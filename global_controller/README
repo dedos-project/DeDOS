@@ -1,0 +1,8 @@
+the global controller that will send control messages, creation/deletion 
+of new MSU's, routing info etc to runtimes.
+
+For now this will done manually by means of a command line prompt, have 
+the skeleton structure for talking to different runtimes over TCP channel.
+The message generation will change from manual command line prompt 
+to automated messages based on collected statistics.
+

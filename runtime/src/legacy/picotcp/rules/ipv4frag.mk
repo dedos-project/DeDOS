@@ -1,0 +1,2 @@
+OPTIONS+=-DPICO_SUPPORT_IPV4FRAG
+MOD_OBJ+=$(LIBBASE)/pico_fragments.o
