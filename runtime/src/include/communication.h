@@ -24,11 +24,11 @@
 #include "comm_protocol.h"
 #include "control_msg_handler.h"
 
-// #define comm_dbg(fmt, ...) \
-//           do { if (1) { fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, \
-//                                               __LINE__, __func__, __VA_ARGS__); } \
-//                         fprintf(stderr,"\n"); } while (0)
-
+/* #define comm_dbg(fmt, ...) \
+           do { if (1) { fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, \
+                                               __LINE__, __func__, __VA_ARGS__); } \
+                         fprintf(stderr,"\n"); } while (0)
+*/
 
 #define MAX_RUNTIME_PEERS 12
 #define MAX_RCV_BUFLEN 10000
