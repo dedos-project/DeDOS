@@ -6,9 +6,9 @@ This repository contains the codebase for the DeDOS runtime and global controlle
 
 We will be using the git-flow model for code contributions.
 
-See 
-[here](http://nvie.com/posts/a-successful-git-branching-model/) 
-for a thorough description, and 
+See
+[here](http://nvie.com/posts/a-successful-git-branching-model/)
+for a thorough description, and
 [here](https://datasift.github.io/gitflow/IntroducingGitFlow.html)
 for a brief overview.
 
@@ -28,24 +28,24 @@ That would look like:
 ```bash
 $ git checkout -b myfeature dev
 $ # Make your changes here
-$ git commit 
+$ git commit
 $ git checkout dev
 $ git merge --no-ff myfeature
 $ git push origin dev
 ```
 
-In addition, please make small commits -- 
-the commit message should be able to summarize all 
-changes made in a single message. 
+In addition, please make small commits --
+the commit message should be able to summarize all
+changes made in a single message.
 
 Prior to releases, the dev branch will be merged back into `origin master` and
 tagged appropriately.
 
 ## Code style
 
-A summary of code style guidelines follows. For any other questions not 
-addressed by the following, refer to Google's C++ style guide:
-[[https://google.github.io/styleguide/cppguide.html]].
+A summary of code style guidelines follows. For any other questions not
+addressed by the following, refer to
+[Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
 
 ##### Whitespace
 Four-space indent. Eight-space if continuing a line. No tabs. No trailing spaces.
@@ -61,7 +61,7 @@ if doing so does not harm structure or significantly impact efficiency
 
 ##### Maintain scope using headers
 Where possible, declare in headers only those functions which are meant to be
-"public" (part of the external interface). Helper functions, intended only to 
+"public" (part of the external interface). Helper functions, intended only to
 be used within that file, need not be declared in the header.
 
 ##### Comment style
@@ -73,10 +73,10 @@ Use the Javadoc style (`/** Explanation */`) before function definitions.
 If commenting after a variable makes things clearer, use
 `/**< description */` instead.
 
-Be sure to provide documentation for every public function and variable 
+Be sure to provide documentation for every public function and variable
 declaration in header files.
 More verbose documentation can be provided by the definition. We will be using
-the 
+the
 [JAVADOC_AUTOBRIEF](https://www.stack.nl/~dimitri/doxygen/manual/config.html#cfg_javadoc_autobrief)
 feature, which extracts up to the first period as the function's brief description.
 
@@ -90,7 +90,7 @@ int i_am_an_int;
 char first_part;  /**< This description comes after the variable */
 char second_part; /**< It sometimes makes things easier to read */
 
-/** 
+/**
  * This is a brief description of what the function does.
  * If more details are provided, they go here. Even more details...
  * @param something the input to be transformed.
