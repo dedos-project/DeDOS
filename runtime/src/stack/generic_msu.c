@@ -423,13 +423,18 @@ struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
         struct msu_endpoint *last_endpoint = dst_msus;
         // TODO: Need to free when freeing msu!
         route_state = malloc(sizeof(*route_state));
-        for (int i=0; i< (sender->id) % HASH_COUNT(dst_msus); i++)
+        for (int i=0; i< (sender->id) % HASH_COUNT(dst_msus); i++){
             last_endpoint = last_endpoint->hh.next;
+            if (! last_endpoint)
+                last_endpoint = dst_msus;
+        }
         route_state->type_id = type->type_id;
         route_state->last_endpoint = last_endpoint;
         HASH_ADD_INT(all_states, type_id, route_state);
     }
     route_state->last_endpoint = route_state->last_endpoint->hh.next;
+    if (! route_state->last_endpoint)
+       route_state->last_endpoint = dst_msus; 
     return route_state->last_endpoint;
 }
 
@@ -522,7 +527,7 @@ int msu_receive(msu_t *self, msu_queue_item_t *data){
         // If type_id <= 0 it can either be an error (< 0) or just
         // not have a subsequent destination 
         if (type_id < 0){
-            log_error("MSU %d returned error code %d", self->id, type_id);
+            log_warn("MSU %d returned error code %d", self->id, type_id);
         }
         if (data){
             free(data->buffer);
@@ -546,7 +551,7 @@ int msu_receive(msu_t *self, msu_queue_item_t *data){
     // Get the specific MSU to deliver to
     struct msu_endpoint *dst = type->route(type, self, data);
     if (dst == NULL){
-        log_error("No destination endpoint %s", "");
+        log_error("No destination endpoint of type %s (%d) for msu %d", type->name, type_id, self->id);
         if (data){
             free(data->buffer);
             free(data);
