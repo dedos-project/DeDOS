@@ -43,7 +43,7 @@ struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
 /** Defines a type of MSU. This information (mostly callbacks)
  * is shared across all MSUs of the same type.
  */
-typedef struct msu_type_t{
+struct msu_type_t{
     /** Name for the msu type */
     char *name;
     /** Layer in which the msu operates */
