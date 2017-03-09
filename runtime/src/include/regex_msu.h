@@ -1,4 +1,5 @@
-#pragma once 
+#ifndef REGEX_MSU_H
+#define REGEX_MSU_H
 
 #define REGEX_MSU_ID 505
 
@@ -30,3 +31,4 @@ struct regex_data_payload {
 
 const msu_type_t REGEX_MSU_TYPE;
 
+#endif

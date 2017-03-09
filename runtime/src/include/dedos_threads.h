@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DEDOS_THREADS_H
+#define DEDOS_THREADS_H
 
 #include <semaphore.h>
 #include <pthread.h>
@@ -26,3 +27,5 @@ int dedos_sem_wait(sem_t *sem, int timeout);
 
 /* POSIX thread implementation */
 void *dedos_thread_create(void *(*routine)(void *), void *arg);
+
+#endif

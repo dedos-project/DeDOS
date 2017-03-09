@@ -4,7 +4,8 @@
  * Contains function for the creation of MSUs, as well as the
  * registration of new MSU types
  */
-#pragma once
+#ifndef GENERIC_MSU_H
+#define GENERIC_MSU_H
 
 #include <stdint.h>
 #include "routing.h"
@@ -235,3 +236,5 @@ void *msu_data(msu_t *msu);
 
 /** An MSU registers itself with this so that instances can be created */
 void register_msu_type(msu_type_t *msu_type);
+
+#endif
