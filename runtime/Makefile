@@ -22,7 +22,7 @@ LEGACY_LIBS = picotcp
 COMPILE=gcc -c
 FINAL=gcc
 LINK=ld -r
-DEPEND=gcc -MM  -MF
+DEPEND=gcc -MM -MF
 
 CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g
 
@@ -35,20 +35,21 @@ INCLUDES= $(PATH_SRC_INC) $(LEGACY_INC)
 
 CFLAGS+= $(foreach inc, $(INCLUDES), -I$(inc))
 
-BUILD_PATHS = $(PATH_BLD) $(PATH_OBJ) $(PATH_RES) $(PATH_BLD_LEG)
+BUILD_PATHS = $(PATH_BLD) $(PATH_OBJ) $(PATH_RES) $(PATH_DEP) $(PATH_BLD_LEG)
 
 SRC_TST = $(wildcard $(PATH_TST)*.c)
 
 SRC_MOD = $(wildcard $(PATH_SRC_MOD)*.c)
 SRC_STK = $(wildcard $(PATH_SRC_STK)*.c)
-SRC_UTL = $(wildcard $(PATH_SRC_UTL)*.c)
-SRC_ALL = $(SRC_MOD) $(SRC_STK) $(SRC_UTL)
+SRC_ALL = $(SRC_MOD) $(SRC_STK)
 
 SRC_APP = $(wildcard $(PATH_SRC_APP)*.c)
 
 RESULTS = $(patsubst $(PATH_TST)Test%.c, $(PATH_RES)Test%.txt, $(SRC_TST))
 
 DEP_TST = $(patsubst $(PATH_TST)Test%.c, $(PATH_DEP)Test%.d, $(SRC_TST))
+DEP_SRC = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_DEP)%.d, $(SRC_MOD)) \
+		  $(patsubst $(PATH_SRC_STK)%.c, $(PATH_DEP)%.d, $(SRC_STK))
 
 OBJECTS = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_OBJ)%.o, $(SRC_MOD))
 OBJECTS += $(patsubst $(PATH_SRC_STK)%.c, $(PATH_OBJ)%.o, $(SRC_STK))
@@ -58,6 +59,9 @@ APPS = $(patsubst $(PATH_SRC_APP)%.c, %, $(SRC_APP))
 all: $(BUILD_PATHS) legacy $(APPS) 
 
 legacy: $(LEGACY_OBJ)
+
+depends: $(DEP_SRC)
+
 
 $(PATH_BLD_LEG)%.o:: $(PATH_SRC_LEG)%
 	@filename=$$(basename "$@"); filename="$${filename%.*}"; echo $$filename; cd $(PATH_SRC_LEG)/$$filename && make;
@@ -83,7 +87,6 @@ test: $(RESULTS)
 $(PATH_RES)%.txt: $(PATH_BLD)%.$(TARGET_EXT)
 	-./$< > $@ 2>&1
 
--include $(DEP_TST)
 
 # creates the test executables by linking the test objects with
 # the build objects, unity, and the test dependencies
@@ -99,14 +102,17 @@ $(PATH_OBJ)%.o:: $(PATH_TST)%.c
 $(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c
 	$(COMPILE) $(CFLAGS) $< -o $@
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c
+$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c 
 	$(COMPILE) $(CFLAGS) $< -o $@
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_UTL)%.c
-	$(COMPILE) $(CFLAGS) $< -o $@
+$(PATH_DEP)%.d: $(PATH_TST)%.c 
+	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
 
-$(PATH_DEP)%.d:: $(PATH_TST)%.c
-	$(DEPEND) $@ -o $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
+$(PATH_DEP)%.d: $(PATH_SRC_STK)%.c $(LEGACY_OBJ)
+	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
+
+$(PATH_DEP)%.d: $(PATH_SRC_MOD)%.c $(LEGACY_OBJ)
+	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
 
 
 $(PATH_BLD):
@@ -121,6 +127,9 @@ $(PATH_RES):
 $(PATH_BLD_LEG):
 	$(MKDIR) $(PATH_BLD_LEG)
 
+$(PATH_DEP):
+	$(MKDIR) $(PATH_DEP)
+
 clean:
 	$(CLEANUP) $(PATH_OBJ)*.o
 	$(CLEANUP) $(PATH_BLD)*.$(TARGET_EXT)
@@ -130,9 +139,14 @@ clean:
 	$(CLEANUP) $(PATH_DEP)*.d
 	$(CLEANUP) $(APPS)
 
+-include $(DEP_TST)
+-include $(DEP_SRC)
+
+.PHONY: all
 .PHONY: clean
 .PHONY: test
 .PHONY: legacy
+.PHONY: depends
 .PRECIOUS: $(PATH_BLD)Test%.$(TARGET_EXT)
 .PRECIOUS: $(PATH_OBJ)%.o
 .PRECIOUS: $(PATH_BLD_LEG)%.o
