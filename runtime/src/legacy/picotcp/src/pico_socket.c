@@ -22,7 +22,7 @@
 #include "pico_socket_multicast.h"
 #include "pico_socket_tcp.h"
 #include "pico_socket_udp.h"
-#include "msu_tcp_handshake.h"
+#include "modules/msu_tcp_handshake.h"
 #include "logging.h"
 
 #if defined (PICO_SUPPORT_IPV4) || defined (PICO_SUPPORT_IPV6)

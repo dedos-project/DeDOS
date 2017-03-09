@@ -4,16 +4,16 @@
 #include "runtime.h"
 #include "comm_protocol.h"
 #include "routing.h"
-#include "msu_tcp_handshake.h"
+#include "modules/msu_tcp_handshake.h"
 #include "communication.h"
 #include "control_msg_handler.h"
 #include "generic_msu_queue.h"
 #include "generic_msu_queue_item.h"
 #include "msu_tracker.h"
 #include "global.h"
-#include "ssl_msu.h"
+#include "modules/ssl_msu.h"
 #include "logging.h"
-#include "ssl_request_routing_msu.h"
+#include "modules/ssl_request_routing_msu.h"
 
 static fd_set readfds;
 struct sockaddr_in ws, cli_addr;

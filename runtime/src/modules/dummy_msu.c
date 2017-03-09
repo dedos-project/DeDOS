@@ -1,5 +1,5 @@
 #include "runtime.h"
-#include "dummy_msu.h"
+#include "modules/dummy_msu.h"
 #include "pico_socket_tcp.h"
 #include "communication.h"
 #include "routing.h"

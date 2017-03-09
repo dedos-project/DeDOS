@@ -1,5 +1,5 @@
 #include "runtime.h"
-#include "regex_msu.h"
+#include "modules/regex_msu.h"
 #include "communication.h"
 #include "routing.h"
 #include "dedos_msu_msg_type.h"
@@ -7,7 +7,7 @@
 #include "dedos_thread_queue.h" //for enqueuing outgoing control messages
 #include "control_protocol.h"
 #include "logging.h"
-#include "ssl_msu.h"
+#include "modules/ssl_msu.h"
 
 #include <pcre.h>
 

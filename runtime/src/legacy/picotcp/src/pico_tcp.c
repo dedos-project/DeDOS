@@ -18,11 +18,11 @@
 #include "runtime.h"
 #include "generic_msu.h"
 #include "communication.h"
-#include "msu_tcp_handshake.h"
+#include "modules/msu_tcp_handshake.h"
 #include "dedos_msu_msg_type.h"
 #include "dedos_msu_list.h"
-#include "msu_pico_tcp.h"
-#include "hs_request_routing_msu.h" //for struct routing item
+#include "modules/msu_pico_tcp.h"
+#include "modules/hs_request_routing_msu.h" //for struct routing item
 #include "logging.h"
 
 #define TCP_IS_STATE(s, st) ((s->state & PICO_SOCKET_STATE_TCP) == st)

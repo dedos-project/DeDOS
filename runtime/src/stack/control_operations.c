@@ -2,7 +2,7 @@
 #include "runtime.h"
 #include "comm_protocol.h"
 #include "dedos_msu_list.h"
-#include "msu_tcp_handshake.h"
+#include "modules/msu_tcp_handshake.h"
 #include "communication.h"
 #include "control_msg_handler.h"
 #include "control_protocol.h"

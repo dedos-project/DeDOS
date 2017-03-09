@@ -5,7 +5,7 @@
 #include "pico_eth.h"
 #include "pico_protocol.h"
 #include "runtime.h"
-#include "msu_tcp_handshake.h"
+#include "modules/msu_tcp_handshake.h"
 #include "pico_socket_tcp.h"
 #include "communication.h"
 #include "routing.h"

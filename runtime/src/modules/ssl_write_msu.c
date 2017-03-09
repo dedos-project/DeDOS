@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "ssl_write_msu.h"
+#include "modules/ssl_write_msu.h"
 #include "runtime.h"
-#include "webserver_msu.h"
+#include "modules/webserver_msu.h"
 #include "communication.h"
 #include "routing.h"
 #include "dedos_msu_list.h"

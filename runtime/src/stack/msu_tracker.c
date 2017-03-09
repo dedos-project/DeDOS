@@ -1,17 +1,17 @@
 #include "msu_tracker.h"
 #include "logging.h"
 
-#include "dummy_msu.h"
-#include "regex_msu.h"
-#include "ssl_request_routing_msu.h"
-#include "ssl_read_msu.h"
-#include "ssl_write_msu.h"
-#include "webserver_msu.h"
+#include "modules/dummy_msu.h"
+#include "modules/regex_msu.h"
+#include "modules/ssl_request_routing_msu.h"
+#include "modules/ssl_read_msu.h"
+#include "modules/ssl_write_msu.h"
+#include "modules/webserver_msu.h"
 #include "generic_msu.h"
-#include "hs_request_routing_msu.h"
-#include "msu_app_tcp_echo.h"
-#include "msu_pico_tcp.h"
-#include "msu_tcp_handshake.h"
+#include "modules/hs_request_routing_msu.h"
+#include "modules/msu_app_tcp_echo.h"
+#include "modules/msu_pico_tcp.h"
+#include "modules/msu_tcp_handshake.h"
 
 #define N_MSU_TYPES 10
 

@@ -40,7 +40,7 @@
 #include "pico_queue.h"
 #include "pico_frame.h"
 #include "runtime.h"
-#include "msu_app_tcp_echo.h"
+#include "modules/msu_app_tcp_echo.h"
 #include "pico_socket_tcp.h"
 #include "communication.h"
 #include "routing.h"
