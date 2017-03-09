@@ -139,8 +139,10 @@ clean:
 	$(CLEANUP) $(PATH_DEP)*.d
 	$(CLEANUP) $(APPS)
 
+ifneq ($(MAKECMDGOALS), clean)
 -include $(DEP_TST)
 -include $(DEP_SRC)
+endif
 
 .PHONY: all
 .PHONY: clean
