@@ -199,13 +199,13 @@ int webserver_receive(msu_t *self, msu_queue_item_t *input_data) {
                     return DEDOS_SSL_WRITE_MSU_ID;
                 }
             } else {
-                log_error("Webserver received unknown request type %s", RequestType);
+                log_warn("Webserver received unknown request type %s", RequestType);
             }
         } else {
-            log_error("Webserver received NULL request type%s", "");
+            log_warn("Webserver received NULL request type", "");
         }
     } else {
-        log_error("Either self or input data was null??%s","");
+        log_warn("Either self or input data to webserver was null??","");
     }
     return -1;
 }

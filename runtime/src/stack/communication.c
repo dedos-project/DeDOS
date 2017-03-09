@@ -136,8 +136,7 @@ int dedos_webserver_socket_init(int webserver_port) {
     ws_sock = socket(AF_INET, SOCK_STREAM, 0);
     int Set = 1;
     if ( setsockopt(ws_sock, SOL_SOCKET, SO_REUSEADDR, &Set, sizeof(int)) == -1 ) {
-        printf("setsockopt() failed\n");
-        return -1;
+        log_warn("setsockopt() failed with error %s (%d)", errno, strerror(errno));
     }
 
     ws.sin_family = AF_INET;
@@ -274,7 +273,7 @@ int check_comm_sockets() {
         timeout.tv_sec = 0;
         timeout.tv_usec = 10000;
         if ( setsockopt(new_sock_ws, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(struct timeval)) == -1 ) {
-            printf("setsockopt() failed\n");
+            log_warn("setsockopt() failed with error %s (%d)", errno, strerror(errno));
             return -1;
         }
 
