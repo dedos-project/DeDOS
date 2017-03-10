@@ -29,7 +29,7 @@ be used within that file, need not be declared in the header.
 
 ##### Comment style
 We will be using
-[https://www.stack.nl/~dimitri/doxygen/manual/docblocks.html doxygen]
+[doxygen](https://www.stack.nl/~dimitri/doxygen/manual/docblocks.html)
 for automatic documentation generation.
 
 Use the Javadoc style (`/** Explanation */`) before function definitions.
@@ -40,7 +40,7 @@ Be sure to provide documentation for every public function and variable
 declaration in header files.
 More verbose documentation can be provided by the definition. We will be using
 the 
-[https://www.stack.nl/~dimitri/doxygen/manual/config.html#cfg_javadoc_autobrief JAVADOC_AUTOBRIEF]
+[JAVADOC_AUTOBRIEF](https://www.stack.nl/~dimitri/doxygen/manual/config.html#cfg_javadoc_autobrief)
 feature, which extracts up to the first period as the function's brief description.
 
 Example:
