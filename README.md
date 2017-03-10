@@ -2,13 +2,50 @@
 
 This repository contains the codebase for the DeDOS runtime and global controller
 
+## Contributing
+
+We will be using the git-flow model for code contributions.
+
+See 
+[here](http://nvie.com/posts/a-successful-git-branching-model/) 
+for a thorough description, and 
+[here](https://datasift.github.io/gitflow/IntroducingGitFlow.html)
+for a brief overview.
+
+In brief, when contributing a new feature, use the following protocol:
+* Branch from dev into a branch entitled <feature>
+* Make changes and commit within <feature> branch
+* Merge (**with --no-ff**) back into dev
+* Delete the feature branch
+* Push back to `origin dev`
+
+*Note: --no-ff ensures that the history of a branch remains consistant, 
+and that it does not simply overwrite the history of the merged branch. 
+See [here](http://nvie.com/img/merge-without-ff@2x.png) for a consise 
+explanation*
+
+That would look like:
+```bash
+$ git checkout -b myfeature dev
+$ # Make your changes here
+$ git commit 
+$ git checkout dev
+$ git merge --no-ff myfeature
+$ git push origin dev
+```
+
+In addition, please make small commits -- 
+the commit message should be able to summarize all 
+changes made in a single message. 
+
+Prior to releases, the dev branch will be merged back into `origin master` and
+tagged appropriately.
+
 ## Code style
 
 A summary of code style guidelines follows. For any other questions not 
 addressed by the following, refer to Google's C++ style guide:
 [[https://google.github.io/styleguide/cppguide.html]].
-
-#### Summary of code style guidelines
 
 ##### Whitespace
 Four-space indent. Eight-space if continuing a line. No tabs. No trailing spaces.
@@ -68,4 +105,9 @@ Headers should `#include` all files that are necessary to compile the header,
 such that they should not be affected by the order in which they are included.
 
 ##### 100 character Line length
-Try to keep your lines to a maximum of 100 characters. 
+Try to keep your lines to a maximum of 100 characters. Use the following line
+in .vimrc as a subtle reminder
+```vim
+:set colorcolumn=100
+```
+
