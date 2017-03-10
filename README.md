@@ -13,8 +13,8 @@ for a thorough description, and
 for a brief overview.
 
 In brief, when contributing a new feature, use the following protocol:
-* Branch from dev into a branch entitled <feature>
-* Make changes and commit within <feature> branch
+* Branch from dev into a branch for your feature
+* Make changes and commit within feature branch
 * Merge (**with --no-ff**) back into dev
 * Delete the feature branch
 * Push back to `origin dev`
