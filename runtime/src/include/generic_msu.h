@@ -58,7 +58,7 @@ struct msu_type_t{
      * @param initial_state initial information passed to the runtime by the global controller
      * @return 0 on success, -1 on error
      */
-    int (*init)(msu_t *self, struct craete_msu_thread_msg_data  *initial_state);
+    int (*init)(msu_t *self, struct create_msu_thread_msg_data  *initial_state);
 
     /**
      * Type-specific destructor that frees any internal data or state
