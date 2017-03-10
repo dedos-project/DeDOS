@@ -33,7 +33,7 @@ int WriteSSL(SSL *State, char *Buffer, int BufferSize) {
 
     return NumBytes;
 }
-int ssl_write_receive(msu_t *self, msu_queue_item_t *input_data) {
+int ssl_write_receive(local_msu *self, msu_queue_item *input_data) {
     if (input_data != NULL) {
         struct ssl_data_payload *data = (struct ssl_data_payload*) input_data->buffer;
         WriteSSL(data->state, data->msg, strlen(data->msg));
@@ -41,7 +41,7 @@ int ssl_write_receive(msu_t *self, msu_queue_item_t *input_data) {
     }
     return -1;
 }
-msu_type_t SSL_WRITE_MSU_TYPE = {
+msu_type SSL_WRITE_MSU_TYPE = {
     .name="SSLWriteMsu",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_SSL_WRITE_MSU_ID,

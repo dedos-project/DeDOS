@@ -123,7 +123,7 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
     return Request;
 }
 
-int ssl_read_receive(msu_t *self, msu_queue_item_t *input_data) {
+int ssl_read_receive(local_msu *self, msu_queue_item *input_data) {
     int ret = 0;
     struct ssl_data_payload *data = input_data->buffer;
     if (data->type == READ) {
@@ -143,7 +143,7 @@ int ssl_read_receive(msu_t *self, msu_queue_item_t *input_data) {
     return -1;
 }
 
-msu_type_t SSL_READ_MSU_TYPE = {
+msu_type SSL_READ_MSU_TYPE = {
     .name="SSL_Read_msu",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_SSL_READ_MSU_ID,
