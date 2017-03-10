@@ -1,3 +1,8 @@
+/**
+ * regex_msu.c
+ *
+ * MSU for processing regular expressions
+ */
 #include "runtime.h"
 #include "modules/regex_msu.h"
 #include "communication.h"
@@ -10,11 +15,29 @@
 #include "modules/ssl_msu.h"
 
 #include <pcre.h>
+#define REGEX_KEY "regex="
+#define EVIL_REGEX "^(a+)+$"
+#define HTML "\
+<!DOCTYPE html>\n\
+<html>\n\
+    <body>\n\
+        <h1>Does %s match %s?</h1> <br/>\n\
+        <p>%s.</p>\n\
+    </body>\n\
+</html>\
+"
 
+/** Maximum length of the HTML to be returned */
 int html_len() {
     return strlen(HTML) + 200;
 }
 
+/**
+ * Recieves data for the Regex MSU
+ * @param self Regex MSU to receive the data
+ * @param input_data contains a regex_data_payload* in input_data->buffer
+ * @return ID of next MSU-type to receive data, or -1 on error
+ */
 int regex_receive(msu_t *self, msu_queue_item_t *input_data) {
     if (self && input_data) {
         struct regex_data_payload *regex_data = (struct regex_data_payload *) (input_data->buffer);
@@ -73,14 +96,15 @@ int regex_receive(msu_t *self, msu_queue_item_t *input_data) {
 
             return DEDOS_SSL_WRITE_MSU_ID;
         }
-    return -1;
     }
+    return -1;
 }
 
+/** Definition of type information for a Regex MSU */
 const msu_type_t REGEX_MSU_TYPE = {
     .name="regex_msu",
     .layer=DEDOS_LAYER_APPLICATION,
-    .type_id=REGEX_MSU_ID,
+    .type_id=DEDOS_REGEX_MSU_ID,
     .proto_number=MSU_PROTO_REGEX,
     .init=NULL,
     .destroy=NULL,

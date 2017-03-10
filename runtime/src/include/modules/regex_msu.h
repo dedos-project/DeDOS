@@ -1,33 +1,19 @@
 #ifndef REGEX_MSU_H
 #define REGEX_MSU_H
-
-#define REGEX_MSU_ID 505
+#include "generic_msu.h"
 
 #define MAX_REGEX_VALUE_LEN 128
 #define MAX_REQUEST_LEN 1024
-#define REGEX_KEY "regex="
-#define EVIL_REGEX "^(a+)+$"
-#define HTML "\
-<!DOCTYPE html>\n\
-<html>\n\
-    <body>\n\
-        <h1>Does %s match %s?</h1> <br/>\n\
-        <p>%s.</p>\n\
-    </body>\n\
-</html>\
-"
 
-
-
+/** Holds data to be delivered to a regex MSU */
 struct regex_data_payload {
-    char to_match[MAX_REGEX_VALUE_LEN];
-    char string[MAX_REQUEST_LEN];
+    char to_match[MAX_REGEX_VALUE_LEN];  /**< Regular expression to match */
+    char string[MAX_REQUEST_LEN];        /**< String to match regex against */
     char http_response[MAX_REQUEST_LEN];
-    int dst_type;
-    void *dst_packet;
+    int dst_type;      /**< Type of MSU destination */
+    void *dst_packet; /**< Packet to be delivered to MSU destination */
 };
 
-#include "generic_msu.h"
 
 const msu_type_t REGEX_MSU_TYPE;
 
