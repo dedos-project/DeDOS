@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "routing.h"
 #include "comm_protocol.h"
+#include "generic_msu_queue_item.h"
 
 /** A typedef to represent a generic msu */
 typedef struct generic_msu local_msu;
@@ -33,7 +34,7 @@ typedef struct msu_stats {
 
 /** Routing function to deliver traffic to a set of MSUs */
 struct msu_endpoint *round_robin(msu_type *type, local_msu *sender,
-                                 struct msu_queue_item *data);
+                                 msu_queue_item *data);
 
 /**
  * Defines a type of MSU. This information (mostly callbacks)
@@ -132,7 +133,7 @@ struct msu_type{
      * @param bufsize Size of the buffer being received
      * @return 0 on success, -1 on error
      */
-    int (*deserialize)(local_msu *self, struct intermsu_msg *msg, 
+    int (*deserialize)(local_msu *self, intermsu_msg *msg,
                        void *buf, uint16_t bufsize);
 };
 

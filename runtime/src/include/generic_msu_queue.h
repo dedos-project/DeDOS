@@ -25,7 +25,7 @@ typedef struct generic_msu_queue {
     void *mutex;
     uint8_t shared;
     uint16_t overhead;
-} msu_queue_t;
+} msu_queue;
 
 
 static inline void generic_msu_queue_init(struct generic_msu_queue *q){

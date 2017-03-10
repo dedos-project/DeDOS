@@ -151,10 +151,10 @@ int msu_receive_ctrl(local_msu *self, msu_queue_item *queue_item){
  *  and only freed via
  *      msu_data_free()
  */
-typedef struct msu_data{
+struct msu_data{
     size_t n_bytes;
     void *data;
-} msu_data;
+};
 
 /** Allocates data in the msu and tracks the amount of allocated data.
  * Returns a pointer to the allocated data.
