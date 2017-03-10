@@ -38,7 +38,7 @@ int html_len() {
  * @param input_data contains a regex_data_payload* in input_data->buffer
  * @return ID of next MSU-type to receive data, or -1 on error
  */
-int regex_receive(msu_t *self, msu_queue_item_t *input_data) {
+int regex_receive(local_msu *self, msu_queue_item *input_data) {
     if (self && input_data) {
         struct regex_data_payload *regex_data = (struct regex_data_payload *) (input_data->buffer);
         int ret;
@@ -101,7 +101,7 @@ int regex_receive(msu_t *self, msu_queue_item_t *input_data) {
 }
 
 /** Definition of type information for a Regex MSU */
-const msu_type_t REGEX_MSU_TYPE = {
+const msu_type REGEX_MSU_TYPE = {
     .name="regex_msu",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_REGEX_MSU_ID,

@@ -16,13 +16,13 @@
  * @param msu dummy msu to receive data
  * @param queue_item queue item to be recieved
  */
-int dummy_msu_receive(msu_t *msu, msu_queue_item_t *queue_item){
+int dummy_msu_receive(local_msu *msu, msu_queue_item *queue_item){
     /* function called when an item is dequeued */
     // Signal that next msu should also be DEDOS_DUMMY_MSU
     return DEDOS_DUMMY_MSU_ID;
 }
 
-msu_type_t DUMMY_MSU_TYPE = {
+msu_type DUMMY_MSU_TYPE = {
     .name="dummy_msu",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_DUMMY_MSU_ID,

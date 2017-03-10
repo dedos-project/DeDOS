@@ -26,7 +26,7 @@ static unsigned concatenate(unsigned x, unsigned y) {
     return x * pow + y;
 }
 
-int ssl_request_routing_msu_receive(msu_t *self, msu_queue_item_t *queue_item)
+int ssl_request_routing_msu_receive(local_msu *self, msu_queue_item *queue_item)
 {
     /* function called when an item is dequeued */
     /* here we will make a decision as to which next SSL msu the request be routed to */
@@ -81,7 +81,7 @@ void ssl_request_routing_msu_destroy(struct generic_msu *self)
     destroy_chord_ring(self->internal_state);
 }
 
-int ssl_request_routing_msu_init(msu_t *self, 
+int ssl_request_routing_msu_init(local_msu *self, 
         struct create_msu_thread_msg_data *create_action)
 {
     /* any other internal state that MSU needs to maintain */
@@ -95,7 +95,7 @@ int ssl_request_routing_msu_init(msu_t *self,
     return 0;
 }
 
-const msu_type_t SSL_REQUEST_ROUTING_MSU_TYPE = {
+const msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {
     .name="ssl_request_routing_msu",
     .layer=DEDOS_LAYER_TRANSPORT,
     .type_id=DEDOS_SSL_REQUEST_ROUTING_MSU_ID,
