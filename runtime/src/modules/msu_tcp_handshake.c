@@ -1090,7 +1090,7 @@ static int valid_ip_tcp_flags(struct pico_frame *f)
     }
 }
 
-int msu_tcp_hs_restore_socket(msu_t *self, struct dedos_intermsu_message* msg, 
+int msu_tcp_hs_restore_socket(local_msu *self, struct dedos_intermsu_message* msg, 
                               void *buf, uint16_t bufsize)
 {
     struct pico_frame *f = pico_frame_alloc(bufsize);
@@ -1157,7 +1157,7 @@ int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
 }
 */
 
-int msu_tcp_process_queue_item(msu_t *msu, msu_queue_item_t *queue_item)
+int msu_tcp_process_queue_item(local_msu *msu, msu_queue_item *queue_item)
 {
     //interface from runtime to picoTCP structures or any other existing code
     struct hs_internal_state *in_state = msu->internal_state;
@@ -1201,7 +1201,7 @@ void msu_tcp_handshake_destroy(struct generic_msu *self)
     free(self->internal_state);
     log_debug("%s","Freed internal state");
 }
-struct generic_msu* msu_tcp_handshake_init(msu_t *handshake_msu, 
+struct generic_msu* msu_tcp_handshake_init(local_msu *handshake_msu, 
         struct create_msu_thread_msg_data *create_action)
 {
     //handshake_msu->collect_state = msu_tcp_hs_collect_socket;
@@ -1241,7 +1241,7 @@ struct generic_msu* msu_tcp_handshake_init(msu_t *handshake_msu,
     return 0;
 }
 
-msu_type_t TCP_HANDSHAKE_MSU_TYPE = {
+msu_type TCP_HANDSHAKE_MSU_TYPE = {
     .name="tcp_handshake_msu",
     .layer=DEDOS_LAYER_TRANSPORT,
     .type_id=DEDOS_TCP_HANDSHAKE_MSU_ID,

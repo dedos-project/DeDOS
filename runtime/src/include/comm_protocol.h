@@ -10,7 +10,7 @@ typedef struct dedos_intermsu_message {
     unsigned int proto_msg_type;
     unsigned int payload_len;
     void *payload;
-} intermsu_msg_t;
+} intermsu_msg;
 
 
 #endif /* COMM_PROTOCOL_H_ */

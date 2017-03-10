@@ -120,7 +120,7 @@ void hs_request_routing_msu_destroy(struct generic_msu *self)
 }
 */
 
-int hs_request_routing_msu_restore(msu_t *self,
+int hs_request_routing_msu_restore(local_msu *self,
         struct dedos_intermsu_message* msg, void *buf, uint16_t bufsize)
 {
     //parse the received buffer, then enqueue the request
@@ -147,7 +147,7 @@ int hs_request_routing_msu_restore(msu_t *self,
 
         //enqueue the request and also the src msu_id
 
-        msu_queue_item_t *item = create_generic_msu_queue_item();
+        msu_queue_item *item = create_generic_msu_queue_item();
         if (!item) {
             log_error("Failed malloc for generic queue item %s", "");
         }
@@ -231,7 +231,7 @@ end:
     return 0;
 }
 */
-msu_type_t HS_REQUEST_ROUTING_MSU_TYPE = {
+msu_type HS_REQUEST_ROUTING_MSU_TYPE = {
     .name="hs_request_routing_msu",
     .layer=DEDOS_LAYER_TRANSPORT,
     .type_id=DEDOS_TCP_HS_REQUEST_ROUTING_MSU_ID,

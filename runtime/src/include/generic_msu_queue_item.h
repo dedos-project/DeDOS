@@ -13,7 +13,7 @@ typedef struct generic_msu_queue_item{
      */
     uint32_t buffer_len;
     void *buffer;
-} msu_queue_item_t;
+} msu_queue_item;
 
 static inline struct generic_msu_queue_item * create_generic_msu_queue_item(){
     struct generic_msu_queue_item *item;

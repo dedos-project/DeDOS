@@ -19,7 +19,7 @@
 /** Maximum number of MSU types that can be registered */
 #define MAX_MSU_TYPES 64
 /** When msu types are registered, they are included in this array */
-static msu_type_t *msu_types = NULL;
+static msu_type *msu_types = NULL;
 /** Number of currently-registered msu types */
 static unsigned int n_types = 0;
 
@@ -30,7 +30,7 @@ static unsigned int n_types = 0;
  * @param bytes number of bytes to malloc
  * @returns pointer to the allocated memory
  */
-static void *msu_track_alloc(msu_t *msu, size_t bytes){
+static void *msu_track_alloc(local_msu *msu, size_t bytes){
     void *ptr = NULL;
     ptr = malloc(bytes);
     if (!ptr) {
@@ -52,7 +52,7 @@ static void *msu_track_alloc(msu_t *msu, size_t bytes){
  * @param msu msu in which to track allocatioin
  * @param bytes number of bytes being freed
  */
-static void msu_track_free(void* ptr, msu_t* msu, size_t bytes)
+static void msu_track_free(void* ptr, local_msu* msu, size_t bytes)
 {
     msu->stats.memory_allocated -= bytes;
     log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes",
@@ -67,7 +67,7 @@ static void msu_track_free(void* ptr, msu_t* msu, size_t bytes)
  * If more than 64 different types of MSUs are registered, this will fail.
  * @param type MSU type to be registered.
  */
-void register_msu_type(msu_type_t *type){
+void register_msu_type(msu_type *type){
     // TODO: realloc if n_types+1 == MAX
     if (msu_types == NULL)
         msu_types = malloc(sizeof(*msu_types) * MAX_MSU_TYPES);
@@ -79,10 +79,10 @@ void register_msu_type(msu_type_t *type){
  * Gets a registered msu_type structure that matches the provided id.
  *
  * @param type_id numerical ID of the MSU type to be retrieved
- * @return first msu_type_t in which type->type_id matches the provided id or NULL if N/A
+ * @return first msu_type in which type->type_id matches the provided id or NULL if N/A
  */
-msu_type_t *msu_type_by_id(unsigned int type_id){
-    msu_type_t *type = NULL;
+msu_type *msu_type_by_id(unsigned int type_id){
+    msu_type *type = NULL;
     // NOTE: This will require slightly more time than a switch statement
     for (int i=0; i<n_types; i++){
         if (msu_types[i].type_id == type_id){
@@ -103,7 +103,7 @@ msu_type_t *msu_type_by_id(unsigned int type_id){
  * @param queue_item control queue message
  * @return 0 on success, -1 on error
  */
-int msu_receive_ctrl(msu_t *self, msu_queue_item_t *queue_item){
+int msu_receive_ctrl(local_msu *self, msu_queue_item *queue_item){
     struct msu_control_update *update_msg = queue_item->buffer;
     int rtn = 0;
     if (self->id != update_msg->msu_id){
@@ -151,10 +151,10 @@ int msu_receive_ctrl(msu_t *self, msu_queue_item_t *queue_item){
  *  and only freed via
  *      msu_data_free()
  */
-typedef struct msu_data_t{
+struct msu_data{
     size_t n_bytes;
     void *data;
-} msu_data_t;
+};
 
 /** Allocates data in the msu and tracks the amount of allocated data.
  * Returns a pointer to the allocated data.
@@ -166,7 +166,7 @@ typedef struct msu_data_t{
  * @param bytes number of bytes to malloc
  * @return pointer to the allocated data, or NULL if memory could not be allocated
  */
-void *msu_data_alloc(msu_t* msu, size_t bytes)
+void *msu_data_alloc(local_msu* msu, size_t bytes)
 {
     void *ptr = realloc(msu->data_p->data, bytes);
     if (ptr == NULL){
@@ -188,7 +188,7 @@ void *msu_data_alloc(msu_t* msu, size_t bytes)
  * Frees data stored within an MSU and tracks that the data has been freed.
  * @param msu MSU in which to track the freed data
  */
-void msu_data_free(msu_t *msu)
+void msu_data_free(local_msu *msu)
 {
     msu->stats.memory_allocated -= msu->data_p->n_bytes;
     log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes",
@@ -200,7 +200,7 @@ void msu_data_free(msu_t *msu)
  *  Gets the data allocated within an MSU
  *  @return pointer to the allocated data
  */
-void *msu_data(msu_t *msu)
+void *msu_data(local_msu *msu)
 {
     return msu->data_p->data;
 }
@@ -209,9 +209,9 @@ void *msu_data(msu_t *msu)
  * Private function to allocate a new MSU.
  * MSU creation should be handled through init_msu()
  */
-msu_t *msu_alloc(void)
+local_msu *msu_alloc(void)
 {
-    msu_t *msu = malloc(sizeof(*msu));
+    local_msu *msu = malloc(sizeof(*msu));
     if (msu == NULL){
         log_error("%s", "Failed to allocate msu");
         return msu;
@@ -220,7 +220,7 @@ msu_t *msu_alloc(void)
     msu->stats.memory_allocated = 0;
     msu->stats.queue_item_processed = 0;
 
-    msu->data_p = malloc(sizeof(struct msu_data_t));
+    msu->data_p = malloc(sizeof(struct msu_data));
     msu->data_p->n_bytes = 0;
     msu->data_p->data = NULL;
 
@@ -238,7 +238,7 @@ msu_t *msu_alloc(void)
  * Private function to free an MSU.
  * MSU destruction should be handled through destroy_msu()
  */
-void msu_free(msu_t* msu)
+void msu_free(local_msu* msu)
 {
     free(msu->data_p);
     free(msu);
@@ -253,13 +253,13 @@ void msu_free(msu_t* msu)
  * @param create_action Initial data to be provided to the MSU
  * @return initialized MSU or NULL if error occurred
  */
-msu_t *init_msu(unsigned int type_id, int msu_id,
+local_msu *init_msu(unsigned int type_id, int msu_id,
                 struct create_msu_thread_msg_data *create_action){
     if (type_id < 1){
         return NULL;
     }
 
-    msu_t *msu = msu_alloc();
+    local_msu *msu = msu_alloc();
     msu->id = msu_id;
     msu->type = msu_type_by_id(type_id);
     msu->data_p->data = create_action->creation_init_data;
@@ -308,7 +308,7 @@ msu_t *init_msu(unsigned int type_id, int msu_id,
  *       with msu_data_free()
  * @param msu The MSU to be freed
  */
-void destroy_msu(msu_t* msu)
+void destroy_msu(local_msu* msu)
 {
     if (msu->type->destroy)
         msu->type->destroy(msu);
@@ -329,10 +329,10 @@ void destroy_msu(msu_t* msu)
  * @param bufsize ???
  * @return 0 on success, -1 on error
  */
-int default_deserialize(msu_t *self, intermsu_msg_t *msg,
+int default_deserialize(local_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
     if (self){
-        msu_queue_item_t *recvd =  malloc(sizeof(*recvd));
+        msu_queue_item *recvd =  malloc(sizeof(*recvd));
         if (!(recvd))
             return -1;
         recvd->buffer_len = bufsize;
@@ -362,7 +362,7 @@ int default_deserialize(msu_t *self, intermsu_msg_t *msg,
  * @param dst MSU destination to receive the message
  * @return -1 on error, >=0 on success
  */
-int default_send_remote(msu_t *src, msu_queue_item_t *data,
+int default_send_remote(local_msu *src, msu_queue_item *data,
                         struct msu_endpoint *dst){
     struct dedos_intermsu_message *msg = malloc(sizeof(*msg));
     if (!msg){
@@ -426,7 +426,7 @@ int default_send_remote(msu_t *src, msu_queue_item_t *data,
  * @param dst MSU receiving the data
  * @return 0 on success, -1 on error
  */
-int default_send_local(msu_t *src, msu_queue_item_t *data,
+int default_send_local(local_msu *src, msu_queue_item *data,
                        struct msu_endpoint *dst){
     log_debug("Enqueuing locally to dst with id%d", dst->id);
     return generic_msu_queue_enqueue(dst->next_msu_input_queue, data);
@@ -437,7 +437,7 @@ int default_send_local(msu_t *src, msu_queue_item_t *data,
  * the round-robin routing method.
  * Will soon be replaced by routing object and hash-based method
  */
-struct round_robin_state_t {
+struct round_robin_state {
     int type_id;    /**< ID of the type stored in this element in the struct */
     struct msu_endpoint *last_endpoint; /**< Last endpoint of that type that was sent to */
     UT_hash_handle hh; /**< Hash-handle */
@@ -453,8 +453,8 @@ struct round_robin_state_t {
  * @param data queue item to be delivered
  * @return msu to which the message is to be enqueued, or NULL if no MSU could be found
  */
-struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
-                                 msu_queue_item_t *data){
+struct msu_endpoint *round_robin(msu_type *type, local_msu *sender,
+                                 msu_queue_item *data){
     struct msu_endpoint *dst_msus =
         get_all_type_msus(sender->rt_table, type->type_id);
 
@@ -464,9 +464,9 @@ struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
         return NULL;
     }
 
-    struct round_robin_state_t *all_states =
-            (struct round_robin_state_t *)sender->routing_state;
-    struct round_robin_state_t *route_state = NULL;
+    struct round_robin_state *all_states =
+            (struct round_robin_state *)sender->routing_state;
+    struct round_robin_state *route_state = NULL;
     HASH_FIND_INT(all_states, &type->type_id, route_state);
 
     // Routing hasn't been initialized yet, so choose a semi-random
@@ -502,8 +502,8 @@ struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
  *       ...
  *       type->route = type_do_routing;
  *       ...
- *       struct msu_endpoint type_do_routing(msu_type_t *type, msu_t *sender,
- *                                           msu_queue_item_t *data){
+ *       struct msu_endpoint type_do_routing(msu_type *type, local_msu *sender,
+ *                                           msu_queue_item *data){
  *           uint32_t ip_address = extract_ip_from_type_data(data);
  *           return round_robin_within_ip(type, sender, ip_address);
  *       }
@@ -515,7 +515,7 @@ struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
  * @param ip_address requested ip of destination MSU
  * @return msu_endpoint with requested IP, or NULL if N/A
  */
-struct msu_endpoint *round_robin_within_ip(msu_type_t *type, msu_t *sender,
+struct msu_endpoint *round_robin_within_ip(msu_type *type, local_msu *sender,
                                            uint32_t ip_address){
     struct msu_endpoint *dst_msus =
         get_all_type_msus(sender->rt_table, type->type_id);
@@ -543,7 +543,7 @@ struct msu_endpoint *round_robin_within_ip(msu_type_t *type, msu_t *sender,
  * @param data Data to be enqueued on or sent to destination
  * @return -1 on error, 0 on success
  */
-int send_to_dst(struct msu_endpoint *dst, msu_t *src, msu_queue_item_t *data){
+int send_to_dst(struct msu_endpoint *dst, local_msu *src, msu_queue_item *data){
     if (dst->locality == MSU_LOC_SAME_RUNTIME){
         if (!(dst->next_msu_input_queue)){
             log_error("Queue pointer not found%s", "");
@@ -574,7 +574,7 @@ int send_to_dst(struct msu_endpoint *dst, msu_t *src, msu_queue_item_t *data){
  * @param data received data
  * @return 0 on success, -1 on error
  */
-int msu_receive(msu_t *self, msu_queue_item_t *data){
+int msu_receive(local_msu *self, msu_queue_item *data){
 
     // Check that all of the relevant structures exist
     if (! (self && self->type->receive) ){
@@ -603,7 +603,7 @@ int msu_receive(msu_t *self, msu_queue_item_t *data){
     log_debug("type ID of next MSU is %d", type_id);
 
     // Get the MSU type to deliver to
-    msu_type_t *type = msu_type_by_id((unsigned int)type_id);
+    msu_type *type = msu_type_by_id((unsigned int)type_id);
     if (type == NULL){
         log_error("Type ID %d not recognized", type_id);
         if (data){

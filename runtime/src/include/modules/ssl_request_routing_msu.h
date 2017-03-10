@@ -14,8 +14,8 @@ struct ssl_routing_queue_item
     void *data;
 };
 
-const msu_type_t SSL_REQUEST_ROUTING_MSU_TYPE;
-msu_t *ssl_request_routing_msu;
+const msu_type SSL_REQUEST_ROUTING_MSU_TYPE;
+local_msu *ssl_request_routing_msu;
 
 
 #endif /* SSL_REQUEST_ROUTING_MSU_H_ */

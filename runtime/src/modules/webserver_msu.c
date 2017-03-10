@@ -136,7 +136,7 @@ void requested_regex_value(char *request, char *val_out){
 
 #define MAX_LINE_LENGTH 128
 
-int webserver_receive(msu_t *self, msu_queue_item_t *input_data) {
+int webserver_receive(local_msu *self, msu_queue_item *input_data) {
     if (self && input_data) {
         // printf("web_server_data_handler :Webserver MSU started processing\n");
         int ret;
@@ -210,7 +210,7 @@ int webserver_receive(msu_t *self, msu_queue_item_t *input_data) {
     return -1;
 }
 
-const msu_type_t WEBSERVER_MSU_TYPE = {
+const msu_type WEBSERVER_MSU_TYPE = {
     .name="WebserverMSU",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_WEBSERVER_MSU_ID,

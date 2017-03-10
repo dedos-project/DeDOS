@@ -91,7 +91,7 @@ static struct pico_socket *find_listen_sock(struct pico_sockport *sp, struct pic
     return found;
 }
 
-int msu_pico_tcp_restore(msu_t *self,
+int msu_pico_tcp_restore(local_msu *self,
         struct dedos_intermsu_message* msg, void *buf, uint16_t bufsize)
 {
 
@@ -229,7 +229,7 @@ int msu_pico_tcp_restore(msu_t *self,
     }
     return 0;
 }
-int msu_pico_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item_t *queue_item){
+int msu_pico_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *queue_item){
     /* function called when an item is dequeued */
     /* queue_item can be parsed into the struct with is expected in the queue */
 #ifdef PICO_SUPPORT_TIMINGS
@@ -260,7 +260,7 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item_t *q
 }
 
 
-int msu_pico_tcp_init(msu_t *self, 
+int msu_pico_tcp_init(local_msu *self, 
         struct create_msu_thread_msg_data *create_action)
 {
     // pico_tcp_msu->restore = msu_pico_tcp_restore; //called when data is received over control socket i.e. TCP state from HS MSU
@@ -283,7 +283,7 @@ int msu_pico_tcp_init(msu_t *self,
     return 0;
 }
 
-msu_type_t PICO_TCP_MSU_TYPE= {
+msu_type PICO_TCP_MSU_TYPE= {
     .name="pico_tcp_msu",
     .layer=DEDOS_LAYER_ALL,
     .type_id=DEDOS_PICO_TCP_STACK_MSU_ID | DEDOS_TCP_DATA_MSU_ID,
