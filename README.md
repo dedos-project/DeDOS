@@ -8,26 +8,26 @@ A summary of code style guidelines follows. For any other questions not
 addressed by the following, refer to Google's C++ style guide:
 [[https://google.github.io/styleguide/cppguide.html]].
 
-### Summary of code style guidelines
+#### Summary of code style guidelines
 
-#### Whitespace
+##### Whitespace
 Four-space indent. Eight-space if continuing a line. No tabs. No trailing spaces.
 The following two lines in a .vimrc file will help:
-```
+```vim
 :highlight ExtraWhitespace ctermbg=darkgreen guibg=darkgreen
 :match ExtraWhitespace /\s\+\%#\@<!$/
 ```
 
-#### Short functions
+##### Short functions
 If a function exceeds ~40 lines, try to break it up into smaller functions,
 if doing so does not harm structure or significantly impact efficiency
 
-#### Maintain scope using headers
+##### Maintain scope using headers
 Where possible, declare in headers only those functions which are meant to be
 "public" (part of the external interface). Helper functions, intended only to 
 be used within that file, need not be declared in the header.
 
-#### Comment style
+##### Comment style
 We will be using
 [https://www.stack.nl/~dimitri/doxygen/manual/docblocks.html doxygen]
 for automatic documentation generation.
@@ -63,9 +63,9 @@ char second_part; /**< It sometimes makes things easier to read */
 int i_am_function(int something, char *output);
 ```
 
-#### Self-contained headers
+##### Self-contained headers
 Headers should `#include` all files that are necessary to compile the header,
 such that they should not be affected by the order in which they are included.
 
-#### 100 character Line length
+##### 100 character Line length
 Try to keep your lines to a maximum of 100 characters. 
