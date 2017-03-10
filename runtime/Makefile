@@ -16,7 +16,7 @@ PATH_OBJ = build/objs/
 PATH_BLD_LEG = build/legacy/
 PATH_RES = build/results/
 
-#LEGACY_LIBS = 
+#LEGACY_LIBS =
 LEGACY_LIBS = picotcp
 
 COMPILE=gcc -c
@@ -56,7 +56,7 @@ OBJECTS += $(patsubst $(PATH_SRC_STK)%.c, $(PATH_OBJ)%.o, $(SRC_STK))
 OBJECTS += $(patsubst $(PATH_SRC_UTL)%.c, $(PATH_OBJ)%.o, $(SRC_UTL))
 APPS = $(patsubst $(PATH_SRC_APP)%.c, %, $(SRC_APP))
 
-all: $(BUILD_PATHS) legacy $(APPS) 
+all: $(BUILD_PATHS) legacy $(APPS)
 
 legacy: $(LEGACY_OBJ)
 
@@ -91,7 +91,7 @@ $(PATH_RES)%.txt: $(PATH_BLD)%.$(TARGET_EXT)
 # creates the test executables by linking the test objects with
 # the build objects, unity, and the test dependencies
 $(PATH_BLD)Test%.$(TARGET_EXT): $(PATH_OBJ)Test%.o $(OBJECTS)
-	$(LINK) -o $@ $^ $(CFLAGS) 
+	$(LINK) -o $@ $^ $(CFLAGS)
 
 
 # Creates object files from the test sources
@@ -102,10 +102,10 @@ $(PATH_OBJ)%.o:: $(PATH_TST)%.c
 $(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c
 	$(COMPILE) $(CFLAGS) $< -o $@
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c 
+$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c
 	$(COMPILE) $(CFLAGS) $< -o $@
 
-$(PATH_DEP)%.d: $(PATH_TST)%.c 
+$(PATH_DEP)%.d: $(PATH_TST)%.c
 	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
 
 $(PATH_DEP)%.d: $(PATH_SRC_STK)%.c $(LEGACY_OBJ)
