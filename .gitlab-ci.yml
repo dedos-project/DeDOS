@@ -1,0 +1,14 @@
+image: alpine
+
+pages:
+    script:
+    - apk update && apk add doxygen
+    - cd runtime && doxygen Doxyfile
+    - cd .. && mkdir public
+    - mv runtime/html public
+    artifacts:
+        paths:
+        - public
+    only:
+    - master
+    - dev
