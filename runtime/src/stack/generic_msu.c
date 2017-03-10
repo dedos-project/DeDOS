@@ -16,14 +16,19 @@
 // TODO: This type-registration should probably be handled elsewhere
 //       probably in msu_tracker?
 
-// When msu types are registered, they are included in this array
+/** Maximum number of MSU types that can be registered */
 #define MAX_MSU_TYPES 64
+/** When msu types are registered, they are included in this array */
 static msu_type_t *msu_types = NULL;
+/** Number of currently-registered msu types */
 static unsigned int n_types = 0;
 
 /**
  * Tracks the amount of memory allocated to an MSU.
  * Private function
+ * @param msu msu in which to track allocation
+ * @param bytes number of bytes to malloc
+ * @returns pointer to the allocated memory
  */
 static void *msu_track_alloc(msu_t *msu, size_t bytes){
     void *ptr = NULL;
@@ -43,8 +48,11 @@ static void *msu_track_alloc(msu_t *msu, size_t bytes){
 /**
  * Tracks the amount of memory allocated to an MSU.
  * Private function
+ * @param ptr memory to free
+ * @param msu msu in which to track allocatioin
+ * @param bytes number of bytes being freed
  */
-static void msu_track_free(void* ptr, struct generic_msu* msu, size_t bytes)
+static void msu_track_free(void* ptr, msu_t* msu, size_t bytes)
 {
     msu->stats.memory_allocated -= bytes;
     log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes",
@@ -57,6 +65,7 @@ static void msu_track_free(void* ptr, struct generic_msu* msu, size_t bytes)
  *
  * Adds the type to the static *msu_types structure.
  * If more than 64 different types of MSUs are registered, this will fail.
+ * @param type MSU type to be registered.
  */
 void register_msu_type(msu_type_t *type){
     // TODO: realloc if n_types+1 == MAX
@@ -68,6 +77,9 @@ void register_msu_type(msu_type_t *type){
 
 /**
  * Gets a registered msu_type structure that matches the provided id.
+ *
+ * @param type_id numerical ID of the MSU type to be retrieved
+ * @return first msu_type_t in which type->type_id matches the provided id or NULL if N/A
  */
 msu_type_t *msu_type_by_id(unsigned int type_id){
     msu_type_t *type = NULL;
@@ -83,14 +95,20 @@ msu_type_t *msu_type_by_id(unsigned int type_id){
 
 /**
  * Called on receipt of a new message from the global controller by an MSU.
- *
+ * Adds new routes and updates the scheduling weight if appropriate.
  * Calls individual MSU type's receive_ctrl() if not NULL
  * Automatically frees the queue_item and queue_item->buffer once processed.
+ *
+ * @param self MSU receiving the control message
+ * @param queue_item control queue message
+ * @return 0 on success, -1 on error
  */
 int msu_receive_ctrl(msu_t *self, msu_queue_item_t *queue_item){
     struct msu_control_update *update_msg = queue_item->buffer;
+    int rtn = 0;
     if (self->id != update_msg->msu_id){
         log_error("ERROR: MSU %d got updated destined for MSU %d", self->id, update_msg->msu_id);
+        rtn = -1;
     } else {
         log_debug("MSU %d got update with type %u", self->id, update_msg->update_type);
         int handled = 0;
@@ -113,15 +131,17 @@ int msu_receive_ctrl(msu_t *self, msu_queue_item_t *queue_item){
             handled = (self->type->receive_ctrl(self, queue_item)) == 0;
         }
 
-        if (!handled)
+        if (!handled){
             log_error("Unknown update msg type %u received by MSU %d",
                     update_msg->update_type, self->id);
+            rtn = -1;
+        }
     }
 
     free_msu_control_update(update_msg);
     free(queue_item);
     log_debug("Freed update_msg and control_q_item %s","");
-    return 0;
+    return rtn;
 }
 
 /**
@@ -137,10 +157,14 @@ typedef struct msu_data_t{
 } msu_data_t;
 
 /** Allocates data in the msu and tracks the amount of allocated data.
- * Returns a pointer to the allocated data. 
+ * Returns a pointer to the allocated data.
  * NOTE: MSU can only have a single allocated data structure at any time
- *       Calling this function again will realloc that data, and 
+ *       Calling this function again will realloc that data, and
  *       may cause unexpected behavior
+ * TODO: Provide ID by which allocated data can be retrieved
+ * @param msu MSU in which to track the allocated data
+ * @param bytes number of bytes to malloc
+ * @return pointer to the allocated data, or NULL if memory could not be allocated
  */
 void *msu_data_alloc(msu_t* msu, size_t bytes)
 {
@@ -160,7 +184,9 @@ void *msu_data_alloc(msu_t* msu, size_t bytes)
     return ptr;
 }
 
-/** Frees data stored within an MSU and tracks that the data has been freed.
+/**
+ * Frees data stored within an MSU and tracks that the data has been freed.
+ * @param msu MSU in which to track the freed data
  */
 void msu_data_free(msu_t *msu)
 {
@@ -170,7 +196,9 @@ void msu_data_free(msu_t *msu)
     free(msu->data_p->data);
 }
 
-/** Returns the data allocated within an MSU
+/**
+ *  Gets the data allocated within an MSU
+ *  @return pointer to the allocated data
  */
 void *msu_data(msu_t *msu)
 {
@@ -219,7 +247,11 @@ void msu_free(msu_t* msu)
 
 /**
  * Malloc's and creates a new MSU of the specified type and id.
- * TODO: What is *create_action??
+ *
+ * @param type_id ID of the MSU type to be created
+ * @param msu_id ID of the instance of the MSU to be created
+ * @param create_action Initial data to be provided to the MSU
+ * @return initialized MSU or NULL if error occurred
  */
 msu_t *init_msu(unsigned int type_id, int msu_id,
                 struct create_msu_thread_msg_data *create_action){
@@ -270,10 +302,11 @@ msu_t *init_msu(unsigned int type_id, int msu_id,
     return msu;
 }
 
-/** Frees the data associated with the MSU.
+/** Frees an instance of an MSU along with associated structures
  * Calls type-specific destructor if applicable.
  * NOTE: Does **NOT** free msu->data -- that must be freed manually
  *       with msu_data_free()
+ * @param msu The MSU to be freed
  */
 void destroy_msu(msu_t* msu)
 {
@@ -282,15 +315,19 @@ void destroy_msu(msu_t* msu)
     msu_free(msu);
 }
 
-/** Deserializes data received from remote MSU and enqueues the 
+/** Deserializes data received from remote MSU and enqueues the
  * message payload onto the msu queue.
  *
  * NOTE: If there are substructures in the buffer to be received,
- *       a type-specific deserialize function will have to be 
+ *       a type-specific deserialize function will have to be
  *       implemented.
  *
  * TODO: I don't think "void *buf" is necessary.
- * @returns 0 on success, -1 on error
+ * @param self MSU to receive data
+ * @param msg remote message to be received, containing msg->payload
+ * @param buf ???
+ * @param bufsize ???
+ * @return 0 on success, -1 on error
  */
 int default_deserialize(msu_t *self, intermsu_msg_t *msg,
                         void *buf, uint16_t bufsize){
@@ -313,12 +350,17 @@ int default_deserialize(msu_t *self, intermsu_msg_t *msg,
 
 /** Serializes the data of an msu_queue_item and sends it
  * to be deserialized by a remote msu.
- * 
- * Copies data->buffer onto msg->payload. If something more 
+ *
+ * Copies data->buffer onto msg->payload. If something more
  * complicated has to be done, use a type-specific implementation
  * of this function
  *
- * @returns -1 on error, >=0 on success
+ * Frees the message after enqueuing
+ *
+ * @param src MSU sending the message
+ * @param data item to be enqueued onto next MSU
+ * @param dst MSU destination to receive the message
+ * @return -1 on error, >=0 on success
  */
 int default_send_remote(msu_t *src, msu_queue_item_t *data,
                         struct msu_endpoint *dst){
@@ -376,8 +418,13 @@ int default_send_remote(msu_t *src, msu_queue_item_t *data,
  * Default function to enqueue data onto a local msu.
  *
  * I see no reason why this function wouldn't suffice for all msus,
- * but more (or more complicated) data structures must be sent, 
+ * but if more (or more complicated) data structures must be sent,
  * provide a custom implementation in the msu_type source.
+ *
+ * @param src MSU sending the data
+ * @param data queue item to be sent
+ * @param dst MSU receiving the data
+ * @return 0 on success, -1 on error
  */
 int default_send_local(msu_t *src, msu_queue_item_t *data,
                        struct msu_endpoint *dst){
@@ -385,34 +432,39 @@ int default_send_local(msu_t *src, msu_queue_item_t *data,
     return generic_msu_queue_enqueue(dst->next_msu_input_queue, data);
 }
 
+/**
+ * Simple structure to store an MSUs routing state when using
+ * the round-robin routing method.
+ * Will soon be replaced by routing object and hash-based method
+ */
 struct round_robin_state_t {
-    int type_id;
-    struct msu_endpoint *last_endpoint;
-    UT_hash_handle hh;
+    int type_id;    /**< ID of the type stored in this element in the struct */
+    struct msu_endpoint *last_endpoint; /**< Last endpoint of that type that was sent to */
+    UT_hash_handle hh; /**< Hash-handle */
 };
 
 
 /** Routing function to deliver traffic to a set of MSUs
- * TODO: This will soon be moved to a "router" object, instead of 
+ * TODO: This will soon be moved to a "router" object, instead of
  * being handled by the destination type.
  *
  * @param type msu_type to be delivered to
  * @param sender msu sending the data
  * @param data queue item to be delivered
- * @return msu to which the message is to be enqueued
+ * @return msu to which the message is to be enqueued, or NULL if no MSU could be found
  */
 struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
                                  msu_queue_item_t *data){
     struct msu_endpoint *dst_msus =
         get_all_type_msus(sender->rt_table, type->type_id);
-    
+
     if (! (dst_msus) ){
         log_error("Source MSU %d did not find target MSU of type %d",
                   sender->id, type->type_id);
         return NULL;
     }
 
-    struct round_robin_state_t *all_states = 
+    struct round_robin_state_t *all_states =
             (struct round_robin_state_t *)sender->routing_state;
     struct round_robin_state_t *route_state = NULL;
     HASH_FIND_INT(all_states, &type->type_id, route_state);
@@ -432,9 +484,12 @@ struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
         route_state->last_endpoint = last_endpoint;
         HASH_ADD_INT(all_states, type_id, route_state);
     }
+
+    // Get the next endpoint of the same type, and replace the current one with it
     route_state->last_endpoint = route_state->last_endpoint->hh.next;
+    // If it's null, just get the first endpoint
     if (! route_state->last_endpoint)
-       route_state->last_endpoint = dst_msus; 
+       route_state->last_endpoint = dst_msus;
     return route_state->last_endpoint;
 }
 
@@ -454,6 +509,11 @@ struct msu_endpoint *round_robin(msu_type_t *type, msu_t *sender,
  *       }
  *
  * TODO: Soon to be handled by router object.
+ *
+ * @param type MSU type to be located
+ * @param sender MSU sending the data
+ * @param ip_address requested ip of destination MSU
+ * @return msu_endpoint with requested IP, or NULL if N/A
  */
 struct msu_endpoint *round_robin_within_ip(msu_type_t *type, msu_t *sender,
                                            uint32_t ip_address){
@@ -478,7 +538,10 @@ struct msu_endpoint *round_robin_within_ip(msu_type_t *type, msu_t *sender,
  * Private function, sends data stored in a queue_item to a destination msu,
  * either local or remote.
  *
- * @returns -1 on error, 0 on success
+ * @param dst Destination MSU
+ * @param src Source MSU
+ * @param data Data to be enqueued on or sent to destination
+ * @return -1 on error, 0 on success
  */
 int send_to_dst(struct msu_endpoint *dst, msu_t *src, msu_queue_item_t *data){
     if (dst->locality == MSU_LOC_SAME_RUNTIME){
@@ -505,9 +568,11 @@ int send_to_dst(struct msu_endpoint *dst, msu_t *src, msu_queue_item_t *data){
 }
 
 /** Receives and handles dequeued data from another MSU.
- * Also handles sending message to the next MSU, if applicable
+ * Also handles sending message to the next MSU, if applicable.
+ * Calls the receieve function of the provided MSU type if available.
  * @param self MSU receiving data
  * @param data received data
+ * @return 0 on success, -1 on error
  */
 int msu_receive(msu_t *self, msu_queue_item_t *data){
 
@@ -525,7 +590,7 @@ int msu_receive(msu_t *self, msu_queue_item_t *data){
     int type_id = self->type->receive(self, data);
     if (type_id <= 0){
         // If type_id <= 0 it can either be an error (< 0) or just
-        // not have a subsequent destination 
+        // not have a subsequent destination
         if (type_id < 0){
             log_warn("MSU %d returned error code %d", self->id, type_id);
         }
@@ -536,7 +601,7 @@ int msu_receive(msu_t *self, msu_queue_item_t *data){
         return type_id;
     }
     log_debug("type ID of next MSU is %d", type_id);
-    
+
     // Get the MSU type to deliver to
     msu_type_t *type = msu_type_by_id((unsigned int)type_id);
     if (type == NULL){
@@ -547,11 +612,12 @@ int msu_receive(msu_t *self, msu_queue_item_t *data){
         }
         return -1;
     }
-    
+
     // Get the specific MSU to deliver to
     struct msu_endpoint *dst = type->route(type, self, data);
     if (dst == NULL){
-        log_error("No destination endpoint of type %s (%d) for msu %d", type->name, type_id, self->id);
+        log_error("No destination endpoint of type %s (%d) for msu %d",
+                  type->name, type_id, self->id);
         if (data){
             free(data->buffer);
             free(data);
@@ -559,7 +625,7 @@ int msu_receive(msu_t *self, msu_queue_item_t *data){
         return -1;
     }
     log_debug("Next msu id is %d", dst->id);
-    
+
     // Send to the specific destination
     int rtn = send_to_dst(dst, self, data);
     if (rtn < 0){
