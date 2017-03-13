@@ -20,6 +20,7 @@ PATH_RES = build/results/
 LEGACY_LIBS = picotcp
 
 COMPILE=gcc -c
+COMPILE_PP=g++ -c
 FINAL=gcc -lstdc++
 LINK=ld -r
 DEPEND=gcc -MM -MF
@@ -120,8 +121,8 @@ $(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c
 
 $(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc
 	@if [ "$(COMPILE_$(notdir $(@:.o=)))" = "" ]; then \
-		echo $(COMPILE) $(CFLAGS) $< -o $@; \
-		$(COMPILE) $(CFLAGS) $< -o $@; \
+		echo $(COMPILE_PP) $(CFLAGS) $< -o $@; \
+		$(COMPILE_PP) $(CFLAGS) $< -o $@; \
 	else \
 		echo $(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
 		$(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
