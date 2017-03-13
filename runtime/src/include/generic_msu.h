@@ -61,13 +61,13 @@ struct msu_type{
     int (*init)(local_msu *self, struct create_msu_thread_msg_data  *initial_state);
 
     /**
-     * Type-specific destructor that frees any internal data or state
-     * Can be NULL if no additional freeing must occur/
+     * Type-specific destructor that frees any internal data or state.
+     * Can be NULL if no additional freeing must occur
      * @param self MSU to be destroyed
      */
     void (*destroy)(local_msu *self);
 
-    /** Dequeues data from input queue.
+    /** Dequeues data from input queue, received from other MSUs.
      * NOTE: **never** handled by generic_msu, **must** be set in msu_type
      * @param self MSU receieving data
      * @param input_data data to receive from previous MSU
@@ -75,7 +75,7 @@ struct msu_type{
      */
     int (*receive)(local_msu *self, msu_queue_item *input_data);
 
-    /** Recv function for control updates
+    /** Receive function for control updates specifically from the Global Controller.
      * Generic receipt of control messages (adding/removing routes) handled
      * by generic_msu. Can be NULL if no other messages need be handled.
      * @param self MSU receieving data
@@ -114,7 +114,7 @@ struct msu_type{
     int (*send_local)(local_msu *self, msu_queue_item *queue_item,
                       struct msu_endpoint *dst);
 
-    /** Enqueues data to a remote MSU (handles data serialization)
+    /** Enqueues data to a remote MSU (handles data serialization).
      * Set to default_send_remote for default behavior.
      * @param self MSU sending data
      * @param queue_item data to send
