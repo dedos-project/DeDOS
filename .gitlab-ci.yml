@@ -5,7 +5,7 @@ pages:
     - apk update && apk add doxygen
     - cd runtime && doxygen Doxyfile
     - cd .. && mkdir public
-    - mv runtime/html public
+    - mv runtime/html public/runtime
     artifacts:
         paths:
         - public
