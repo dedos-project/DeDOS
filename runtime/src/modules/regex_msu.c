@@ -100,7 +100,9 @@ int regex_receive(local_msu *self, msu_queue_item *input_data) {
     return -1;
 }
 
-/** Definition of type information for a Regex MSU */
+/**
+ * All regex MSUs contain a reference to this type
+ */
 const msu_type REGEX_MSU_TYPE = {
     .name="regex_msu",
     .layer=DEDOS_LAYER_APPLICATION,

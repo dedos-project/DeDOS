@@ -62,7 +62,7 @@ int query_db(char *ip, int port, const char *query, int param)
 
     // send request
     int req_buf_len= 15;
-    char *req_buf = (char *) malloc(req_buf_len); 
+    char *req_buf = (char *) malloc(req_buf_len);
     sprintf(req_buf, "%s %d\0", query, param);
     if (send(sockfd, req_buf, strlen(req_buf), 0) == -1) {
         log_error("%s", "send failed");
@@ -116,6 +116,9 @@ int query_db(char *ip, int port, const char *query, int param)
 /**
  * Finds the first occurance of "regex=" in the string referenced by *request,
  * and stores the value in the string *val_out
+ *
+ * @param request URL that is being parsed
+ * @param val_out Output variable, filled with the value of "regex" from the URL
  */
 void requested_regex_value(char *request, char *val_out){
     const int keylen = strlen(REGEX_KEY);
@@ -136,6 +139,12 @@ void requested_regex_value(char *request, char *val_out){
 
 #define MAX_LINE_LENGTH 128
 
+/**
+ * Called when the webserver MSU receives data from another MSU
+ * @param self the Webserver MSU itself
+ * @param input_data Data received by the MSU
+ * @return type ID of next MSU to receive data on success, -1 on error
+ */
 int webserver_receive(local_msu *self, msu_queue_item *input_data) {
     if (self && input_data) {
         // printf("web_server_data_handler :Webserver MSU started processing\n");
@@ -152,7 +161,7 @@ int webserver_receive(local_msu *self, msu_queue_item *input_data) {
             GetLine(Request, 0, '\n', FirstLine);
             GetLine(FirstLine, 0, ' ', RequestType);
             GetLine(FirstLine, strlen(RequestType) + 1, ' ', RequestPage);
-        
+
             log_debug("First line of request: %s", FirstLine);
 
             if (strcmp(RequestType, "GET") == 0) {
@@ -193,7 +202,7 @@ int webserver_receive(local_msu *self, msu_queue_item *input_data) {
                     recv_data->type = WRITE;
 
                     free(finalSend);
-                    
+
                     log_debug("Retuning rcv_data->msg=%s", recv_data->msg);
 
                     return DEDOS_SSL_WRITE_MSU_ID;
@@ -210,6 +219,9 @@ int webserver_receive(local_msu *self, msu_queue_item *input_data) {
     return -1;
 }
 
+/**
+ * All instances of Webserver MSUs share this type information
+ */
 const msu_type WEBSERVER_MSU_TYPE = {
     .name="WebserverMSU",
     .layer=DEDOS_LAYER_APPLICATION,
