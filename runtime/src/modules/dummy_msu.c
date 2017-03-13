@@ -1,6 +1,11 @@
 /**
  * Example usage of MSU. Do not use.
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "dedos_msu_list.h"
 #include "runtime.h"
 #include "modules/dummy_msu.h"
@@ -10,6 +15,10 @@
 #include "dedos_thread_queue.h" //for enqueuing outgoing control messages
 #include "control_protocol.h"
 #include "logging.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 /**
  * Recieves data for the dummy msu
@@ -32,9 +41,9 @@ msu_type DUMMY_MSU_TYPE = {
     .receive=dummy_msu_receive,
     .receive_ctrl=NULL,
     .route=round_robin,
-    .deserialize=default_deserialize,
     .send_local=default_send_local,
-    .send_remote=default_send_remote
+    .send_remote=default_send_remote,
+    .deserialize=default_deserialize
 };
 
 

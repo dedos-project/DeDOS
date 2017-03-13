@@ -29,7 +29,7 @@ void freeSSLRelatedStuff(void) {
 
 #ifdef USE_OPENSSL
 #include <openssl/crypto.h>
-static void lock_callback(int mode, int type, char *file, int line) {
+static void lock_callback(int mode, int type, const char *file, int line) {
   (void) file;
   (void) line;
   if (mode & CRYPTO_LOCK) {
@@ -57,7 +57,7 @@ static void init_locks(void) {
   }
 
   CRYPTO_set_id_callback((unsigned long (*)())thread_id);
-  CRYPTO_set_locking_callback((void (*)())lock_callback);
+  CRYPTO_set_locking_callback(lock_callback);
 }
 
 static void kill_locks(void) {
@@ -85,13 +85,13 @@ int main(int argc, char **argv){
     // Declared in communication.h, used in ssl_read_msu
     runtime_listener_port = atoi(argv[3]);
     int control_listen_port = runtime_listener_port;
-    
+
     int same_physical_machine = atoi(argv[4]);
     int webserver_port = atoi(argv[5]);
 
     if (argc == 9) {
        // Declared in communication.h, used in webserver_msu
-       db_ip = malloc(16);
+       db_ip = (char*)malloc(16);
        strncpy(db_ip, argv[6], strlen(argv[6]));
        db_port = atoi(argv[7]);
        db_max_load = atoi(argv[8]);
@@ -114,17 +114,17 @@ int main(int argc, char **argv){
     LoadCertificates(ssl_ctx_global, "mycert.pem", "mycert.pem");
 #endif
     init_peer_socks();
-    
+
     dedos_control_socket_init(control_listen_port);
-    
+
     dedos_webserver_socket_init(webserver_port);
-    
+
     int ret = 0;
     do {
         ret = connect_to_master(master_ip, master_port);
         sleep(2);
     } while (ret);
-    
+
     log_info("Connected to global master");
 
     dedos_main_thread_loop();

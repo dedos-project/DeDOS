@@ -20,7 +20,7 @@ struct dedos_thread_queue {
     uint32_t max_size;
     struct dedos_thread_msg *head;
     struct dedos_thread_msg *tail;
-    void *mutex;
+    pthread_mutex_t *mutex;
     uint8_t shared;
     uint16_t overhead;
 };
