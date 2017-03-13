@@ -16,7 +16,7 @@ pages_dev:
     script:
     - apk update && apk add doxygen
     - cd runtime && doxygen Doxyfile
-    - cd .. && mkdir -P public
+    - cd .. && mkdir -p public
     - mv runtime/html public/runtime_dev
     artifacts:
         paths:
