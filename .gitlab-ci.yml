@@ -11,3 +11,15 @@ pages:
         - public
     only:
     - master
+
+pages_dev:
+    script:
+    - apk update && apk add doxygen
+    - cd runtime && doxygen Doxyfile
+    - cd .. && mkdir -P public
+    - mv runtime/html public/runtime_dev
+    artifacts:
+        paths:
+        - public
+    only:
+    - dev
