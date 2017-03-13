@@ -8,5 +8,5 @@
 #include "generic_msu_queue_item.h"
 
 /** Information generalizable to all dummy MSUs */
-msu_type DUMMY_MSU_TYPE;
+extern msu_type DUMMY_MSU_TYPE;
 #endif /* DUMMY_MSU_H_ */

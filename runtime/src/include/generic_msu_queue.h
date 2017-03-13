@@ -22,7 +22,7 @@ typedef struct generic_msu_queue {
     uint32_t max_size;
     struct generic_msu_queue_item *head;
     struct generic_msu_queue_item *tail;
-    void *mutex;
+    pthread_mutex_t *mutex;
     uint8_t shared;
     uint16_t overhead;
 } msu_queue;

@@ -20,9 +20,14 @@ PATH_RES = build/results/
 LEGACY_LIBS = picotcp
 
 COMPILE=gcc -c
-FINAL=gcc
+COMPILE_PP=g++ -c
+FINAL=gcc -lstdc++
 LINK=ld -r
 DEPEND=gcc -MM -MF
+
+# If specific MSUs need special compilation instructions,
+# they can be specified here, as such:
+# COMPILE_dummy_msu=g++ -c
 
 CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g
 
@@ -40,8 +45,9 @@ BUILD_PATHS = $(PATH_BLD) $(PATH_OBJ) $(PATH_RES) $(PATH_DEP) $(PATH_BLD_LEG)
 SRC_TST = $(wildcard $(PATH_TST)*.c)
 
 SRC_MOD = $(wildcard $(PATH_SRC_MOD)*.c)
+SRC_MOD_PP = $(wildcard $(PATH_SRC_MOD)*.cc)
 SRC_STK = $(wildcard $(PATH_SRC_STK)*.c)
-SRC_ALL = $(SRC_MOD) $(SRC_STK)
+SRC_ALL = $(SRC_MOD) $(SRC_MOD_PP) $(SRC_STK)
 
 SRC_APP = $(wildcard $(PATH_SRC_APP)*.c)
 
@@ -49,9 +55,11 @@ RESULTS = $(patsubst $(PATH_TST)Test%.c, $(PATH_RES)Test%.txt, $(SRC_TST))
 
 DEP_TST = $(patsubst $(PATH_TST)Test%.c, $(PATH_DEP)Test%.d, $(SRC_TST))
 DEP_SRC = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_DEP)%.d, $(SRC_MOD)) \
+		  $(patsubst $(PATH_SRC_MOD)%.cc, $(PATH_DEP)%.d, $(SRC_MOD_PP)) \
 		  $(patsubst $(PATH_SRC_STK)%.c, $(PATH_DEP)%.d, $(SRC_STK))
 
 OBJECTS = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_OBJ)%.o, $(SRC_MOD))
+OBJECTS += $(patsubst $(PATH_SRC_MOD)%.cc, $(PATH_OBJ)%.o, $(SRC_MOD_PP))
 OBJECTS += $(patsubst $(PATH_SRC_STK)%.c, $(PATH_OBJ)%.o, $(SRC_STK))
 OBJECTS += $(patsubst $(PATH_SRC_UTL)%.c, $(PATH_OBJ)%.o, $(SRC_UTL))
 APPS = $(patsubst $(PATH_SRC_APP)%.c, %, $(SRC_APP))
@@ -103,7 +111,22 @@ $(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c
 	$(COMPILE) $(CFLAGS) $< -o $@
 
 $(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c
-	$(COMPILE) $(CFLAGS) $< -o $@
+	@if [ "$(COMPILE_$(notdir $(@:.o=)))" = "" ]; then \
+		echo $(COMPILE) $(CFLAGS) $< -o $@; \
+		$(COMPILE) $(CFLAGS) $< -o $@; \
+	else \
+		echo $(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
+		$(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
+	fi
+
+$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc
+	@if [ "$(COMPILE_$(notdir $(@:.o=)))" = "" ]; then \
+		echo $(COMPILE_PP) $(CFLAGS) $< -o $@; \
+		$(COMPILE_PP) $(CFLAGS) $< -o $@; \
+	else \
+		echo $(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
+		$(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
+	fi
 
 $(PATH_DEP)%.d: $(PATH_TST)%.c
 	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<

@@ -1,5 +1,6 @@
 #ifndef RUNTIME_H_
 #define RUNTIME_H_
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/conf.h>
@@ -49,5 +50,6 @@ int on_demand_create_worker_thread(int is_blocking);
 int destroy_worker_thread(struct dedos_thread *dedos_thread);
 int dedos_runtime_destroy(void);
 void freeSSLRelatedStuff(void);
+
 
 #endif /* RUNTIME_H_ */

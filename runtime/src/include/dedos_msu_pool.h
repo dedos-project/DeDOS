@@ -14,7 +14,7 @@ struct msu_pool {
     int num_msus;
     struct generic_msu *head;
     struct generic_msu *tail;
-    void *mutex;
+    pthread_mutex_t *mutex;
 };
 
 #define MUTEX_LOCK(x) { \

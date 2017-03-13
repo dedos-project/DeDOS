@@ -1,5 +1,5 @@
 /**
- * generic_msu.c
+ * @file generic_msu.c
  *
  *
  * Contains function for the creation of MSUs, as well as the
@@ -145,7 +145,7 @@ int msu_receive_ctrl(local_msu *self, msu_queue_item *queue_item){
 }
 
 /**
- *  Hidden data structure so we can protect access to MSU specific data
+ *  Hidden data structure to protect access to MSU specific data.
  *  Data should only ever be allocated to this structure via:
  *      msu_data_alloc()
  *  and only freed via
@@ -197,7 +197,7 @@ void msu_data_free(local_msu *msu)
 }
 
 /**
- *  Gets the data allocated within an MSU
+ *  Gets the data allocated within an MSU.
  *  @return pointer to the allocated data
  */
 void *msu_data(local_msu *msu)
@@ -302,7 +302,7 @@ local_msu *init_msu(unsigned int type_id, int msu_id,
     return msu;
 }
 
-/** Frees an instance of an MSU along with associated structures
+/** Frees an instance of an MSU along with associated structures.
  * Calls type-specific destructor if applicable.
  * NOTE: Does **NOT** free msu->data -- that must be freed manually
  *       with msu_data_free()
@@ -444,7 +444,7 @@ struct round_robin_state {
 };
 
 
-/** Routing function to deliver traffic to a set of MSUs
+/** Routing function to deliver traffic to a set of MSUs.
  * TODO: This will soon be moved to a "router" object, instead of
  * being handled by the destination type.
  *
