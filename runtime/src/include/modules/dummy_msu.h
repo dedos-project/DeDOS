@@ -1,12 +1,12 @@
 /**
- * Example usage of MSU. Do not use.
+ * @file dummy_msu.h
+ * Example usage of MSU. Do not instantiate.
  */
 #ifndef DUMMY_MSU_H_
 #define DUMMY_MSU_H_
 
 #include "generic_msu.h"
-#include "generic_msu_queue_item.h"
 
-/** Information generalizable to all dummy MSUs */
+/** All Dummy MSUs contain a reference to this type */
 extern msu_type DUMMY_MSU_TYPE;
 #endif /* DUMMY_MSU_H_ */
