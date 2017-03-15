@@ -5,7 +5,7 @@
 #include "logging.h"
 #include "communication.h"
 #include "cli_interface.h"
-
+#include "scheduling.h"
 #include "dfg.h"
 
 #define FILENAME_LEN 32

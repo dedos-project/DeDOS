@@ -2,7 +2,6 @@
 #define CLI_INTERFACE_H_
 
 #define MAX_CMD_LEN 512
-#define NO_DFG 1
 
 int start_cli_thread(pthread_t *cli_thread);
 

@@ -18,6 +18,7 @@ endif
 
 CORE_OBJ= src/main.o \
 		  src/dfg.o \
+		  src/dfg_json.o \
 		  src/api.o \
 		  src/jsmn.o \
 		  src/scheduling.o \

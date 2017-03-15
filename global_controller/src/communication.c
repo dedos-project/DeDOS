@@ -29,7 +29,7 @@ int max_fd;
 int stat_listen_sock;
 
 static void cleanup_peer_socket(struct runtime_endpoint *runtime_peer){
-    int i, tmp;
+    int tmp;
     tmp = runtime_peer->sock;
     close(runtime_peer->sock);
     runtime_peer->sock = 0;

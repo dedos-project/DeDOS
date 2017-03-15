@@ -33,7 +33,7 @@ static int start_listener_socket(int tcp_port, int sock) {
 
     memset((char *) &tcp_addr, 0, slen);
     tcp_addr.sin_family = AF_INET;
-    tcp_addr.sin_port = htons(tcp_port);
+    tcp_addr.sin_port = (unsigned short) htons(tcp_port);
     tcp_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(sock, (struct sockaddr *) &tcp_addr, slen) == -1) {
@@ -52,7 +52,7 @@ static int start_listener_socket(int tcp_port, int sock) {
 }
 
 static int how_many_digits(int num) {
-    if (num) {
+    if (num >= 0) {
         return (int) floor(log10(abs((double) num)) + 1);
     } else {
         return -1;
