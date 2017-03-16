@@ -15,6 +15,7 @@
 #define GET_INIT_CONFIG 10
 #define SET_INIT_CONFIG 11
 #define GET_MSU_LIST 12
+#define RUNTIME_ENDPOINT_ADD 13
 #define SET_DEDOS_RUNTIMES_LIST 20 /* msg from master to runtime for connecting to other runtimes */
 #define CREATE_PINNED_THREAD 21
 #define DELETE_PINNED_THREAD 22

@@ -1,3 +1,7 @@
+/**
+ * @file rt.c
+ * The main executable file to start the runtime.
+ */
 #include <stdlib.h>
 #include <stdio.h>
 
