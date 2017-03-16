@@ -810,7 +810,7 @@ int do_dfg_config(const char * init_cfg_filename) {
     ts->num_msu = num_to_alloc;
 
     print_dfg();
-    dump_json();
+    //dump_json();
 
     if (strcmp(load_mode, "toload") == 0) {
         //allocate(ts);
@@ -869,10 +869,8 @@ void dump_json(void) {
     /**
      *  RUNTIMES
      */
-
     if (dfg.runtimes_cnt > 0) {
         json_len += snprintf(json_string + json_len, 3, ", ");
-
         field_len = 12 + 1;
         json_len += snprintf(json_string + json_len,
                              field_len,

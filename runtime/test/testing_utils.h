@@ -25,11 +25,13 @@
 #define log_test_error(test_name, fmt, ...)\
     _log_test(test_name, ANSI_COLOR_RED, "ERROR", fmt, ##__VA_ARGS__)
 
+#define log_test_debug(test_name, fmt, ...)\
+    _log_test(test_name, ANSI_COLOR_RESET, "DEBUG", fmt, ##__VA_ARGS__)
+
 char RES_PATH[256];
 char RES_ROOT[256];
 
 char* _get_resource_path(const char* test_name, char *resource){
-    mark_point();
     if (RES_ROOT == NULL){
         log_test_error(test_name, "Testing resources not initialized");
         return NULL;

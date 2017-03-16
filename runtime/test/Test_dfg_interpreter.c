@@ -2,7 +2,7 @@
 #include "global_controller/dfg.h"
 #include "dfg_interpreter.h"
 #include "testing_utils.h"
-#include "routing.h"
+#include "runtime.h"
 #include <stdio.h>
 #include <check.h>
 
@@ -29,7 +29,9 @@ struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex);
 struct dfg_config *load_dfg(char *dfg_path){
     if (dfg_path == NULL)
         ck_abort_msg("No DFG file to load");
+    mark_point();
     int rtn = do_dfg_config(dfg_path);
+    mark_point();
     if (rtn < 0){
         ck_abort_msg("Could not load dfg");
     }
@@ -47,32 +49,94 @@ START_TEST(test_get_local_runtime){
 } END_TEST
 
 START_TEST(test_msu_msg_from_vertex){
+    mark_point();
     load_dfg( get_resource_path(DFG_CONFIG_FILE) );
+    mark_point();
+
     int msu_id = 1;
+    int msu_type = 502;
+
     struct dfg_vertex *vertex = dfg_msu_from_id(msu_id);
     struct dedos_thread_msg *msg = msu_msg_from_vertex(vertex);
+    struct create_msu_thread_msg_data *data = (struct create_msu_thread_msg_data*)msg->data;
 
+    mark_point();
     ck_assert_msg(msg->action == CREATE_MSU, "Improper action type");
     ck_assert_msg(msg->action_data == msu_id, "Improper MSU ID assigned");
-    ck_assert_msg(msg->buffer_len == sizeof(*(msg->data)), "Improper buffer size");
+    ck_assert_msg(msg->buffer_len == sizeof(*data),
+            "Improper buffer length %d (should be %d)",
+            msg->buffer_len, sizeof(*data));
 
-    struct create_msu_thread_msg_data *data = (struct create_msu_thread_msg_data*)msg->data;
-    ck_assert_msg(data->msu_type == 502, "Wrong MSU ID assigned");
+    mark_point();
+    ck_assert_msg(data->msu_type == msu_type, "Wrong MSU type assigned");
 } END_TEST
 
+struct msu_control_add_route * assert_proper_route_message(
+        int from_id, int to_id, int to_type, struct dedos_thread_msg *msg){
+
+    mark_point();
+    struct msu_control_add_route *data = (struct msu_control_add_route*)msg->data;
+
+    ck_assert_msg(msg->action == MSU_ROUTE_ADD, "Message action not MSU_ROUTE_ADD");
+    ck_assert_msg(msg->action_data == from_id, "Improper MSU ID in route add");
+    ck_assert_msg(msg->buffer_len == sizeof(*data), "Improper buffer length");
+    ck_assert_msg(data->peer_msu_id == to_id, "Wrong destination MSU ID");
+    ck_assert_msg(data->peer_msu_type == to_type, "Wrong destination type "
+            "(expected %d was %d)", to_type, data->peer_msu_type);
+    return data;
+}
+
+START_TEST(test_route_msg_from_vertex_local){
+    load_dfg( get_resource_path(DFG_CONFIG_FILE) );
+    mark_point();
+
+    int from_id = 1;
+    int to_id = 2;
+    int to_type = 501;
+
+    struct dfg_vertex *from_vertex = dfg_msu_from_id(from_id);
+    struct dfg_vertex *to_vertex = dfg_msu_from_id(to_id);
+    struct dedos_thread_msg *msg = route_msg_from_vertices(from_vertex, to_vertex);
+
+    struct msu_control_add_route *data = assert_proper_route_message(from_id, to_id, to_type, msg);
+    ck_assert_msg(data->peer_locality == 0, "Wrong peer locality for local route "
+            "(expected %d, was %d)", 0, data->peer_locality);
+    ck_assert_msg(data->peer_ipv4 == 0, "IP address present for local route");
+} END_TEST
+
+START_TEST(test_create_runtime_threads){
+    struct dfg_config *dfg = load_dfg( get_resource_path(DFG_CONFIG_FILE) );
+    mark_point();
+
+    uint32_t ip;
+    string_to_ipv4(LOCAL_IP_STR, &ip);
+    int n_threads = 4;
+
+    struct runtime_endpoint *rt = get_local_runtime(dfg, ip);
+
+    create_runtime_threads(rt);
+
+    ck_assert_msg(total_threads == n_threads, "Wrong number of threads created ",
+            "(expected %d, was %d)", n_threads, total_threads);
+}END_TEST
 
 Suite *implement_dfg_suite(void)
 {
-    Suite *s;
-    TCase *tc_core;
+    Suite *s = suite_create("DFG_loading");
 
-    s = suite_create("DFG_loading");
 
-    tc_core = tcase_create("runtime_setup");
+    TCase *tc_setup = tcase_create("runtime_setup");
+    tcase_add_test(tc_setup, test_get_local_runtime);
+    suite_add_tcase(s, tc_setup);
 
-    tcase_add_test(tc_core, test_get_local_runtime);
-    tcase_add_test(tc_core, test_msu_msg_from_vertex);
-    suite_add_tcase(s, tc_core);
+    TCase *tc_messages = tcase_create("message_creation");
+    tcase_add_test(tc_messages, test_msu_msg_from_vertex);
+    tcase_add_test(tc_messages, test_route_msg_from_vertex_local);
+    suite_add_tcase(s, tc_messages);
+
+    TCase *tc_resources = tcase_create("resource_creation");
+    tcase_add_test(tc_resources, test_create_runtime_threads);
+    suite_add_tcase(s, tc_resources);
 
     return s;
 }
