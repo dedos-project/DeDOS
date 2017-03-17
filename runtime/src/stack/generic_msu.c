@@ -35,12 +35,11 @@ static void *msu_track_alloc(local_msu *msu, size_t bytes){
     ptr = malloc(bytes);
     if (!ptr) {
         log_error("Failed to allocate %d bytes for MSU id %d, %s",
-            bytes, msu->id, msu->type->name);
+            (int)bytes, msu->id, msu->type->name);
     } else {
         msu->stats.memory_allocated += bytes;
-        log_debug(
-        "Successfully allocated %d bytes for MSU id %d, %s memory footprint: %u bytes",
-        bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
+        log_debug("Successfully allocated %d bytes for MSU id %d, %s memory footprint: %u bytes",
+                  (int)bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
     }
     return ptr;
 }
@@ -56,7 +55,7 @@ static void msu_track_free(void* ptr, local_msu* msu, size_t bytes)
 {
     msu->stats.memory_allocated -= bytes;
     log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes",
-        bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
+              (int)bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
     free(ptr);
 }
 
@@ -128,7 +127,7 @@ int msu_receive_ctrl(local_msu *self, msu_queue_item *queue_item){
             }
         }
         if (self->type->receive_ctrl){
-            handled = (self->type->receive_ctrl(self, queue_item)) == 0;
+            handled = (self->type->receive_ctrl(self, update_msg)) == 0;
         }
 
         if (!handled){
@@ -171,13 +170,12 @@ void *msu_data_alloc(local_msu* msu, size_t bytes)
     void *ptr = realloc(msu->data_p->data, bytes);
     if (ptr == NULL){
         log_error("Failed to allocate %d bytes for MSU id %d, %s",
-            bytes, msu->id, msu->type->name);
+                  (int)bytes, msu->id, msu->type->name);
     } else {
         msu->stats.memory_allocated += (bytes - msu->data_p->n_bytes);
-        log_debug(
-        "Successfully allocated %d bytes for MSU id %d, "
-        "%s memory footprint: %u bytes",
-        bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
+        log_debug("Successfully allocated %d bytes for MSU id %d, "
+                  "%s memory footprint: %u bytes",
+                  (int)bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
         msu->data_p->n_bytes = bytes;
         msu->data_p->data = ptr;
     }
@@ -192,7 +190,7 @@ void msu_data_free(local_msu *msu)
 {
     msu->stats.memory_allocated -= msu->data_p->n_bytes;
     log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes",
-        msu->data_p->n_bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
+              (int)msu->data_p->n_bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
     free(msu->data_p->data);
 }
 
@@ -244,6 +242,24 @@ void msu_free(local_msu* msu)
     free(msu);
 }
 
+/**
+ * Sends a message to the main thread queue indicating that
+ * the requested MSU has failed to be created.
+ */
+int msu_failure(int msu_id){
+    struct dedos_thread_msg *thread_msg = dedos_thread_msg_alloc();
+    if (thread_msg){
+        thread_msg->action = FAIL_CREATE_MSU;
+        thread_msg->action_data = msu_id;
+        thread_msg->buffer_len = 0;
+        thread_msg->data = NULL;
+        dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+        return 0;
+    }
+    log_error("Failed to enqueue FAIL_CREATE_MSU message on main thread");
+    return -1;
+}
+
 
 /**
  * Malloc's and creates a new MSU of the specified type and id.
@@ -271,15 +287,7 @@ local_msu *init_msu(unsigned int type_id, int msu_id,
     if (msu->type == NULL){
         /* for enqueing failure messages*/
         log_error("Unknown MSU type %d", type_id);
-        struct dedos_thread_msg *thread_msg = dedos_thread_msg_alloc();
-        if (thread_msg){
-            thread_msg->action = FAIL_CREATE_MSU;
-            thread_msg->action_data = msu_id;
-            thread_msg->buffer_len = 0;
-            thread_msg->data = NULL;
-
-            dedos_thread_enqueue(main_thread->thread_q, thread_msg);
-        }
+        msu_failure(msu_id);
         msu_free(msu);
         return NULL;
     }
@@ -291,6 +299,7 @@ local_msu *init_msu(unsigned int type_id, int msu_id,
         if (rtn){
             log_error("MSU creation failed for %s MSU: id %d",
                       msu->type->name, msu_id);
+            msu_failure(msu_id);
             msu_free(msu);
             return NULL;
         }

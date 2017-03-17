@@ -407,7 +407,7 @@ int destroy_worker_thread(struct dedos_thread *dedos_thread){
     return 0;
 }
 
-static int init_main_thread(void) {
+int init_main_thread(void) {
     /* create threads = number of cores and associate a queue with each thread */
     int ret;
     //Get number number of cores
@@ -681,14 +681,12 @@ void dedos_main_thread_loop(void) {
     // Add all of the known MSU types
     register_known_msu_types();
 
-    //allocate global msu_tracker wrapper struct
-    msu_tracker = (struct msu_tracker *)malloc(sizeof(struct msu_tracker));
-    if (!msu_tracker) {
-        log_error("malloc msu_tracker failed %s","");
+    // Start the MSU tracker
+    if ( init_msu_tracker() < 0 ){
+        log_critical("Could not initialize MSU tracker... Exiting.");
         exit(1);
     }
-    msu_tracker->msu_placements = NULL;
-    msu_tracker->mutex = mutex_init();
+
 
     request_init_config();
     log_info("%s", "Requested init config...");

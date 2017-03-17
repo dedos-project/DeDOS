@@ -34,6 +34,15 @@ void register_known_msu_types(){
     }
 }
 
+int init_msu_tracker(void){
+    msu_tracker = malloc(sizeof(*msu_tracker));
+    if (msu_tracker == NULL){
+        log_error("malloc msu_tracker failed");
+        return -1;
+    }
+    msu_tracker->msu_placements = NULL;
+    msu_tracker->mutex = mutex_init();
+}
 
 void msu_tracker_add(int msu_id, struct dedos_thread *dedos_thread) {
     struct msu_placement_tracker *s;

@@ -28,6 +28,7 @@ struct msu_thread_info {
 
 struct msu_tracker *msu_tracker;
 
+int init_msu_tracker(void);
 void msu_tracker_add(int msu_id, struct dedos_thread *dedos_thread);
 struct msu_placement_tracker *msu_tracker_find(int msu_id);
 void msu_tracker_delete(struct msu_placement_tracker *item);

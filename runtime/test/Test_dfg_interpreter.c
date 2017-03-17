@@ -3,6 +3,7 @@
 #include "dfg_interpreter.h"
 #include "testing_utils.h"
 #include "runtime.h"
+#include "msu_tracker.h"
 #include <stdio.h>
 #include <check.h>
 
@@ -12,9 +13,8 @@ int create_vertex_routes(struct dfg_vertex *vertex);
 int create_route_from_vertices(struct dfg_vertex *from, struct dfg_vertex *to);
 struct dedos_thread_msg *route_msg_from_vertices(struct dfg_vertex *from,
                                                  struct dfg_vertex *to);
-int create_runtime_threads(struct runtime_endpoint *rt);
 struct runtime_endpoint *get_local_runtime(struct dfg_config *dfg, uint32_t local_ip);
-int create_msu_from_vertex(struct dfg_vertex *vertex, int max_threads);
+int create_msu_from_vertex(struct dfg_vertex *vertex);
 struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex);
 
 
@@ -104,20 +104,27 @@ START_TEST(test_route_msg_from_vertex_local){
     ck_assert_msg(data->peer_ipv4 == 0, "IP address present for local route");
 } END_TEST
 
-START_TEST(test_create_runtime_threads){
+START_TEST(test_create_msu_from_vertex){
     struct dfg_config *dfg = load_dfg( get_resource_path(DFG_CONFIG_FILE) );
     mark_point();
+    int msu_id = 3;
 
-    uint32_t ip;
-    string_to_ipv4(LOCAL_IP_STR, &ip);
-    int n_threads = 4;
+    struct dfg_vertex *vertex = dfg_msu_from_id(msu_id);
 
-    struct runtime_endpoint *rt = get_local_runtime(dfg, ip);
+    mark_point();
+    init_main_thread();
+    init_msu_tracker();
 
-    create_runtime_threads(rt);
+    mark_point();
+    int rtn = create_msu_from_vertex(vertex);
+    ck_assert_msg(rtn == 0, "<0 return for proper msu creation");
+    ck_assert_msg(msu_tracker_count() == 1, "MSU tracker did not receive MSU creation");
 
-    ck_assert_msg(total_threads == n_threads, "Wrong number of threads created ",
-            "(expected %d, was %d)", n_threads, total_threads);
+    struct msu_placement_tracker *tracker = msu_tracker_find(msu_id);
+    ck_assert_msg(tracker != NULL, "Tracker could not find placed MSU");
+    ck_assert_msg(tracker->msu_id == msu_id, "MSU tracker found wrong MSU");
+
+
 }END_TEST
 
 Suite *implement_dfg_suite(void)
@@ -135,7 +142,7 @@ Suite *implement_dfg_suite(void)
     suite_add_tcase(s, tc_messages);
 
     TCase *tc_resources = tcase_create("resource_creation");
-    tcase_add_test(tc_resources, test_create_runtime_threads);
+    tcase_add_test(tc_resources, test_create_msu_from_vertex);
     suite_add_tcase(s, tc_resources);
 
     return s;

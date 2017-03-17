@@ -67,14 +67,6 @@ int create_vertex_routes(struct dfg_vertex *vertex){
     return routes_created;
 }
 
-int create_runtime_threads(struct runtime_endpoint *rt){
-    log_debug("Creating %d pinned threads", rt->num_pinned_threads);
-    for (int i=0; i<rt->num_pinned_threads; i++) {
-        on_demand_create_worker_thread(0);
-    }
-    return rt->num_pinned_threads;
-}
-
 struct runtime_endpoint *get_local_runtime(struct dfg_config *dfg, uint32_t local_ip) {
     printf("Checking %d runtimes\n", dfg->runtimes_cnt);
     for (int i=0; i<dfg->runtimes_cnt; i++) {
@@ -98,7 +90,6 @@ struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex){
         free(thread_msg);
         return NULL;
     }
-
     thread_msg->action = CREATE_MSU;
     thread_msg->action_data = vertex->msu_id;
     thread_msg->data = create_action;
@@ -115,30 +106,40 @@ struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex){
     return thread_msg;
 }
 
-int create_msu_from_vertex(struct dfg_vertex *vertex, int max_threads){
+int create_msu_from_vertex(struct dfg_vertex *vertex){
     int thread_id = vertex_thread_id(vertex);
-    if (thread_id < 0){
-        log_error("Invalid thread ID for msu creation: %d", thread_id);
-        return -1;
-    } else if (thread_id >= max_threads){
-        log_error("Provided thread ID (%d) for msu %d "
-                  "is greater than available threads (%d)",
-                  thread_id, vertex->msu_id, max_threads);
-        return -1;
-    }
     struct dedos_thread_msg *msg = msu_msg_from_vertex(vertex);
     if (!msg)
         return -1;
+    log_debug("Requesting MSU creation");
     create_msu_request(&all_threads[thread_id], msg);
     // Store the placement info in msu_placements hash structure,
     // though we don't know yet if the creation will succeed.
     // If the creation fails the thread creating the MSU should
     // enqueue a FAIL_CREATE_MSU msg.
+    log_debug("Tracking MSU %d", vertex->msu_id);
     msu_tracker_add(vertex->msu_id, &all_threads[thread_id]);
     log_debug("Creation of MSU %d requested", vertex->msu_id);
     return 0;
 }
 
+int spawn_threads_from_dfg(struct dfg_config *dfg){
+    int n_spawned_threads = 0;
+    for (int i=0; i<dfg->vertex_cnt; i++){
+        int thread_id = vertex_thread_id(dfg->vertices[i]);
+        while (thread_id >= total_threads){
+            n_spawned_threads++;
+            int rtn = on_demand_create_worker_thread(0);
+            if (rtn == 0){
+                log_debug("Created worker thread to accomodate MSU");
+            } else {
+                log_error("Could not create necessary worker thread");
+                return -1;
+            }
+        }
+    }
+    return n_spawned_threads;
+}
 
 int vertex_locality(struct dfg_vertex *vertex, uint32_t local_ip){
     if (vertex->scheduling->runtime->ip == local_ip)
@@ -147,21 +148,20 @@ int vertex_locality(struct dfg_vertex *vertex, uint32_t local_ip){
 }
 
 int implement_dfg(struct dfg_config *dfg, uint32_t local_ip) {
-    struct runtime_endpoint *rt = get_local_runtime(dfg, local_ip);
-    int n_threads = create_runtime_threads(rt);
-    if (create_runtime_threads(rt) < 0) {
-        log_error("Failed to create runtime threads");
+    log_debug("Creating maximum of %d MSUs", dfg->vertex_cnt);
+    int msus_created = 0;
+    if ( spawn_threads_from_dfg < 0 ){
+        log_error("Aborting DFG implementation");
         return -1;
     }
-
-    log_debug("Creating %d MSUs", dfg->vertex_cnt);
     for (int i=0; i<dfg->vertex_cnt; i++) {
         struct dfg_vertex *vertex = dfg->vertices[i];
         if (vertex_locality(vertex, local_ip) == 0) {
-            if ( create_msu_from_vertex(vertex, n_threads) < 0){
+            if ( create_msu_from_vertex(vertex) < 0){
                 log_debug("Failed to create msu %d", vertex->msu_id);
                 continue;
             }
+            msus_created++;
             int n_routes = create_vertex_routes(vertex);
             if ( n_routes < 0 ){
                 log_error("Failed to create any routes for MSU %d", vertex->msu_id);
@@ -171,5 +171,7 @@ int implement_dfg(struct dfg_config *dfg, uint32_t local_ip) {
             }
         }
     }
+    log_info("Created %d MSUs", msus_created);
+    return 0;
 }
 
