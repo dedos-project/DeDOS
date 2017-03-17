@@ -8,41 +8,39 @@
 
 #include "dfg.h"
 
+#define FILENAME_LEN 32
+
 pthread_t cli_thread;
 
 static void print_usage() {
-    printf("Usage: global_controller -p tcp_control_listen_port\n");
+    printf("Usage: global_controller -p tcp_control_listen_port -j /path/to/json\n");
 }
 
 int main(int argc, char *argv[]) {
     int tcp_control_listen_port;
     int option = 0;
+    char filename[FILENAME_LEN];
+    memset(filename, '\0', FILENAME_LEN);
 
-    while ((option = getopt(argc, argv,"p:")) != -1) {
+    while ((option = getopt(argc, argv,"p:j:")) != -1) {
         switch (option) {
             case 'p' : tcp_control_listen_port = atoi(optarg);
+                break;
+            //strncpy results in a segfault here.
+            //e.g strncpy(filename, optarg, FILENAME_LEN);
+            case 'j' : strcpy(filename, optarg);
                 break;
             default:
                 print_usage();
                 exit(EXIT_FAILURE);
         }
     }
-    if (tcp_control_listen_port < 1) {
+    if (tcp_control_listen_port < 1 || strlen(filename) == 0) {
         print_usage();
         exit(EXIT_FAILURE);
     }
 
-
-    //char *policy = "greedy";
-    //init_scheduler(policy);
-
-    char *filename = "data/toload.json";
     do_dfg_config(filename);
-
-    //pthread_t jl_thread;
-    //start_json_listener_thread(&jl_thread);
-    //test_serialization();
-    
 
     start_cli_thread(&cli_thread);
     start_communication(tcp_control_listen_port);

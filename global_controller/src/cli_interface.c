@@ -86,7 +86,6 @@ static void parse_cmd_action(char *cmd)
     }
     else if (!strncasecmp(cmd, "addmsu", 6)) {
         int runtime_sock, msu_type, msu_id;
-        char *data;
 
         runtime_sock = atoi(strtok(&cmd[6], " "));
 
@@ -98,14 +97,20 @@ static void parse_cmd_action(char *cmd)
         new_msu->msu_type = atoi(strtok(NULL, " "));
         new_msu->msu_id   = atoi(strtok(NULL, " "));
 
-        data = strtok(NULL, "\r\n");
+        char *data = strtok(NULL, "\r\n");
+        char *all_data[strlen(data)];
+        strcpy(all_data, data);
+        char *blocking = strtok(data, " ");
+
+        if (strcmp(blocking, "non-blocking"))
+            new_msu->thread_id = atoi(strtok(NULL, " |"));
         //assume there is only the thread id after the mode
-        memcpy(new_msu->msu_mode, data, strlen(data) - 2);
+        memcpy(new_msu->msu_mode, blocking, strlen(blocking));
 
         new_msu->thread_id = atoi(data + strlen(new_msu->msu_mode) + 1);
 
         int ret;
-        ret = add_msu(data, new_msu, runtime_sock);
+        ret = add_msu(all_data, new_msu, runtime_sock);
         if (ret == -1) {
             debug("ERROR: %s", "could not trigger new msu creation");
         }

@@ -466,8 +466,6 @@ int do_dfg_config(char * init_cfg_filename) {
         debug("ERROR: %s", "failed to init dfg mutex");
     }
 
-    pthread_mutex_lock(dfg.dfg_mutex);
-
     dfg.vertex_cnt = 0;
     dfg.runtimes_cnt = 0;
 
@@ -610,8 +608,6 @@ int do_dfg_config(char * init_cfg_filename) {
             to_allocate_msus[n] = dfg.vertices[n]->msu_id;
         }
     }
-
-    pthread_mutex_unlock(dfg.dfg_mutex);
 
     if (strcmp(load_mode, "toload") == 0) {
         //allocate(to_allocate_msus);
@@ -828,7 +824,7 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
             if (r == NULL) {
                 r = malloc(sizeof(struct runtime_endpoint));
 
-                strncpy(r->ip, update->runtime_ip, INET_ADDRSTRLEN);
+                string_to_ipv4(update->runtime_ip, &(r->ip));
 
                 dfg.runtimes[dfg.runtimes_cnt] = r;
                 dfg.runtimes_cnt++;
