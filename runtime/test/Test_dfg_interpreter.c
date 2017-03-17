@@ -140,7 +140,7 @@ START_TEST(test_spawn_threads_from_dfg){
 
     int rtn = spawn_threads_from_dfg(dfg);
 
-    ck_assert_msg(rtn == 0, " return < 0: thread spawn");
+    ck_assert_msg(rtn >= 0, " return < 0: thread spawn");
     ck_assert_msg(total_threads == 4, "%d threads created, expected 4");
 }END_TEST
 

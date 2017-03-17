@@ -134,7 +134,7 @@ int spawn_threads_from_dfg(struct dfg_config *dfg){
         while (thread_id >= total_threads){
             n_spawned_threads++;
             int rtn = on_demand_create_worker_thread(0);
-            if (rtn == 0){
+            if (rtn >= 0){
                 log_debug("Created worker thread to accomodate MSU");
             } else {
                 log_error("Could not create necessary worker thread");
