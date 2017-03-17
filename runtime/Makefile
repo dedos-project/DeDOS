@@ -93,9 +93,9 @@ test: $(RESULTS)
 		fi;\
 	done
 	@echo "-----------------------\nFAILURES:\n-----------------------"
-	@echo `grep -s "F:" $(PATH_RES)*.txt`
+	@grep -s "F:" $(PATH_RES)*.txt
 	@echo "-----------------------\nERRORS:\n-----------------------"
-	@echo `grep -s "E:" $(PATH_RES)*.txt`
+	@grep -s "E:" $(PATH_RES)*.txt
 	@echo "\nDONE"
 
 $(TEST_RESOURCES): $(RESOURCE_IN)
