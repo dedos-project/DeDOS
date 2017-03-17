@@ -809,7 +809,7 @@ int do_dfg_config(const char * init_cfg_filename) {
     ts->msu_ids = to_allocate_msus;
     ts->num_msu = num_to_alloc;
 
-    print_dfg();
+    //print_dfg();
     //dump_json();
 
     if (strcmp(load_mode, "toload") == 0) {
