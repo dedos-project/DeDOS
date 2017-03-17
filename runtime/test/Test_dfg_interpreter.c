@@ -117,14 +117,31 @@ START_TEST(test_create_msu_from_vertex){
 
     mark_point();
     int rtn = create_msu_from_vertex(vertex);
-    ck_assert_msg(rtn == 0, "<0 return for proper msu creation");
-    ck_assert_msg(msu_tracker_count() == 1, "MSU tracker did not receive MSU creation");
+    ck_assert_msg(rtn < 0, "MSU created despite lack of threads");
+    ck_assert_msg(msu_tracker_count() == 0, "MSU created despite lack of threads");
+
+    rtn = spawn_threads_from_dfg(dfg);
+    ck_assert_msg(rtn >= 0, "Could not create threads for testing MSU");
+
+    rtn = create_msu_from_vertex(vertex);
+    ck_assert_msg(rtn >= 0, "MSU creation returned -1");
+    ck_assert_msg(msu_tracker_count() == 1, "MSU creation not tracked");
 
     struct msu_placement_tracker *tracker = msu_tracker_find(msu_id);
     ck_assert_msg(tracker != NULL, "Tracker could not find placed MSU");
     ck_assert_msg(tracker->msu_id == msu_id, "MSU tracker found wrong MSU");
+}END_TEST
 
+START_TEST(test_spawn_threads_from_dfg){
+    struct dfg_config *dfg = load_dfg(get_resource_path(DFG_CONFIG_FILE) );
+    mark_point();
 
+    init_main_thread();
+
+    int rtn = spawn_threads_from_dfg(dfg);
+
+    ck_assert_msg(rtn == 0, " return < 0: thread spawn");
+    ck_assert_msg(total_threads == 4, "%d threads created, expected 4");
 }END_TEST
 
 Suite *implement_dfg_suite(void)
@@ -142,6 +159,7 @@ Suite *implement_dfg_suite(void)
     suite_add_tcase(s, tc_messages);
 
     TCase *tc_resources = tcase_create("resource_creation");
+    tcase_add_test(tc_resources, test_spawn_threads_from_dfg);
     tcase_add_test(tc_resources, test_create_msu_from_vertex);
     suite_add_tcase(s, tc_resources);
 

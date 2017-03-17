@@ -108,6 +108,10 @@ struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex){
 
 int create_msu_from_vertex(struct dfg_vertex *vertex){
     int thread_id = vertex_thread_id(vertex);
+    if (thread_id > total_threads){
+        log_error("Cannot create MSU on nonexistent thread %d", thread_id);
+        return -1;
+    }
     struct dedos_thread_msg *msg = msu_msg_from_vertex(vertex);
     if (!msg)
         return -1;
