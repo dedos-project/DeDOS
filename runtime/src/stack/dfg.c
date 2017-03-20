@@ -45,9 +45,9 @@ int show_connected_peers(void) {
 /**
  * Get runtime pointer from ID
  * @param integer runtime_id
- * @return struct runtime_endpoint *runtime
+ * @return struct dfg_runtime_endpoint *runtime
  */
-struct runtime_endpoint *get_runtime_from_id(int runtime_id) {
+struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id) {
     struct dfg_config *dfg = NULL;
     dfg = get_dfg();
 
@@ -239,7 +239,7 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
 
             debug("DEBUG: registering endpoint at %s", update->runtime_ip);
 
-            struct runtime_endpoint *r = NULL;
+            struct dfg_runtime_endpoint *r = NULL;
 
             int i;
             for (i = 0; i < dfg->runtimes_cnt; ++i) {
@@ -254,7 +254,7 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
             }
 
             if (r == NULL) {
-                r = malloc(sizeof(struct runtime_endpoint));
+                r = malloc(sizeof(struct dfg_runtime_endpoint));
 
                 strncpy(r->ip, update->runtime_ip, INET_ADDRSTRLEN);
 

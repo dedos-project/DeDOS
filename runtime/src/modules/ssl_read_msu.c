@@ -2,11 +2,11 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "communication.h"
 #include "dedos_msu_list.h"
 #include "modules/ssl_read_msu.h"
 #include "runtime.h"
 #include "modules/webserver_msu.h"
-#include "communication.h"
 #include "routing.h"
 #include "dedos_msu_msg_type.h"
 #include "dedos_thread_queue.h" //for enqueuing outgoing control messages
@@ -122,6 +122,7 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
 
     return Request;
 }
+
 
 int ssl_read_receive(local_msu *self, msu_queue_item *input_data) {
     int ret = 0;

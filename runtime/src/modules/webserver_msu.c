@@ -1,6 +1,6 @@
+#include "communication.h"
 #include "runtime.h"
 #include "modules/webserver_msu.h"
-#include "communication.h"
 #include "routing.h"
 #include "dedos_msu_msg_type.h"
 #include "dedos_msu_list.h"

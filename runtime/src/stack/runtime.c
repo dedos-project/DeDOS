@@ -7,10 +7,10 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <time.h>
+#include "communication.h"
 #include "runtime.h"
 #include "control_protocol.h"
 #include "dedos_msu_list.h"
-#include "communication.h"
 #include "logging.h"
 #include "dedos_thread_queue.h"
 #include "dedos_msu_msg_type.h"
@@ -663,7 +663,7 @@ int dedos_runtime_destroy(void){
     return 0;
 }
 
-void dedos_main_thread_loop(void) {
+void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
     int ret;
     static int next_stat_thread = 0;
     clock_t begin;
@@ -690,6 +690,13 @@ void dedos_main_thread_loop(void) {
 
     request_init_config();
     log_info("%s", "Requested init config...");
+    
+    if (dfg != NULL){
+        int rtn = implement_dfg(dfg, runtime_id);
+        if (rtn < 0){
+            log_error("Could not implement DFG in local runtime");
+        }
+    }  
 
     begin = clock();
 

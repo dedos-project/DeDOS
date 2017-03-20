@@ -1,11 +1,11 @@
 #include <error.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include "communication.h"
 #include "runtime.h"
 #include "comm_protocol.h"
 #include "routing.h"
 #include "modules/msu_tcp_handshake.h"
-#include "communication.h"
 #include "control_msg_handler.h"
 #include "generic_msu_queue.h"
 #include "generic_msu_queue_item.h"

@@ -2,6 +2,7 @@
 #define DFG_INTERPRETER_H
 #include "global_controller/dfg.h"
 
-int implement_dfg(struct dfg_config *dfg, uint32_t local_ip);
+struct dfg_runtime_endpoint *get_local_runtime(struct dfg_config *dfg, int runtime_id);
+int implement_dfg(struct dfg_config *dfg, int runtime_id);
 
 #endif

@@ -293,7 +293,7 @@ int json_parse_runtimes(jsmntok_t *t, int starting_token,
     //jump to the first runtime object
     i++;
 
-    struct runtime_endpoint *r = NULL;
+    struct dfg_runtime_endpoint *r = NULL;
     while (i < ending_token) {
         if (t[i].type != JSMN_OBJECT) {
             debug("DEBUG: At location %d, expected JSMN_OBJECT but found %d\n", i, t[i].type);
@@ -301,8 +301,8 @@ int json_parse_runtimes(jsmntok_t *t, int starting_token,
         }
 
         int fields = t[i].size;
-        struct runtime_endpoint *r = NULL;
-        r = malloc(sizeof(struct runtime_endpoint));
+        struct dfg_runtime_endpoint *r = NULL;
+        r = malloc(sizeof(struct dfg_runtime_endpoint));
 
         dfg.runtimes[dfg.runtimes_cnt] = r;
         dfg.runtimes_cnt++;

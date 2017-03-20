@@ -35,7 +35,7 @@ struct dedos_dfg_manage_msg {
 
 
 /* Structures defining DFG elements */
-struct runtime_endpoint {
+struct dfg_runtime_endpoint {
     int id;
     int sock;
     uint32_t ip;
@@ -72,7 +72,7 @@ struct msu_statistics_data {
 };
 
 struct msu_scheduling {
-    struct runtime_endpoint *runtime;
+    struct dfg_runtime_endpoint *runtime;
     uint32_t thread_id;
     struct dfg_edge_set *routing;
     int deadline;
@@ -133,7 +133,7 @@ struct dfg_config {
     //Data-flow graph of MSUs
     struct dfg_vertex *vertices[MAX_MSU]; //All MSUs
     int vertex_cnt;                       //Number of MSUs
-    struct runtime_endpoint *runtimes[MAX_RUNTIMES]; //All runtimes
+    struct dfg_runtime_endpoint *runtimes[MAX_RUNTIMES]; //All runtimes
     int runtimes_cnt;
 
     pthread_mutex_t *dfg_mutex;
@@ -158,6 +158,6 @@ int get_sock_endpoint_index(int sock);
 int show_connected_peers(void);
 struct dfg_vertex *dfg_msu_from_id(int msu_id);
 struct msus_of_type *get_msus_from_type(int type);
-struct runtime_endpoint *get_runtime_from_id(int runtime_id);
+struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id);
 
 #endif //DFG_H_

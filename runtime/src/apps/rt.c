@@ -5,16 +5,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "runtime.h"
 #include "communication.h"
+#include "global_controller/dfg.h"
+#include "dfg_interpreter.h"
+#include "runtime.h"
 #include "global.h"
 #include "modules/ssl_read_msu.h"
 
 #define USE_OPENSSL
 
-#define USAGE_ARGS "master_ip master_port local_listen_port " \
-                   "same_physical_machine [webserver_port " \
-                   "db_ip db_port max_db_load]"
+#define USAGE_ARGS "<dfg.json> <runtime_id> <webserver_port> "\
+                   "[db_ip db_port max_db_load]"
 
 SSL_CTX* ssl_ctx_global;
 static pthread_mutex_t *lockarray;
@@ -78,31 +79,47 @@ static void kill_locks(void) {
 int main(int argc, char **argv){
     // initialize the context and read the certificates
 
-    if (argc < 5){
+    if (argc < 4){
         printf("%s %s\n", argv[0], USAGE_ARGS);
         exit(0);
     }
 
-    char *master_ip = argv[1];
-    int master_port = atoi(argv[2]);
+    int runtime_id = atoi(argv[2]);
+    int rtn = do_dfg_config(argv[1]);
+    if ( rtn < 0 ) {
+        printf("%s is not a valid DFG json file. Exiting.\n", argv[1]);
+        exit(-1);
+    }
 
-    // Declared in communication.h, used in ssl_read_msu
-    runtime_listener_port = atoi(argv[3]);
+    struct dfg_config *dfg = get_dfg();
+    struct dfg_runtime_endpoint *rt = get_local_runtime(dfg, runtime_id);
+    if ( rt == NULL ){
+        printf("Runtime %d not present in provided DFG. Exiting.\n", runtime_id);
+        exit(-1);
+    }
+
+    char *master_ip = dfg->global_ctl_ip;
+    uint32_t master_ip_int;
+    string_to_ipv4(master_ip, &master_ip_int);
+
+    int master_port = dfg->global_ctl_port;
+    runtime_listener_port = rt->port;
     int control_listen_port = runtime_listener_port;
+    uint32_t this_ip = rt->ip;
 
-    int same_physical_machine = atoi(argv[4]);
-    int webserver_port = atoi(argv[5]);
+    int same_physical_machine = ( master_ip_int == this_ip );
+    int webserver_port = atoi(argv[3]);
 
-    if (argc == 9) {
-       // Declared in communication.h, used in webserver_msu
-       db_ip = (char*)malloc(16);
-       strncpy(db_ip, argv[6], strlen(argv[6]));
-       db_port = atoi(argv[7]);
-       db_max_load = atoi(argv[8]);
+    if (argc > 4) {
+        // Declared in communication.h, used in webserver_msu
+        db_ip = (char*)malloc(16);
+        strncpy(db_ip, argv[4], strlen(argv[4]));
+        db_port = atoi(argv[5]);
+        db_max_load = atoi(argv[6]);
 
-       // Initialize random number generator
-       time_t t;
-       srand((unsigned) time(&t));
+        // Initialize random number generator
+        time_t t;
+        srand((unsigned) time(&t));
     }
 
     log_info("Starting runtime...");
@@ -110,7 +127,7 @@ int main(int argc, char **argv){
     // Control socket init for listening to connections
     // from other runtimes
     if (same_physical_machine == 1)
-        control_listen_port++; // IMP: I do not understand
+        control_listen_port++;
 
 #ifdef USE_OPENSSL
     init_locks();
@@ -131,7 +148,7 @@ int main(int argc, char **argv){
 
     log_info("Connected to global master");
 
-    dedos_main_thread_loop();
+    dedos_main_thread_loop(dfg, runtime_id);
 
 #ifdef USE_OPENSSL
     freeSSLRelatedStuff();

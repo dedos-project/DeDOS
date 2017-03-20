@@ -8,12 +8,11 @@
 #include <check.h>
 
 // Forward declarations of functions under test:
-struct runtime_endpoint *get_local_runtime(struct dfg_config *dfg, uint32_t local_ip);
+struct dfg_runtime_endpoint *get_local_runtime(struct dfg_config *dfg, int runtime_id);
 int create_vertex_routes(struct dfg_vertex *vertex);
 int create_route_from_vertices(struct dfg_vertex *from, struct dfg_vertex *to);
 struct dedos_thread_msg *route_msg_from_vertices(struct dfg_vertex *from,
                                                  struct dfg_vertex *to);
-struct runtime_endpoint *get_local_runtime(struct dfg_config *dfg, uint32_t local_ip);
 int create_msu_from_vertex(struct dfg_vertex *vertex);
 struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex);
 
@@ -23,7 +22,7 @@ struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex);
 #define MK_IP(a, b, c, d) \
     ((uint32_t)(a<<24)) + ((uint32_t)(b<<16)) + ((uint32_t)(c<<8)) + ((uint32_t)(d))
 
-#define LOCAL_IP_STR "158.130.57.63"
+#define LOCAL_RUNTIME_ID 1
 #define DFG_CONFIG_FILE "sample_dfg.json"
 
 struct dfg_config *load_dfg(char *dfg_path){
@@ -40,12 +39,11 @@ struct dfg_config *load_dfg(char *dfg_path){
 
 
 START_TEST(test_get_local_runtime){
-    uint32_t ip;
-    string_to_ipv4(LOCAL_IP_STR, &ip);
     struct dfg_config *dfg = load_dfg( get_resource_path(DFG_CONFIG_FILE) );
-    struct runtime_endpoint *rt = get_local_runtime(dfg, ip);
+    struct runtime_endpoint *rt = get_local_runtime(dfg, LOCAL_RUNTIME_ID);
     ck_assert_msg(rt!=NULL, "Could not find runtime");
-    ck_assert_int_eq(rt->ip, ip);
+    ck_assert_msg(rt->id == LOCAL_RUNTIME_ID, "Runtime ID does not match");
+
 } END_TEST
 
 START_TEST(test_msu_msg_from_vertex){

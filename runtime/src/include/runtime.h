@@ -1,6 +1,8 @@
 #ifndef RUNTIME_H_
 #define RUNTIME_H_
 
+#define MAX_THREADS 20
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/conf.h>
@@ -14,8 +16,7 @@
 #include "control_msg_handler.h"
 #include "dedos_msu_pool.h"
 #include "dedos_statistics.h"
-
-#define MAX_THREADS 20
+#include "global_controller/dfg.h"
 
 #define BLOCKING_THREAD 1
 #define NON_BLOCKING_THREAD 2
@@ -45,7 +46,7 @@ int create_worker_threads(void);
 
 struct dedos_thread* get_ptr_to_self(void);
 int get_thread_index(pthread_t tid);
-void dedos_main_thread_loop(void);
+void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id);
 int on_demand_create_worker_thread(int is_blocking);
 int destroy_worker_thread(struct dedos_thread *dedos_thread);
 int dedos_runtime_destroy(void);

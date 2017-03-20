@@ -1,3 +1,4 @@
+#include "dfg_interpreter.h"
 #include "global_controller/dfg.h"
 #include "control_protocol.h"
 #include "runtime.h"
@@ -67,11 +68,10 @@ int create_vertex_routes(struct dfg_vertex *vertex){
     return routes_created;
 }
 
-struct runtime_endpoint *get_local_runtime(struct dfg_config *dfg, uint32_t local_ip) {
+struct dfg_runtime_endpoint *get_local_runtime(struct dfg_config *dfg, int runtime_id) {
     printf("Checking %d runtimes\n", dfg->runtimes_cnt);
     for (int i=0; i<dfg->runtimes_cnt; i++) {
-        printf("rt ip: %u\n", dfg->runtimes[i]->ip);
-        if (dfg->runtimes[i]->ip == local_ip) {
+        if (dfg->runtimes[i]->id == runtime_id) {
             return dfg->runtimes[i];
         }
     }
@@ -145,13 +145,13 @@ int spawn_threads_from_dfg(struct dfg_config *dfg){
     return n_spawned_threads;
 }
 
-int vertex_locality(struct dfg_vertex *vertex, uint32_t local_ip){
-    if (vertex->scheduling->runtime->ip == local_ip)
+int vertex_locality(struct dfg_vertex *vertex, int runtime_id){
+    if (vertex->scheduling->runtime->id == runtime_id)
         return 0;
     return 1;
 }
 
-int implement_dfg(struct dfg_config *dfg, uint32_t local_ip) {
+int implement_dfg(struct dfg_config *dfg, int runtime_id) {
     log_debug("Creating maximum of %d MSUs", dfg->vertex_cnt);
     int msus_created = 0;
     if ( spawn_threads_from_dfg < 0 ){
@@ -160,7 +160,7 @@ int implement_dfg(struct dfg_config *dfg, uint32_t local_ip) {
     }
     for (int i=0; i<dfg->vertex_cnt; i++) {
         struct dfg_vertex *vertex = dfg->vertices[i];
-        if (vertex_locality(vertex, local_ip) == 0) {
+        if (vertex_locality(vertex, runtime_id) == 0) {
             if ( create_msu_from_vertex(vertex) < 0){
                 log_debug("Failed to create msu %d", vertex->msu_id);
                 continue;
