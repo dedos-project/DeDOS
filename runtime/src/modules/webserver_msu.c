@@ -171,11 +171,13 @@ int webserver_send_remote(local_msu *src, msu_queue_item *data,
     if (dst->msu_type != DEDOS_REGEX_MSU_ID) {
         memcpy(msg->payload, data->buffer, msg->payload_len);
     } else {
+        struct regex_data_payload *regex_data = 
+                (struct regex_data_payload *)(data->buffer);
         struct ssl_data_payload *recv_data = 
-                (struct ssl_data_payload *)(data->buffer);
+                (struct ssl_data_payload *)(regex_data->dst_packet);
 
-        memcpy(msg->payload, data->buffer, sizeof(struct regex_data_payload));
-        memcpy(msg->payload + sizeof(struct regex_data_payload), recv_data, sizeof(*recv_data));
+        memcpy(msg->payload, regex_data, sizeof(*regex_data));
+        memcpy(msg->payload + sizeof(*regex_data), recv_data, sizeof(*recv_data));
     }
 
 
