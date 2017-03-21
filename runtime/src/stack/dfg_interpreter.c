@@ -1,3 +1,4 @@
+#include "communication.h"
 #include "dfg_interpreter.h"
 #include "global_controller/dfg.h"
 #include "control_protocol.h"
@@ -28,10 +29,10 @@ struct dedos_thread_msg *route_msg_from_vertices(struct dfg_vertex *from,
     add_route_msg->peer_msu_id = to->msu_id;
     add_route_msg->peer_msu_type = to->msu_type;
     if ( from->scheduling->runtime->ip == to->scheduling->runtime->ip ){
-        add_route_msg->peer_locality = 0;
+        add_route_msg->peer_locality = MSU_LOC_SAME_RUNTIME;
         add_route_msg->peer_ipv4 = 0;
     } else {
-        add_route_msg->peer_locality = 1;
+        add_route_msg->peer_locality = MSU_LOC_REMOTE_RUNTIME;
         add_route_msg->peer_ipv4 = to->scheduling->runtime->ip;
     }
 
@@ -60,9 +61,11 @@ int create_route_from_vertices(struct dfg_vertex *from, struct dfg_vertex *to){
 
 int create_vertex_routes(struct dfg_vertex *vertex){
     struct dfg_edge_set *edge_set = vertex->scheduling->routing;
+    if (edge_set == NULL)
+        return 0;
     int routes_created = 0;
     for (int i=0; i<edge_set->num_edges; i++) {
-        if (create_route_from_vertices(vertex, edge_set->edges[i]) >= 0)
+        if (create_route_from_vertices(vertex, edge_set->edges[i]->to) >= 0)
             routes_created++;
     }
     return routes_created;
@@ -154,10 +157,11 @@ int vertex_locality(struct dfg_vertex *vertex, int runtime_id){
 int implement_dfg(struct dfg_config *dfg, int runtime_id) {
     log_debug("Creating maximum of %d MSUs", dfg->vertex_cnt);
     int msus_created = 0;
-    if ( spawn_threads_from_dfg < 0 ){
+    if ( spawn_threads_from_dfg(dfg) < 0 ){
         log_error("Aborting DFG implementation");
         return -1;
     }
+    // Loop through once to create the MSUs
     for (int i=0; i<dfg->vertex_cnt; i++) {
         struct dfg_vertex *vertex = dfg->vertices[i];
         if (vertex_locality(vertex, runtime_id) == 0) {
@@ -165,13 +169,26 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
                 log_debug("Failed to create msu %d", vertex->msu_id);
                 continue;
             }
+            log_info("Created MSU %d", vertex->msu_id);
             msus_created++;
+        }
+    }
+    // Make sure the MSU creation goes through
+    int ret = check_comm_sockets();
+    if (ret < 0){
+        log_warn("check_comm_sockets failed");
+    }
+    sleep(5);
+
+    for (int i=0; i<dfg->vertex_cnt; i++){
+        struct dfg_vertex *vertex = dfg->vertices[i];
+        if (vertex_locality(vertex, runtime_id) == 0) {
             int n_routes = create_vertex_routes(vertex);
             if ( n_routes < 0 ){
                 log_error("Failed to create any routes for MSU %d", vertex->msu_id);
             } else {
-                log_info("Created MSU %d, with %d outgoing routes",
-                         vertex->msu_id, n_routes);
+                log_info("Created %d outgoing routes for MSU %d",
+                         n_routes, vertex->msu_id);
             }
         }
     }
