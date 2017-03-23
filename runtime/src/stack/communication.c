@@ -310,7 +310,7 @@ int check_comm_sockets() {
     } else {
         // check for the other runtime sockets
         for (j = 0; j < MAX_RUNTIME_PEERS; j++) {
-            if(fds[j + totalSockets].revents & POLLIN) {
+            if(fds[j + totalSockets].revents & POLLIN && peer_tcp_sockets[j] > 0) {
                 fds[j + totalSockets].revents = 0;
                 dedos_control_rcv(peer_tcp_sockets[j]);
             }
@@ -436,7 +436,7 @@ void dedos_control_send(struct dedos_intermsu_message* msg,
     }
 
     //create output buffer
-    unsigned int sendbuf_len = sizeof(struct dedos_intermsu_message) + bufsize;
+    size_t sendbuf_len = sizeof(struct dedos_intermsu_message) + bufsize;
 
     char *sendbuf = (char*) malloc(sendbuf_len);
     memcpy(sendbuf, msg, sizeof(struct dedos_intermsu_message));
@@ -479,7 +479,7 @@ void dedos_control_rcv(int peer_sk)
     //assuming inter-runtime communication is safe
 
     if (data_len == -1) {
-        log_error("%s", "receiving TCP data over control socket");
+        log_error("Error receiving TCP data over control socket: %s", strerror(errno));
     } else {
         log_debug("************Received data with len: %d ***", data_len);
         if (data_len == 0) {

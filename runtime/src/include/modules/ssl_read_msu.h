@@ -9,7 +9,7 @@
 #include "generic_msu_queue_item.h"
 #include "ssl_msu.h"
 
-#define MAX_REQUEST_LEN 1024
+#define MAX_REQUEST_LEN 512
 #define READ 0
 #define WRITE 1
 

@@ -12,7 +12,6 @@
 
 /* Some infra properties */
 #define MAX_RUNTIMES 20
-#define MAX_RCV_BUFLEN 4096
 
 /* Some struct related to DFG management protocol */
 struct dedos_dfg_add_endpoint_msg {

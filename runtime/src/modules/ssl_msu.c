@@ -42,7 +42,10 @@ void SSLErrorCheck(int err){
             break;
         }
         case SSL_ERROR_SSL: {
-            log_error("SSL_ERROR_SSL (%d): %s", err, error_str);
+            unsigned long specific_error = ERR_get_error();
+            log_error("SSL_ERROR_SSL (%d): %s %04x", err, error_str, specific_error);
+            const char *error_str2 = ERR_error_string(specific_error, NULL);
+            log_error("SSL_ERROR_SSL specific: %s", error_str2);
             break;
         }
         default:
