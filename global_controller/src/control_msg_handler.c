@@ -96,7 +96,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
             }
             response->msg_type = RESPONSE_MESSAGE;
             response->msg_code = SET_DEDOS_RUNTIMES_LIST;
-            response->payload_len = (count * sizeof(uint32_t));
+            response->payload_len = ((count-1) * sizeof(uint32_t));
 
             response->payload = to_send_peer_ips;
             response->header_len = sizeof(struct dedos_control_msg);
