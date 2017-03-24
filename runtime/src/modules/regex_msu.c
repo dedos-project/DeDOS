@@ -50,18 +50,22 @@ static int regex_deserialize(local_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
     if (self){
         msu_queue_item *recvd =  malloc(sizeof(*recvd));
-        if (!(recvd))
+        if (!(recvd)){
+            log_error("Could not allocate msu_queue_item");
             return -1;
+        }
     
         struct regex_data_payload *regex_data = malloc(sizeof(*regex_data));
         if (!regex_data){
             free(recvd);
+            log_error("Could not allocate regex_data_payload");
             return -1;
         }
         void *dst_packet = malloc(bufsize - sizeof(*regex_data));
         if (!dst_packet){
             free(recvd);
             free(regex_data);
+            log_error("Could not allocate regex_data->dst_packet");
             return -1;
         }
         memcpy(regex_data, msg->payload, sizeof(*regex_data));
@@ -142,6 +146,7 @@ int regex_receive(local_msu *self, msu_queue_item *input_data) {
 
             return DEDOS_SSL_WRITE_MSU_ID;
         }
+        log_warn("Unknown dst type: %d", regex_data->dst_type);
     }
     return -1;
 }
