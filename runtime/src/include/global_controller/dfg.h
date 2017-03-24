@@ -5,45 +5,13 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
+#include "runtime.h"
+#include "dfg_json.h"
 #include "logging.h"
-#include "communication.h"
-#include "jsmn.h"
+#include "global_controller/communication.h"
 
 /* Some infra properties */
 #define MAX_RUNTIMES 20
-#define MAX_THREADS 99
-#define MAX_RCV_BUFLEN 4096
-
-/* Some JSON properties */
-#define MAX_JSON_LEN 65536
-#define MAX_MSU 128
-// Counts are inclusive of ALL subfields
-#define RUNTIME_FIELDS 6
-#define MSU_PROFILING_FIELDS 10
-
-/**
- * JSON related declarations
- */
-int do_dfg_config(const char *init_filename);
-void print_dfg();
-void dump_json(void);
-struct dfg_config *get_dfg();
-int jsoneq(const char *json, jsmntok_t *tok, const char *s);
-void json_parse_error(int err);
-int json_test(jsmntok_t *t, int r);
-struct dfg_vertex; //for next signatures to refer to this
-void parse_msu_scheduling(jsmntok_t *t, int *starting_token,
-                          const char *json_string, struct dfg_vertex *v);
-int parse_msu_profiling(jsmntok_t *t, int starting_token,
-                        const char *json_string, struct dfg_vertex *v);
-int json_parse_runtimes(jsmntok_t *t, int starting_token,
-                        int ending_token, const char *json_string);
-int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *json_string);
-
-
-/**
- * DFG related declarations
- */
 
 /* Some struct related to DFG management protocol */
 struct dedos_dfg_add_endpoint_msg {
@@ -66,7 +34,7 @@ struct dedos_dfg_manage_msg {
 
 
 /* Structures defining DFG elements */
-struct runtime_endpoint {
+struct dfg_runtime_endpoint {
     int id;
     int sock;
     uint32_t ip;
@@ -103,7 +71,7 @@ struct msu_statistics_data {
 };
 
 struct msu_scheduling {
-    struct runtime_endpoint *runtime;
+    struct dfg_runtime_endpoint *runtime;
     uint32_t thread_id;
     struct dfg_edge_set *routing;
     int deadline;
@@ -164,7 +132,7 @@ struct dfg_config {
     //Data-flow graph of MSUs
     struct dfg_vertex *vertices[MAX_MSU]; //All MSUs
     int vertex_cnt;                       //Number of MSUs
-    struct runtime_endpoint *runtimes[MAX_RUNTIMES]; //All runtimes
+    struct dfg_runtime_endpoint *runtimes[MAX_RUNTIMES]; //All runtimes
     int runtimes_cnt;
 
     pthread_mutex_t *dfg_mutex;
@@ -187,8 +155,8 @@ void get_connected_peer_ips(uint32_t *peer_ips);
 uint32_t get_sock_endpoint_ip(int sock);
 int get_sock_endpoint_index(int sock);
 int show_connected_peers(void);
-struct dfg_vertex *get_msu_from_id(int msu_id);
+struct dfg_vertex *dfg_msu_from_id(int msu_id);
 struct msus_of_type *get_msus_from_type(int type);
-struct runtime_endpoint *get_runtime_from_id(int runtime_id);
+struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id);
 
 #endif //DFG_H_

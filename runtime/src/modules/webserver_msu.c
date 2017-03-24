@@ -1,6 +1,6 @@
+#include "communication.h"
 #include "runtime.h"
 #include "modules/webserver_msu.h"
-#include "communication.h"
 #include "routing.h"
 #include "dedos_msu_msg_type.h"
 #include "dedos_msu_list.h"
@@ -137,6 +137,80 @@ void requested_regex_value(char *request, char *val_out){
     val_out[i]='\0';
 }
 
+/** Serializes the data of an msu_queue_item and sends it
+ * to be deserialized by a remote msu.
+ *
+ * Frees the message after enqueuing
+ *
+ * @param src MSU sending the message
+ * @param data item to be enqueued onto next MSU
+ * @param dst MSU destination to receive the message
+ * @return -1 on error, >=0 on success
+ */
+int webserver_send_remote(local_msu *src, msu_queue_item *data,
+                        struct msu_endpoint *dst){
+    struct dedos_intermsu_message *msg = malloc(sizeof(*msg));
+    if (!msg){
+        log_error("Unable to allocate memory for intermsu msg%s", "");
+        return -1;
+    }
+
+    msg->dst_msu_id = dst->id;
+    msg->src_msu_id = src->id;
+
+    // TODO: Is this next line right? src->proto_number?
+    msg->proto_msg_type = src->type->proto_number;
+    msg->payload_len = data->buffer_len;
+    msg->payload = malloc(msg->payload_len);
+    if (!msg->payload){
+        log_error("Unable to allocate memory for intermsu payload %s", "");
+        free(msg);
+        return -1;
+    }
+    
+    if (dst->msu_type != DEDOS_REGEX_MSU_ID) {
+        memcpy(msg->payload, data->buffer, msg->payload_len);
+    } else {
+        struct regex_data_payload *regex_data = 
+                (struct regex_data_payload *)(data->buffer);
+        struct ssl_data_payload *recv_data = 
+                (struct ssl_data_payload *)(regex_data->dst_packet);
+
+        memcpy(msg->payload, regex_data, sizeof(*regex_data));
+        memcpy(msg->payload + sizeof(*regex_data), recv_data, sizeof(*recv_data));
+    }
+
+
+    struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
+    if (!thread_msg){
+        log_error("Unable to allocate dedos_thread_msg%s", "");
+        free(msg->payload);
+        free(msg);
+        return -1;
+    }
+    thread_msg->next = NULL;
+    thread_msg->action = FORWARD_DATA;
+    thread_msg->action_data = dst->ipv4;
+
+    thread_msg->buffer_len = sizeof(*msg) + msg->payload_len;
+    thread_msg->data = msg;
+
+    /* add to allthreads[0] queue,since main thread is always at index 0 */
+    /* need to create thread_msg struct with action = forward */
+
+    int rtn = dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+    if (rtn < 0){
+        log_error("Failed to enqueue data in main thread queue%s", "");
+        free(thread_msg);
+        free(msg->payload);
+        free(msg);
+        return -1;
+    }
+    log_debug("Successfully enqueued msg in main queue, size: %d", rtn);
+    return rtn;
+}
+
+
 #define MAX_LINE_LENGTH 128
 
 /**
@@ -153,6 +227,7 @@ int webserver_receive(local_msu *self, msu_queue_item *input_data) {
         char *Request =  recv_data->msg;
         debug("DEBUG: WS MSU received data from source ssl msu %d",
               recv_data->sslMsuId);
+        log_debug("Received request: %s", Request);
 
         if (Request != NULL) {
             char FirstLine[MAX_LINE_LENGTH];
@@ -161,7 +236,7 @@ int webserver_receive(local_msu *self, msu_queue_item *input_data) {
             GetLine(Request, 0, '\n', FirstLine);
             GetLine(FirstLine, 0, ' ', RequestType);
             GetLine(FirstLine, strlen(RequestType) + 1, ' ', RequestPage);
-
+            
             log_debug("First line of request: %s", FirstLine);
 
             if (strcmp(RequestType, "GET") == 0) {
@@ -183,7 +258,8 @@ int webserver_receive(local_msu *self, msu_queue_item *input_data) {
                     regex_data->dst_packet = input_data->buffer;
                     strncpy(regex_data->string, lookup, strlen(lookup) + 1);
                     input_data->buffer = regex_data;
-                    input_data->buffer_len = sizeof(*regex_data);
+                    // += because the original buffer is still contained in the new buffer
+                    input_data->buffer_len += sizeof(*regex_data);
                     return DEDOS_REGEX_MSU_ID;
                 }
                 else {
@@ -234,7 +310,7 @@ const msu_type WEBSERVER_MSU_TYPE = {
     .route=round_robin,
     .deserialize=default_deserialize,
     .send_local=default_send_local,
-    .send_remote=default_send_remote
+    .send_remote=webserver_send_remote
 };
 
 

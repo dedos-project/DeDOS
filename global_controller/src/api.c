@@ -5,13 +5,16 @@
 #include "api.h"
 #include "dfg.h"
 #include "control_protocol.h"
+#include "controller_tools.h"
 #include "communication.h"
 
-int add_msu(char *data, struct dfg_vertex *new_msu, int runtime_sock) {
+int add_msu(char *msu_data, int msu_id, int msu_type,
+            char *msu_mode, int thread_id, int runtime_sock) {
     char *buf;
     long total_msg_size = 0;
     struct dedos_control_msg control_msg;
-    struct dfg_config *dfg;
+    struct dfg_config *dfg = NULL;
+    struct dfg_vertex *new_msu = NULL;
 
     dfg = get_dfg();
 
@@ -21,14 +24,31 @@ int add_msu(char *data, struct dfg_vertex *new_msu, int runtime_sock) {
     if (endpoint_index > -1) {
         pthread_mutex_lock(dfg->dfg_mutex);
 
+        new_msu = malloc(sizeof(struct dfg_vertex));
+        if (new_msu == NULL) {
+            debug("ERROR: %s", "could not allocate memory for new msu");
+        }
+
+        memcpy(new_msu->msu_mode, msu_mode, strlen(msu_mode));
+        new_msu->msu_type = msu_type;
+        new_msu->msu_id = msu_id;
+
+        struct msu_scheduling *s = NULL;
+        s = malloc(sizeof(struct msu_scheduling));
+
+        s->runtime = dfg->runtimes[endpoint_index];
+        s->thread_id = thread_id;
+        new_msu->scheduling = s;
+
         num_pinned_threads = dfg->runtimes[endpoint_index]->num_pinned_threads;
-        new_msu->msu_runtime = dfg->runtimes[endpoint_index];
 
         pthread_mutex_unlock(dfg->dfg_mutex);
 
-        if (num_pinned_threads == 0 || num_pinned_threads < new_msu->thread_id) {
+        if (num_pinned_threads == 0 || num_pinned_threads < s->thread_id) {
             debug("ERROR: Destination runtime has %d worker threads. Can't fit new msu on thread %d",
-                  num_pinned_threads, new_msu->thread_id);
+                  num_pinned_threads, s->thread_id);
+            free(s);
+            free(new_msu);
             return -1;
         }
     }
@@ -36,6 +56,11 @@ int add_msu(char *data, struct dfg_vertex *new_msu, int runtime_sock) {
         debug("ERROR: Couldn't find endpoint index for sock: %d", runtime_sock);
         return -1;
     }
+
+    // [mode][space][thread_id][\0]
+    int data_len = strlen(msu_data) + 1 + strlen(msu_mode) + 1 + how_many_digits(msu_id) + 1;
+    char data[data_len];
+    snprintf(data, data_len, "%s %d %s", msu_mode, thread_id, msu_data);
 
     struct dedos_control_msg_manage_msu create_msu_msg;
     create_msu_msg.msu_id         = new_msu->msu_id;
@@ -68,10 +93,8 @@ int add_msu(char *data, struct dfg_vertex *new_msu, int runtime_sock) {
     send_to_runtime(runtime_sock, buf, total_msg_size);
     //FIXME: assume msu creation goes well.
     //We need some kind of acknowledgement from the runtime
-#if NO_DFG != 1
     set_msu(new_msu);
     print_dfg();
-#endif
     free(buf);
 
     return 0;
@@ -128,7 +151,6 @@ int update_route(int action, int runtime_sock, int from_msu_id, int from_msu_typ
     send_to_runtime(runtime_sock, buf, total_msg_size);
 
     //TODO: assume msu update goes well. We need some kind of acknowledgement.
-#if NO_DFG != 1
     struct dedos_dfg_manage_msg *dfg_manage_msg =
         (struct dedos_dfg_manage_msg *) malloc(sizeof(struct dedos_dfg_manage_msg));
 
@@ -146,7 +168,7 @@ int update_route(int action, int runtime_sock, int from_msu_id, int from_msu_typ
     dfg_manage_msg->payload = route_update_msg;
 
     update_dfg(dfg_manage_msg);
-#endif
+
     free(buf);
 
     return 0;

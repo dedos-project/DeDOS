@@ -34,6 +34,8 @@ uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)
         return 0;
     }
 
+    log_debug("Adding timer with fn addr %p", timer);
+
     tref.expire = PICO_TIME_MS() + expire;
     t->arg = arg;
     t->timer = timer;

@@ -7,11 +7,12 @@
 #include <pthread.h>
 #include <time.h>
 
-#include "dfg.h"
+#include "global_controller/dfg.h"
+#include "global_controller/dfg_json.h"
 #include "logging.h"
 #include "control_protocol.h"
-#include "controller_tools.h"
-#include "scheduling.h"
+#include "global_controller/controller_tools.h"
+#include "global_controller/scheduling.h"
 
 /* Display information about runtimes */
 int show_connected_peers(void) {
@@ -40,12 +41,13 @@ int show_connected_peers(void) {
     return count;
 }
 
+
 /**
  * Get runtime pointer from ID
  * @param integer runtime_id
- * @return struct runtime_endpoint *runtime
+ * @return struct dfg_runtime_endpoint *runtime
  */
-struct runtime_endpoint *get_runtime_from_id(int runtime_id) {
+struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id) {
     struct dfg_config *dfg = NULL;
     dfg = get_dfg();
 
@@ -152,7 +154,7 @@ struct msus_of_type *get_msus_from_type(int type) {
  * @param integer msu_id
  * @return struct dfg_vertex *msu
  */
-struct dfg_vertex *get_msu_from_id(int msu_id) {
+struct dfg_vertex *dfg_msu_from_id(int msu_id) {
     struct dfg_vertex *msu = NULL;
     struct dfg_config *dfg = NULL;
     dfg = get_dfg();
@@ -237,7 +239,7 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
 
             debug("DEBUG: registering endpoint at %s", update->runtime_ip);
 
-            struct runtime_endpoint *r = NULL;
+            struct dfg_runtime_endpoint *r = NULL;
 
             int i;
             for (i = 0; i < dfg->runtimes_cnt; ++i) {
@@ -252,9 +254,9 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
             }
 
             if (r == NULL) {
-                r = malloc(sizeof(struct runtime_endpoint));
+                r = malloc(sizeof(struct dfg_runtime_endpoint));
 
-                string_to_ipv4(update->runtime_ip, &(r->ip));
+                strncpy(r->ip, update->runtime_ip, INET_ADDRSTRLEN);
 
                 dfg->runtimes[dfg->runtimes_cnt] = r;
                 dfg->runtimes_cnt++;

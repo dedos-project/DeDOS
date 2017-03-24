@@ -307,7 +307,7 @@ static struct generic_msu_queue *get_input_queue_ptr(int msu_id, unsigned int ms
 	//then ask the thread's msu pool to get a pointer to the msu
 	next_msu = dedos_msu_pool_find(tracker->dedos_thread->msu_pool, msu_id);
 	if(!next_msu){
-       log_error("Failed to get ptr to next MSU from msu_pool %s","");
+       log_error("Failed to get ptr to next MSU (%d) from msu_pool", msu_id);
 		return NULL;
 	}
 	if(next_msu->type->type_id != msu_type){

@@ -11,6 +11,7 @@ PATH_SRC_INC = $(PATH_SRC)include/
 PATH_SRC_LEG = $(PATH_SRC)legacy/
 PATH_TST = test/
 PATH_BLD = build/
+PATH_RSC = build/resources/
 PATH_DEP = build/depends/
 PATH_OBJ = build/objs/
 PATH_BLD_LEG = build/legacy/
@@ -30,6 +31,7 @@ DEPEND=gcc -MM -MF
 # COMPILE_dummy_msu=g++ -c
 
 CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g
+TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc
 
 LEGACY_MAKE=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/Makefile)
 LEGACY_INC=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/build/include)
@@ -51,9 +53,11 @@ SRC_ALL = $(SRC_MOD) $(SRC_MOD_PP) $(SRC_STK)
 
 SRC_APP = $(wildcard $(PATH_SRC_APP)*.c)
 
-RESULTS = $(patsubst $(PATH_TST)Test%.c, $(PATH_RES)Test%.txt, $(SRC_TST))
+RESULTS = $(patsubst $(PATH_TST)Test_%.c, $(PATH_RES)Test_%.txt, $(SRC_TST))
+RESOURCE_IN = $(wildcard $(PATH_TST)resources/*)
+TEST_RESOURCES = $(patsubst $(PATH_TST)resources/%, $(PATH_RSC)%, $(RESOURCE_IN))
 
-DEP_TST = $(patsubst $(PATH_TST)Test%.c, $(PATH_DEP)Test%.d, $(SRC_TST))
+DEP_TST = $(patsubst $(PATH_TST)Test_%.c, $(PATH_DEP)Test_%.d, $(SRC_TST))
 DEP_SRC = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_DEP)%.d, $(SRC_MOD)) \
 		  $(patsubst $(PATH_SRC_MOD)%.cc, $(PATH_DEP)%.d, $(SRC_MOD_PP)) \
 		  $(patsubst $(PATH_SRC_STK)%.c, $(PATH_DEP)%.d, $(SRC_STK))
@@ -82,24 +86,32 @@ $(PATH_BLD_LEG)%.o:: $(PATH_SRC_LEG)%
 
 test: $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
-	@for FILE in "$^"; do echo ___ $$FILE ___ ; cat $$FILE; done
+	@for FILE in $^; do \
+		if [ "$$FILE" != test_resources ]; then \
+   			echo ___ $$FILE ___ ; \
+			cat $$FILE; \
+		fi;\
+	done
 	@echo "-----------------------\nFAILURES:\n-----------------------"
-	@echo `grep -s "F:" $(PATH_RES)*.txt`
+	@grep -s "F:" $(PATH_RES)*.txt
 	@echo "-----------------------\nERRORS:\n-----------------------"
-	@echo `grep -s "E:" $(PATH_RES)*.txt`
+	@grep -s "E:" $(PATH_RES)*.txt
 	@echo "\nDONE"
 
+$(TEST_RESOURCES): $(RESOURCE_IN)
+	mkdir -p $(PATH_BLD)/resources
+	cp -r $^ $(PATH_BLD)/resources
 
 # Output the results of the tests by executing each of the builds
 # of the tests. Output STDOUT and STDERR to the name of the rule
-$(PATH_RES)%.txt: $(PATH_BLD)%.$(TARGET_EXT)
+$(PATH_RES)%.txt: $(PATH_BLD)%.$(TARGET_EXT) $(TEST_RESOURCES)
 	-./$< > $@ 2>&1
 
 
 # creates the test executables by linking the test objects with
 # the build objects, unity, and the test dependencies
-$(PATH_BLD)Test%.$(TARGET_EXT): $(PATH_OBJ)Test%.o $(OBJECTS)
-	$(LINK) -o $@ $^ $(CFLAGS)
+$(PATH_BLD)Test_%.$(TARGET_EXT): $(PATH_OBJ)Test_%.o $(OBJECTS) $(LEGACY_OBJ)
+	$(FINAL) -o $@ $^ $(TEST_CFLAGS)
 
 
 # Creates object files from the test sources
@@ -172,7 +184,7 @@ endif
 .PHONY: test
 .PHONY: legacy
 .PHONY: depends
-.PRECIOUS: $(PATH_BLD)Test%.$(TARGET_EXT)
+.PRECIOUS: $(PATH_BLD)Test_%.$(TARGET_EXT)
 .PRECIOUS: $(PATH_OBJ)%.o
 .PRECIOUS: $(PATH_BLD_LEG)%.o
 .PRECIOUS: $(PATH_DEP)%.d

@@ -2,11 +2,11 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "communication.h"
 #include "dedos_msu_list.h"
 #include "modules/ssl_read_msu.h"
 #include "runtime.h"
 #include "modules/webserver_msu.h"
-#include "communication.h"
 #include "routing.h"
 #include "dedos_msu_msg_type.h"
 #include "dedos_thread_queue.h" //for enqueuing outgoing control messages
@@ -18,14 +18,20 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
 {
     int NumBytes;
     int ret, err;
-
-    if ( (ret = SSL_accept(State)) < 0 ) {
-        log_error("SSL_accept failed with ret = %d", ret);
-        err = SSL_get_error(State, ret);
-        SSLErrorCheck(err);
-
-        return -1;
-    }
+    
+    do {
+        ret = SSL_accept(State);
+        err = 0;
+        if (ret < 0){
+            log_warn("SSL_accept failed with ret = %d", ret);
+            err = SSL_get_error(State, ret);
+            if (err != SSL_ERROR_WANT_READ){
+                return -1;
+            } else {
+                log_warn("SSL_accept got SSL_ERROR_WANT_READ");
+            }
+        }
+    } while (err == SSL_ERROR_WANT_READ);
 
     if ( (NumBytes = SSL_read(State, Buffer, BufferSize)) <= 0 ) {
         err = SSL_get_error(State, NumBytes);
@@ -119,9 +125,12 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
         close(SocketFD);
         return NULL;
     }
+    log_debug("ReadSSL returned: %d", ReadBytes);
+    log_debug("SSL state version: %d", State->version);
 
     return Request;
 }
+
 
 int ssl_read_receive(local_msu *self, msu_queue_item *input_data) {
     int ret = 0;
@@ -129,13 +138,15 @@ int ssl_read_receive(local_msu *self, msu_queue_item *input_data) {
     if (data->type == READ) {
         char *retState = GetSSLStateAndRequest(data->socketfd, &(data->state), self, data->msg);
         if (retState == NULL) {
-            debug("DEBUG: ssl msu %d couldn't get data from socket %d", self->id, data->socketfd);
+            log_warn("DEBUG: ssl msu %d couldn't get data from socket %d", self->id, data->socketfd);
             return -1;
         }
         data->ipAddress = runtimeIpAddress;
         data->port = runtime_listener_port;
         data->sslMsuId = self->id;
-
+    
+        log_debug("SSL state location: %p", data->state);
+        log_debug("SSL state version: %d", data->state->version);
         return DEDOS_WEBSERVER_MSU_ID;
     }
     log_debug("Freeing state in SSL MSU %s","");

@@ -18,6 +18,23 @@
 #define NEXT_MSU_LOCAL 1
 #define NEXT_MSU_REMOTE 2
 
+const char *help =
+    "\nList of available commands : \n" \
+    "\n" \
+    "\t*******NOTE: []are required fields else it will segfault*****\n" \
+    "\t*******NOTE: must create at least 1 pinned thread before creating MSUs*****\n" \
+    "\n" \
+    "\t1. show runtimes /* List connected runtimes and socket num */\n" \
+    "\t2. show msus [runtime_socket_num] /* Get MSUs running on the runtime */\n" \
+    "\t3. addmsu [runtime_socket_num] [msu_type] [msu_id_to_assign] [blocking/non-blocking] (thread num {1 to Current_pinned_threads} if non-blocking)\n" \
+    "\t4. delmsu [runtime_socket_num] [msu_type] [msu_id_to_delete]\n" \
+    "\t5. add route [which_on_runtime_socket_num] [on_this_msu_id] [this_msu_type] [to_msu_id] [to_msu_type] [1 for local, 2 for remote] (IP if remote)\n" \
+    "\t6. del route [which_on_runtime_socket_num] [on_this_msu_id] [this_msu_type] [to_msu_id] [to_msu_type] [1 for local, 2 for remote] (IP if remote)\n" \
+    "\t7. create_pinned_thread [runtime_socket_num] /* creates a pinned worker thread on a core not being used */\n" \
+    "\t8. loadcfg [filename] /* load a suite of commands from a file */\n" \
+    "\t9. help /* display available commands */\n" \
+    "\n";
+
 static void send_route_update(char **input, int action){
     char *cmd = *input;
     int from_msu_id, to_msu_id, runtime_sock, from_msu_type, to_msu_type, to_msu_locality;
@@ -58,14 +75,14 @@ static void parse_cmd_action(char *cmd)
     if (*cmd && cmd[ln] == '\n') {
         cmd[ln] = '\0';
     }
-    debug("CMD: %s", cmd);
     char *buf;
     struct dedos_control_msg control_msg;
 
     if (!strcasecmp(cmd, "show runtimes")) {
         show_connected_peers();
-    }
-    else if (!strncasecmp(cmd, "loadcfg", 7)) {
+    } else if (strncasecmp(cmd, "help", 4) == 0) {
+        printf("%s", help);
+    } else if (!strncasecmp(cmd, "loadcfg", 7)) {
         char *filename = strtok(&cmd[7], " ");
         char *line = NULL;
         size_t len = 0;
@@ -83,40 +100,29 @@ static void parse_cmd_action(char *cmd)
 
         fclose(f);
         free(line);
-    }
-    else if (!strncasecmp(cmd, "addmsu", 6)) {
-        int runtime_sock, msu_type, msu_id;
+    } else if (!strncasecmp(cmd, "addmsu", 6)) {
+        int runtime_sock, msu_type, msu_id, thread_id, data_len;
+        char *msu_mode, *data;
 
         runtime_sock = atoi(strtok(&cmd[6], " "));
+        msu_type = atoi(strtok(NULL, " "));
+        msu_id   = atoi(strtok(NULL, " "));
+        msu_mode = strtok(NULL, " ");
 
-        struct dfg_vertex *new_msu = (struct dfg_vertex *) malloc(sizeof(struct dfg_vertex));
-        if (new_msu == NULL) {
-            debug("ERROR: %s", "could not allocate memory for new msu");
+        if (strncmp(msu_mode, "non_blocking", strlen("non-blocking\0"))) {
+            thread_id = atoi(strtok(NULL, "|"));
         }
 
-        new_msu->msu_type = atoi(strtok(NULL, " "));
-        new_msu->msu_id   = atoi(strtok(NULL, " "));
-
-        char *data = strtok(NULL, "\r\n");
-        char *all_data[strlen(data)];
-        strcpy(all_data, data);
-        char *blocking = strtok(data, " ");
-
-        if (strcmp(blocking, "non-blocking"))
-            new_msu->thread_id = atoi(strtok(NULL, " |"));
+        data = strtok(NULL, "\r\n");
         //assume there is only the thread id after the mode
-        memcpy(new_msu->msu_mode, blocking, strlen(blocking));
-
-        new_msu->thread_id = atoi(data + strlen(new_msu->msu_mode) + 1);
 
         int ret;
-        ret = add_msu(all_data, new_msu, runtime_sock);
+        ret = add_msu(data, msu_id, msu_type, msu_mode, thread_id, runtime_sock);
         if (ret == -1) {
             debug("ERROR: %s", "could not trigger new msu creation");
         }
 
-    }
-    else if (!strncasecmp(cmd, "show msus", 9)) {
+    } else if (!strncasecmp(cmd, "show msus", 9)) {
 
         int runtime_sock;
         control_msg.msg_type = REQUEST_MESSAGE;
@@ -132,15 +138,13 @@ static void parse_cmd_action(char *cmd)
 
         free(buf);
 
-    }
-    else if (!strncasecmp(cmd, "delmsu", 6)) {
+    } else if (!strncasecmp(cmd, "delmsu", 6)) {
         // buf = (char*) malloc(sizeof(char) * ln);
         // strncpy(buf, cmd, ln);
 
         int runtime_sock;
         unsigned int msu_type;
         int id;
-        char *data;
         int total_msg_size = 0;
 
         runtime_sock = atoi(strtok(&cmd[6], " "));
@@ -178,20 +182,17 @@ static void parse_cmd_action(char *cmd)
 
         free(buf);
 
-    }
-    else if (!strncasecmp(cmd, "add route", 9)) {
+    } else if (!strncasecmp(cmd, "add route", 9)) {
         int action;
         action = MSU_ROUTE_ADD;
         send_route_update(&cmd, action);
 
-    }
-    else if (!strncasecmp(cmd, "del route", 9)) {
+    } else if (!strncasecmp(cmd, "del route", 9)) {
         int action;
         action = MSU_ROUTE_DEL;
         send_route_update(&cmd, action);
 
-    }
-    else if (!strncasecmp(cmd, "create_pinned_thread", 20)) {
+    } else if (!strncasecmp(cmd, "create_pinned_thread", 20)) {
         int runtime_sock, ret;
         runtime_sock = atoi(strtok(&cmd[20], "\r\n"));
 
@@ -211,23 +212,9 @@ static void* cli_loop()
     char *line = NULL;
     size_t size;
 
-    do {
-        printf("\nList of available commands : \n"
-                "\n"
-                "\t*******NOTE: []are required fields else it will segfault*****\n"
-                "\t*******NOTE: must create at least 1 pinned thread before creating MSUs*****\n"
-                "\n"
-                "\t1. show runtimes /* List connected runtimes and socket num */\n"
-                "\t2. show msus [runtime_socket_num] /* Get MSUs running on the runtime */\n"
-                "\t3. addmsu [runtime_socket_num] [msu_type] [msu_id_to_assign] [blocking/non-blocking] (thread num {1 to Current_pinned_threads} if non-blocking)\n"
-                "\t4. delmsu [runtime_socket_num] [msu_type] [msu_id_to_delete]\n"
-                "\t5. add route [which_on_runtime_socket_num] [on_this_msu_id] [this_msu_type] [to_msu_id] [to_msu_type] [1 for local, 2 for remote] (IP if remote)\n"
-                "\t6. del route [which_on_runtime_socket_num] [on_this_msu_id] [this_msu_type] [to_msu_id] [to_msu_type] [1 for local, 2 for remote] (IP if remote)\n"
-                "\t7. create_pinned_thread [runtime_socket_num] /* creates a pinned worker thread on a core not being used */\n"
-                "\t8. loadcfg [filename] /* load a suite of commands from a file */\n"
-                "\n"
-        );
+    printf("%s", help);
 
+    do {
         printf("> Enter command: ");
         next = getline(&line, &size, stdin);
         if (next != -1) {

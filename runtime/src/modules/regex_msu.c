@@ -32,6 +32,56 @@ int html_len() {
     return strlen(HTML) + 200;
 }
 
+/** Deserializes data received from remote MSU and enqueues the
+ * message payload onto the msu queue.
+ *
+ * NOTE: If there are substructures in the buffer to be received,
+ *       a type-specific deserialize function will have to be
+ *       implemented.
+ *
+ * TODO: I don't think "void *buf" is necessary.
+ * @param self MSU to receive data
+ * @param msg remote message to be received, containing msg->payload
+ * @param buf ???
+ * @param bufsize ???
+ * @return 0 on success, -1 on error
+ */
+static int regex_deserialize(local_msu *self, intermsu_msg *msg,
+                        void *buf, uint16_t bufsize){
+    if (self){
+        msu_queue_item *recvd =  malloc(sizeof(*recvd));
+        if (!(recvd)){
+            log_error("Could not allocate msu_queue_item");
+            return -1;
+        }
+    
+        struct regex_data_payload *regex_data = malloc(sizeof(*regex_data));
+        if (!regex_data){
+            free(recvd);
+            log_error("Could not allocate regex_data_payload");
+            return -1;
+        }
+        void *dst_packet = malloc(bufsize - sizeof(*regex_data));
+        if (!dst_packet){
+            free(recvd);
+            free(regex_data);
+            log_error("Could not allocate regex_data->dst_packet");
+            return -1;
+        }
+        memcpy(regex_data, msg->payload, sizeof(*regex_data));
+        memcpy(dst_packet, msg->payload + sizeof(*regex_data),
+               bufsize - sizeof(*regex_data));
+
+        recvd->buffer_len = sizeof(*regex_data);
+        recvd->buffer = regex_data;
+        regex_data->dst_packet = dst_packet;
+        generic_msu_queue_enqueue(&self->q_in, recvd);
+        return 0;
+    }
+    return -1;
+}
+
+
 /**
  * Recieves data for the Regex MSU
  * @param self Regex MSU to receive the data
@@ -96,6 +146,7 @@ int regex_receive(local_msu *self, msu_queue_item *input_data) {
 
             return DEDOS_SSL_WRITE_MSU_ID;
         }
+        log_warn("Unknown dst type: %d", regex_data->dst_type);
     }
     return -1;
 }
@@ -113,7 +164,7 @@ const msu_type REGEX_MSU_TYPE = {
     .receive=regex_receive,
     .receive_ctrl=NULL,
     .route=round_robin,
-    .deserialize=default_deserialize,
+    .deserialize=regex_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,
 };

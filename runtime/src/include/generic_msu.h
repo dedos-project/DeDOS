@@ -229,7 +229,7 @@ void msu_free_data(local_msu *msu);
 /** Gets the state data associated with an MSU. */
 void *msu_data(local_msu *msu);
 
-/** An MSU registers itself with this so that instances can be created 
+/** An MSU registers itself with this so that instances can be created
  * using the type->id */
 void register_msu_type(msu_type *type);
 

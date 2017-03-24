@@ -5,7 +5,7 @@
 #include "logging.h"
 #include "communication.h"
 #include "cli_interface.h"
-
+#include "scheduling.h"
 #include "dfg.h"
 
 #define FILENAME_LEN 32
@@ -17,7 +17,7 @@ static void print_usage() {
 }
 
 int main(int argc, char *argv[]) {
-    int tcp_control_listen_port;
+    int tcp_control_listen_port = -1;
     int option = 0;
     char filename[FILENAME_LEN];
     memset(filename, '\0', FILENAME_LEN);

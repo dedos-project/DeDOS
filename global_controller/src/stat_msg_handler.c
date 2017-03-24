@@ -3,12 +3,12 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
-#include "scheduling.h"
 #include "controller_tools.h"
 #include "stat_msg_handler.h"
 #include "communication.h"
 #include "control_protocol.h"
 #include "dfg.h"
+#include "api.h"
 
 #define NEXT_MSU_LOCAL 1
 #define NEXT_MSU_REMOTE 2
@@ -17,7 +17,6 @@ static void send_route_update(char *input, int action) {
     char *cmd = &(*input);
     int from_msu_id, to_msu_id, runtime_sock, from_msu_type, to_msu_type, to_msu_locality;
     char *ip_str;
-    long total_msg_size = 0;
     int to_ip = 0;
     int ret;
 
@@ -46,23 +45,20 @@ static void send_route_update(char *input, int action) {
     }
 }
 
+//TODO: update this function for new scheduling & DFG structure
 void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
+/*
     //TODO: add specific stat report message types and code
     struct msu_stats_data *stats = stats_data;
 
-    /*
-    debug("DEBUG: %s", "processing stat messages");
-    debug("DEBUG: %s: %d", "payload.msu_id", stats->msu_id);
-    debug("DEBUG: %s: %u", "payload.item_processed", stats->queue_item_processed);
-    debug("DEBUG: %s: %u", "payload.memory_allocated", stats->memory_allocated);
-    debug("DEBUG: %s: %u", "payload.data_queue_size", stats->data_queue_size);
-    */
+    //debug("DEBUG: %s", "processing stat messages");
+    //debug("DEBUG: %s: %d", "payload.msu_id", stats->msu_id);
+    //debug("DEBUG: %s: %u", "payload.item_processed", stats->queue_item_processed);
+    //debug("DEBUG: %s: %u", "payload.memory_allocated", stats->memory_allocated);
+    //debug("DEBUG: %s: %u", "payload.data_queue_size", stats->data_queue_size);
 
-    /**
-     * TODO:
-     * check memory consumption (check with requirements for the MSU, stored in JSON)
-     * trigger remote cloning
-     */
+     //TODO: check memory consumption (check with requirements for the MSU, stored in JSON)
+     // trigger remote cloning
 
     struct dfg_config *dfg_config_g = NULL;
     dfg_config_g = get_dfg();
@@ -73,9 +69,6 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
     }
 
     if (stats->data_queue_size > 5) {
-        /**
-         * First create the new msu
-         */
         char data[32];
         memset(data, '\0', sizeof(data));
         struct dfg_vertex *new_msu = (struct dfg_vertex *) malloc (sizeof(struct dfg_vertex));
@@ -91,21 +84,21 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
             return;
         }
 
-        /* Check if we need to spawn a new worker thread */
+        // Check if we need to spawn a new worker thread
         //right now we assume the new thread doesn't exist.
         create_worker_thread(target_runtime_sock);
         sleep(2);
 
 
-        /* Deep copy of msu to be cloned and update specific fields */
+        // Deep copy of msu to be cloned and update specific fields
         memcpy(new_msu, msu, sizeof(*msu));
 
         new_msu->msu_id = dfg_config_g->vertex_cnt + 1;
         new_msu->thread_id = target_thread_id;
-        /* clone routes counts will be incremented when actually created */
+        // clone routes counts will be incremented when actually created
         new_msu->num_dst = 0;
         new_msu->num_src = 0;
-        /* clean up target and destination pointers */
+        // clean up target and destination pointers
         int r;
         for (r = 0; r < msu->num_dst; r++) {
             new_msu->msu_dst_list[r] = NULL;
@@ -121,9 +114,7 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
 
         add_msu(&data, new_msu, target_runtime_sock);
 
-        /**
-         * Then update downstream and upstream routes
-         */
+        // Then update downstream and upstream routes
         int action;
         action = MSU_ROUTE_ADD;
 
@@ -136,9 +127,7 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
         //TODO: determine locality on a per destination basis
         int locality = 1;
 
-        /**
-         * 1 char for '\0', 5 for spaces
-         */
+        // 1 char for '\0', 5 for spaces
         base_len = 1 + 5;
         base_len = base_len + how_many_digits(new_msu->msu_id);
         base_len = base_len + how_many_digits(new_msu->msu_type);
@@ -185,4 +174,5 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
             send_route_update(cmd, action);
         }
     }
+*/
 }

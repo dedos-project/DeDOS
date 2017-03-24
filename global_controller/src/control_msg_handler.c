@@ -96,7 +96,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
             }
             response->msg_type = RESPONSE_MESSAGE;
             response->msg_code = SET_DEDOS_RUNTIMES_LIST;
-            response->payload_len = (count * sizeof(uint32_t));
+            response->payload_len = ((count-1) * sizeof(uint32_t));
 
             response->payload = to_send_peer_ips;
             response->header_len = sizeof(struct dedos_control_msg);
@@ -148,12 +148,12 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
         case STATISTICS_UPDATE:
             //process received stats update here
             if (control_msg->msg_type == ACTION_MESSAGE) {
-                unsigned int array_len = control_msg->payload_len / sizeof(struct msu_stats_data);
                 int i;
                 struct msu_stats_data *rcvd_stats_array = (struct msu_stats_data*)control_msg->payload;
 
                 /*
                 debug("Received stats: %s","");
+                //unsigned int array_len = control_msg->payload_len / sizeof(struct msu_stats_data);
                 for (i = 0; i < array_len; ++i) {
                     debug("msu_id: %d, items_processed: %u, mem_usage: %u, q_size: %u",
                             rcvd_stats_array[i].msu_id,

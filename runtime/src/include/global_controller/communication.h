@@ -2,14 +2,9 @@
 #define COMMUNICATION_H_
 
 #include "logging.h"
+#include "msu_tracker.h" // For getting msu_thread_info which was redefined here
 #include <stdint.h>
 #include <pthread.h>
-
-//for parsing msu id and thread info received from runtime
-struct msu_thread_info {
-    int msu_id;
-    pthread_t thread_id;
-};
 
 int start_communication(int tcp_control_listen_port);
 void check_comm_sockets(void);
