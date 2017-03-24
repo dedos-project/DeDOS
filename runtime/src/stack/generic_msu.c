@@ -481,6 +481,7 @@ struct msu_endpoint *round_robin(msu_type *type, local_msu *sender,
     // Routing hasn't been initialized yet, so choose a semi-random
     // starting point
     if (route_state == NULL){
+        log_debug("Creating new routing state for type %d from  msu %d", type->type_id, sender->id);
         struct msu_endpoint *last_endpoint = dst_msus;
         // TODO: Need to free when freeing msu!
         route_state = malloc(sizeof(*route_state));
@@ -492,6 +493,7 @@ struct msu_endpoint *round_robin(msu_type *type, local_msu *sender,
         route_state->type_id = type->type_id;
         route_state->last_endpoint = last_endpoint;
         HASH_ADD_INT(all_states, type_id, route_state);
+        sender->routing_state = (void*)all_states;
     }
 
     // Get the next endpoint of the same type, and replace the current one with it
