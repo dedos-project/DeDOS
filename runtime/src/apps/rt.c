@@ -132,7 +132,9 @@ int main(int argc, char **argv){
 #ifdef USE_OPENSSL
     init_locks();
     InitServerSSLCtx(&ssl_ctx_global);
-    LoadCertificates(ssl_ctx_global, "mycert.pem", "mycert.pem");
+    if (LoadCertificates(ssl_ctx_global, "mycert.pem", "mycert.pem") < 0){
+        log_error("Error loading SSL certificates");
+    }
 #endif
     init_peer_socks();
 
