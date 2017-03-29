@@ -14,8 +14,9 @@
 
 #define USE_OPENSSL
 
-#define USAGE_ARGS "<dfg.json> <runtime_id> <webserver_port> "\
-                   "[db_ip db_port max_db_load]"
+#define USAGE_ARGS " [-j dfg.json -i runtime_id] | " \
+                   "[-g global_ctl_ip -p global_ctl_port -P local_listen_port [--same-machine | -s]] "\
+                   "-w webserver_port [--db-ip db_ip --db-port db_port --db-load db_max_load] "
 
 SSL_CTX* ssl_ctx_global;
 static pthread_mutex_t *lockarray;
@@ -78,56 +79,141 @@ static void kill_locks(void) {
 
 int main(int argc, char **argv){
     // initialize the context and read the certificates
+    
+    char *dfg_json = NULL;
+    int runtime_id = -1;
+    char *global_ctl_ip = NULL;
+    int global_ctl_port = -1;
+    int local_listen_port = -1;
+    int same_physical_machine = 0;
+    int webserver_port = -1;
+    // Declared in communication.h, used in webserver_msu
+    db_ip = NULL;
+    db_port = -1;
+    db_max_load = -1;
+    
+    struct option long_options[] = {
+        {"same-machine", no_argument, 0, 's'},
+        {"db-ip", required_argument, 0, 'd'},
+        {"db-port", required_argument, 0, 'b'},
+        {"db-load", required_argument, 0, 'l'},
+        {0, 0, 0, 0}
+    };
+    
+    int arguments_provided = 0;
+    while (1){
+        int option_index = 0;
+        int c = getopt_long(argc, argv, "j:i:g:p:P:s:w:d:b:l:",
+                            long_options, &option_index);
+        if (c == -1)
+            break;
+        arguments_provided = 1;
 
-    if (argc < 4){
+        switch (c){
+            case 'j':
+                dfg_json = optarg;
+                break;
+            case 'i':
+                runtime_id = atoi(optarg);
+                break;
+            case 'g':
+                global_ctl_ip = optarg;
+                break;
+            case 'p':
+                global_ctl_port = atoi(optarg);
+                break;
+            case 'P':
+                local_listen_port = atoi(optarg);
+                break;
+            case 's':
+                same_physical_machine = 1;
+                break;
+            case 'w':
+                webserver_port = atoi(optarg);
+                break;
+            case 'd':
+                db_ip = optarg;
+                break;
+            case 'b':
+                db_port = atoi(optarg);
+                break;
+            case 'l':
+                db_max_load = atoi(optarg);
+                break;
+            case '?':
+            default:
+                printf("Unknown option provided 0%o. Exiting.\n", c);
+                exit(-1);
+        }
+    }
+    if (!arguments_provided){
         printf("%s %s\n", argv[0], USAGE_ARGS);
         exit(0);
     }
+    int json_all = (dfg_json != NULL && runtime_id > 0);
+    int json_any = (dfg_json != NULL || runtime_id > 0);
 
-    int runtime_id = atoi(argv[2]);
-    int rtn = do_dfg_config(argv[1]);
-    if ( rtn < 0 ) {
-        printf("%s is not a valid DFG json file. Exiting.\n", argv[1]);
+    int manual_all = (global_ctl_ip != NULL && global_ctl_port > 0 && 
+                      local_listen_port > 0 && same_physical_machine > 0);
+    int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 || 
+                      local_listen_port > 0 || same_physical_machine > 0) ;
+
+    int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
+
+    if (!json_all && !manual_all){
+        printf("One of JSON file and runtime ID or global control IP and port required. Exiting.\n");
+        exit(-1);
+    }
+    if ((json_all && manual_any) || (json_any && manual_all)){
+        printf("Both JSON and manual configuration present. Please provide only one.\n");
+        exit(-1);
+    }
+    if (webserver_port == -1){
+        printf("Webserver port not provided. Exiting\n");
         exit(-1);
     }
 
-    struct dfg_config *dfg = get_dfg();
-    struct dfg_runtime_endpoint *rt = get_local_runtime(dfg, runtime_id);
-    if ( rt == NULL ){
-        printf("Runtime %d not present in provided DFG. Exiting.\n", runtime_id);
-        exit(-1);
+    struct dfg_config *dfg = NULL;
+    if (json_all){
+        int rtn = do_dfg_config(dfg_json);
+        if (rtn < 0){
+            printf("%s is not a valid json DFG. Exiting\n", dfg_json);
+            exit(-1);
+        }
+        dfg = get_dfg();
+        struct dfg_runtime_endpoint *rt = get_local_runtime(dfg, runtime_id);
+        if (rt == NULL){
+            printf("Runtime %d not present in provided DFG. Exiting.\n", runtime_id);
+            exit(-1);
+        }
+        
+        global_ctl_ip = dfg->global_ctl_ip;
+        global_ctl_port = dfg->global_ctl_port;
+        local_listen_port = rt->port;
+
+        uint32_t global_ctl_ip_int;
+        string_to_ipv4(global_ctl_ip, &global_ctl_ip_int);
+        same_physical_machine = ( global_ctl_ip_int == rt->ip );
+
+    } 
+    
+    runtime_listener_port = local_listen_port;
+    int control_listen_port = local_listen_port;
+
+    // Control socket init for listening to connections from other runtimes
+    if (same_physical_machine == 1){
+        control_listen_port++;
     }
-
-    char *master_ip = dfg->global_ctl_ip;
-    uint32_t master_ip_int;
-    string_to_ipv4(master_ip, &master_ip_int);
-
-    int master_port = dfg->global_ctl_port;
-    runtime_listener_port = rt->port;
-    int control_listen_port = runtime_listener_port;
-    uint32_t this_ip = rt->ip;
-
-    int same_physical_machine = ( master_ip_int == this_ip );
-    int webserver_port = atoi(argv[3]);
-
-    if (argc > 4) {
-        // Declared in communication.h, used in webserver_msu
-        db_ip = (char*)malloc(16);
-        strncpy(db_ip, argv[4], strlen(argv[4]));
-        db_port = atoi(argv[5]);
-        db_max_load = atoi(argv[6]);
-
+    
+    if ( ! db_all){
+        log_warn("Connection to mock database not fully instantiated");
+    } else {
         // Initialize random number generator
         time_t t;
         srand((unsigned) time(&t));
     }
-
     log_info("Starting runtime...");
 
-    // Control socket init for listening to connections
-    // from other runtimes
-    if (same_physical_machine == 1)
-        control_listen_port++;
 
 #ifdef USE_OPENSSL
     init_locks();
@@ -138,13 +224,17 @@ int main(int argc, char **argv){
 #endif
     init_peer_socks();
 
-    dedos_control_socket_init(control_listen_port);
+    if (dedos_control_socket_init(control_listen_port) < 0){
+       log_error("Could not initialize control socket");
+    } 
 
-    dedos_webserver_socket_init(webserver_port);
+    if (dedos_webserver_socket_init(webserver_port) < 0){
+        log_error("Could nto initialize webserver socket");
+    }
 
     int ret = 0;
     do {
-        ret = connect_to_master(master_ip, master_port);
+        ret = connect_to_master(global_ctl_ip, global_ctl_port);
         sleep(2);
     } while (ret);
 
@@ -156,7 +246,6 @@ int main(int argc, char **argv){
     freeSSLRelatedStuff();
     kill_locks();
 #endif
-    free(db_ip);
     log_info("Runtime exit...");
     return 0;
 }
