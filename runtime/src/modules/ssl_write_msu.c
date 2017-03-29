@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "communication.h"
 #include "modules/ssl_write_msu.h"
 #include "runtime.h"
 #include "modules/webserver_msu.h"
-#include "communication.h"
 #include "routing.h"
 #include "dedos_msu_list.h"
 #include "dedos_msu_msg_type.h"
@@ -41,6 +41,13 @@ int ssl_write_receive(local_msu *self, msu_queue_item *input_data) {
     }
     return -1;
 }
+
+int ssl_write_route(msu_type *type, local_msu *sender, msu_queue_item *data){
+    struct ssl_data_payload *ssl_data = (struct ssl_data_payload*)data->buffer;
+    uint32_t ipAddress = ssl_data->ipAddress == runtimeIpAddress ? 0 : ssl_data->ipAddress;
+    return round_robin_within_ip(type, sender, ipAddress);
+}
+
 msu_type SSL_WRITE_MSU_TYPE = {
     .name="SSLWriteMsu",
     .layer=DEDOS_LAYER_APPLICATION,
@@ -50,7 +57,7 @@ msu_type SSL_WRITE_MSU_TYPE = {
     .destroy=NULL,
     .receive=ssl_write_receive,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=ssl_write_route,
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,
