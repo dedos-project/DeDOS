@@ -1,6 +1,8 @@
 #include <error.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <errno.h>
+#include <string.h>
 #include "communication.h"
 #include "runtime.h"
 #include "comm_protocol.h"
@@ -136,7 +138,7 @@ int dedos_webserver_socket_init(int webserver_port) {
     ws_sock = socket(AF_INET, SOCK_STREAM, 0);
     int Set = 1;
     if ( setsockopt(ws_sock, SOL_SOCKET, SO_REUSEADDR, &Set, sizeof(int)) == -1 ) {
-        log_warn("setsockopt() failed with error %s (%d)", errno, strerror(errno));
+        log_warn("setsockopt() failed with error %s (%d)", strerror(errno), errno );
     }
 
     ws.sin_family = AF_INET;
@@ -266,14 +268,19 @@ int check_comm_sockets() {
         // if the queue is NULL close the connection right away
         // printf("Trying to get a new conn \n");
         struct sockaddr_in ClientAddr;
-        socklen_t AddrLen;
+        socklen_t AddrLen = sizeof(ClientAddr);
         int new_sock_ws = accept(ws_sock,(struct sockaddr*) &ClientAddr, &AddrLen);
+    
+        if (new_sock_ws < 0){
+            log_warn("accept(%d,...) failed with error %s ", ws_sock, strerror(errno));
+            return -1;
+        }
 
         struct timeval timeout;
         timeout.tv_sec = 0;
         timeout.tv_usec = 10000;
         if ( setsockopt(new_sock_ws, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(struct timeval)) == -1 ) {
-            log_warn("setsockopt() failed with error %s (%d)", errno, strerror(errno));
+            log_warn("setsockopt(%d,...) failed with error %s ", new_sock_ws, strerror(errno));
             return -1;
         }
 
