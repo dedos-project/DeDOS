@@ -20,10 +20,12 @@ class Thread:
 class MSU:
 
     USED_IDS = []
-    def __init__(self, threads, rep, name, rt_socket, type_id, block_type, 
-            thread, ip, id=None, reps=None):
-        self.name, self.rt_socket, self.type_id, self.block_type, self.ip= \
-                name, rt_socket, type_id, block_type, ip, 
+    def __init__(self, threads, rep, name, scheduling, type, working_mode,
+            thread, id=None, reps=None, **kwargs):
+        self.name, self.type_id, self.block_type, = \
+                name, type, working_mode, 
+        self.rt_socket = scheduling['runtime_id'] + 3
+        self.ip = scheduling['ip']
         self.rep_num = rep
 
         if id is None:
@@ -31,9 +33,9 @@ class MSU:
         else:
             self.id = id
         
-        if thread+rep not in threads[rt_socket]:
-            threads[rt_socket][thread+rep] =  Thread(rt_socket, thread+rep)
-        self.thread = threads[rt_socket][thread+rep]
+        if thread+rep not in threads[self.rt_socket]:
+            threads[self.rt_socket][thread+rep] =  Thread(self.rt_socket, thread+rep)
+        self.thread = threads[self.rt_socket][thread+rep]
             
     def gen_id(self):
         i=1
@@ -93,7 +95,7 @@ def add_routes(gc_ip, routes, msus, froms, tos, thread_match):
 
 def create_cfg(yml_filename):
     input = yaml.load(open(yml_filename))
-    gc_ip = input['global_controller_ip']
+    gc_ip = input['global_ctl']['ip']
 
     threads = defaultdict(dict)
         
@@ -105,7 +107,7 @@ def create_cfg(yml_filename):
 
     routes = []
     for route in input['routes']:
-        add_routes(gc_ip, routes, msus, route['from'], route['to'], route['thread-match'])
+        add_routes(gc_ip, routes, msus, route['from'], route['to'], route['thread-match'] if 'thread_match' in route else False)
     
     n_used_threads = defaultdict(int)
     used_msus = []

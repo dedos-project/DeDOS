@@ -4,6 +4,8 @@ import sys
 from collections import OrderedDict
 
 def sort_msus(msus):
+    if len(msus) == 0:
+        return []
     msus_out = []
     start_msus = [msu for msu in msus if msu['vertex_type'] == 'entry']
     msus_out.extend(start_msus)
@@ -132,4 +134,8 @@ def make_cfg(yml_filename, pretty=False):
 
 if __name__ == '__main__':
     pretty = '-p' in sys.argv
-    make_cfg('dfg.yml', pretty)
+    if (pretty and len(sys.argv) > 2) or (not pretty and len(sys.argv) > 1):
+        cfg = sys.argv[-1]
+    else:
+        cfg = 'dfg.yml'
+    make_cfg(cfg, pretty)
