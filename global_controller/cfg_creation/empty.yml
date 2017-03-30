@@ -1,10 +1,16 @@
 machines:
     - &dedos01
-      ip: 158.130.57.62
+      ip: 192.168.0.2
       runtime_id: 1
     - &dedos02
-      ip: 158.130.56.192
+      ip: 192.168.0.3
       runtime_id: 2
+    - &dedos03
+      ip: 192.168.0.4
+      runtime_id: 0
+    - &dedos04
+      ip: 192.168.0.5
+      runtime_id: 0
 
 types:
     ssl_read: &ssl-read
@@ -38,7 +44,7 @@ types:
 
 global_ctl:
     <<: *dedos01
-    port: 8080
+    port: 8090
 
 application:
     load_mode: preload
@@ -79,77 +85,10 @@ default_msus:
       scheduling:
           <<: *dedos02
 
-msus:
-    - name: ssl-route
-      <<: *rt1-msu
-      <<: *ssl-routing
-      thread: 1
+msus: []
 
-    - name: ssl-read1
-      <<: *rt1-msu
-      <<: *ssl-read
-      thread: 1
-      reps: 1
+routes: []
 
-    - name: http1
-      <<: *rt1-msu
-      <<: *http
-      thread: 1
-      reps: 1
-
-    - name: regex
-      <<: *rt1-msu
-      <<: *regex
-      thread: 2
-      reps: 14
-
-#    - name: regex2
-#      <<: *rt2-msu
-#      <<: *regex
-#      thread: 1
-#      reps: 16
-
-    - name: ssl-write1
-      <<: *rt1-msu
-      <<: *ssl-write
-      thread: 1
-
-
-    # RUNTIME 2 
-    #- &HTTP_RT2
-    # name: http-rt2
-    # <<: *rt2-nb
-    # <<: *http
-    # thread: 1
-    #- <<: *HTTP_RT2
-    #  name: http-rt2-2
-    #  thread: 2
-    #- <<: *HTTP_RT2
-    #  name: http-rt2-3
-    #  thread: 3
-    #- <<: *HTTP_RT2
-    # name: http-rt2-4
-    # thread: 4
-
-
-
-
-routes:
-    - from: ssl-route
-      to: ssl-read1
-      thread-match: false
-
-    - from: ssl-read1
-      to: http1
-      thread-match: true
-
-    - from: http1
-      to: [regex] #, regex2]
-      thread-match: false
-
-    - from: [http1, regex] #, regex2]
-      to: ssl-write1
-      thread-match: false
 
       #- from: [http-rt1, http-rt2, http-rt2-2, http-rt2-3, http-rt2-4]
       #to: ssl-write-rt1

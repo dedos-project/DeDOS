@@ -114,6 +114,8 @@ static void parse_cmd_action(char *cmd)
         }
 
         data = strtok(NULL, "\r\n");
+        if (data == NULL)
+            data = "\0";
         //assume there is only the thread id after the mode
 
         int ret;
