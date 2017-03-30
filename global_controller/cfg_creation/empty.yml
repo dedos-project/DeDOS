@@ -1,16 +1,12 @@
 machines:
     - &dedos01
       ip: 192.168.0.2
-      runtime_id: 1
     - &dedos02
       ip: 192.168.0.3
-      runtime_id: 2
     - &dedos03
       ip: 192.168.0.4
-      runtime_id: 0
     - &dedos04
       ip: 192.168.0.5
-      runtime_id: 0
 
 types:
     ssl_read: &ssl-read
@@ -61,9 +57,11 @@ runtimes:
     1: &rt1
         <<: *dedos01
         <<: *default_runtime
+        runtime_id: 1
     2: &rt2
         <<: *dedos02
         <<: *default_runtime
+        runtime_id: 2
 
 default_msus:
     - &default_msu
@@ -79,11 +77,11 @@ default_msus:
     - &rt1-msu
       <<: *default_msu
       scheduling:
-          <<: *dedos01
+          <<: *rt1
     - &rt2-msu
       <<: *default_msu
       scheduling:
-          <<: *dedos02
+          <<: *rt2
 
 msus: []
 
