@@ -103,8 +103,8 @@ void parse_msu_scheduling(jsmntok_t *t, int *starting_token,
         }
         debug("String name : %.*s\n", t[*i].end-t[*i].start, json_string + t[*i].start);
 
-        char value[32];
-        memset(value, '\0', 32);
+        char value[256];
+        memset(value, '\0', 256);
         memcpy(value, json_string + t[*i+1].start, t[*i+1].end - t[*i+1].start);
 
         if (jsoneq(json_string, &t[*i], "runtime_id") == 0) {
@@ -683,7 +683,7 @@ int do_dfg_config(const char * init_cfg_filename) {
     }
 
     /*Do JSON parsing*/
-    jsmntok_t t[1024];//num. of JSON tokens.
+    jsmntok_t t[4096];//num. of JSON tokens.
     jsmn_init(&jp);
     int r = jsmn_parse(&jp, json_string, strlen(json_string), t, sizeof(t)/sizeof(t[0]));
     if (r < 0) {

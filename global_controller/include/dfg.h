@@ -15,7 +15,7 @@
 #define MAX_RCV_BUFLEN 4096
 
 /* Some JSON properties */
-#define MAX_JSON_LEN 65536
+#define MAX_JSON_LEN 131072
 #define MAX_MSU 128
 // Counts are inclusive of ALL subfields
 #define RUNTIME_FIELDS 6
