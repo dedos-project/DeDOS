@@ -571,6 +571,11 @@ int send_to_dst(struct msu_endpoint *dst, local_msu *src, msu_queue_item *data){
         if (rtn < 0){
             log_error("Failed to send to remote runtime%s", "");
         }
+        if (data){
+            log_debug("Freeing data buffer and data because of remote send");
+            free(data->buffer);
+            free(data);
+        }
         return rtn;
     } else {
         log_error("Unknown locality: %d", dst->locality);
