@@ -249,7 +249,7 @@ int msu_app_tcp_echo_process_queue_item(struct generic_msu *msu, struct generic_
 
     return 0;
 }
-int msu_app_tcp_echo_init(local_msu *self, 
+int msu_app_tcp_echo_init(struct generic_msu *self, 
         struct create_msu_thread_msg_data *create_action)
 {
     struct pico_ip4 ZERO_IP4 = {
@@ -329,7 +329,7 @@ int msu_app_tcp_echo_init(local_msu *self,
     return 0;
 }
 
-msu_type MSU_APP_TCP_ECHO_TYPE = {
+struct msu_type MSU_APP_TCP_ECHO_TYPE = {
     .name="app_tcp_echo_msu",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_PICO_TCP_APP_TCP_ECHO_ID,

@@ -10,6 +10,6 @@ struct routing_queue_item
     struct pico_frame *f;
 };
 
-msu_type HS_REQUEST_ROUTING_MSU_TYPE;
+struct msu_type HS_REQUEST_ROUTING_MSU_TYPE;
 
 #endif

@@ -27,7 +27,7 @@ struct msu_pool {
 
 static inline void dedos_msu_pool_print(struct msu_pool *q)
 {
-    local_msu *cur;
+    struct generic_msu *cur;
     MUTEX_LOCK(q->mutex);
     cur = q->head;
     if(!q->head){
@@ -46,7 +46,7 @@ static inline void dedos_msu_pool_print(struct msu_pool *q)
     MUTEX_UNLOCK(q->mutex);
 }
 
-static inline int32_t dedos_msu_pool_add(struct msu_pool *q, local_msu *p)
+static inline int32_t dedos_msu_pool_add(struct msu_pool *q, struct generic_msu *p)
 {
     if(q == NULL){
         log_error("%s","NULL msu_pool pointer..cannot add msu to pool");

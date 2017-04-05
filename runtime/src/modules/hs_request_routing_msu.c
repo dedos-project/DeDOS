@@ -120,7 +120,7 @@ void hs_request_routing_msu_destroy(struct generic_msu *self)
 }
 */
 
-int hs_request_routing_msu_restore(local_msu *self,
+int hs_request_routing_msu_restore(struct generic_msu *self,
         struct dedos_intermsu_message* msg, void *buf, uint16_t bufsize)
 {
     //parse the received buffer, then enqueue the request
@@ -231,7 +231,7 @@ end:
     return 0;
 }
 */
-msu_type HS_REQUEST_ROUTING_MSU_TYPE = {
+struct msu_type HS_REQUEST_ROUTING_MSU_TYPE = {
     .name="hs_request_routing_msu",
     .layer=DEDOS_LAYER_TRANSPORT,
     .type_id=DEDOS_TCP_HS_REQUEST_ROUTING_MSU_ID,

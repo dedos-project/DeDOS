@@ -147,7 +147,7 @@ void requested_regex_value(char *request, char *val_out){
  * @param dst MSU destination to receive the message
  * @return -1 on error, >=0 on success
  */
-int webserver_send_remote(local_msu *src, msu_queue_item *data,
+int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
                         struct msu_endpoint *dst){
     struct dedos_intermsu_message *msg = malloc(sizeof(*msg));
     if (!msg){
@@ -219,7 +219,7 @@ int webserver_send_remote(local_msu *src, msu_queue_item *data,
  * @param input_data Data received by the MSU
  * @return type ID of next MSU to receive data on success, -1 on error
  */
-int webserver_receive(local_msu *self, msu_queue_item *input_data) {
+int webserver_receive(struct generic_msu *self, msu_queue_item *input_data) {
     if (self && input_data) {
         // printf("web_server_data_handler :Webserver MSU started processing\n");
         int ret;
@@ -298,7 +298,7 @@ int webserver_receive(local_msu *self, msu_queue_item *input_data) {
 /**
  * All instances of Webserver MSUs share this type information
  */
-const msu_type WEBSERVER_MSU_TYPE = {
+const struct msu_type WEBSERVER_MSU_TYPE = {
     .name="WebserverMSU",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_WEBSERVER_MSU_ID,
