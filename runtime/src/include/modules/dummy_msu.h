@@ -8,5 +8,5 @@
 #include "generic_msu.h"
 
 /** All Dummy MSUs contain a reference to this type */
-extern msu_type DUMMY_MSU_TYPE;
+extern struct msu_type DUMMY_MSU_TYPE;
 #endif /* DUMMY_MSU_H_ */

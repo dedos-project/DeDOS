@@ -46,7 +46,7 @@ int html_len() {
  * @param bufsize ???
  * @return 0 on success, -1 on error
  */
-static int regex_deserialize(local_msu *self, intermsu_msg *msg,
+static int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
     if (self){
         msu_queue_item *recvd =  malloc(sizeof(*recvd));
@@ -88,7 +88,7 @@ static int regex_deserialize(local_msu *self, intermsu_msg *msg,
  * @param input_data contains a regex_data_payload* in input_data->buffer
  * @return ID of next MSU-type to receive data, or -1 on error
  */
-int regex_receive(local_msu *self, msu_queue_item *input_data) {
+int regex_receive(struct generic_msu *self, msu_queue_item *input_data) {
     if (self && input_data) {
         struct regex_data_payload *regex_data = (struct regex_data_payload *) (input_data->buffer);
         int ret;
@@ -154,7 +154,7 @@ int regex_receive(local_msu *self, msu_queue_item *input_data) {
 /**
  * All regex MSUs contain a reference to this type
  */
-const msu_type REGEX_MSU_TYPE = {
+const struct msu_type REGEX_MSU_TYPE = {
     .name="regex_msu",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_REGEX_MSU_ID,

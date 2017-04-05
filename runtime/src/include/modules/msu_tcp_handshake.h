@@ -23,7 +23,7 @@ struct hs_queue_item
     struct pico_frame *f;
 };
 
-msu_type TCP_HANDSHAKE_MSU_TYPE;
+struct msu_type TCP_HANDSHAKE_MSU_TYPE;
 
 uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire,
         void (*timer)(pico_time, void *, void *), void *arg);

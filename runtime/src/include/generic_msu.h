@@ -12,11 +12,6 @@
 #include "comm_protocol.h"
 #include "generic_msu_queue_item.h"
 
-/** A typedef to represent a generic msu */
-typedef struct generic_msu local_msu;
-/** Contains information generic to a type of MSU*/
-typedef struct msu_type msu_type;
-
 enum layer {
     DEDOS_LAYER_DATALINK = 2, /* Ethernet only. */
     DEDOS_LAYER_NETWORK = 3, /* IPv4, IPv6, ARP.
@@ -31,10 +26,6 @@ typedef struct msu_stats {
     unsigned int memory_allocated;
     //data queue size can directly be queried from msu->q_in->size
 } msu_stats;
-
-/** Routing function to deliver traffic to a set of MSUs */
-struct msu_endpoint *round_robin(msu_type *type, local_msu *sender,
-                                 msu_queue_item *data);
 
 /**
  * Defines a type of MSU. This information (mostly callbacks)
@@ -59,14 +50,14 @@ struct msu_type{
      * @param initial_state initial information passed to the runtime by the global controller
      * @return 0 on success, -1 on error
      */
-    int (*init)(local_msu *self, struct create_msu_thread_msg_data  *initial_state);
+    int (*init)(struct generic_msu *self, struct create_msu_thread_msg_data  *initial_state);
 
     /**
      * Type-specific destructor that frees any internal data or state.
      * Can be NULL if no additional freeing must occur
      * @param self MSU to be destroyed
      */
-    void (*destroy)(local_msu *self);
+    void (*destroy)(struct generic_msu *self);
 
     /** Handles the receiving of data sent from other MSUs.
      * This field can **not** be set to NULL, and must be defined 
@@ -75,7 +66,7 @@ struct msu_type{
      * @param input_data data to receive from previous MSU
      * @return MSU type-id of next MSU to receive data, 0 if no rcpt, -1 on err
      */
-    int (*receive)(local_msu *self, msu_queue_item *input_data);
+    int (*receive)(struct generic_msu *self, msu_queue_item *input_data);
 
     /** Handles receiving of data sent specifically from the Global Controller.
      * Generic receipt of control messages (adding/removing routes) 
@@ -85,7 +76,7 @@ struct msu_type{
      * @param ctrl_msg message to receieve from global controller
      * @return 0 on success, -1 on error
      */
-    int (*receive_ctrl)(local_msu *self, struct msu_control_update *ctrl_msg);
+    int (*receive_ctrl)(struct generic_msu *self, struct msu_control_update *ctrl_msg);
 
     /* Move state within same process and physical machine, like pointers.
      * Runtime should call this.
@@ -104,7 +95,7 @@ struct msu_type{
      * @param data data to be sent, in case destination depends on specifics of data
      * @return msu_endpoint destination
      */
-    struct msu_endpoint *(*route)(struct msu_type *type, local_msu *sender,
+    struct msu_endpoint *(*route)(struct msu_type *type, struct generic_msu *sender,
                                   msu_queue_item *data);
 
     /** Enqueues data to a local MSU.
@@ -114,7 +105,7 @@ struct msu_type{
      * @param dst MSU receiving data
      * @return 0 on success, -1 on error
      */
-    int (*send_local)(local_msu *self, msu_queue_item *queue_item,
+    int (*send_local)(struct generic_msu *self, msu_queue_item *queue_item,
                       struct msu_endpoint *dst);
 
     /** Enqueues data to a remote MSU (handles data serialization).
@@ -124,7 +115,7 @@ struct msu_type{
      * @param dst MSU receiving data
      * @return 0 on success, -1 on error
      */
-    int (*send_remote)(local_msu *self, msu_queue_item *queue_item,
+    int (*send_remote)(struct generic_msu *self, msu_queue_item *queue_item,
                        struct msu_endpoint *dst);
 
     /** Deserializes data received from remote MSU and enqueues the
@@ -136,7 +127,7 @@ struct msu_type{
      * @param bufsize Size of the buffer being received
      * @return 0 on success, -1 on error
      */
-    int (*deserialize)(local_msu *self, intermsu_msg *msg,
+    int (*deserialize)(struct generic_msu *self, intermsu_msg *msg,
                        void *buf, uint16_t bufsize);
 };
 
@@ -159,7 +150,7 @@ struct generic_msu{
      * all instances of this type of MSU.
      * Includes type-specific MSU functions
      */
-    msu_type *type;
+    struct msu_type *type;
 
     /** Routing table pointer, containing all destination MSUs*/
     struct msu_routing_table *rt_table;
@@ -168,7 +159,7 @@ struct generic_msu{
     //msu_route *routing_table;
 
     /** ??? */
-    local_msu *next;
+    struct generic_msu *next;
 
     /** Unique id for an implemented MSU */
     int id;
@@ -194,43 +185,47 @@ struct generic_msu{
     void *routing_state;
 };
 
+/** Routing function to deliver traffic to a set of MSUs */
+struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *sender,
+                                 msu_queue_item *data);
+
 /** Malloc's and creates a new MSU of the specified type and id. */
-local_msu *init_msu(unsigned int type_id, int msu_id,
+struct generic_msu *init_msu(unsigned int type_id, int msu_id,
                     struct create_msu_thread_msg_data *create_action);
 
 /** Destroys an msu, freeing all relevant data. */
-void destroy_msu(local_msu *self);
+void destroy_msu(struct generic_msu *self);
 
 /** Default function to enqueue data onto a local msu. */
-int default_send_local(local_msu *src, msu_queue_item *data,
+int default_send_local(struct generic_msu *src, msu_queue_item *data,
                        struct msu_endpoint *dst);
 /** Default function to enqueue data onto a remote msu. */
-int default_send_remote(local_msu *src, msu_queue_item *data,
+int default_send_remote(struct generic_msu *src, msu_queue_item *data,
                         struct msu_endpoint *dst);
 
 /** Deserializes and enqueues data received from remote MSU. */
-int default_deserialize(local_msu *self, intermsu_msg *msg,
+int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize);
 
 /** Dequeues and processes data received from another MSU. */
-int msu_receive(local_msu *self, msu_queue_item *input_data);
+int msu_receive(struct generic_msu *self, msu_queue_item *input_data);
 
 /** Dequeues and processes data received from global controller. */
-int msu_receive_ctrl(local_msu *self, msu_queue_item *ctrl_msg);
+int msu_receive_ctrl(struct generic_msu *self, msu_queue_item *ctrl_msg);
 
 /** Move state within same process and physical machine, like pointers???.*/
 int msu_move_state(void *data, void *optional_data);
 
 
 /** Allocates state data in an MSU and returns the alloc'd data. */
-void* msu_alloc_data(local_msu *msu, size_t bytes);
+void* msu_alloc_data(struct generic_msu *msu, size_t bytes);
 /** Frees the state data associated with an MSU. */
-void msu_free_data(local_msu *msu);
+void msu_free_data(struct generic_msu *msu);
 /** Gets the state data associated with an MSU. */
-void *msu_data(local_msu *msu);
+void *msu_data(struct generic_msu *msu);
 
 /** An MSU registers itself with this so that instances can be created
  * using the type->id */
-void register_msu_type(msu_type *type);
+void register_msu_type(struct msu_type *type);
 
 #endif

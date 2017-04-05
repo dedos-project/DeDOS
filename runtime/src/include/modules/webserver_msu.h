@@ -13,6 +13,6 @@
 #define TEXT_MEMORY 1000 * 1000 * 10
 
 /** All instances of a Webserver MSU share this type information. */
-const msu_type WEBSERVER_MSU_TYPE;
+const struct msu_type WEBSERVER_MSU_TYPE;
 
 #endif

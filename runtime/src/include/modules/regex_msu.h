@@ -15,6 +15,6 @@ struct regex_data_payload {
 };
 
 
-const msu_type REGEX_MSU_TYPE;
+const struct msu_type REGEX_MSU_TYPE;
 
 #endif

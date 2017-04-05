@@ -3,7 +3,7 @@
 
 #include "generic_msu.h"
 
-msu_type PICO_TCP_MSU_TYPE;
-local_msu *pico_tcp_msu;
+struct msu_type PICO_TCP_MSU_TYPE;
+struct generic_msu *pico_tcp_msu;
 
 #endif

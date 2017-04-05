@@ -8,6 +8,6 @@ struct init_state {
     char *argv;
 };
 
-msu_type MSU_APP_TCP_ECHO_TYPE;
+struct msu_type MSU_APP_TCP_ECHO_TYPE;
 
 #endif

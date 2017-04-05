@@ -15,7 +15,7 @@
 
 #define N_MSU_TYPES 10
 
-static msu_type *MSU_TYPES[] = {
+static struct msu_type *MSU_TYPES[] = {
     &SSL_REQUEST_ROUTING_MSU_TYPE,
     &DUMMY_MSU_TYPE,
     &REGEX_MSU_TYPE,

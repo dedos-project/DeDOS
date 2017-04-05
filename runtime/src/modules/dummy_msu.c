@@ -29,7 +29,7 @@ extern "C" {
  * @param queue_item queue item to be recieved
  * @return Type-id of MSU to receive data next. In this case, dummy_msu.
  */
-int dummy_msu_receive(local_msu *msu, msu_queue_item *queue_item){
+int dummy_msu_receive(struct generic_msu *msu, msu_queue_item *queue_item){
     /* function called when an item is dequeued */
     // Signal that next msu should also be DEDOS_DUMMY_MSU
     return DEDOS_DUMMY_MSU_ID;
@@ -39,7 +39,7 @@ int dummy_msu_receive(local_msu *msu, msu_queue_item *queue_item){
  * The only instance of the dummy_msu type on this runtime.
  * All dummy_msus contain a reference to this object
  */
-msu_type DUMMY_MSU_TYPE = {
+struct msu_type DUMMY_MSU_TYPE = {
     .name="dummy_msu",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_DUMMY_MSU_ID,

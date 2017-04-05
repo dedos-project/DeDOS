@@ -11,6 +11,6 @@
 #define WRITE 1
 
 int WriteSSL(SSL *State, char *Buffer, int BufferSize);
-msu_type SSL_WRITE_MSU_TYPE;
+struct msu_type SSL_WRITE_MSU_TYPE;
 
 #endif /* __ssl_write_msu_H__ */
