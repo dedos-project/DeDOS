@@ -23,7 +23,7 @@ LEGACY_LIBS = picotcp
 
 COMPILE=gcc -c
 COMPILE_PP=g++ -c
-FINAL=gcc -lstdc++
+FINAL=gcc 
 LINK=ld -r
 DEPEND=gcc -MM -MF
 

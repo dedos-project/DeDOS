@@ -5,6 +5,8 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
+struct dfg_config;
+
 #include "runtime.h"
 #include "dfg_json.h"
 #include "logging.h"
@@ -94,6 +96,12 @@ struct dfg_edge_set {
     int num_edges;
     struct dfg_edge *edges[MAX_MSU];
 };
+
+struct dfg_route {
+    int route_id;
+
+
+
 
 //Definition of a vertex--an MSU
 struct dfg_vertex {

@@ -26,7 +26,7 @@ static unsigned concatenate(unsigned x, unsigned y) {
     return x * pow + y;
 }
 
-int ssl_request_routing_msu_receive(struct generic_msu *self, msu_queue_item *queue_item)
+int ssl_request_routing_msu_receive(struct generic_msu *self, struct generic_msu_queue_item *queue_item)
 {
     /* function called when an item is dequeued */
     /* here we will make a decision as to which next SSL msu the request be routed to */

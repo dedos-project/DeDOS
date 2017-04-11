@@ -211,7 +211,7 @@ static void send_to_next_msu(struct generic_msu *self,
         queue_item->buffer_len = msg->payload_len + sizeof(struct dedos_intermsu_message);
         queue_item->next = NULL;
 
-        generic_msu_queue_enqueue(tmp->next_msu_input_queue, queue_item);
+        generic_msu_queue_enqueue(tmp->msu_queue, queue_item);
         log_debug("Enqueued msg in next data msu's queue: %s","");
 
         if(message_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE){
@@ -1198,7 +1198,7 @@ int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
     return 0;
 }
 
-int msu_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *queue_item)
+int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item)
 {
     //interface from runtime to picoTCP structures or any other existing code
     struct hs_internal_state *in_state = msu->internal_state;

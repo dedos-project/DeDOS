@@ -33,7 +33,7 @@ int WriteSSL(SSL *State, char *Buffer, int BufferSize) {
 
     return NumBytes;
 }
-int ssl_write_receive(struct generic_msu *self, msu_queue_item *input_data) {
+int ssl_write_receive(struct generic_msu *self, struct generic_msu_queue_item *input_data) {
     if (input_data != NULL) {
         struct ssl_data_payload *data = (struct ssl_data_payload*) input_data->buffer;
         WriteSSL(data->state, data->msg, strlen(data->msg));
@@ -42,7 +42,7 @@ int ssl_write_receive(struct generic_msu *self, msu_queue_item *input_data) {
     return -1;
 }
 
-int ssl_write_route(struct msu_type *type, struct generic_msu *sender, msu_queue_item *data){
+int ssl_write_route(struct msu_type *type, struct generic_msu *sender, struct generic_msu_queue_item *data){
     struct ssl_data_payload *ssl_data = (struct ssl_data_payload*)data->buffer;
     log_debug("Attempting to route to %d", ssl_data->ipAddress);
     uint32_t ipAddress = ssl_data->ipAddress == runtimeIpAddress ? 0 : ssl_data->ipAddress;

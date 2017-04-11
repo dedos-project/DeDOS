@@ -4,64 +4,85 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <error.h>
+#include "routing.h"
 
 /* Request or Response control message between runtime and master */
-#define REQUEST_MESSAGE 1
-#define RESPONSE_MESSAGE 2
-#define ACTION_MESSAGE 3 //just an action to do no response required
+enum dedos_msg_type {
+    REQUEST_MESSAGE = 1,
+    RESPONSE_MESSAGE = 2,
+    ACTION_MESSAGE = 3 // No response required
+};
 
 /* msg_code field in dedos_control_msg
  * Various types of request/responses between runtime and master */
-#define GET_INIT_CONFIG 10
-#define SET_INIT_CONFIG 11
-#define GET_MSU_LIST 12
-#define RUNTIME_ENDPOINT_ADD 13
-#define SET_DEDOS_RUNTIMES_LIST 20 /* msg from master to runtime for connecting to other runtimes */
-#define CREATE_PINNED_THREAD 21
-#define DELETE_PINNED_THREAD 22
-#define STATISTICS_UPDATE 30
-
-/* actions for dedos_thread_msg */
-#define CREATE_MSU 2001
-#define DESTROY_MSU 2002
-#define FORWARD_DATA 2003
-#define MSU_ROUTE_ADD 2004
-#define MSU_ROUTE_DEL 2005
+enum dedos_action_type {
+    GET_INIT_CONFIG = 10,
+    SET_INIT_CONFIG = 11,
+    GET_MSU_LIST = 12,
+    RUNTIME_ENDPOINT_ADD = 13,
+    SET_DEDOS_RUNTIMES_LIST = 20, // msg from master to runtime for connecting to other runtimes
+    CREATE_PINNED_THREAD = 21,
+    DELETE_PINNED_THREAD = 22,
+    STATISTICS_UPDATE = 30,
+    /* actions for dedos_thread_msg */
+    CREATE_MSU   = 2001,
+    DESTROY_MSU  = 2002,
+    FORWARD_DATA = 2003,
+    ADD_ROUTE_TO_MSU   = 3001,
+    DEL_ROUTE_FROM_MSU = 3002,
+    MSU_ROUTE_ADD_ENDPOINT = 3011,
+    MSU_ROUTE_DEL_ENDPOINT = 3012,
+    MSU_ROUTE_MOD_ENDPOINT = 3013
+};
 
 #define FAIL_CREATE_MSU 4001
 #define FAIL_DESTROY_MSU 4002
 
-struct dedos_control_msg_manage_msu {
+//struct dedos_control_msg_manage_msu {
+
+struct manage_route_control_payload {
+    int msu_id;
+    int msu_type_id;
+    int route_id;
+    uint32_t key_range;
+    enum locality locality;
+    uint32_t ipv4;
+};
+
+struct manage_msu_control_payload {
     int msu_id;
     unsigned int msu_type;
+
+    int route_id; // Optional -- only set if action pertains to a route
     unsigned int init_data_size;
     void *init_data;
 };
 
 struct dedos_control_msg {
-    unsigned int msg_type; //request or response
-    unsigned int msg_code;
+    enum dedos_msg_type msg_type; //request or response
+    enum dedos_action_type msg_code;
     unsigned int header_len;
     unsigned int payload_len;
     void *payload;
 };
 
-/* actions for dedos_thread_msg */
-#define CREATE_MSU 2001
-#define DESTROY_MSU 2002
-#define FORWARD_DATA 2003
-
-struct create_msu_thread_msg_data
-{
+struct create_msu_thread_data {
     uint16_t msu_type;
+    int msu_id;
     uint32_t init_data_len;
-    void* creation_init_data;
+    void* init_data;
+};
+
+struct msu_action_thread_data {
+    int msu_id;
+    enum dedos_action_type action;
+    int route_id; // Optional -- only set if action pertains to a route
 };
 
 struct dedos_thread_msg
 {
     struct dedos_thread_msg *next;
-    uint16_t action;
+    enum dedos_action_type action;
     unsigned int action_data; // e.g for CREATE_MSU, could be id, for FORWARD dest runtime ip
     uint32_t buffer_len; //total len of data
     void *data; /* depending on the action and msu_id, creator and processor of

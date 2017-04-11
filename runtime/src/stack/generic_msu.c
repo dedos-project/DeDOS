@@ -126,7 +126,7 @@ int msu_type_by_id_corrected(unsigned int type_id, struct msu_type **type){
  * @param queue_item control queue message
  * @return 0 on success, -1 on error
  */
-int msu_receive_ctrl(struct generic_msu *self, msu_queue_item *queue_item){
+int msu_receive_ctrl(struct generic_msu *self, struct generic_msu_queue_item *queue_item){
     struct msu_control_update *update_msg = queue_item->buffer;
     int rtn = 0;
     if (self->id != update_msg->msu_id){
@@ -378,7 +378,7 @@ void destroy_msu(struct generic_msu *msu)
 int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
     if (self){
-        msu_queue_item *recvd =  malloc(sizeof(*recvd));
+        struct generic_msu_queue_item *recvd =  malloc(sizeof(*recvd));
         if (!(recvd))
             return -1;
         recvd->buffer_len = bufsize;
@@ -392,6 +392,14 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
         return 0;
     }
     return -1;
+}
+
+uint32_t default_generate_id(struct generic_msu *self,
+                             struct generic_msu_queue_item *queue_item){
+    int len = queue_item->buffer_len < 96 ? queue_item->buffer_len : 96;
+    uint32_t id;
+    HASH_VALUE(queue_item->buffer, len, id);
+    return id;
 }
 
 /** Serializes the data of an msu_queue_item and sends it
@@ -408,7 +416,7 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
  * @param dst MSU destination to receive the message
  * @return -1 on error, >=0 on success
  */
-int default_send_remote(struct generic_msu *src, msu_queue_item *data,
+int default_send_remote(struct generic_msu *src, struct generic_msu_queue_item *data,
                         struct msu_endpoint *dst){
     struct dedos_intermsu_message *msg = malloc(sizeof(*msg));
     if (!msg){
@@ -478,7 +486,7 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
  * @param dst MSU receiving the data
  * @return 0 on success, -1 on error
  */
-int default_send_local(struct generic_msu *src, msu_queue_item *data,
+int default_send_local(struct generic_msu *src, struct generic_msu_queue_item *data,
                        struct msu_endpoint *dst){
     log_debug("Enqueuing locally to dst with id%d", dst->id);
     return generic_msu_queue_enqueue(dst->next_msu_input_queue, data);
@@ -546,7 +554,7 @@ struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_
  * @return msu to which the message is to be enqueued, or NULL if no MSU could be found
  */
 struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *sender,
-                                 msu_queue_item *data){
+                                 struct generic_msu_queue_item *data){
     struct msu_endpoint *dst_msus =
         get_all_type_msus(sender->rt_table, type->type_id);
 
@@ -714,7 +722,7 @@ struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct g
  * @param data Data to be enqueued on or sent to destination
  * @return -1 on error, 0 on success
  */
-int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, msu_queue_item *data){
+int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generic_msu_queue_item *data){
     if (dst->locality == MSU_LOC_SAME_RUNTIME){
         if (!(dst->next_msu_input_queue)){
             log_error("Queue pointer not found%s", "");
@@ -760,7 +768,7 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, msu_queue_ite
  * @param data received data
  * @return 0 on success, -1 on error
  */
-int msu_receive(struct generic_msu *self, msu_queue_item *data){
+int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
 
     // Check that all of the relevant structures exist
     if (! (self && self->type->receive) ){

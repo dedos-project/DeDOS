@@ -2,7 +2,7 @@
 #define HS_ROUTING_REQUEST_MSU_H
 
 #include "generic_msu.h"
-#include "flow_table.h"
+//#include "flow_table.h"
 
 struct routing_queue_item
 {

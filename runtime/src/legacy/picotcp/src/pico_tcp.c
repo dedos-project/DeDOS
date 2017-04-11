@@ -2787,9 +2787,7 @@ static int forward_to_routing_MSU_deprecated(struct pico_socket *s, struct pico_
         log_debug("Enqueuing following to next hs_request_routing_msu: %s","");
         log_debug("\tqueue_item->buffer_len: %u",queue_item->buffer_len);
         log_debug("\trt_queue_item->src_msu_id: %d",rt_queue_item->src_msu_id);
-//        log_debug("Forwarding follwing frame to routing MSU: %s","");
-//        print_frame(rt_queue_item->f);
-        ret = generic_msu_queue_enqueue(msu_endpoint->next_msu_input_queue, queue_item);
+        ret = generic_msu_queue_enqueue(msu_endpoint->msu_queue, queue_item);
         if(ret < 0){
             log_debug("Failed to enqueue request %s","");
 //            pico_frame_discard(new_frame);

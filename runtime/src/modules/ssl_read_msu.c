@@ -172,8 +172,7 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
     return Request;
 }
 
-
-int ssl_read_receive(struct generic_msu *self, msu_queue_item *input_data) {
+static int ssl_read_receive(struct generic_msu *self, struct generic_msu_queue_item *input_data) {
     int ret = 0;
     struct ssl_data_payload *data = input_data->buffer;
     if (data->type == READ) {

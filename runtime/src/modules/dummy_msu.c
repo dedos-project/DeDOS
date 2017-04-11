@@ -10,14 +10,7 @@ extern "C" {
 #endif
 
 #include "dedos_msu_list.h"
-#include "runtime.h"
-#include "modules/dummy_msu.h"
-#include "communication.h"
-#include "routing.h"
-#include "dedos_msu_msg_type.h"
-#include "dedos_thread_queue.h" //for enqueuing outgoing control messages
-#include "control_protocol.h"
-#include "logging.h"
+#include "generic_msu.h"
 
 #ifdef __cplusplus
 }
@@ -29,7 +22,7 @@ extern "C" {
  * @param queue_item queue item to be recieved
  * @return Type-id of MSU to receive data next. In this case, dummy_msu.
  */
-int dummy_msu_receive(struct generic_msu *msu, msu_queue_item *queue_item){
+int dummy_msu_receive(struct generic_msu *msu, struct generic_msu_queue_item *queue_item){
     /* function called when an item is dequeued */
     // Signal that next msu should also be DEDOS_DUMMY_MSU
     return DEDOS_DUMMY_MSU_ID;
