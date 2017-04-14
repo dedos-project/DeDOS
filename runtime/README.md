@@ -21,7 +21,7 @@ int <something>_receive(struct generic_msu *msu, struct generic_msu_queue_item *
 
 and then must define the `msu_type` declared in the header:
 
-```
+```c
 /**
  * All msus of this type ontain a reference to this object
  */
