@@ -2718,22 +2718,23 @@ static int forward_to_routing_MSU_deprecated(struct pico_socket *s, struct pico_
     unsigned int next_msu_type = DEDOS_TCP_HS_REQUEST_ROUTING_MSU_ID;
 
     //find an entry for routing msu from the routing table based on some info from frame f, like 4 tuple
-    all_msu_enpoints = get_all_type_msus(pico_tcp_msu->rt_table, next_msu_type);
+/*    all_msu_enpoints = get_all_type_msus(pico_tcp_msu->rt_table, next_msu_type);
     if(!all_msu_enpoints){
         log_error("%s","No next MSU info...can't continue");
         return -1;
     }
-
+*/
     struct pico_tcp_hdr *tcp_hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
     struct pico_ipv4_hdr *net_hdr = (struct pico_ipv4_hdr *) (f->net_hdr);
 
     log_debug("picking up the first entry of request type: %u",next_msu_type);
-    msu_endpoint = all_msu_enpoints;
+    struct route_set *type_set = get_type_from_route_set(&pico_tcp_msu->routes, next_msu_type);
+    msu_endpoint = get_route_endpoint(type_set, 0);
     if(!msu_endpoint){
         return -1;
     }
 
-    if (is_endpoint_local(msu_endpoint) == 0) {
+    if (msu_endpoint->locality == MSU_IS_LOCAL) {
     	void *serialized_queue_item_payload;
         struct routing_queue_item *rt_queue_item;
     	struct pico_frame *new_frame;

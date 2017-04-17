@@ -163,6 +163,7 @@ typedef struct msu_data *msu_data_p;
  * Information generic to a type of MSU goes in msu->type
  */
 struct generic_msu{
+
     /** Pointer to struct containing information shared across
      * all instances of this type of MSU.
      * Includes type-specific MSU functions
@@ -170,7 +171,7 @@ struct generic_msu{
     struct msu_type *type;
 
     /** Routing table pointer, containing all destination MSUs*/
-    struct msu_routing_table *rt_table;
+    struct route_set *routes;
 
     /* NEW ROUTING TABLE */
     //msu_route *routing_table;
@@ -216,7 +217,12 @@ struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *send
 struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic_msu *sender,
                                            uint32_t ip_address);
 
-/** Malloc's and creates a new MSU of the specified type and id. */
+struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *sender,
+                                     struct generic_msu_queue_item *data);
+struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *sender,
+                                      int msu_id);
+
+ /** Malloc's and creates a new MSU of the specified type and id. */
 struct generic_msu *init_msu(unsigned int type_id, int msu_id,
                              struct create_msu_thread_msg_data *create_action);
 

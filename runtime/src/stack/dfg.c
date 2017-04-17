@@ -14,6 +14,21 @@
 #include "global_controller/controller_tools.h"
 #include "global_controller/scheduling.h"
 
+struct dfg_config *dfg = NULL;
+
+struct dfg_config *get_dfg(){
+    return dfg;
+}
+
+int load_dfg_from_file(const char *init_filename){
+    dfg = parse_dfg_json(init_filename);
+    if (dfg == NULL){
+        log_error("Error loading dfg from file %s!", init_filename);
+        return -1;
+    }
+    return 0;
+}
+
 /* Display information about runtimes */
 int show_connected_peers(void) {
     char ipstr[INET_ADDRSTRLEN];

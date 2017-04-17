@@ -116,20 +116,8 @@ static void send_to_next_msu(struct generic_msu *self,
     if (message_type == MSU_PROTO_TCP_CONN_RESTORE) {
         next_msu_type = DEDOS_TCP_DATA_MSU_ID;
     }
-
-    struct msu_endpoint *all_msu_enpoints = get_all_type_msus(self->rt_table,
-            next_msu_type);
-    if (!all_msu_enpoints) {
-        log_error("%s", "No next MSU info...can't continue");
-        return;
-    }
-    //picking up the entry corresponding to the msu that send the request.
-    struct msu_endpoint* tmp = NULL;
-    tmp = get_msu_from_id(all_msu_enpoints, reply_msu_id);
-    if (!tmp) {
-        log_error("Could find msu endpoint with id: %d",reply_msu_id);
-        return;
-    }
+    
+    struct msu_endpoint * tmp = route_by_msu_id(next_msu_type, self, reply_msu_id);
 
     struct dedos_intermsu_message *msg;
 	msg = (struct dedos_intermsu_message*) malloc(
@@ -147,7 +135,7 @@ static void send_to_next_msu(struct generic_msu *self,
     struct pico_frame* new_frame;
     char *restore_buf;
 
-    if (is_endpoint_local(tmp) == 0){
+    if (tmp->locality == MSU_IS_LOCAL){
 		//create intermsu dedos msg as above
         log_debug("next data msu is local, msu id: %d",tmp->id);
         if(message_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE){

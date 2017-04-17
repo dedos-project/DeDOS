@@ -10,10 +10,13 @@ struct dfg_config;
 #include "runtime.h"
 #include "dfg_json.h"
 #include "logging.h"
+#include "global_controller/scheduling.h"
 #include "global_controller/communication.h"
 
 /* Some infra properties */
 #define MAX_RUNTIMES 20
+#define NUM_MSU_TYPES 16
+#define MAX_DESTINATIONS 16
 
 /* Some struct related to DFG management protocol */
 struct dedos_dfg_add_endpoint_msg {
@@ -49,6 +52,8 @@ struct dfg_runtime_endpoint {
     uint32_t num_threads;
     struct runtime_thread *threads[MAX_THREADS];
     struct cut *current_alloc;
+    int num_routes;
+    struct dfg_route *routes[MAX_MSU];
 };
 
 struct runtime_thread {
@@ -75,7 +80,9 @@ struct msu_statistics_data {
 struct msu_scheduling {
     struct dfg_runtime_endpoint *runtime;
     uint32_t thread_id;
-    struct dfg_edge_set *routing;
+
+    int num_routes;
+    struct dfg_route *routes[NUM_MSU_TYPES];
     int deadline;
 };
 
@@ -87,21 +94,13 @@ struct msu_meta_routing {
     int num_dst_types;
 };
 
-struct dfg_edge {
-    struct dfg_vertex *from;
-    struct dfg_vertex *to;
-};
-
-struct dfg_edge_set {
-    int num_edges;
-    struct dfg_edge *edges[MAX_MSU];
-};
-
 struct dfg_route {
     int route_id;
+    int msu_type;
 
-
-
+    int num_destinations;
+    struct dfg_vertex *destinations[MAX_DESTINATIONS];
+};
 
 //Definition of a vertex--an MSU
 struct dfg_vertex {
@@ -114,17 +113,19 @@ struct dfg_vertex {
     char msu_mode[13]; //blocking/non-blocking
 
     //Profiling data
-    struct msu_profiling *profiling;
+    struct msu_profiling profiling;
 
     //Scheduling data
-    struct msu_scheduling *scheduling;
+    struct msu_scheduling scheduling;
 
     //Routing data
-    struct msu_meta_routing *meta_routing;
+    struct msu_meta_routing meta_routing;
 
     //Monitoring data
-    struct msu_statistics_data *statistics;
+    struct msu_statistics_data statistics;
 };
+
+
 
 // Wrapper structure for the DFG
 struct dfg_config {
@@ -142,7 +143,6 @@ struct dfg_config {
     int vertex_cnt;                       //Number of MSUs
     struct dfg_runtime_endpoint *runtimes[MAX_RUNTIMES]; //All runtimes
     int runtimes_cnt;
-
     pthread_mutex_t *dfg_mutex;
 };
 

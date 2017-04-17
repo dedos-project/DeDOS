@@ -74,37 +74,16 @@ int ssl_request_routing_msu_receive(struct generic_msu *self, struct generic_msu
     return next_msu_type;
 }
 
-
-void ssl_request_routing_msu_destroy(struct generic_msu *self)
-{
-    /* any stuff which it must complete before getting destroyed can be done here */
-    destroy_chord_ring(self->internal_state);
-}
-
-int ssl_request_routing_msu_init(struct generic_msu *self, 
-        struct create_msu_thread_msg_data *create_action)
-{
-    /* any other internal state that MSU needs to maintain */
-    //For routing MSU the internal state will be the chord ring
-    ssl_request_routing_msu = self;
-    self->internal_state = (struct chord_ring *)init_chord_ring();
-
-    log_debug("Created %s MSU with id: %u", self->type->name,
-            self->id);
-
-    return 0;
-}
-
 const struct msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {
     .name="ssl_request_routing_msu",
     .layer=DEDOS_LAYER_TRANSPORT,
     .type_id=DEDOS_SSL_REQUEST_ROUTING_MSU_ID,
     .proto_number=MSU_PROTO_SSL_REQUEST,
-    .init=ssl_request_routing_msu_init,
-    .destroy=ssl_request_routing_msu_destroy,
+    .init=NULL,
+    .destroy=NULL,
     .receive=ssl_request_routing_msu_receive,
     .receive_ctrl=NULL,
-    .route=NULL,
+    .route=default_routing,
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,

@@ -127,45 +127,43 @@ int msu_type_by_id_corrected(unsigned int type_id, struct msu_type **type){
  * @return 0 on success, -1 on error
  */
 int msu_receive_ctrl(struct generic_msu *self, struct generic_msu_queue_item *queue_item){
-    struct msu_control_update *update_msg = queue_item->buffer;
+    struct msu_action_thread_data *update = queue_item->buffer;
+
     int rtn = 0;
-    if (self->id != update_msg->msu_id){
-        log_error("ERROR: MSU %d got updated destined for MSU %d", self->id, update_msg->msu_id);
+    if (self->id != update->msu_id){
+        log_error("ERROR: MSU %d got updated destined for MSU %d", self->id, update->msu_id);
         rtn = -1;
     } else {
-        log_debug("MSU %d got update with type %u", self->id, update_msg->update_type);
-        int handled = 0;
-        if (update_msg->update_type == MSU_ROUTE_ADD || update_msg->update_type == MSU_ROUTE_DEL){
-            int first_entry = (self->rt_table == NULL);
-            self->rt_table = handle_routing_table_update(self->rt_table, update_msg);
-            handled = 1;
-            if (!first_entry){
-                if (update_msg->update_type == MSU_ROUTE_ADD){
-                    self->scheduling_weight++;
-                } else {
-                    self->scheduling_weight--;
-                    if (self->scheduling_weight == 0){
-                        self->scheduling_weight = 1;
-                    }
-                }
-            }
-            log_info("MSU %d now has a scheduling weight of %d", self->id, self->scheduling_weight);
+
+        log_debug("MSU %d got update with type %u", self->id, update->action);
+        int error = 0;
+        switch(update->action){
+            case ADD_ROUTE_TO_MSU:
+                error = add_route_to_set(&self->routes, update->route_id);
+                if ( error )
+                    log_error("Error adding route to MSU %d", self->id);
+                break;
+            case DEL_ROUTE_FROM_MSU:
+                error = del_route_from_set(&self->routes, update->route_id);
+                if ( error )
+                    log_error("Error removing route from MSU %d", self->id);
+                break;
+            default:
+                error = -1;
         }
         if (self->type->receive_ctrl){
-            handled = (self->type->receive_ctrl(self, update_msg)) == 0;
+            error = (self->type->receive_ctrl(self, update)) == 0;
         }
-
-        if (!handled){
-            log_error("Unknown update msg type %u received by MSU %d",
-                    update_msg->update_type, self->id);
-            rtn = -1;
+        if (error){
+            log_error("Error handling update type %u in MSU %d",
+                    update->action, self->id);
         }
     }
 
-    free_msu_control_update(update_msg);
+    free(update);
     free(queue_item);
     log_debug("Freed update_msg and control_q_item %s","");
-    return rtn;
+    return error;
 }
 
 /**
@@ -307,7 +305,7 @@ int msu_failure(int msu_id){
  * @return initialized MSU or NULL if error occurred
  */
 struct generic_msu *init_msu(unsigned int type_id, int msu_id,
-                struct create_msu_thread_msg_data *create_action){
+                             int init_data_len, void *init_data){
     if (type_id < 1){
         return NULL;
     }
@@ -315,7 +313,7 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
     struct generic_msu *msu = msu_alloc();
     msu->id = msu_id;
     msu->type = msu_type_by_id(type_id);
-    msu->data_p->data = create_action->creation_init_data;
+    msu->data_p->data = init_data;
 
     // TODO: queue_ws, msu_ws, what????
 
@@ -332,7 +330,7 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
     // Call the type-specific initialization function
     // TODO: What is this "creation_init_data"
     if (msu->type->init){
-        int rtn = msu->type->init(msu, create_action);
+        int rtn = msu->type->init(msu, init_data, init_data_len);
         if (rtn){
             log_error("MSU creation failed for %s MSU: id %d",
                       msu->type->name, msu_id);
@@ -342,7 +340,7 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
         }
     }
     log_info("Created %s MSU: id %d", msu->type->name, msu_id);
-    msu->rt_table = NULL;
+    msu->routes = NULL;
     msu->scheduling_weight = 1;
     msu->routing_state = NULL;
     return msu;
@@ -489,7 +487,7 @@ int default_send_remote(struct generic_msu *src, struct generic_msu_queue_item *
 int default_send_local(struct generic_msu *src, struct generic_msu_queue_item *data,
                        struct msu_endpoint *dst){
     log_debug("Enqueuing locally to dst with id%d", dst->id);
-    return generic_msu_queue_enqueue(dst->next_msu_input_queue, data);
+    return generic_msu_queue_enqueue(dst->msu_queue, data);
 }
 
 struct round_robin_hh_key{
@@ -560,6 +558,7 @@ struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *send
 
     if (! (dst_msus) ){
         log_error("Source MSU %d did not find target MSU of type %d",
+
                   sender->id, type->type_id);
         return NULL;
     }
@@ -589,13 +588,27 @@ struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *send
         HASH_ADD(hh, all_states, id, sizeof(key), route_state);
         sender->routing_state = (void*)all_states;
     }
-
     // Get the next endpoint of the same type, and replace the current one with it
     route_state->last_endpoint = route_state->last_endpoint->hh.next;
     // If it's null, just get the first endpoint
     if (! route_state->last_endpoint)
        route_state->last_endpoint = dst_msus;
     return route_state->last_endpoint;
+}
+
+
+struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *sender,
+                                     struct generic_msu_queue_item *data){
+    struct route_set *type_set = get_type_from_route_set(sender->routes, type->type_id);
+    
+    if (type_set == NULL){
+        log_error("No routes available from msu %d to type %d",
+                  sender->id, type->type_id);
+        return NULL;
+    }
+    struct msu_endpoint *destination = get_route_endpoint(type_set, data->id);
+    return destination;
+    } 
 }
 
 /** Calls typical round_robin routing iteratively until it gets a destination
@@ -713,6 +726,14 @@ struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct g
 }
 
 
+struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *sender,
+                                     int msu_id){
+    struct route_set *type_set = get_type_from_route_set(sender->routes, type->type_id);
+    struct msu_endpoint *destination = get_endpoint_by_id(type_set, msu_id);
+
+    return destination;
+}
+
 /**
  * Private function, sends data stored in a queue_item to a destination msu,
  * either local or remote.
@@ -723,8 +744,8 @@ struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct g
  * @return -1 on error, 0 on success
  */
 int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generic_msu_queue_item *data){
-    if (dst->locality == MSU_LOC_SAME_RUNTIME){
-        if (!(dst->next_msu_input_queue)){
+    if (dst->locality == MSU_IS_LOCAL){
+        if (!(dst->msu_queue)){
             log_error("Queue pointer not found%s", "");
             return -1;
         }
@@ -734,7 +755,7 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generi
             return -1;
         }
         return 0;
-    } else if (dst->locality == MSU_LOC_REMOTE_RUNTIME){
+    } else if (dst->locality == MSU_IS_REMOTE){
         int rtn = src->type->send_remote(src, data, dst);
 #ifdef DATAPLANE_PROFILING
         //copy queue item profile log to in memory log before its freed
@@ -793,7 +814,7 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
             return 0;
         }
         if (type_id < 0){
-            ;//log_warn("MSU %d returned error code %d", self->id, type_id);
+            log_warn("MSU %d returned error code %d", self->id, type_id);
         }
         if (data){
             if (data->buffer) {

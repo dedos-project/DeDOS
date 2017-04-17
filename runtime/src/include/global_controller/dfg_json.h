@@ -19,8 +19,7 @@
 
 int do_dfg_config(const char *init_filename);
 void print_dfg();
-void dump_json(void);
-struct dfg_config *get_dfg();
+//void dump_json(void);
 int jsoneq(const char *json, jsmntok_t *tok, const char *s);
 void json_parse_error(int err);
 int json_test(jsmntok_t *t, int r);

@@ -2,6 +2,7 @@
 #define GENERIC_MSU_QUEUE_ITEM_H_
 #include "data_plane_profiling.h"
 #include <stdlib.h>
+#include <stdint.h>
 #include "logging.h"
 
 /* definition of struct that is an item of generic msu queue */

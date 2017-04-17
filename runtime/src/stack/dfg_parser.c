@@ -77,7 +77,7 @@ static int set_runtimes(jsmntok_t **tok, char *j, struct json_state *in, struct 
     return parse_jsmn_obj_list(tok, j, in, saved, init_runtime);
 }
 
-struct json_state init_route(struct json_state *in, int index){
+static struct json_state init_dfg_route(struct json_state *in, int index){
     struct dfg_runtime_endpoint *rt = in->data;
 
     rt->num_routes++;
@@ -92,7 +92,7 @@ struct json_state init_route(struct json_state *in, int index){
 }
 
 static int set_routes(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
-    return parse_jsmn_obj_list(tok, j, in, saved, init_route);
+    return parse_jsmn_obj_list(tok, j, in, saved, init_dfg_route);
 }
 
 struct json_state init_dfg_msu(struct json_state *in, int index){

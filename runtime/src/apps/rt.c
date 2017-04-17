@@ -196,7 +196,7 @@ int main(int argc, char **argv){
 
     struct dfg_config *dfg = NULL;
     if (json_all){
-        int rtn = do_dfg_config(dfg_json);
+        int rtn = load_dfg_from_file(dfg_json);
         if (rtn < 0){
             printf("%s is not a valid json DFG. Exiting\n", dfg_json);
             exit(-1);

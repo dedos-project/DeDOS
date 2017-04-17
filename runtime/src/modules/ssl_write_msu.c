@@ -46,7 +46,8 @@ int ssl_write_route(struct msu_type *type, struct generic_msu *sender, struct ge
     struct ssl_data_payload *ssl_data = (struct ssl_data_payload*)data->buffer;
     log_debug("Attempting to route to %d", ssl_data->ipAddress);
     uint32_t ipAddress = ssl_data->ipAddress == runtimeIpAddress ? 0 : ssl_data->ipAddress;
-    return round_robin_within_ip(type, sender, ipAddress);
+    return 0;
+    //return round_robin_within_ip(type, sender, ipAddress);
 }
 
 struct msu_type SSL_WRITE_MSU_TYPE = {
@@ -58,7 +59,7 @@ struct msu_type SSL_WRITE_MSU_TYPE = {
     .destroy=NULL,
     .receive=ssl_write_receive,
     .receive_ctrl=NULL,
-    .route=ssl_write_route,
+    .route=default_routing,
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,

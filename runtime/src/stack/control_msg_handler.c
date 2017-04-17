@@ -321,7 +321,7 @@ static int action_modify_route_msus(struct dedos_control_msg *control_msg){
             endpoint.locality = manage_route_msg->locality;
 
             if (endpoint.locality == MSU_IS_LOCAL){
-                endpoint.msu_queue = get_input_queue_ptr(msu_id, msu_type_id);
+                endpoint.msu_queue = get_msu_queue(msu_id, msu_type_id);
             } else {
                 endpoint.ipv4 = manage_route_msg->ipv4;
             }
