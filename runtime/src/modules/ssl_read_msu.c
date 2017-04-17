@@ -58,6 +58,7 @@ int AcceptSSL(SSL *State){
         }
     //} while (err == SSL_ERROR_WANT_READ);
 
+
     if ( (NumBytes = SSL_read(State, Buffer, BufferSize)) <= 0 ) {
         err = SSL_get_error(State, NumBytes);
 

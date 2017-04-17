@@ -26,6 +26,10 @@ struct dfg_config *parse_dfg_json(char *filename){
     }
 }
 
+static int ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    return 0;
+}
+
 static int set_app_name(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct dfg_config *cfg = in->data;
     strcpy(cfg->application_name, tok_to_str(*tok, j));
@@ -222,16 +226,21 @@ static int set_route_id(jsmntok_t **tok, char *j, struct json_state *in, struct 
     return 0;
 }
 
+static int set_route_type(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct dfg_route *route = in->data;
+    route->msu_type = tok_to_int(*tok, j);
+    return 0;
+}
 
 static int set_route_destination(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct dfg_route *route = in->data;
     struct dfg_config *cfg =  get_jsmn_obj();
     int n_dests = (*tok)->size;
     if (cfg->vertex_cnt == 0){
-        (*tok) += n_dests;
+        (*tok) += (n_dests * 2);
         return 1;
     }
-    ASSERT_JSMN_TYPE(*tok, JSMN_ARRAY, j);
+    ASSERT_JSMN_TYPE(*tok, JSMN_OBJECT, j);
     for (int i=0; i<n_dests; i++){
         ++(*tok);
         ASSERT_JSMN_TYPE(*tok, JSMN_STRING, j);
@@ -241,8 +250,12 @@ static int set_route_destination(jsmntok_t **tok, char *j, struct json_state *in
         for (int msu_i=0; msu_i<cfg->vertex_cnt; msu_i++){
             if (cfg->vertices[msu_i]->msu_id == msu_id){
                 found = 1;
+                ++(*tok);
+                ASSERT_JSMN_TYPE(*tok, JSMN_STRING, j);
+                int key = tok_to_int(*tok, j);
                 struct dfg_vertex *v = cfg->vertices[msu_i];
                 route->destinations[route->num_destinations] = v;
+                route->destination_keys[route->num_destinations] = key;
                 ++route->num_destinations;
                 break;
             }
@@ -391,6 +404,7 @@ static struct key_mapping key_map[] = {
     { "scheduling", MSUS,  set_scheduling },
     { "type", MSUS,  set_msu_type },
     { "id", MSUS,  set_msu_id },
+    { "name", MSUS, ignore },
 
 
     { "dram", RUNTIMES, set_rt_dram },
@@ -403,6 +417,7 @@ static struct key_mapping key_map[] = {
 
     { "id", ROUTES, set_route_id },
     { "destinations", ROUTES, set_route_destination },
+    { "type", ROUTES, set_route_type },
 
     { "dram", PROFILING, set_prof_dram },
     { "tx_node_local", PROFILING,  set_tx_node_local },

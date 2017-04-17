@@ -74,12 +74,17 @@ int ssl_request_routing_msu_receive(struct generic_msu *self, struct generic_msu
     return next_msu_type;
 }
 
+int ssl_init(struct generic_msu *self, void *init_data, int init_data_len){
+    ssl_request_routing_msu = self;
+    return 0;
+}
+
 const struct msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {
     .name="ssl_request_routing_msu",
     .layer=DEDOS_LAYER_TRANSPORT,
     .type_id=DEDOS_SSL_REQUEST_ROUTING_MSU_ID,
     .proto_number=MSU_PROTO_SSL_REQUEST,
-    .init=NULL,
+    .init=ssl_init,
     .destroy=NULL,
     .receive=ssl_request_routing_msu_receive,
     .receive_ctrl=NULL,
@@ -87,4 +92,5 @@ const struct msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,
+    .generate_id=default_generate_id
 };

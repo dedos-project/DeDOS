@@ -132,7 +132,8 @@ static int process_route_change_request(struct dedos_thread_msg *msg,
     struct generic_msu *msu = dedos_msu_pool_find(thread->msu_pool, msu_id);
 
     if (!msu){
-        log_error("Addition of route to nonexistent msu %d request", msu_id);
+        log_error("Addition of route to nonexistent msu %d requested on thread %ld",
+                   msu_id, thread->tid);
         return -1;
     }
 
@@ -209,6 +210,7 @@ void process_control_updates(void)
         case ADD_ROUTE_TO_MSU:
         case DEL_ROUTE_FROM_MSU:
             rtn = process_route_change_request(msg, thread);
+            break;
         default:
             log_error("Unknown thread control action %d", msg->action);
     }

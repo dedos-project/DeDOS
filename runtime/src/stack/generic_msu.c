@@ -599,8 +599,8 @@ struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *send
 
 struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *sender,
                                      struct generic_msu_queue_item *data){
-    struct route_set *type_set = get_type_from_route_set(sender->routes, type->type_id);
-    
+    struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
+
     if (type_set == NULL){
         log_error("No routes available from msu %d to type %d",
                   sender->id, type->type_id);
@@ -728,7 +728,7 @@ struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct g
 
 struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *sender,
                                      int msu_id){
-    struct route_set *type_set = get_type_from_route_set(sender->routes, type->type_id);
+    struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
     struct msu_endpoint *destination = get_endpoint_by_id(type_set, msu_id);
 
     return destination;
@@ -781,6 +781,36 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generi
         return -1;
     }
 }
+
+int msu_route(struct msu_type *type, struct generic_msu *sender,
+                struct generic_msu_queue_item *data){
+    if (data->id == 0){
+        if (sender->type->generate_id == NULL){
+            log_warn("Data ID not assigned, and sender %d (%s) cannot assign ID",
+                     sender->id, sender->type->name);
+        } else {
+            data->id = sender->type->generate_id(sender, data);
+        }
+    }
+
+    struct msu_endpoint *dst = type->route(type, sender, data);
+    if (dst == NULL){
+        log_error("No destination endpoint of type %s for msu %d",
+                  type->name, sender->id);
+        return -1;
+    }
+
+    int rtn = send_to_dst(dst, sender, data);
+    if (rtn < 0){
+        log_error("Error sending to destination msu");
+        if (data){
+            free(data->buffer);
+            free(data);
+        }
+    }
+    return rtn;
+}
+
 
 /** Receives and handles dequeued data from another MSU.
  * Also handles sending message to the next MSU, if applicable.
@@ -837,23 +867,10 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
         return -1;
     }
 
-    // Get the specific MSU to deliver to
-    struct msu_endpoint *dst = type->route(type, self, data);
-    if (dst == NULL){
-        log_error("No destination endpoint of type %s (%d) for msu %d",
-                  type->name, type_id, self->id);
-        if (data){
-            free(data->buffer);
-            free(data);
-        }
-        return -1;
-    }
-    log_debug("Next msu id is %d", dst->id);
-
     // Send to the specific destination
-    int rtn = send_to_dst(dst, self, data);
+    int rtn = msu_route(type, self, data);
     if (rtn < 0){
-        log_error("Error sending to destination msu %s", "");
+        log_error("Error sending from msu %d", self->id);
         if (data){
             free(data->buffer);
             free(data);

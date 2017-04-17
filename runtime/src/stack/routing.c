@@ -75,7 +75,7 @@ struct routing_table{
 
     int n_refs;
     
-    pthread_rwlock_t *rwlock;
+    pthread_rwlock_t rwlock;
 
     int n_destinations;
     int max_destinations;
@@ -84,15 +84,15 @@ struct routing_table{
 };
 
 static int read_lock(struct routing_table *table){
-    return pthread_rwlock_rdlock(table->rwlock);
+    return pthread_rwlock_rdlock(&table->rwlock);
 }
 
 static int write_lock(struct routing_table *table){
-    return pthread_rwlock_wrlock(table->rwlock);
+    return pthread_rwlock_wrlock(&table->rwlock);
 }
 
 static int unlock(struct routing_table *table){
-    return pthread_rwlock_unlock(table->rwlock);
+    return pthread_rwlock_unlock(&table->rwlock);
 }
 
 
@@ -119,6 +119,8 @@ static int realloc_table_entries(struct routing_table *table, int max_entries){
 static int find_value_index(struct routing_table *table, uint32_t value){
     //TODO: Binary search?
     int i;
+    if (table->n_destinations == 0)
+        return -1;
     value = value % table->ranges[table->n_destinations-1];
     for (i=0; i<table->n_destinations; i++){
         if (table->ranges[i] > value)
@@ -139,9 +141,9 @@ static struct msu_endpoint *rm_routing_table_entry(struct routing_table *table, 
     write_lock(table);;
     int index = find_id_index(table, msu_id);
     if (index == -1){
-        log_error("MSU %d does not exist in specified route");
+        log_error("MSU %d does not exist in specified route", msu_id);
         unlock(table);
-        return -1;
+        return NULL;
     }
     struct msu_endpoint *to_remove = &table->destinations[index];
     for (int i=index; i<table->n_destinations-1; i++){
@@ -150,7 +152,7 @@ static struct msu_endpoint *rm_routing_table_entry(struct routing_table *table, 
     }
     table->n_destinations--;
     unlock(table);
-
+    return to_remove;
 }
    
 static int add_routing_table_entry(struct routing_table *table, 
@@ -159,6 +161,12 @@ static int add_routing_table_entry(struct routing_table *table,
     if (table->type_id == 0){
         table->type_id = destination->type_id;
     }
+
+    if (range_end <= 0){
+        log_error("Cannot add routing table entry with non-positive key %d", range_end);
+        return -1;
+    }
+
 
     if (destination->type_id != table->type_id){
         log_error("Cannot add mixed-types to a single route. "
@@ -177,14 +185,15 @@ static int add_routing_table_entry(struct routing_table *table,
             return -1;
         }
     }
-    int index = find_value_index(table, range_end);
-    int i;
-    for (i=table->n_destinations; i>index; --i){
+
+    int i; 
+    for (i=table->n_destinations; i > 0 && range_end < table->ranges[i-1]; i--) {
         table->ranges[i] = table->ranges[i-1];
         table->destinations[i] = table->destinations[i-1];
     }
     table->ranges[i] = range_end;
     table->destinations[i] = *destination;
+    table->n_destinations++;
     unlock(table);
     return 0;
 }
@@ -208,6 +217,8 @@ static struct routing_table *init_routing_table(){
     table->n_refs = 0;
     table->n_destinations = 0;
     table->max_destinations = 0;
+    table->ranges = NULL;
+    table->destinations = NULL;
     pthread_rwlock_init(&table->rwlock, NULL);
 
     int rtn = realloc_table_entries(table, DEFAULT_MAX_DESTINATIONS);
@@ -247,6 +258,7 @@ int init_route(int route_id, int type_id){
     struct routing_table *table = get_routing_table(route_id);
     if (table->type_id == 0){
         table->type_id = type_id;
+        log_debug("Set type of route %d to %d", route_id, type_id);
     }
     if (table->type_id != 0 && table->type_id != type_id){
         log_warn("Type ID of route %d is %d, not %d", route_id, type_id, table->type_id);
@@ -321,6 +333,7 @@ struct route_set *init_route_set(int route_id){
     write_lock(table);
     ++(route->table->n_refs);
     unlock(table);
+    return route;
 }
 
 void destroy_route_set(struct route_set *route){
@@ -347,13 +360,14 @@ int add_route_to_set(struct route_set **routes, int route_id){
     HASH_FIND_INT(*routes, &route->id, existing_route);
     if (existing_route == NULL) {
         HASH_ADD_INT(*routes, id, route);
-        log_debug("Added route %d to set", route_id);
+        log_debug("Added route %d (type %d) to set", route_id, route->id);
     } else {
         log_error("Could not add route %d -- route with id %d already exists in set",
                   route_id, route->id);
         destroy_route_set(route);
         return -1;
     }
+    return 0;
 }
     
 int del_route_from_set(struct route_set **routes, int route_id){
@@ -376,6 +390,7 @@ int del_route_from_set(struct route_set **routes, int route_id){
     HASH_DEL(*routes, route);
     destroy_route_set(route);
     log_debug("Removed route %d from set", route_id);
+    return 0;
 }
 
 struct route_set *get_type_from_route_set(struct route_set **routes, int type_id){
@@ -383,6 +398,8 @@ struct route_set *get_type_from_route_set(struct route_set **routes, int type_id
     HASH_FIND_INT(*routes, &type_id, type_set);
     if (type_set == NULL){
         log_error("No routes available of type %d", type_id);
+        for (struct route_set *route = *routes; route != NULL; route=route->hh.next)
+            log_debug("Available: %d", route->id);
         return NULL;
     }
     return type_set;

@@ -97,8 +97,8 @@ struct msu_meta_routing {
 struct dfg_route {
     int route_id;
     int msu_type;
-
     int num_destinations;
+    int destination_keys[MAX_DESTINATIONS];
     struct dfg_vertex *destinations[MAX_DESTINATIONS];
 };
 

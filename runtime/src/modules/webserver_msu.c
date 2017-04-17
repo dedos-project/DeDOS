@@ -269,16 +269,18 @@ int webserver_receive(struct generic_msu *self, struct generic_msu_queue_item *i
                 else {
                     char ReturnOk[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length:";
                     char htmlDoc[] =
-                        "<!DOCTYPE html>\n<html>\n<body>\n<h1>Dedos New Runtime</h1>\n</body>\n</html>";
+                        "<!DOCTYPE html>\n<html>\n<body>\n<h1>Dedos New Runtime MSU %03d</h1>\n</body>\n</html>";
+                    char htmlDocOut[strlen(htmlDoc)];
+                    sprintf(htmlDocOut,htmlDoc, self->id);
 
                     // Generate the document to send back to the client
-                    int http_response_len = strlen(ReturnOk) +  strlen(htmlDoc) + 20;
+                    int http_response_len = strlen(ReturnOk) +  strlen(htmlDocOut) + 20;
                     char *finalSend = (char *) malloc (http_response_len);
                     memset(finalSend, '\0', http_response_len);
 
                     snprintf(finalSend, http_response_len, "%s %d\r\n\r\n%s",
-                             ReturnOk, (int) strlen(htmlDoc), htmlDoc);
-                    strncpy(recv_data->msg, finalSend, http_response_len+1);
+                             ReturnOk, (int) strlen(htmlDocOut), htmlDocOut);
+                    strncpy(recv_data->msg, finalSend, strlen(finalSend) + 1);
                     recv_data->type = WRITE;
 
                     free(finalSend);

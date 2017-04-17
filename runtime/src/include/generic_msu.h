@@ -216,6 +216,8 @@ struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *send
  * with the same ip address as specified. */
 struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic_msu *sender,
                                            uint32_t ip_address);
+int msu_route(struct msu_type *type, struct generic_msu *sender,
+              struct generic_msu_queue_item *data);
 
 struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *sender,
                                      struct generic_msu_queue_item *data);
