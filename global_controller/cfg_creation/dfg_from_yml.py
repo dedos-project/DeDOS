@@ -62,7 +62,7 @@ def runtime_routes(rt_id, msus, routes):
             for i in range(99):
                 name = route_name(rt_id, type, i)
                 if name not in routes_out:
-                    routes_out[name] = list()
+                    routes_out[name] = {'destinations':{}, 'type':type, 'link': route, 'key-max': 0}
                     these_routes[type] = name
                     break
 
@@ -70,16 +70,26 @@ def runtime_routes(rt_id, msus, routes):
             route_msus = [msu for msu in msus if msu['name'] == route_to]
             if len(msu) == 0:
                 print('No MSU with name %s! Stopping!'%route_to)
-
             for msu in route_msus:
-                routes_out[these_routes[msu['type']]].append(msu['id'])
-
+                route_out = routes_out[these_routes[msu['type']]]
+                last_max = route_out['key-max'];
+                route_out['destinations'][msu['id']] = last_max + 1;
+                route_out['key-max']+=1;
+        
         for from_msu in from_msus:
             for type in types:
                 if these_routes[type] not in from_msu['scheduling']['routing']:
                     from_msu['scheduling']['routing'].append(these_routes[type])
 
-    routes_final = [ {'id': k, 'destinations': v} for k, v in routes_out.items()]
+    for id, route_out in routes_out.items():
+        if 'key-max' in route_out['link']:
+            ratio = route_out['link']['key-max'] / route_out['key-max']
+            for msu_id in route_out['destinations']:
+                route_out['destinations'][msu_id] *= ratio
+        del route_out['key-max']
+        del route_out['link']
+
+    routes_final = [ dict(id=k, **v) for k, v in routes_out.items()]
 
     return routes_final
 
@@ -154,9 +164,6 @@ def make_dfg(yml_filename, pretty=False):
 
     for rt in output['runtimes']:
         rt['routes'] = runtime_routes(rt['id'], msus_out, input['routes'])
-
-    for msu in msus_out:
-        del msu['name']
 
     output['MSUs'] = msus_out
     stringify(output)
