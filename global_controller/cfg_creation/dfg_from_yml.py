@@ -27,33 +27,61 @@ def sort_msus(msus):
 
 max_id = 1
 
-def add_routing(msu, msus, routes):
+def route_name(runtime_id, type, i):
+    return '%03d%01d' % (type, i)
+    #return '%03d%02d%01d' % (type, runtime_id, i)
 
-    for route in routes:
+def runtime_routes(rt_id, msus, routes):
+
+    routes_out = {}
+
+    for i, route in enumerate(routes):
+        if isinstance(route['to'], list):
+            tos = route['to']
+        else:
+            tos = [route['to']]
 
         if isinstance(route['from'], list):
             froms = route['from']
         else:
             froms = [route['from']]
 
-        if isinstance(route['to'], list):
-            tos = route['to']
-        else:
-            tos = [route['to']]
+        from_msus = [msu for msu in msus if msu['name'] in froms and msu['scheduling']['runtime_id'] == rt_id]
 
-        if 'thread-match' in route:
-            thread_match = route['thread-match']
-        else:
-            thread_match = False
 
-        for route_from in froms:
-            if route_from == msu['name']:
-                for route_to in tos:
-                    for msu_to in msus:
-                        if route_to == msu_to['name']:
-                            if ( (not thread_match) or
-                                    (thread_match and msu['scheduling']['thread_id'] == msu_to['scheduling']['thread_id']) ):
-                                msu['scheduling']['routing'].append(msu_to['id'])
+        if len(from_msus) == 0:
+            continue
+
+
+        to_msus = [msu for msu in msus if msu['name'] in tos]
+        types = [msu['type'] for msu in to_msus]
+
+        these_routes = {}
+
+        for type in set(types):
+            for i in range(99):
+                name = route_name(rt_id, type, i)
+                if name not in routes_out:
+                    routes_out[name] = list()
+                    these_routes[type] = name
+                    break
+
+        for route_to in tos:
+            route_msus = [msu for msu in msus if msu['name'] == route_to]
+            if len(msu) == 0:
+                print('No MSU with name %s! Stopping!'%route_to)
+
+            for msu in route_msus:
+                routes_out[these_routes[msu['type']]].append(msu['id'])
+
+        for from_msu in from_msus:
+            for type in types:
+                if these_routes[type] not in from_msu['scheduling']['routing']:
+                    from_msu['scheduling']['routing'].append(these_routes[type])
+
+    routes_final = [ {'id': k, 'destinations': v} for k, v in routes_out.items()]
+
+    return routes_final
 
 def make_msus_out(msu):
     global max_id
@@ -93,12 +121,12 @@ def stringify(output):
             if isinstance(v, dict) or isinstance(v, OrderedDict):
                 stringify(v)
             elif isinstance(v, list):
-                stringify(v) 
+                stringify(v)
             else:
                 output[i] = str(v)
-def make_cfg(yml_filename, pretty=False):
+def make_dfg(yml_filename, pretty=False):
     input = yaml.load(open(yml_filename))
-    
+ 
     output = OrderedDict()
 
     output['application_name'] = input['application']['name']
@@ -119,18 +147,18 @@ def make_cfg(yml_filename, pretty=False):
         ))
     output['runtimes'] = rts
 
-    msus = sort_msus(input['msus'])
+    msus = input['msus'] #sort_msus(input['msus'])
     msus_out = []
     for msu in msus:
         msus_out.extend(make_msus_out(msu))
-    
-    for msu in msus_out:
-        add_routing(msu, msus_out, input['routes'])
+
+    for rt in output['runtimes']:
+        rt['routes'] = runtime_routes(rt['id'], msus_out, input['routes'])
 
     for msu in msus_out:
         del msu['name']
-    
-    output['MSUs'] = msus_out[::-1]
+
+    output['MSUs'] = msus_out
     stringify(output)
 
     if pretty:
@@ -145,4 +173,4 @@ if __name__ == '__main__':
         cfg = sys.argv[-1]
     else:
         cfg = 'dfg.yml'
-    make_cfg(cfg, pretty)
+    make_dfg(cfg, pretty)
