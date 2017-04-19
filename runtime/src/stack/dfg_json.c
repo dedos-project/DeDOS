@@ -30,13 +30,13 @@ int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 void json_parse_error(int err) {
     switch(err) {
         case JSMN_ERROR_INVAL:
-            debug("%s", "Bad token, JSON string is corrupted");
+            log_debug("%s", "Bad token, JSON string is corrupted");
             break;
         case JSMN_ERROR_NOMEM:
-            debug("%s", "not enough tokens, JSON string is too large");
+            log_debug("%s", "not enough tokens, JSON string is too large");
             break;
         case JSMN_ERROR_PART:
-            debug("%s", "JSON string is too short, expecting more JSON data");
+            log_debug("%s", "JSON string is too short, expecting more JSON data");
             break;
     }
 }
@@ -49,7 +49,7 @@ void json_parse_error(int err) {
  */
 int json_test(jsmntok_t *t, int r) {
     if (r == 0 || t[0].type != JSMN_OBJECT) {
-        debug("ERROR: %s", "The top-level element should be an object!");
+        log_debug("ERROR: %s", "The top-level element should be an object!");
         return -1;
     }
 
@@ -65,7 +65,7 @@ int json_test(jsmntok_t *t, int r) {
             case JSMN_STRING:
                 break;
             default:
-                debug("Unknown json element: %d", t[j].type);
+                log_debug("Unknown json element: %d", t[j].type);
                 return -1;
             break;
         }
@@ -89,7 +89,7 @@ void parse_msu_scheduling(jsmntok_t *t, int *starting_token,
     struct msu_scheduling *s = NULL;
     s = malloc(sizeof(struct msu_scheduling));
     if (s == NULL) {
-        debug("%s", "Could not allocate memory for msu_scheduling");
+        log_debug("%s", "Could not allocate memory for msu_scheduling");
     }
 
     v->scheduling = s;
@@ -101,45 +101,45 @@ void parse_msu_scheduling(jsmntok_t *t, int *starting_token,
     while (f < fields) {
 
         if (t[*i].type != JSMN_STRING) {
-            debug("DEBUG: Expected JSMN_STRING but found %d\n", t[*i].type);
+            log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[*i].type);
         }
-        debug("String name : %.*s\n", t[*i].end-t[*i].start, json_string + t[*i].start);
+        log_debug("String name : %.*s\n", t[*i].end-t[*i].start, json_string + t[*i].start);
 
         char value[256];
         memset(value, '\0', 256);
         memcpy(value, json_string + t[*i+1].start, t[*i+1].end - t[*i+1].start);
 
         if (jsoneq(json_string, &t[*i], "runtime_id") == 0) {
-            debug("'runtime_id' field. Value: %s\n", value);
+            log_debug("'runtime_id' field. Value: %s\n", value);
 
             v->scheduling->runtime = get_runtime_from_id(atoi(value));
 
             if (v->scheduling->runtime == NULL) {
-                debug("Couldn't find runtime associated with id %d", atoi(value));
+                log_debug("Couldn't find runtime associated with id %d", atoi(value));
             }
 
             f++;
             *i += 2;
         } else if (jsoneq(json_string, &t[*i], "thread_id") == 0) {
-            debug("'thread_id' field. Value: %s\n", value);
+            log_debug("'thread_id' field. Value: %s\n", value);
 
             v->scheduling->thread_id = atoi(value);
 
             f++;
             *i += 2;
         } else if (jsoneq(json_string, &t[*i], "deadline") == 0) {
-            debug("'deadline' field. Value: %s\n", value);
+            log_debug("'deadline' field. Value: %s\n", value);
 
             v->scheduling->deadline = atoi(value);
 
             f++;
             *i += 2;
         } else if (jsoneq(json_string, &t[*i], "routing") == 0) {
-            debug("'routing' field. Value: %.*s\n\n",
+            log_debug("'routing' field. Value: %.*s\n\n",
                   t[*i+1].end - t[*i+1].start, json_string + t[*i+1].start);
 
             if (t[*i+1].type != JSMN_ARRAY) {
-                debug("DEBUG: Expected JSMN_ARRAY but found %d\n", t[*i+1].type);
+                log_debug("DEBUG: Expected JSMN_ARRAY but found %d\n", t[*i+1].type);
             }
 
             //jump to the ARRAY object
@@ -150,7 +150,7 @@ void parse_msu_scheduling(jsmntok_t *t, int *starting_token,
                 struct dfg_edge_set *set = NULL;
                 set = malloc(sizeof(struct dfg_edge_set));
                 if (set == NULL) {
-                    debug("%s", "Could not allocate memory for dfg_edge_set");
+                    log_debug("%s", "Could not allocate memory for dfg_edge_set");
                 }
 
                 v->scheduling->routing = set;
@@ -167,17 +167,17 @@ void parse_msu_scheduling(jsmntok_t *t, int *starting_token,
                 //jump to first/next element in the array
                 *i += 1;
 
-                debug("destination id field. Value: %.*s\n\n",
+                log_debug("destination id field. Value: %.*s\n\n",
                       t[*i].end - t[*i].start, json_string + t[*i].start);
 
                 if (t[*i].type != JSMN_STRING) {
-                    debug("DEBUG: Expected JSMN_STRING but found %d\n", t[*i].type);
+                    log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[*i].type);
                 }
 
                 struct dfg_edge *edge = NULL;
                 edge = malloc(sizeof(struct dfg_edge));
                 if (edge == NULL) {
-                    debug("%s", "Could not allocate memory for dfg_edge");
+                    log_debug("%s", "Could not allocate memory for dfg_edge");
                 }
                 v->scheduling->routing->edges[dst] = edge;
 
@@ -209,7 +209,7 @@ int parse_msu_profiling(jsmntok_t *t, int starting_token,
     int i = starting_token;
 
     if (t[i].type != JSMN_OBJECT) {
-        debug("DEBUG: Expected %d-th field to be JSMN_OBJECT but found %d",
+        log_debug("DEBUG: Expected %d-th field to be JSMN_OBJECT but found %d",
               i, t[i].type);
         return -1;
     }
@@ -219,7 +219,7 @@ int parse_msu_profiling(jsmntok_t *t, int starting_token,
     struct msu_profiling *p = NULL;
     p = malloc(sizeof(struct msu_profiling));
     if (p == NULL) {
-        debug("%s", "Could not allocate memory for msu_profiling struct");
+        log_debug("%s", "Could not allocate memory for msu_profiling struct");
         return -1;
     }
 
@@ -228,37 +228,37 @@ int parse_msu_profiling(jsmntok_t *t, int starting_token,
     int s;
     for (s = 1; s < fields * 2; s += 2) {
         if (t[i+s].type != JSMN_STRING || t[i+s+1].type != JSMN_STRING) {
-            debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+s].type);
+            log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+s].type);
             return -1;
         }
-        debug("String name : %.*s\n", t[i+s].end-t[i+s].start, json_string + t[i+s].start);
+        log_debug("String name : %.*s\n", t[i+s].end-t[i+s].start, json_string + t[i+s].start);
 
         char value[32];
         memset(value, '\0', 32);
         memcpy(value, json_string + t[i+s+1].start, t[i+s+1].end - t[i+s+1].start);
 
         if (jsoneq(json_string, &t[i+s], "wcet") == 0) {
-            debug("'wcet' field. Value: %s\n", value);
+            log_debug("'wcet' field. Value: %s\n", value);
 
             v->profiling->wcet = atoi(value);
 
         } else if (jsoneq(json_string, &t[i+s], "dram") == 0) {
-            debug("'dram' field. Value: %s\n", value);
+            log_debug("'dram' field. Value: %s\n", value);
 
             v->profiling->dram = atol(value);
 
         } else if (jsoneq(json_string, &t[i+s], "tx_node_local") == 0) {
-            debug("'tx_node_local' field. Value: %s\n", value);
+            log_debug("'tx_node_local' field. Value: %s\n", value);
 
             v->profiling->tx_node_local = atoi(value);
 
         } else if (jsoneq(json_string, &t[i+s], "tx_core_local") == 0) {
-            debug("'tx_core_local' field. Value: %s\n", value);
+            log_debug("'tx_core_local' field. Value: %s\n", value);
 
             v->profiling->tx_core_local = atoi(value);
 
         } else if (jsoneq(json_string, &t[i+s], "tx_node_remote") == 0) {
-            debug("'tx_node_remote' field. Value: %s\n", value);
+            log_debug("'tx_node_remote' field. Value: %s\n", value);
 
             v->profiling->tx_node_remote = atoi(value);
 
@@ -285,7 +285,7 @@ int json_parse_runtimes(jsmntok_t *t, int starting_token,
     int i = starting_token;
 
     if (t[i].type != JSMN_ARRAY) {
-        debug("DEBUG: Expected %d-th field to be JSMN_ARRAY but found %d",
+        log_debug("DEBUG: Expected %d-th field to be JSMN_ARRAY but found %d",
               i, t[i].type);
         return -1;
     }
@@ -296,7 +296,7 @@ int json_parse_runtimes(jsmntok_t *t, int starting_token,
     struct dfg_runtime_endpoint *r = NULL;
     while (i < ending_token) {
         if (t[i].type != JSMN_OBJECT) {
-            debug("DEBUG: At location %d, expected JSMN_OBJECT but found %d\n", i, t[i].type);
+            log_debug("DEBUG: At location %d, expected JSMN_OBJECT but found %d\n", i, t[i].type);
             return -1;
         }
 
@@ -314,42 +314,42 @@ int json_parse_runtimes(jsmntok_t *t, int starting_token,
         for (s = 1; s <= fields * 2; s += 2) {
             // field name should be a JSMN_STRING
             if (t[i+s].type != JSMN_STRING) {
-                debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+s].type);
+                log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+s].type);
                 return -1;
             }
-            debug("String name : %.*s\n", t[i+s].end-t[i+s].start, json_string + t[i+s].start);
+            log_debug("String name : %.*s\n", t[i+s].end-t[i+s].start, json_string + t[i+s].start);
 
             char value[32];
             memset(value, '\0', 32);
             memcpy(value, json_string + t[i+s+1].start, t[i+s+1].end - t[i+s+1].start);
 
             if (jsoneq(json_string, &t[i+s], "id") == 0) {
-                debug("'id' field. Value: %s\n", value);
+                log_debug("'id' field. Value: %s\n", value);
 
                 r->id = atoi(value);
 
             } else if (jsoneq(json_string, &t[i+s], "ip") == 0) {
-                debug("'ip' field. Value: %s\n", value);
+                log_debug("'ip' field. Value: %s\n", value);
 
                 string_to_ipv4(value, &(r->ip));
 
             } else if (jsoneq(json_string, &t[i+s], "port") == 0) {
-                debug("'port' field. Value: %s\n", value);
+                log_debug("'port' field. Value: %s\n", value);
 
                 r->port = atoi(value);
 
             } else if (jsoneq(json_string, &t[i+s], "num_cores") == 0) {
-                debug("'num_cores' field. Value: %s\n", value);
+                log_debug("'num_cores' field. Value: %s\n", value);
 
                 r->num_cores = atoi(value);
 
             } else if (jsoneq(json_string, &t[i+s], "dram") == 0) {
-                debug("'num_cores' field. Value: %s\n", value);
+                log_debug("'num_cores' field. Value: %s\n", value);
 
                 r->dram = atol(value);
 
             } else if (jsoneq(json_string, &t[i+s], "io_network_bw") == 0) {
-                debug("'num_cores' field. Value: %s\n", value);
+                log_debug("'num_cores' field. Value: %s\n", value);
 
                 r->io_network_bw = atol(value);
 
@@ -382,7 +382,7 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
     int c = 0;
 
     if (t[i].type != JSMN_ARRAY) {
-        debug("DEBUG: Expected %d-th field to be JSMN_ARRAY but found %d",
+        log_debug("DEBUG: Expected %d-th field to be JSMN_ARRAY but found %d",
               i, t[i].type);
         return -1;
     }
@@ -394,7 +394,7 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
     //Parse msu objects in the array one by one.
     while (c < msu_cnt) {
         if (t[i].type != JSMN_OBJECT) {
-            debug("DEBUG: At location %d, expected JSMN_OBJECT but found %d\n", i, t[i].type);
+            log_debug("DEBUG: At location %d, expected JSMN_OBJECT but found %d\n", i, t[i].type);
             return -1;
         }
 
@@ -420,17 +420,17 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
 
             // field name should be a JSMN_STRING
             if (t[i].type != JSMN_STRING) {
-                debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i].type);
+                log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i].type);
                 return -1;
             }
-            debug("Field name: %.*s\n", t[i].end-t[i].start, json_string + t[i].start);
+            log_debug("Field name: %.*s\n", t[i].end-t[i].start, json_string + t[i].start);
 
             if (jsoneq(json_string, &t[i], "id") == 0) {
-                debug("'id' field. Value: %.*s\n\n",
+                log_debug("'id' field. Value: %.*s\n\n",
                       t[i+1].end - t[i+1].start, json_string + t[i+1].start);
 
                 if (t[i+1].type != JSMN_STRING) {
-                    debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+1].type);
+                    log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+1].type);
                     return -1;
                 }
 
@@ -443,11 +443,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
                 f++;
                 i += 2;
             } else if (jsoneq(json_string, &t[i], "vertex_type") == 0) {
-                debug("'vertex_type' field. Value: %.*s\n\n",
+                log_debug("'vertex_type' field. Value: %.*s\n\n",
                       t[i+1].end - t[i+1].start, json_string + t[i+1].start);
 
                 if (t[i+1].type != JSMN_STRING) {
-                    debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+1].type);
+                    log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+1].type);
                     return -1;
                 }
 
@@ -456,11 +456,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
                 f++;
                 i += 2;
             } else if (jsoneq(json_string, &t[i], "type") == 0) {
-                debug("'type' field. Value: %.*s\n\n",
+                log_debug("'type' field. Value: %.*s\n\n",
                       t[i+1].end - t[i+1].start, json_string + t[i+1].start);
 
                 if (t[i+1].type != JSMN_STRING) {
-                    debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+1].type);
+                    log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+1].type);
                     return -1;
                 }
 
@@ -473,11 +473,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
                 f++;
                 i += 2;
             } else if (jsoneq(json_string, &t[i], "working_mode") == 0) {
-                debug("'working_mode' field. Value: %.*s\n\n",
+                log_debug("'working_mode' field. Value: %.*s\n\n",
                       t[i+1].end - t[i+1].start, json_string + t[i+1].start);
 
                 if (t[i+1].type != JSMN_STRING) {
-                    debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+1].type);
+                    log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i+1].type);
                     return -1;
                 }
 
@@ -486,11 +486,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
                 f++;
                 i += 2;
             } else if (jsoneq(json_string, &t[i], "profiling") == 0) {
-                debug("'profiling' field. Value: %.*s\n\n",
+                log_debug("'profiling' field. Value: %.*s\n\n",
                       t[i+1].end - t[i+1].start, json_string + t[i+1].start);
 
                 if (t[i+1].type != JSMN_OBJECT) {
-                    debug("DEBUG: Expected JSMN_OBJECT but found %d\n", t[i+1].type);
+                    log_debug("DEBUG: Expected JSMN_OBJECT but found %d\n", t[i+1].type);
                     return -1;
                 }
 
@@ -501,18 +501,18 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
             } else if (jsoneq(json_string, &t[i], "meta_routing") == 0) {
                 // annoying because dynamic (i.e different MSUs have different routes)
                 // we have to determine on the go how much to increment i
-                debug("'meta_routing' field. Value: %.*s\n\n",
+                log_debug("'meta_routing' field. Value: %.*s\n\n",
                       t[i+1].end - t[i+1].start, json_string + t[i+1].start);
 
                 if (t[i+1].type != JSMN_OBJECT) {
-                    debug("DEBUG: Expected JSMN_OBJECT but found %d\n", t[i+1].type);
+                    log_debug("DEBUG: Expected JSMN_OBJECT but found %d\n", t[i+1].type);
                     return -1;
                 }
 
                 struct msu_meta_routing *m = NULL;
                 m = malloc(sizeof(struct msu_meta_routing));
                 if (m == NULL) {
-                    debug("%s", "Could not allocate memory for msu_meta_routing struct");
+                    log_debug("%s", "Could not allocate memory for msu_meta_routing struct");
                     return -1;
                 }
                 v->meta_routing = m;
@@ -524,11 +524,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
 
                 if (jsoneq(json_string, &t[i], "source_types") == 0 &&
                     strncmp(v->vertex_type, "entry", strlen("entry\0")) != 0) {
-                    debug("'source_types' field. Value: %.*s\n\n",
+                    log_debug("'source_types' field. Value: %.*s\n\n",
                           t[i+1].end - t[i+1].start, json_string + t[i+1].start);
 
                     if (t[i+1].type != JSMN_ARRAY) {
-                        debug("DEBUG: Expected JSMN_ARRAY but found %d\n", t[i+1].type);
+                        log_debug("DEBUG: Expected JSMN_ARRAY but found %d\n", t[i+1].type);
                         return -1;
                     }
 
@@ -541,11 +541,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
                     int s;
                     char value[4];
                     for (s = 0; s < num_src_types; s++) {
-                        debug("New source MSU: %.*s\n\n",
+                        log_debug("New source MSU: %.*s\n\n",
                           t[i].end - t[i].start, json_string + t[i].start);
 
                         if (t[i].type != JSMN_STRING) {
-                            debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i].type);
+                            log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i].type);
                             return -1;
                         }
 
@@ -561,11 +561,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
 
                 if (jsoneq(json_string, &t[i], "dst_types") == 0 &&
                     strncmp(v->vertex_type, "exit", strlen("exit\0")) != 0) {
-                    debug("'dst_types' field. Value: %.*s\n\n",
+                    log_debug("'dst_types' field. Value: %.*s\n\n",
                           t[i].end - t[i].start, json_string + t[i].start);
 
                     if (t[i+1].type != JSMN_ARRAY) {
-                        debug("DEBUG: Expected JSMN_ARRAY but found %d\n", t[i+1].type);
+                        log_debug("DEBUG: Expected JSMN_ARRAY but found %d\n", t[i+1].type);
                         return -1;
                     }
 
@@ -578,11 +578,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
                     int d;
                     char value[4];
                     for (d = 0; d < num_dst_types; d++) {
-                        debug("New dst MSU: %.*s\n\n",
+                        log_debug("New dst MSU: %.*s\n\n",
                           t[i].end - t[i].start, json_string + t[i].start);
 
                         if (t[i].type != JSMN_STRING) {
-                            debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i].type);
+                            log_debug("DEBUG: Expected JSMN_STRING but found %d\n", t[i].type);
                             return -1;
                         }
 
@@ -598,11 +598,11 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
 
                 f++;
             } else if (jsoneq(json_string, &t[i], "scheduling") == 0) {
-                debug("'scheduling' field. Value: %.*s\n\n",
+                log_debug("'scheduling' field. Value: %.*s\n\n",
                       t[i+1].end - t[i+1].start, json_string + t[i+1].start);
 
                 if (t[i+1].type != JSMN_OBJECT) {
-                    debug("DEBUG: Expected JSMN_OBJECT but found %d\n", t[i+1].type);
+                    log_debug("DEBUG: Expected JSMN_OBJECT but found %d\n", t[i+1].type);
                     return -1;
                 }
 
@@ -633,10 +633,10 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
  */
 int do_dfg_config(const char * init_cfg_filename) {
     if ((strlen(init_cfg_filename) == 0) || (strlen(init_cfg_filename) > 128)) {
-        debug("ERROR: %s", "invalid DFG filename");
+        log_debug("ERROR: %s", "invalid DFG filename");
         return -1;
     }
-
+    log_debug("Parsing json...");
     /**
      * Init some key elements of the dataflow graph
      */
@@ -644,7 +644,7 @@ int do_dfg_config(const char * init_cfg_filename) {
     pthread_mutex_t m; // Need a mutex to make the dfg thread safe
     dfg.dfg_mutex = &m;
     if (pthread_mutex_init(dfg.dfg_mutex, NULL) != 0) {
-        debug("ERROR: %s", "failed to init dfg mutex");
+        log_debug("ERROR: %s", "failed to init dfg mutex");
     }
 
     dfg.vertex_cnt = 0;
@@ -658,7 +658,7 @@ int do_dfg_config(const char * init_cfg_filename) {
     strncpy(dfg.init_dfg_filename,
             init_cfg_filename,
             strlen(init_cfg_filename));
-    debug("DEBUG: Loading dataflow graph from : %s", dfg.init_dfg_filename);
+    log_debug("DEBUG: Loading dataflow graph from : %s", dfg.init_dfg_filename);
 
     /**
      * Read JSON file
@@ -666,21 +666,21 @@ int do_dfg_config(const char * init_cfg_filename) {
 
     FILE *fin = fopen(dfg.init_dfg_filename, "r");
     if (!fin) {
-        debug("DEBUG: file open error: %s", dfg.init_dfg_filename);
+        log_debug("DEBUG: file open error: %s", dfg.init_dfg_filename);
         return -1;
     } else {
-        debug("DEBUG: opened JSON file: %s", dfg.init_dfg_filename);
+        log_debug("DEBUG: opened JSON file: %s", dfg.init_dfg_filename);
     }
 
     const char json_string[MAX_JSON_LEN]; //file content
     int linecnt = 0;
     while (fgets(json_string, sizeof(json_string), fin) != NULL) {
-        debug("DEBUG: JSON string: %s", json_string);
+        log_debug("DEBUG: JSON string: %s", json_string);
         linecnt ++;
     }
 
     if (linecnt != 1) {
-        debug("%s", "Malformed JSON file, one-line file expected.");
+        log_debug("%s", "Malformed JSON file, one-line file expected.");
         return -1;
     }
 
@@ -689,13 +689,14 @@ int do_dfg_config(const char * init_cfg_filename) {
     jsmn_init(&jp);
     int r = jsmn_parse(&jp, json_string, strlen(json_string), t, sizeof(t)/sizeof(t[0]));
     if (r < 0) {
+        log_debug("FAIL.");
         json_parse_error(r);
         return -1;
     }
 
     int ret;
     if ((ret = json_test(t, r)) != 0) {
-        debug("%s", "malformed JSON");
+        log_debug("%s", "malformed JSON");
         return -1;
     }
 
@@ -703,7 +704,7 @@ int do_dfg_config(const char * init_cfg_filename) {
     int i = 1;
 
     if (jsoneq(json_string, &t[i], "application_name") != 0) {
-        debug("DEBUG: Expected 'application_name' but was %.*s\n",
+        log_debug("DEBUG: Expected 'application_name' but was %.*s\n",
               t[i].end - t[i].start, json_string+t[i].start);
         return -1;
     }
@@ -711,18 +712,18 @@ int do_dfg_config(const char * init_cfg_filename) {
     i += 2;
 
     if (jsoneq(json_string, &t[i], "application_deadline") != 0) {
-        debug("DEBUG: Expected 'application_deadline' but was %.*s\n",
+        log_debug("DEBUG: Expected 'application_deadline' but was %.*s\n",
               t[i].end - t[i].start, json_string+t[i].start);
         return -1;
     }
     char deadline[5];
     strncpy(deadline, json_string + t[i+1].start, t[i+1].end - t[i+1].start);
     dfg.application_deadline = atoi(deadline);
-    debug("application_deadline %d", dfg.application_deadline);
+    log_debug("application_deadline %d", dfg.application_deadline);
     i += 2;
 
     if (jsoneq(json_string, &t[i], "global_ctl_ip") != 0) {
-        debug("DEBUG: Expected 'global_ctl_ip' but was %.*s\n",
+        log_debug("DEBUG: Expected 'global_ctl_ip' but was %.*s\n",
               t[i].end - t[i].start, json_string+t[i].start);
         return -1;
     }
@@ -730,7 +731,7 @@ int do_dfg_config(const char * init_cfg_filename) {
     i += 2;
 
     if (jsoneq(json_string, &t[i], "global_ctl_port") != 0) {
-        debug("DEBUG: Expected 'global_ctl_port' but was %.*s\n",
+        log_debug("DEBUG: Expected 'global_ctl_port' but was %.*s\n",
               t[i].end - t[i].start, json_string+t[i].start);
         return -1;
     }
@@ -740,7 +741,7 @@ int do_dfg_config(const char * init_cfg_filename) {
     i += 2;
 
     if (jsoneq(json_string, &t[i], "load_mode") != 0) {
-        debug("DEBUG: Expected 'load_mode' but was %.*s\n",
+        log_debug("DEBUG: Expected 'load_mode' but was %.*s\n",
               t[i].end - t[i].start, json_string+t[i].start);
         return -1;
     }
@@ -754,7 +755,7 @@ int do_dfg_config(const char * init_cfg_filename) {
 
     //runtimes
     if (jsoneq(json_string, &t[i], "runtimes") != 0) {
-        debug("DEBUG: Expected 'runtimes' but was %.*s\n",
+        log_debug("DEBUG: Expected 'runtimes' but was %.*s\n",
               t[i].end - t[i].start, json_string+t[i].start);
         return -1;
     }
@@ -762,12 +763,12 @@ int do_dfg_config(const char * init_cfg_filename) {
     int runtimes_cnt = t[i].size;
     int runtimes_tokens = runtimes_cnt + (RUNTIME_FIELDS * 2 * runtimes_cnt);
 
-    debug("DEBUG: %d runtimes have been declared.", runtimes_cnt);
+    log_debug("DEBUG: %d runtimes have been declared.", runtimes_cnt);
 
     //ending idx = current idx + 1 (json array) + #runtimes (json objects) + #msu * #runtime_fields
     ret = json_parse_runtimes(t, i, i + 1 + runtimes_tokens, json_string);
     if (ret != 0) {
-        debug("ERROR: %s", "could not extract runtimes from JSON");
+        log_debug("ERROR: %s", "could not extract runtimes from JSON");
         return -1;
     }
 
@@ -775,18 +776,18 @@ int do_dfg_config(const char * init_cfg_filename) {
 
     //MSUs
     if (jsoneq(json_string, &t[i], "MSUs") != 0) {
-        debug("DEBUG: Expected MSUs but was %.*s\n",
+        log_debug("DEBUG: Expected MSUs but was %.*s\n",
               t[i].end - t[i].start, json_string+t[i].start);
         return -1;
     }
     i++;
     int msu_cnt = t[i].size;
 
-    debug("DEBUG: Detected %d MSUs in this dataflow graph.", msu_cnt);
+    log_debug("DEBUG: Detected %d MSUs in this dataflow graph.", msu_cnt);
 
     ret = json_parse_msu(t, i, msu_cnt, json_string);
     if (ret != 0) {
-        debug("ERROR: %s", "could not extract msus from JSON");
+        log_debug("ERROR: %s", "could not extract msus from JSON");
         return -1;
     }
 

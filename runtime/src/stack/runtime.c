@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <time.h>
+#include "stats.h"
 #include "communication.h"
 #include "runtime.h"
 #include "control_protocol.h"
@@ -178,7 +179,7 @@ static void* non_block_per_thread_loop() {
     log_debug("Thread thread_q addr: %p", self->thread_q);
     log_debug("Thread pool addr: %p", self->msu_pool);
     log_debug("-------------------------%s", "");
-
+    
     while (1) {
         /* 1. MSU processing */
         //RR over each msu in MSU pool
@@ -191,17 +192,20 @@ static void* non_block_per_thread_loop() {
 
         if (cur != NULL) {
             do {
+                aggregate_stat(QUEUE_LEN, cur->id, cur->q_in.num_msgs, 0);
                 unsigned int covered_weight = 0;
                 struct generic_msu_queue_item *queue_item;
-
+                
                 while(covered_weight < cur->scheduling_weight){
                     //dequeue from data queue
                     queue_item = generic_msu_queue_dequeue(&cur->q_in);
                     if (queue_item) {
                         debug("DEBUG: Thread %02x dequeuing MSU %d data queue", self->tid, cur->id);
+                        aggregate_start_time(MSU_FULL_TIME, cur->id);
                         /* NOTE: data_handler should consume the item, i.e. free the memory
                          by calling delete_generic_msu_queue_item(queue_item) */
                         msu_receive(cur, queue_item);
+                        aggregate_end_time(MSU_FULL_TIME, cur->id);
                         //increment queue item processed
                         cur->stats.queue_item_processed++; //FIXME UINT OVERFLOW
                         debug("DEBUG: msu %d has processed MD %d items",
@@ -701,6 +705,7 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
     begin = clock();
 
     while (1) {
+        flush_all_stats_to_log(0);
         ret = check_comm_sockets(); //for incoming data processing
         // log_debug("Done check_comm_sockets %s","");
         if (ret == -1) {

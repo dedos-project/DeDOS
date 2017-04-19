@@ -19,6 +19,7 @@
 #define TCP_DEBUG 0
 #define STATS 0
 
+
 #define log_error(fmt, ...) \
         do { if (ERROR) { fprintf(stderr, "" ANSI_COLOR_RED "%lu:%s:%d:%s(): ERROR: " fmt, pthread_self(),__FILE__, \
                                 __LINE__, __func__, ##__VA_ARGS__); \
@@ -50,10 +51,14 @@
                                 __LINE__, __func__, ##__VA_ARGS__); \
                               fprintf(stderr,""  ANSI_COLOR_RESET "\n"); }  } while (0)
 
+#ifdef STATS
 #define log_stats(fmt, ...) \
-    do { if (1) { fprintf(stderr, "" ANSI_COLOR_PURPLE "%lu:%s:%d:%s(): STATS: " fmt, pthread_self(),__FILE__, \
-                            __LINE__, __func__, ##__VA_ARGS__); \
-                          fprintf(stderr,""  ANSI_COLOR_RESET "\n"); }  } while (0)
+        do { if (1) { fprintf(stderr,  "%lu:%s:%d:%s(): STATS: " fmt "\n", pthread_self(),__FILE__, \
+                                __LINE__, __func__, ##__VA_ARGS__); \
+        }} while (0)
+#else
+#define log_stats(...)
+#endif
 
 #define tcp_dbg(fmt, ...) \
         do { if (TCP_DEBUG) { fprintf(stderr, "%lu:%s:%d:%s(): TCP_DEBUG: " fmt, pthread_self(),__FILE__, \

@@ -357,7 +357,7 @@ int connect_to_runtime(char *ip, int tcp_control_port)
     /* connect: create a connection with the server */
     if (connect(sockfd, (struct sockaddr_in*) &peer_addr, sizeof(peer_addr))
             < 0) {
-        log_error("%s","connect failed");
+        log_error("Connection to runtime failed: %s", strerror(errno));
         close(sockfd);
         return -1;
     }

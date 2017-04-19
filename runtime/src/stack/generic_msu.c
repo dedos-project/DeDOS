@@ -7,6 +7,7 @@
  */
 
 #include <stdlib.h>
+#include "stats.h"
 #include "generic_msu.h"
 #include "runtime.h"
 #include "routing.h"
@@ -112,7 +113,7 @@ int msu_receive_ctrl(struct generic_msu *self, msu_queue_item *queue_item){
         log_debug("MSU %d got update with type %u", self->id, update_msg->update_type);
         int handled = 0;
         if (update_msg->update_type == MSU_ROUTE_ADD || update_msg->update_type == MSU_ROUTE_DEL){
-            int first_entry = (self->rt_table != NULL);
+            int first_entry = (self->rt_table == NULL);
             self->rt_table = handle_routing_table_update(self->rt_table, update_msg);
             handled = 1;
             if (!first_entry){
@@ -603,7 +604,9 @@ int msu_receive(struct generic_msu *self, msu_queue_item *data){
     }
 
     // Receieve the data, get the type of the next msu to send to
+    aggregate_start_time(MSU_INTERNAL_TIME, self->id);
     int type_id = self->type->receive(self, data);
+    aggregate_end_time(MSU_INTERNAL_TIME, self->id);
     if (type_id <= 0){
         // If type_id <= 0 it can either be an error (< 0) or just
         // not have a subsequent destination
