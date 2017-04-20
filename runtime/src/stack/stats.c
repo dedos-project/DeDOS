@@ -3,10 +3,50 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#define MAX_STATS 2048
-#define MAX_ITEM_ID 32
-#define FLUSH_TIME_S 10
+// If STATLOG is defined to be 0, these functions are defined as
+// empty macros in the header file
+#if STATLOG
 
+/** The maximum number of statistics that can be gathered about
+ * a single item before the structure is written to disk */
+#define MAX_STATS 2048
+
+/** The maximum number of items that can be gathered within 
+ * a single statistic */
+#define MAX_ITEM_ID 32
+
+/** The minumum amount of time that must pass before statistics
+ * are written to disk */
+#define FLUSH_TIME_S 5
+
+/** The type of clock being used for timestamps */
+#define CLOCK_ID CLOCK_MONOTONIC
+
+#ifndef LOG_SELF_TIME
+#define LOG_SELF_TIME 1
+#endif
+
+#ifndef LOG_QUEUE_LEN
+#define LOG_QUEUE_LEN 1
+#endif 
+
+#ifndef LOG_FULL_MSU_TIME
+#define LOG_FULL_MSU_TIME 1
+#endif
+
+#ifndef LOG_MSU_INTERNAL_TIME 
+#define LOG_MSU_INTERNAL_TIME 1
+#endif
+
+#ifndef LOG_THREAD_LOOP_TIME
+#define LOG_THREAD_LOOP_TIME 1
+#endif
+
+/**
+ * Defines which statistics are gathered.
+ * Each entry corresponds to a single enumerator.
+ * If an entry is set to 0, the call to log is immediately exited
+ */
 int log_mask[] = {
     LOG_SELF_TIME,
     LOG_QUEUE_LEN,
@@ -15,7 +55,10 @@ int log_mask[] = {
     LOG_THREAD_LOOP_TIME
 };
 
-
+/**
+ * Defines the format in which the corresponding statistic is 
+ * output with sprintf 
+ */
 char *stat_format[] = {
     "%0.9f",
     "%02.0f",
@@ -24,6 +67,10 @@ char *stat_format[] = {
     "%0.9f",
 };
 
+/** 
+ * Defines the name that is prepended to the log line for each time
+ * that the corresponding item is logged 
+ */
 char *stat_name[] = {
     "_STAT_FLUSH_TIME",
     "MSU_QUEUE_LENGTH",
@@ -32,33 +79,51 @@ char *stat_name[] = {
     "THREAD_LOOP_TIME"
 };
 
+/**
+ * The internal statistics structure where stats are aggregated
+ * before being written to disk.
+ * One per statistic-item. 
+ */
 struct item_stats
 {
-    time_t last_flush;
-    unsigned int item_id;
-    int n_stats;
-    pthread_mutex_t mutex;
-    struct timespec time[MAX_STATS];
-    double stat[MAX_STATS];
+    time_t last_flush;      /**< The last time at which the stats were written to file */
+    unsigned int item_id;   /**< A unique identifier for the item being logged */
+    int n_stats;            /**< The number of stats currently aggregated in the struct */
+    pthread_mutex_t mutex;  /**< A lock to ensure reading and writing do not overlap */
+    struct timespec time[MAX_STATS]; /**< The time at which each statistic was gathered */
+    double stat[MAX_STATS]; /**< The actual statistics gathered */
 };
 
+/** 
+ * Contains all items being gathered for a single statistic
+ */
 struct dedos_stats{
     enum stat_id stat_id;
     struct item_stats item_stats[MAX_ITEM_ID];
 };
 
-
+/** All statistics are saved in this instance until written to disk */
 struct dedos_stats saved_stats[N_STAT_IDS];
 
+/** The time at which DeDos started (in seconds) */
 time_t start_time_s;
+/** Mutex to make sure log is written to by one thread at a time */
 pthread_mutex_t log_mutex;
+/** The file to which stats are written */
 FILE *statlog;
 
+/** Gets the amount of time that has elapsed since logging started .
+ * @param *t the elapsed time is output into this variable
+ * */
 void get_elapsed_time(struct timespec *t){
-    clock_gettime(CLOCK_MONOTONIC, t);
+    clock_gettime(CLOCK_ID, t);
     t->tv_sec -= start_time_s;
 }
 
+/** Writes gathered statistics for an individual item to the log file.
+ * @param stat_id ID of the statistic to be logged
+ * @param item_id ID of the specific item being logged (must be less than MAX_ITEM_ID)
+ */
 void flush_item_to_log(enum stat_id stat_id, unsigned int item_id){
     aggregate_start_time(SELF_TIME, stat_id);
     struct item_stats *item = &saved_stats[(int)stat_id].item_stats[item_id];
@@ -91,6 +156,9 @@ void flush_item_to_log(enum stat_id stat_id, unsigned int item_id){
     aggregate_end_time(SELF_TIME, stat_id);
 }
 
+/** Writes all gathered statistics to the log file if enough time has passed
+ * @param force Forces the write to log even if enough time has not passed
+ */
 void flush_all_stats_to_log(int force){
     aggregate_start_time(SELF_TIME, N_STAT_IDS);
     struct timespec curtime;
@@ -114,6 +182,11 @@ void flush_all_stats_to_log(int force){
 
 }
 
+/** Adds the elapsed time since the previous aggregate_start_time(stat_id, item_id)
+ * to the log.
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
+ */
 void aggregate_end_time(enum stat_id stat_id, unsigned int item_id){
     if (log_mask[stat_id] == 0)
         return;
@@ -132,6 +205,11 @@ void aggregate_end_time(enum stat_id stat_id, unsigned int item_id){
     }
 }
 
+/** Starts a measurement of how much time elapses. This informatino is not added
+ * to the log until the next call to aggregate_end_time(stat_id, item_id)
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
+ */
 void aggregate_start_time(enum stat_id stat_id, unsigned int item_id){
     if (log_mask[stat_id] == 0)
         return;
@@ -141,6 +219,12 @@ void aggregate_start_time(enum stat_id stat_id, unsigned int item_id){
     pthread_mutex_unlock(&item->mutex);
 }
 
+/** Adds a single stastic for a single item to the log.
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
+ * @param stat The specific statistic being logged
+ * @param relog Whether to re-log a stat if it has not changed since the previous log
+ */
 void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int relog){
     if (log_mask[stat_id] == 0)
         return;
@@ -158,6 +242,10 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
     }
 }
 
+/**
+ * Opens the log file for statistics and initializes the stat structure
+ * @param filename The filename to which logs are written
+ */
 void init_statlog(char *filename){
     struct timespec start_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
@@ -172,7 +260,12 @@ void init_statlog(char *filename){
     statlog = fopen(filename, "w");
 }
 
+/**
+ * Flushes all stats to the log file, and closes the file
+ */
 void close_statlog(){
     flush_all_stats_to_log(1);
     fclose(statlog);
 }
+
+#endif

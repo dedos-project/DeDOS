@@ -2,12 +2,13 @@
 #include <time.h>
 #include <pthread.h>
 
-#define LOG_SELF_TIME 1
-#define LOG_QUEUE_LEN 1
-#define LOG_FULL_MSU_TIME  1
-#define LOG_MSU_INTERNAL_TIME 1
-#define LOG_THREAD_LOOP_TIME 1
+#ifndef STATLOG
+#define STATLOG 1
+#endif
 
+/**
+ * There must be a unique identifier for each statistic that is gathered.
+ */
 enum stat_id{
     SELF_TIME = 0,
     QUEUE_LEN,
@@ -17,17 +18,39 @@ enum stat_id{
     N_STAT_IDS
 };
 
+#if STATLOG
+
+/** Writes gathered statistics for an individual item to the log file. */
 void flush_stat_to_log(enum stat_id stat_id, unsigned int item_id);
 
+/** Writes all gathered statistics to the log file if enough time has passed */
 void flush_all_stats_to_log(int force);
 
+/** Adds the elapsed time as a statistic to the log (must follow aggregate_start_time()) */
 void aggregate_end_time(enum stat_id stat_id, unsigned int item_id);
 
+/** Starts a measurement of how much time elapses.
+ * (the next call to aggregate_end_time() will add this stat to the log)
+ * */
 void aggregate_start_time(enum stat_id stat_id, unsigned int item_id);
 
+/** Adds a single statistic for a single item to the log */
 void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int relog);
 
+/** Flushes all statistics to the log file and then closes the file */
 void close_statlog();
 
+/** Opens the log file for statistics and initializes the stat structure */
 void init_statlog(char *filename);
 
+#else
+
+#define flush_stat_to_log(...)
+#define flush_all_stats_to_log(...)
+#define aggregate_end_time(...)
+#define aggregate_start_time(...)
+#define aggregate_stat(...)
+#define close_statlog(...)
+#define init_statlog(...)
+
+#endif
