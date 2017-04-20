@@ -27,6 +27,8 @@ typedef struct msu_stats {
     //data queue size can directly be queried from msu->q_in->size
 } msu_stats;
 
+struct generic_msu;
+
 /**
  * Defines a type of MSU. This information (mostly callbacks)
  * is shared across all MSUs of the same type.
