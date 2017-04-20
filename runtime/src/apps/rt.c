@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "stats.h"
 #include "communication.h"
 #include "global_controller/dfg.h"
 #include "dfg_interpreter.h"
@@ -80,6 +81,7 @@ static void kill_locks(void) {
 int main(int argc, char **argv){
     // initialize the context and read the certificates
     
+
     char *dfg_json = NULL;
     int runtime_id = -1;
     char *global_ctl_ip = NULL;
@@ -150,6 +152,9 @@ int main(int argc, char **argv){
         printf("%s %s\n", argv[0], USAGE_ARGS);
         exit(0);
     }
+    char statlog_fname[48];
+    sprintf(statlog_fname, "rt%d_stats.log", runtime_id);
+    init_statlog(statlog_fname);
     int json_all = (dfg_json != NULL && runtime_id > 0);
     int json_any = (dfg_json != NULL || runtime_id > 0);
 
@@ -246,6 +251,7 @@ int main(int argc, char **argv){
     freeSSLRelatedStuff();
     kill_locks();
 #endif
+    close_statlog();
     log_info("Runtime exit...");
     return 0;
 }

@@ -8,7 +8,7 @@
 #include "generic_msu_queue.h"
 #include "generic_msu_queue_item.h"
 
-#define MAX_REQUEST_LEN 512
+#define MAX_REQUEST_LEN 256
 #define READ 0
 #define WRITE 1
 
