@@ -18,5 +18,6 @@
 #define MSU_PROTO_SSL_REQUEST 701
 
 #define MSU_PROTO_REGEX 801
+#define MSU_PROTO_NONE 404
 
 #endif /* DEDOS_MSU_MSG_TYPE_H_ */
