@@ -609,12 +609,12 @@ static void check_pending_runtimes() {
 
     if (pending_runtime_peers && pending_runtime_peers->count > 0) {
         remaining_count = pending_runtime_peers->count;
-        log_debug("Pending runtimes to connect to : %d", remaining_count);
+        //log_debug("Pending runtimes to connect to : %d", remaining_count);
         for (i = 0; i < pending_runtime_peers->count; i++) {
             cur_ip = &pending_runtime_peers->ips[i];
             char ip_buf[40];
             ipv4_to_string(&ip_buf, *cur_ip);
-            log_debug("Current IP to connect to: %s %d", ip_buf, *cur_ip);
+            //log_debug("Current IP to connect to: %s %d", ip_buf, *cur_ip);
             //Only connect if not already connected to, runtime being identified by its IP
             if (*cur_ip != 0 && !is_connected_to_runtime(cur_ip)) {
                 log_debug("Found unconnected runtime IP: %s", ip_buf);
