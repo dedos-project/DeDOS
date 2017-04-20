@@ -230,5 +230,6 @@ void *msu_data(struct generic_msu *msu);
 /** An MSU registers itself with this so that instances can be created
  * using the type->id */
 void register_msu_type(struct msu_type *type);
-
+/** Get pointer to msu type struct based on type_id */
+struct msu_type *msu_type_by_id(unsigned int type_id);
 #endif

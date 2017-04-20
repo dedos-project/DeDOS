@@ -12,8 +12,9 @@
 #include "modules/msu_app_tcp_echo.h"
 #include "modules/msu_pico_tcp.h"
 #include "modules/msu_tcp_handshake.h"
+#include "modules/baremetal_msu.h"
 
-#define N_MSU_TYPES 10
+#define N_MSU_TYPES 11
 
 static struct msu_type *MSU_TYPES[] = {
     &SSL_REQUEST_ROUTING_MSU_TYPE,
@@ -25,7 +26,8 @@ static struct msu_type *MSU_TYPES[] = {
     &PICO_TCP_MSU_TYPE,
     &HS_REQUEST_ROUTING_MSU_TYPE,
     &MSU_APP_TCP_ECHO_TYPE,
-    &TCP_HANDSHAKE_MSU_TYPE
+    &TCP_HANDSHAKE_MSU_TYPE,
+    &BAREMETAL_MSU_TYPE
 };
 
 void register_known_msu_types(){
