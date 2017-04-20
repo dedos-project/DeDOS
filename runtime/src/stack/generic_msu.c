@@ -72,6 +72,7 @@ void register_msu_type(struct msu_type *type){
     if (msu_types == NULL)
         msu_types = malloc(sizeof(*msu_types) * MAX_MSU_TYPES);
     msu_types[n_types] = *type;
+    log_debug("Registered MSU type: %s",type->name);
     n_types++;
 }
 
