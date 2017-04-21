@@ -80,7 +80,6 @@ static void kill_locks(void) {
 
 int main(int argc, char **argv){
     // initialize the context and read the certificates
-    
 
     char *dfg_json = NULL;
     int runtime_id = -1;
@@ -93,7 +92,7 @@ int main(int argc, char **argv){
     db_ip = NULL;
     db_port = -1;
     db_max_load = -1;
-    
+
     struct option long_options[] = {
         {"same-machine", no_argument, 0, 's'},
         {"db-ip", required_argument, 0, 'd'},
@@ -101,7 +100,7 @@ int main(int argc, char **argv){
         {"db-load", required_argument, 0, 'l'},
         {0, 0, 0, 0}
     };
-    
+
     int arguments_provided = 0;
     while (1){
         int option_index = 0;
@@ -191,7 +190,7 @@ int main(int argc, char **argv){
             printf("Runtime %d not present in provided DFG. Exiting.\n", runtime_id);
             exit(-1);
         }
-        
+
         global_ctl_ip = dfg->global_ctl_ip;
         global_ctl_port = dfg->global_ctl_port;
         local_listen_port = rt->port;
@@ -200,8 +199,8 @@ int main(int argc, char **argv){
         string_to_ipv4(global_ctl_ip, &global_ctl_ip_int);
         same_physical_machine = ( global_ctl_ip_int == rt->ip );
 
-    } 
-    
+    }
+
     runtime_listener_port = local_listen_port;
     int control_listen_port = local_listen_port;
 
@@ -209,7 +208,7 @@ int main(int argc, char **argv){
     if (same_physical_machine == 1){
         control_listen_port++;
     }
-    
+
     if ( ! db_all){
         log_warn("Connection to mock database not fully instantiated");
     } else {
@@ -231,12 +230,17 @@ int main(int argc, char **argv){
 
     if (dedos_control_socket_init(control_listen_port) < 0){
        log_error("Could not initialize control socket");
-    } 
+    }
 
     if (dedos_webserver_socket_init(webserver_port) < 0){
         log_error("Could nto initialize webserver socket");
     }
 
+#ifdef DEDOS_SUPPORT_BAREMETAL_MSU
+    if (dedos_baremetal_listen_socket_init(8989) < 0){
+        log_error("Could not initialize baremetal listen socket");
+    }
+#endif
     int ret = 0;
     do {
         ret = connect_to_master(global_ctl_ip, global_ctl_port);
