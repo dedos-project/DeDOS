@@ -315,6 +315,17 @@ void baremetal_msu_destroy_entry(struct generic_msu *self){
     }
 }
 
+int baremetal_msu_init_entry(struct generic_msu *self,
+        struct create_msu_thread_msg_data *create_action)
+{
+    /* any other internal state that MSU needs to maintain */
+    //For routing MSU the internal state will be the chord ring
+    if(self->id == 1 && baremetal_entry_msu == NULL){
+        baremetal_entry_msu = self;
+    }
+    log_debug("Set baremetal entry msu to be MSU with id: %u",self->id);
+    return 0;
+}
 /**
  * All baremetal MSUs contain a reference to this type
  */
