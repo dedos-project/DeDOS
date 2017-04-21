@@ -2,6 +2,7 @@
 #define BAREMETAL_MSU_H
 #include <sys/poll.h>
 #include "generic_msu.h"
+#include "ssl_msu.h" //for definition of READ and WRITE type
 
 #define INITIAL_ACTIVE_SOCKETS_SIZE 10
 
