@@ -17,6 +17,7 @@
 #include "dedos_msu_pool.h"
 #include "dedos_statistics.h"
 #include "global_controller/dfg.h"
+#include "dedos_defines.h"
 
 #define BLOCKING_THREAD 1
 #define NON_BLOCKING_THREAD 2
