@@ -12,10 +12,14 @@
 enum stat_id{
     SELF_TIME = 0,
     QUEUE_LEN,
+    ITEMS_PROCESSED,
     MSU_FULL_TIME,
     MSU_INTERNAL_TIME,
+    MSU_INTERIM_TIME,
+    N_SWAPS,
+    CPUTIME,
     THREAD_LOOP_TIME,
-    N_STAT_IDS
+    N_STAT_IDS,
 };
 
 #if STATLOG
@@ -36,6 +40,13 @@ void aggregate_start_time(enum stat_id stat_id, unsigned int item_id);
 
 /** Adds a single statistic for a single item to the log */
 void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int relog);
+
+/** Adds elapsed time as a statistic if period_ms milliseconds have passed */
+void periodic_aggregate_end_time(enum stat_id stat_id, unsigned int item_id, int period_ms);
+
+/** Aggregates a statistic, but only if period_ms milliseconds have passed */
+void periodic_aggregate_stat(enum stat_id stat_id, unsigned int item_id,
+                             double stat, int period_ms);
 
 /** Flushes all statistics to the log file and then closes the file */
 void close_statlog();
