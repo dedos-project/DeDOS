@@ -1,4 +1,5 @@
 #include "stats.h"
+#include <string.h>
 #include <time.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -11,7 +12,7 @@
  * a single item before the structure is written to disk */
 #define MAX_STATS 2048
 
-/** The maximum number of items that can be gathered within 
+/** The maximum number of items that can be gathered within
  * a single statistic */
 #define MAX_ITEM_ID 32
 
@@ -28,19 +29,36 @@
 
 #ifndef LOG_QUEUE_LEN
 #define LOG_QUEUE_LEN 1
-#endif 
+#endif
+
+#ifndef LOG_ITEMS_PROCESSED
+#define LOG_ITEMS_PROCESSED 1
+#endif
 
 #ifndef LOG_FULL_MSU_TIME
 #define LOG_FULL_MSU_TIME 1
 #endif
 
-#ifndef LOG_MSU_INTERNAL_TIME 
+#ifndef LOG_MSU_INTERNAL_TIME
 #define LOG_MSU_INTERNAL_TIME 1
+#endif
+
+#ifndef LOG_MSU_INTERIM_TIME
+#define LOG_MSU_INTERIM_TIME 1
+#endif
+
+#ifndef LOG_N_SWAPS
+#define LOG_N_SWAPS 1
+#endif
+
+#ifndef LOG_CPU_TIME
+#define LOG_CPU_TIME 1
 #endif
 
 #ifndef LOG_THREAD_LOOP_TIME
 #define LOG_THREAD_LOOP_TIME 1
 #endif
+
 
 /**
  * Defines which statistics are gathered.
@@ -50,39 +68,51 @@
 int log_mask[] = {
     LOG_SELF_TIME,
     LOG_QUEUE_LEN,
+    LOG_ITEMS_PROCESSED,
     LOG_FULL_MSU_TIME,
     LOG_MSU_INTERNAL_TIME,
+    LOG_MSU_INTERIM_TIME,
+    LOG_N_SWAPS,
+    LOG_CPU_TIME,
     LOG_THREAD_LOOP_TIME
 };
 
 /**
- * Defines the format in which the corresponding statistic is 
- * output with sprintf 
+ * Defines the format in which the corresponding statistic is
+ * output with sprintf
  */
 char *stat_format[] = {
-    "%0.9f",
-    "%02.0f",
-    "%0.9f",
-    "%0.9f",
-    "%0.9f",
+    "%0.9f",  // Self time
+    "%02.0f", // Queue length
+    "%03.0f", // Items processed
+    "%0.9f",  // Full MSU time
+    "%0.9f",  // Internal MSU time
+    "%0.9f",  // Interim MSU time
+    "%03.0f",  // Number of non-voluntary context switches
+    "%03.9f", // Elasped thread-specific CPU time
+    "%01.9f", // Thread loop time
 };
 
-/** 
+/**
  * Defines the name that is prepended to the log line for each time
- * that the corresponding item is logged 
+ * that the corresponding item is logged
  */
 char *stat_name[] = {
     "_STAT_FLUSH_TIME",
     "MSU_QUEUE_LENGTH",
+    "_ITEMS_PROCESSED",
     "___MSU_FULL_TIME",
     "__MSU_INNER_TIME",
+    "MSU_INTERIM_TIME",
+    "__N_THREAD_SWAPS",
+    "PER_THREAD_CPU_T",
     "THREAD_LOOP_TIME"
 };
 
 /**
  * The internal statistics structure where stats are aggregated
  * before being written to disk.
- * One per statistic-item. 
+ * One per statistic-item.
  */
 struct item_stats
 {
@@ -94,7 +124,7 @@ struct item_stats
     double stat[MAX_STATS]; /**< The actual statistics gathered */
 };
 
-/** 
+/**
  * Contains all items being gathered for a single statistic
  */
 struct dedos_stats{
@@ -131,9 +161,9 @@ void flush_item_to_log(enum stat_id stat_id, unsigned int item_id){
     char to_write[item->n_stats][128];
     pthread_mutex_lock(&item->mutex);
     for (int i=0; i<item->n_stats; i++){
-        int written = sprintf(to_write[i], "%s:%02d:%05ld.%010ld:", 
-                              stat_name[stat_id], 
-                              item_id, 
+        int written = sprintf(to_write[i], "%s:%02d:%05ld.%09ld:",
+                              stat_name[stat_id],
+                              item_id,
                               item->time[i].tv_sec, item->time[i].tv_nsec);
         written += sprintf(to_write[i]+written, stat_format[(int)stat_id], item->stat[i]);
         n_to_write[i] = written;
@@ -168,7 +198,7 @@ void flush_all_stats_to_log(int force){
         for (int j=0; j<MAX_ITEM_ID; j++){
             struct item_stats *item = &saved_stats[i].item_stats[j];
             pthread_mutex_lock(&item->mutex);
-            int do_log = item->n_stats > 0 && 
+            int do_log = item->n_stats > 0 &&
                     (curtime.tv_sec - item->last_flush > FLUSH_TIME_S || force);
             pthread_mutex_unlock(&item->mutex);
             if (do_log){
@@ -205,7 +235,7 @@ void aggregate_end_time(enum stat_id stat_id, unsigned int item_id){
     }
 }
 
-/** Starts a measurement of how much time elapses. This informatino is not added
+/** Starts a measurement of how much time elapses. This information is not added
  * to the log until the next call to aggregate_end_time(stat_id, item_id)
  * @param stat_id ID for the statistic being logged
  * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
@@ -219,6 +249,74 @@ void aggregate_start_time(enum stat_id stat_id, unsigned int item_id){
     pthread_mutex_unlock(&item->mutex);
 }
 
+int get_time_diff_ms(struct timespec *t1, struct timespec *t2){
+    return (t2->tv_sec - t1->tv_sec) * 1000 + \
+           (t2->tv_nsec - t1->tv_nsec) / 1000000;
+}
+
+/** Finishes a measurement of how much time has elapsed since the previous aggregate_start_time().
+ * This function can safely be used with aggregate_start_time(), as subsequent calls to
+ * aggregate_start_time() merely reset the timer, so the information will not be logged until
+ * this function successfully executes.
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
+ * @param period_ms The number of milliseconds that must have passed since the previous successful
+ *                  call in order for this call to succeed
+ */
+void periodic_aggregate_end_time(enum stat_id stat_id, unsigned int item_id, int period_ms){
+    if (log_mask[stat_id] == 0)
+        return;
+
+    struct timespec newtime;
+    get_elapsed_time(&newtime);
+    struct item_stats *item = &saved_stats[(int)stat_id].item_stats[item_id];
+    pthread_mutex_lock(&item->mutex);
+
+    struct timespec curr_time;
+    get_elapsed_time(&curr_time);
+
+    int do_log = get_time_diff_ms(&item->time[item->n_stats-1], &curr_time) > period_ms;
+
+    if (do_log){
+        time_t timediff_s = curr_time.tv_sec - item->time[item->n_stats].tv_sec;
+        long timediff_ns = newtime.tv_nsec - item->time[item->n_stats].tv_nsec;
+        item->stat[item->n_stats] = (double)timediff_s + ((double)timediff_ns/(1000000000.0));
+        item->n_stats++;
+    }
+    int flush = item->n_stats == MAX_STATS;
+    pthread_mutex_unlock(&item->mutex);
+    if (flush)
+        flush_item_to_log(stat_id, item_id);
+}
+
+/** Aggregates a statistic, but only if period_ms milliseconds have passed.
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
+ * @param stat The value of the statistic to be logged
+ * @param period_ms The number of milliseconds that must have passed for this to be logged again*/
+void periodic_aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int period_ms){
+    if (log_mask[stat_id] == 0)
+        return;
+
+    struct item_stats *item = &saved_stats[(int)stat_id].item_stats[item_id];
+    pthread_mutex_lock(&item->mutex);
+
+    struct timespec curr_time;
+    get_elapsed_time(&curr_time);
+    int do_log = get_time_diff_ms(&item->time[item->n_stats-1], &curr_time) > period_ms;
+    if (do_log){
+        item->time[item->n_stats] = curr_time;
+        item->stat[item->n_stats] = stat;
+        item->n_stats++;
+    }
+    int flush = item->n_stats == MAX_STATS;
+    pthread_mutex_unlock(&item->mutex);
+    if (flush){
+        flush_item_to_log(stat_id, item_id);
+    }
+}
+
+
 /** Adds a single stastic for a single item to the log.
  * @param stat_id ID for the statistic being logged
  * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
@@ -230,7 +328,8 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
         return;
     struct item_stats *item = &saved_stats[(int)stat_id].item_stats[item_id];
     pthread_mutex_lock(&item->mutex);
-    if (item->stat[item->n_stats-1] != stat || relog){
+
+    if ( (item->n_stats == 0 || item->stat[item->n_stats-1] != stat ) || relog){
         get_elapsed_time(&item->time[item->n_stats]);
         item->stat[item->n_stats] = stat;
         item->n_stats++;
@@ -248,13 +347,15 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
  */
 void init_statlog(char *filename){
     struct timespec start_time;
-    clock_gettime(CLOCK_MONOTONIC, &start_time);
+    clock_gettime(CLOCK_ID, &start_time);
     start_time_s = start_time.tv_sec;
     for (int i=0; i<N_STAT_IDS; i++){
         for (int j=0; j<MAX_ITEM_ID; j++){
             pthread_mutex_init(&saved_stats[i].item_stats[j].mutex, NULL );
-            saved_stats[i].item_stats[j].last_flush = 0;
-            saved_stats[i].item_stats[j].n_stats = 0;
+            struct item_stats *item = &saved_stats[i].item_stats[j];
+            item->last_flush = 0;
+            item->n_stats = 0;
+            memset(item->time, 0, sizeof(item->time));
         }
     }
     statlog = fopen(filename, "w");
@@ -269,3 +370,4 @@ void close_statlog(){
 }
 
 #endif
+

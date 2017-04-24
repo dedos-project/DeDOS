@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <time.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include "stats.h"
 #include "communication.h"
 #include "runtime.h"
@@ -179,8 +181,26 @@ static void* non_block_per_thread_loop() {
     log_debug("Thread thread_q addr: %p", self->thread_q);
     log_debug("Thread pool addr: %p", self->msu_pool);
     log_debug("-------------------------%s", "");
-    
+    struct rusage thread_usage;
     while (1) {
+
+#if STATLOG
+        getrusage(RUSAGE_THREAD, &thread_usage);
+        periodic_aggregate_stat(N_SWAPS, thread_index,
+                                thread_usage.ru_nivcsw,
+                                250);
+        struct timespec t;
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t);
+        periodic_aggregate_stat(CPUTIME, thread_index,
+                                (double)t.tv_sec + (double)t.tv_nsec/1000000000.0,
+                                200);
+
+        periodic_aggregate_end_time(THREAD_LOOP_TIME,
+                                    thread_index,
+                                    100);
+        aggregate_start_time(THREAD_LOOP_TIME, thread_index);
+
+#endif
         /* 1. MSU processing */
         //RR over each msu in MSU pool
 #ifdef PICO_SUPPORT_TIMINGS
@@ -195,11 +215,13 @@ static void* non_block_per_thread_loop() {
                 aggregate_stat(QUEUE_LEN, cur->id, cur->q_in.num_msgs, 0);
                 unsigned int covered_weight = 0;
                 struct generic_msu_queue_item *queue_item;
-                
+
                 while(covered_weight < cur->scheduling_weight){
                     //dequeue from data queue
                     queue_item = generic_msu_queue_dequeue(&cur->q_in);
                     if (queue_item) {
+
+                        aggregate_end_time(MSU_INTERIM_TIME, cur->id);
                         debug("DEBUG: Thread %02x dequeuing MSU %d data queue", self->tid, cur->id);
                         aggregate_start_time(MSU_FULL_TIME, cur->id);
                         /* NOTE: data_handler should consume the item, i.e. free the memory
@@ -208,9 +230,10 @@ static void* non_block_per_thread_loop() {
                         aggregate_end_time(MSU_FULL_TIME, cur->id);
                         //increment queue item processed
                         cur->stats.queue_item_processed++; //FIXME UINT OVERFLOW
+                        aggregate_stat(ITEMS_PROCESSED, cur->id, cur->stats.queue_item_processed, 0);
                         debug("DEBUG: msu %d has processed MD %d items",
                               cur->id, cur->stats.queue_item_processed);
-
+                        aggregate_start_time(MSU_INTERIM_TIME, cur->id);
                     } else if (cur->type->type_id == DEDOS_TCP_DATA_MSU_ID) {
                         //To make sure stack ticks even if there was no item
                         msu_receive(cur, NULL);
@@ -694,13 +717,13 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
 
     request_init_config();
     log_info("%s", "Requested init config...");
-    
+
     if (dfg != NULL){
         int rtn = implement_dfg(dfg, runtime_id);
         if (rtn < 0){
             log_error("Could not implement DFG in local runtime");
         }
-    }  
+    }
 
     begin = clock();
 
@@ -744,3 +767,4 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
 
     dedos_runtime_destroy();
 }
+
