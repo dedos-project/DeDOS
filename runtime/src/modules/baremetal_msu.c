@@ -72,8 +72,13 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
         int ret;
         char buffer[BAREMETAL_RECV_BUFFER_SIZE];
         log_debug("Baremetal receive for msu: %d, msg type: %d",self->id, baremetal_data->type);
-        if(baremetal_data->type == READ_FROM_SOCK){
+        if(baremetal_data->type == NEW_ACCEPTED_CONN){
+            //add to list of sockets to poll
+            log_warn("TODO POLLIN established sockets");
+            baremetal_data->type = FORWARD;
+        } else if(baremetal_data->type == READ_FROM_SOCK){
             //read from socket//only happens at entry msu
+            //FIXME the recv call should move to poll above
             log_debug("READ_FROM_SOCK state");
             ret = recv(baremetal_data->socketfd, &buffer, BAREMETAL_RECV_BUFFER_SIZE, MSG_WAITALL);
             if(ret > 0){
@@ -98,15 +103,17 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                 log_error("EXIT: No destination endpoint of type %s (%d) for msu %d so an exit!",
                       type->name, type->type_id, self->id);
                 //Send call
-                ret = send(baremetal_data->socketfd, &baremetal_data->int_data,
-                        sizeof(baremetal_data->int_data),0);
+                char sendbuf[10];
+                memset(sendbuf,'\0',sizeof(sendbuf));
+                snprintf(sendbuf, 10,"%u",baremetal_data->int_data);
+                ret = send(baremetal_data->socketfd, &sendbuf, sizeof(sendbuf),0);
                 if(ret == -1){
                     log_error("Failed to send out data on socket: %s",strerror(errno));
                 } else {
                     log_debug("Sent baremetal response bytes to client: %d",ret);
                 }
+                return -1; //since nothing to forward
             }
-            return -1; //since nothing to forward
         }
         return DEDOS_BAREMETAL_MSU_ID;
     }

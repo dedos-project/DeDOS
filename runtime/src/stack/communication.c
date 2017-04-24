@@ -386,7 +386,7 @@ int check_comm_sockets() {
                                                         malloc(sizeof(struct ssl_data_payload));
                 data->socketfd = new_sock_bm;
                 // set the initial type to READ
-                data->type = READ_FROM_SOCK;
+                data->type = NEW_ACCEPTED_CONN;
                 data->int_data = 0;
                 // get a new queue item and enqueue it into this queue
                 struct generic_msu_queue_item *new_item_bm = malloc(sizeof(struct generic_msu_queue_item));
