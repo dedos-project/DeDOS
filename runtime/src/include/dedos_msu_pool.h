@@ -164,7 +164,6 @@ static inline void dedos_msu_pool_destroy(struct msu_pool* msu_pool){
     }
     cur = msu_pool->head;
     log_debug("Emptying msu_pool list %s","");
-    //RESUME HERE
     empty_generic_msu_list(msu_pool, cur);
     if(msu_pool->num_msus != 0){
         log_error("Failed to empty msu_pool %s","");
