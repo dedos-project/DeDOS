@@ -105,12 +105,12 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                 //Send call
                 char sendbuf[10];
                 memset(sendbuf,'\0',sizeof(sendbuf));
-                snprintf(sendbuf, 10,"%u",baremetal_data->int_data);
+                snprintf(sendbuf, 10,"%u\n",baremetal_data->int_data);
                 ret = send(baremetal_data->socketfd, &sendbuf, sizeof(sendbuf),0);
                 if(ret == -1){
                     log_error("Failed to send out data on socket: %s",strerror(errno));
                 } else {
-                    log_debug("Sent baremetal response bytes to client: %d",ret);
+                    log_debug("Sent baremetal response bytes: %d, msg: %s", ret, sendbuf);
                 }
                 return -1; //since nothing to forward
             }
