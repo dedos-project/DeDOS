@@ -14,6 +14,7 @@
 #include "control_protocol.h"
 #include "logging.h"
 #include <pcre.h>
+#include <errno.h>
 
 /** Deserializes data received from remote MSU and enqueues the
  * message payload onto the msu queue.
@@ -54,7 +55,10 @@ static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
     return -1;
 }
 
-
+static int baremetal_mock_delay(struct generic_msu *self, struct baremetal_msu_data_payload *baremetal_data){
+    log_debug("TODO: Can simulate delay here for each baremetal msu");
+    return 0;
+}
 /**
  * Recieves data for baremetal MSU
  * @param self baremetal MSU to receive the data
@@ -66,8 +70,45 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
         struct baremetal_msu_data_payload *baremetal_data =
             (struct baremetal_msu_data_payload*) (input_data->buffer);
         int ret;
-
-        log_warn("TODO");
+        char buffer[BAREMETAL_RECV_BUFFER_SIZE];
+        log_debug("Baremetal receive for msu: %d, msg type: %d",self->id, baremetal_data->type);
+        if(baremetal_data->type == READ_FROM_SOCK){
+            //read from socket//only happens at entry msu
+            log_debug("READ_FROM_SOCK state");
+            ret = recv(baremetal_data->socketfd, &buffer, BAREMETAL_RECV_BUFFER_SIZE, MSG_WAITALL);
+            if(ret > 0){
+                sscanf(buffer, "%d", &(baremetal_data->int_data));
+                log_debug("Received int from client: %d",baremetal_data->int_data);
+            } else if(ret == 0){
+                log_debug("Socket closed by peer");
+                return -1;
+            } else {
+                log_debug("Error in recv: %s",strerror(errno));
+                return -1;
+            }
+            baremetal_data->type = FORWARD;
+        } else if(baremetal_data->type == FORWARD){
+            baremetal_data->int_data += 1;
+            log_debug("FORWARD state, data val: %d",baremetal_data->int_data);
+            //Maybe check that if my routing table is empty for next type,
+            //that means I am the last sink MSU and should send out the final response?
+            struct msu_type *type = &BAREMETAL_MSU_TYPE;
+            struct msu_endpoint *dst = get_all_type_msus(self->rt_table, type->type_id);
+            if (dst == NULL){
+                log_error("EXIT: No destination endpoint of type %s (%d) for msu %d so an exit!",
+                      type->name, type->type_id, self->id);
+                //Send call
+                ret = send(baremetal_data->socketfd, &baremetal_data->int_data,
+                        sizeof(baremetal_data->int_data),0);
+                if(ret == -1){
+                    log_error("Failed to send out data on socket: %s",strerror(errno));
+                } else {
+                    log_debug("Sent baremetal response bytes to client: %d",ret);
+                }
+            }
+            return -1; //since nothing to forward
+        }
+        return DEDOS_BAREMETAL_MSU_ID;
     }
     return -1;
 }

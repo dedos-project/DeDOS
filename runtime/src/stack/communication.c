@@ -369,7 +369,7 @@ int check_comm_sockets() {
                 log_warn("accept(%d,...) failed with error %s ", baremetal_sock, strerror(errno));
                 return -1;
             }
-
+            log_debug("Accepted conn for baremetal");
             struct timeval timeout;
             timeout.tv_sec = 0;
             timeout.tv_usec = 10000;
@@ -382,11 +382,25 @@ int check_comm_sockets() {
                 close(new_sock_bm);
             } else {
                 // enqueue this item into this queue so that the MSU can process it
-                log_error("TODO handle baremetal traffic");
+                struct baremetal_msu_data_payload *data = (struct baremetal_msu_data_payload*)
+                                                        malloc(sizeof(struct ssl_data_payload));
+                data->socketfd = new_sock_bm;
+                // set the initial type to READ
+                data->type = READ_FROM_SOCK;
+                data->int_data = 0;
+                // get a new queue item and enqueue it into this queue
+                struct generic_msu_queue_item *new_item_bm = malloc(sizeof(struct generic_msu_queue_item));
+                new_item_bm->buffer = data;
+                new_item_bm->buffer_len = sizeof(struct baremetal_msu_data_payload);
+                int baremetal_entry_msu_q_len= generic_msu_queue_enqueue(&baremetal_entry_msu->q_in, new_item_bm); //enqueuing to first bm MSU
+                if(baremetal_entry_msu_q_len < 0){
+                    log_error("Failed to enqueue baremetal request to entry msu with id: %d",baremetal_entry_msu->id);
+                    free(new_item_bm);
+                    free(data);
+                } else {
+                    log_debug("Enqueued baremtal request in entry msu, q_len: %d",baremetal_entry_msu_q_len);
+                }
             }
-
-
-
         }
 #endif
         else {
