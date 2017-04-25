@@ -365,7 +365,7 @@ int check_comm_sockets() {
             socklen_t AddrLen = sizeof(ClientAddr);
             int new_sock_bm = accept(baremetal_sock,(struct sockaddr*) &ClientAddr, &AddrLen);
 
-            if (new_sock_bm< 0){
+            if (new_sock_bm < 0){
                 log_warn("accept(%d,...) failed with error %s ", baremetal_sock, strerror(errno));
                 return -1;
             }
@@ -383,7 +383,7 @@ int check_comm_sockets() {
             } else {
                 // enqueue this item into this queue so that the MSU can process it
                 struct baremetal_msu_data_payload *data = (struct baremetal_msu_data_payload*)
-                                                        malloc(sizeof(struct ssl_data_payload));
+                                                        malloc(sizeof(struct baremetal_msu_data_payload));
                 data->socketfd = new_sock_bm;
                 // set the initial type to READ
                 data->type = NEW_ACCEPTED_CONN;

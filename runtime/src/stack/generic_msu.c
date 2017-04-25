@@ -612,7 +612,7 @@ int msu_receive(struct generic_msu *self, msu_queue_item *data){
         // If type_id <= 0 it can either be an error (< 0) or just
         // not have a subsequent destination
         if (type_id < 0){
-            log_warn("MSU %d returned error code %d", self->id, type_id);
+            ;//log_warn("MSU %d returned error code %d", self->id, type_id);
         }
         if (data){
             free(data->buffer);
