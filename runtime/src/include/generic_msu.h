@@ -181,7 +181,9 @@ struct generic_msu{
     msu_data_p data_p;
 
     /** Any internal state struct which MSU might need to maintain.
-     * TODO: Normalize across MSUs, creating key-based state structure. */
+     * TODO: Normalize across MSUs, creating key-based state structure. 
+     * Tavish: Not necessarily can be any internal data structure which 
+     * doesn't have to be key based. */
     void *internal_state;
 
     /** State related to routing. Will eventually be moved to routing object*/

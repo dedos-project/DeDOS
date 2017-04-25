@@ -72,10 +72,12 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
         int ret;
         char buffer[BAREMETAL_RECV_BUFFER_SIZE];
         log_debug("Baremetal receive for msu: %d, msg type: %d",self->id, baremetal_data->type);
+
         if(baremetal_data->type == NEW_ACCEPTED_CONN){
             //add to list of sockets to poll
             log_warn("TODO POLLIN established sockets");
             baremetal_data->type = FORWARD;
+
         } else if(baremetal_data->type == READ_FROM_SOCK){
             //read from socket//only happens at entry msu
             //FIXME the recv call should move to poll above
@@ -92,6 +94,7 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                 return -1;
             }
             baremetal_data->type = FORWARD;
+
         } else if(baremetal_data->type == FORWARD){
             baremetal_data->int_data += 1;
             log_debug("FORWARD state, data val: %d",baremetal_data->int_data);
@@ -119,18 +122,71 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
     }
     return -1;
 }
+/**
+ * Init the internal state for entry baremetal MSU to hold active sockets to poll over
+ * @param self baremetal MSU to receive the data
+ * @return 0 on success, or -1 on error
+ */
+static int baremetal_init_initial_state(struct generic_msu *self){
+    struct baremetal_msu_internal_state *in_state = malloc(sizeof(struct baremetal_msu_internal_state));
+    if(!in_state){
+        log_error("Failed to malloc internal state");
+        return -1;
+    }
+    in_state->total_array_size = INITIAL_ACTIVE_SOCKETS_SIZE;
+    in_state->active_sockets = 0;
+    in_state->fds = malloc(in_state->total_array_size * sizeof(struct pollfd));
+    if(!in_state->fds){
+        log_error("Failded to malloc fds struct array");
+        free(in_state);
+        return -1;
+    }
+    memset(in_state->fds, 0x0, sizeof(struct pollfd) * in_state->total_array_size);
+    self->internal_state = (struct baremetal_msu_internal_state*) in_state;
+    return 0;
+}
 
+/**
+ * Init the baremetal entry msu if id is 1 and the global pointer in NULL
+ * @param self baremetal MSU to receive the data
+ * @param create_action information
+ * @return 0 on success, or -1 on error
+ */
 int baremetal_msu_init_entry(struct generic_msu *self,
         struct create_msu_thread_msg_data *create_action)
 {
     /* any other internal state that MSU needs to maintain */
     //For routing MSU the internal state will be the chord ring
     if(self->id == 1 && baremetal_entry_msu == NULL){
+        int ret = 0;
         baremetal_entry_msu = self;
+        ret = baremetal_init_initial_state(self);
+        if(ret){
+            log_error("Error init baremetal initial state");
+            return -1;
+        }
+        log_debug("Initialized internal state data for entry baremetal msu");
     }
     log_debug("Set baremetal entry msu to be MSU with id: %u",self->id);
     return 0;
 }
+/**
+ * Destroy the internal state if the MSU was an entry MSU
+ * @param self msu pointer
+ * @return NULL
+ */
+void baremetal_msu_destroy_entry(struct generic_msu *self){
+    if(self->internal_state != NULL){
+        log_debug("Freeing internal state for entry baremetal msu");
+        struct baremetal_msu_internal_state* in_state = self->internal_state;
+        if(in_state->active_sockets != 0){
+            log_warn("Active sockets conn in entry msu, but freeing!");
+        }
+        free(in_state->fds);
+        free(in_state);
+    }
+}
+
 /**
  * All baremetal MSUs contain a reference to this type
  */
@@ -140,7 +196,7 @@ const struct msu_type BAREMETAL_MSU_TYPE = {
     .type_id=DEDOS_BAREMETAL_MSU_ID,
     .proto_number=MSU_PROTO_NONE,
     .init=baremetal_msu_init_entry,
-    .destroy=NULL,
+    .destroy=baremetal_msu_destroy_entry,
     .receive=baremetal_receive,
     .receive_ctrl=NULL,
     .route=round_robin,
