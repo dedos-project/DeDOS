@@ -179,7 +179,7 @@ static void* non_block_per_thread_loop() {
     log_debug("Thread thread_q addr: %p", self->thread_q);
     log_debug("Thread pool addr: %p", self->msu_pool);
     log_debug("-------------------------%s", "");
-    
+
     while (1) {
         /* 1. MSU processing */
         //RR over each msu in MSU pool
@@ -195,7 +195,7 @@ static void* non_block_per_thread_loop() {
                 aggregate_stat(QUEUE_LEN, cur->id, cur->q_in.num_msgs, 0);
                 unsigned int covered_weight = 0;
                 struct generic_msu_queue_item *queue_item;
-                
+
                 while(covered_weight < cur->scheduling_weight){
                     //dequeue from data queue
                     queue_item = generic_msu_queue_dequeue(&cur->q_in);
@@ -215,6 +215,9 @@ static void* non_block_per_thread_loop() {
                         //To make sure stack ticks even if there was no item
                         msu_receive(cur, NULL);
                     } else if (cur->type->type_id == DEDOS_TCP_HANDSHAKE_MSU_ID) {
+                        //To make sure internal state is cleared
+                        msu_receive(cur, NULL);
+                    } else if (cur->type->type_id == DEDOS_BAREMETAL_MSU_ID) {
                         //To make sure internal state is cleared
                         msu_receive(cur, NULL);
                     }
