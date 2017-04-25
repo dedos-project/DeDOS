@@ -72,20 +72,62 @@ static int baremetal_mock_delay(struct generic_msu *self, struct baremetal_msu_d
  */
 static int baremetal_track_socket_poll(struct generic_msu* self, int new_sock_fd){
     struct baremetal_msu_internal_state *in_state = self->internal_state;
+/* TODO FIXME: Fix this tracker as we don't do defragmentation of the array
     if(in_state->active_sockets == in_state->total_array_size){
         log_error("TODO: Poll fds socket array full, need to realloc");
         return -1;
     }
+*/
     //add the fd at the last index, we make sure that there are no holes in array
     struct pollfd* fds = in_state->fds;
-    fds[in_state->active_sockets].fd = new_sock_fd;
-    fds[in_state->active_sockets].events = POLLIN;
-    log_debug("adding socket: %d at index %d",(*(in_state->fds + in_state->active_sockets)).fd,
-            in_state->active_sockets);
-    in_state->active_sockets += 1;
+    int i;
+    //if(in_state->active_sockets == in_state->total_array_size){
+    if(in_state->active_sockets == in_state->total_array_size || 1){ //ALWAYS Happens debug
+        for(i = 0;i < in_state->total_array_size; i++){
+            if(fds[i].fd < 1){
+                //we have a free slot, use this
+                fds[i].fd = new_sock_fd;
+                fds[i].events = POLLIN;
+                log_debug("adding socket: %d at index %d",(*(in_state->fds + i)).fd, i);
+                if(in_state->active_sockets < in_state->total_array_size){
+                    in_state->active_sockets += 1;
+                }
+                log_debug("Active sockets num: %d",in_state->active_sockets);
+                return 0;
+            }
+        }
+        log_error("TODO: Poll fds socket array full, need to realloc");
+        return -1;
+    } else {
+        fds[in_state->active_sockets].fd = new_sock_fd;
+        fds[in_state->active_sockets].events = POLLIN;
+        log_debug("adding socket: %d at index %d",(*(in_state->fds + in_state->active_sockets)).fd,
+                in_state->active_sockets);
+        in_state->active_sockets += 1;
+    }
     return 0;
 }
-
+/**
+ * Clears out socket entry in poll fds tracker for given socket
+ * @param self msu
+ * @socket fd number to clear
+ * @return NULL
+ */
+static void baremetal_remove_socket_poll(struct generic_msu* self, int socketfd){
+    struct baremetal_msu_internal_state *in_state = self->internal_state;
+    struct pollfd* fds = in_state->fds;
+    int i;
+    for(i = 0; i < in_state->total_array_size; i++){
+        if(fds[i].fd == socketfd){
+            log_debug("Found socket to remove from poll");
+            fds[i].fd = -1;
+            close(socketfd);
+            //TODO rearrange socket in array to make sure there are no holes
+            return;
+        }
+        log_error("Couldn't find socket to remove from poll fd array..shouldn't happen!");
+    }
+}
 /**
  * Recieves data for baremetal MSU
  * @param self baremetal MSU to receive the data
@@ -101,6 +143,9 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
 
         if(baremetal_data->type == NEW_ACCEPTED_CONN){
             //add to list of sockets to poll, should only happen in entry MSU
+            if(self->id != 1){
+                log_error("NEW_ACCEPTED_CONN type in non-entry msu");
+            }
             ret = baremetal_track_socket_poll(self, baremetal_data->socketfd);
             if(ret){
                 log_error("Failed to add socket for poll tracking: %d",baremetal_data->socketfd);
@@ -121,7 +166,7 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
             struct msu_type *type = &BAREMETAL_MSU_TYPE;
             struct msu_endpoint *dst = get_all_type_msus(self->rt_table, type->type_id);
             if (dst == NULL){
-                log_error("EXIT: No destination endpoint of type %s (%d) for msu %d so an exit!",
+                log_debug("EXIT: No destination endpoint of type %s (%d) for msu %d so an exit!",
                       type->name, type->type_id, self->id);
                 //Send call
                 char sendbuf[10];
@@ -130,6 +175,8 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                 ret = send(baremetal_data->socketfd, &sendbuf, sizeof(sendbuf),0);
                 if(ret == -1){
                     log_error("Failed to send out data on socket: %s",strerror(errno));
+                    //baremetal_remove_socket_poll(self, baremetal_data->socketfd);
+                    //not here sockets should only be removed via poll mechanism
                 } else {
                     log_debug("Sent baremetal response bytes: %d, msg: %s", ret, sendbuf);
                 }
@@ -145,16 +192,18 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
         struct baremetal_msu_internal_state *in_state = self->internal_state;
         ret = poll(in_state->fds, in_state->active_sockets, 0);
         if (ret == -1) {
-                //log_error("polling established sockets"); // error occurred in poll()
+                ;//log_error("erro polling established sockets"); // error occurred in poll()
         } else if (ret == 0) {
                 ;//log_debug("Poll Timeout occurred!");
         } else {
             //iterate over the sockets to see which was set and process all
+            //log_debug("poll return %d",ret);
             int i;
             unsigned int recvd_int;
             struct pollfd *pollfd_ptr = in_state->fds;
             for(i = 0; i < in_state->active_sockets; i++){
                 if(pollfd_ptr->revents & POLLIN){
+                    pollfd_ptr->revents = 0;
                     log_debug("POLLIN on index %d, socket: %d",i,pollfd_ptr->fd);
                     ret = recv(pollfd_ptr->fd, &buffer, BAREMETAL_RECV_BUFFER_SIZE, MSG_WAITALL);
                     if(ret > 0){
@@ -179,24 +228,24 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                         } else {
                             log_debug("Enqueued baremtal request in entry msu, q_len: %d",baremetal_entry_msu_q_len);
                         }
-                        return -1; //since the above enqueue is just for the same msu and noting to forward
 
                     } else if(ret == 0){
                         log_debug("Socket closed by peer");
                         close(pollfd_ptr->fd);
                         pollfd_ptr->fd = -1;
                         //TODO rearrange socket in array to make sure there are no holes
-                        return -1;
+
                     } else {
                         log_debug("Error in recv: %s",strerror(errno));
                         //TODO rearrange socket in array to make sure there are no holes
                         close(pollfd_ptr->fd);
                         pollfd_ptr->fd = -1;
-                        return -1;
                     }
                 }
+                pollfd_ptr++;
             }
-            return DEDOS_BAREMETAL_MSU_ID;
+            return -1;
+            //return DEDOS_BAREMETAL_MSU_ID;
         }
     }
     return -1;
