@@ -315,17 +315,47 @@ void baremetal_msu_destroy_entry(struct generic_msu *self){
     }
 }
 
+/**
+ * Init the baremetal entry msu if id is 1 and the global pointer in NULL
+ * @param self baremetal MSU to receive the data
+ * @param create_action information
+ * @return 0 on success, or -1 on error
+ */
 int baremetal_msu_init_entry(struct generic_msu *self,
         struct create_msu_thread_msg_data *create_action)
 {
     /* any other internal state that MSU needs to maintain */
     //For routing MSU the internal state will be the chord ring
     if(self->id == 1 && baremetal_entry_msu == NULL){
+        int ret = 0;
         baremetal_entry_msu = self;
+        ret = baremetal_init_initial_state(self);
+        if(ret){
+            log_error("Error init baremetal initial state");
+            return -1;
+        }
+        log_debug("Initialized internal state data for entry baremetal msu");
     }
     log_debug("Set baremetal entry msu to be MSU with id: %u",self->id);
     return 0;
 }
+/**
+ * Destroy the internal state if the MSU was an entry MSU
+ * @param self msu pointer
+ * @return NULL
+ */
+void baremetal_msu_destroy_entry(struct generic_msu *self){
+    if(self->internal_state != NULL){
+        log_debug("Freeing internal state for entry baremetal msu");
+        struct baremetal_msu_internal_state* in_state = self->internal_state;
+        if(in_state->active_sockets != 0){
+            log_warn("Active sockets conn in entry msu, but freeing!");
+        }
+        free(in_state->fds);
+        free(in_state);
+    }
+}
+
 /**
  * All baremetal MSUs contain a reference to this type
  */
