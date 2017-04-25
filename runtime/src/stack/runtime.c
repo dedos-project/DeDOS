@@ -182,6 +182,7 @@ static void* non_block_per_thread_loop() {
     log_debug("Thread pool addr: %p", self->msu_pool);
     log_debug("-------------------------%s", "");
     struct rusage thread_usage;
+
     while (1) {
 
 #if STATLOG
@@ -238,6 +239,9 @@ static void* non_block_per_thread_loop() {
                         //To make sure stack ticks even if there was no item
                         msu_receive(cur, NULL);
                     } else if (cur->type->type_id == DEDOS_TCP_HANDSHAKE_MSU_ID) {
+                        //To make sure internal state is cleared
+                        msu_receive(cur, NULL);
+                    } else if (cur->type->type_id == DEDOS_BAREMETAL_MSU_ID) {
                         //To make sure internal state is cleared
                         msu_receive(cur, NULL);
                     }

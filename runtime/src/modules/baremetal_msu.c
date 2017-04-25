@@ -55,10 +55,37 @@ static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
     return -1;
 }
 
+/** Mock any delay in MSUs
+ * @param generic_msu self
+ * @param baremetal_msu_data_payload struct
+ * @return 0
+ */
 static int baremetal_mock_delay(struct generic_msu *self, struct baremetal_msu_data_payload *baremetal_data){
     log_debug("TODO: Can simulate delay here for each baremetal msu");
     return 0;
 }
+
+/** Adds newly accepted socket to array of socket fds in internal state struct for polling
+ * @param self msu
+ * @param socket fd
+ * return 0 on success, -1 on error
+ */
+static int baremetal_track_socket_poll(struct generic_msu* self, int new_sock_fd){
+    struct baremetal_msu_internal_state *in_state = self->internal_state;
+    if(in_state->active_sockets == in_state->total_array_size){
+        log_error("TODO: Poll fds socket array full, need to realloc");
+        return -1;
+    }
+    //add the fd at the last index, we make sure that there are no holes in array
+    struct pollfd* fds = in_state->fds;
+    fds[in_state->active_sockets].fd = new_sock_fd;
+    fds[in_state->active_sockets].events = POLLIN;
+    log_debug("adding socket: %d at index %d",(*(in_state->fds + in_state->active_sockets)).fd,
+            in_state->active_sockets);
+    in_state->active_sockets += 1;
+    return 0;
+}
+
 /**
  * Recieves data for baremetal MSU
  * @param self baremetal MSU to receive the data
@@ -66,38 +93,29 @@ static int baremetal_mock_delay(struct generic_msu *self, struct baremetal_msu_d
  * @return ID of next MSU-type to receive data, or -1 on error
  */
 int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
+    int ret;
     if (self && input_data) {
         struct baremetal_msu_data_payload *baremetal_data =
             (struct baremetal_msu_data_payload*) (input_data->buffer);
-        int ret;
-        char buffer[BAREMETAL_RECV_BUFFER_SIZE];
         log_debug("Baremetal receive for msu: %d, msg type: %d",self->id, baremetal_data->type);
 
         if(baremetal_data->type == NEW_ACCEPTED_CONN){
-            //add to list of sockets to poll
-            log_warn("TODO POLLIN established sockets");
-            baremetal_data->type = FORWARD;
-
-        } else if(baremetal_data->type == READ_FROM_SOCK){
-            //read from socket//only happens at entry msu
-            //FIXME the recv call should move to poll above
-            log_debug("READ_FROM_SOCK state");
-            ret = recv(baremetal_data->socketfd, &buffer, BAREMETAL_RECV_BUFFER_SIZE, MSG_WAITALL);
-            if(ret > 0){
-                sscanf(buffer, "%d", &(baremetal_data->int_data));
-                log_debug("Received int from client: %d",baremetal_data->int_data);
-            } else if(ret == 0){
-                log_debug("Socket closed by peer");
-                return -1;
-            } else {
-                log_debug("Error in recv: %s",strerror(errno));
+            //add to list of sockets to poll, should only happen in entry MSU
+            ret = baremetal_track_socket_poll(self, baremetal_data->socketfd);
+            if(ret){
+                log_error("Failed to add socket for poll tracking: %d",baremetal_data->socketfd);
                 return -1;
             }
-            baremetal_data->type = FORWARD;
+            //because this will happen only at entry MSU and the entry msu should poll and recv
+            //thus the main listen thread enqueued the accepted socket which the entry msu will
+            //now poll on. Here we added that socket to be polled
+            return -1;
 
         } else if(baremetal_data->type == FORWARD){
             baremetal_data->int_data += 1;
             log_debug("FORWARD state, data val: %d",baremetal_data->int_data);
+
+            //SINK MSU logic
             //Maybe check that if my routing table is empty for next type,
             //that means I am the last sink MSU and should send out the final response?
             struct msu_type *type = &BAREMETAL_MSU_TYPE;
@@ -117,8 +135,69 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                 }
                 return -1; //since nothing to forward
             }
+            return DEDOS_BAREMETAL_MSU_ID;
         }
-        return DEDOS_BAREMETAL_MSU_ID;
+    }
+
+    if(self && self->id == 1 && !input_data){ //TODO FIXME may create an entry/exit flag in generic_msu
+        //for polling sockets on entry msu
+        char buffer[BAREMETAL_RECV_BUFFER_SIZE];
+        struct baremetal_msu_internal_state *in_state = self->internal_state;
+        ret = poll(in_state->fds, in_state->active_sockets, 0);
+        if (ret == -1) {
+                //log_error("polling established sockets"); // error occurred in poll()
+        } else if (ret == 0) {
+                ;//log_debug("Poll Timeout occurred!");
+        } else {
+            //iterate over the sockets to see which was set and process all
+            int i;
+            unsigned int recvd_int;
+            struct pollfd *pollfd_ptr = in_state->fds;
+            for(i = 0; i < in_state->active_sockets; i++){
+                if(pollfd_ptr->revents & POLLIN){
+                    log_debug("POLLIN on index %d, socket: %d",i,pollfd_ptr->fd);
+                    ret = recv(pollfd_ptr->fd, &buffer, BAREMETAL_RECV_BUFFER_SIZE, MSG_WAITALL);
+                    if(ret > 0){
+                        sscanf(buffer, "%d", &(recvd_int));
+                        log_debug("Received int from client: %u",recvd_int);
+
+                        struct baremetal_msu_data_payload *data = (struct baremetal_msu_data_payload*)
+                                                        malloc(sizeof(struct baremetal_msu_data_payload));
+                        data->socketfd = pollfd_ptr->fd;
+                        data->type = FORWARD;
+                        data->int_data = recvd_int;
+                        // get a new queue item and enqueue this within itself because cannot directly
+                        // enqueue a queue item to next msu since it's handles by route in msu_receive
+                        struct generic_msu_queue_item *new_item_bm = malloc(sizeof(struct generic_msu_queue_item));
+                        new_item_bm->buffer = data;
+                        new_item_bm->buffer_len = sizeof(struct baremetal_msu_data_payload);
+                        int baremetal_entry_msu_q_len= generic_msu_queue_enqueue(&self->q_in, new_item_bm); //enqueuing to first bm MSU
+                        if(baremetal_entry_msu_q_len < 0){
+                            log_error("Failed to enqueue baremetal data to entry msu with id: %d",self->id);
+                            free(new_item_bm);
+                            free(data);
+                        } else {
+                            log_debug("Enqueued baremtal request in entry msu, q_len: %d",baremetal_entry_msu_q_len);
+                        }
+                        return -1; //since the above enqueue is just for the same msu and noting to forward
+
+                    } else if(ret == 0){
+                        log_debug("Socket closed by peer");
+                        close(pollfd_ptr->fd);
+                        pollfd_ptr->fd = -1;
+                        //TODO rearrange socket in array to make sure there are no holes
+                        return -1;
+                    } else {
+                        log_debug("Error in recv: %s",strerror(errno));
+                        //TODO rearrange socket in array to make sure there are no holes
+                        close(pollfd_ptr->fd);
+                        pollfd_ptr->fd = -1;
+                        return -1;
+                    }
+                }
+            }
+            return DEDOS_BAREMETAL_MSU_ID;
+        }
     }
     return -1;
 }

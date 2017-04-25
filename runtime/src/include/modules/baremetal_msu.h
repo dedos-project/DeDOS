@@ -9,7 +9,7 @@
 struct baremetal_msu_internal_state {
     int active_sockets;
     int total_array_size;
-    struct pollfds *fds;
+    struct pollfd *fds;
 };
 
 /** Holds data to be delivered to a baremetal MSU */
