@@ -72,12 +72,10 @@ static int baremetal_mock_delay(struct generic_msu *self, struct baremetal_msu_d
  */
 static int baremetal_track_socket_poll(struct generic_msu* self, int new_sock_fd){
     struct baremetal_msu_internal_state *in_state = self->internal_state;
-/* TODO FIXME: Fix this tracker as we don't do defragmentation of the array
     if(in_state->active_sockets == in_state->total_array_size){
         log_error("TODO: Poll fds socket array full, need to realloc");
         return -1;
     }
-*/
     //add the fd at the last index, we make sure that there are no holes in array
     struct pollfd* fds = in_state->fds;
     int i;
@@ -128,6 +126,7 @@ static void baremetal_remove_socket_poll(struct generic_msu* self, int socketfd)
         log_error("Couldn't find socket to remove from poll fd array..shouldn't happen!");
     }
 }
+
 /**
  * Recieves data for baremetal MSU
  * @param self baremetal MSU to receive the data
@@ -228,13 +227,11 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                         } else {
                             log_debug("Enqueued baremtal request in entry msu, q_len: %d",baremetal_entry_msu_q_len);
                         }
-
                     } else if(ret == 0){
                         log_debug("Socket closed by peer");
                         close(pollfd_ptr->fd);
                         pollfd_ptr->fd = -1;
                         //TODO rearrange socket in array to make sure there are no holes
-
                     } else {
                         log_debug("Error in recv: %s",strerror(errno));
                         //TODO rearrange socket in array to make sure there are no holes
