@@ -11,7 +11,7 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 #define ANSI_COLOR_PURPLE   "\x1b[35m"
 
-#define PICO_SUPPORT_NDEBUG
+//#define PICO_SUPPORT_NDEBUG
 #define DEBUG 1
 #define INFO 1
 #define ERROR 1
