@@ -1,11 +1,11 @@
 #pragma once
 #include <time.h>
 #include <pthread.h>
-
+/*
 #ifndef STATLOG
 #define STATLOG 1
 #endif
-
+*/
 /**
  * There must be a unique identifier for each statistic that is gathered.
  */
