@@ -1,5 +1,6 @@
 #ifndef GENERIC_MSU_QUEUE_ITEM_H_
 #define GENERIC_MSU_QUEUE_ITEM_H_
+#include "data_plane_profiling.h"
 #include "logging.h"
 
 /* definition of struct that is an item of generic msu queue */
@@ -12,6 +13,9 @@ typedef struct generic_msu_queue_item{
      to be in
      */
     uint32_t buffer_len;
+#ifdef DATAPLANE_PROFILING
+    struct dataplane_profile_info dp_profile_info;
+#endif
     void *buffer;
 } msu_queue_item;
 
