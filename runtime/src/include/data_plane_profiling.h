@@ -12,17 +12,21 @@
 #define CLOCK_ID CLOCK_MONOTONIC
 
 typedef enum {
-    ENQUEUE = 0,
+    DEDOS_ENTRY = 0,
+    ENQUEUE,
     DEQUEUE,
     REMOTE_SEND, //When sent over TCP conn b/w runtimes
-    REMOTE_RECV //When recevied over TCP conn b/w runtimes
+    REMOTE_RECV, //When recevied over TCP conn b/w runtimes
+    DEDOS_EXIT
 } enum_dataplane_op_id;
 
 static const char *enum_dataplane_op_name[] = {
+    "DEDOS_ENTRY",
     "ENQUEUE",
     "DEQUEUE",
     "REMOTE_SEND", //When sent over TCP conn b/w runtimes
-    "REMOTE_RECV" //When recevied over TCP conn b/w runtimes
+    "REMOTE_RECV", //When recevied over TCP conn b/w runtimes
+    "DEDOS_EXIT"
 };
 
 struct dataplane_profile_info {
