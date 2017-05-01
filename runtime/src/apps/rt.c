@@ -80,7 +80,9 @@ static void kill_locks(void) {
 
 int main(int argc, char **argv){
     // initialize the context and read the certificates
-
+#ifdef DATAPLANE_PROFILING
+    log_warn("Data plane profiling enabled");
+#endif
     char *dfg_json = NULL;
     int runtime_id = -1;
     char *global_ctl_ip = NULL;

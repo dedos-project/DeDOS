@@ -18,6 +18,7 @@
 #include "dedos_statistics.h"
 #include "global_controller/dfg.h"
 #include "dedos_defines.h"
+#include "data_plane_profiling.h"
 
 #define BLOCKING_THREAD 1
 #define NON_BLOCKING_THREAD 2
