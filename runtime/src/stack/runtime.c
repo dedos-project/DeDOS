@@ -186,6 +186,7 @@ static void* non_block_per_thread_loop() {
     while (1) {
 
 #if STATLOG
+        log_warn("STAT_LOG Enabled");
         getrusage(RUSAGE_THREAD, &thread_usage);
         periodic_aggregate_stat(N_SWAPS, thread_index,
                                 thread_usage.ru_nivcsw,
