@@ -173,6 +173,7 @@ void flush_item_to_log(enum stat_id stat_id, unsigned int item_id){
     item->last_flush = writetime.tv_sec;
 
     item->time[0] = item->time[item->n_stats];
+    item->stat[0] = item->stat[item->n_stats];
     int n_stats = item->n_stats;
     item->n_stats = 0;
     pthread_mutex_unlock(&item->mutex);
@@ -329,7 +330,9 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
     struct item_stats *item = &saved_stats[(int)stat_id].item_stats[item_id];
     pthread_mutex_lock(&item->mutex);
 
-    if ( (item->n_stats == 0 || item->stat[item->n_stats-1] != stat ) || relog){
+    int i = item->n_stats == 0 ? 0 : item->n_stats-1;
+
+    if ( (item->stat[i] != stat ) || relog){
         get_elapsed_time(&item->time[item->n_stats]);
         item->stat[item->n_stats] = stat;
         item->n_stats++;
@@ -356,6 +359,7 @@ void init_statlog(char *filename){
             item->last_flush = 0;
             item->n_stats = 0;
             memset(item->time, 0, sizeof(item->time));
+            item->stat[0] = 0;
         }
     }
     statlog = fopen(filename, "w");
