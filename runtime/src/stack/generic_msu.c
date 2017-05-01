@@ -442,13 +442,18 @@ int default_send_local(struct generic_msu *src, msu_queue_item *data,
     return generic_msu_queue_enqueue(dst->next_msu_input_queue, data);
 }
 
+struct round_robin_hh_key{
+    int type_id;
+    uint32_t ip_address;
+};
+
 /**
  * Simple structure to store an MSUs routing state when using
  * the round-robin routing method.
  * Will soon be replaced by routing object and hash-based method
  */
 struct round_robin_state {
-    int type_id;    /**< ID of the type stored in this element in the struct */
+    struct round_robin_hh_key id; /**< ID of the type stored in this element in the struct */
     struct msu_endpoint *last_endpoint; /**< Last endpoint of that type that was sent to */
     UT_hash_handle hh; /**< Hash-handle */
 };
@@ -474,15 +479,18 @@ struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *send
         return NULL;
     }
 
+    struct round_robin_hh_key key = {type->type_id, 0};
+
     struct round_robin_state *all_states =
             (struct round_robin_state *)sender->routing_state;
     struct round_robin_state *route_state = NULL;
-    HASH_FIND_INT(all_states, &type->type_id, route_state);
+    HASH_FIND(hh, all_states, &key, sizeof(key), route_state);
 
     // Routing hasn't been initialized yet, so choose a semi-random
     // starting point
     if (route_state == NULL){
-        log_debug("Creating new routing state for type %d from  msu %d", type->type_id, sender->id);
+        log_debug("Creating new routing state for type %d from msu %d",
+                  type->type_id, sender->id);
         struct msu_endpoint *last_endpoint = dst_msus;
         // TODO: Need to free when freeing msu!
         route_state = malloc(sizeof(*route_state));
@@ -491,9 +499,9 @@ struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *send
             if (! last_endpoint)
                 last_endpoint = dst_msus;
         }
-        route_state->type_id = type->type_id;
+        route_state->id = key;
         route_state->last_endpoint = last_endpoint;
-        HASH_ADD_INT(all_states, type_id, route_state);
+        HASH_ADD(hh, all_states, id, sizeof(key), route_state);
         sender->routing_state = (void*)all_states;
     }
 
@@ -532,18 +540,56 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
     struct msu_endpoint *dst_msus =
         get_all_type_msus(sender->rt_table, type->type_id);
 
-    struct msu_endpoint *dst;
+    if (! (dst_msus) ){
+        log_error("Source MSU %d did not find target MSU of type %d",
+                  sender->id, type->type_id);
+        return NULL;
+    }
+
+    struct round_robin_hh_key key = {type->type_id, ip_address};
+
+    struct round_robin_state *all_states =
+            (struct round_robin_state *)sender->routing_state;
+    struct round_robin_state *route_state = NULL;
+    HASH_FIND(hh, all_states, &key, sizeof(key), route_state);
+
+    // Routing hasn't been initialized yet, so choose a semi-random
+    // starting point
+    if (route_state == NULL){
+        log_debug("Creating new routing state for type %d from msu %d",
+                  type->type_id, sender->id);
+        struct msu_endpoint *last_endpoint = dst_msus;
+        // TODO: Need to free when freeing msu!
+        route_state = malloc(sizeof(*route_state));
+        for (int i=0; i< (sender->id) % HASH_COUNT(dst_msus); i++){
+            last_endpoint = last_endpoint->hh.next;
+            if (! last_endpoint)
+                last_endpoint = dst_msus;
+        }
+        route_state->id = key;
+        route_state->last_endpoint = last_endpoint;
+        HASH_ADD(hh, all_states, id, sizeof(key), route_state);
+        sender->routing_state = (void*)all_states;
+    }
+
+    // Now loop over until you find an MSU with the right IP
     for (int i=0; i<HASH_COUNT(dst_msus); i++){
-        dst = round_robin(type, sender, NULL);
-        if (dst == NULL || dst->ipv4 == ip_address)
+        // Get the next endpoint of the same type, and replace the current one with it
+        route_state->last_endpoint = route_state->last_endpoint->hh.next;
+        // If it's null, just get the first endpoint
+        if (! route_state->last_endpoint)
+           route_state->last_endpoint = dst_msus;
+
+        if (route_state->last_endpoint->ipv4 == ip_address)
             break;
     }
-    if (dst == NULL || dst->ipv4 != ip_address){
+
+    if ( route_state->last_endpoint->ipv4 != ip_address){
         log_error("Could not find destination of type %d with correct ip from sender %d",
                 type->type_id, sender->id);
         return NULL;
     }
-    return dst;
+    return route_state->last_endpoint;
 }
 
 /**
