@@ -44,14 +44,15 @@ struct dataplane_profile_info {
 static void inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
     struct dataplane_profile_info *dp_profile_info)
 {
+    pthread_t self_tid = pthread_self();
     struct timespec cur_timestamp;
     long int ts;
     clock_gettime(CLOCK_ID, &cur_timestamp);
     ts = (cur_timestamp.tv_sec * 1000 * 1000) + (cur_timestamp.tv_nsec / 1000);
     snprintf(dp_profile_info->dp_log_entries[dp_profile_info->dp_entry_count],
             MAX_DATAPLANE_LOG_ENTRY_LEN,
-            "%ld, %d, %d, %d, %s",
-            ts, dp_profile_info->dp_id, dp_profile_info->dp_entry_count,
+            "%ld, %lu, %d, %d, %d, %s",
+            ts, self_tid, dp_profile_info->dp_id, dp_profile_info->dp_entry_count,
                 msu_id, enum_dataplane_op_name[dataplane_op_id]);
     log_profile("%s",dp_profile_info->dp_log_entries[dp_profile_info->dp_entry_count]);
     dp_profile_info->dp_entry_count++;
