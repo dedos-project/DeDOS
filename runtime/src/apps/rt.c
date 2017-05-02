@@ -12,6 +12,7 @@
 #include "runtime.h"
 #include "global.h"
 #include "modules/ssl_read_msu.h"
+#include "data_plane_profiling.h"
 
 #define USE_OPENSSL
 
@@ -82,11 +83,7 @@ int main(int argc, char **argv){
     // initialize the context and read the certificates
 #ifdef DATAPLANE_PROFILING
     log_warn("Data plane profiling enabled");
-    if (pthread_mutex_init(&request_id_mutex, NULL) != 0)
-    {
-        log_error("request id mutex init failed");
-        return 1;
-    }
+    init_data_plane_profiling();
 #endif
     char *dfg_json = NULL;
     int runtime_id = -1;

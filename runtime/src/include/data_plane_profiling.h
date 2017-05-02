@@ -57,6 +57,7 @@ static void inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id
     dp_profile_info->dp_entry_count++;
 }
 
+int init_data_plane_profiling(void);
 int get_request_id(void);
 
 // #ifdef DATAPLANE_PROFILING

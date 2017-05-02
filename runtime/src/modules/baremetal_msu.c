@@ -178,7 +178,9 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                     //baremetal_remove_socket_poll(self, baremetal_data->socketfd);
                     //not here sockets should only be removed via poll mechanism
                 } else {
+#ifdef DATAPLANE_PROFILING
                     log_dp_event(-1, DEDOS_EXIT, &input_data->dp_profile_info);
+#endif
                     log_debug("Sent baremetal response bytes: %d, msg: %s", ret, sendbuf);
                 }
                 return -1; //since nothing to forward
