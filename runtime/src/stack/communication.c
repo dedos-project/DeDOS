@@ -17,6 +17,7 @@
 #include "logging.h"
 #include "modules/ssl_request_routing_msu.h"
 #include "modules/baremetal_msu.h"
+#include <assert.h>
 static fd_set readfds;
 struct sockaddr_in ws, cli_addr, bm;
 int clilen = sizeof(cli_addr);
@@ -202,9 +203,7 @@ int check_comm_sockets() {
     struct sockaddr_storage addr;
     int i, j;
     int max_fd;
-
     len = sizeof(addr);
-
     // implementing poll
 #ifdef DEDOS_SUPPORT_BAREMETAL_MSU
     int totalSockets = 4;
@@ -390,8 +389,16 @@ int check_comm_sockets() {
                 data->int_data = 0;
                 // get a new queue item and enqueue it into this queue
                 struct generic_msu_queue_item *new_item_bm = malloc(sizeof(struct generic_msu_queue_item));
+                if(!new_item_bm){
+                    log_error("Failed to mallc new bm item");
+                    return -1;
+                }
+                memset(new_item_bm,'\0',sizeof(struct generic_msu_queue_item));
                 new_item_bm->buffer = data;
                 new_item_bm->buffer_len = sizeof(struct baremetal_msu_data_payload);
+#ifdef DATAPLANE_PROFILING
+                new_item_bm->dp_profile_info.dp_id = get_request_id();
+#endif
                 int baremetal_entry_msu_q_len= generic_msu_queue_enqueue(&baremetal_entry_msu->q_in, new_item_bm); //enqueuing to first bm MSU
                 if(baremetal_entry_msu_q_len < 0){
                     log_error("Failed to enqueue baremetal request to entry msu with id: %d",baremetal_entry_msu->id);

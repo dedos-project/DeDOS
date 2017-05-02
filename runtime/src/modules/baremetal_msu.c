@@ -178,6 +178,7 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                     //baremetal_remove_socket_poll(self, baremetal_data->socketfd);
                     //not here sockets should only be removed via poll mechanism
                 } else {
+                    log_dp_event(-1, DEDOS_EXIT, &input_data->dp_profile_info);
                     log_debug("Sent baremetal response bytes: %d, msg: %s", ret, sendbuf);
                 }
                 return -1; //since nothing to forward
@@ -218,6 +219,15 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                         // get a new queue item and enqueue this within itself because cannot directly
                         // enqueue a queue item to next msu since it's handles by route in msu_receive
                         struct generic_msu_queue_item *new_item_bm = malloc(sizeof(struct generic_msu_queue_item));
+                        if(!new_item_bm){
+                            log_error("Failed to mallc new bm item");
+                            return -1;
+                        }
+                        memset(new_item_bm,'\0',sizeof(struct generic_msu_queue_item));
+#ifdef DATAPLANE_PROFILING
+                        new_item_bm->dp_profile_info.dp_id = get_request_id();
+                        log_dp_event(-1, DEDOS_ENTRY, &new_item_bm->dp_profile_info);
+#endif
                         new_item_bm->buffer = data;
                         new_item_bm->buffer_len = sizeof(struct baremetal_msu_data_payload);
                         int baremetal_entry_msu_q_len= generic_msu_queue_enqueue(&self->q_in, new_item_bm); //enqueuing to first bm MSU

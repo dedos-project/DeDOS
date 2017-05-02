@@ -11,21 +11,23 @@
 #define MAX_DATAPLANE_LOG_ENTRY_LEN 512
 #define CLOCK_ID CLOCK_MONOTONIC
 
+pthread_mutex_t request_id_mutex;
+
 typedef enum {
-    DEDOS_ENTRY = 0,
-    ENQUEUE,
+    ENQUEUE = 0,
     DEQUEUE,
     REMOTE_SEND, //When sent over TCP conn b/w runtimes
     REMOTE_RECV, //When recevied over TCP conn b/w runtimes
+    DEDOS_ENTRY,
     DEDOS_EXIT
 } enum_dataplane_op_id;
 
 static const char *enum_dataplane_op_name[] = {
-    "DEDOS_ENTRY",
     "ENQUEUE",
     "DEQUEUE",
     "REMOTE_SEND", //When sent over TCP conn b/w runtimes
     "REMOTE_RECV", //When recevied over TCP conn b/w runtimes
+    "DEDOS_ENTRY",
     "DEDOS_EXIT"
 };
 
@@ -38,23 +40,28 @@ struct dataplane_profile_info {
     char dp_log_entries[MAX_DATAPLANE_ITEMS][MAX_DATAPLANE_LOG_ENTRY_LEN];
 };
 
-static inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
+static void inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
     struct dataplane_profile_info *dp_profile_info)
 {
+    //TODO: Add thread id as well to the log
     struct timespec cur_timestamp;
     long int ts;
     clock_gettime(CLOCK_ID, &cur_timestamp);
     ts = (cur_timestamp.tv_sec * 1000 * 1000) + (cur_timestamp.tv_nsec / 1000);
     snprintf(dp_profile_info->dp_log_entries[dp_profile_info->dp_entry_count],
             MAX_DATAPLANE_LOG_ENTRY_LEN,
-            "%ld %d, %d, %d, %s",
+            "%ld, %d, %d, %d, %s",
             ts, dp_profile_info->dp_id, dp_profile_info->dp_entry_count,
                 msu_id, enum_dataplane_op_name[dataplane_op_id]);
     log_warn("LOGGED: %s",dp_profile_info->dp_log_entries[dp_profile_info->dp_entry_count]);
     dp_profile_info->dp_entry_count++;
 }
+
+int get_request_id(void);
+
 // #ifdef DATAPLANE_PROFILING
 // /* declare everything here */
 // #endif /* DATAPLANE_PROFILING */
+
 
 #endif /* DATA_PLANE_PROFILING_H_ */
