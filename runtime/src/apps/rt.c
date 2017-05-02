@@ -82,6 +82,11 @@ int main(int argc, char **argv){
     // initialize the context and read the certificates
 #ifdef DATAPLANE_PROFILING
     log_warn("Data plane profiling enabled");
+    if (pthread_mutex_init(&request_id_mutex, NULL) != 0)
+    {
+        log_error("request id mutex init failed");
+        return 1;
+    }
 #endif
     char *dfg_json = NULL;
     int runtime_id = -1;
@@ -159,9 +164,9 @@ int main(int argc, char **argv){
     int json_all = (dfg_json != NULL && runtime_id > 0);
     int json_any = (dfg_json != NULL || runtime_id > 0);
 
-    int manual_all = (global_ctl_ip != NULL && global_ctl_port > 0 && 
+    int manual_all = (global_ctl_ip != NULL && global_ctl_port > 0 &&
                       local_listen_port > 0 && same_physical_machine > 0);
-    int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 || 
+    int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 ||
                       local_listen_port > 0 || same_physical_machine > 0) ;
 
     int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
@@ -261,4 +266,3 @@ int main(int argc, char **argv){
     log_info("Runtime exit...");
     return 0;
 }
-
