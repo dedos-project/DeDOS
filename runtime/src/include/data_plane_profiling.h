@@ -35,6 +35,8 @@ struct dataplane_profile_info {
     int dp_id;
     /** Current count of dataplane log entries (dp_entry_count < MAX_DATAPLANE_ITEMS) */
     int dp_entry_count;
+    /** Hop count on logical flow for this item inside dedos system */
+    int dp_seq_count;
     /** 2d char array to hold MAX_DATAPLANE_ITEMS logs items with len MAX_DATAPLANE_LOG_ENTRY_LEN */
     char dp_log_entries[MAX_DATAPLANE_ENTRIES_PER_ITEM][MAX_DATAPLANE_LOG_ENTRY_LEN];
 };
@@ -103,11 +105,13 @@ static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
     if(dp_profile_info->dp_entry_count < MAX_DATAPLANE_ENTRIES_PER_ITEM){
         snprintf(dp_profile_info->dp_log_entries[dp_profile_info->dp_entry_count],
                 MAX_DATAPLANE_LOG_ENTRY_LEN,
-                "%ld, %lu, %d, %d, %d, %s",
-                ts, self_tid, dp_profile_info->dp_id, dp_profile_info->dp_entry_count,
+                "%ld, %lu, %d, %d, %d, %d, %s",
+                ts, self_tid, dp_profile_info->dp_id,dp_profile_info->dp_seq_count,
+                dp_profile_info->dp_entry_count,
                     msu_id, enum_dataplane_op_name[dataplane_op_id]);
         log_profile("%s",dp_profile_info->dp_log_entries[dp_profile_info->dp_entry_count]);
         dp_profile_info->dp_entry_count++;
+        dp_profile_info->dp_seq_count++;
     } else {
         log_error("Overflow in iterm profile entry count");
     }

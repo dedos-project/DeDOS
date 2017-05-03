@@ -41,8 +41,10 @@ static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
         }
 #ifdef DATAPLANE_PROFILING
         memset(recvd, 0, sizeof(*recvd));
+        recvd->dp_profile_info.dp_seq_count = msg->payload_seq_count;
         recvd->dp_profile_info.dp_id = msg->payload_request_id;
-        log_debug("Recieved request id from remote runtime: %d",recvd->dp_profile_info.dp_id);
+        log_debug("Recieved request id from remote runtime: %d, seq: ",recvd->dp_profile_info.dp_id
+                , recvd->dp_profile_info.dp_seq_count);
         log_dp_event(self->id, REMOTE_RECV, &recvd->dp_profile_info);
 #endif
         struct baremetal_msu_data_payload *baremetal_data = malloc(sizeof(*baremetal_data));
