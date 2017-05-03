@@ -413,6 +413,7 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
     /* add to allthreads[0] queue,since main thread is always at index 0 */
     /* need to create thread_msg struct with action = forward */
 #ifdef DATAPLANE_PROFILING
+    msg->payload_seq_count = data->dp_profile_info.dp_seq_count;
     msg->payload_request_id = data->dp_profile_info.dp_id;
     log_dp_event(-1, REMOTE_SEND, &data->dp_profile_info);
     log_debug("Copied item request id: %d",msg->payload_request_id);

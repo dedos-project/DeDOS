@@ -12,6 +12,7 @@ typedef struct dedos_intermsu_message {
     unsigned int payload_len;
 #ifdef DATAPLANE_PROFILING
     int payload_request_id;
+    int payload_seq_count;
 #endif
     void *payload;
 } intermsu_msg;
