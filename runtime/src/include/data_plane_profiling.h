@@ -103,7 +103,7 @@ static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
     clock_gettime(CLOCK_ID, &cur_timestamp);
     ts = (cur_timestamp.tv_sec * 1000 * 1000) + (cur_timestamp.tv_nsec / 1000);
     if(dp_profile_info->dp_entry_count < MAX_DATAPLANE_ENTRIES_PER_ITEM){
-        if(dataplane_op_id = REMOTE_RECV){
+        if(dataplane_op_id == REMOTE_RECV){
             dp_profile_info->dp_entry_count++;
         }
         snprintf(dp_profile_info->dp_log_entries[dp_profile_info->dp_entry_count],
