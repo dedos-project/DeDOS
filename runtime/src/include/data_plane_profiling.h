@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include "logging.h"
 /** Number of entries per item that can be logged from entry to exit */
-#define MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS 8096 /* for in memory log accross runtime */
+#define MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS 15 //8096 /* for in memory log accross runtime */
 #define MAX_DATAPLANE_ENTRIES_PER_ITEM 32 /* 32 max hops */
 #define MAX_DATAPLANE_LOG_ENTRY_LEN 512
 #define CLOCK_ID CLOCK_MONOTONIC
@@ -59,7 +59,40 @@ int get_request_id(void);
 pthread_mutex_t request_id_mutex;
 struct in_memory_profile_log mem_dp_profile_log;
 
-static void inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
+static void copy_queue_item_dp_data(struct dataplane_profile_info *dp_profile_info){
+    log_debug("Current entry count in memory log: %d",mem_dp_profile_log.in_memory_entry_count);
+    log_debug("Current entry count in item log: %d",dp_profile_info->dp_entry_count);
+    log_debug("Capacity of in memory log: %d",mem_dp_profile_log.in_memory_entry_max_capacity);
+
+    if(mem_dp_profile_log.in_memory_entry_count + dp_profile_info->dp_entry_count >= mem_dp_profile_log.in_memory_entry_max_capacity){
+        log_error("Overflow...in memory profile log...dump before continuing...");
+        dump_profile_logs(NULL);
+        log_info("Dumped in memory profile log....");
+    }
+
+    pthread_mutex_lock(&mem_dp_profile_log.mutex);
+    memcpy(&mem_dp_profile_log.in_memory_entries[mem_dp_profile_log.in_memory_entry_count], 
+          dp_profile_info->dp_log_entries, sizeof (char) * dp_profile_info->dp_entry_count * MAX_DATAPLANE_LOG_ENTRY_LEN);
+    mem_dp_profile_log.in_memory_entry_count += dp_profile_info->dp_entry_count;
+    pthread_mutex_unlock(&mem_dp_profile_log.mutex);
+
+    log_debug("Current entry count in memory log after copy: %d",mem_dp_profile_log.in_memory_entry_count);
+    log_debug("Queue item entries: ");
+#if DEBUG == 1
+    int i=0;
+    for(i=0; i < dp_profile_info->dp_entry_count; i++){
+        printf("%s\n",dp_profile_info->dp_log_entries[i]);
+    }
+    log_debug("InMemory item entries:");
+    for(i=0; i < mem_dp_profile_log.in_memory_entry_count; i++){
+        printf("%s\n",mem_dp_profile_log.in_memory_entries[i]);
+    }
+//        log_debug("Test profile log mem dump");
+//        dump_profile_logs(NULL);
+#endif
+}
+
+static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
     struct dataplane_profile_info *dp_profile_info)
 {
     pthread_t self_tid = pthread_self();
@@ -80,35 +113,7 @@ static void inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id
     }
     //log to in memory log if we see DEDOS_EXIT event, by coping the whole dp_log_entries
     if(dataplane_op_id == DEDOS_EXIT){
-        log_debug("Current entry count in memory log: %d",mem_dp_profile_log.in_memory_entry_count);
-        log_debug("Current entry count in item log: %d",dp_profile_info->dp_entry_count);
-        log_debug("Capacity of in memory log: %d",mem_dp_profile_log.in_memory_entry_max_capacity);
-        if(mem_dp_profile_log.in_memory_entry_count + dp_profile_info->dp_entry_count >= mem_dp_profile_log.in_memory_entry_max_capacity){
-            log_error("Overflow...in memory profile log...dump before continuing...");
-            dump_profile_logs(NULL);
-            log_info("Dumped in memory profile log....");
-        }
-
-        pthread_mutex_lock(&mem_dp_profile_log.mutex);
-        memcpy(&mem_dp_profile_log.in_memory_entries[mem_dp_profile_log.in_memory_entry_count], 
-              dp_profile_info->dp_log_entries, sizeof (char) * dp_profile_info->dp_entry_count * MAX_DATAPLANE_LOG_ENTRY_LEN);
-        mem_dp_profile_log.in_memory_entry_count += dp_profile_info->dp_entry_count;
-        pthread_mutex_unlock(&mem_dp_profile_log.mutex);
-
-        log_debug("Current entry count in memory log after copy: %d",mem_dp_profile_log.in_memory_entry_count);
-        log_debug("Queue item entries: ");
-#if DEBUG == 1
-        int i=0;
-        for(i=0; i < dp_profile_info->dp_entry_count; i++){
-            printf("%s\n",dp_profile_info->dp_log_entries[i]);
-        }
-        log_debug("InMemory item entries:");
-        for(i=0; i < mem_dp_profile_log.in_memory_entry_count; i++){
-            printf("%s\n",mem_dp_profile_log.in_memory_entries[i]);
-        }
-//        log_debug("Test profile log mem dump");
-//        dump_profile_logs(NULL);
-#endif
+        copy_queue_item_dp_data(dp_profile_info);
     } //if(dataplane_op_id == DEDOS_EXIT)
 }
 
