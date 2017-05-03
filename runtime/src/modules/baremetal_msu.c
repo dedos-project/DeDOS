@@ -38,7 +38,11 @@ static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
             log_error("Could not allocate msu_queue_item");
             return -1;
         }
-
+#ifdef DATAPLANE_PROFILING
+        memset(recvd, 0, sizeof(*recvd));
+        recvd->dp_profile_info.dp_id = msg->payload_request_id;
+        log_debug("Recieved request id from remote runtime: %d",recvd->dp_profile_info.dp_id);
+#endif
         struct baremetal_msu_data_payload *baremetal_data = malloc(sizeof(*baremetal_data));
         if (!baremetal_data){
             free(recvd);

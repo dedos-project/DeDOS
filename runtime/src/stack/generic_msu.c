@@ -395,7 +395,10 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
     }
 
     memcpy(msg->payload, data->buffer, msg->payload_len);
-
+#ifdef DATAPLANE_PROFILING
+    msg->payload_request_id = data->dp_profile_info.dp_id;
+    log_debug("Copied item request id: %d",msg->payload_request_id);
+#endif
     struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
     if (!thread_msg){
         log_error("Unable to allocate dedos_thread_msg%s", "");
