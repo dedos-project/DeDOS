@@ -45,7 +45,7 @@ int dump_profile_logs(char *logfile){
 
     pthread_mutex_lock(&mem_dp_profile_log.mutex);
 
-    fp = fopen(logfile, "w");
+    fp = fopen(logfile, "a");
     if (fp == NULL) {
         log_error("Can't open file: %s",logfile);
         pthread_mutex_unlock(&mem_dp_profile_log.mutex);
