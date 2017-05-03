@@ -40,6 +40,8 @@ struct dataplane_profile_info {
 };
 
 struct in_memory_profile_log {
+    /** Mutex, multiple threads update this */
+    pthread_mutex_t mutex;
     /** Current number of entries stored */
     int in_memory_entry_count;
     /** Capacity for entries */
@@ -47,6 +49,10 @@ struct in_memory_profile_log {
     /** 2d char of hold profile log */
     char in_memory_entries[MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS][MAX_DATAPLANE_LOG_ENTRY_LEN];
 };
+
+int dump_profile_logs(char *logfile);
+int init_data_plane_profiling(void);
+int get_request_id(void);
 
 /***GLOBALS***/
 pthread_mutex_t request_id_mutex;
@@ -77,14 +83,17 @@ static void inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id
         log_debug("Current entry count in item log: %d",dp_profile_info->dp_entry_count);
         log_debug("Capacity of in memory log: %d",mem_dp_profile_log.in_memory_entry_max_capacity);
         if(mem_dp_profile_log.in_memory_entry_count + dp_profile_info->dp_entry_count >= mem_dp_profile_log.in_memory_entry_max_capacity){
-            log_error("Overflow...in memory profile log...dump before continuing...TODO");
-            return;
+            log_error("Overflow...in memory profile log...dump before continuing...");
+            dump_profile_logs(NULL);
+            log_info("Dumped in memory profile log....");
         }
-        //TODO add mutex around access to in memory log
+
+        pthread_mutex_lock(&mem_dp_profile_log.mutex);
         memcpy(&mem_dp_profile_log.in_memory_entries[mem_dp_profile_log.in_memory_entry_count], 
               dp_profile_info->dp_log_entries, sizeof (char) * dp_profile_info->dp_entry_count * MAX_DATAPLANE_LOG_ENTRY_LEN);
         mem_dp_profile_log.in_memory_entry_count += dp_profile_info->dp_entry_count;
-        
+        pthread_mutex_unlock(&mem_dp_profile_log.mutex);
+
         log_debug("Current entry count in memory log after copy: %d",mem_dp_profile_log.in_memory_entry_count);
         log_debug("Queue item entries: ");
 #if DEBUG == 1
@@ -97,10 +106,8 @@ static void inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id
             printf("%s\n",mem_dp_profile_log.in_memory_entries[i]);
         }
 #endif
-    }
+    } //if(dataplane_op_id == DEDOS_EXIT)
 }
-int init_data_plane_profiling(void);
-int get_request_id(void);
 
 // #ifdef DATAPLANE_PROFILING
 // /* declare everything here */
