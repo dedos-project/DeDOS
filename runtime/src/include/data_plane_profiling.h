@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include "logging.h"
 /** Number of entries per item that can be logged from entry to exit */
-#define MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS 15 //8096 /* for in memory log accross runtime */
+#define MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS 8096 /* for in memory log accross runtime */
 #define MAX_DATAPLANE_ENTRIES_PER_ITEM 32 /* 32 max hops */
 #define MAX_DATAPLANE_LOG_ENTRY_LEN 512
 #define CLOCK_ID CLOCK_MONOTONIC
