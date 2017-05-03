@@ -52,6 +52,7 @@ struct in_memory_profile_log {
 
 int dump_profile_logs(char *logfile);
 int init_data_plane_profiling(void);
+void clear_in_memory_profile_log(void);
 int get_request_id(void);
 
 /***GLOBALS***/
@@ -105,6 +106,8 @@ static void inline log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id
         for(i=0; i < mem_dp_profile_log.in_memory_entry_count; i++){
             printf("%s\n",mem_dp_profile_log.in_memory_entries[i]);
         }
+//        log_debug("Test profile log mem dump");
+//        dump_profile_logs(NULL);
 #endif
     } //if(dataplane_op_id == DEDOS_EXIT)
 }
