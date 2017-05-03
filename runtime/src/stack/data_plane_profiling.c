@@ -22,16 +22,23 @@ int init_data_plane_profiling(void){
         return 1;
     }
     log_debug("Initialized mutex for dataplane request count");
+    memset(&mem_dp_profile_log,'\0',sizeof(struct in_memory_profile_log));
     if (pthread_mutex_init(&mem_dp_profile_log.mutex, NULL) != 0)
     {
         log_error("In memory profile log mutex init failed");
         return 1;
     }
-
-    memset(&mem_dp_profile_log,'\0',sizeof(struct in_memory_profile_log));
+    mem_dp_profile_log.in_memory_entry_count = 0;
     mem_dp_profile_log.in_memory_entry_max_capacity = MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS;
     log_debug("Initialized in memory profile log");
     return 0;
+}
+
+void clear_in_memory_profile_log(void){
+    memset(&mem_dp_profile_log.in_memory_entries,'\0',
+            sizeof(char)*MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS * MAX_DATAPLANE_LOG_ENTRY_LEN);
+    mem_dp_profile_log.in_memory_entry_count = 0;
+    mem_dp_profile_log.in_memory_entry_max_capacity = MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS;
 }
 
 int dump_profile_logs(char *logfile){
@@ -55,6 +62,8 @@ int dump_profile_logs(char *logfile){
         fprintf(fp, "%s\n",mem_dp_profile_log.in_memory_entries[i]);
     }
     fclose(fp);
+    clear_in_memory_profile_log();
+    
     pthread_mutex_unlock(&mem_dp_profile_log.mutex);
     return 0;
 }
