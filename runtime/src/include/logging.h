@@ -13,7 +13,7 @@
 
 #define PICO_SUPPORT_NDEBUG
 #define DEBUG 1
-#define INFO 1
+#define INFO 0
 #define ERROR 1
 #define WARN 1
 #define TCP_DEBUG 0
