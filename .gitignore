@@ -11,3 +11,4 @@ runtime/rt*_stats.log
 runtime/src/legacy/picotcp/build/
 runtime/tags
 runtime/build/
+*.swp
