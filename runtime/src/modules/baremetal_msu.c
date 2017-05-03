@@ -15,6 +15,7 @@
 #include "logging.h"
 #include <pcre.h>
 #include <errno.h>
+#include "data_plane_profiling.h"
 
 /** Deserializes data received from remote MSU and enqueues the
  * message payload onto the msu queue.
@@ -42,6 +43,7 @@ static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
         memset(recvd, 0, sizeof(*recvd));
         recvd->dp_profile_info.dp_id = msg->payload_request_id;
         log_debug("Recieved request id from remote runtime: %d",recvd->dp_profile_info.dp_id);
+        log_dp_event(self->id, REMOTE_RECV, &recvd->dp_profile_info);
 #endif
         struct baremetal_msu_data_payload *baremetal_data = malloc(sizeof(*baremetal_data));
         if (!baremetal_data){

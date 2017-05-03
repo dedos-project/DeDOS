@@ -12,3 +12,4 @@ runtime/src/legacy/picotcp/build/
 runtime/tags
 runtime/build/
 *.swp
+*tags
