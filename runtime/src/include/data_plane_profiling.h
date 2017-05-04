@@ -54,12 +54,15 @@ struct in_memory_profile_log {
 
 int dump_profile_logs(char *logfile);
 int init_data_plane_profiling(void);
+int deinit_data_plane_profiling(void);
 void clear_in_memory_profile_log(void);
 int get_request_id(void);
 
 /***GLOBALS***/
 pthread_mutex_t request_id_mutex;
 struct in_memory_profile_log mem_dp_profile_log;
+FILE *fp_log;
+pthread_mutex_t fp_log_mutex;
 
 static void copy_queue_item_dp_data(struct dataplane_profile_info *dp_profile_info){
     log_debug("Current entry count in memory log: %d",mem_dp_profile_log.in_memory_entry_count);
@@ -118,10 +121,21 @@ static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
     } else {
         log_error("Overflow in item profile entry count: %d",dp_profile_info->dp_entry_count);
     }
+/*
     //log to in memory log if we see DEDOS_EXIT event, by coping the whole dp_log_entries
     if(dataplane_op_id == DEDOS_EXIT){
         copy_queue_item_dp_data(dp_profile_info);
     } //if(dataplane_op_id == DEDOS_EXIT)
+*/
+    //instead memory logging just write to disk, since it is buffered
+    if(dataplane_op_id == DEDOS_EXIT){
+        int i = 0;
+        pthread_mutex_lock(&fp_log_mutex);
+        for(i = 0; i < dp_profile_info->dp_entry_count; i++){
+            fprintf(fp_log, "%s\n",dp_profile_info->dp_log_entries[i]);
+        }
+        pthread_mutex_unlock(&fp_log_mutex);
+    }
 }
 
 // #ifdef DATAPLANE_PROFILING

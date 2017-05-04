@@ -23,6 +23,7 @@ int init_data_plane_profiling(void){
     }
     log_debug("Initialized mutex for dataplane request count");
     memset(&mem_dp_profile_log,'\0',sizeof(struct in_memory_profile_log));
+/*
     if (pthread_mutex_init(&mem_dp_profile_log.mutex, NULL) != 0)
     {
         log_error("In memory profile log mutex init failed");
@@ -31,6 +32,34 @@ int init_data_plane_profiling(void){
     mem_dp_profile_log.in_memory_entry_count = 0;
     mem_dp_profile_log.in_memory_entry_max_capacity = MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS;
     log_debug("Initialized in memory profile log");
+*/
+
+    /* Skipping in memory log and directly write to log since its buffered */
+    if (pthread_mutex_init(&fp_log_mutex, NULL) != 0)
+    {
+        log_error("FP log file mutex init failed");
+        return 1;
+    }
+
+    // open file here and close on exit
+    char *logfile = "dataplane_profile.log\0";
+    pthread_mutex_lock(&fp_log_mutex);
+    fp_log = fopen(logfile, "a");
+    if (fp_log == NULL) {
+        log_error("Can't open file: %s",logfile);
+        pthread_mutex_unlock(&fp_log_mutex);
+        return -1;
+    }
+    //TODO add setbuf options to buffer
+    pthread_mutex_unlock(&fp_log_mutex);
+    return 0;
+}
+
+int deinit_data_plane_profiling(void){
+    pthread_mutex_lock(&fp_log_mutex);
+    fclose(fp_log);
+    pthread_mutex_unlock(&fp_log_mutex);
+    log_info("Closed dataprofile log file");
     return 0;
 }
 
