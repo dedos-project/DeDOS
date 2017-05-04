@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#ifdef DATAPLANE_PROFILING
+//#ifdef DATAPLANE_PROFILING
 int get_request_id(void){
     static int counter;
     int ret_val;
@@ -67,4 +67,4 @@ int dump_profile_logs(char *logfile){
     pthread_mutex_unlock(&mem_dp_profile_log.mutex);
     return 0;
 }
-#endif
+//#endif
