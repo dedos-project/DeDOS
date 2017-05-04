@@ -15,10 +15,10 @@
 #define DEBUG 0
 #define INFO 0
 #define ERROR 1
-#define WARN 1
+#define WARN 0
 #define TCP_DEBUG 0
 #define STATS 0
-#define DATA_PROFILING 1
+#define DATA_PROFILING_PRINT 0
 
 #define log_error(fmt, ...) \
         do { if (ERROR) { fprintf(stderr, "" ANSI_COLOR_RED "%lu:%s:%d:%s(): ERROR: " fmt, pthread_self(),__FILE__, \
@@ -60,7 +60,7 @@
 #define log_stats(...)
 #endif
 
-#ifdef DATA_PROFILING
+#if DATA_PROFILING_PRINT == 1
 #define log_profile(fmt, ...) \
         do { if (1) { fprintf(stderr,  "%lu:%s:%d:%s(): DATA_PROFILE: " fmt "\n", pthread_self(),__FILE__, \
                                 __LINE__, __func__, ##__VA_ARGS__); \
