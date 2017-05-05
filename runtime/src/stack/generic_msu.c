@@ -625,7 +625,13 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, msu_queue_ite
         int rtn = src->type->send_remote(src, data, dst);
 #ifdef DATAPLANE_PROFILING
         //copy queue item profile log to in memory log before its freed
-        copy_queue_item_dp_data(&data->dp_profile_info);
+        //copy_queue_item_dp_data(&data->dp_profile_info);
+        int i = 0;
+        pthread_mutex_lock(&fp_log_mutex);
+        for(i = 0; i < data->dp_profile_info.dp_entry_count; i++){
+            fprintf(fp_log, "%s\n",data->dp_profile_info.dp_log_entries[i]);
+        }
+        pthread_mutex_unlock(&fp_log_mutex);
 #endif
         if (rtn < 0){
             log_error("Failed to send to remote runtime%s", "");
