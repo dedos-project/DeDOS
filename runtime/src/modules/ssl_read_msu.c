@@ -18,8 +18,8 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
 {
     int NumBytes;
     int ret, err;
-    
-    do {
+
+    //do {
         ret = SSL_accept(State);
         err = 0;
         if (ret < 0){
@@ -31,7 +31,7 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
                 log_warn("SSL_accept got SSL_ERROR_WANT_READ");
             }
         }
-    } while (err == SSL_ERROR_WANT_READ);
+    //} while (err == SSL_ERROR_WANT_READ);
 
     if ( (NumBytes = SSL_read(State, Buffer, BufferSize)) <= 0 ) {
         err = SSL_get_error(State, NumBytes);

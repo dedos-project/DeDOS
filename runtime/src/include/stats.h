@@ -2,6 +2,7 @@
 #include <time.h>
 #include <pthread.h>
 
+
 #ifndef STATLOG
 #define STATLOG 1
 #endif
@@ -19,6 +20,10 @@ enum stat_id{
     N_SWAPS,
     CPUTIME,
     THREAD_LOOP_TIME,
+    MESSAGES_SENT,
+    MESSAGES_RECEIVED,
+    BYTES_SENT,
+    BYTES_RECEIVED,
     N_STAT_IDS,
 };
 

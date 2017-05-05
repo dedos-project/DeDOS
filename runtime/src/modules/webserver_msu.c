@@ -30,7 +30,7 @@ int GetLine(char *Request, int Offset, char EndChar, char *out) {
     return i - Offset;;
 }
 
-int query_db(char *ip, int port, const char *query, int param)
+int query_db(char *ip, int port, const char *query, int param, struct generic_msu *self)
 {
     int sockfd, optval = 1;
     struct sockaddr_in db_addr;
@@ -99,9 +99,13 @@ int query_db(char *ip, int port, const char *query, int param)
         }
     }
 
-    char *memory = (char *) malloc (memSize / 10);
+    char *memory = (char *) self->internal_state;
     if (memory != NULL) {
-        memset(memory, 0, memSize / 10);
+        int increment = (1<<12);
+        int iter_size = memSize / 10;
+        for (int i=0; i < iter_size; i+= increment){
+            memory[i]++;
+        }
     }
 
     free(memory);
@@ -167,13 +171,13 @@ int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
         free(msg);
         return -1;
     }
-    
+
     if (dst->msu_type != DEDOS_REGEX_MSU_ID) {
         memcpy(msg->payload, data->buffer, msg->payload_len);
     } else {
-        struct regex_data_payload *regex_data = 
+        struct regex_data_payload *regex_data =
                 (struct regex_data_payload *)(data->buffer);
-        struct ssl_data_payload *recv_data = 
+        struct ssl_data_payload *recv_data =
                 (struct ssl_data_payload *)(regex_data->dst_packet);
 
         memcpy(msg->payload, regex_data, sizeof(*regex_data));
@@ -236,14 +240,14 @@ int webserver_receive(struct generic_msu *self, msu_queue_item *input_data) {
             GetLine(Request, 0, '\n', FirstLine);
             GetLine(FirstLine, 0, ' ', RequestType);
             GetLine(FirstLine, strlen(RequestType) + 1, ' ', RequestPage);
-            
+
             log_debug("First line of request: %s", FirstLine);
 
             if (strcmp(RequestType, "GET") == 0) {
                 log_debug("A GET Request:\n%s", Request);
 
                 if (strstr(RequestPage, "database") != NULL) {
-                    if (query_db(db_ip, db_port, "REQUEST", rand() % db_max_load) < 0) {
+                    if (query_db(db_ip, db_port, "REQUEST", rand() % db_max_load, self) < 0) {
                         log_error("%s", "error querying database");
                     }
                 }
@@ -274,7 +278,7 @@ int webserver_receive(struct generic_msu *self, msu_queue_item *input_data) {
 
                     snprintf(finalSend, http_response_len, "%s %d\r\n\r\n%s",
                              ReturnOk, (int) strlen(htmlDoc), htmlDoc);
-                    strncpy(recv_data->msg, finalSend, strlen(finalSend) + 1);
+                    strncpy(recv_data->msg, finalSend, http_response_len+1);
                     recv_data->type = WRITE;
 
                     free(finalSend);
@@ -293,6 +297,17 @@ int webserver_receive(struct generic_msu *self, msu_queue_item *input_data) {
         log_warn("Either self or input data to webserver was null??","");
     }
     return -1;
+}
+
+int webserver_init(struct generic_msu *self, struct create_msu_thread_msg_data *initial_state){
+    self->internal_state = malloc(VIDEO_MEMORY / 10);
+    return 0;
+}
+
+int webserver_destroy(struct generic_msu *self){
+    if (self->internal_state != NULL){
+        free(self->internal_state);
+    }
 }
 
 /**

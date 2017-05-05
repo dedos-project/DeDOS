@@ -30,7 +30,7 @@ DEPEND=gcc -MM -MF
 # they can be specified here, as such:
 # COMPILE_dummy_msu=g++ -c
 
-CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g
+CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g -DSTATLOG=1
 TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc
 
 LEGACY_MAKE=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/Makefile)

@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include "ssl_msu.h"
 
-#define MAX_REQUEST_LEN 1024
+#define MAX_REQUEST_LEN 256
 #define READ 0
 #define WRITE 1
 
