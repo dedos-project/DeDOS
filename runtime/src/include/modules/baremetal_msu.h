@@ -16,7 +16,7 @@ struct baremetal_msu_internal_state {
 struct baremetal_msu_data_payload {
     int type;
     int socketfd;
-    unsigned int int_data;
+    unsigned long int int_data;
 };
 #define BAREMETAL_RECV_BUFFER_SIZE 64
 

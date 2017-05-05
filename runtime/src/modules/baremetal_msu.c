@@ -43,7 +43,7 @@ static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
         memset(recvd, 0, sizeof(*recvd));
         recvd->dp_profile_info.dp_seq_count = msg->payload_seq_count;
         recvd->dp_profile_info.dp_id = msg->payload_request_id;
-        log_debug("Recieved request id from remote runtime: %d, seq: ",recvd->dp_profile_info.dp_id
+        log_debug("Recieved request id from remote runtime: %lu, seq: %d",recvd->dp_profile_info.dp_id
                 , recvd->dp_profile_info.dp_seq_count);
         log_dp_event(self->id, REMOTE_RECV, &recvd->dp_profile_info);
 #endif
@@ -177,9 +177,9 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                 log_debug("EXIT: No destination endpoint of type %s (%d) for msu %d so an exit!",
                       type->name, type->type_id, self->id);
                 //Send call
-                char sendbuf[10];
+                char sendbuf[20];
                 memset(sendbuf,'\0',sizeof(sendbuf));
-                snprintf(sendbuf, 10,"%u\n",baremetal_data->int_data);
+                snprintf(sendbuf, 20,"%lu\n",baremetal_data->int_data);
                 ret = send(baremetal_data->socketfd, &sendbuf, sizeof(sendbuf),0);
                 if(ret == -1){
                     log_error("Failed to send out data on socket: %s",strerror(errno));
@@ -210,7 +210,7 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
             //iterate over the sockets to see which was set and process all
             //log_debug("poll return %d",ret);
             int i;
-            unsigned int recvd_int;
+            unsigned long int recvd_int;
             struct pollfd *pollfd_ptr = in_state->fds;
             for(i = 0; i < in_state->active_sockets; i++){
                 if(pollfd_ptr->revents & POLLIN){
@@ -218,8 +218,8 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                     log_debug("POLLIN on index %d, socket: %d",i,pollfd_ptr->fd);
                     ret = recv(pollfd_ptr->fd, &buffer, BAREMETAL_RECV_BUFFER_SIZE, MSG_WAITALL);
                     if(ret > 0){
-                        sscanf(buffer, "%d", &(recvd_int));
-                        log_debug("Received int from client: %u",recvd_int);
+                        sscanf(buffer, "%lu", &(recvd_int));
+                        log_debug("Received int from client: %lu",recvd_int);
 
                         struct baremetal_msu_data_payload *data = (struct baremetal_msu_data_payload*)
                                                         malloc(sizeof(struct baremetal_msu_data_payload));
@@ -235,7 +235,11 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                         }
                         memset(new_item_bm,'\0',sizeof(struct generic_msu_queue_item));
 #ifdef DATAPLANE_PROFILING
-                        new_item_bm->dp_profile_info.dp_id = get_request_id();
+                        //new_item_bm->dp_profile_info.dp_id = get_request_id();
+
+                        /* using seed int data from client as request id to correlate
+                         * timing observations from runtime and as observed by client */
+                        new_item_bm->dp_profile_info.dp_id = recvd_int;
                         log_dp_event(-1, DEDOS_ENTRY, &new_item_bm->dp_profile_info);
 #endif
                         new_item_bm->buffer = data;
