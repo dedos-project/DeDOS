@@ -70,6 +70,7 @@ static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
  */
 static int baremetal_mock_delay(struct generic_msu *self, struct baremetal_msu_data_payload *baremetal_data){
     log_debug("TODO: Can simulate delay here for each baremetal msu");
+    usleep(10 * 1000);
     return 0;
 }
 
@@ -167,6 +168,7 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
         } else if(baremetal_data->type == FORWARD){
             baremetal_data->int_data += 1;
             log_debug("FORWARD state, data val: %d",baremetal_data->int_data);
+            baremetal_mock_delay(self, baremetal_data);
 
             //SINK MSU logic
             //Maybe check that if my routing table is empty for next type,
