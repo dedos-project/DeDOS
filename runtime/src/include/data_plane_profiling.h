@@ -102,7 +102,7 @@ static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
 {
     pthread_t self_tid = pthread_self();
     struct timespec cur_timestamp;
-    long int ts;
+    unsigned long long int ts;
     clock_gettime(CLOCK_ID, &cur_timestamp);
     ts = (cur_timestamp.tv_sec * 1000 * 1000) + (cur_timestamp.tv_nsec / 1000);
     if(dp_profile_info->dp_entry_count < MAX_DATAPLANE_ENTRIES_PER_ITEM){
@@ -111,7 +111,7 @@ static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
         }
         snprintf(dp_profile_info->dp_log_entries[dp_profile_info->dp_entry_count],
                 MAX_DATAPLANE_LOG_ENTRY_LEN,
-                "%ld, %lu, %lu, %d, %d, %d, %s",
+                "%llu, %lu, %lu, %d, %d, %d, %s",
                 ts, self_tid, dp_profile_info->dp_id,dp_profile_info->dp_seq_count,
                 dp_profile_info->dp_entry_count,
                     msu_id, enum_dataplane_op_name[dataplane_op_id]);
