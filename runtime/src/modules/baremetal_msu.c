@@ -70,7 +70,7 @@ static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
  */
 static int baremetal_mock_delay(struct generic_msu *self, struct baremetal_msu_data_payload *baremetal_data){
     log_debug("TODO: Can simulate delay here for each baremetal msu");
-    usleep(10 * 1000);
+    usleep(2 * 1000);
     return 0;
 }
 
