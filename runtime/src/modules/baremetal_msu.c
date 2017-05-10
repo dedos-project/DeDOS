@@ -254,11 +254,13 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                         } else {
                             log_debug("Enqueued baremtal request in entry msu, q_len: %d",baremetal_entry_msu_q_len);
                         }
+
                     } else if(ret == 0){
                         log_debug("Socket closed by peer");
                         close(pollfd_ptr->fd);
                         pollfd_ptr->fd = -1;
                         //TODO rearrange socket in array to make sure there are no holes
+
                     } else {
                         log_debug("Error in recv: %s",strerror(errno));
                         //TODO rearrange socket in array to make sure there are no holes
