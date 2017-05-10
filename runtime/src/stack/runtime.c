@@ -214,7 +214,6 @@ static void* non_block_per_thread_loop() {
 
         if (cur != NULL) {
             do {
-                aggregate_stat(QUEUE_LEN, cur->id, cur->q_in.num_msgs, 0);
                 unsigned int covered_weight = 0;
                 struct generic_msu_queue_item *queue_item;
 
@@ -223,6 +222,7 @@ static void* non_block_per_thread_loop() {
                     queue_item = generic_msu_queue_dequeue(&cur->q_in);
                     if (queue_item) {
 
+                        aggregate_stat(QUEUE_LEN, cur->id, cur->q_in.num_msgs, 1);
                         aggregate_end_time(MSU_INTERIM_TIME, cur->id);
                         debug("DEBUG: Thread %02x dequeuing MSU %d data queue", self->tid, cur->id);
                         aggregate_start_time(MSU_FULL_TIME, cur->id);
@@ -622,7 +622,7 @@ static void check_pending_runtimes() {
             //log_debug("Current IP to connect to: %s %d", ip_buf, *cur_ip);
             //Only connect if not already connected to, runtime being identified by its IP
             if (*cur_ip != 0 && !is_connected_to_runtime(cur_ip)) {
-                log_debug("Found unconnected runtime IP: %s", ip_buf);
+                log_debug("Found unconnected runtime IP: %s:%d", ip_buf, runtime_listener_port);
                 ret = connect_to_runtime(&ip_buf, runtime_listener_port);
                 //zero out the entry in pending_runtime_peers, do not decrement count
                 if (ret == 0) {

@@ -1,8 +1,11 @@
+#include <netinet/tcp.h>
 #include <error.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <errno.h>
 #include <string.h>
+#include "stats.h"
 #include "communication.h"
 #include "runtime.h"
 #include "comm_protocol.h"
@@ -540,10 +543,12 @@ void dedos_control_send(struct dedos_intermsu_message* msg,
 
     //create output buffer
     size_t sendbuf_len = sizeof(struct dedos_intermsu_message) + bufsize;
+    
 
-    char *sendbuf = (char*) malloc(sendbuf_len);
-    memcpy(sendbuf, msg, sizeof(struct dedos_intermsu_message));
-    memcpy(sendbuf + sizeof(struct dedos_intermsu_message), buf, bufsize);
+    char *sendbuf = (char*) malloc(sizeof(size_t) + sendbuf_len);
+    memcpy(sendbuf, &sendbuf_len, sizeof(size_t));
+    memcpy(sendbuf + sizeof(size_t), msg, sizeof(struct dedos_intermsu_message));
+    memcpy(sendbuf + sizeof(size_t) + sizeof(struct dedos_intermsu_message), buf, bufsize);
     log_debug("%s", "Sending following inter dedos message: ");
     print_dedos_intermsu_message(msg);
 
@@ -555,13 +560,16 @@ void dedos_control_send(struct dedos_intermsu_message* msg,
      dst_addr.sin_port = htons(tcp_control_port);
      dst_addr.sin_addr.s_addr = endpoint->ipv4.addr;
      */
-    if (send(peer_sk, sendbuf, sendbuf_len, 0) == -1) {
+    int bytes_sent;
+    if ((bytes_sent = send(peer_sk, sendbuf, sendbuf_len + sizeof(size_t), 0)) == -1) {
         log_error("%s", "sendto failed");
         goto err;
     }
     log_debug("Finished sending data over control port len: %u *********",
             bufsize);
 
+    aggregate_stat(MESSAGES_SENT, 0, 1, 1);
+    aggregate_stat(BYTES_SENT, 0, bytes_sent, 1);
     err: free(sendbuf);
 }
 
@@ -575,11 +583,43 @@ void dedos_control_rcv(int peer_sk)
     memset((char *) &rcv_buf, 0, sizeof(rcv_buf));
     struct sockaddr_in remote_addr;
     socklen_t len = sizeof(remote_addr);
+
     ssize_t data_len = 0;
-    data_len = recvfrom(peer_sk, rcv_buf, MAX_RCV_BUFLEN, 0,
-            (void*) &remote_addr, &len);
+    size_t msg_size = -1;
+    data_len = recvfrom(peer_sk, &msg_size, sizeof(size_t), 0, (void*)&remote_addr, &len);
+    if (data_len != sizeof(ssize_t)){
+        log_error("Couldn't read the size of incoming message");
+    }
+    if (data_len == -1){
+        log_error("%s", strerror(errno));
+    }
+
+    data_len = 0;
+    while (data_len < msg_size){
+        len = sizeof(remote_addr);
+        int new_len = recvfrom(peer_sk, rcv_buf+data_len, msg_size - data_len, 0,
+                (void*) &remote_addr, &len);
+        if (new_len < 0){
+            log_error("Error reading");
+            return;
+        } else {
+            data_len += new_len;
+            if (data_len < msg_size)
+                log_info("Reading more...");
+        }
+    }
+    aggregate_stat(MESSAGES_RECEIVED, 0, 1, 1);
+    aggregate_stat(BYTES_RECEIVED, 0, data_len, 1);
     //TODO More check on incoming message sanity for now,
     //assuming inter-runtime communication is safe
+    
+    if (data_len != msg_size){
+        log_warn("Received data len of %d, expected %d", (int)data_len, (int)msg_size);
+    }
+
+    if (data_len == MAX_RCV_BUFLEN){
+        log_warn("Received maximum sized data. May not have received full message");
+    }
 
     if (data_len == -1) {
         log_error("Error receiving TCP data over control socket: %s", strerror(errno));

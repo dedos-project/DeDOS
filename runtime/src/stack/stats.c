@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <pthread.h>
 
+
 // If STATLOG is defined to be 0, these functions are defined as
 // empty macros in the header file
 #if STATLOG
@@ -59,6 +60,21 @@
 #define LOG_THREAD_LOOP_TIME 1
 #endif
 
+#ifndef LOG_MESSAGES_SENT
+#define LOG_MESSAGES_SENT 1
+#endif
+
+#ifndef LOG_MESSAGES_RECEIVED
+#define LOG_MESSAGES_RECEIVED 1
+#endif
+
+#ifndef LOG_BYTES_RECEIVED
+#define LOG_BYTES_RECEIVED 1
+#endif
+
+#ifndef LOG_BYTES_SENT
+#define LOG_BYTES_SENT 1
+#endif
 
 /**
  * Defines which statistics are gathered.
@@ -74,7 +90,11 @@ int log_mask[] = {
     LOG_MSU_INTERIM_TIME,
     LOG_N_SWAPS,
     LOG_CPU_TIME,
-    LOG_THREAD_LOOP_TIME
+    LOG_THREAD_LOOP_TIME,
+    LOG_MESSAGES_SENT,
+    LOG_MESSAGES_RECEIVED,
+    LOG_BYTES_SENT,
+    LOG_BYTES_RECEIVED
 };
 
 /**
@@ -88,9 +108,13 @@ char *stat_format[] = {
     "%0.9f",  // Full MSU time
     "%0.9f",  // Internal MSU time
     "%0.9f",  // Interim MSU time
-    "%03.0f",  // Number of non-voluntary context switches
+    "%03.0f", // Number of non-voluntary context switches
     "%03.9f", // Elasped thread-specific CPU time
     "%01.9f", // Thread loop time
+    "%03.0f", // N Messages sent
+    "%03.0f", // N messages received
+    "%06.0f", // Bytes sent
+    "%06.0f", // Bytes received
 };
 
 /**
@@ -106,7 +130,11 @@ char *stat_name[] = {
     "MSU_INTERIM_TIME",
     "__N_THREAD_SWAPS",
     "PER_THREAD_CPU_T",
-    "THREAD_LOOP_TIME"
+    "THREAD_LOOP_TIME",
+    "_N_MESSAGES_SENT",
+    "_N_MESSAGES_RCVD",
+    "__NUM_BYTES_SENT",
+    "__NUM_BYTES_RCVD"
 };
 
 /**
@@ -329,7 +357,7 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
         return;
     struct item_stats *item = &saved_stats[(int)stat_id].item_stats[item_id];
     pthread_mutex_lock(&item->mutex);
-
+    
     int i = item->n_stats == 0 ? 0 : item->n_stats-1;
 
     if ( (item->stat[i] != stat ) || relog){
