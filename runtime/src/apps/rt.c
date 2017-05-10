@@ -18,7 +18,8 @@
 
 #define USAGE_ARGS " [-j dfg.json -i runtime_id] | " \
                    "[-g global_ctl_ip -p global_ctl_port -P local_listen_port [--same-machine | -s]] "\
-                   "-w webserver_port [--db-ip db_ip --db-port db_port --db-load db_max_load] "
+                   "-w webserver_port [--db-ip db_ip --db-port db_port --db-load db_max_load] "\
+                   "--prof-tag-probability=prob"
 
 SSL_CTX* ssl_ctx_global;
 static pthread_mutex_t *lockarray;
@@ -96,19 +97,21 @@ int main(int argc, char **argv){
     db_ip = NULL;
     db_port = -1;
     db_max_load = -1;
+    char *tag_probability = NULL;
 
     struct option long_options[] = {
         {"same-machine", no_argument, 0, 's'},
         {"db-ip", required_argument, 0, 'd'},
         {"db-port", required_argument, 0, 'b'},
         {"db-load", required_argument, 0, 'l'},
+        {"prof-tag-probability", optional_argument, 0, 'z'},
         {0, 0, 0, 0}
     };
 
     int arguments_provided = 0;
     while (1){
         int option_index = 0;
-        int c = getopt_long(argc, argv, "j:i:g:p:P:s:w:d:b:l:",
+        int c = getopt_long(argc, argv, "j:i:g:p:P:s:w:d:b:l:z:",
                             long_options, &option_index);
         if (c == -1)
             break;
@@ -144,6 +147,15 @@ int main(int argc, char **argv){
                 break;
             case 'l':
                 db_max_load = atoi(optarg);
+                break;
+            case 'z':
+                tag_probability = optarg;
+                if(tag_probability != NULL){
+                    sscanf(tag_probability, "%f", &dprof_tag_probability);
+                }
+                if(tag_probability == NULL || dprof_tag_probability < 0.0  || dprof_tag_probability > 1){
+                    dprof_tag_probability = 1.0;
+                }
                 break;
             case '?':
             default:
