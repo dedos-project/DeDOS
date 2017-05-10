@@ -13,15 +13,6 @@ struct baremetal_msu_internal_state {
     struct pollfd *fds;
 };
 
-#define INITIAL_ACTIVE_SOCKETS_SIZE 10
-
-/** Internal state struct for tracking active connection and use in poll */
-struct baremetal_msu_internal_state {
-    int active_sockets;
-    int total_array_size;
-    struct pollfd *fds;
-};
-
 /** Holds data to be delivered to a baremetal MSU */
 struct baremetal_msu_data_payload {
     int type;
