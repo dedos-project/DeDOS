@@ -19,6 +19,31 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
     int NumBytes;
     int ret, err;
 
+    if ( ( NumBytes = SSL_read(State, Buffer, BufferSize) ) <= 0) {
+        log_error("SSL_read failed with ret: %d\n", NumBytes);
+        err = SSL_get_error(State, NumBytes);
+        SSLErrorCheck(err);
+        return -1;
+    }
+
+    Buffer[NumBytes] = '\0';
+
+    return 0;
+}
+
+int AcceptSSL(SSL *State){
+    int ret;
+    if ( (ret = SSL_accept(State) ) < 0 ){
+        log_error("SSL_accept failed with ret: %d\n");
+        int err = SSL_get_error(State, ret);
+        SSLErrorCheck(err);
+        return -1;
+    }
+    SSL_set_mode(State, SSL_MODE_AUTO_RETRY);
+    return 0;
+}
+
+/*
     //do {
         ret = SSL_accept(State);
         err = 0;
@@ -35,11 +60,16 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
 
     if ( (NumBytes = SSL_read(State, Buffer, BufferSize)) <= 0 ) {
         err = SSL_get_error(State, NumBytes);
+
+        if ( err == SSL_ERROR_WANT_READ ){
+            return 0;
+        }
+
         char *error;
 
         while (err == SSL_ERROR_WANT_READ) {
-            //debug("SSL_read returned ret: %d. Errno: %s",
-            //       NumBytes, error);
+            log_debug("SSL_read returned ret: %d. Errno: %s",
+                      NumBytes, error);
             NumBytes = SSL_read(State, Buffer, BufferSize);
             //strerror is not thread safe
             error = strerror(errno);
@@ -51,7 +81,7 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
 
     return NumBytes;
 }
-
+*/
 void InitServerSSLCtx(SSL_CTX **Ctx) {
     const SSL_METHOD *Method;
 
@@ -117,7 +147,19 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
         return NULL;
     }
 
+
+    int rtn = AcceptSSL(State);
+    if (rtn < 0){
+        SSL_free(State);
+        close(SocketFD);
+        log_error("Error accepting SSL");
+        return -1;
+    }
+
     debug("MSU %d calling SSL_read", self->id);
+
+
+
     int ReadBytes;
     if ( ( ReadBytes = ReadSSL(State, Request, MAX_REQUEST_LEN) ) < 0 ) {
         log_error("SSL_read on socket %d failed. Data read: %s", SocketFD, Request);
@@ -126,7 +168,6 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
         return NULL;
     }
     log_debug("ReadSSL returned: %d", ReadBytes);
-    log_debug("SSL state version: %d", State->version);
 
     return Request;
 }
@@ -144,7 +185,7 @@ int ssl_read_receive(struct generic_msu *self, msu_queue_item *input_data) {
         data->ipAddress = runtimeIpAddress;
         data->port = runtime_listener_port;
         data->sslMsuId = self->id;
-    
+
         log_debug("SSL state location: %p", data->state);
         log_debug("SSL state version: %d", data->state->version);
         return DEDOS_WEBSERVER_MSU_ID;

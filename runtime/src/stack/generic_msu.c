@@ -126,6 +126,7 @@ int msu_receive_ctrl(struct generic_msu *self, msu_queue_item *queue_item){
                     }
                 }
             }
+            log_info("MSU %d now has a scheduling weight of %d", self->id, self->scheduling_weight);
         }
         if (self->type->receive_ctrl){
             handled = (self->type->receive_ctrl(self, update_msg)) == 0;
