@@ -6,3 +6,10 @@ global_controller/global_controller
 /.cproject
 /.project
 .DS_Store
+runtime/rt
+runtime/rt*_stats.log
+runtime/src/legacy/picotcp/build/
+runtime/tags
+runtime/build/
+*.swp
+*tags

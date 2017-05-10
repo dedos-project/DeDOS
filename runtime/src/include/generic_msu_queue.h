@@ -41,6 +41,9 @@ static inline void generic_msu_queue_init(struct generic_msu_queue *q){
 static inline int32_t generic_msu_queue_enqueue(struct generic_msu_queue *q, struct generic_msu_queue_item *p)
 {
     int retsize = 0;
+#ifdef DATAPLANE_PROFILING
+    log_dp_event(-1, ENQUEUE, &p->dp_profile_info);
+#endif
     if (q->shared)
         mutex_lock(q->mutex);
 
@@ -110,7 +113,10 @@ static inline struct generic_msu_queue_item *generic_msu_queue_dequeue(struct ge
     p->next = NULL;
     if (q->shared)
         mutex_unlock(q->mutex);
+#ifdef DATAPLANE_PROFILING
+    log_dp_event(-1, DEQUEUE, &p->dp_profile_info);
 
+#endif
     return p;
 }
 
@@ -171,7 +177,7 @@ static inline int32_t generic_msu_queue_enqueue_at_head (struct generic_msu_queu
         q->tail = p;
     }
     q->head = p;
-    
+
     q->size += p->buffer_len;
     retsize = q->size;
     q->num_msgs++;

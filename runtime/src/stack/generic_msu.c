@@ -13,6 +13,7 @@
 #include "routing.h"
 #include "logging.h"
 #include "dedos_statistics.h"
+#include "data_plane_profiling.h"
 
 // TODO: This type-registration should probably be handled elsewhere
 //       probably in msu_tracker?
@@ -72,6 +73,7 @@ void register_msu_type(struct msu_type *type){
     if (msu_types == NULL)
         msu_types = malloc(sizeof(*msu_types) * MAX_MSU_TYPES);
     msu_types[n_types] = *type;
+    log_debug("Registered MSU type: %s",type->name);
     n_types++;
 }
 
@@ -394,7 +396,6 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
     }
 
     memcpy(msg->payload, data->buffer, msg->payload_len);
-
     struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
     if (!thread_msg){
         log_error("Unable to allocate dedos_thread_msg%s", "");
@@ -411,6 +412,12 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
 
     /* add to allthreads[0] queue,since main thread is always at index 0 */
     /* need to create thread_msg struct with action = forward */
+#ifdef DATAPLANE_PROFILING
+    msg->payload_seq_count = data->dp_profile_info.dp_seq_count;
+    msg->payload_request_id = data->dp_profile_info.dp_id;
+    log_dp_event(-1, REMOTE_SEND, &data->dp_profile_info);
+    log_debug("Copied item request id: %d",msg->payload_request_id);
+#endif
 
     int rtn = dedos_thread_enqueue(main_thread->thread_q, thread_msg);
     if (rtn < 0){
@@ -420,6 +427,7 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
         free(msg);
         return -1;
     }
+
     log_debug("Successfully enqueued msg in main queue, size: %d", rtn);
     return rtn;
 }
@@ -615,6 +623,16 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, msu_queue_ite
         return 0;
     } else if (dst->locality == MSU_LOC_REMOTE_RUNTIME){
         int rtn = src->type->send_remote(src, data, dst);
+#ifdef DATAPLANE_PROFILING
+        //copy queue item profile log to in memory log before its freed
+        //copy_queue_item_dp_data(&data->dp_profile_info);
+        int i = 0;
+        pthread_mutex_lock(&fp_log_mutex);
+        for(i = 0; i < data->dp_profile_info.dp_entry_count; i++){
+            fprintf(fp_log, "%s\n",data->dp_profile_info.dp_log_entries[i]);
+        }
+        pthread_mutex_unlock(&fp_log_mutex);
+#endif
         if (rtn < 0){
             log_error("Failed to send to remote runtime%s", "");
         }
@@ -657,7 +675,7 @@ int msu_receive(struct generic_msu *self, msu_queue_item *data){
         // If type_id <= 0 it can either be an error (< 0) or just
         // not have a subsequent destination
         if (type_id < 0){
-            log_warn("MSU %d returned error code %d", self->id, type_id);
+            ;//log_warn("MSU %d returned error code %d", self->id, type_id);
         }
         if (data){
             free(data->buffer);

@@ -12,13 +12,13 @@
 #define ANSI_COLOR_PURPLE   "\x1b[35m"
 
 #define PICO_SUPPORT_NDEBUG
-#define DEBUG 1
-#define INFO 1
+#define DEBUG 0
+#define INFO 0
 #define ERROR 1
-#define WARN 1
+#define WARN 0
 #define TCP_DEBUG 0
 #define STATS 0
-
+#define DATA_PROFILING_PRINT 0
 
 #define log_error(fmt, ...) \
         do { if (ERROR) { fprintf(stderr, "" ANSI_COLOR_RED "%lu:%s:%d:%s(): ERROR: " fmt, pthread_self(),__FILE__, \
@@ -59,6 +59,16 @@
 #else
 #define log_stats(...)
 #endif
+
+#if DATA_PROFILING_PRINT == 1
+#define log_profile(fmt, ...) \
+        do { if (1) { fprintf(stderr,  "%lu:%s:%d:%s(): DATA_PROFILE: " fmt "\n", pthread_self(),__FILE__, \
+                                __LINE__, __func__, ##__VA_ARGS__); \
+        }} while (0)
+#else
+#define log_profile(...)
+#endif
+
 
 #define tcp_dbg(fmt, ...) \
         do { if (TCP_DEBUG) { fprintf(stderr, "%lu:%s:%d:%s(): TCP_DEBUG: " fmt, pthread_self(),__FILE__, \

@@ -23,4 +23,7 @@
 /* DUMMY MSU FOR SHOWING USAGE, DO NOT USE THIS */
 #define DEDOS_DUMMY_MSU_ID 888
 
+// Baremetal MSU for Profiling runtime without other MSUs
+#define DEDOS_BAREMETAL_MSU_ID 900
+
 #endif /* DEDOS_MSU_LIST_H_ */

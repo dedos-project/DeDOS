@@ -31,6 +31,11 @@ DEPEND=gcc -MM -MF
 # COMPILE_dummy_msu=g++ -c
 
 CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g
+
+ifeq ($(DATAPLANE_PROFILING),1)
+        CFLAGS+=-DDATAPLANE_PROFILING
+endif
+
 TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc
 
 LEGACY_MAKE=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/Makefile)

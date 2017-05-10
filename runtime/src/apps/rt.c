@@ -12,12 +12,14 @@
 #include "runtime.h"
 #include "global.h"
 #include "modules/ssl_read_msu.h"
+#include "data_plane_profiling.h"
 
 #define USE_OPENSSL
 
 #define USAGE_ARGS " [-j dfg.json -i runtime_id] | " \
                    "[-g global_ctl_ip -p global_ctl_port -P local_listen_port [--same-machine | -s]] "\
-                   "-w webserver_port [--db-ip db_ip --db-port db_port --db-load db_max_load] "
+                   "-w webserver_port [--db-ip db_ip --db-port db_port --db-load db_max_load] "\
+                   "--prof-tag-probability=prob"
 
 SSL_CTX* ssl_ctx_global;
 static pthread_mutex_t *lockarray;
@@ -80,8 +82,10 @@ static void kill_locks(void) {
 
 int main(int argc, char **argv){
     // initialize the context and read the certificates
-    
-
+#ifdef DATAPLANE_PROFILING
+    log_warn("Data plane profiling enabled");
+    init_data_plane_profiling();
+#endif
     char *dfg_json = NULL;
     int runtime_id = -1;
     char *global_ctl_ip = NULL;
@@ -93,19 +97,21 @@ int main(int argc, char **argv){
     db_ip = NULL;
     db_port = -1;
     db_max_load = -1;
-    
+    char *tag_probability = NULL;
+
     struct option long_options[] = {
         {"same-machine", no_argument, 0, 's'},
         {"db-ip", required_argument, 0, 'd'},
         {"db-port", required_argument, 0, 'b'},
         {"db-load", required_argument, 0, 'l'},
+        {"prof-tag-probability", optional_argument, 0, 'z'},
         {0, 0, 0, 0}
     };
-    
+
     int arguments_provided = 0;
     while (1){
         int option_index = 0;
-        int c = getopt_long(argc, argv, "j:i:g:p:P:s:w:d:b:l:",
+        int c = getopt_long(argc, argv, "j:i:g:p:P:s:w:d:b:l:z:",
                             long_options, &option_index);
         if (c == -1)
             break;
@@ -142,6 +148,15 @@ int main(int argc, char **argv){
             case 'l':
                 db_max_load = atoi(optarg);
                 break;
+            case 'z':
+                tag_probability = optarg;
+                if(tag_probability != NULL){
+                    sscanf(tag_probability, "%f", &dprof_tag_probability);
+                }
+                if(tag_probability == NULL || dprof_tag_probability < 0.0  || dprof_tag_probability > 1){
+                    dprof_tag_probability = 1.0;
+                }
+                break;
             case '?':
             default:
                 printf("Unknown option provided 0%o. Exiting.\n", c);
@@ -158,9 +173,9 @@ int main(int argc, char **argv){
     int json_all = (dfg_json != NULL && runtime_id > 0);
     int json_any = (dfg_json != NULL || runtime_id > 0);
 
-    int manual_all = (global_ctl_ip != NULL && global_ctl_port > 0 && 
+    int manual_all = (global_ctl_ip != NULL && global_ctl_port > 0 &&
                       local_listen_port > 0 && same_physical_machine > 0);
-    int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 || 
+    int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 ||
                       local_listen_port > 0 || same_physical_machine > 0) ;
 
     int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
@@ -191,7 +206,7 @@ int main(int argc, char **argv){
             printf("Runtime %d not present in provided DFG. Exiting.\n", runtime_id);
             exit(-1);
         }
-        
+
         global_ctl_ip = dfg->global_ctl_ip;
         global_ctl_port = dfg->global_ctl_port;
         local_listen_port = rt->port;
@@ -200,8 +215,8 @@ int main(int argc, char **argv){
         string_to_ipv4(global_ctl_ip, &global_ctl_ip_int);
         same_physical_machine = ( global_ctl_ip_int == rt->ip );
 
-    } 
-    
+    }
+
     runtime_listener_port = local_listen_port;
     int control_listen_port = local_listen_port;
 
@@ -209,7 +224,7 @@ int main(int argc, char **argv){
     if (same_physical_machine == 1){
         control_listen_port++;
     }
-    
+
     if ( ! db_all){
         log_warn("Connection to mock database not fully instantiated");
     } else {
@@ -231,12 +246,17 @@ int main(int argc, char **argv){
 
     if (dedos_control_socket_init(control_listen_port) < 0){
        log_error("Could not initialize control socket");
-    } 
+    }
 
     if (dedos_webserver_socket_init(webserver_port) < 0){
         log_error("Could nto initialize webserver socket");
     }
 
+#ifdef DEDOS_SUPPORT_BAREMETAL_MSU
+    if (dedos_baremetal_listen_socket_init(8989) < 0){
+        log_error("Could not initialize baremetal listen socket");
+    }
+#endif
     int ret = 0;
     do {
         ret = connect_to_master(global_ctl_ip, global_ctl_port);
@@ -255,4 +275,3 @@ int main(int argc, char **argv){
     log_info("Runtime exit...");
     return 0;
 }
-

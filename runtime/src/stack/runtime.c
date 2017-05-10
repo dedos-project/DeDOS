@@ -182,9 +182,11 @@ static void* non_block_per_thread_loop() {
     log_debug("Thread pool addr: %p", self->msu_pool);
     log_debug("-------------------------%s", "");
     struct rusage thread_usage;
+
     while (1) {
 
 #if STATLOG
+        log_warn("STAT_LOG Enabled");
         getrusage(RUSAGE_THREAD, &thread_usage);
         periodic_aggregate_stat(N_SWAPS, thread_index,
                                 thread_usage.ru_nivcsw,
@@ -238,6 +240,9 @@ static void* non_block_per_thread_loop() {
                         //To make sure stack ticks even if there was no item
                         msu_receive(cur, NULL);
                     } else if (cur->type->type_id == DEDOS_TCP_HANDSHAKE_MSU_ID) {
+                        //To make sure internal state is cleared
+                        msu_receive(cur, NULL);
+                    } else if (cur->type->type_id == DEDOS_BAREMETAL_MSU_ID) {
                         //To make sure internal state is cleared
                         msu_receive(cur, NULL);
                     }
@@ -609,12 +614,12 @@ static void check_pending_runtimes() {
 
     if (pending_runtime_peers && pending_runtime_peers->count > 0) {
         remaining_count = pending_runtime_peers->count;
-        log_debug("Pending runtimes to connect to : %d", remaining_count);
+        //log_debug("Pending runtimes to connect to : %d", remaining_count);
         for (i = 0; i < pending_runtime_peers->count; i++) {
             cur_ip = &pending_runtime_peers->ips[i];
             char ip_buf[40];
             ipv4_to_string(&ip_buf, *cur_ip);
-            log_debug("Current IP to connect to: %s %d", ip_buf, *cur_ip);
+            //log_debug("Current IP to connect to: %s %d", ip_buf, *cur_ip);
             //Only connect if not already connected to, runtime being identified by its IP
             if (*cur_ip != 0 && !is_connected_to_runtime(cur_ip)) {
                 log_debug("Found unconnected runtime IP: %s", ip_buf);
@@ -675,6 +680,7 @@ int dedos_runtime_destroy(void){
     //TODO Cleanup all threads -> all msus of that thread -> all internal MSU stuff
     log_critical("TODO Destroying runtime %s","");
     log_critical("Just exiting for now %s","");
+    deinit_data_plane_profiling();
 
 /*
     int i;
