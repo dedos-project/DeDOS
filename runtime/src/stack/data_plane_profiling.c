@@ -3,15 +3,22 @@
 #include <stdio.h>
 
 //#ifdef DATAPLANE_PROFILING
-int get_request_id(void){
-    static int counter;
-    int ret_val;
-
+unsigned long int get_request_id(){
+    static unsigned long int counter;
+    unsigned long int ret_val = 0;
+    if(counter == 0){
+        srand(time(NULL));   // should only be called once
+    }
+    float r = rand() % 10;
+    if(r > dprof_tag_probability * 10.0){
+        //Do not tag the request, i.e. not track this
+        return ret_val;
+    }
     pthread_mutex_lock(&request_id_mutex);
     counter++;
     ret_val = counter;
     pthread_mutex_unlock(&request_id_mutex);
-    assert(ret_val > 0);
+
     return ret_val;
 }
 
@@ -23,6 +30,7 @@ int init_data_plane_profiling(void){
     }
     log_debug("Initialized mutex for dataplane request count");
     memset(&mem_dp_profile_log,'\0',sizeof(struct in_memory_profile_log));
+    dprof_tag_probability = 1;
 /*
     if (pthread_mutex_init(&mem_dp_profile_log.mutex, NULL) != 0)
     {

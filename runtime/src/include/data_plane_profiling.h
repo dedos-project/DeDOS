@@ -56,9 +56,10 @@ int dump_profile_logs(char *logfile);
 int init_data_plane_profiling(void);
 int deinit_data_plane_profiling(void);
 void clear_in_memory_profile_log(void);
-int get_request_id(void);
+unsigned long int get_request_id(void);
 
 /***GLOBALS***/
+float dprof_tag_probability;
 pthread_mutex_t request_id_mutex;
 struct in_memory_profile_log mem_dp_profile_log;
 FILE *fp_log;
@@ -100,6 +101,10 @@ static void copy_queue_item_dp_data(struct dataplane_profile_info *dp_profile_in
 static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
     struct dataplane_profile_info *dp_profile_info)
 {
+    if(dp_profile_info->dp_id == 0){
+        return;
+    }
+
     pthread_t self_tid = pthread_self();
     struct timespec cur_timestamp;
     unsigned long long int ts;
