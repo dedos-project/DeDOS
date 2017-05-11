@@ -14,6 +14,7 @@
 #include "control_protocol.h"
 #include "logging.h"
 #include <pcre.h>
+#include <fcntl.h>
 #include <errno.h>
 #include "data_plane_profiling.h"
 
@@ -151,6 +152,12 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
         log_debug("Baremetal receive for msu: %d, msg type: %d",self->id, baremetal_data->type);
 
         if(baremetal_data->type == NEW_ACCEPTED_CONN){
+            //make socket to be non-blocking
+            int status = fcntl(baremetal_data->socketfd, F_SETFL,
+                    fcntl(baremetal_data->socketfd, F_GETFL, 0) | O_NONBLOCK);
+            if (status == -1){
+                  log_error("calling fcntl for setting non-blocking socket");
+            }
             //add to list of sockets to poll, should only happen in entry MSU
             if(self->id != 1){
                 log_error("NEW_ACCEPTED_CONN type in non-entry msu");
@@ -184,14 +191,25 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
                 snprintf(sendbuf, 20,"%lu\n",baremetal_data->int_data);
                 ret = send(baremetal_data->socketfd, &sendbuf, sizeof(sendbuf),0);
                 if(ret == -1){
-                    log_error("Failed to send out data on socket: %s",strerror(errno));
-                    //baremetal_remove_socket_poll(self, baremetal_data->socketfd);
-                    //not here sockets should only be removed via poll mechanism
+                    log_error("Non blocking send failed while sending out data on socket: %s",strerror(errno));
+                    //if is was because call would block, then switch to blocking mode
+                    //with timeout
+                    if(errno == EAGAIN || errno == EWOULDBLOCK){
+                        //make it blocking with some timeout
+                        int status = fcntl(baremetal_data->socketfd, F_SETFL,
+                            fcntl(baremetal_data->socketfd, F_GETFL, 0) & ~O_NONBLOCK);
+                        ret = send(baremetal_data->socketfd, &sendbuf, sizeof(sendbuf),0);
+                        if(ret == -1){
+                            log_error("Even Blocking send failed while sending out data on socket: %s",strerror(errno));
+                        } else {
+                            log_debug("Sent(in blocking mode) baremetal response bytes: %d, msg: %s", ret, sendbuf);
+                        }
+                    }
                 } else {
+                    log_debug("Sent(in non-blocking mode) baremetal response bytes: %d, msg: %s", ret, sendbuf);
 #ifdef DATAPLANE_PROFILING
                     log_dp_event(-1, DEDOS_EXIT, &input_data->dp_profile_info);
 #endif
-                    log_debug("Sent baremetal response bytes: %d, msg: %s", ret, sendbuf);
                 }
                 return -1; //since nothing to forward
             }
