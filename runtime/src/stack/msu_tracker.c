@@ -12,13 +12,15 @@
 #include "modules/msu_app_tcp_echo.h"
 #include "modules/msu_pico_tcp.h"
 #include "modules/msu_tcp_handshake.h"
+#include "modules/regex_routing_msu.h"
 
-#define N_MSU_TYPES 10
+#define N_MSU_TYPES 11
 
 static struct msu_type *MSU_TYPES[] = {
     &SSL_REQUEST_ROUTING_MSU_TYPE,
     &DUMMY_MSU_TYPE,
     &REGEX_MSU_TYPE,
+    &REGEX_ROUTING_MSU_TYPE,
     &SSL_READ_MSU_TYPE,
     &SSL_WRITE_MSU_TYPE,
     &WEBSERVER_MSU_TYPE,

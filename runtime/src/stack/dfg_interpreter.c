@@ -130,18 +130,20 @@ int create_msu_from_vertex(struct dfg_vertex *vertex){
     return 0;
 }
 
-int spawn_threads_from_dfg(struct dfg_config *dfg){
+int spawn_threads_from_dfg(struct dfg_config *dfg, int runtime_id){
     int n_spawned_threads = 0;
     for (int i=0; i<dfg->vertex_cnt; i++){
-        int thread_id = vertex_thread_id(dfg->vertices[i]);
-        while (thread_id >= total_threads){
-            n_spawned_threads++;
-            int rtn = on_demand_create_worker_thread(0);
-            if (rtn >= 0){
-                log_debug("Created worker thread to accomodate MSU");
-            } else {
-                log_error("Could not create necessary worker thread");
-                return -1;
+        if (vertex_locality(dfg->vertices[i], runtime_id) == 0) {
+            int thread_id = vertex_thread_id(dfg->vertices[i]);
+            while (thread_id >= total_threads){
+                n_spawned_threads++;
+                int rtn = on_demand_create_worker_thread(0);
+                if (rtn >= 0){
+                    log_debug("Created worker thread to accomodate MSU");
+                } else {
+                    log_error("Could not create necessary worker thread");
+                    return -1;
+                }
             }
         }
     }
@@ -157,7 +159,7 @@ int vertex_locality(struct dfg_vertex *vertex, int runtime_id){
 int implement_dfg(struct dfg_config *dfg, int runtime_id) {
     log_debug("Creating maximum of %d MSUs", dfg->vertex_cnt);
     int msus_created = 0;
-    if ( spawn_threads_from_dfg(dfg) < 0 ){
+    if ( spawn_threads_from_dfg(dfg, runtime_id) < 0 ){
         log_error("Aborting DFG implementation");
         return -1;
     }

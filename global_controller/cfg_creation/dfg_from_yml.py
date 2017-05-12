@@ -9,7 +9,7 @@ def sort_msus(msus):
     msus_out = []
     start_msus = [msu for msu in msus if msu['vertex_type'] == 'entry']
     msus_out.extend(start_msus)
-    
+
     last_types = start_msus[-1]['meta_routing']['dst_types']
     while any(msu['type'] in last_types for msu in msus):
         next_types = set()
@@ -40,13 +40,20 @@ def add_routing(msu, msus, routes):
             tos = route['to']
         else:
             tos = [route['to']]
-        
+
+        if 'thread-match' in route:
+            thread_match = route['thread-match']
+        else:
+            thread_match = False
+
         for route_from in froms:
             if route_from == msu['name']:
                 for route_to in tos:
                     for msu_to in msus:
                         if route_to == msu_to['name']:
-                            msu['scheduling']['routing'].append(msu_to['id'])
+                            if ( (not thread_match) or
+                                    (thread_match and msu['scheduling']['thread_id'] == msu_to['scheduling']['thread_id']) ):
+                                msu['scheduling']['routing'].append(msu_to['id'])
 
 def make_msus_out(msu):
     global max_id

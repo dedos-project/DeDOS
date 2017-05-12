@@ -188,9 +188,15 @@ struct generic_msu{
     void *routing_state;
 };
 
+struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_msu *sender,
+                                    msu_queue_item *data);
 /** Routing function to deliver traffic to a set of MSUs */
 struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *sender,
                                  msu_queue_item *data);
+/** Calls typical round_robin routing iteratively until it gets a destination
+ * with the same ip address as specified. */
+struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic_msu *sender,
+                                           uint32_t ip_address);
 
 /** Malloc's and creates a new MSU of the specified type and id. */
 struct generic_msu *init_msu(unsigned int type_id, int msu_id,

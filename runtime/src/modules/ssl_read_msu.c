@@ -39,7 +39,7 @@ int AcceptSSL(SSL *State){
         SSLErrorCheck(err);
         return -1;
     }
-    SSL_set_mode(State, SSL_MODE_AUTO_RETRY);
+    //SSL_set_mode(State, SSL_MODE_AUTO_RETRY);
     return 0;
 }
 
@@ -186,6 +186,7 @@ int ssl_read_receive(struct generic_msu *self, msu_queue_item *input_data) {
         data->port = runtime_listener_port;
         data->sslMsuId = self->id;
 
+        log_debug("IP address %d", data->ipAddress);
         log_debug("SSL state location: %p", data->state);
         log_debug("SSL state version: %d", data->state->version);
         return DEDOS_WEBSERVER_MSU_ID;
@@ -204,7 +205,7 @@ struct msu_type SSL_READ_MSU_TYPE = {
     .destroy=NULL,
     .receive=ssl_read_receive,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=shortest_queue_route,
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote

@@ -44,6 +44,7 @@ int ssl_write_receive(struct generic_msu *self, msu_queue_item *input_data) {
 
 int ssl_write_route(struct msu_type *type, struct generic_msu *sender, msu_queue_item *data){
     struct ssl_data_payload *ssl_data = (struct ssl_data_payload*)data->buffer;
+    log_debug("Attempting to route to %d", ssl_data->ipAddress);
     uint32_t ipAddress = ssl_data->ipAddress == runtimeIpAddress ? 0 : ssl_data->ipAddress;
     return round_robin_within_ip(type, sender, ipAddress);
 }

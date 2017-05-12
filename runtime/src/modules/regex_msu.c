@@ -46,7 +46,7 @@ int html_len() {
  * @param bufsize ???
  * @return 0 on success, -1 on error
  */
-static int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
+int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
     if (self){
         msu_queue_item *recvd =  malloc(sizeof(*recvd));
@@ -54,7 +54,7 @@ static int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
             log_error("Could not allocate msu_queue_item");
             return -1;
         }
-    
+
         struct regex_data_payload *regex_data = malloc(sizeof(*regex_data));
         if (!regex_data){
             free(recvd);
@@ -163,7 +163,7 @@ const struct msu_type REGEX_MSU_TYPE = {
     .destroy=NULL,
     .receive=regex_receive,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=shortest_queue_route,
     .deserialize=regex_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,

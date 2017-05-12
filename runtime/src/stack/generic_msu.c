@@ -459,6 +459,41 @@ struct round_robin_state {
     UT_hash_handle hh; /**< Hash-handle */
 };
 
+/** Chooses the destination with the shortest queue length.
+ * NOTE: Destination must be local in order to be chosen
+ */
+struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_msu *sender,
+                                    msu_queue_item *data) {
+    struct msu_endpoint *dst_msu =
+        get_all_type_msus(sender->rt_table, type->type_id);
+
+    if ( !dst_msu ) {
+        log_error("Source MSU %d did not find target MSU of type %d",
+                  sender->id, type->type_id);
+        return NULL;
+    }
+
+    unsigned int shortest_queue = MAX_MSU_Q_SIZE;
+    struct msu_endpoint *best_endpoint = NULL;
+
+    while ( dst_msu != NULL ) {
+        if ( dst_msu->locality == MSU_LOC_REMOTE_RUNTIME ){
+            dst_msu = dst_msu->hh.next;
+            continue;
+        }
+        int length = dst_msu->next_msu_input_queue->num_msgs;
+        if ( length < shortest_queue ) {
+            shortest_queue = length;
+            best_endpoint = dst_msu;
+        }
+        dst_msu = dst_msu->hh.next;
+    }
+
+    if ( best_endpoint == NULL ){
+        log_error("Cannot enqueue to shortest-length queue when all destinations are remote");
+    }
+    return best_endpoint;
+}
 
 /** Routing function to deliver traffic to a set of MSUs.
  * TODO: This will soon be moved to a "router" object, instead of
@@ -581,8 +616,11 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
         if (! route_state->last_endpoint)
            route_state->last_endpoint = dst_msus;
 
-        if (route_state->last_endpoint->ipv4 == ip_address)
+        if (route_state->last_endpoint->ipv4 == ip_address){
             break;
+        } else {
+            log_debug("IP %d is not %d", route_state->last_endpoint->ipv4, ip_address);
+        }
     }
 
     if ( route_state->last_endpoint->ipv4 != ip_address){
