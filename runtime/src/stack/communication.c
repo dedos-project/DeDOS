@@ -446,6 +446,9 @@ int connect_to_runtime(char *ip, int tcp_control_port)
             < 0) {
         log_error("%s","Failed to set SO_REUSEADDR");
     }
+    if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (void *) &optval, sizeof(opt))) {
+        log_error("%s","Error setting TCP_NODELAY");
+    }
 
     /* build the server's Internet address */
     bzero((char *) &peer_addr, sizeof(peer_addr));
