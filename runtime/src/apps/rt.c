@@ -19,7 +19,7 @@
 #define USAGE_ARGS " [-j dfg.json -i runtime_id] | " \
                    "[-g global_ctl_ip -p global_ctl_port -P local_listen_port [--same-machine | -s]] "\
                    "-w webserver_port [--db-ip db_ip --db-port db_port --db-load db_max_load] "\
-                   "--prof-tag-probability=prob"
+                   "[--prof-tag-probability=prob]"
 
 SSL_CTX* ssl_ctx_global;
 static pthread_mutex_t *lockarray;
