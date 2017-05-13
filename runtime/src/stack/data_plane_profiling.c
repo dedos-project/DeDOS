@@ -52,7 +52,7 @@ int init_data_plane_profiling(void){
     // open file here and close on exit
     char *logfile = "dataplane_profile.log\0";
     pthread_mutex_lock(&fp_log_mutex);
-    fp_log = fopen(logfile, "a");
+    fp_log = fopen(logfile, "w");
     if (fp_log == NULL) {
         log_error("Can't open file: %s",logfile);
         pthread_mutex_unlock(&fp_log_mutex);

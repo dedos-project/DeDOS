@@ -4,7 +4,7 @@
 #include "generic_msu.h"
 #include "ssl_msu.h" //for definition of READ and WRITE type
 
-#define INITIAL_ACTIVE_SOCKETS_SIZE 128
+#define INITIAL_ACTIVE_SOCKETS_SIZE 256
 
 /** Internal state struct for tracking active connection and use in poll */
 struct baremetal_msu_internal_state {
