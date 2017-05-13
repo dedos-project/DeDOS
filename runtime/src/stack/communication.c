@@ -346,6 +346,9 @@ int check_comm_sockets() {
                 struct generic_msu_queue_item *new_item_ws = malloc(sizeof(struct generic_msu_queue_item));
                 new_item_ws->buffer = data;
                 new_item_ws->buffer_len = sizeof(struct ssl_data_payload);
+#ifdef DATAPLANE_PROFILING
+                new_item_ws->dp_profile_info.dp_id = get_request_id();
+#endif
     //            generic_msu_queue_enqueue(queue_ssl, new_item_ws);
                 int ssl_request_queue_len = generic_msu_queue_enqueue(&ssl_request_routing_msu->q_in, new_item_ws); //enqueuing to routing MSU
                 if(ssl_request_queue_len < 0){
