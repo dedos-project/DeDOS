@@ -15,9 +15,9 @@
 #include "dedos_thread_queue.h"
 #include "control_msg_handler.h"
 #include "dedos_msu_pool.h"
-#include "dedos_statistics.h"
 #include "global_controller/dfg.h"
 #include "dedos_defines.h"
+#include "dedos_statistics.h"
 #include "data_plane_profiling.h"
 
 #define BLOCKING_THREAD 1

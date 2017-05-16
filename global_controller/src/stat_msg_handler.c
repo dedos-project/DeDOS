@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
+#include "statistics.h"
 #include "controller_tools.h"
 #include "stat_msg_handler.h"
 #include "communication.h"
@@ -47,7 +48,6 @@ static void send_route_update(char *input, int action) {
 
 //TODO: update this function for new scheduling & DFG structure
 void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
-/*
     //TODO: add specific stat report message types and code
     struct msu_stats_data *stats = stats_data;
 
@@ -68,6 +68,20 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
         return;
     }
 
+    struct dfg_vertex *msu = get_msu_from_id(stats->msu_id);
+    if (msu->statistics == NULL) {
+        msu->statistics = malloc(sizeof(struct msu_statistics_data));
+        msu->statistics->queue_length = malloc(sizeof(struct timeserie));
+        msu->statistics->queue_length->timepoint = 0;
+    }
+
+/*
+    //Maybe check for that condition multiple times (to ensure that it is a permanent/real behaviour)
+    //Also check when the last action was triggered
+    // Manage queue length
+    short timepoint = msu->satistics->queue_length->timepoint;
+    msu->statistics->queue_length->data[timepoint] = stats->data_queue_size;
+    timepoint++;
     if (stats->data_queue_size > 5) {
         char data[32];
         memset(data, '\0', sizeof(data));

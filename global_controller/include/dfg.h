@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
+#include "statistics.h"
 #include "logging.h"
 #include "communication.h"
 #include "jsmn.h"
@@ -98,8 +99,7 @@ struct msu_profiling {
 };
 
 struct msu_statistics_data {
-    int msu_events_this_intvl;
-    int msu_events_last_intvl;
+    struct timeserie *queue_length;
 };
 
 struct msu_scheduling {

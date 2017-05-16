@@ -6,6 +6,7 @@
  * registration of new MSU types
  */
 
+#include <time.h>
 #include <stdlib.h>
 #include "stats.h"
 #include "generic_msu.h"
@@ -32,16 +33,20 @@ static unsigned int n_types = 0;
  * @param bytes number of bytes to malloc
  * @returns pointer to the allocated memory
  */
-static void *msu_track_alloc(struct generic_msu *msu, size_t bytes){
+static void *msu_track_alloc(struct generic_msu *msu, size_t bytes) {
     void *ptr = NULL;
     ptr = malloc(bytes);
     if (!ptr) {
         log_error("Failed to allocate %d bytes for MSU id %d, %s",
             (int)bytes, msu->id, msu->type->name);
     } else {
-        msu->stats.memory_allocated += bytes;
-        log_debug("Successfully allocated %d bytes for MSU id %d, %s memory footprint: %u bytes",
-                  (int)bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
+        msu->stats.memory_allocated->value += bytes;
+        msu->stats.memory_allocated->timestamp = time(NULL);
+        log_debug("Successfully allocated %d bytes for MSU id %d, \
+                  %s memory footprint: %u bytes at time %d",
+                  (int)bytes, msu->id, msu->type->name,
+                  msu->stats.memory_allocated->value,
+                  msu->stats.memory_allocated->timestamp);
     }
     return ptr;
 }
@@ -53,11 +58,14 @@ static void *msu_track_alloc(struct generic_msu *msu, size_t bytes){
  * @param msu msu in which to track allocatioin
  * @param bytes number of bytes being freed
  */
-static void msu_track_free(void* ptr, struct generic_msu * msu, size_t bytes)
-{
-    msu->stats.memory_allocated -= bytes;
-    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes",
-              (int)bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
+static void msu_track_free(void* ptr, struct generic_msu * msu, size_t bytes) {
+    msu->stats.memory_allocated->value -= bytes;
+    msu->stats.memory_allocated->timestamp = time(NULL);
+    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes at time %d",
+              (int)bytes, msu->id, msu->type->name,
+              msu->stats.memory_allocated->value,
+              msu->stats.memory_allocated->timestamp);
+
     free(ptr);
 }
 
@@ -68,7 +76,7 @@ static void msu_track_free(void* ptr, struct generic_msu * msu, size_t bytes)
  * If more than 64 different types of MSUs are registered, this will fail.
  * @param type MSU type to be registered.
  */
-void register_msu_type(struct msu_type *type){
+void register_msu_type(struct msu_type *type) {
     // TODO: realloc if n_types+1 == MAX
     if (msu_types == NULL)
         msu_types = malloc(sizeof(*msu_types) * MAX_MSU_TYPES);
@@ -175,10 +183,14 @@ void *msu_data_alloc(struct generic_msu * msu, size_t bytes)
         log_error("Failed to allocate %d bytes for MSU id %d, %s",
                   (int)bytes, msu->id, msu->type->name);
     } else {
-        msu->stats.memory_allocated += (bytes - msu->data_p->n_bytes);
+        msu->stats.memory_allocated->value += (bytes - msu->data_p->n_bytes);
+        msu->stats.memory_allocated->timestamp = time(NULL);
         log_debug("Successfully allocated %d bytes for MSU id %d, "
-                  "%s memory footprint: %u bytes",
-                  (int)bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
+                  "%s memory footprint: %u bytes at time %d",
+                  (int)bytes, msu->id, msu->type->name,
+                  msu->stats.memory_allocated->value,
+                  msu->stats.memory_allocated->timestamp);
+
         msu->data_p->n_bytes = bytes;
         msu->data_p->data = ptr;
     }
@@ -189,11 +201,14 @@ void *msu_data_alloc(struct generic_msu * msu, size_t bytes)
  * Frees data stored within an MSU and tracks that the data has been freed.
  * @param msu MSU in which to track the freed data
  */
-void msu_data_free(struct generic_msu *msu)
-{
-    msu->stats.memory_allocated -= msu->data_p->n_bytes;
-    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes",
-              (int)msu->data_p->n_bytes, msu->id, msu->type->name, msu->stats.memory_allocated);
+void msu_data_free(struct generic_msu *msu) {
+    msu->stats.memory_allocated->value -= msu->data_p->n_bytes;
+    msu->stats.memory_allocated->timestamp = time(NULL);
+    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes at time %d",
+              (int)msu->data_p->n_bytes, msu->id, msu->type->name,
+              msu->stats.memory_allocated->value,
+              msu->stats.memory_allocated->timestamp);
+
     free(msu->data_p->data);
 }
 
@@ -201,8 +216,7 @@ void msu_data_free(struct generic_msu *msu)
  *  Gets the data allocated within an MSU.
  *  @return pointer to the allocated data
  */
-void *msu_data(struct generic_msu *msu)
-{
+void *msu_data(struct generic_msu *msu) {
     return msu->data_p->data;
 }
 
@@ -210,16 +224,26 @@ void *msu_data(struct generic_msu *msu)
  * Private function to allocate a new MSU.
  * MSU creation should be handled through init_msu()
  */
-struct generic_msu *msu_alloc(void)
-{
+struct generic_msu *msu_alloc(void) {
     struct generic_msu *msu = malloc(sizeof(*msu));
     if (msu == NULL){
         log_error("%s", "Failed to allocate msu");
         return msu;
     }
 
-    msu->stats.memory_allocated = 0;
-    msu->stats.queue_item_processed = 0;
+    msu->stats.memory_allocated = malloc(sizeof(struct timed_stat));
+    if (msu->stats.memory_allocated == NULL) {
+        log_error("%s", "Failed to allocate memory for timed_stat");
+        return msu;
+    }
+    msu->stats.memory_allocated->value = 0;
+
+    msu->stats.queue_item_processed = malloc(sizeof(struct timed_stat));
+    if (msu->stats.queue_item_processed == NULL) {
+        log_error("%s", "Failed to allocate memory for timed_stat");
+        return msu;
+    }
+    msu->stats.queue_item_processed->value = 0;
 
     msu->data_p = malloc(sizeof(struct msu_data));
     msu->data_p->n_bytes = 0;

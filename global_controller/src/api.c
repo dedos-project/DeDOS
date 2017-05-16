@@ -51,8 +51,7 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
             free(new_msu);
             return -1;
         }
-    }
-    else {
+    } else {
         debug("ERROR: Couldn't find endpoint index for sock: %d", runtime_sock);
         return -1;
     }

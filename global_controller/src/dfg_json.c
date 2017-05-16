@@ -408,6 +408,7 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
 
         //init some base fields
         v->scheduling = NULL;
+        v->statistics = NULL;
 
         //jump in the first field of the MSU object
         i++;
@@ -819,7 +820,7 @@ int do_dfg_config(const char * init_cfg_filename) {
 
 /**
  * Parse the DFG and format it as a JSON string
- * @return none 
+ * @return none
  */
 void dump_json(void) {
     char json_string[MAX_JSON_LEN];
