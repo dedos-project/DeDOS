@@ -47,19 +47,32 @@ static void send_route_update(char *input, int action) {
 }
 
 //TODO: update this function for new scheduling & DFG structure
-void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
+void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int stats_items) {
     //TODO: add specific stat report message types and code
     struct msu_stats_data *stats = stats_data;
 
-    //debug("DEBUG: %s", "processing stat messages");
-    //debug("DEBUG: %s: %d", "payload.msu_id", stats->msu_id);
-    //debug("DEBUG: %s: %u", "payload.item_processed", stats->queue_item_processed);
-    //debug("DEBUG: %s: %u", "payload.memory_allocated", stats->memory_allocated);
-    //debug("DEBUG: %s: %u", "payload.data_queue_size", stats->data_queue_size);
+    debug("DEBUG: %s", "processing stat messages");
+
+    int i;
+    for (i = 0; i <= stats_items; i++) {
+        if (stats[i].msu_id > 0) {
+            debug("DEBUG: %s: %d", "payload.msu_id", stats[i].msu_id);
+            debug("DEBUG: %d payload.item_processed at time %d",
+                  stats[i].queue_item_processed[1],
+                  stats[i].queue_item_processed[0]);
+            debug("DEBUG: %d payload.memory_allocated at time %d",
+                  stats[i].memory_allocated[1],
+                  stats[i].memory_allocated[0]);
+            debug("DEBUG: %d payload.data_queue_size at time %d",
+                  stats[i].data_queue_size[1],
+                  stats[i].data_queue_size[0]);
+        }
+    }
 
      //TODO: check memory consumption (check with requirements for the MSU, stored in JSON)
      // trigger remote cloning
 
+/*
     struct dfg_config *dfg_config_g = NULL;
     dfg_config_g = get_dfg();
 
@@ -75,7 +88,6 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
         msu->statistics->queue_length->timepoint = 0;
     }
 
-/*
     //Maybe check for that condition multiple times (to ensure that it is a permanent/real behaviour)
     //Also check when the last action was triggered
     // Manage queue length

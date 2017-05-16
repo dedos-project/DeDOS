@@ -8,16 +8,11 @@
 //used for stat array
 #define MAX_MSUS_PER_THREAD 10
 
-struct timed_stat {
-    int value;
-    time_t timestamp;
-};
-
 struct msu_stats_data {
     int msu_id;
-    struct timed_stat *queue_item_processed;
-    struct timed_stat *memory_allocated;
-    struct timed_stat *data_queue_size;
+    int queue_item_processed[2];
+    int memory_allocated[2];
+    int data_queue_size[2];
 };
 
 //to keep direct pointer to entry in array where MSU stats are stored in the thread

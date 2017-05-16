@@ -40,13 +40,13 @@ static void *msu_track_alloc(struct generic_msu *msu, size_t bytes) {
         log_error("Failed to allocate %d bytes for MSU id %d, %s",
             (int)bytes, msu->id, msu->type->name);
     } else {
-        msu->stats.memory_allocated->value += bytes;
-        msu->stats.memory_allocated->timestamp = time(NULL);
+        msu->stats.memory_allocated[1] += bytes;
+        msu->stats.memory_allocated[0] = time(NULL);
         log_debug("Successfully allocated %d bytes for MSU id %d, \
                   %s memory footprint: %u bytes at time %d",
                   (int)bytes, msu->id, msu->type->name,
-                  msu->stats.memory_allocated->value,
-                  msu->stats.memory_allocated->timestamp);
+                  msu->stats.memory_allocated[1],
+                  msu->stats.memory_allocated[0]);
     }
     return ptr;
 }
@@ -59,12 +59,12 @@ static void *msu_track_alloc(struct generic_msu *msu, size_t bytes) {
  * @param bytes number of bytes being freed
  */
 static void msu_track_free(void* ptr, struct generic_msu * msu, size_t bytes) {
-    msu->stats.memory_allocated->value -= bytes;
-    msu->stats.memory_allocated->timestamp = time(NULL);
+    msu->stats.memory_allocated[1] -= bytes;
+    msu->stats.memory_allocated[0] = time(NULL);
     log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes at time %d",
               (int)bytes, msu->id, msu->type->name,
-              msu->stats.memory_allocated->value,
-              msu->stats.memory_allocated->timestamp);
+              msu->stats.memory_allocated[1],
+              msu->stats.memory_allocated[0]);
 
     free(ptr);
 }
@@ -183,13 +183,13 @@ void *msu_data_alloc(struct generic_msu * msu, size_t bytes)
         log_error("Failed to allocate %d bytes for MSU id %d, %s",
                   (int)bytes, msu->id, msu->type->name);
     } else {
-        msu->stats.memory_allocated->value += (bytes - msu->data_p->n_bytes);
-        msu->stats.memory_allocated->timestamp = time(NULL);
+        msu->stats.memory_allocated[1] += (bytes - msu->data_p->n_bytes);
+        msu->stats.memory_allocated[0] = time(NULL);
         log_debug("Successfully allocated %d bytes for MSU id %d, "
                   "%s memory footprint: %u bytes at time %d",
                   (int)bytes, msu->id, msu->type->name,
-                  msu->stats.memory_allocated->value,
-                  msu->stats.memory_allocated->timestamp);
+                  msu->stats.memory_allocated[1],
+                  msu->stats.memory_allocated[0]);
 
         msu->data_p->n_bytes = bytes;
         msu->data_p->data = ptr;
@@ -202,12 +202,12 @@ void *msu_data_alloc(struct generic_msu * msu, size_t bytes)
  * @param msu MSU in which to track the freed data
  */
 void msu_data_free(struct generic_msu *msu) {
-    msu->stats.memory_allocated->value -= msu->data_p->n_bytes;
-    msu->stats.memory_allocated->timestamp = time(NULL);
+    msu->stats.memory_allocated[1] -= msu->data_p->n_bytes;
+    msu->stats.memory_allocated[0] = time(NULL);
     log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes at time %d",
               (int)msu->data_p->n_bytes, msu->id, msu->type->name,
-              msu->stats.memory_allocated->value,
-              msu->stats.memory_allocated->timestamp);
+              msu->stats.memory_allocated[1],
+              msu->stats.memory_allocated[0]);
 
     free(msu->data_p->data);
 }
@@ -231,19 +231,8 @@ struct generic_msu *msu_alloc(void) {
         return msu;
     }
 
-    msu->stats.memory_allocated = malloc(sizeof(struct timed_stat));
-    if (msu->stats.memory_allocated == NULL) {
-        log_error("%s", "Failed to allocate memory for timed_stat");
-        return msu;
-    }
-    msu->stats.memory_allocated->value = 0;
-
-    msu->stats.queue_item_processed = malloc(sizeof(struct timed_stat));
-    if (msu->stats.queue_item_processed == NULL) {
-        log_error("%s", "Failed to allocate memory for timed_stat");
-        return msu;
-    }
-    msu->stats.queue_item_processed->value = 0;
+    msu->stats.memory_allocated[1] = 0;
+    msu->stats.queue_item_processed[1] = 0;
 
     msu->data_p = malloc(sizeof(struct msu_data));
     msu->data_p->n_bytes = 0;

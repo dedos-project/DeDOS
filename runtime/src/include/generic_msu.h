@@ -22,8 +22,8 @@ enum layer {
 };
 
 typedef struct msu_stats {
-    struct timed_stat *queue_item_processed;
-    struct timed_stat *memory_allocated;
+    int queue_item_processed[2];
+    int memory_allocated[2];
     //data queue size can directly be queried from msu->q_in->size
 } msu_stats;
 

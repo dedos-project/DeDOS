@@ -143,12 +143,12 @@ static inline void update_thread_stats(struct dedos_thread* thread, struct gener
         return;
     } else {
         // copy msu statistics into thread's statistics collector struct,
-        msu_stats_data->queue_item_processed->value = msu->stats.queue_item_processed->value;
-        msu_stats_data->queue_item_processed->timestamp = msu->stats.queue_item_processed->timestamp;
-        msu_stats_data->memory_allocated->value = msu->stats.memory_allocated->value;
-        msu_stats_data->memory_allocated->timestamp = msu->stats.memory_allocated->timestamp;
-        //TODO: gather timestamp for q_in.size
-        msu_stats_data->data_queue_size->value = msu->q_in.size;
+        msu_stats_data->queue_item_processed[1] = msu->stats.queue_item_processed[1];
+        msu_stats_data->queue_item_processed[0] = msu->stats.queue_item_processed[0];
+        msu_stats_data->memory_allocated[1] = msu->stats.memory_allocated[1];
+        msu_stats_data->memory_allocated[0] = msu->stats.memory_allocated[0];
+        msu_stats_data->data_queue_size[1] = msu->q_in.size;
+        msu_stats_data->data_queue_size[0] = time(NULL);
         /* Print stats */
 #if DEBUG != 0
 //        iterate_print_thread_stats_array(thread->thread_stats);
@@ -235,14 +235,14 @@ static void* non_block_per_thread_loop() {
                         aggregate_end_time(MSU_FULL_TIME, cur->id);
 
                         //increment queue item processed
-                        cur->stats.queue_item_processed->value++; //FIXME UINT OVERFLOW
-                        cur->stats.queue_item_processed->timestamp = time(NULL);
+                        cur->stats.queue_item_processed[1]++; //FIXME UINT OVERFLOW
+                        cur->stats.queue_item_processed[0] = time(NULL);
 
-                        aggregate_stat(ITEMS_PROCESSED, cur->id, cur->stats.queue_item_processed->value, 0);
+                        aggregate_stat(ITEMS_PROCESSED, cur->id, cur->stats.queue_item_processed[1], 0);
 
                         debug("DEBUG: msu %d has processed MD %d items at time %d",
-                              cur->id, cur->stats.queue_item_processed->value,
-                              cur->stats.queue_item_processed->timestamp);
+                              cur->id, cur->stats.queue_item_processed[1],
+                              cur->stats.queue_item_processed[0]);
 
                         aggregate_start_time(MSU_INTERIM_TIME, cur->id);
                     } else if (cur->type->type_id == DEDOS_TCP_DATA_MSU_ID) {
@@ -275,11 +275,9 @@ static void* non_block_per_thread_loop() {
         }
         /* 2. Control updates */
         //TODO add counter to call in intervals
-        if(!self->thread_q){
+        if (!self->thread_q) {
             log_error("Missing thread_q! %s","");
-        }
-        // else if (self->thread_q->size || self->thread_q->num_msgs) {
-        else{
+        } else {// else if (self->thread_q->size || self->thread_q->num_msgs) {
             // log_debug("Number of messages in thread queue: %u", self->thread_q->num_msgs);
             // log_debug("Total thread queue size: %u", self->thread_q->size);
             process_control_updates();
@@ -647,7 +645,7 @@ static void check_pending_runtimes() {
     }
 }
 
-static void push_stats_to_controller(){
+static void push_stats_to_controller() {
 
     struct dedos_control_msg *stats_msg;
     unsigned int payload_size = main_thread->thread_stats->array_len * sizeof(struct msu_stats_data);
@@ -769,7 +767,7 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
             } else {
                 //send before a reset but not all resets
                 if (main_thread->thread_stats->num_msus > 0) {
-                    //push_stats_to_controller();
+                    push_stats_to_controller();
                 }
                 main_thread->thread_stats->num_msus = 0;
             }

@@ -68,8 +68,7 @@ int enqueue_msu_request(struct dedos_thread *d_thread,
     return ret;
 }
 
-void process_control_updates(void)
-{
+void process_control_updates(void) {
     int index;
     struct dedos_thread *self;
     struct dedos_thread_msg *msg;
@@ -125,7 +124,7 @@ void process_control_updates(void)
         log_debug("Init data len: %d",create_action->init_data_len);
         tmp = init_msu(create_action->msu_type, msg->action_data,
                        create_action);
-        if(!tmp){
+        if (!tmp) {
             free(create_action->creation_init_data);
             return;
         }

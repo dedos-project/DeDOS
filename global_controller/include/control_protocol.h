@@ -46,9 +46,9 @@ struct dedos_control_msg {
 
 struct msu_stats_data {
     int msu_id;
-    int queue_item_processed;
-    int memory_allocated;
-    int data_queue_size;
+    int queue_item_processed[2];
+    int memory_allocated[2];
+    int data_queue_size[2];
 };
 
 #endif /* CONTROL_PROTOCOL_H_ */
