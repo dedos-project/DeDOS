@@ -43,7 +43,7 @@ int init_thread_stats(struct thread_msu_stats* thread_stats) {
 int init_aggregate_thread_stats(struct thread_msu_stats* thread_stats, unsigned int total_msus) {
     unsigned int i;
     thread_stats->msu_stats_index_tracker = NULL;
-    thread_stats->num_msus = total_msus;
+    thread_stats->num_msus = 0;
     thread_stats->array_len = total_msus;
     log_debug("thread_stats array len: %u", thread_stats->array_len);
     thread_stats->mutex = NULL;
