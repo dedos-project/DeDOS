@@ -2,6 +2,7 @@
 #define DEDOS_THREAD_QUEUE_H_
 #include "control_protocol.h"
 #include "generic_msu_queue.h"
+#include "runtime.h"
 
 #define Q_LIMIT 0
 
@@ -43,9 +44,11 @@ static void debug_q(struct dedos_thread_queue *q)
 #define debug_q(x) do {} while(0)
 #endif
 
-static inline int32_t dedos_thread_enqueue(struct dedos_thread_queue *q, struct dedos_thread_msg *p)
+static inline int32_t dedos_thread_enqueue(struct dedos_thread *dedos_thread, struct dedos_thread_msg *p)
 {
     int ret_size = 0;
+
+    struct dedos_thread_queue *q = dedos_thread->thread_q;
 
     if (q->shared)
         mutex_lock(q->mutex);
@@ -80,6 +83,13 @@ static inline int32_t dedos_thread_enqueue(struct dedos_thread_queue *q, struct 
     q->num_msgs++;
     debug_q(q);
     ret_size = q->size;
+
+    if (dedos_thread->q_sem){
+        int rtn = sem_post(dedos_thread->q_sem);
+        if (rtn < 0){
+            log_error("Error incrementing thread queue semaphore");
+        }
+    }
 
     if (q->shared)
         mutex_unlock(q->mutex);

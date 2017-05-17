@@ -202,7 +202,7 @@ int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
     /* add to allthreads[0] queue,since main thread is always at index 0 */
     /* need to create thread_msg struct with action = forward */
 
-    int rtn = dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+    int rtn = dedos_thread_enqueue(main_thread, thread_msg);
     if (rtn < 0){
         log_error("Failed to enqueue data in main thread queue%s", "");
         free(thread_msg);

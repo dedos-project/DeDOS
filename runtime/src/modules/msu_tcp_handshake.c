@@ -247,7 +247,7 @@ static void send_to_next_msu(struct generic_msu *self,
 		/* add to allthreads[0] queue,since main thread is always stored at index 0 */
 		/* need to create thread_msg struct with action = forward */
 		int ret;
-		ret = dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+		ret = dedos_thread_enqueue(main_thread, thread_msg);
 		if (ret < 0) {
 			log_error("Failed to enqueue data in main threads queue %s", "");
 			free(thread_msg);

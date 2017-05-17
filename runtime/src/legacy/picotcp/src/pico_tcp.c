@@ -18,6 +18,7 @@
 #include "runtime.h"
 #include "generic_msu.h"
 #include "communication.h"
+#include "dedos_thread_queue.h"
 #include "modules/msu_tcp_handshake.h"
 #include "dedos_msu_msg_type.h"
 #include "dedos_msu_list.h"
@@ -2621,7 +2622,7 @@ static void forward_data_over_sock(struct msu_endpoint *tmp, char *buf, unsigned
             + msg->payload_len;
     thread_msg->data = (struct dedos_intermsu_message*) msg;
 
-    ret = dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+    ret = dedos_thread_enqueue(main_thread, thread_msg);
     if (ret < 0) {
         log_error("Failed to enqueue data in main threads queue %s", "");
         free(thread_msg);

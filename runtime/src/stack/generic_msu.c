@@ -13,6 +13,7 @@
 #include "routing.h"
 #include "logging.h"
 #include "dedos_statistics.h"
+#include "dedos_thread_queue.h"
 
 // TODO: This type-registration should probably be handled elsewhere
 //       probably in msu_tracker?
@@ -217,6 +218,13 @@ struct generic_msu *msu_alloc(void)
         return msu;
     }
 
+    int thread_index = get_thread_index(pthread_self());
+    struct dedos_thread *dedos_thread = &all_threads[thread_index];
+    if(!pthread_equal(dedos_thread->tid, pthread_self())){
+        log_error("Unable to get correct pointer to self thread struct for msu queue init");
+        return NULL;
+    }
+
     msu->stats.memory_allocated = 0;
     msu->stats.queue_item_processed = 0;
 
@@ -226,11 +234,11 @@ struct generic_msu *msu_alloc(void)
 
     msu->q_in.mutex = mutex_init();
     msu->q_in.shared = 1;
-    generic_msu_queue_init(&msu->q_in);
+    generic_msu_queue_init(&msu->q_in, dedos_thread->q_sem);
 
     msu->q_control.mutex = mutex_init();
     msu->q_control.shared = 1;
-    generic_msu_queue_init(&msu->q_control);
+    generic_msu_queue_init(&msu->q_control, dedos_thread->q_sem);
     return msu;
 }
 
@@ -255,7 +263,7 @@ int msu_failure(int msu_id){
         thread_msg->action_data = msu_id;
         thread_msg->buffer_len = 0;
         thread_msg->data = NULL;
-        dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+        dedos_thread_enqueue(main_thread, thread_msg);
         return 0;
     }
     log_error("Failed to enqueue FAIL_CREATE_MSU message on main thread");
@@ -413,7 +421,7 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
     /* add to allthreads[0] queue,since main thread is always at index 0 */
     /* need to create thread_msg struct with action = forward */
 
-    int rtn = dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+    int rtn = dedos_thread_enqueue(main_thread, thread_msg);
     if (rtn < 0){
         log_error("Failed to enqueue data in main thread queue%s", "");
         free(thread_msg);
