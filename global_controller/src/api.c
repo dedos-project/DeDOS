@@ -18,6 +18,11 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
 
     dfg = get_dfg();
 
+    if (get_msu_from_id(msu_id) != NULL) {
+        debug("An MSU with ID %d is already registered", msu_id);
+        return -1;
+    }
+
     int endpoint_index = -1;
     uint32_t num_pinned_threads;
     endpoint_index = get_sock_endpoint_index(runtime_sock);
