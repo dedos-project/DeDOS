@@ -138,15 +138,17 @@ static inline void update_thread_stats(struct dedos_thread* thread, struct gener
     struct msu_stats_data *msu_stats_data = index_tracker->stats_data_ptr;
     mutex_lock(thread->thread_stats->mutex);
     // inside a lock because main thread might read it intermittently to update systemwide statistics
-    if(msu_stats_data->msu_id != msu->id){
-        log_error("MSU id mistach for updating stats from msu to thread struct, id: %d",msu->id);
+    if (msu_stats_data->msu_id != msu->id) {
+        log_error("MSU id mismatch for updating stats from msu to thread struct, id: %d", msu->id);
         return;
-    }
-    else{
+    } else {
         // copy msu statistics into thread's statistics collector struct,
-        msu_stats_data->queue_item_processed = msu->stats.queue_item_processed;
-        msu_stats_data->memory_allocated = msu->stats.memory_allocated;
-        msu_stats_data->data_queue_size = msu->q_in.size;
+        msu_stats_data->queue_item_processed[1] = msu->stats.queue_item_processed[1];
+        msu_stats_data->queue_item_processed[0] = msu->stats.queue_item_processed[0];
+        msu_stats_data->memory_allocated[1] = msu->stats.memory_allocated[1];
+        msu_stats_data->memory_allocated[0] = msu->stats.memory_allocated[0];
+        msu_stats_data->data_queue_size[1] = msu->q_in.size;
+        msu_stats_data->data_queue_size[0] = time(NULL);
         /* Print stats */
 #if DEBUG != 0
 //        iterate_print_thread_stats_array(thread->thread_stats);
@@ -225,16 +227,23 @@ static void* non_block_per_thread_loop() {
                         aggregate_stat(QUEUE_LEN, cur->id, cur->q_in.num_msgs, 1);
                         aggregate_end_time(MSU_INTERIM_TIME, cur->id);
                         debug("DEBUG: Thread %02x dequeuing MSU %d data queue", self->tid, cur->id);
+
                         aggregate_start_time(MSU_FULL_TIME, cur->id);
                         /* NOTE: data_handler should consume the item, i.e. free the memory
                          by calling delete_generic_msu_queue_item(queue_item) */
                         msu_receive(cur, queue_item);
                         aggregate_end_time(MSU_FULL_TIME, cur->id);
+
                         //increment queue item processed
-                        cur->stats.queue_item_processed++; //FIXME UINT OVERFLOW
-                        aggregate_stat(ITEMS_PROCESSED, cur->id, cur->stats.queue_item_processed, 0);
-                        debug("DEBUG: msu %d has processed MD %d items",
-                              cur->id, cur->stats.queue_item_processed);
+                        cur->stats.queue_item_processed[1]++; //FIXME UINT OVERFLOW
+                        cur->stats.queue_item_processed[0] = time(NULL);
+
+                        aggregate_stat(ITEMS_PROCESSED, cur->id, cur->stats.queue_item_processed[1], 0);
+
+                        debug("DEBUG: msu %d has processed MD %d items at time %d",
+                              cur->id, cur->stats.queue_item_processed[1],
+                              cur->stats.queue_item_processed[0]);
+
                         aggregate_start_time(MSU_INTERIM_TIME, cur->id);
                     } else if (cur->type->type_id == DEDOS_TCP_DATA_MSU_ID) {
                         //To make sure stack ticks even if there was no item
@@ -266,11 +275,9 @@ static void* non_block_per_thread_loop() {
         }
         /* 2. Control updates */
         //TODO add counter to call in intervals
-        if(!self->thread_q){
+        if (!self->thread_q) {
             log_error("Missing thread_q! %s","");
-        }
-        // else if (self->thread_q->size || self->thread_q->num_msgs) {
-        else{
+        } else {// else if (self->thread_q->size || self->thread_q->num_msgs) {
             // log_debug("Number of messages in thread queue: %u", self->thread_q->num_msgs);
             // log_debug("Total thread queue size: %u", self->thread_q->size);
             process_control_updates();
@@ -638,7 +645,7 @@ static void check_pending_runtimes() {
     }
 }
 
-static void push_stats_to_controller(){
+static void push_stats_to_controller() {
 
     struct dedos_control_msg *stats_msg;
     unsigned int payload_size = main_thread->thread_stats->array_len * sizeof(struct msu_stats_data);
@@ -753,15 +760,16 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
         time_spent = (double) (clock() - begin) / CLOCKS_PER_SEC;
         if (total_threads > 1 && time_spent > 5.0) {
             if (next_stat_thread != 0) { //main thread not welcome
+                aggregate_start_time(GATHER_THREAD_STATS, next_stat_thread);
                 ret = copy_stats_from_worker(next_stat_thread);
+                aggregate_end_time(GATHER_THREAD_STATS, next_stat_thread);
                 if (ret == -1) {
                     log_error("Failed to copy stats from worker thread at index %d", next_stat_thread);
                 }
-            }
-            else {
+            } else {
                 //send before a reset but not all resets
                 if (main_thread->thread_stats->num_msus > 0) {
-                    //push_stats_to_controller();
+                    push_stats_to_controller();
                 }
                 main_thread->thread_stats->num_msus = 0;
             }

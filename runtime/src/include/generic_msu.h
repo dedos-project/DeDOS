@@ -22,8 +22,8 @@ enum layer {
 };
 
 typedef struct msu_stats {
-    unsigned int queue_item_processed;
-    unsigned int memory_allocated;
+    int queue_item_processed[2];
+    int memory_allocated[2];
     //data queue size can directly be queried from msu->q_in->size
 } msu_stats;
 
@@ -63,7 +63,7 @@ struct msu_type{
     void (*destroy)(struct generic_msu *self);
 
     /** Handles the receiving of data sent from other MSUs.
-     * This field can **not** be set to NULL, and must be defined 
+     * This field can **not** be set to NULL, and must be defined
      * for each msu_type.
      * @param self MSU receieving data
      * @param input_data data to receive from previous MSU
@@ -181,8 +181,8 @@ struct generic_msu{
     msu_data_p data_p;
 
     /** Any internal state struct which MSU might need to maintain.
-     * TODO: Normalize across MSUs, creating key-based state structure. 
-     * Tavish: Not necessarily can be any internal data structure which 
+     * TODO: Normalize across MSUs, creating key-based state structure.
+     * Tavish: Not necessarily can be any internal data structure which
      * doesn't have to be key based. */
     void *internal_state;
 

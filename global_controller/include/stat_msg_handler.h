@@ -7,6 +7,6 @@
 #include "logging.h"
 #include "control_protocol.h"
 
-void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock);
+void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int stats_items);
 
 #endif

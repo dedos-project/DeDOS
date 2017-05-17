@@ -18,6 +18,11 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
 
     dfg = get_dfg();
 
+    if (get_msu_from_id(msu_id) != NULL) {
+        debug("An MSU with ID %d is already registered", msu_id);
+        return -1;
+    }
+
     int endpoint_index = -1;
     uint32_t num_pinned_threads;
     endpoint_index = get_sock_endpoint_index(runtime_sock);
@@ -51,8 +56,7 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
             free(new_msu);
             return -1;
         }
-    }
-    else {
+    } else {
         debug("ERROR: Couldn't find endpoint index for sock: %d", runtime_sock);
         return -1;
     }
@@ -255,4 +259,39 @@ int add_runtime(char *runtime_ip, int runtime_sock) {
     print_dfg();
 
     return 0;
+}
+
+/**
+ * Display an MSU stats on stdout. This is a temporary solution before returning a data structure
+ * exploitatable by anyone calling this API function
+ * @param msu_id
+ * @return none
+ */
+void show_stats(int msu_id) {
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    int i;
+
+    printf("queue_item_processed\n");
+    printf("value, timestamp\n");
+    for (i = 0; i < TIME_SLOTS; ++i) {
+        printf("%d, %d\n",
+                msu->statistics->queue_item_processed->data[i],
+                msu->statistics->queue_item_processed->timestamp[i]);
+    }
+
+    printf("data_queue_size\n");
+    printf("value, timestamp\n");
+    for (i = 0; i < TIME_SLOTS; ++i) {
+        printf("%d, %d\n",
+                msu->statistics->data_queue_size->data[i],
+                msu->statistics->data_queue_size->timestamp[i]);
+    }
+
+    printf("memory_allocated\n");
+    printf("value, timestamp\n");
+    for (i = 0; i < TIME_SLOTS; ++i) {
+        printf("%d, %d\n",
+                msu->statistics->memory_allocated->data[i],
+                msu->statistics->memory_allocated->timestamp[i]);
+    }
 }

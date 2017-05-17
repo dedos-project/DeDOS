@@ -76,6 +76,10 @@
 #define LOG_BYTES_SENT 1
 #endif
 
+#ifndef LOG_GATHER_THREAD_STATS
+#define LOG_GATHER_THREAD_STATS 1
+#endif
+
 /**
  * Defines which statistics are gathered.
  * Each entry corresponds to a single enumerator.
@@ -94,7 +98,8 @@ int log_mask[] = {
     LOG_MESSAGES_SENT,
     LOG_MESSAGES_RECEIVED,
     LOG_BYTES_SENT,
-    LOG_BYTES_RECEIVED
+    LOG_BYTES_RECEIVED,
+    LOG_GATHER_THREAD_STATS,
 };
 
 /**
@@ -115,6 +120,7 @@ char *stat_format[] = {
     "%03.0f", // N messages received
     "%06.0f", // Bytes sent
     "%06.0f", // Bytes received
+    "%0.9f", // Time spent gathering thread stats
 };
 
 /**
@@ -122,19 +128,20 @@ char *stat_format[] = {
  * that the corresponding item is logged
  */
 char *stat_name[] = {
-    "_STAT_FLUSH_TIME",
-    "MSU_QUEUE_LENGTH",
-    "_ITEMS_PROCESSED",
-    "___MSU_FULL_TIME",
-    "__MSU_INNER_TIME",
-    "MSU_INTERIM_TIME",
-    "__N_THREAD_SWAPS",
-    "PER_THREAD_CPU_T",
-    "THREAD_LOOP_TIME",
-    "_N_MESSAGES_SENT",
-    "_N_MESSAGES_RCVD",
-    "__NUM_BYTES_SENT",
-    "__NUM_BYTES_RCVD"
+    "____STAT_FLUSH_TIME",
+    "___MSU_QUEUE_LENGTH",
+    "____ITEMS_PROCESSED",
+    "______MSU_FULL_TIME",
+    "_____MSU_INNER_TIME",
+    "___MSU_INTERIM_TIME",
+    "_____N_THREAD_SWAPS",
+    "___PER_THREAD_CPU_T",
+    "___THREAD_LOOP_TIME",
+    "____N_MESSAGES_SENT",
+    "____N_MESSAGES_RCVD",
+    "_____NUM_BYTES_SENT",
+    "_____NUM_BYTES_RCVD",
+    "GATHER_THREAD_STATS",
 };
 
 /**

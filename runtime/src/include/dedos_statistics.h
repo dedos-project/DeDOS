@@ -3,15 +3,16 @@
 #include "runtime.h"
 #include "logging.h"
 #include "uthash.h"
+#include <time.h>
 
 //used for stat array
 #define MAX_MSUS_PER_THREAD 10
 
 struct msu_stats_data {
     int msu_id;
-    unsigned int queue_item_processed;
-    unsigned int memory_allocated;
-    unsigned int data_queue_size;
+    int queue_item_processed[2];
+    int memory_allocated[2];
+    int data_queue_size[2];
 };
 
 //to keep direct pointer to entry in array where MSU stats are stored in the thread

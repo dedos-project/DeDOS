@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
+#include "statistics.h"
 #include "controller_tools.h"
 #include "stat_msg_handler.h"
 #include "communication.h"
@@ -46,20 +47,59 @@ static void send_route_update(char *input, int action) {
 }
 
 //TODO: update this function for new scheduling & DFG structure
-void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
-/*
+void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int stats_items) {
     //TODO: add specific stat report message types and code
     struct msu_stats_data *stats = stats_data;
 
-    //debug("DEBUG: %s", "processing stat messages");
-    //debug("DEBUG: %s: %d", "payload.msu_id", stats->msu_id);
-    //debug("DEBUG: %s: %u", "payload.item_processed", stats->queue_item_processed);
-    //debug("DEBUG: %s: %u", "payload.memory_allocated", stats->memory_allocated);
-    //debug("DEBUG: %s: %u", "payload.data_queue_size", stats->data_queue_size);
+    debug("DEBUG: %s", "processing stat messages");
+
+    int i;
+    for (i = 0; i <= stats_items; i++) {
+        if (stats[i].msu_id > 0) {
+            debug("DEBUG: %s: %d", "payload.msu_id", stats[i].msu_id);
+            debug("DEBUG: %d payload.item_processed at time %d",
+                  stats[i].queue_item_processed[1],
+                  stats[i].queue_item_processed[0]);
+            debug("DEBUG: %d payload.memory_allocated at time %d",
+                  stats[i].memory_allocated[1],
+                  stats[i].memory_allocated[0]);
+            debug("DEBUG: %d payload.data_queue_size at time %d",
+                  stats[i].data_queue_size[1],
+                  stats[i].data_queue_size[0]);
+
+
+            struct dfg_vertex *msu = get_msu_from_id(stats[i].msu_id);
+            short index;
+
+            index = msu->statistics->queue_item_processed->timepoint;
+            msu->statistics->queue_item_processed->data[index] =
+                stats[i].queue_item_processed[1];
+            msu->statistics->queue_item_processed->timestamp[index] =
+                stats[i].queue_item_processed[0];
+            msu->statistics->queue_item_processed->timepoint = (index + 1) % TIME_SLOTS;
+
+            index = msu->statistics->memory_allocated->timepoint;
+            msu->statistics->memory_allocated->data[index] =
+                stats[i].memory_allocated[1];
+            msu->statistics->memory_allocated->timestamp[index] =
+                stats[i].memory_allocated[0];
+            msu->statistics->memory_allocated->timepoint = (index + 1) % TIME_SLOTS;
+
+            index = msu->statistics->data_queue_size->timepoint;
+            msu->statistics->data_queue_size->data[index] =
+                stats[i].data_queue_size[1];
+            msu->statistics->data_queue_size->timestamp[index] =
+                stats[i].data_queue_size[0];
+            msu->statistics->data_queue_size->timepoint = (index + 1) % TIME_SLOTS;
+        }
+    }
 
      //TODO: check memory consumption (check with requirements for the MSU, stored in JSON)
      // trigger remote cloning
 
+
+
+/*
     struct dfg_config *dfg_config_g = NULL;
     dfg_config_g = get_dfg();
 
@@ -68,6 +108,12 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock) {
         return;
     }
 
+    //Maybe check for that condition multiple times (to ensure that it is a permanent/real behaviour)
+    //Also check when the last action was triggered
+    // Manage queue length
+    short timepoint = msu->satistics->queue_length->timepoint;
+    msu->statistics->queue_length->data[timepoint] = stats->data_queue_size;
+    timepoint++;
     if (stats->data_queue_size > 5) {
         char data[32];
         memset(data, '\0', sizeof(data));

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <string.h>
 #include "logging.h"
 #include "communication.h"
 #include "cli_interface.h"
