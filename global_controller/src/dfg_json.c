@@ -408,7 +408,21 @@ int json_parse_msu(jsmntok_t *t, int starting_token, int msu_cnt, const char *js
 
         //init some base fields
         v->scheduling = NULL;
-        v->statistics = NULL;
+        v->profiling  = NULL;
+
+        v->statistics = malloc(sizeof(struct msu_statistics_data));
+        v->statistics->queue_item_processed = malloc(sizeof(struct timeserie));
+        v->statistics->queue_item_processed->timepoint = 0;
+        memset(v->statistics->queue_item_processed->data, 0, TIME_SLOTS);
+        memset(v->statistics->queue_item_processed->timestamp, 0, TIME_SLOTS);
+        v->statistics->data_queue_size = malloc(sizeof(struct timeserie));
+        v->statistics->data_queue_size->timepoint = 0;
+        memset(v->statistics->data_queue_size->data, 0, TIME_SLOTS);
+        memset(v->statistics->data_queue_size->timestamp, 0, TIME_SLOTS);
+        v->statistics->memory_allocated = malloc(sizeof(struct timeserie));
+        v->statistics->memory_allocated->timepoint = 0;
+        memset(v->statistics->memory_allocated->data, 0, TIME_SLOTS);
+        memset(v->statistics->memory_allocated->timestamp, 0, TIME_SLOTS);
 
         //jump in the first field of the MSU object
         i++;

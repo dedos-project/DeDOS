@@ -32,7 +32,8 @@ const char *help =
     "\t6. del route [which_on_runtime_socket_num] [on_this_msu_id] [this_msu_type] [to_msu_id] [to_msu_type] [1 for local, 2 for remote] (IP if remote)\n" \
     "\t7. create_pinned_thread [runtime_socket_num] /* creates a pinned worker thread on a core not being used */\n" \
     "\t8. loadcfg [filename] /* load a suite of commands from a file */\n" \
-    "\t9. help /* display available commands */\n" \
+    "\t9. show stats [msu_id] /* display stored time serie for a given msu */\n" \
+    "\t10. help /* display this menu */\n" \
     "\n";
 
 static void send_route_update(char **input, int action){
@@ -123,6 +124,11 @@ static void parse_cmd_action(char *cmd)
         if (ret == -1) {
             debug("ERROR: %s", "could not trigger new msu creation");
         }
+
+    } else if (!strncasecmp(cmd, "show stats", 10)) {
+        int msu_id;
+        msu_id = atoi(strtok(&cmd[10], " \r\n"));
+        show_stats(msu_id);
 
     } else if (!strncasecmp(cmd, "show msus", 9)) {
 

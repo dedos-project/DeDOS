@@ -168,7 +168,11 @@ struct dfg_vertex *get_msu_from_id(int msu_id) {
     return msu;
 }
 
-/* Overwrite or create a MSU in the DFG */
+/**
+ * Overwrite or create a MSU in the DFG
+ * @param dfg_vertex msu: pointer to the new vertex struct
+ * @return none
+ */
 void set_msu(struct dfg_vertex *msu) {
     debug("DEBUG: adding msu %d to the graph", msu->msu_id);
 
@@ -190,6 +194,19 @@ void set_msu(struct dfg_vertex *msu) {
     dfg->vertices[new_id] = msu;
     dfg->vertex_cnt++;
 
+    dfg->vertices[new_id]->statistics = malloc(sizeof(struct msu_statistics_data));
+    dfg->vertices[new_id]->statistics->queue_item_processed = malloc(sizeof(struct timeserie));
+    dfg->vertices[new_id]->statistics->queue_item_processed->timepoint = 0;
+    memset(dfg->vertices[new_id]->statistics->queue_item_processed->data, 0, TIME_SLOTS);
+    memset(dfg->vertices[new_id]->statistics->queue_item_processed->timestamp, 0, TIME_SLOTS);
+    dfg->vertices[new_id]->statistics->data_queue_size = malloc(sizeof(struct timeserie));
+    dfg->vertices[new_id]->statistics->data_queue_size->timepoint = 0;
+    memset(dfg->vertices[new_id]->statistics->data_queue_size->data, 0, TIME_SLOTS);
+    memset(dfg->vertices[new_id]->statistics->data_queue_size->timestamp, 0, TIME_SLOTS);
+    dfg->vertices[new_id]->statistics->memory_allocated = malloc(sizeof(struct timeserie));
+    dfg->vertices[new_id]->statistics->memory_allocated->timepoint = 0;
+    memset(dfg->vertices[new_id]->statistics->memory_allocated->data, 0, TIME_SLOTS);
+    memset(dfg->vertices[new_id]->statistics->memory_allocated->timestamp, 0, TIME_SLOTS);
 }
 
 /* Big mess of create, updates, etc */

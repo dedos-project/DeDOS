@@ -99,7 +99,9 @@ struct msu_profiling {
 };
 
 struct msu_statistics_data {
-    struct timeserie *queue_length;
+    struct timeserie *queue_item_processed;
+    struct timeserie *data_queue_size;
+    struct timeserie *memory_allocated;
 };
 
 struct msu_scheduling {

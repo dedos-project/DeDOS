@@ -66,11 +66,38 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
             debug("DEBUG: %d payload.data_queue_size at time %d",
                   stats[i].data_queue_size[1],
                   stats[i].data_queue_size[0]);
+
+
+            struct dfg_vertex *msu = get_msu_from_id(stats[i].msu_id);
+            short index;
+
+            index = msu->statistics->queue_item_processed->timepoint;
+            msu->statistics->queue_item_processed->data[index] =
+                stats[i].queue_item_processed[1];
+            msu->statistics->queue_item_processed->timestamp[index] =
+                stats[i].queue_item_processed[0];
+            msu->statistics->queue_item_processed->timepoint = (index + 1) % TIME_SLOTS;
+
+            index = msu->statistics->memory_allocated->timepoint;
+            msu->statistics->memory_allocated->data[index] =
+                stats[i].memory_allocated[1];
+            msu->statistics->memory_allocated->timestamp[index] =
+                stats[i].memory_allocated[0];
+            msu->statistics->memory_allocated->timepoint = (index + 1) % TIME_SLOTS;
+
+            index = msu->statistics->data_queue_size->timepoint;
+            msu->statistics->data_queue_size->data[index] =
+                stats[i].data_queue_size[1];
+            msu->statistics->data_queue_size->timestamp[index] =
+                stats[i].data_queue_size[0];
+            msu->statistics->data_queue_size->timepoint = (index + 1) % TIME_SLOTS;
         }
     }
 
      //TODO: check memory consumption (check with requirements for the MSU, stored in JSON)
      // trigger remote cloning
+
+
 
 /*
     struct dfg_config *dfg_config_g = NULL;
@@ -79,13 +106,6 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
     if (dfg_config_g == NULL) {
         debug("ERROR: %s", "could not retrieve dfg");
         return;
-    }
-
-    struct dfg_vertex *msu = get_msu_from_id(stats->msu_id);
-    if (msu->statistics == NULL) {
-        msu->statistics = malloc(sizeof(struct msu_statistics_data));
-        msu->statistics->queue_length = malloc(sizeof(struct timeserie));
-        msu->statistics->queue_length->timepoint = 0;
     }
 
     //Maybe check for that condition multiple times (to ensure that it is a permanent/real behaviour)
