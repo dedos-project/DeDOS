@@ -760,7 +760,9 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
         time_spent = (double) (clock() - begin) / CLOCKS_PER_SEC;
         if (total_threads > 1 && time_spent > 5.0) {
             if (next_stat_thread != 0) { //main thread not welcome
+                aggregate_start_time(GATHER_THREAD_STATS, next_stat_thread);
                 ret = copy_stats_from_worker(next_stat_thread);
+                aggregate_end_time(GATHER_THREAD_STATS, next_stat_thread);
                 if (ret == -1) {
                     log_error("Failed to copy stats from worker thread at index %d", next_stat_thread);
                 }

@@ -23,6 +23,7 @@ enum stat_id{
     MESSAGES_RECEIVED,
     BYTES_SENT,
     BYTES_RECEIVED,
+    GATHER_THREAD_STATS,
     N_STAT_IDS,
 };
 
