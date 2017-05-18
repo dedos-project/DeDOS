@@ -15,7 +15,7 @@
 
 /** The maximum number of items that can be gathered within
  * a single statistic */
-#define MAX_ITEM_ID 32
+#define MAX_ITEM_ID 64
 
 /** The minumum amount of time that must pass before statistics
  * are written to disk */

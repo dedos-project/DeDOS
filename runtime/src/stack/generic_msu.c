@@ -15,6 +15,7 @@
 #include "logging.h"
 #include "dedos_statistics.h"
 #include "data_plane_profiling.h"
+#include "dedos_thread_queue.h"
 
 // TODO: This type-registration should probably be handled elsewhere
 //       probably in msu_tracker?
@@ -136,6 +137,7 @@ int msu_receive_ctrl(struct generic_msu *self, msu_queue_item *queue_item){
                     }
                 }
             }
+            log_info("MSU %d now has a scheduling weight of %d", self->id, self->scheduling_weight);
         }
         if (self->type->receive_ctrl){
             handled = (self->type->receive_ctrl(self, update_msg)) == 0;
@@ -234,17 +236,24 @@ struct generic_msu *msu_alloc(void) {
     msu->stats.memory_allocated[1] = 0;
     msu->stats.queue_item_processed[1] = 0;
 
+    int thread_index = get_thread_index(pthread_self());
+    struct dedos_thread *dedos_thread = &all_threads[thread_index];
+    if(!pthread_equal(dedos_thread->tid, pthread_self())){
+        log_error("Unable to get correct pointer to self thread struct for msu queue init");
+        return NULL;
+    }
+
     msu->data_p = malloc(sizeof(struct msu_data));
     msu->data_p->n_bytes = 0;
     msu->data_p->data = NULL;
 
     msu->q_in.mutex = mutex_init();
     msu->q_in.shared = 1;
-    generic_msu_queue_init(&msu->q_in);
+    generic_msu_queue_init(&msu->q_in, dedos_thread->q_sem);
 
     msu->q_control.mutex = mutex_init();
     msu->q_control.shared = 1;
-    generic_msu_queue_init(&msu->q_control);
+    generic_msu_queue_init(&msu->q_control, dedos_thread->q_sem);
     return msu;
 }
 
@@ -269,7 +278,7 @@ int msu_failure(int msu_id){
         thread_msg->action_data = msu_id;
         thread_msg->buffer_len = 0;
         thread_msg->data = NULL;
-        dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+        dedos_thread_enqueue(main_thread, thread_msg);
         return 0;
     }
     log_error("Failed to enqueue FAIL_CREATE_MSU message on main thread");
@@ -432,7 +441,7 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
     log_debug("Copied item request id: %d",msg->payload_request_id);
 #endif
 
-    int rtn = dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+    int rtn = dedos_thread_enqueue(main_thread, thread_msg);
     if (rtn < 0){
         log_error("Failed to enqueue data in main thread queue%s", "");
         free(thread_msg);
@@ -479,6 +488,41 @@ struct round_robin_state {
     UT_hash_handle hh; /**< Hash-handle */
 };
 
+/** Chooses the destination with the shortest queue length.
+ * NOTE: Destination must be local in order to be chosen
+ */
+struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_msu *sender,
+                                    msu_queue_item *data) {
+    struct msu_endpoint *dst_msu =
+        get_all_type_msus(sender->rt_table, type->type_id);
+
+    if ( !dst_msu ) {
+        log_error("Source MSU %d did not find target MSU of type %d",
+                  sender->id, type->type_id);
+        return NULL;
+    }
+
+    unsigned int shortest_queue = MAX_MSU_Q_SIZE;
+    struct msu_endpoint *best_endpoint = NULL;
+
+    while ( dst_msu != NULL ) {
+        if ( dst_msu->locality == MSU_LOC_REMOTE_RUNTIME ){
+            dst_msu = dst_msu->hh.next;
+            continue;
+        }
+        int length = dst_msu->next_msu_input_queue->num_msgs;
+        if ( length < shortest_queue ) {
+            shortest_queue = length;
+            best_endpoint = dst_msu;
+        }
+        dst_msu = dst_msu->hh.next;
+    }
+
+    if ( best_endpoint == NULL ){
+        log_error("Cannot enqueue to shortest-length queue when all destinations are remote");
+    }
+    return best_endpoint;
+}
 
 /** Routing function to deliver traffic to a set of MSUs.
  * TODO: This will soon be moved to a "router" object, instead of
@@ -601,8 +645,11 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
         if (! route_state->last_endpoint)
            route_state->last_endpoint = dst_msus;
 
-        if (route_state->last_endpoint->ipv4 == ip_address)
+        if (route_state->last_endpoint->ipv4 == ip_address){
             break;
+        } else {
+            log_debug("IP %d is not %d", route_state->last_endpoint->ipv4, ip_address);
+        }
     }
 
     if ( route_state->last_endpoint->ipv4 != ip_address){

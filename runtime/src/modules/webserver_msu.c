@@ -172,7 +172,7 @@ int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
         return -1;
     }
 
-    if (dst->msu_type != DEDOS_REGEX_MSU_ID) {
+    if (dst->msu_type != DEDOS_REGEX_MSU_ID && dst->msu_type != DEDOS_REGEX_ROUTING_MSU_ID) {
         memcpy(msg->payload, data->buffer, msg->payload_len);
     } else {
         struct regex_data_payload *regex_data =
@@ -202,7 +202,7 @@ int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
     /* add to allthreads[0] queue,since main thread is always at index 0 */
     /* need to create thread_msg struct with action = forward */
 
-    int rtn = dedos_thread_enqueue(main_thread->thread_q, thread_msg);
+    int rtn = dedos_thread_enqueue(main_thread, thread_msg);
     if (rtn < 0){
         log_error("Failed to enqueue data in main thread queue%s", "");
         free(thread_msg);
@@ -264,7 +264,7 @@ int webserver_receive(struct generic_msu *self, msu_queue_item *input_data) {
                     input_data->buffer = regex_data;
                     // += because the original buffer is still contained in the new buffer
                     input_data->buffer_len += sizeof(*regex_data);
-                    return DEDOS_REGEX_MSU_ID;
+                    return DEDOS_REGEX_ROUTING_MSU_ID;
                 }
                 else {
                     char ReturnOk[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length:";

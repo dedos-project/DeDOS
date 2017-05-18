@@ -187,6 +187,11 @@ static void* non_block_per_thread_loop() {
 
     while (1) {
 
+        int rtn  = sem_wait(self->q_sem);
+        if (rtn < 0){
+            log_error("Error waiting on thread queue semaphore");
+        }
+
 #if STATLOG
         log_warn("STAT_LOG Enabled");
         getrusage(RUSAGE_THREAD, &thread_usage);
@@ -336,6 +341,22 @@ int on_demand_create_worker_thread(int is_blocking) {
         log_error("%s", "Unable to allocate memory for MSU pool");
         return -1; //FIXME tell global controller of failure
     }
+
+    all_threads[index].q_sem = malloc(sizeof(sem_t));
+    if (!(all_threads[index].q_sem)){
+        log_error("Unable to allocate thread queue semaphore");
+        free(all_threads[index].msu_pool);
+        return -1;
+    }
+    ret = sem_init(all_threads[index].q_sem, 0, 0);
+    if (ret < 0){
+        log_error("Unable to initialize queue semaphore");
+        free(all_threads[index].msu_pool);
+        free(all_threads[index].q_sem);
+        return -1;
+    }
+
+
     // cur_thread->msu_pool = msu_pool;
     // cur_thread->msu_pool->num_msus = 0;
     // cur_thread->msu_pool->mutex = NULL;

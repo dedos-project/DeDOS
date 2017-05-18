@@ -17,4 +17,6 @@ struct regex_data_payload {
 
 const struct msu_type REGEX_MSU_TYPE;
 
+int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
+                        void *buf, uint16_t bufsize);
 #endif

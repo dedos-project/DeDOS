@@ -12,7 +12,6 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include "routing.h"
-#include "dedos_thread_queue.h"
 #include "control_msg_handler.h"
 #include "dedos_msu_pool.h"
 #include "global_controller/dfg.h"
@@ -23,6 +22,9 @@
 #define BLOCKING_THREAD 1
 #define NON_BLOCKING_THREAD 2
 
+/** Forward declaration to solve circular dependency */
+struct dedos_thread_queue;
+
 /* each thread and some associated info */
 struct dedos_thread
 {
@@ -31,6 +33,7 @@ struct dedos_thread
     struct dedos_thread_queue *thread_q; //queue for incoming control messages
     struct msu_pool *msu_pool; //pointer to struct that will keep track of msu's assigned to the thread
     struct thread_msu_stats *thread_stats;
+    sem_t *q_sem;
 };
 
 //including main thread

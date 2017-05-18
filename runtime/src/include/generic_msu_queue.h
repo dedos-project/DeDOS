@@ -25,10 +25,11 @@ typedef struct generic_msu_queue {
     pthread_mutex_t *mutex;
     uint8_t shared;
     uint16_t overhead;
+    sem_t *thread_q_sem;
 } msu_queue;
 
 
-static inline void generic_msu_queue_init(struct generic_msu_queue *q){
+static inline void generic_msu_queue_init(struct generic_msu_queue *q, sem_t *thread_q_sem){
     q->num_msgs = 0;
     q->size = 0;
     q->max_msgs = MAX_MSU_Q_MSGS;
@@ -36,6 +37,7 @@ static inline void generic_msu_queue_init(struct generic_msu_queue *q){
     q->head = NULL;
     q->tail = NULL;
     q->overhead = 0;
+    q->thread_q_sem = thread_q_sem;
 }
 
 static inline int32_t generic_msu_queue_enqueue(struct generic_msu_queue *q, struct generic_msu_queue_item *p)
@@ -77,6 +79,11 @@ static inline int32_t generic_msu_queue_enqueue(struct generic_msu_queue *q, str
     q->size += p->buffer_len;
     retsize = q->size;
     q->num_msgs++;
+
+    int rtn = sem_post(q->thread_q_sem);
+    if (rtn < 0){
+        log_error("error incrementing thread queue semaphore");
+    }
 
     if (q->shared)
         mutex_unlock(q->mutex);
