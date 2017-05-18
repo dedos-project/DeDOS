@@ -2,6 +2,8 @@ picotcp/.git
 examplecode
 *~
 *.o
+global_controller/cfg_creation/*.yml
+global_controller/cfg_creation/*.json
 global_controller/global_controller
 /.cproject
 /.project
