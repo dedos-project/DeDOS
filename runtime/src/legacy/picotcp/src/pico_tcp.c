@@ -997,8 +997,8 @@ struct pico_socket *pico_tcp_open(uint16_t family)
     t->tcpq_in.pool.root = t->tcpq_hold.pool.root = t->tcpq_out.pool.root = &LEAF;
     t->tcpq_hold.pool.compare = t->tcpq_out.pool.compare = segment_compare;
     t->tcpq_in.pool.compare = input_segment_compare;
-    t->tcpq_in.max_size = PICO_DEFAULT_SOCKETQ;
-    t->tcpq_out.max_size = PICO_DEFAULT_SOCKETQ;
+    t->tcpq_in.max_size = PICO_DEFAULT_TCP_SOCKETQ;
+    t->tcpq_out.max_size = PICO_DEFAULT_TCP_SOCKETQ;
     t->tcpq_hold.max_size = 2u * t->mss;
     rto_set(t, PICO_TCP_RTO_MIN);
 
@@ -1033,8 +1033,8 @@ struct pico_socket *hs_pico_tcp_open(uint16_t family, void *timer_heap)
     t->tcpq_in.pool.root = t->tcpq_hold.pool.root = t->tcpq_out.pool.root = &LEAF;
     t->tcpq_hold.pool.compare = t->tcpq_out.pool.compare = segment_compare;
     t->tcpq_in.pool.compare = input_segment_compare;
-    t->tcpq_in.max_size = PICO_DEFAULT_SOCKETQ;
-    t->tcpq_out.max_size = PICO_DEFAULT_SOCKETQ;
+    t->tcpq_in.max_size = PICO_DEFAULT_TCP_SOCKETQ;
+    t->tcpq_out.max_size = PICO_DEFAULT_TCP_SOCKETQ;
     t->tcpq_hold.max_size = 2u * t->mss;
     rto_set(t, PICO_TCP_RTO_MIN);
 
@@ -1189,7 +1189,7 @@ int pico_tcp_initconn(struct pico_socket *s)
     ts->cwnd = PICO_TCP_IW;
     mtu = (uint16_t)pico_socket_get_mss(s);
     ts->mss = (uint16_t)(mtu - PICO_SIZE_TCPHDR);
-    ts->ssthresh = (uint16_t)((uint16_t)(PICO_DEFAULT_SOCKETQ / ts->mss) -  (((uint16_t)(PICO_DEFAULT_SOCKETQ / ts->mss)) >> 3u));
+    ts->ssthresh = (uint16_t)((uint16_t)(PICO_DEFAULT_SOCKETQ / ts->mss) -  (((uint16_t)(PICO_DEFAULT_TCP_SOCKETQ / ts->mss)) >> 3u));
     syn->sock = s;
     hdr->seq = long_be(ts->snd_nxt);
     hdr->len = (uint8_t)((PICO_SIZE_TCPHDR + opt_len) << 2 | ts->jumbo);
@@ -2634,7 +2634,79 @@ static void forward_data_over_sock(struct msu_endpoint *tmp, char *buf, unsigned
             ret);
 }
 
-static int forward_to_routing_MSU(struct pico_socket *s, struct pico_frame *f, char *flag)
+static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, char *flag)
+{
+    //the incoming f pointer will be freed when this function returs, so need to create
+    //a copy of it
+    //serialize f as a queue item data struct
+    int ret;
+    struct generic_msu *self = pico_tcp_msu;
+    msu_queue_item *queue_item;
+    queue_item = (msu_queue_item*) malloc(sizeof(msu_queue_item));
+    if(!queue_item){
+        log_error("Failed to malloc queue_item queue item");
+        return -1;
+    }
+    queue_item->buffer_len = sizeof(struct tcp_intermsu_queue_item) + f->buffer_len;
+
+    queue_item->buffer = (char*)malloc(sizeof(char) * queue_item->buffer_len);
+    if(!queue_item->buffer){
+        log_error("Failed to malloc queue item buffer");
+        free(queue_item);
+        return -1;
+    }
+    struct tcp_intermsu_queue_item *tcp_queue_data_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
+    tcp_queue_data_item->src_msu_id = self->id;
+    tcp_queue_data_item->msg_type = MSU_PROTO_TCP_HANDSHAKE;
+    tcp_queue_data_item->data_len = f->buffer_len;
+    tcp_queue_data_item->data = queue_item->buffer + sizeof(struct tcp_intermsu_queue_item);
+    memcpy(tcp_queue_data_item->data, f->buffer, tcp_queue_data_item->data_len);
+    log_debug("routing to handshake msu msg_type: %d",tcp_queue_data_item->msg_type);
+    log_debug("routing to handshake frome len: %d",tcp_queue_data_item->data_len);
+
+    //next msu type id
+    unsigned int type_id = DEDOS_TCP_HANDSHAKE_MSU_ID;
+    log_debug("type ID of next MSU is %d", type_id);
+
+    // Get the MSU type to deliver to
+    struct msu_type *type = NULL;
+    ret = msu_type_by_id_corrected((unsigned int)type_id, &type);
+    if (type == NULL){
+        log_error("Type ID %d not recognized", type_id);
+        if (queue_item){
+            free(queue_item->buffer);
+            free(queue_item);
+        }
+        return -1;
+    }
+    log_debug("retrieved msu type from id. name: %s", type->name);
+
+    // Get the specific MSU to deliver to
+    struct msu_endpoint *dst = type->route(type, self, queue_item);
+    if (dst == NULL){
+        log_error("No destination endpoint of type %s (%d) for msu %d",
+                  type->name, type_id, self->id);
+        if (queue_item){
+            free(queue_item->buffer);
+            free(queue_item);
+        }
+        return -1;
+    }
+    log_debug("Next msu id is %d", dst->id);
+
+    // Send to the specific destination
+    int rtn = send_to_dst(dst, self, queue_item);
+    if (rtn < 0){
+        log_error("Error sending to destination msu %s", "");
+        if (queue_item){
+            free(queue_item->buffer);
+            free(queue_item);
+        }
+    }
+    return 0;
+}
+
+static int forward_to_routing_MSU_deprecated(struct pico_socket *s, struct pico_frame *f, char *flag)
 {
 	//the incoming f pointer will be freed when this function returs, so need to create
 	//a copy of it
@@ -2660,23 +2732,37 @@ static int forward_to_routing_MSU(struct pico_socket *s, struct pico_frame *f, c
     }
 
     if (is_endpoint_local(msu_endpoint) == 0) {
-    	struct routing_queue_item *rt_queue_item;
+    	void *serialized_queue_item_payload;
+        struct routing_queue_item *rt_queue_item;
     	struct pico_frame *new_frame;
+        log_debug("Local next routing MSU");
+/*
     	new_frame = pico_frame_alloc(f->buffer_len);
     	if(!new_frame){
     		log_error("pico_frame_alloc failed %s","");
     		return -1;
     	}
-
-    	rt_queue_item = (struct routing_queue_item*)malloc(sizeof(struct routing_queue_item));
-    	if(!rt_queue_item){
-    		log_error("Failed to malloc routing queue item%s","");
-    		pico_frame_discard(new_frame);
+*/
+        int rt_queue_item_total_size = sizeof(struct routing_queue_item) +
+                                       //sizeof(struct pico_frame) +
+                                       f->buffer_len;
+    	serialized_queue_item_payload = malloc(rt_queue_item_total_size);
+    	if(!serialized_queue_item_payload){
+    		log_error("Failed to malloc serial buffer for queue item%s","");
+    		//pico_frame_discard(new_frame);
     		return -1;
     	}
-        memcpy(new_frame->buffer, f->buffer, f->buffer_len);
+        rt_queue_item = (struct rt_queue_item*)serialized_queue_item_payload;
+    	rt_queue_item->src_msu_id = pico_tcp_msu->id; //one picotcp msu per runtime for now
+    	rt_queue_item->f = NULL; //rt_queue_item + sizeof(struct routing_queue_item);
+    	//rt_queue_item->f->buffer = rt_queue_item + sizeof(struct routing_queue_item) + sizeof(struct pico_frame);
+       	//new_frame->buffer = rt_queue_item->f->buffer;
+        log_debug("Before memcpy of f->buffer into new_frame");
+        print_frame(f);
+        memcpy(serialized_queue_item_payload + sizeof(struct routing_queue_item), f->buffer, f->buffer_len);
+        log_debug("After memcpy of f->buffer into new_frame");
     	/* fix new frame pointers */
-
+/*
         new_frame->buffer_len = f->buffer_len;
         new_frame->start = new_frame->buffer;
         new_frame->len = new_frame->buffer_len;
@@ -2686,10 +2772,7 @@ static int forward_to_routing_MSU(struct pico_socket *s, struct pico_frame *f, c
         new_frame->transport_hdr = new_frame->net_hdr + new_frame->net_len;
         new_frame->transport_len = (uint16_t) (new_frame->len - new_frame->net_len
                 - (uint16_t) (new_frame->net_hdr - new_frame->buffer));
-
-    	rt_queue_item->src_msu_id = pico_tcp_msu->id; //one picotcp msu per runtime for now
-    	rt_queue_item->f = new_frame;
-    	//but should also update the pointers!
+*/
 
     	struct generic_msu_queue_item *queue_item;
         queue_item = (struct generic_msu_queue_item*)malloc(sizeof(struct generic_msu_queue_item));
@@ -2697,19 +2780,19 @@ static int forward_to_routing_MSU(struct pico_socket *s, struct pico_frame *f, c
         	log_error("Failed to malloc queue item %s","");
         	return -1;
         }
-        queue_item->buffer_len = f->buffer_len + sizeof(struct routing_queue_item);
-        queue_item->buffer = rt_queue_item;
+        queue_item->buffer_len = rt_queue_item_total_size;
+        queue_item->buffer = serialized_queue_item_payload;
         log_debug("Enqueuing following to next hs_request_routing_msu: %s","");
         log_debug("\tqueue_item->buffer_len: %u",queue_item->buffer_len);
         log_debug("\trt_queue_item->src_msu_id: %d",rt_queue_item->src_msu_id);
-        log_debug("\trt_queue_item->f: %s","");
-        log_debug("Forwarding follwing frame to routing MSU: %s","");
-        print_frame(rt_queue_item->f);
+//        log_debug("Forwarding follwing frame to routing MSU: %s","");
+//        print_frame(rt_queue_item->f);
         ret = generic_msu_queue_enqueue(msu_endpoint->next_msu_input_queue, queue_item);
         if(ret < 0){
             log_debug("Failed to enqueue request %s","");
-            pico_frame_discard(new_frame);
-            free(rt_queue_item);
+//            pico_frame_discard(new_frame);
+//            free(rt_queue_item);
+              free(serialized_queue_item_payload);
         } else {
             log_debug("Same host next MSU of type: %u, Enqueued %s request to MSU queue", next_msu_type, flag);
         }
@@ -2727,7 +2810,7 @@ static int tcp_syn(struct pico_socket *s, struct pico_frame *f)
 {
 #ifdef PICO_SUPPORT_DEDOS_MSUS
     log_debug("Requesting Handshake from MSU","");
-    forward_to_routing_MSU(s, f, "SYN");
+    route_to_handshake_msu(s, f, "SYN");
     //FIXME: How to handle pending connections number provided by listen?
     // Should not be incremented here, because we dont want to drop syn requests
     //s->number_of_pending_conn++;
@@ -2886,7 +2969,7 @@ static int tcp_first_ack(struct pico_socket *s, struct pico_frame *f)
 {
 #ifdef PICO_SUPPORT_DEDOS_MSUS
     log_debug("Forwarding FIRST ACK to MSU","");
-    forward_to_routing_MSU(s, f, "FIRST_ACK");
+    route_to_handshake_msu(s, f, "FIRST_ACK");
     log_debug("Done enqueuing FIRST_ACK request","");
 
     return 0;
