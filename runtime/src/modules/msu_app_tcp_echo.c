@@ -60,15 +60,14 @@
 #include <fcntl.h>
 #include <libgen.h>
 
+#define RECV_MODE 0
+#define SEND_MODE 0
+#define HANDSHAKE_ONLY_MODE 0
+
+#define BSIZE (1024)
 void msu_app_tcpecho(uint16_t listen_port);
 void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s);
-int msu_send_tcpecho(struct pico_socket *s);
-
-#define BSIZE (1024 * 10)
-
-static char recvbuf[BSIZE];
-static int pos = 0, len = 0;
-static int flag = 0;
+int msu_send_tcpecho(struct pico_socket *s, char *recvbuf, int len);
 
 static char *msu_cpy_arg(char **dst, char *str)
 {
@@ -95,12 +94,22 @@ static char *msu_cpy_arg(char **dst, char *str)
     return nxt;
 }
 
-int msu_send_tcpecho(struct pico_socket *s)
+int msu_send_tcpecho(struct pico_socket *s, char *recvbuf, int len)
 {
+#if RECV_MODE == 1
+    //do not send back anything
+    return 1;
+#endif
+    //log_warn("Recvd and sending:\n%s",recvbuf);
+    int pos = 0;
     int w, ww = 0;
+    char sendbuf[BSIZE];
+    memset(sendbuf, '\0', sizeof(char)*BSIZE);
+    memcpy(&sendbuf, recvbuf, BSIZE);
+
     if (len > pos) {
         do {
-            w = pico_socket_write(s, recvbuf + pos, len - pos);
+            w = pico_socket_write(s, sendbuf + pos, len - pos);
             if (w > 0) {
                 pos += w;
                 ww += w;
@@ -118,31 +127,31 @@ int msu_send_tcpecho(struct pico_socket *s)
 void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
 {
     int r = 0;
-
-    // printf("tcpecho> wakeup ev=%u\n", ev);
+    int len = 0;
+    char recvbuf[BSIZE];
+    memset(recvbuf, '\0', sizeof(char)*BSIZE);
 
     if (ev & PICO_SOCK_EV_RD) {
-        if (flag & PICO_SOCK_EV_CLOSE){
+        if (s->flag & PICO_SOCK_EV_CLOSE){
             ;
         }
-            // printf("SOCKET> EV_RD, FIN RECEIVED\n");
-
+        
+        memset(recvbuf, '\0', sizeof(char)*BSIZE);
         while (len < BSIZE) {
             r = pico_socket_read(s, recvbuf + len, BSIZE - len);
             if (r > 0) {
                 len += r;
-                flag &= ~(PICO_SOCK_EV_RD);
+                s->flag &= ~(PICO_SOCK_EV_RD);
             } else {
-                flag |= PICO_SOCK_EV_RD;
+                s->flag |= PICO_SOCK_EV_RD;
                 break;
             }
         }
-        if (flag & PICO_SOCK_EV_WR) {
-            flag &= ~PICO_SOCK_EV_WR;
-            msu_send_tcpecho(s);
+        if (s->flag & PICO_SOCK_EV_WR) {
+            s->flag &= ~PICO_SOCK_EV_WR;
+            msu_send_tcpecho(s, recvbuf, len);
         }
     }
-
     if (ev & PICO_SOCK_EV_CONN) {
         uint32_t ka_val = 0;
         struct pico_socket *sock_a = {
@@ -158,6 +167,7 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
         int yes = 1;
 
         sock_a = pico_socket_accept(s, &orig, &port);
+
         pico_ipv4_to_string(peer, orig.addr);
         log_debug("Connection established with %s:%d", peer, short_be(port));
         pico_socket_setoption(sock_a, PICO_TCP_NODELAY, &yes);
@@ -172,30 +182,30 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
 
     if (ev & PICO_SOCK_EV_FIN) {
         ;
-        // printf("Socket closed. Exit normally. \n");
         //pico_timer_add(2000, deferred_exit, NULL);
     }
 
     if (ev & PICO_SOCK_EV_ERR) {
-        // printf("Socket error received: %s. Bailing out.\n", strerror(pico_err));
+        log_error("Socket error received: %s. Bailing out.\n", strerror(pico_err));
         //exit(1);
-        ;
     }
 
     if (ev & PICO_SOCK_EV_CLOSE) {
         // printf("Socket received close from peer.\n");
-        if (flag & PICO_SOCK_EV_RD) {
+        if (s->flag & PICO_SOCK_EV_RD) {
             pico_socket_shutdown(s, PICO_SHUT_WR);
-            // printf("SOCKET> Called shutdown write, ev = %d\n", ev);
         }
     }
 
     if (ev & PICO_SOCK_EV_WR) {
-        r = msu_send_tcpecho(s);
+        r = 0;
+        if(recvbuf[0] != '\0'){
+            //r = msu_send_tcpecho(s, recvbuf, len);
+        }
         if (r == 0)
-            flag |= PICO_SOCK_EV_WR;
+            s->flag |= PICO_SOCK_EV_WR;
         else
-            flag &= (~PICO_SOCK_EV_WR);
+            s->flag &= (~PICO_SOCK_EV_WR);
     }
 }
 
@@ -249,7 +259,8 @@ int msu_app_tcp_echo_process_queue_item(struct generic_msu *msu, struct generic_
 
     return 0;
 }
-int msu_app_tcp_echo_init(struct generic_msu *self, 
+
+int msu_app_tcp_echo_init(struct generic_msu *self,
         struct create_msu_thread_msg_data *create_action)
 {
     struct pico_ip4 ZERO_IP4 = {
@@ -343,6 +354,3 @@ struct msu_type MSU_APP_TCP_ECHO_TYPE = {
     .send_local=default_send_local,
     .send_remote=default_send_remote
 };
-
-
-
