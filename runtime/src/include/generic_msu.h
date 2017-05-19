@@ -240,4 +240,6 @@ void *msu_data(struct generic_msu *msu);
 void register_msu_type(struct msu_type *type);
 /** Get pointer to msu type struct based on type_id */
 struct msu_type *msu_type_by_id(unsigned int type_id);
+
+int msu_type_by_id_corrected(unsigned int type_id, msu_type **type);
 #endif

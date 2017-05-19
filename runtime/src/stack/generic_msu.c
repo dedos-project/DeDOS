@@ -104,6 +104,18 @@ struct msu_type *msu_type_by_id(unsigned int type_id){
     return type;
 }
 
+int msu_type_by_id_corrected(unsigned int type_id, msu_type **type){
+    *type = NULL;
+    // NOTE: This will require slightly more time than a switch statement
+    for (int i=0; i<n_types; i++){
+        if (msu_types[i].type_id == type_id){
+            *type = &msu_types[i];
+            return 0;
+        }
+    }
+    return -1;
+}
+
 /**
  * Called on receipt of a new message from the global controller by an MSU.
  * Adds new routes and updates the scheduling weight if appropriate.
@@ -660,6 +672,39 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
     return route_state->last_endpoint;
 }
 
+/** Picks the next endpoing in a RR fashion while considering 4 tuple. This is to
+* ensure that items for the same flow are sent to same destination
+*
+* TODO: Soon to be handled by router object.
+*
+* @param type MSU type to be located
+* @param sender MSU sending the data
+* @param source ip_address of data frame
+* @param source port of data frame
+* @param destination ip of data frame
+* @param destination port of data frame
+* @return msu_endpoint or NULL
+*/
+struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct generic_msu *sender,
+                                    uint32_t src_addr, uint16_t src_port,
+                                    uint32_t dst_addr, uint16_t dst_port){
+    log_debug("Inside rr with 4 tup");
+    log_debug("Received 4 tuple: %u:%u -> %u:%u",src_addr, src_port, dst_addr, dst_port);
+    struct msu_endpoint *dst_msus =
+        get_all_type_msus(sender->rt_table, type->type_id);
+
+    struct msu_endpoint *dst = NULL;
+    int count_next_msus = HASH_COUNT(dst_msus);
+    log_debug("Available MSU for dst of type %s: %d",type->name, count_next_msus);
+
+    //Only using one msu for redoing usenix tests.
+    //update routing logic to support more handshake workers.
+    dst = dst_msus;
+
+    return dst;
+}
+
+
 /**
  * Private function, sends data stored in a queue_item to a destination msu,
  * either local or remote.
@@ -734,11 +779,18 @@ int msu_receive(struct generic_msu *self, msu_queue_item *data){
     if (type_id <= 0){
         // If type_id <= 0 it can either be an error (< 0) or just
         // not have a subsequent destination
+        if (type_id == -10){ // Special case for tcp related msus, return this
+            //no need to free data pointer, if was set, the receive function
+            //takes care of freeing the buffer
+            return 0;
+        }
         if (type_id < 0){
             ;//log_warn("MSU %d returned error code %d", self->id, type_id);
         }
         if (data){
-            free(data->buffer);
+            if (data->buffer) {
+                free(data->buffer);
+            }
             free(data);
         }
         return type_id;
