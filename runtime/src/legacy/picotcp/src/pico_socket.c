@@ -662,6 +662,7 @@ struct pico_socket *pico_socket_open(uint16_t net, uint16_t proto, void (*wakeup
     s->q_in.max_size = PICO_DEFAULT_SOCKETQ;
     s->q_out.max_size = PICO_DEFAULT_SOCKETQ;
 
+    s->flag = 0;
     s->wakeup = wakeup;
     return s;
 }
