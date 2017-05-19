@@ -16,6 +16,7 @@ PATH_DEP = build/depends/
 PATH_OBJ = build/objs/
 PATH_BLD_LEG = build/legacy/
 PATH_RES = build/results/
+ADDRESS_SANITIZER?=1
 
 #LEGACY_LIBS =
 LEGACY_LIBS = picotcp
@@ -34,6 +35,10 @@ CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g -DSTAT
 
 ifeq ($(DATAPLANE_PROFILING),1)
         CFLAGS+=-DDATAPLANE_PROFILING
+endif
+
+ifeq ($(ADDRESS_SANITIZER),1)
+  CFLAGS+=-fsanitize=address -fno-omit-frame-pointer
 endif
 
 TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc
