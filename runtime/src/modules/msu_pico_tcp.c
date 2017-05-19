@@ -34,6 +34,7 @@
 #include "pico_tftp.h"
 #include "pico_tcp.h"
 #include "pico_eth.h"
+#include "pico_socket_tcp.h"
 
 #include "dedos_msu_list.h"
 #include "pico_queue.h"
@@ -91,6 +92,47 @@ static struct pico_socket *find_listen_sock(struct pico_sockport *sp, struct pic
     return found;
 }
 
+int msu_pico_tcp_recv_state(struct generic_msu *self, struct dedos_intermsu_message* msg, void *buf, uint16_t bufsize){
+    //copy the buf and enqueue the message into my queue
+    //malloc intermsu_msg
+    struct dedos_intermsu_message *intermsu_msg = (struct dedos_intermsu_message*)malloc(sizeof(struct dedos_intermsu_message));
+    if(!intermsu_msg){
+        log_error("Failed to malloc intermsu_msg in recv state%s","");
+        return -1;
+    }
+    intermsu_msg->src_msu_id = msg->src_msu_id;
+    intermsu_msg->dst_msu_id = msg->dst_msu_id;
+    intermsu_msg->proto_msg_type = msg->proto_msg_type;
+    intermsu_msg->payload_len = msg->payload_len;
+    intermsu_msg->payload = (char*)malloc(bufsize);
+    if(!intermsu_msg->payload){
+        log_error("Failed to malloc intermsu_msg payload in recv state%s","");
+        free(intermsu_msg);
+        return -1;
+    }
+    memcpy(intermsu_msg->payload, buf, bufsize);
+
+    //create a queue item
+    struct generic_msu_queue_item *queue_item = (struct generic_msu_queue_item*)malloc(sizeof(struct generic_msu_queue_item));
+    if(!queue_item){
+        log_error("Failed to malloc queue item in recv state %s","");
+        free(intermsu_msg->payload);
+        free(intermsu_msg);
+        return -1;
+    }
+    queue_item->buffer = intermsu_msg;
+    queue_item->buffer_len = sizeof(struct dedos_intermsu_message) + bufsize;
+    int ret = generic_msu_queue_enqueue(&self->q_in, queue_item);
+    if(ret < 0){
+        log_error("Failed to enqueue recv state in to own queue for processing%s","");
+        free(queue_item);
+        free(intermsu_msg->payload);
+        free(intermsu_msg);
+        return -1;
+    }
+    return 0;
+}
+
 int msu_pico_tcp_restore(struct generic_msu *self,
         struct dedos_intermsu_message* msg, void *buf, uint16_t bufsize)
 {
@@ -111,7 +153,7 @@ int msu_pico_tcp_restore(struct generic_msu *self,
         f->transport_len = (uint16_t) (f->len - f->net_len
                 - (uint16_t) (f->net_hdr - f->buffer));
 
-        print_frame(f);
+        // print_frame(f);
 
         struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
         int ret = 0;
@@ -163,8 +205,8 @@ int msu_pico_tcp_restore(struct generic_msu *self,
         s->q_out.max_size = PICO_DEFAULT_SOCKETQ;
         s->wakeup = NULL;
 
-        t->tcpq_in.max_size = PICO_DEFAULT_SOCKETQ;
-        t->tcpq_out.max_size = PICO_DEFAULT_SOCKETQ;
+        t->tcpq_in.max_size = PICO_DEFAULT_TCP_SOCKETQ;
+        t->tcpq_out.max_size = PICO_DEFAULT_TCP_SOCKETQ;
         t->tcpq_hold.max_size = 2u * mtu;
         memcpy(&s->local_addr, &s_dump->local_addr, sizeof(struct pico_ip4));
         memcpy(&s->remote_addr, &s_dump->remote_addr, sizeof(struct pico_ip4));
@@ -226,6 +268,7 @@ int msu_pico_tcp_restore(struct generic_msu *self,
                     short_be(s->local_port));
             s->parent->wakeup(PICO_SOCK_EV_CONN, s->parent);
         }
+        s->ev_pending |= PICO_SOCK_EV_WR;
     }
     return 0;
 }
@@ -256,7 +299,7 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *que
 
     log_debug("Processed queue item of %s",msu->type->name);
 
-    return 0;
+    return -10;
 }
 
 
@@ -264,13 +307,14 @@ int msu_pico_tcp_init(struct generic_msu *self,
         struct create_msu_thread_msg_data *create_action)
 {
     // pico_tcp_msu->restore = msu_pico_tcp_restore; //called when data is received over control socket i.e. TCP state from HS MSU
-    
+
     /* for sake of running this msu since no msu writes to this MSU's input queue,
      * we will write some dummy data to its own queue to be dequeued when thread loop
      * iterates over all MSU to check it they should run it.
      */
 
     log_info("Initializing pico_tcp_stack by calling pico_stack_init %s","");
+    pico_tcp_msu = self;
     pico_stack_init();
 //
 //    struct generic_msu_queue_item *dummy_item;
@@ -293,9 +337,7 @@ struct msu_type PICO_TCP_MSU_TYPE= {
     .receive=msu_pico_tcp_process_queue_item,
     .receive_ctrl=NULL,
     .route=round_robin,
-    .deserialize=msu_pico_tcp_restore,
+    .deserialize=msu_pico_tcp_recv_state,
     .send_local=default_send_local,
     .send_remote=default_send_remote
 };
-
-
