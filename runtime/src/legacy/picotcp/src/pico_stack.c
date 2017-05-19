@@ -29,6 +29,7 @@
 #include "pico_tcp.h"
 #include "dedos_msu_msg_type.h"
 #include "modules/msu_tcp_handshake.h"
+#include "modules/msu_pico_tcp.h"
 #include "pico_socket.h"
 #include "heap.h"
 #include "communication.h"
