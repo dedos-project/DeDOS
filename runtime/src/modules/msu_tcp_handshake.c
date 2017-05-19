@@ -3,8 +3,10 @@
 #include "pico_ipv4.h"
 #include "pico_tcp.h"
 #include "pico_eth.h"
+#include "pico_config.h"
 #include "pico_protocol.h"
 #include "runtime.h"
+#include "modules/hs_request_routing_msu.h"
 #include "modules/msu_tcp_handshake.h"
 #include "pico_socket_tcp.h"
 #include "communication.h"
@@ -716,8 +718,7 @@ struct pico_socket *find_tcp_socket(struct pico_sockport *sp,
     return found;
 }
 
-static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
-        struct pico_frame *f)
+static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id, struct pico_frame *f)
 {
     //DONT NOT FREE THE INCOMING FRAME HERE
     /* check what flags are set and take appropriate action */
@@ -777,12 +778,23 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
                 log_debug("Sending original SYN ACK %s", "");
                 dedos_tcp_send_synack(self, &tcp_sock_found->sock, reply_msu_id);
             } else {
-                log_warn("Bad seqs..Sending a reset %s","");
-                tcp_send_rst(sock_found, f);
-                goto end;
+                    log_warn("Bad seqs...cleaning up socket..%s","");
+                    // tcp_send_rst(sock_found, f);
+                    /* non-synchronized state */
+                    /* go to CLOSED here to prevent timer callback to go on after timeout */
+                    (tcp_sock_found->sock).state &= 0x00FFU;
+                    (tcp_sock_found->sock).state |= PICO_SOCKET_STATE_TCP_CLOSED;
+                    // ret = tcp_do_send_rst(s, long_be(t->snd_nxt));
+
+                    /* Set generic socket state to CLOSED, too */
+                    (tcp_sock_found->sock).state &= 0xFF00U;
+                    (tcp_sock_found->sock).state |= PICO_SOCKET_STATE_CLOSED;
+
+                    remove_completed_request(in_state,  (struct pico_socket *)tcp_sock_found);
+                    goto end;
             }
-        } else {
-            log_warn("Bad state associated with received SYN and found sock%s","");
+        } else if (sock_found->state  == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED | PICO_SOCKET_STATE_CONNECTED)) {
+            log_warn("SYN for established socket..ignoring..%s","");
             goto end;
         }
     } else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK ) && sock_found) /* ACK for prev seen SYN */
@@ -835,6 +847,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
 
                 //call the same thread restore here
                 msu_tcp_hs_same_thread_transfer(new, f);
+                ret = remove_completed_request(in_state,  (struct pico_socket *)tcp_sock_found);
                 goto end2;
             }
 #endif
@@ -850,30 +863,23 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
             //free collected_tcp_sock after sending the buff
             PICO_FREE(collected_tcp_sock);
             log_debug("%s","Freed collected socket");
-
-//#endif
-            //Free the resources here(remove socket connection) //move this to later and free after a while
-            // in case we get a duplicate First Ack
-            //following is now checked by pico_sockets_msu_check()
-//            ret = remove_completed_request(in_state,
-//                    (struct pico_socket *)tcp_sock_found);
         }
         //Duplicate first ACK
         else if(sock_found->state == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED |
                                                                 PICO_SOCKET_STATE_CONNECTED))
         {
-            log_warn("Duplicate first ACK %s",""); //TODO
+            log_warn("Duplicate first ACK %s. IGNORING FOR NOW","");
             /* take back our own SEQ number to its original value
              * faking to client since we don't want to lose anytime in the meantime
              * when connection is being restored
              * so the synack retransmitted is identical to the original.
              */
-            tcp_sock_found->snd_nxt--;
-            log_debug("Sending original SYN ACK for keeping TCP happy..%s", "");
-            //TODO here now send the original SYN/ACK back so that the client again sends the first ACK,
+            // tcp_sock_found->snd_nxt--;
+            // log_debug("Sending original SYN ACK for keeping TCP happy..%s", "");
+            // here now send the original SYN/ACK back so that the client again sends the first ACK,
             //and if the connection has been restored in data MSU, that that will take take of duplicate,
             //first ACK and all things will be happy thereafter.
-            dedos_tcp_send_synack(self, &tcp_sock_found->sock, reply_msu_id);
+            // dedos_tcp_send_synack(self, &tcp_sock_found->sock, reply_msu_id);
         }
     } else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK) && !sock_found) {
     	log_warn("ACK with no associated socket %s","");
@@ -913,7 +919,7 @@ void* msu_tcp_hs_collect_socket(void *data)
     struct pico_socket_dump *s_dump = (struct pico_socket_dump*) t_dump;
 
     //copy pico_socket data
-    
+
     s_dump->l4_proto = s->proto->proto_number;
     s_dump->l3_net = s->net->proto_number;
 
@@ -1095,11 +1101,50 @@ static int valid_ip_tcp_flags(struct pico_frame *f)
 int msu_tcp_hs_restore_socket(struct generic_msu *self, struct dedos_intermsu_message* msg, 
                               void *buf, uint16_t bufsize)
 {
-    struct pico_frame *f = pico_frame_alloc(bufsize);
-    char *bufs = (char *) buf;
+    if (msg->proto_msg_type != MSU_PROTO_PICO_TCP_STACK) {
+        log_error("Invalid proto_msg_type received");
+        return -1;
+    }
 
+    int ret;
+    log_debug("%s", "Received a valid TCP frame on control socket");
+    //handle_incoming_frame(self, msg->src_msu_id, f);
+
+    //clone the buf and create msu_queue item and enqueue it
+    msu_queue_item *queue_item;
+    void *cloned_buffer;
+
+    queue_item = (msu_queue_item*)malloc(sizeof(msu_queue_item));
+    if(!queue_item){
+        log_error("Failed to malloc msu queue item");
+    	return -1;
+    }
+
+    queue_item->buffer = malloc(bufsize * sizeof(char));
+    if(!queue_item->buffer){
+        log_error("Failed to malloc buffer to hold recevied data");
+        free(queue_item);
+        return -1;
+    }
+    cloned_buffer = queue_item->buffer;
+    memcpy(cloned_buffer, buf, bufsize);
+
+    queue_item->buffer_len = bufsize;
+
+    struct tcp_intermsu_queue_item *tcp_queue_item = (struct tcp_intermsu_queue_item *)cloned_buffer;
+    log_debug("src msu id: %d",tcp_queue_item->src_msu_id);
+    log_debug("msg type: %d",tcp_queue_item->msg_type);
+    log_debug("data len: %d",tcp_queue_item->data_len);
+    ret = generic_msu_queue_enqueue(&self->q_in, queue_item);
+    log_debug("Enqueued MSU_PROTO_TCP_HANDSHAKE request: %d", ret);
+
+
+/*
+    struct pico_frame *f = pico_frame_alloc(bufsize);
+    char *bufs = (char *) buf + sizeof(struct routing_queue_item);
+    int frame_len = bufsize - sizeof(struct routing_queue_item);
     memcpy(f->buffer, bufs, bufsize);
-    f->buffer_len = bufsize;
+    f->buffer_len = frame_len;
     f->start = f->buffer;
     f->len = f->buffer_len;
     f->datalink_hdr = f->buffer;
@@ -1108,19 +1153,11 @@ int msu_tcp_hs_restore_socket(struct generic_msu *self, struct dedos_intermsu_me
     f->transport_hdr = f->net_hdr + f->net_len;
     f->transport_len = (uint16_t) (f->len - f->net_len
             - (uint16_t) (f->net_hdr - f->buffer));
-
-    if (msg->proto_msg_type == MSU_PROTO_TCP_HANDSHAKE) {
-        log_debug("%s", "Received a valid TCP frame on control socket");
-        handle_incoming_frame(self, msg->src_msu_id, f);
-    }
-
+*/
     return 0;
 }
 
-/* 
- * This was used to transfer on the same machine
- * Couldn't find where it was called so it's commented out for now
- *
+
 int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
 {
     log_debug("%s", "Same host established conn socket transfer");
@@ -1149,15 +1186,17 @@ int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
     pico_socket_add(&tcp_sock_found->sock);
     tcp_sock_found->retrans_tmr = 0;
 
+    tcp_send_ack(tcp_sock_found);
+
     if (sock_found->parent && sock_found->parent->wakeup) {
         log_debug("FIRST ACK - Parent found -> listening socket %u",
                 short_be(sock_found->local_port));
         sock_found->parent->wakeup(PICO_SOCK_EV_CONN, sock_found->parent);
     }
+    sock_found->ev_pending |= PICO_SOCK_EV_WR;
 
     return 0;
 }
-*/
 
 int msu_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *queue_item)
 {
@@ -1168,11 +1207,42 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *queue_it
     if(queue_item){
         log_debug("----------------->>%s", "Processing HS MSU item handler");
 
-        struct hs_queue_item *hs_item;
-        hs_item = (struct hs_queue_item*)queue_item->buffer;
+        struct tcp_intermsu_queue_item *tcp_queue_item;
+        tcp_queue_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
+        int src_msu_id = tcp_queue_item->src_msu_id;
+        int msg_type = tcp_queue_item->msg_type;
+        int frame_len = tcp_queue_item->data_len;
 
-        msu_process_hs_request_in(msu, hs_item->reply_msu_id, hs_item->f);
-        pico_frame_discard(hs_item->f);
+        tcp_queue_item->data = queue_item->buffer + sizeof(struct tcp_intermsu_queue_item);
+
+        if(msg_type != MSU_PROTO_TCP_HANDSHAKE){
+            log_error("Unexpected msg type: %d",msg_type);
+            delete_generic_msu_queue_item(queue_item);
+        }
+
+        struct pico_frame *f = pico_frame_alloc(frame_len);
+        if(!f || !f->buffer){
+            log_error("Failed to allocate pico frame");
+            delete_generic_msu_queue_item(queue_item);
+        }
+        memcpy(f->buffer, tcp_queue_item->data, frame_len);
+        log_debug("copied frame");
+
+        //Fix frame pointers
+        f->buffer_len = frame_len;
+        f->start = f->buffer;
+        f->len = f->buffer_len;
+        f->datalink_hdr = f->buffer;
+        f->net_hdr = f->datalink_hdr + PICO_SIZE_ETHHDR;
+        f->net_len = 20;
+        f->transport_hdr = f->net_hdr + f->net_len;
+        f->transport_len = (uint16_t) (f->len - f->net_len
+            - (uint16_t) (f->net_hdr - f->buffer));
+        log_debug("Fixed frame pointers..");
+        msu_process_hs_request_in(msu, tcp_queue_item->src_msu_id, f);
+
+        pico_frame_discard(f);
+
         //free the queue item's memory that was processed.
         delete_generic_msu_queue_item(queue_item);
         log_debug("----------------->>%s", "Exiting HS MSU item handler");
@@ -1186,7 +1256,7 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *queue_it
     //check expired timers
     hs_check_timers(in_state->hs_timers);
 
-    return 0;
+    return -10;
 }
 
 void msu_tcp_handshake_destroy(struct generic_msu *self)
@@ -1203,6 +1273,7 @@ void msu_tcp_handshake_destroy(struct generic_msu *self)
     free(self->internal_state);
     log_debug("%s","Freed internal state");
 }
+
 struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu, 
         struct create_msu_thread_msg_data *create_action)
 {
@@ -1243,6 +1314,45 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     return 0;
 }
 
+int hs_route(struct msu_type *type, struct generic_msu *sender, msu_queue_item *queue_item){
+    struct tcp_intermsu_queue_item *tcp_queue_item;
+    struct msu_endpoint *ret_endpoint = NULL;
+    tcp_queue_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
+    tcp_queue_item->data = queue_item->buffer + sizeof(struct tcp_intermsu_queue_item);
+    int frame_len = tcp_queue_item->data_len;
+
+    struct pico_frame *f = (struct pico_frame *)malloc(sizeof(struct pico_frame));
+    if(!f){
+        log_error("Failed malloc pico frame");
+        return -1;
+    }
+    f->buffer = tcp_queue_item->data;
+    f->buffer_len = frame_len;
+    f->start = tcp_queue_item->data;
+    f->len = f->buffer_len;
+    f->datalink_hdr = f->buffer;
+    f->net_hdr = f->datalink_hdr + PICO_SIZE_ETHHDR;
+    f->net_len = 20;
+    f->transport_hdr = f->net_hdr + f->net_len;
+    f->transport_len = (uint16_t) (f->len - f->net_len - (uint16_t) (f->net_hdr - f->buffer));
+    struct pico_ipv4_hdr *net_hdr = (struct pico_ipv4_hdr *) f->net_hdr;
+    struct pico_tcp_hdr *tcp_hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
+    //log_debug("dst port:%u src port: %u ",
+    //        short_be(tcp_hdr->trans.dport), short_be(tcp_hdr->trans.sport));
+
+    //char peer[30], local[30];
+    //pico_ipv4_to_string(peer, net_hdr->src.addr);
+    //pico_ipv4_to_string(local, net_hdr->dst.addr);
+    //log_debug("Src addr %s: dst addr : %s", peer, local);
+
+    //log_debug("calling rr with 4 tup");
+    ret_endpoint = round_robin_with_four_tuple(type, sender,
+                                    net_hdr->src.addr, short_be(tcp_hdr->trans.sport),
+                                    net_hdr->dst.addr, short_be(tcp_hdr->trans.dport));
+    free(f);
+    return ret_endpoint;
+}
+
 struct msu_type TCP_HANDSHAKE_MSU_TYPE = {
     .name="tcp_handshake_msu",
     .layer=DEDOS_LAYER_TRANSPORT,
@@ -1252,10 +1362,8 @@ struct msu_type TCP_HANDSHAKE_MSU_TYPE = {
     .destroy=msu_tcp_handshake_destroy,
     .receive=msu_tcp_process_queue_item,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=hs_route,
     .deserialize=msu_tcp_hs_restore_socket,
     .send_local=default_send_local,
     .send_remote=default_send_remote,
 };
-
-
