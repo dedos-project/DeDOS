@@ -241,5 +241,9 @@ void register_msu_type(struct msu_type *type);
 /** Get pointer to msu type struct based on type_id */
 struct msu_type *msu_type_by_id(unsigned int type_id);
 
-int msu_type_by_id_corrected(unsigned int type_id, msu_type **type);
+int msu_type_by_id_corrected(unsigned int type_id, struct msu_type **type);
+/* Routing function based on 4 tuple */
+struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type,
+    struct generic_msu *sender, uint32_t src_addr, uint16_t src_port,
+    uint32_t dst_addr, uint16_t dst_port);
 #endif

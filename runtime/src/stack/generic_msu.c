@@ -104,7 +104,7 @@ struct msu_type *msu_type_by_id(unsigned int type_id){
     return type;
 }
 
-int msu_type_by_id_corrected(unsigned int type_id, msu_type **type){
+int msu_type_by_id_corrected(unsigned int type_id, struct msu_type **type){
     *type = NULL;
     // NOTE: This will require slightly more time than a switch statement
     for (int i=0; i<n_types; i++){

@@ -86,9 +86,5 @@ struct msu_routing_table * do_del_route_update(struct msu_routing_table *rt_tabl
 struct msu_routing_table* handle_routing_table_update(struct msu_routing_table *rt_table, struct msu_control_update *update_msg);
 
 void free_msu_control_update(struct msu_control_update *update_msg);
-/* Routing function based on 4 tuple */
-struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, 
-	struct generic_msu *sender, uint32_t src_addr, uint16_t src_port,
-    uint32_t dst_addr, uint16_t dst_port);
 
 #endif /* ROUTING_H_ */
