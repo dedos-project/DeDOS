@@ -11,7 +11,7 @@ enum object_type {
 static struct key_mapping key_map[];
 
 struct dfg_config *parse_dfg_json(char *filename){
-    
+
     struct dfg_config *cfg = malloc(sizeof(*cfg));
     bzero(cfg, sizeof(*cfg));
 
@@ -339,7 +339,7 @@ static int set_msu_rt_id(jsmntok_t **tok, char *j, struct json_state *in, struct
     if (cfg->runtimes_cnt == 0){
         return 1;
     }
-    
+
     struct msu_scheduling *sched = in->data;
     ASSERT_JSMN_TYPE(*tok, JSMN_STRING, j);
     int id = tok_to_int(*tok, j);
