@@ -708,8 +708,9 @@ int dedos_runtime_destroy(void){
     //TODO Cleanup all threads -> all msus of that thread -> all internal MSU stuff
     log_critical("TODO Destroying runtime %s","");
     log_critical("Just exiting for now %s","");
+#ifdef DATAPLANE_PROFILING
     deinit_data_plane_profiling();
-
+#endif
 /*
     int i;
     for(i = total_threads-1; i >=1; i--){
