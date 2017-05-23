@@ -280,6 +280,11 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *que
 #endif
 
     pico_stack_tick();
+    msu_queue *q = &msu->q_in;
+    int rtn = sem_post(q->thread_q_sem);
+    if (rtn < 0){
+        log_error("error incrementing thread queue semaphore");
+    }
 
 #ifdef PICO_SUPPORT_TIMINGS
     END_TIME("dedos_pico_stack_tick");
