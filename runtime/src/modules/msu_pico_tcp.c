@@ -316,6 +316,11 @@ int msu_pico_tcp_init(struct generic_msu *self,
     log_info("Initializing pico_tcp_stack by calling pico_stack_init %s","");
     pico_tcp_msu = self;
     pico_stack_init();
+    // Following is for pico_tcp busy loop
+    int rtn = sem_post(self->q_in->thread_q_sem);
+    if (rtn < 0){
+        log_error("error incrementing thread queue semaphore");
+    }
 //
 //    struct generic_msu_queue_item *dummy_item;
 //    dummy_item = malloc(sizeof(struct generic_msu_queue_item));

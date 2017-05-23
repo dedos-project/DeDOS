@@ -161,7 +161,7 @@ struct generic_msu{
     /* NEW ROUTING TABLE */
     //msu_route *routing_table;
 
-    /** ??? */
+    /** Linked list for MSU pool*/
     struct generic_msu *next;
 
     /** Unique id for an implemented MSU */
