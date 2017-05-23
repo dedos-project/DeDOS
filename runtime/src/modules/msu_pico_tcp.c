@@ -317,10 +317,12 @@ int msu_pico_tcp_init(struct generic_msu *self,
     pico_tcp_msu = self;
     pico_stack_init();
     // Following is for pico_tcp busy loop
-    int rtn = sem_post(self->q_in.thread_q_sem);
+    msu_queue *q_data = &self->q_in;
+    int rtn = sem_post(q_data->thread_q_sem);
     if (rtn < 0){
         log_error("error incrementing thread queue semaphore");
     }
+    log_debug("post semaphore for tcp msu");
 //
 //    struct generic_msu_queue_item *dummy_item;
 //    dummy_item = malloc(sizeof(struct generic_msu_queue_item));
