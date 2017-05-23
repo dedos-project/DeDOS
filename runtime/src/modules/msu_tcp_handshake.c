@@ -1312,7 +1312,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     log_debug("Created %s MSU with id: %u", handshake_msu->type->name,
             handshake_msu->id);
 
-    int rtn = sem_post(self->q_in->thread_q_sem);
+    int rtn = sem_post(handshake_msu->q_in.thread_q_sem);
     if(rtn < 0){
         log_error("Failed to increment semaphore for handshake msu");
     }

@@ -12,7 +12,7 @@
 #define ANSI_COLOR_PURPLE   "\x1b[35m"
 
 #define PICO_SUPPORT_NDEBUG
-#define DEBUG 0
+#define DEBUG 1
 #define INFO 1
 #define ERROR 1
 #define WARN 0

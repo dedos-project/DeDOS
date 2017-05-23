@@ -317,7 +317,7 @@ int msu_pico_tcp_init(struct generic_msu *self,
     pico_tcp_msu = self;
     pico_stack_init();
     // Following is for pico_tcp busy loop
-    int rtn = sem_post(self->q_in->thread_q_sem);
+    int rtn = sem_post(self->q_in.thread_q_sem);
     if (rtn < 0){
         log_error("error incrementing thread queue semaphore");
     }
