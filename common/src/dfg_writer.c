@@ -1,5 +1,81 @@
-#include <math.h>
-#include "dfg_json.h"
+#include <string.h>
+#include "ip_utils.h"
+#include "dfg.h"
+#include "jsmn.h"
+#include "logging.h"
+
+#define MAX_JSON_LEN 16384
+
+jsmn_parser jp;
+struct dfg_config dfg;    //The global config for DFG.
+
+/**
+ * Compare two JSON strings
+ * @param const char *json a JSON string
+ * @param jsmntok_t *tok pointer to a jsmn token
+ * @param const char *s what to compare with
+ * @return integer match / no match
+ */
+int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+  if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+    strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+    return 0;
+  }
+  return -1;
+}
+
+/**
+ * Details about a JSMN error
+ * @param int error code
+ * @return none
+ */
+void json_parse_error(int err) {
+    switch(err) {
+        case JSMN_ERROR_INVAL:
+            debug("%s", "Bad token, JSON string is corrupted");
+            break;
+        case JSMN_ERROR_NOMEM:
+            debug("%s", "not enough tokens, JSON string is too large");
+            break;
+        case JSMN_ERROR_PART:
+            debug("%s", "JSON string is too short, expecting more JSON data");
+            break;
+    }
+}
+
+/**
+ * Make a pass over a JSON string and ensure it is made of valid tokens
+ * @param jsmntok_t *t pointer to a token
+ * @param int r number of token returned by json_parse()
+ * @return int valid / notvalid
+ */
+int json_test(jsmntok_t *t, int r) {
+    if (r == 0 || t[0].type != JSMN_OBJECT) {
+        debug("ERROR: %s", "The top-level element should be an object!");
+        return -1;
+    }
+
+    int j;
+    for (j = 0; j < r; j++) {
+        switch(t[j].type) {
+            case JSMN_ARRAY:
+                break;
+            case JSMN_OBJECT:
+                break;
+            case JSMN_PRIMITIVE:
+                break;
+            case JSMN_STRING:
+                break;
+            default:
+                debug("Unknown json element: %d", t[j].type);
+                return -1;
+            break;
+        }
+    }
+
+    return 0;
+}
+
 /**
  * Parse the DFG and format it as a JSON string
  * @return none
@@ -479,4 +555,48 @@ void dump_json(struct dfg_config *dfg_ref) {
     printf("%s\n", json_string);
 }
 
+
+
+
+
+/**
+ * Print a trimmed version of the DFG
+ * @return none
+ */
+void print_dfg(void) {
+    printf("This DeDOS instance currently manages %d runtimes: \n", dfg.runtimes_cnt);
+
+    if (dfg.runtimes_cnt > 0 ) {
+        char ip[INET_ADDRSTRLEN];
+        int r;
+
+        for (r = 0; r < dfg.runtimes_cnt; r++) {
+            if (dfg.runtimes[r] != NULL) {
+                ipv4_to_string(&ip, dfg.runtimes[r]->ip);
+
+                printf("runtime #%d. [ip] %s | [socket] %d | [cores] %d | [pin_t] %d | [threads] %d\n",
+                        r + 1,
+                        ip,
+                        dfg.runtimes[r]->sock,
+                        dfg.runtimes[r]->num_cores,
+                        dfg.runtimes[r]->num_pinned_threads,
+                        dfg.runtimes[r]->num_threads);
+            }
+        }
+    }
+
+    printf("The current dataflow graph has %d MSUs\n", dfg.vertex_cnt);
+    if (dfg.vertex_cnt > 0 ) {
+        int v = 0;
+        for (v = 0; v < dfg.vertex_cnt; v++) {
+            if (dfg.vertices[v] != NULL) {
+                printf("The %d-th MSU: msu_id=%d, msu_type =%d, msu_mode=%s\n",
+                        v + 1,
+                        dfg.vertices[v]->msu_id,
+                        dfg.vertices[v]->msu_type,
+                        dfg.vertices[v]->msu_mode);
+            }
+        }
+    }
+}
 

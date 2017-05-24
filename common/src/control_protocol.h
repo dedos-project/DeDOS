@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <error.h>
-#include "routing.h"
+
+#define MAX_RCV_BUFLEN 4096
 
 /* Request or Response control message between runtime and master */
 enum dedos_msg_type {
@@ -30,9 +31,14 @@ enum dedos_action_type {
     FORWARD_DATA = 2003,
     ADD_ROUTE_TO_MSU   = 3001,
     DEL_ROUTE_FROM_MSU = 3002,
-    MSU_ROUTE_ADD_ENDPOINT = 3011,
-    MSU_ROUTE_DEL_ENDPOINT = 3012,
-    MSU_ROUTE_MOD_ENDPOINT = 3013
+    ROUTE_ADD_ENDPOINT = 3011,
+    ROUTE_DEL_ENDPOINT = 3012,
+    ROUTE_MOD_ENDPOINT = 3013
+};
+
+enum locality {
+    MSU_IS_LOCAL = 1,
+    MSU_IS_REMOTE = 2
 };
 
 #define FAIL_CREATE_MSU 4001

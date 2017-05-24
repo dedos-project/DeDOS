@@ -7,7 +7,8 @@
 
 #include "stats.h"
 #include "communication.h"
-#include "global_controller/dfg.h"
+#include "dfg.h"
+#include "dfg_reader.h"
 #include "dfg_interpreter.h"
 #include "runtime.h"
 #include "global.h"

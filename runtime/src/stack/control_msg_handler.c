@@ -15,16 +15,16 @@
 static int request_msu_list(struct dedos_control_msg *control_msg){
     unsigned int total_msu_count = msu_tracker_count();
     struct msu_thread_info *info = malloc(sizeof(*info) * total_msu_count);
-    
+
     if (!info){
         log_error("Failed to malloc info for GET_MSU_LIST");
         return -1;
     }
     msu_tracker_get_all_info(info, total_msu_count);
-    
+
     log_debug("Sending following MSU placement info to master:");
     for (int i=0; i<total_msu_count; i++){
-        log_debug("MSU ID: %d, thread ID: %lu", 
+        log_debug("MSU ID: %d, thread ID: %lu",
                   info[i].msu_id, info[i].thread_id);
     }
 
@@ -34,14 +34,14 @@ static int request_msu_list(struct dedos_control_msg *control_msg){
         free(info);
         return -1;
     }
-    
+
     reply_msg->msg_type = RESPONSE_MESSAGE;
     reply_msg->msg_code = GET_MSU_LIST;
     reply_msg->header_len = sizeof(*reply_msg);
     reply_msg->payload_len = sizeof(*info) * total_msu_count;
-    
+
     void *sendbuf;
-    int total_size = SERIALIZE5(sendbuf, reply_msg, 1, info, total_msu_count); 
+    int total_size = SERIALIZE5(sendbuf, reply_msg, 1, info, total_msu_count);
     if (!sendbuf){
         log_error("Failed to allocate buffer for GET_MSU_LIST");
         free(info);
@@ -58,7 +58,7 @@ static int request_msu_list(struct dedos_control_msg *control_msg){
 static int action_create_msu(struct dedos_control_msg *control_msg){
     struct manage_msu_control_payload *create_msu_msg;
     DESERIALIZE5(control_msg->payload,
-                 create_msu_msg, 1, 
+                 create_msu_msg, 1,
                  create_msu_msg->init_data, create_msu_msg->init_data_size);
 
     struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
@@ -70,7 +70,7 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
     thread_msg->action_data = create_msu_msg->msu_id;
     thread_msg->next = NULL;
 
-    struct create_msu_thread_data *create_action = 
+    struct create_msu_thread_data *create_action =
             malloc(sizeof(*create_action));
 
     if (!create_action){
@@ -93,9 +93,9 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
     memcpy(create_action->init_data, create_msu_msg->init_data,
             create_msu_msg->init_data_size);
     thread_msg->buffer_len = sizeof(*thread_msg) + create_action->init_data_len;
-    
+
     int placement_index = -1;
-    
+
     if (create_action->init_data_len > 0){
         if (strncasecmp(create_msu_msg->init_data, "non-blocking", 12) == 0){
             log_debug("Request for creation non-blocking MSU");
@@ -139,7 +139,7 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
         log_error("No initial data for MSU creation");
         return -1;
     }
-    
+
     create_msu_request(&all_threads[placement_index], thread_msg);
     //store the placement info in msu_placements hash structure, though we don't know yet if the creation will
     //succeed. if the creation fails the thread creating the MSU should enqueue a FAIL_CREATE_MSU msg.
@@ -151,7 +151,7 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
 }
 
 static int action_destroy_msu(struct dedos_control_msg *control_msg){
-    struct manage_msu_control_payload *delete_msu_msg = 
+    struct manage_msu_control_payload *delete_msu_msg =
             (struct manage_msu_control_payload *)control_msg->payload;
 
     struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
@@ -163,12 +163,12 @@ static int action_destroy_msu(struct dedos_control_msg *control_msg){
     thread_msg->action = control_msg->msg_code;
     thread_msg->action_data = delete_msu_msg->msu_id;
     thread_msg->next = NULL;
-    thread_msg->data = 0; 
+    thread_msg->data = 0;
     thread_msg->buffer_len = 0;
 
     struct msu_placement_tracker *msu_tracker =
             msu_tracker_find(delete_msu_msg->msu_id);
-    
+
     if (!msu_tracker){
         log_error("Couldn't find msu tracker for MSU id %d", delete_msu_msg->msu_id);
         free(thread_msg);
@@ -204,7 +204,7 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
     log_debug("Received Peer IP list");
     uint32_t *peers = control_msg->payload;
     int count = (control_msg->payload_len) / sizeof(uint32_t);
-     
+
     if (!pending_runtime_peers) { /* struct not allocated */
         pending_runtime_peers = malloc(sizeof(struct pending_runtimes));
         if (!pending_runtime_peers) {
@@ -235,7 +235,7 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
         log_debug("Pending connections to runtimes: %d", pending_runtime_peers->count);
         // Malloc and increase the size
         int new_count = pending_runtime_peers->count + count;
-        pending_runtime_peers->ips = realloc(pending_runtime_peers->ips, 
+        pending_runtime_peers->ips = realloc(pending_runtime_peers->ips,
                                              new_count * sizeof(uint32_t));
         for (int j=pending_runtime_peers->count; j<new_count; j++){
             pending_runtime_peers->ips[j] = peers[j - pending_runtime_peers->count];
@@ -245,7 +245,7 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
             j++;
         }
         pending_runtime_peers->count = new_count;
-        
+
         log_debug("New list of pending runtime ips: %s", "");
         int k = pending_runtime_peers->count;
         int z = 0;
@@ -259,20 +259,20 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
     }
     return 0;
 }
- 
+
 static int action_modify_msu_routes(struct dedos_control_msg *control_msg){
-    struct manage_msu_control_payload *manage_msu_msg = 
+    struct manage_msu_control_payload *manage_msu_msg =
             (struct manage_route_control_payload *)control_msg->payload;
-    
+
     struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
     if (!thread_msg){
         log_error("Failed to allocate thread_msg for modifying MSU route");
         return -1;
     }
-    thread_msg->action = control_msg->msg_code; 
+    thread_msg->action = control_msg->msg_code;
     thread_msg->action_data = manage_msu_msg->msu_id;
     thread_msg->next = NULL;
-    
+
     struct msu_action_thread_data *route_thread_msg = malloc(sizeof(*route_thread_msg));
     if (!route_thread_msg){
         log_error("Failed to allocate routing thread msg");
@@ -284,7 +284,7 @@ static int action_modify_msu_routes(struct dedos_control_msg *control_msg){
     thread_msg->buffer_len = sizeof(*route_thread_msg);
     thread_msg->data = route_thread_msg;
 
-    struct msu_placement_tracker *msu_tracker = 
+    struct msu_placement_tracker *msu_tracker =
             msu_tracker_find(manage_msu_msg->msu_id);
 
     if (!msu_tracker){
@@ -293,7 +293,7 @@ static int action_modify_msu_routes(struct dedos_control_msg *control_msg){
         free(thread_msg);
         return -1;
     }
-    
+
     int r = get_thread_index(msu_tracker->dedos_thread->tid);
     if (r == -1) {
         log_error("Cannot find thread index for thread %u", msu_tracker->dedos_thread->tid);
@@ -306,15 +306,15 @@ static int action_modify_msu_routes(struct dedos_control_msg *control_msg){
 }
 
 static int action_modify_route_msus(struct dedos_control_msg *control_msg){
-    struct manage_route_control_payload *manage_route_msg = 
+    struct manage_route_control_payload *manage_route_msg =
             (struct manage_route_control_payload *)control_msg->payload;
-    int route_id = manage_route_msg->route_id; 
+    int route_id = manage_route_msg->route_id;
     int msu_id = manage_route_msg->msu_id;
     int msu_type_id = manage_route_msg->msu_type_id;
     uint32_t key_range = manage_route_msg->key_range;
     int rtn;
     switch (control_msg->msg_code){
-        case MSU_ROUTE_ADD_ENDPOINT:;
+        case ROUTE_ADD_ENDPOINT:;
             struct msu_endpoint endpoint;
             endpoint.type_id = msu_type_id;
             endpoint.id = msu_id;
@@ -325,7 +325,7 @@ static int action_modify_route_msus(struct dedos_control_msg *control_msg){
             } else {
                 endpoint.ipv4 = manage_route_msg->ipv4;
             }
-           
+
             rtn = add_route_endpoint(route_id, &endpoint, key_range);
             if (rtn < 0){
                 log_error("Failed to add endpoint %d to route %d",
@@ -333,7 +333,7 @@ static int action_modify_route_msus(struct dedos_control_msg *control_msg){
                 return -1;
             }
             return 0;
-        case MSU_ROUTE_DEL_ENDPOINT:
+        case ROUTE_DEL_ENDPOINT:
             rtn = remove_route_destination(route_id, msu_id);
             if (rtn < 0){
                 log_error("Failed to remove destination %d from route %d",
@@ -341,11 +341,11 @@ static int action_modify_route_msus(struct dedos_control_msg *control_msg){
                 return -1;
             }
             return 0;
-        case MSU_ROUTE_MOD_ENDPOINT:
+        case ROUTE_MOD_ENDPOINT:
             rtn = modify_route_key_range(route_id, msu_id, key_range);
             if (rtn < 0){
                 log_error("Failed to change msu %d key range to %d in route %d",
-                          msu_id, key_range, route_id); 
+                          msu_id, key_range, route_id);
                 return -1;
             }
             return 0;
@@ -386,9 +386,9 @@ static int parse_action_msg(struct dedos_control_msg *control_msg){
         case ADD_ROUTE_TO_MSU:
         case DEL_ROUTE_FROM_MSU:
             return action_modify_msu_routes(control_msg);
-        case MSU_ROUTE_ADD_ENDPOINT:
-        case MSU_ROUTE_DEL_ENDPOINT:
-        case MSU_ROUTE_MOD_ENDPOINT:
+        case ROUTE_ADD_ENDPOINT:
+        case ROUTE_DEL_ENDPOINT:
+        case ROUTE_MOD_ENDPOINT:
             return action_modify_route_msus(control_msg);
         case CREATE_PINNED_THREAD:
             return action_create_pinned_thread(control_msg);

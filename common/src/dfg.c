@@ -9,9 +9,8 @@
 
 #include "dfg.h"
 #include "logging.h"
+#include "ip_utils.h"
 #include "control_protocol.h"
-#include "controller_tools.h"
-#include "scheduling.h"
 
 /* Display information about runtimes */
 int show_connected_peers(void) {
@@ -43,9 +42,9 @@ int show_connected_peers(void) {
 /**
  * Get runtime pointer from ID
  * @param integer runtime_id
- * @return struct runtime_endpoint *runtime
+ * @return struct dfg_runtime_endpoint *runtime
  */
-struct runtime_endpoint *get_runtime_from_id(int runtime_id) {
+struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id) {
     struct dfg_config *dfg = NULL;
     dfg = get_dfg();
 
@@ -169,10 +168,22 @@ struct dfg_vertex *get_msu_from_id(int msu_id) {
 }
 
 /**
- * Overwrite or create a MSU in the DFG
- * @param dfg_vertex msu: pointer to the new vertex struct
- * @return none
+ * Retrieve dfg route given a runtime socket number and route ID
+ * @param rt runtime that contains the route ID
+ * @param route_id id of the route to retrieve
+ * @return dfg route if successful else NULL
  */
+struct dfg_route *get_route_from_id(struct dfg_runtime_endpoint *rt, int route_id) {
+    for (int i=0; i<rt->num_routes; i++) {
+        struct dfg_route *route = rt->routes[i];
+        if ( route->route_id == route_id ) {
+            return route;
+        }
+    }
+    return NULL;
+}
+
+/* Overwrite or create a MSU in the DFG */
 void set_msu(struct dfg_vertex *msu) {
     debug("DEBUG: adding msu %d to the graph", msu->msu_id);
 
@@ -194,20 +205,146 @@ void set_msu(struct dfg_vertex *msu) {
     dfg->vertices[new_id] = msu;
     dfg->vertex_cnt++;
 
-    dfg->vertices[new_id]->statistics = malloc(sizeof(struct msu_statistics_data));
-    dfg->vertices[new_id]->statistics->queue_item_processed = malloc(sizeof(struct timeserie));
-    dfg->vertices[new_id]->statistics->queue_item_processed->timepoint = 0;
-    memset(dfg->vertices[new_id]->statistics->queue_item_processed->data, 0, TIME_SLOTS);
-    memset(dfg->vertices[new_id]->statistics->queue_item_processed->timestamp, 0, TIME_SLOTS);
-    dfg->vertices[new_id]->statistics->data_queue_size = malloc(sizeof(struct timeserie));
-    dfg->vertices[new_id]->statistics->data_queue_size->timepoint = 0;
-    memset(dfg->vertices[new_id]->statistics->data_queue_size->data, 0, TIME_SLOTS);
-    memset(dfg->vertices[new_id]->statistics->data_queue_size->timestamp, 0, TIME_SLOTS);
-    dfg->vertices[new_id]->statistics->memory_allocated = malloc(sizeof(struct timeserie));
-    dfg->vertices[new_id]->statistics->memory_allocated->timepoint = 0;
-    memset(dfg->vertices[new_id]->statistics->memory_allocated->data, 0, TIME_SLOTS);
-    memset(dfg->vertices[new_id]->statistics->memory_allocated->timestamp, 0, TIME_SLOTS);
 }
+
+/**
+ * Adds an outgoing route to an MSU
+ * @param runtime_sock runtime on which the route and msu reside
+ * @param msu_id msu to which the route is to be added
+ * @param route_id ID of the route to add to the msu (must already exist)
+ * @return 0 on success, -1 on error
+ */
+int add_route_to_msu_vertex(int runtime_index, int msu_id, int route_id) {
+    struct dfg_config *dfg = get_dfg();
+
+    struct dfg_runtime_endpoint *rt = dfg->runtimes[runtime_index];
+
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    if (msu == NULL){
+        log_error("Specified MSU %d does not exist", msu_id);
+        return -1;
+    }
+    if ( get_sock_endpoint_index(msu->scheduling.runtime->sock) != runtime_index ) {
+        log_error("Specified MSU %d does not reside on runtime %d", msu_id, runtime_index);
+        return -1;
+    }
+
+    struct dfg_route *route = get_route_from_id(rt, route_id);
+    if (route == NULL){
+        log_error("Specified route %d does not reside on runtime %d", route_id, runtime_index);
+        return -1;
+    }
+
+    msu->scheduling.routes[msu->scheduling.num_routes] = route;
+    msu->scheduling.num_routes++;
+    return 0;
+}
+
+int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) {
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    if (msu == NULL){
+        log_error("Specified MSU %d does not exist", msu_id);
+        return -1;
+    }
+    if ( get_sock_endpoint_index(msu->scheduling.runtime->sock) != runtime_index ) {
+        log_error("Specified MSU %d does not reside on runtime %d", msu_id, runtime_index);
+        return -1;
+    }
+
+    struct msu_scheduling *sched = &msu->scheduling;
+    int i;
+    for (i=0; i<sched->num_routes; i++){
+        struct dfg_route *route = sched->routes[i];
+        if (route->route_id == route_id){
+            break;
+        }
+    }
+
+    if ( i == sched->num_routes ) {
+        log_error("Specified route %d not assigned to msu %d", route_id, msu_id);
+        return -1;
+    }
+
+    // Move the remainder of the routes back in the array to fill the gap
+    for (; i<sched->num_routes-1; i++){
+        sched->routes[i] = sched->routes[i+1];
+    }
+
+    sched->num_routes--;
+    return 0;
+}
+
+
+int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end){
+    struct dfg_config *dfg = get_dfg();
+    struct dfg_runtime_endpoint *rt = dfg->runtimes[runtime_index];
+
+    struct dfg_route *route = get_route_from_id(rt, route_id);
+    if (route == NULL){
+        log_error("Specified route %d does not reside on runtime %d", route_id, runtime_index);
+        return -1;
+    }
+
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    if (msu == NULL){
+        log_error("Specified MSU %d does not exist", msu_id);
+        return -1;
+    }
+
+    // Iterate through backwards, advancing entries in the routing table until
+    // the correct place for range_end is found
+    int i;
+    for (i = route->num_destinations; i > 0 && range_end < route->destination_keys[i]; i--){
+        route->destinations[i] = route->destinations[i-1];
+        route->destination_keys[i] = route->destination_keys[i-1];
+    }
+    route->destinations[i] = msu;
+    route->destination_keys[i] = range_end;
+    route->num_destinations++;
+    return 0;
+}
+
+int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id){
+    struct dfg_config *dfg = get_dfg();
+    struct dfg_runtime_endpoint *rt = dfg->runtimes[runtime_index];
+
+    struct dfg_route *route = get_route_from_id(rt, route_id);
+    if (route == NULL){
+        log_error("Specified route %d does not reside on runtime %d", route_id, runtime_index);
+        return -1;
+    }
+
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    if (msu == NULL){
+        log_error("Specified MSU %d does not exist", msu_id);
+        return -1;
+    }
+
+    // Remove endpoint, move other endpoints backwards to fill gap
+    int i;
+    for (i=0; i<route->num_destinations; i++){
+        if (route->destinations[i]->msu_id == msu_id){
+            break;
+        }
+    }
+
+    if ( i == route->num_destinations ) {
+        log_error("Specified msu %d not assigned to route %d", msu_id, route_id);
+        return -1;
+    }
+
+    // Move everything else backwards
+    for (; i<route->num_destinations-1; i++){
+        route->destinations[i] = route->destinations[i+1];
+        route->destination_keys[i] = route->destination_keys[i+1];
+    }
+
+    route->num_destinations--;
+    return 0;
+}
+
+
+
 
 /* Big mess of create, updates, etc */
 void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
@@ -254,7 +391,7 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
 
             debug("DEBUG: registering endpoint at %s", update->runtime_ip);
 
-            struct runtime_endpoint *r = NULL;
+            struct dfg_runtime_endpoint *r = NULL;
 
             int i;
             for (i = 0; i < dfg->runtimes_cnt; ++i) {
@@ -269,7 +406,7 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
             }
 
             if (r == NULL) {
-                r = malloc(sizeof(struct runtime_endpoint));
+                r = malloc(sizeof(struct dfg_runtime_endpoint));
 
                 string_to_ipv4(update->runtime_ip, &(r->ip));
 

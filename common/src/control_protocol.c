@@ -3,7 +3,6 @@
 #include <string.h>
 #include "control_protocol.h"
 #include "logging.h"
-#include "dedos_thread_queue.h"
 
 struct dedos_thread_msg* dedos_thread_msg_alloc(){
     struct dedos_thread_msg* msg;

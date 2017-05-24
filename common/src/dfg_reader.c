@@ -1,16 +1,34 @@
 #include <strings.h>
-#include "global_controller/dfg.h"
-#include "dfg_parser.h"
+#include <string.h>
+#include "ip_utils.h"
+#include "dfg.h"
+#include "dfg_reader.h"
 #include "jsmn_parser.h"
+#include "jsmn.h"
 
 enum object_type {
     ROOT=0, RUNTIMES=1, ROUTES=2, DESTINATIONS=3, MSUS=4, PROFILING=5,
     META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8
 };
 
+struct dfg_config *dfg_global = NULL;
+
+struct dfg_config *get_dfg(){
+    return dfg_global;
+}
+
+int load_dfg_from_file(const char *init_filename){
+    dfg_global = parse_dfg_json(init_filename);
+    if (dfg_global == NULL){
+        log_error("Error loading dfg from file %s!", init_filename);
+        return -1;
+    }
+    return 0;
+}
+
 static struct key_mapping key_map[];
 
-struct dfg_config *parse_dfg_json(char *filename){
+struct dfg_config *parse_dfg_json(const char *filename){
 
     struct dfg_config *cfg = malloc(sizeof(*cfg));
     bzero(cfg, sizeof(*cfg));
@@ -18,6 +36,7 @@ struct dfg_config *parse_dfg_json(char *filename){
     int rtn = parse_into_obj(filename, cfg, key_map);
 
     if (rtn >= 0){
+        pthread_mutex_init(&cfg->dfg_mutex, NULL);
         log_debug("Success!");
         return cfg;
     } else {
@@ -386,7 +405,7 @@ static int set_msu_routing(jsmntok_t **tok, char *j, struct json_state *in, stru
     return 0;
 }
 
-    
+
 static struct key_mapping key_map[] = {
     { "application_name", ROOT, set_app_name },
     { "application_deadline", ROOT, set_app_deadline },
@@ -405,7 +424,6 @@ static struct key_mapping key_map[] = {
     { "type", MSUS,  set_msu_type },
     { "id", MSUS,  set_msu_id },
     { "name", MSUS, ignore },
-
 
     { "dram", RUNTIMES, set_rt_dram },
     { "ip", RUNTIMES,  set_rt_ip },

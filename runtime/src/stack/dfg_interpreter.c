@@ -1,6 +1,6 @@
 #include "communication.h"
 #include "dfg_interpreter.h"
-#include "global_controller/dfg.h"
+#include "dfg.h"
 #include "control_protocol.h"
 #include "msu_tracker.h"
 #include "control_operations.h"

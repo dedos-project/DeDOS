@@ -6,13 +6,12 @@
  *
  */
 
+#include "control_protocol.h"
 #include "generic_msu_queue.h"
 #include "uthash.h"
 
 int ipv4_to_string(char *ipbuf, const uint32_t ip);
 int string_to_ipv4(const char *ipstr, uint32_t *ip);
-
-enum locality {MSU_IS_LOCAL=1, MSU_IS_REMOTE=2};
 
 struct msu_endpoint{
     int id;

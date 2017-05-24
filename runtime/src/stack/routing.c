@@ -1,74 +1,8 @@
 #include "routing.h"
-#include "global_controller/controller_tools.h"
+#include "ip_utils.h"
 #include "msu_tracker.h"
 
 #define DEFAULT_MAX_DESTINATIONS 16
-
-int ipv4_to_string(char *ipbuf, const uint32_t ip)
-{
-    const unsigned char *addr = (const unsigned char *) &ip;
-    int i;
-
-    if (!ipbuf) {
-        return -1;
-    }
-
-    for (i = 0; i < 4; i++) {
-        if (addr[i] > 99) {
-            *ipbuf++ = (char) ('0' + (addr[i] / 100));
-            *ipbuf++ = (char) ('0' + ((addr[i] % 100) / 10));
-            *ipbuf++ = (char) ('0' + ((addr[i] % 100) % 10));
-        } else if (addr[i] > 9) {
-            *ipbuf++ = (char) ('0' + (addr[i] / 10));
-            *ipbuf++ = (char) ('0' + (addr[i] % 10));
-        } else {
-            *ipbuf++ = (char) ('0' + addr[i]);
-        }
-
-        if (i < 3)
-            *ipbuf++ = '.';
-    }
-    *ipbuf = '\0';
-
-    return 0;
-}
-
-int string_to_ipv4(const char *ipstr, uint32_t *ip)
-{
-    unsigned char buf[4] = { 0 };
-    int cnt = 0;
-    char p;
-
-    if (!ipstr || !ip) {
-        return -1;
-    }
-    while ((p = *ipstr++) != 0 && cnt < 4) {
-        if (is_digit(p)) {
-            buf[cnt] = (uint8_t) ((10 * buf[cnt]) + (p - '0'));
-        } else if (p == '.') {
-            cnt++;
-        } else {
-            return -1;
-        }
-    }
-    /* Handle short notation */
-    if (cnt == 1) {
-        buf[3] = buf[1];
-        buf[1] = 0;
-        buf[2] = 0;
-    } else if (cnt == 2) {
-        buf[3] = buf[2];
-        buf[2] = 0;
-    } else if (cnt != 3) {
-        /* String could not be parsed, return error */
-        return -1;
-    }
-
-    *ip = long_from(buf);
-
-    return 0;
-}
-
 
 struct routing_table{
     int type_id;

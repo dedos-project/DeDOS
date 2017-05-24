@@ -31,7 +31,6 @@
 */
 
 #define MAX_RUNTIME_PEERS 12
-#define MAX_RCV_BUFLEN 10000
 
 struct runtime_endpoint {
      int sock;

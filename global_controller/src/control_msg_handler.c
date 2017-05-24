@@ -40,7 +40,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
 
             endpoint_index = get_sock_endpoint_index(runtime_sock);
 
-            pthread_mutex_lock(dfg->dfg_mutex);
+            pthread_mutex_lock(&dfg->dfg_mutex);
 
             if (endpoint_index > -1) {
                 dfg->runtimes[endpoint_index]->num_cores = control_msg->payload_len;
@@ -52,7 +52,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
                 debug("ERROR: Couldn't find endpoint index for sock: %d", runtime_sock);
             }
 
-            pthread_mutex_unlock(dfg->dfg_mutex);
+            pthread_mutex_unlock(&dfg->dfg_mutex);
 
             count = show_connected_peers();
 

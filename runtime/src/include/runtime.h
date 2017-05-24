@@ -14,10 +14,11 @@
 #include "routing.h"
 #include "control_msg_handler.h"
 #include "dedos_msu_pool.h"
-#include "global_controller/dfg.h"
 #include "dedos_defines.h"
 #include "dedos_statistics.h"
 #include "data_plane_profiling.h"
+#include "dedos_statistics.h"
+#include "dfg.h"
 
 #define BLOCKING_THREAD 1
 #define NON_BLOCKING_THREAD 2

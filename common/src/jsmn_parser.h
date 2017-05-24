@@ -1,6 +1,7 @@
 #pragma once
 #include <stdlib.h>
 #include <stdio.h>
+#include "jsmn.h"
 
 /**
  * Asserts that the type of the current token is the provided type,
@@ -12,7 +13,7 @@
         return -1; \
     } \
 
-/** 
+/**
  * Structure to hold state while parsing JSON
  */
 struct json_state {
@@ -23,7 +24,7 @@ struct json_state {
 };
 
 /**
- * Typedef for a jsmn parsing function. Each element in the key mapping should 
+ * Typedef for a jsmn parsing function. Each element in the key mapping should
  * have one of these as the third element.
  *
  * @param tok - current token to be parsed
@@ -40,17 +41,17 @@ typedef int (*jsmn_parsing_fn)(jsmntok_t **tok, char *j, struct json_state *stat
  */
 struct key_mapping {
     char *key;              /**< The string in the JSON file */
-    int parent_type;        /**< The current type, as set by a previous parsing fn. 
+    int parent_type;        /**< The current type, as set by a previous parsing fn.
                                  Starts at 0*/
     jsmn_parsing_fn parse;  /**< The function to be called when this string is seen
                                  at the appropriate place in the input JSON */
 };
 
 /**
- * Using the provided functions, parses the JSON present in 
+ * Using the provided functions, parses the JSON present in
  * 'filename' and stores the resulting object in 'obj'.
  */
-int parse_into_obj(char *filename, void *obj, struct key_mapping *km);
+int parse_into_obj(const char *filename, void *obj, struct key_mapping *km);
 
 
 /**
@@ -64,7 +65,7 @@ typedef struct json_state (*jsmn_initializer)(struct json_state *state, int inde
 
 
 /** Parses a single JSMN object utilizing the key mapping provided in parse_into_obj() */
-int parse_jsmn_obj(jsmntok_t **tok, char *j, struct json_state *in, 
+int parse_jsmn_obj(jsmntok_t **tok, char *j, struct json_state *in,
                           struct json_state **saved);
 
 /** Parses an array of JSMN objects. */

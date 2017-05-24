@@ -3,6 +3,7 @@
 #include <linux/types.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <sys/select.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -15,6 +16,7 @@
 #include <netinet/tcp.h>
 #include <errno.h>
 
+#include "api.h"
 #include "communication.h"
 #include "logging.h"
 #include "control_msg_handler.h"
@@ -28,16 +30,14 @@ int max_fd;
 
 int stat_listen_sock;
 
-static void cleanup_peer_socket(struct runtime_endpoint *runtime_peer){
-    int tmp;
-    tmp = runtime_peer->sock;
+static void cleanup_peer_socket(struct dfg_runtime_endpoint *runtime_peer){
+    log_info("Removing socket %d", runtime_peer->sock);
     close(runtime_peer->sock);
     runtime_peer->sock = 0;
-    debug("INFO: Removed socket %d", tmp);
     show_connected_peers();
 }
 
-static void controller_rcv(struct runtime_endpoint *runtime_peer){
+static void controller_rcv(struct dfg_runtime_endpoint *runtime_peer){
     char rcv_buf[MAX_RCV_BUFLEN];
     struct sockaddr_in remote_addr;
 
@@ -75,7 +75,7 @@ void check_comm_sockets(void) {
 
     max_fd = control_listen_sock;
 
-    pthread_mutex_lock(dfg->dfg_mutex);
+    pthread_mutex_lock(&dfg->dfg_mutex);
 
     for (i = 0; i < dfg->runtimes_cnt; i++) {
         if (dfg->runtimes[i]->sock > 0) {
@@ -87,7 +87,7 @@ void check_comm_sockets(void) {
         }
     }
 
-    pthread_mutex_unlock(dfg->dfg_mutex);
+    pthread_mutex_unlock(&dfg->dfg_mutex);
 
     timeout.tv_sec = 0; // in second
     timeout.tv_usec = 1000;
@@ -104,7 +104,7 @@ void check_comm_sockets(void) {
     if (FD_ISSET(control_listen_sock, &readfds)) {
         //a new connection from some other runtime peer
         int peer_sk;
-        peer_sk = accept(control_listen_sock, &addr, &len);
+        peer_sk = accept(control_listen_sock, (struct sockaddr*)&addr, &len);
         debug("DEBUG: peer_sk after accept on control socket: %d", peer_sk);
         if (peer_sk < 0) {
             debug("ERROR: %s",
@@ -131,29 +131,44 @@ void check_comm_sockets(void) {
         // listen to already registerd runtimes
 
         for (i = 0; i < dfg->runtimes_cnt; i++) {
-            pthread_mutex_lock(dfg->dfg_mutex);
+            pthread_mutex_lock(&dfg->dfg_mutex);
 
             if (FD_ISSET(dfg->runtimes[i]->sock, &readfds)) {
-                pthread_mutex_unlock(dfg->dfg_mutex);
+                pthread_mutex_unlock(&dfg->dfg_mutex);
 
                 //call message receiver function
                 controller_rcv(dfg->runtimes[i]);
             }
 
-            pthread_mutex_unlock(dfg->dfg_mutex);
+            pthread_mutex_unlock(&dfg->dfg_mutex);
         }
     }
 }
 
+int send_control_msg(int runtime_sock, struct dedos_control_msg *control_msg){
+    int total_msg_size = control_msg->header_len + control_msg->payload_len;
+
+    char buf[total_msg_size];
+
+    memcpy(buf, control_msg, control_msg->header_len);
+    memcpy(buf, control_msg->payload, control_msg->payload_len);
+
+    return send_to_runtime(runtime_sock, buf, (unsigned int)total_msg_size);
+}
+
 int send_to_runtime(int runtime_sock, char *buf, unsigned int bufsize){
-    debug("INFO: Sending msg to peer runtime with len: %u", bufsize);
+    log_debug("Sending msg to peer runtime with len: %u", bufsize);
     int data_len;
-    data_len = send(runtime_sock, buf, bufsize, 0);
+    data_len = (int)send(runtime_sock, buf, bufsize, 0);
     if (data_len == -1) {
-        debug("ERROR: %s", "failed to send data on socket");
+        log_error("failed to send data on socket");
         return -1;
     }
-    debug("INFO: Sent msg to peer runtime with len: %d", data_len);
+    if (data_len != bufsize) {
+        log_warn("Failed to send full message to runtime socket %d", runtime_sock);
+        return -1;
+    }
+    log_info("Sent msg to peer runtime with len: %d", data_len);
     return 0;
 }
 

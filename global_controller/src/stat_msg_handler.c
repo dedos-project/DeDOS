@@ -13,7 +13,7 @@
 
 #define NEXT_MSU_LOCAL 1
 #define NEXT_MSU_REMOTE 2
-
+/*
 static void send_route_update(char *input, int action) {
     char *cmd = &(*input);
     int from_msu_id, to_msu_id, runtime_sock, from_msu_type, to_msu_type, to_msu_locality;
@@ -45,7 +45,7 @@ static void send_route_update(char *input, int action) {
         debug("ERROR: %s", "Could not process update route request");
     }
 }
-
+*/
 //TODO: update this function for new scheduling & DFG structure
 void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int stats_items) {
     //TODO: add specific stat report message types and code

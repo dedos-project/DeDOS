@@ -32,7 +32,7 @@ long tok_to_long(jsmntok_t *tok, char *j){
 
 
 /** Destructively extracts a c-string from a jsmn token.
- * Sets the "end" char to \0, and returns a pointer 
+ * Sets the "end" char to \0, and returns a pointer
  * to the start
  *
  * @param tok - JSMN token to extract
@@ -67,7 +67,7 @@ void *get_jsmn_obj(){
 }
 
 /**
- * Using the provided functions, parses the JSON present in 
+ * Using the provided functions, parses the JSON present in
  * 'filename' and stores the resulting object in 'obj'.
  * Can iterate multiple times on tokens which have dependencies.
  *
@@ -76,17 +76,17 @@ void *get_jsmn_obj(){
  * @param keymap - the mapping between the JSON key and the function to be called
  * @return 0 on success, -1 on error
  */
-int parse_into_obj(char *filename, void *obj, struct key_mapping *km){
+int parse_into_obj(const char *filename, void *obj, struct key_mapping *km){
     // Set the global key map
     key_map = km;
 
     FILE *file = fopen(filename, "r");
-    
+
     // Get the size of the file
     fseek(file, 0, SEEK_END);
     long fsize = ftell(file);
     rewind(file);
-    
+
     // Read the file
     char *contents = malloc(fsize * sizeof(*contents));
     fread(contents, fsize, 1, file);
@@ -105,18 +105,18 @@ int parse_into_obj(char *filename, void *obj, struct key_mapping *km){
 
     // Set the top-level object so it can be retrieved elsewhere
     global_obj = obj;
-    
+
     // Set the initial state for the first object
     // (type of 0 should indicate the root object)
     struct json_state init_state = {
         .parent_type = 0,
-        .data = obj 
+        .data = obj
     };
     struct json_state *saved_state = NULL;
 
     // Parse the jsmn tokens (assumes top-level item is an object)
     int rtn = parse_jsmn_obj(&tokens, contents, &init_state, &saved_state);
-    
+
     if (rtn < 0){
         log_error("Error parsing JSMN");
         return -1;
@@ -134,7 +134,7 @@ int parse_into_obj(char *filename, void *obj, struct key_mapping *km){
             return -1;
         }
     }
-    
+
     return 0;
 }
 
@@ -146,7 +146,7 @@ int parse_into_obj(char *filename, void *obj, struct key_mapping *km){
  */
 static jsmn_parsing_fn get_parse_fn(char *key, int parent_type){
 
-    for (struct key_mapping *km = key_map; 
+    for (struct key_mapping *km = key_map;
             km->parse != 0; km++){
         if (strncasecmp(key, km->key, strlen(km->key)) == 0 &&
                 km->parent_type == parent_type){
@@ -168,7 +168,7 @@ static jsmn_parsing_fn get_parse_fn(char *key, int parent_type){
 static int retry_saved(struct json_state **saved_states, char *j){
     struct json_state *prev = NULL;
     struct json_state *saved = *saved_states;
-    
+
     int success = -1;
     while (saved != NULL){
         jsmntok_t *tok = saved->tok;
@@ -200,7 +200,7 @@ static int retry_saved(struct json_state **saved_states, char *j){
     }
     return success;
 }
-   
+
 /** Parses an array of JSMN objects.
  * Calls init() for each new object, then passes the returned json_state
  * to the next parsed object.
@@ -216,14 +216,14 @@ int parse_jsmn_obj_list(jsmntok_t **tok, char *j, struct json_state *state,
                                struct json_state **saved, jsmn_initializer init){
     ASSERT_JSMN_TYPE(*tok, JSMN_ARRAY, j);
     int size = (*tok)->size;
-   
+
     // Advance to the object inside the list
     ++(*tok);
     for (int i=0; i<size; i++){
         log_debug("Parsing list item %d", i);
-        // This is only for lists of OBJECTS. 
+        // This is only for lists of OBJECTS.
         ASSERT_JSMN_TYPE(*tok, JSMN_OBJECT, j);
-        
+
         // Construct the new state to be passed to the next object
         struct json_state new_state =  init(state, i);
         new_state.tok = *tok;
@@ -238,7 +238,7 @@ int parse_jsmn_obj_list(jsmntok_t **tok, char *j, struct json_state *state,
             return -1;
         }
     }
-    // parse_jsmn_obj handles advancing to the next object, so we 
+    // parse_jsmn_obj handles advancing to the next object, so we
     // want to rewind here so as not to advance twice
     --(*tok);
     return 0;

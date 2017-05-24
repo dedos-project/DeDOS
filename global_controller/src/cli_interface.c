@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <strings.h>
 
 #include "logging.h"
 #include "controller_tools.h"
@@ -18,30 +19,295 @@
 #define NEXT_MSU_LOCAL 1
 #define NEXT_MSU_REMOTE 2
 
-const char *help =
+#define HELP_PREAMBLE \
     "\nList of available commands : \n" \
     "\n" \
     "\t*******NOTE: []are required fields else it will segfault*****\n" \
     "\t*******NOTE: must create at least 1 pinned thread before creating MSUs*****\n" \
-    "\n" \
-    "\t1. show runtimes /* List connected runtimes and socket num */\n" \
-    "\t2. show msus [runtime_socket_num] /* Get MSUs running on the runtime */\n" \
-    "\t3. addmsu [runtime_socket_num] [msu_type] [msu_id_to_assign] [blocking/non-blocking] (thread num {1 to Current_pinned_threads} if non-blocking)\n" \
-    "\t4. delmsu [runtime_socket_num] [msu_type] [msu_id_to_delete]\n" \
-    "\t5. add route [which_on_runtime_socket_num] [on_this_msu_id] [this_msu_type] [to_msu_id] [to_msu_type] [1 for local, 2 for remote] (IP if remote)\n" \
-    "\t6. del route [which_on_runtime_socket_num] [on_this_msu_id] [this_msu_type] [to_msu_id] [to_msu_type] [1 for local, 2 for remote] (IP if remote)\n" \
-    "\t7. create_pinned_thread [runtime_socket_num] /* creates a pinned worker thread on a core not being used */\n" \
-    "\t8. loadcfg [filename] /* load a suite of commands from a file */\n" \
-    "\t9. show stats [msu_id] /* display stored time serie for a given msu */\n" \
-    "\t10. help /* display this menu */\n" \
-    "\n";
+    "\n"
 
+
+struct cmd_action {
+    char cmd[32];
+    int (*action)(char*);
+    char help[256];
+};
+
+static void parse_cmd_action(char *cmd);
+
+static int parse_show_runtimes(char *args){
+    show_connected_peers();
+    return 0;
+}
+
+#define NEXT_ARG(arg, args) \
+    if ( ( arg = strtok(args, " \r\n") ) == NULL){ \
+        log_error("Missing required argument"); \
+        return -1; \
+    }
+
+static int parse_show_msus(char *args){
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+
+    struct dedos_control_msg control_msg = {
+        .msg_type = REQUEST_MESSAGE,
+        .msg_code = GET_MSU_LIST,
+        .payload_len = 0,
+        .header_len = sizeof(control_msg),
+    };
+
+
+    send_to_runtime(runtime_sock, (char*)&control_msg, sizeof(control_msg));
+
+    return 0;
+}
+
+static int parse_add_msu(char *args){
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_type = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_id = atoi(arg);
+
+    char *msu_mode;
+    NEXT_ARG(msu_mode, NULL);
+
+    int thread_id = -1;
+    if ( strcmp(msu_mode, "non_blocking") != 0 ){
+        arg = strtok(NULL, " ");
+        if ( arg == NULL)
+            return -1;
+        thread_id = atoi(arg);
+    }
+
+    char *data = strtok(NULL, "\r\n");
+    if (data == NULL)
+        data = "\0";
+
+    int ret = add_msu(data, msu_id, msu_type, msu_mode, thread_id, runtime_sock);
+    if (ret == -1){
+        log_error("Could not trigger new MSU creation");
+    }
+    return ret;
+}
+
+static int parse_del_msu(char *args) {
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_type = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_id = atoi(arg);
+
+    int rtn = del_msu(msu_id, msu_type, runtime_sock);
+    if ( rtn < 0 ){
+        log_error("Could not deletion of MSU %d", msu_id);
+    }
+    return rtn;
+}
+
+static int parse_add_route(char *args){
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int route_num = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_id = atoi(arg);
+
+    int rtn = add_route(msu_id, route_num, runtime_sock);
+    if ( rtn < 0 ) {
+        log_error("Could not add route %d to msu %d", route_num, msu_id);
+    }
+    return rtn;
+}
+
+static int parse_del_route(char *args){
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int route_num = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_id = atoi(arg);
+
+    int rtn = del_route(msu_id, route_num, runtime_sock);
+    if ( rtn < 0 ) {
+        log_error("Could not delete route %d from msu %d", route_num, msu_id);
+    }
+    return rtn;
+}
+
+static int parse_add_endpoint(char *args){
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int route_num = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_id = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    unsigned int range_end = (unsigned int)atoi(arg);
+
+    int rtn = add_endpoint(msu_id, route_num, range_end, runtime_sock);
+    if (rtn < 0) {
+        log_error("Could not add endpoint %d to route %d", msu_id, route_num);
+    }
+    return rtn;
+}
+
+static int parse_del_endpoint(char *args){
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int route_num = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_id = atoi(arg);
+
+    int rtn = del_endpoint(msu_id, route_num, runtime_sock);
+    if (rtn < 0) {
+        log_error("Could not delete endpoint %d from route %d", msu_id, route_num);
+    }
+    return rtn;
+}
+
+static int parse_mod_endpoint(char *args){
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int route_num = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    int msu_id = atoi(arg);
+
+    NEXT_ARG(arg, NULL);
+    unsigned int range_end = (unsigned int)atoi(arg);
+
+    int rtn = mod_endpoint(msu_id, route_num, range_end, runtime_sock);
+    if (rtn < 0) {
+        log_error("Could not modify range for endpoiont %d on route %d to %l",
+                msu_id, route_num, range_end);
+    }
+    return rtn;
+}
+
+
+static int parse_create_thread(char *args){
+    char *arg;
+    NEXT_ARG(arg, args);
+    int runtime_sock = atoi(arg);
+
+    int rtn = create_worker_thread(runtime_sock);
+
+    if ( rtn < 0 ) {
+        log_error("Could not create new worker thread on runtime %d", runtime_sock);
+    }
+
+    return rtn;
+}
+
+static int parse_load_cfg(char *args){
+    char *filename;
+    NEXT_ARG(filename, args);
+
+    FILE *f = fopen(filename, "r");
+
+    if ( f == NULL ) {
+        log_error("Could not open cfg file %s", filename);
+        return -1;
+    }
+
+    char *line = NULL;
+    size_t len = 0;
+    int read;
+    while ( ( read = getline(&line, &len, f) ) != -1 ) {
+        parse_cmd_action(line);
+        sleep(3);
+    }
+
+    fclose(f);
+    free(line);
+
+    return 0;
+}
+
+static int parse_help(char *cmd);
+
+struct cmd_action cmd_actions[] = {
+    {"show runtimes", parse_show_runtimes,
+        "/* List connected runtimes and socket num */"},
+
+    {"show msus", parse_show_msus,
+        "[runtime_socket_num] /* Get MSUs running on the runtime */" },
+
+    {"addmsu", parse_add_msu,
+        "[runtime_socket_num] [msu_type] [msu_id_to_assign] [blocking/non-blocking]"
+        " (thread num {1 to Current_pinned_threads} if non-blocking)"},
+
+    {"delmsu", parse_del_msu,
+        "[runtime_socket_num] [msu_type] [msu_id_to_delete]"},
+
+    {"add route", parse_add_route,
+        "[runtime_socket_num] [route_num] [origin_msu]"
+        " /* Adds an outgoing route to an MSU */"},
+
+    {"del route", parse_del_route,
+        "[runtime_socket_num] [route_num] [origin_msu]"
+        " /* Deletes an outgoing route from an MSU */"},
+
+    {"add endpoint", parse_add_endpoint,
+        "[runtime_socket_num] [route_num] [destination_msu_id] [key_range_end]"
+        " /* Adds an MSU as an endpoint to a given route */"},
+
+    {"del endpoint", parse_del_endpoint,
+        "[runtime_socket_num] [route_num] [destination_msu_id]"
+        " /* Deletes an MSU as an endpoint from a given route */"},
+
+    {"mod endpoint", parse_mod_endpoint,
+        "[runtime_socket_num] [route_num] [destination_msu_id] [new_key_range_end]"
+        " /* Modifies the key range associated with an MSU endpoint on the given route */"},
+
+    {"create_pinned_thread", parse_create_thread,
+        "[runtime_socket_num] /* Creates a pinned worker thread on an unused core */"},
+
+    {"loadcfg", parse_load_cfg,
+        "[filename] /* load a suite of commands from a file */"},
+
+    {"help", parse_help, "/* display available commands */"},
+
+    {"quit", NULL, ""},
+
+    {"\0", NULL, "\0"}
+};
+
+/*
 static void send_route_update(char **input, int action){
     char *cmd = *input;
     int from_msu_id, to_msu_id, runtime_sock, from_msu_type, to_msu_type, to_msu_locality;
     char *ip_str;
-    long total_msg_size = 0;
-    int to_ip = 0;
+    uint32_t to_ip = 0;
     int ret;
 
     debug("DEBUG: Route update *input: %s", *input);
@@ -64,11 +330,11 @@ static void send_route_update(char **input, int action){
     ret = update_route(action, runtime_sock, from_msu_id, from_msu_type,
                        to_msu_id, to_msu_type, to_msu_locality, to_ip);
 
-    if (ret < 0 ) {
+    if ( ret < 0 ) {
         debug("ERROR: %s", "Could not process update route request");
     }
 }
-
+*/
 //TODO: need to check whether an msu or a route are already present in the CFG before proceeding to action
 static void parse_cmd_action(char *cmd)
 {
@@ -76,142 +342,31 @@ static void parse_cmd_action(char *cmd)
     if (*cmd && cmd[ln] == '\n') {
         cmd[ln] = '\0';
     }
-    char *buf;
-    struct dedos_control_msg control_msg;
 
-    if (!strcasecmp(cmd, "show runtimes")) {
-        show_connected_peers();
-    } else if (strncasecmp(cmd, "help", 4) == 0) {
-        printf("%s", help);
-    } else if (!strncasecmp(cmd, "loadcfg", 7)) {
-        char *filename = strtok(&cmd[7], " ");
-        char *line = NULL;
-        size_t len = 0;
-        FILE *f = fopen(filename, "r");
-        int read;
-
-        if (f == NULL) {
-            debug("ERROR: could not open cfg file %s", filename);
+    int rtn = -1;
+    for ( int i = 0; cmd_actions[i].cmd[0] != '\0'; i++ ){
+        if ( strncasecmp(cmd, cmd_actions[i].cmd, strlen(cmd_actions[i].cmd)) == 0 ) {
+            if ( cmd_actions[i].action ) {
+                rtn = cmd_actions[i].action(cmd + strlen(cmd_actions[i].cmd) + 1 );
+            } else {
+                rtn = 1;
+            }
+            break;
         }
-
-        while ((read = getline(&line, &len, f)) != -1) {
-            parse_cmd_action(line);
-            sleep(3);
-        }
-
-        fclose(f);
-        free(line);
-    } else if (!strncasecmp(cmd, "addmsu", 6)) {
-        int runtime_sock, msu_type, msu_id, thread_id, data_len;
-        char *msu_mode, *data;
-
-        runtime_sock = atoi(strtok(&cmd[6], " "));
-        msu_type = atoi(strtok(NULL, " "));
-        msu_id   = atoi(strtok(NULL, " "));
-        msu_mode = strtok(NULL, " ");
-
-        if (strncmp(msu_mode, "non_blocking", strlen("non-blocking\0"))) {
-            thread_id = atoi(strtok(NULL, " "));
-        }
-
-        data = strtok(NULL, "\r\n");
-        if (data == NULL)
-            data = "\0";
-        //assume there is only the thread id after the mode
-	printf("Init data: %s\n",data);
-        int ret;
-        ret = add_msu(data, msu_id, msu_type, msu_mode, thread_id, runtime_sock);
-        if (ret == -1) {
-            debug("ERROR: %s", "could not trigger new msu creation");
-        }
-
-    } else if (!strncasecmp(cmd, "show stats", 10)) {
-        int msu_id;
-        msu_id = atoi(strtok(&cmd[10], " \r\n"));
-        show_stats(msu_id);
-
-    } else if (!strncasecmp(cmd, "show msus", 9)) {
-
-        int runtime_sock;
-        control_msg.msg_type = REQUEST_MESSAGE;
-        control_msg.msg_code = GET_MSU_LIST;
-        control_msg.payload_len = 0;
-        control_msg.header_len = sizeof(struct dedos_control_msg);
-
-        runtime_sock = atoi(strtok(&cmd[9], " \r\n"));
-        buf = malloc(sizeof(struct dedos_control_msg));
-        memcpy(buf, &control_msg, sizeof(struct dedos_control_msg));
-
-        send_to_runtime(runtime_sock, buf, sizeof(control_msg));
-
-        free(buf);
-
-    } else if (!strncasecmp(cmd, "delmsu", 6)) {
-        // buf = (char*) malloc(sizeof(char) * ln);
-        // strncpy(buf, cmd, ln);
-
-        int runtime_sock;
-        unsigned int msu_type;
-        int id;
-        int total_msg_size = 0;
-
-        runtime_sock = atoi(strtok(&cmd[6], " "));
-        msu_type = atoi(strtok(NULL, " "));
-        id = atoi(strtok(NULL, " \r\n"));
-
-        struct dedos_control_msg_manage_msu delete_msu_msg;
-        delete_msu_msg.msu_id = id;
-        delete_msu_msg.msu_type = msu_type;
-        delete_msu_msg.init_data_size = 0;
-        delete_msu_msg.init_data = NULL;
-
-        debug("DEBUG: Sock %d\n", runtime_sock);
-        debug("DEBUG: msu_type %d\n", delete_msu_msg.msu_type);
-        debug("DEBUG: MSU id : %d\n", delete_msu_msg.msu_id);
-        debug("DEBUG: init_data : %s\n", delete_msu_msg.init_data);
-
-        control_msg.msg_type = ACTION_MESSAGE;
-        control_msg.msg_code = DESTROY_MSU;
-        control_msg.header_len = sizeof(struct dedos_control_msg); //might be redundant
-        control_msg.payload_len = sizeof(struct dedos_control_msg_manage_msu) + delete_msu_msg.init_data_size;
-
-        total_msg_size = sizeof(struct dedos_control_msg) + control_msg.payload_len;
-
-        buf = (char*) malloc(total_msg_size);
-        if (!buf) {
-            debug("ERROR: Unable to allocate memory for sending control command. %s","");
-            return;
-        }
-        memcpy(buf, &control_msg, sizeof(struct dedos_control_msg));
-        memcpy(buf + sizeof(struct dedos_control_msg), &delete_msu_msg, sizeof(delete_msu_msg));
-
-        //TODO Should also update it's actions in the dataflow graph
-        send_to_runtime(runtime_sock, buf, total_msg_size);
-
-        free(buf);
-
-    } else if (!strncasecmp(cmd, "add route", 9)) {
-        int action;
-        action = MSU_ROUTE_ADD;
-        send_route_update(&cmd, action);
-
-    } else if (!strncasecmp(cmd, "del route", 9)) {
-        int action;
-        action = MSU_ROUTE_DEL;
-        send_route_update(&cmd, action);
-
-    } else if (!strncasecmp(cmd, "create_pinned_thread", 20)) {
-        int runtime_sock, ret;
-        runtime_sock = atoi(strtok(&cmd[20], "\r\n"));
-
-        ret = create_worker_thread(runtime_sock);
-
-        if (ret == -1) {
-            debug("ERROR: %s %d", "could not create new worker thread on runtime", runtime_sock);
-        }
+    }
+    if (rtn < 0){
+        log_error("Error parsing command: %s", cmd);
     }
 
     return;
+}
+
+static int parse_help(char *args){
+    printf(HELP_PREAMBLE);
+    for (int i=0; cmd_actions[i].cmd[0] != '\0'; i++){
+        printf("\t%d. %s %s\n", i, cmd_actions[i].cmd, cmd_actions[i].help);
+    }
+    return 0;
 }
 
 static void* cli_loop()
@@ -220,7 +375,7 @@ static void* cli_loop()
     char *line = NULL;
     size_t size;
 
-    printf("%s", help);
+    parse_help(NULL);
 
     do {
         printf("> Enter command: ");
