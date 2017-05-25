@@ -244,7 +244,7 @@ static int parse_load_cfg(char *args){
     int read;
     while ( ( read = getline(&line, &len, f) ) != -1 ) {
         parse_cmd_action(line);
-        sleep(3);
+        sleep(1);
     }
 
     fclose(f);
@@ -343,6 +343,9 @@ static void parse_cmd_action(char *cmd)
         cmd[ln] = '\0';
     }
 
+    char cmd_cpy[256];
+    strcpy(cmd_cpy, cmd);
+
     int rtn = -1;
     for ( int i = 0; cmd_actions[i].cmd[0] != '\0'; i++ ){
         if ( strncasecmp(cmd, cmd_actions[i].cmd, strlen(cmd_actions[i].cmd)) == 0 ) {
@@ -355,7 +358,7 @@ static void parse_cmd_action(char *cmd)
         }
     }
     if (rtn < 0){
-        log_error("Error parsing command: %s", cmd);
+        log_error("Error parsing command: %s", cmd_cpy);
     }
 
     return;

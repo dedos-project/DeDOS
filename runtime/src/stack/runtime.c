@@ -161,7 +161,7 @@ static void* non_block_per_thread_loop() {
     /* Each of these loops is independently run on thread */
     struct dedos_thread* self;
     int thread_index;
-    sleep(2);
+    usleep(1);
     thread_index = get_thread_index(pthread_self());
     log_debug("Index in all thread: %d", thread_index);
     self = &all_threads[thread_index];
@@ -175,7 +175,7 @@ static void* non_block_per_thread_loop() {
         }
     } while (not_done);
 
-    sleep(2); //segfaults because main thread has finished init everything.
+    usleep(1);
     log_info("Starting nonblocking per thread loop: %lu", self->tid);
 
     log_debug("-------------------------%s", "");

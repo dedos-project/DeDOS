@@ -80,6 +80,7 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
     }
 
     thread_msg->data = create_action;
+    create_action->msu_id = create_msu_msg->msu_id;
     create_action->msu_type = create_msu_msg->msu_type;
     create_action->init_data_len = create_msu_msg->init_data_size;
     create_action->init_data = malloc(create_msu_msg->init_data_size);
@@ -322,6 +323,10 @@ static int action_modify_route_msus(struct dedos_control_msg *control_msg){
 
             if (endpoint.locality == MSU_IS_LOCAL){
                 endpoint.msu_queue = get_msu_queue(msu_id, msu_type_id);
+                if (endpoint.msu_queue == NULL){
+                    log_error("Could not find msu queue! Not adding endpoint!");
+                    return -1;
+                }
             } else {
                 endpoint.ipv4 = manage_route_msg->ipv4;
             }
@@ -425,7 +430,7 @@ void parse_cmd_action(char *cmd) {
 		cmd[ln] = '\0';
 	}
 
-    if (strncasecmp(cmd, "DUMMY_INIT_CONFIG", 17)){
+    if (strncasecmp(cmd, "DUMMY_INIT_CONFIG", 17) == 0){
         cmd_dummy_config(control_msg);
         return;
     }

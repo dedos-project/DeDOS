@@ -151,7 +151,7 @@ int send_control_msg(int runtime_sock, struct dedos_control_msg *control_msg){
     char buf[total_msg_size];
 
     memcpy(buf, control_msg, control_msg->header_len);
-    memcpy(buf, control_msg->payload, control_msg->payload_len);
+    memcpy(buf + control_msg->header_len, control_msg->payload, control_msg->payload_len);
 
     return send_to_runtime(runtime_sock, buf, (unsigned int)total_msg_size);
 }

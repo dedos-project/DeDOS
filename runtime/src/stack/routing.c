@@ -8,7 +8,7 @@ struct routing_table{
     int type_id;
 
     int n_refs;
-    
+
     pthread_rwlock_t rwlock;
 
     int n_destinations;
@@ -88,8 +88,8 @@ static struct msu_endpoint *rm_routing_table_entry(struct routing_table *table, 
     unlock(table);
     return to_remove;
 }
-   
-static int add_routing_table_entry(struct routing_table *table, 
+
+static int add_routing_table_entry(struct routing_table *table,
                                    struct msu_endpoint *destination, uint32_t range_end){
     write_lock(table);
     if (table->type_id == 0){
@@ -109,9 +109,9 @@ static int add_routing_table_entry(struct routing_table *table,
         unlock(table);
         return -1;
     }
-    
+
     if (table->n_destinations == table->max_destinations){
-        int rtn = realloc_table_entries(table, 
+        int rtn = realloc_table_entries(table,
                 table->max_destinations + DEFAULT_MAX_DESTINATIONS);
         if (rtn < 0){
             log_error("Could not add new route endpoint");
@@ -120,7 +120,7 @@ static int add_routing_table_entry(struct routing_table *table,
         }
     }
 
-    int i; 
+    int i;
     for (i=table->n_destinations; i > 0 && range_end < table->ranges[i-1]; i--) {
         table->ranges[i] = table->ranges[i-1];
         table->destinations[i] = table->destinations[i-1];
@@ -129,10 +129,11 @@ static int add_routing_table_entry(struct routing_table *table,
     table->destinations[i] = *destination;
     table->n_destinations++;
     unlock(table);
+    log_info("Added destinoation %d to table of type %d", destination->id, table->type_id);
     return 0;
 }
 
-static int alter_routing_table_entry(struct routing_table *table, 
+static int alter_routing_table_entry(struct routing_table *table,
                                      int msu_id, uint32_t new_range_end){
     struct msu_endpoint *endpoint = rm_routing_table_entry(table, msu_id);
     if (endpoint == NULL){
@@ -222,10 +223,10 @@ struct generic_msu_queue *get_msu_queue(int msu_id, int msu_type_id){
         return NULL;
     }
 
-    struct generic_msu *msu = dedos_msu_pool_find(tracker->dedos_thread->msu_pool, 
+    struct generic_msu *msu = dedos_msu_pool_find(tracker->dedos_thread->msu_pool,
                                                   msu_id);
     if (!msu){
-        log_error("Failed to get ptr to next MSU from msu pool");
+        log_error("Failed to get ptr to MSU %d from msu pool", msu_id);
         return NULL;
     }
 
@@ -248,6 +249,7 @@ struct msu_endpoint *get_route_endpoint(struct route_set *routes, uint32_t key){
         return NULL;
     }
     struct msu_endpoint *endpoint = &table->destinations[index];
+    log_debug("Endpoint for key %u is %d", key, endpoint->id);
     unlock(table);
     return endpoint;
 }
@@ -303,7 +305,7 @@ int add_route_to_set(struct route_set **routes, int route_id){
     }
     return 0;
 }
-    
+
 int del_route_from_set(struct route_set **routes, int route_id){
     // First find it in the global table so we can get type id
     struct route_set *route = NULL;
@@ -320,7 +322,7 @@ int del_route_from_set(struct route_set **routes, int route_id){
         log_debug("Could not delete route %d -- route not in route set", route_id);
         return -1;
     }
-    
+
     HASH_DEL(*routes, route);
     destroy_route_set(route);
     log_debug("Removed route %d from set", route_id);
@@ -350,7 +352,7 @@ int remove_route_destination(int route_id, int msu_id){
     if (endpoint == NULL){
         log_error("Error removing msu %d from route %d", msu_id, route_id);
         return -1;
-    } 
+    }
     free(endpoint);
     return 0;
 }
@@ -359,7 +361,7 @@ int remove_route_destination(int route_id, int msu_id){
 void remove_destination_from_all_routes(int msu_id){
     // TODO: This is slow. Should only care about routes we're interested in
     for (struct route_set *ref = all_routes; ref != NULL; ref=ref->hh.next){
-        
+
         struct msu_endpoint *endpoint = rm_routing_table_entry(ref->table, msu_id);
         if (endpoint != NULL){
             free(endpoint);

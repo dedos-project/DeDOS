@@ -75,7 +75,7 @@ def runtime_routes(rt_id, msus, routes):
                 last_max = route_out['key-max'];
                 route_out['destinations'][msu['id']] = last_max + 1;
                 route_out['key-max']+=1;
-        
+
         for from_msu in from_msus:
             for type in types:
                 if these_routes[type] not in from_msu['scheduling']['routing']:
@@ -123,7 +123,7 @@ def stringify(output):
             if isinstance(v, dict) or isinstance(v, OrderedDict):
                 stringify(v)
             elif isinstance(v, list):
-                stringify(v) 
+                stringify(v)
             else:
                 output[k] = str(v)
     else:
@@ -136,7 +136,6 @@ def stringify(output):
                 output[i] = str(v)
 def make_dfg(yml_filename, pretty=False):
     input = yaml.load(open(yml_filename))
- 
     output = OrderedDict()
 
     output['application_name'] = input['application']['name']

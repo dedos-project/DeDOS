@@ -144,6 +144,7 @@ static int process_route_change_request(struct dedos_thread_msg *msg,
         return -1;
     }
 
+    update_msg->route_id = payload->route_id;
     update_msg->msu_id = msu_id;
     update_msg->action = msg->action;
 
@@ -158,7 +159,7 @@ static int process_route_change_request(struct dedos_thread_msg *msg,
 
     update_queue_item->buffer = update_msg;
     update_queue_item->buffer_len = sizeof(*update_msg);
-    
+
     int rtn = generic_msu_queue_enqueue(&msu->q_control, update_queue_item);
     if (rtn < 0){
         log_error("Error enqueuing route update message for msu %d", msu->id);
@@ -166,10 +167,10 @@ static int process_route_change_request(struct dedos_thread_msg *msg,
         free(update_queue_item);
         return -1;
     }
-    log_debug("Enqueued route update message on msu %d (queue len: %d)", 
+    log_debug("Enqueued route update message on msu %d (queue len: %d)",
               msu->id, rtn);
 }
-    
+
 void process_control_updates(void)
 {
     // Get the current dedos_thread

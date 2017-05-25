@@ -274,21 +274,30 @@ int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) {
     return 0;
 }
 
+static int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type){
+    struct dfg_route *route = malloc(sizeof(*route));
+    route->route_id = route_id;
+    route->msu_type = msu_type;
+    route->num_destinations = 0;
+    rt->routes[rt->num_routes] = route;
+    rt->num_routes++;
+    return 0;
+}
 
 int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end){
     struct dfg_config *dfg = get_dfg();
     struct dfg_runtime_endpoint *rt = dfg->runtimes[runtime_index];
 
-    struct dfg_route *route = get_route_from_id(rt, route_id);
-    if (route == NULL){
-        log_error("Specified route %d does not reside on runtime %d", route_id, runtime_index);
-        return -1;
-    }
-
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
     if (msu == NULL){
         log_error("Specified MSU %d does not exist", msu_id);
         return -1;
+    }
+
+    struct dfg_route *route = get_route_from_id(rt, route_id);
+    if (route == NULL){
+        dfg_add_route(rt, route_id, msu->msu_type);
+        route = get_route_from_id(rt, route_id);
     }
 
     // Iterate through backwards, advancing entries in the routing table until

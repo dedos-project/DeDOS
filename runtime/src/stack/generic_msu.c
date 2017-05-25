@@ -784,13 +784,17 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generi
 
 int msu_route(struct msu_type *type, struct generic_msu *sender,
                 struct generic_msu_queue_item *data){
-    if (data->id == 0){
-        if (sender->type->generate_id == NULL){
+    if (sender->type->generate_id == NULL){
+        if (data->id == 0){
             log_warn("Data ID not assigned, and sender %d (%s) cannot assign ID",
                      sender->id, sender->type->name);
-        } else {
-            data->id = sender->type->generate_id(sender, data);
         }
+    } else {
+        if (data->id != 0){
+            log_warn("Data ID being reassigned");
+        }
+        data->id = sender->type->generate_id(sender, data);
+        log_debug("Assigned queue item %p id %d", data, data->id);
     }
 
     struct msu_endpoint *dst = type->route(type, sender, data);

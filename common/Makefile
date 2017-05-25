@@ -3,7 +3,7 @@ LD=ld -r
 DEPENDS=gcc -MM -MF
 
 
-LOGS_ON = \
+LOGS = \
 		DEBUG\
 	   	INFO \
 	   	ERROR \
@@ -18,7 +18,6 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 
 SELF=./Makefile
 
-LDFLAGS=
 CFLAGS=-Wall -g --std=gnu99 $(LOG_DEFINES)
 
 SRC=src/

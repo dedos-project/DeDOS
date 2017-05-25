@@ -79,6 +79,11 @@ int ssl_init(struct generic_msu *self, void *init_data, int init_data_len){
     return 0;
 }
 
+int ssl_generate_id(struct generic_msu *self, struct generic_msu_queue_item *queue_item){
+    struct ssl_data_payload *data = queue_item->buffer;
+    return data->socketfd;
+}
+
 const struct msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {
     .name="ssl_request_routing_msu",
     .layer=DEDOS_LAYER_TRANSPORT,
@@ -92,5 +97,5 @@ const struct msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,
-    .generate_id=default_generate_id
+    .generate_id=ssl_generate_id
 };
