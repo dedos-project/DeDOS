@@ -226,7 +226,7 @@ struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *
 
  /** Malloc's and creates a new MSU of the specified type and id. */
 struct generic_msu *init_msu(unsigned int type_id, int msu_id,
-                             struct create_msu_thread_msg_data *create_action);
+                             struct create_msu_thread_data *create_action);
 
 /** Destroys an msu, freeing all relevant data. */
 void destroy_msu(struct generic_msu *self);

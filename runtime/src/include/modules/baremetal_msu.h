@@ -29,6 +29,6 @@ struct baremetal_msu_data_payload {
 const struct msu_type BAREMETAL_MSU_TYPE;
 struct generic_msu *baremetal_entry_msu;
 int baremetal_msu_init_entry(struct generic_msu *self,
-        struct create_msu_thread_msg_data *create_action);
+        struct create_msu_thread_data *create_action);
 void baremetal_msu_destroy_entry(struct generic_msu *self);
 #endif

@@ -4,7 +4,7 @@
 #include "dedos_msu_msg_type.h"
 #include "modules/webserver_msu.h"
 
-static int regex_routing_receive(struct generic_msu *self, msu_queue_item *queue_item){
+static int regex_routing_receive(struct generic_msu *self, struct generic_msu_queue_item *queue_item){
     return DEDOS_REGEX_MSU_ID;
 }
 
@@ -17,7 +17,7 @@ const struct msu_type REGEX_ROUTING_MSU_TYPE = {
     .destroy=NULL,
     .receive=regex_routing_receive,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=default_routing,
     .deserialize=regex_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote

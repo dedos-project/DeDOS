@@ -202,6 +202,40 @@ int init_route(int route_id, int type_id){
     return 0;
 }
 
+struct msu_endpoint *get_shortest_queue_endpoint(struct route_set *routes){
+    struct routing_table *table = routes->table;
+    read_lock(table);
+    struct msu_endpoint *msu = NULL;
+
+    unsigned int shortest_queue = MAX_MSU_Q_SIZE;
+    struct msu_endpoint *best_endpoint = NULL;
+
+    for (int i=0; i<table->n_destinations; i++){
+        if ( table->destinations[i].locality == MSU_IS_REMOTE ) {
+            continue;
+        }
+        int length = table->destinations[i].msu_queue->num_msgs;
+        if (length < shortest_queue ) {
+            shortest_queue = length;
+            best_endpoint = &table->destinations[i];
+        }
+    }
+
+    unlock(table);
+    return best_endpoint;
+}
+
+struct msu_endpoint *get_endpoint_by_index(struct route_set *routes, int index){
+    struct routing_table *table = routes->table;
+    read_lock(table);
+    struct msu_endpoint *msu = NULL;
+    if (table->n_destinations > index) {
+        msu = &table->destinations[index];
+    }
+    unlock(table);
+    return msu;
+}
+
 struct msu_endpoint *get_endpoint_by_id(struct route_set *routes, int msu_id){
     struct routing_table *table = routes->table;
     read_lock(table);

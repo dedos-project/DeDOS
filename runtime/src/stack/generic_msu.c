@@ -305,7 +305,7 @@ int msu_failure(int msu_id){
  * @return initialized MSU or NULL if error occurred
  */
 struct generic_msu *init_msu(unsigned int type_id, int msu_id,
-                             int init_data_len, void *init_data){
+                             struct create_msu_thread_data *create_action){
     if (type_id < 1){
         return NULL;
     }
@@ -313,7 +313,7 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
     struct generic_msu *msu = msu_alloc();
     msu->id = msu_id;
     msu->type = msu_type_by_id(type_id);
-    msu->data_p->data = init_data;
+    msu->data_p->data = create_action->init_data;
 
     // TODO: queue_ws, msu_ws, what????
 
@@ -330,7 +330,7 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
     // Call the type-specific initialization function
     // TODO: What is this "creation_init_data"
     if (msu->type->init){
-        int rtn = msu->type->init(msu, init_data, init_data_len);
+        int rtn = msu->type->init(msu, create_action);
         if (rtn){
             log_error("MSU creation failed for %s MSU: id %d",
                       msu->type->name, msu_id);
@@ -495,107 +495,17 @@ struct round_robin_hh_key{
     uint32_t ip_address;
 };
 
-/**
- * Simple structure to store an MSUs routing state when using
- * the round-robin routing method.
- * Will soon be replaced by routing object and hash-based method
- */
-struct round_robin_state {
-    struct round_robin_hh_key id; /**< ID of the type stored in this element in the struct */
-    struct msu_endpoint *last_endpoint; /**< Last endpoint of that type that was sent to */
-    UT_hash_handle hh; /**< Hash-handle */
-};
-
 /** Chooses the destination with the shortest queue length.
  * NOTE: Destination must be local in order to be chosen
  */
 struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_msu *sender,
-                                    msu_queue_item *data) {
-    struct msu_endpoint *dst_msu =
-        get_all_type_msus(sender->rt_table, type->type_id);
-
-    if ( !dst_msu ) {
-        log_error("Source MSU %d did not find target MSU of type %d",
-                  sender->id, type->type_id);
-        return NULL;
-    }
-
-    unsigned int shortest_queue = MAX_MSU_Q_SIZE;
-    struct msu_endpoint *best_endpoint = NULL;
-
-    while ( dst_msu != NULL ) {
-        if ( dst_msu->locality == MSU_LOC_REMOTE_RUNTIME ){
-            dst_msu = dst_msu->hh.next;
-            continue;
-        }
-        int length = dst_msu->next_msu_input_queue->num_msgs;
-        if ( length < shortest_queue ) {
-            shortest_queue = length;
-            best_endpoint = dst_msu;
-        }
-        dst_msu = dst_msu->hh.next;
-    }
-
+                                    struct generic_msu_queue_item *data) {
+    struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(sender->routes);
     if ( best_endpoint == NULL ){
         log_error("Cannot enqueue to shortest-length queue when all destinations are remote");
     }
     return best_endpoint;
 }
-
-/** Routing function to deliver traffic to a set of MSUs.
- * TODO: This will soon be moved to a "router" object, instead of
- * being handled by the destination type.
- *
- * @param type msu_type to be delivered to
- * @param sender msu sending the data
- * @param data queue item to be delivered
- * @return msu to which the message is to be enqueued, or NULL if no MSU could be found
- */
-struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *sender,
-                                 struct generic_msu_queue_item *data){
-    struct msu_endpoint *dst_msus =
-        get_all_type_msus(sender->rt_table, type->type_id);
-
-    if (! (dst_msus) ){
-        log_error("Source MSU %d did not find target MSU of type %d",
-
-                  sender->id, type->type_id);
-        return NULL;
-    }
-
-    struct round_robin_hh_key key = {type->type_id, 0};
-
-    struct round_robin_state *all_states =
-            (struct round_robin_state *)sender->routing_state;
-    struct round_robin_state *route_state = NULL;
-    HASH_FIND(hh, all_states, &key, sizeof(key), route_state);
-
-    // Routing hasn't been initialized yet, so choose a semi-random
-    // starting point
-    if (route_state == NULL){
-        log_debug("Creating new routing state for type %d from msu %d",
-                  type->type_id, sender->id);
-        struct msu_endpoint *last_endpoint = dst_msus;
-        // TODO: Need to free when freeing msu!
-        route_state = malloc(sizeof(*route_state));
-        for (int i=0; i< (sender->id) % HASH_COUNT(dst_msus); i++){
-            last_endpoint = last_endpoint->hh.next;
-            if (! last_endpoint)
-                last_endpoint = dst_msus;
-        }
-        route_state->id = key;
-        route_state->last_endpoint = last_endpoint;
-        HASH_ADD(hh, all_states, id, sizeof(key), route_state);
-        sender->routing_state = (void*)all_states;
-    }
-    // Get the next endpoint of the same type, and replace the current one with it
-    route_state->last_endpoint = route_state->last_endpoint->hh.next;
-    // If it's null, just get the first endpoint
-    if (! route_state->last_endpoint)
-       route_state->last_endpoint = dst_msus;
-    return route_state->last_endpoint;
-}
-
 
 struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *sender,
                                      struct generic_msu_queue_item *data){
@@ -608,7 +518,6 @@ struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *
     }
     struct msu_endpoint *destination = get_route_endpoint(type_set, data->id);
     return destination;
-    } 
 }
 
 /** Calls typical round_robin routing iteratively until it gets a destination
@@ -635,62 +544,40 @@ struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *
  */
 struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic_msu *sender,
                                            uint32_t ip_address){
-    struct msu_endpoint *dst_msus =
-        get_all_type_msus(sender->rt_table, type->type_id);
 
-    if (! (dst_msus) ){
-        log_error("Source MSU %d did not find target MSU of type %d",
-                  sender->id, type->type_id);
-        return NULL;
-    }
+    int previous_index = (intptr_t)sender->routing_state;
+    int new_index = previous_index++;
 
-    struct round_robin_hh_key key = {type->type_id, ip_address};
+    int was_null = 0;
 
-    struct round_robin_state *all_states =
-            (struct round_robin_state *)sender->routing_state;
-    struct round_robin_state *route_state = NULL;
-    HASH_FIND(hh, all_states, &key, sizeof(key), route_state);
+    struct msu_endpoint *dst;
 
-    // Routing hasn't been initialized yet, so choose a semi-random
-    // starting point
-    if (route_state == NULL){
-        log_debug("Creating new routing state for type %d from msu %d",
-                  type->type_id, sender->id);
-        struct msu_endpoint *last_endpoint = dst_msus;
-        // TODO: Need to free when freeing msu!
-        route_state = malloc(sizeof(*route_state));
-        for (int i=0; i< (sender->id) % HASH_COUNT(dst_msus); i++){
-            last_endpoint = last_endpoint->hh.next;
-            if (! last_endpoint)
-                last_endpoint = dst_msus;
+    while ( 1 ) {
+        dst = get_endpoint_by_index(new_index);
+        if ( dst == NULL ){
+            if (was_null){
+                break;
+            } else {
+                was_null = 1;
+                new_index = 0;
+                new_index++;
+            }
         }
-        route_state->id = key;
-        route_state->last_endpoint = last_endpoint;
-        HASH_ADD(hh, all_states, id, sizeof(key), route_state);
-        sender->routing_state = (void*)all_states;
-    }
-
-    // Now loop over until you find an MSU with the right IP
-    for (int i=0; i<HASH_COUNT(dst_msus); i++){
-        // Get the next endpoint of the same type, and replace the current one with it
-        route_state->last_endpoint = route_state->last_endpoint->hh.next;
-        // If it's null, just get the first endpoint
-        if (! route_state->last_endpoint)
-           route_state->last_endpoint = dst_msus;
-
-        if (route_state->last_endpoint->ipv4 == ip_address){
+        if ( dst->ipv4 == ip_address ) {
             break;
         } else {
-            log_debug("IP %d is not %d", route_state->last_endpoint->ipv4, ip_address);
+            new_index++;
         }
     }
 
-    if ( route_state->last_endpoint->ipv4 != ip_address){
+    if ( dst == NULL ){
         log_error("Could not find destination of type %d with correct ip from sender %d",
                 type->type_id, sender->id);
         return NULL;
     }
-    return route_state->last_endpoint;
+
+    sender->routing_state = (intptr_t)new_index;
+    return dst;
 }
 
 /** Picks the next endpoing in a RR fashion while considering 4 tuple. This is to

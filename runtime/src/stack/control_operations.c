@@ -78,8 +78,7 @@ static int process_create_msu_request(struct dedos_thread_msg *msg,
     struct create_msu_thread_data* create_action = msg->data;
     struct generic_msu *new_msu = init_msu(create_action->msu_type,
                                            create_action->msu_id,
-                                           create_action->init_data_len,
-                                           create_action->init_data);
+                                           create_action);
     free(create_action->init_data);
     if (!new_msu){
         log_error("Could not initialize new MSU %d", create_action->msu_id);

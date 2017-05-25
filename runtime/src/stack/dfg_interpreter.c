@@ -179,7 +179,7 @@ int create_route_from_dfg(struct dfg_route *dfg_route){
     return 0;
 }
 
-int spawn_threads_from_dfg(struct dfg_config *dfg){
+int spawn_threads_from_dfg(struct dfg_config *dfg, int runtime_id){
     int n_spawned_threads = 0;
     for (int i=0; i<dfg->vertex_cnt; i++){
         if (vertex_locality(dfg->vertices[i], runtime_id) == 0) {

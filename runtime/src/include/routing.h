@@ -17,10 +17,8 @@ struct msu_endpoint{
     int id;
     int type_id;
     enum locality locality;
-    union{
-        uint32_t ipv4; //If remote, IP of remote runtime
-        struct generic_msu_queue *msu_queue;
-    };
+    uint32_t ipv4; //If remote, IP of remote runtime
+    struct generic_msu_queue *msu_queue;
 };
 
 // Forward declaration so reads and writes have 
@@ -35,6 +33,7 @@ struct route_set{
 
 struct generic_msu_queue *get_msu_queue(int msu_id, int msu_type_id);
 struct msu_endpoint *get_route_endpoint(struct route_set *routes, uint32_t key);
+struct msu_endpoint *get_shortest_queue_endpoint(struct route_set *routes);
 struct msu_endpoint *get_endpoint_by_id(struct route_set *routes, int msu_id);
 
 int init_route(int route_id, int type_id);

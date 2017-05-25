@@ -172,7 +172,7 @@ int webserver_send_remote(struct generic_msu *src, struct generic_msu_queue_item
         return -1;
     }
 
-    if (dst->msu_type != DEDOS_REGEX_MSU_ID && dst->msu_type != DEDOS_REGEX_ROUTING_MSU_ID) {
+    if (dst->type_id != DEDOS_REGEX_MSU_ID && dst->type_id != DEDOS_REGEX_ROUTING_MSU_ID) {
         memcpy(msg->payload, data->buffer, msg->payload_len);
     } else {
         struct regex_data_payload *regex_data =
