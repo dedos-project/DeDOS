@@ -53,6 +53,17 @@ def make_cfg(yml_filename):
                                                block=msu['working_mode'],
                                                thread=msu['scheduling']['thread_id']))
 
+    for i, rt in enumerate(rts):
+        rt_routes = runtime_routes(rt['id'], msus_out, input['routes'])
+        rt_msus = [msu for msu in msus_out if
+                   msu['scheduling']['runtime_id'] == rt['id']]
+
+        if len(rt_msus) == 0:
+            continue
+
+        rt_threads = set(msu['scheduling']['thread_id'] for msu in rt_msus)
+
+
         for route in rt_routes:
             for k, v in route['destinations'].items():
                 output.append(SYNTAX['endpoint'].format(

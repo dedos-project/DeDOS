@@ -53,31 +53,31 @@ default_runtime: &default_runtime
     dram: 67108864
     io_network_bw: 10485760
 
-runtimes:
-    1: &rt1
-        <<: *dedos01
-        <<: *default_runtime
-        runtime_id: 1
+runtimes: {}
+#    1: &rt1
+#        <<: *dedos01
+#        <<: *default_runtime
+#        runtime_id: 1
 #   2: &rt2
 #        <<: *dedos02
 #        <<: *default_runtime
 #        runtime_id: 2
 
-default_msus:
-    - &default_msu
-      vertex_type: nop
-      working_mode: non-blocking
-      profiling:
-          wcet: 10
-          dram: 500MB
-          tx_node_local: 1
-          tx_core_local: 0.5
-          tx_node_remote: 25
-      deadline: 5
-    - &rt1-msu
-      <<: *default_msu
-      scheduling:
-          <<: *rt1
+default_msus: []
+    #    - &default_msu
+    #  vertex_type: nop
+    #  working_mode: non-blocking
+    #  profiling:
+    #      wcet: 10
+    #      dram: 500MB
+    #      tx_node_local: 1
+    #      tx_core_local: 0.5
+    #      tx_node_remote: 25
+    #  deadline: 5
+    #- &rt1-msu
+    #  <<: *default_msu
+    #  scheduling:
+    #      <<: *rt1
 
 msus: []
 

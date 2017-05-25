@@ -176,9 +176,9 @@ int main(int argc, char **argv){
     int json_any = (dfg_json != NULL || runtime_id > 0);
 
     int manual_all = (global_ctl_ip != NULL && global_ctl_port > 0 &&
-                      local_listen_port > 0 && same_physical_machine > 0);
+                      local_listen_port > 0 );
     int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 ||
-                      local_listen_port > 0 || same_physical_machine > 0) ;
+                      local_listen_port > 0 ) ;
 
     int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
 
@@ -223,9 +223,9 @@ int main(int argc, char **argv){
     int control_listen_port = local_listen_port;
 
     // Control socket init for listening to connections from other runtimes
-    if (same_physical_machine == 1){
-        control_listen_port++;
-    }
+    //if (same_physical_machine == 1){
+    //    control_listen_port++;
+    //}
 
     if ( ! db_all){
         log_warn("Connection to mock database not fully instantiated");
