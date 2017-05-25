@@ -164,7 +164,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
                          );
                 }
                 */
-                process_stats_msg(rcvd_stats_array, runtime_sock, stats_items);
+                //process_stats_msg(rcvd_stats_array, runtime_sock, stats_items);
             } else {
                 debug("ERROR: Wrong msg type set for STATISTICS update %u", control_msg->msg_type);
             }

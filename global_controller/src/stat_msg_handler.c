@@ -45,7 +45,7 @@ static void send_route_update(char *input, int action) {
         debug("ERROR: %s", "Could not process update route request");
     }
 }
-*/
+
 //TODO: update this function for new scheduling & DFG structure
 void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int stats_items) {
     //TODO: add specific stat report message types and code
@@ -99,7 +99,7 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
 
 
 
-/*
+*
     struct dfg_config *dfg_config_g = NULL;
     dfg_config_g = get_dfg();
 
@@ -220,5 +220,5 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
             send_route_update(cmd, action);
         }
     }
-*/
 }
+*/
