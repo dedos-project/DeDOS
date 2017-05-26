@@ -503,6 +503,7 @@ int init_main_thread(void) {
     main_thread->msu_pool = NULL; //Only sockets with select so no MSUs
     main_thread->thread_q->shared = 1;
     main_thread->thread_q->mutex = mutex_init();
+    main_thread->thread_q->num_msgs = 0;
     main_thread->thread_q->max_msgs = 0;
     main_thread->thread_q->max_size = 0;
     main_thread->thread_q->head = NULL;
