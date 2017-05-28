@@ -34,6 +34,7 @@
 #include "pico_tftp.h"
 #include "pico_tcp.h"
 #include "pico_eth.h"
+#include "pico_dev_pcap.h"
 #include "pico_socket_tcp.h"
 
 #include "dedos_msu_list.h"
@@ -308,7 +309,7 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *que
 }
 
 
-int msu_pico_tcp_init(struct generic_msu *self, 
+int msu_pico_tcp_init(struct generic_msu *self,
         struct create_msu_thread_msg_data *create_action)
 {
     // pico_tcp_msu->restore = msu_pico_tcp_restore; //called when data is received over control socket i.e. TCP state from HS MSU

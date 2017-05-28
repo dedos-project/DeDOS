@@ -35,6 +35,7 @@
 #include "pico_sntp_client.h"
 #include "pico_mdns.h"
 #include "pico_tftp.h"
+#include "pico_dev_pcap.h"
 
 #include "pico_socket.h"
 #include "pico_queue.h"
@@ -135,7 +136,7 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
         if (s->flag & PICO_SOCK_EV_CLOSE){
             ;
         }
-        
+
         memset(recvbuf, '\0', sizeof(char)*BSIZE);
         while (len < BSIZE) {
             r = pico_socket_read(s, recvbuf + len, BSIZE - len);
@@ -268,7 +269,7 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
     };
     struct pico_ip4 bcastAddr = ZERO_IP4;
 
-    unsigned char macaddr[6] = { 0, 0, 0, 0xa, 0xb, 0x0 };
+    unsigned char macaddr[6] = { 0xf8, 0xbc, 0x12, 0x1a, 0xdf, 0xb1 };
     uint16_t *macaddr_low = (uint16_t *) (macaddr + 2);
     struct pico_device *dev = NULL;
     struct pico_ip4 addr4 = { 0 };
@@ -285,6 +286,8 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
     char *optarg = (char*)malloc(sizeof(char) * create_action->init_data_len + 1);
     strncpy(optarg, create_action->creation_init_data,create_action->init_data_len);
     optarg[create_action->init_data_len] = '\0';
+
+    char *if_file_name = "em4";
 
     do {
         nxt = msu_cpy_arg(&name, optarg);
@@ -304,13 +307,13 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
     } while (0);
 
     if (!nm) {
-        log_error("Bad tap configuration...%s","");
+        log_error("PCAP bad configuration...%s","");
         return -1;
     }
 
-    dev = pico_tap_create(name);
+    dev = pico_pcap_create_live(if_file_name, name, NULL);
     if (!dev) {
-        log_error("Failed to create tap device%s","");
+        log_error("Failed to create pcap device%s","");
         return -1;
     }
     log_debug("Dev created: name: %s",name);

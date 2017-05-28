@@ -7,7 +7,7 @@ AR:=$(CROSS_COMPILE)ar
 RANLIB:=$(CROSS_COMPILE)ranlib
 SIZE:=$(CROSS_COMPILE)size
 STRIP_BIN:=$(CROSS_COMPILE)strip
-TEST_LDFLAGS=-pthread  $(PREFIX)/*.o -lvdeplug -lm -lpcre
+TEST_LDFLAGS=-pthread  $(PREFIX)/*.o -lvdeplug -lm -lpcre -lpcap
 LIBNAME:="libpicotcp.a"
 LIBBASE:=build/
 
@@ -56,7 +56,7 @@ MEMORY_MANAGER?=0
 MEMORY_MANAGER_PROFILING?=0
 TUN?=0
 TAP?=0
-PCAP?=0
+PCAP?=1
 PPP?=1
 CYASSL?=0
 WOLFSSL?=0

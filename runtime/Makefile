@@ -31,7 +31,7 @@ DEPEND=gcc -MM -MF
 # they can be specified here, as such:
 # COMPILE_dummy_msu=g++ -c
 
-CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g -DSTATLOG=0
+CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g -DSTATLOG=0 -lpcap
 
 ifeq ($(DATAPLANE_PROFILING),1)
         CFLAGS+=-DDATAPLANE_PROFILING
@@ -41,7 +41,7 @@ ifeq ($(ADDRESS_SANITIZER),1)
   CFLAGS+=-fsanitize=address -fno-omit-frame-pointer
 endif
 
-TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc
+TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc -lpcap
 
 LEGACY_MAKE=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/Makefile)
 LEGACY_INC=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/build/include)
