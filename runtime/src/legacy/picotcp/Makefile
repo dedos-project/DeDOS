@@ -1,7 +1,7 @@
 -include ../../config.mk
 -include ../../tools/kconfig/.config
 
-CC:=$(CROSS_COMPILE)gcc 
+CC:=$(CROSS_COMPILE)gcc
 LD:=$(CROSS_COMPILE)ld
 AR:=$(CROSS_COMPILE)ar
 RANLIB:=$(CROSS_COMPILE)ranlib
@@ -12,7 +12,7 @@ LIBNAME:="libpicotcp.a"
 LIBBASE:=build/
 
 PREFIX?=$(PWD)/build
-DEBUG?=1
+DEBUG?=0
 PROFILE?=0
 PERF?=1
 ENDIAN?=little
