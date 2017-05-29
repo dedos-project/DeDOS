@@ -188,6 +188,7 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
 
     if (ev & PICO_SOCK_EV_ERR) {
         log_error("Socket error received: %s. Bailing out.\n", strerror(pico_err));
+        pico_socket_shutdown(s, PICO_SHUT_RDWR);
         //exit(1);
     }
 
