@@ -12,12 +12,10 @@
 #include "msu_tracker.h"
 #include "modules/socket_handler_msu.h"
 #include "global_controller/controller_tools.h"
+#include "dedos_msu_list.h"
 
 // TODO refactor this into case statements
 void parse_cmd_action(char *cmd) {
-    int count = 0;
-    char *buf;
-    unsigned long *peer_ips = NULL;
     struct dedos_control_msg *control_msg;
 
     control_msg = (struct dedos_control_msg*) cmd;
@@ -167,9 +165,19 @@ void parse_cmd_action(char *cmd) {
                 //starts at tid, jump 2 spaces (why 2 and not 1? strtok?)
                 other_data = tid + tid_digits + 2;
 
-                memset(create_action->creation_init_data, 0, create_action->init_data_len);
-                memcpy(create_action->creation_init_data, other_data,
-                       sizeof(struct socket_handler_init_payload));
+                //FIXME: ugly way to only check for init data if msu id is known to have some
+                switch (create_action->msu_type) {
+                    case DEDOS_SOCKET_HANDLER_MSU_ID:
+                        memcpy(create_action->creation_init_data, other_data,
+                               sizeof(struct socket_handler_init_payload));
+                    break;
+
+                    case DEDOS_PICO_TCP_STACK_MSU_ID:
+                        memcpy(create_action->creation_init_data, other_data,
+                               strlen(other_data));
+                    break;
+                }
+
 
                 /*TODO: handle the case where the request specify a non existing thread within the range of 0-numCPU */
                 if (placement_index < 0 || placement_index > total_threads -1) {
@@ -361,9 +369,6 @@ void parse_cmd_action(char *cmd) {
     }
     else if (control_msg->msg_type == ACTION_MESSAGE
             && (control_msg->msg_code == MSU_ROUTE_ADD || control_msg->msg_code == MSU_ROUTE_DEL)) {
-
-        unsigned int msu_type;
-        char *data;
 
         struct dedos_control_msg_manage_msu *manage_msu_msg;
         manage_msu_msg = (struct dedos_control_msg_manage_msu *) control_msg->payload;
