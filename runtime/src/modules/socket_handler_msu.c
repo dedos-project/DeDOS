@@ -151,8 +151,6 @@ int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_d
 
     listen(state->socketfd, 5);
 
-    free(init_data);
-
     return 0;
 }
 

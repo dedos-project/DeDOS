@@ -11,6 +11,7 @@
 #include "control_operations.h"
 #include "msu_tracker.h"
 #include "modules/socket_handler_msu.h"
+#include "global_controller/controller_tools.h"
 
 // TODO refactor this into case statements
 void parse_cmd_action(char *cmd) {
@@ -160,23 +161,15 @@ void parse_cmd_action(char *cmd) {
 
                 tid = strtok(NULL, " ");
                 log_debug("thread id: %s", tid);
+                placement_index = atoi(tid);
+                int tid_digits = how_many_digits(placement_index);
 
-                other_data = strtok(NULL, "\r\n");
+                //starts at tid, jump 2 spaces (why 2 and not 1? strtok?)
+                other_data = tid + tid_digits + 2;
 
-                struct socket_handler_init_payload *check =
-                    (struct socket_handler_init_payload *) other_data;
-                printf("%d,%d,%d,%d,%d,%d\n",
-                        check->port,
-                        check->domain,
-                        check->type,
-                        check->protocol,
-                        check->bind_ip,
-                        check->target_msu_type);
-
-                memcpy(&placement_index, tid, strlen(tid));
                 memset(create_action->creation_init_data, 0, create_action->init_data_len);
-                memcpy(create_action->creation_init_data, other_data, strlen(other_data));
-                //sscanf(mode, "%d %s", &placement_index, create_action->creation_init_data);
+                memcpy(create_action->creation_init_data, other_data,
+                       sizeof(struct socket_handler_init_payload));
 
                 /*TODO: handle the case where the request specify a non existing thread within the range of 0-numCPU */
                 if (placement_index < 0 || placement_index > total_threads -1) {
