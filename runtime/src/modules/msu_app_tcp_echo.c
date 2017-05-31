@@ -106,11 +106,11 @@ int msu_send_tcpecho(struct pico_socket *s, char *recvbuf, int len)
     int w, ww = 0;
     char sendbuf[BSIZE];
     memset(sendbuf, '\0', sizeof(char)*BSIZE);
-    memcpy(&sendbuf, recvbuf, BSIZE);
+//    memcpy(&sendbuf, recvbuf, BSIZE);
 
     if (len > pos) {
         do {
-            w = pico_socket_write(s, sendbuf + pos, len - pos);
+            w = pico_socket_write(s, recvbuf + pos, len - pos);
             if (w > 0) {
                 pos += w;
                 ww += w;
@@ -132,27 +132,7 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
     char recvbuf[BSIZE];
     memset(recvbuf, '\0', sizeof(char)*BSIZE);
 
-    if (ev & PICO_SOCK_EV_RD) {
-        if (s->flag & PICO_SOCK_EV_CLOSE){
-            ;
-        }
-
-        memset(recvbuf, '\0', sizeof(char)*BSIZE);
-        while (len < BSIZE) {
-            r = pico_socket_read(s, recvbuf + len, BSIZE - len);
-            if (r > 0) {
-                len += r;
-                s->flag &= ~(PICO_SOCK_EV_RD);
-            } else {
-                s->flag |= PICO_SOCK_EV_RD;
-                break;
-            }
-        }
-        if (s->flag & PICO_SOCK_EV_WR) {
-            s->flag &= ~PICO_SOCK_EV_WR;
-            msu_send_tcpecho(s, recvbuf, len);
-        }
-    }
+    
     if (ev & PICO_SOCK_EV_CONN) {
         uint32_t ka_val = 0;
         struct pico_socket *sock_a = {
@@ -208,6 +188,28 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
             s->flag |= PICO_SOCK_EV_WR;
         else
             s->flag &= (~PICO_SOCK_EV_WR);
+    }
+    
+    if (ev & PICO_SOCK_EV_RD) {
+        if (s->flag & PICO_SOCK_EV_CLOSE){
+            ;
+        }
+
+        memset(recvbuf, '\0', sizeof(char)*BSIZE);
+        while (len < BSIZE) {
+            r = pico_socket_read(s, recvbuf + len, BSIZE - len);
+            if (r > 0) {
+                len += r;
+                s->flag &= ~(PICO_SOCK_EV_RD);
+            } else {
+                s->flag |= PICO_SOCK_EV_RD;
+                break;
+            }
+        }
+        if (s->flag & PICO_SOCK_EV_WR) {
+            s->flag &= ~PICO_SOCK_EV_WR;
+            msu_send_tcpecho(s, recvbuf, len);
+        }
     }
 }
 
@@ -265,21 +267,13 @@ int msu_app_tcp_echo_process_queue_item(struct generic_msu *msu, struct generic_
 int msu_app_tcp_echo_init(struct generic_msu *self,
         struct create_msu_thread_msg_data *create_action)
 {
+    #define PCAP 1
+    #define TAP 2
+
     struct pico_ip4 ZERO_IP4 = {
         0
     };
     struct pico_ip4 bcastAddr = ZERO_IP4;
-
-    unsigned char macaddr[6] = { 0xf8, 0xbc, 0x12, 0x1a, 0xdf, 0xb1 };
-    uint16_t *macaddr_low = (uint16_t *) (macaddr + 2);
-    struct pico_device *dev = NULL;
-    struct pico_ip4 addr4 = { 0 };
-
-    *macaddr_low = (uint16_t) (*macaddr_low
-            ^ (uint16_t) ((uint16_t) getpid() & (uint16_t) 0xFFFFU));
-    log_debug("My macaddr base is: %02x %02x\n", macaddr[2], macaddr[3]);
-    log_debug("My macaddr is: %02x %02x %02x %02x %02x %02x\n", macaddr[0],
-            macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
 
     char *nxt, *name = NULL, *addr = NULL, *nm = NULL, *gw = NULL, *lport;
     struct pico_ip4 ipaddr, netmask, gateway, zero = ZERO_IP4;
@@ -287,6 +281,7 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
     char *optarg = (char*)malloc(sizeof(char) * create_action->init_data_len + 1);
     strncpy(optarg, create_action->creation_init_data,create_action->init_data_len);
     optarg[create_action->init_data_len] = '\0';
+    int mode = 0;
 
     char *if_file_name = "em4";
 
@@ -306,19 +301,51 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
         msu_cpy_arg(&lport, nxt);
 
     } while (0);
+    if(strcmp(name, "myTAP") == 0){
+        mode = TAP;
+    }
+    else{
+        mode = PCAP;
+    }
+    unsigned char macaddr[6] = {0}; 
+    if(mode == PCAP){
+        unsigned char macaddr_pcap[6] = { 0xf8, 0xbc, 0x12, 0x1a, 0xdf, 0xb1 };
+        memcpy(macaddr, macaddr_pcap, sizeof(macaddr_pcap));
+    }else{
+        unsigned char macaddr_tap[6] = { 0, 0, 0, 0xa, 0xb, 0x0 };
+        memcpy(macaddr, macaddr_tap, sizeof(macaddr_tap));
+    }
+    uint16_t *macaddr_low = (uint16_t *) (macaddr + 2);
+    struct pico_device *dev = NULL;
+    struct pico_ip4 addr4 = { 0 };
+    *macaddr_low = (uint16_t) (*macaddr_low
+            ^ (uint16_t) ((uint16_t) getpid() & (uint16_t) 0xFFFFU));
+    log_debug("My macaddr base is: %02x %02x\n", macaddr[2], macaddr[3]);
+    log_debug("My macaddr is: %02x %02x %02x %02x %02x %02x\n", macaddr[0],
+            macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
+
 
     if (!nm) {
-        log_error("PCAP bad configuration...%s","");
+        log_error("bad configuration...%s","");
         return -1;
     }
-
-    dev = pico_pcap_create_live(if_file_name, name, NULL);
-    if (!dev) {
-        log_error("Failed to create pcap device%s","");
-        return -1;
+    
+    if(mode == PCAP){
+        dev = pico_pcap_create_live(if_file_name, name, NULL);
+        if (!dev) {
+            log_error("Failed to create pcap device%s","");
+            return -1;
+        }
+        log_debug("Dev created: name: %s",name);
     }
-    log_debug("Dev created: name: %s",name);
-
+    else {
+        dev = pico_tap_create(name);
+         if (!dev) {
+            log_error("Failed to create pcap device%s","");
+            return -1;
+        }
+        log_debug("Dev created: name: %s",name);
+    }
     pico_string_to_ipv4(addr, &ipaddr.addr);
     pico_string_to_ipv4(nm, &netmask.addr);
     pico_ipv4_link_add(dev, ipaddr, netmask);
