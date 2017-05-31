@@ -29,7 +29,32 @@ max_id = 1
 
 def route_name(runtime_id, type, i):
     return '%03d%01d' % (type, i)
-    #return '%03d%02d%01d' % (type, runtime_id, i)
+    #return '%03d%01d%01d' % (type, runtime_id, i)
+
+def add_pseudo_routing(rt_id, froms, tos, routes, json_route):
+
+    types = [msu['type'] for msu in tos]
+
+    new_routes = {}
+
+    for type in set(types):
+        for i in range(99):
+            name = route_name(rt_id, type, i)
+            if name not in routes:
+                routes[name] = {'destinations':{}, 'type': type, 'link': json_route, 'key-max': 0}
+                new_routes[type] = name
+                break
+
+    for msu in tos:
+        route_out = routes[new_routes[msu['type']]]
+        last_max = route_out['key-max']
+        route_out['destinations'][msu['id']] = last_max + 1
+        route_out['key-max'] += 1
+
+    for msu in froms:
+        for type in types:
+            if new_routes[type] not in msu['scheduling']['routing']:
+                msu['scheduling']['routing'].append(new_routes[type])
 
 def runtime_routes(rt_id, msus, routes):
 
@@ -48,38 +73,20 @@ def runtime_routes(rt_id, msus, routes):
 
         from_msus = [msu for msu in msus if msu['name'] in froms and msu['scheduling']['runtime_id'] == rt_id]
 
-
         if len(from_msus) == 0:
             continue
 
+        thread_match = route.get('thread-match', False)
 
-        to_msus = [msu for msu in msus if msu['name'] in tos]
-        types = [msu['type'] for msu in to_msus]
-
-        these_routes = {}
-
-        for type in set(types):
-            for i in range(99):
-                name = route_name(rt_id, type, i)
-                if name not in routes_out:
-                    routes_out[name] = {'destinations':{}, 'type':type, 'link': route, 'key-max': 0}
-                    these_routes[type] = name
-                    break
-
-        for route_to in tos:
-            route_msus = [msu for msu in msus if msu['name'] == route_to]
-            if len(msu) == 0:
-                print('No MSU with name %s! Stopping!'%route_to)
-            for msu in route_msus:
-                route_out = routes_out[these_routes[msu['type']]]
-                last_max = route_out['key-max'];
-                route_out['destinations'][msu['id']] = last_max + 1;
-                route_out['key-max']+=1;
-
-        for from_msu in from_msus:
-            for type in types:
-                if these_routes[type] not in from_msu['scheduling']['routing']:
-                    from_msu['scheduling']['routing'].append(these_routes[type])
+        if not thread_match:
+            to_msus = [msu for msu in msus if msu['name'] in tos]
+            add_pseudo_routing(rt_id, from_msus, to_msus, routes_out, route)
+        else:
+            threads = set(msu['scheduling']['thread_id'] for msu in from_msus)
+            for thread in threads:
+                thread_froms = [msu for msu in msus if msu['scheduling']['thread_id'] == thread]
+                thread_tos = [msu for msu in msus if msu['name'] in tos and msu['scheduling']['thread_id'] == thread]
+                add_pseudo_routing(rt_id, thread_froms, thread_tos, routes_out, route)
 
     for id, route_out in routes_out.items():
         if 'key-max' in route_out['link']:
