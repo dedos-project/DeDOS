@@ -39,27 +39,18 @@ static int request_msu_list(struct dedos_control_msg *control_msg){
     reply_msg->msg_code = GET_MSU_LIST;
     reply_msg->header_len = sizeof(*reply_msg);
     reply_msg->payload_len = sizeof(*info) * total_msu_count;
+    reply_msg->payload = info;
 
-    void *sendbuf;
-    int total_size = SERIALIZE5(sendbuf, reply_msg, 1, info, total_msu_count);
-    if (!sendbuf){
-        log_error("Failed to allocate buffer for GET_MSU_LIST");
-        free(info);
-        free(reply_msg);
-        return -1;
-    }
-    dedos_send_to_master(sendbuf, total_size);
-    free(sendbuf);
+    int rtn = send_control_msg(controller_sock, reply_msg);
+
     free(reply_msg);
     free(info);
     return 0;
 }
 
 static int action_create_msu(struct dedos_control_msg *control_msg){
-    struct manage_msu_control_payload *create_msu_msg;
-    DESERIALIZE5(control_msg->payload,
-                 create_msu_msg, 1,
-                 create_msu_msg->init_data, create_msu_msg->init_data_size);
+    struct manage_msu_control_payload *create_msu_msg = control_msg->payload;
+    create_msu_msg->init_data = (void*)(create_msu_msg+1);
 
     struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
     if (!thread_msg){
@@ -133,7 +124,7 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
             }
             log_info("Placement in newly created thread, since its a blocking MSU that has its own thread: %d", placement_index);
         } else {
-            log_error("Blocking type for new MSU not specified");
+            log_error("Blocking type for new MSU not specified (%s)", create_msu_msg->init_data);
             return -1;
         }
     } else {

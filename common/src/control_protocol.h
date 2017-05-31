@@ -95,6 +95,7 @@ struct dedos_thread_msg
      the message should know how to handle this data */
 };
 
+int send_control_msg(int sock, struct dedos_control_msg *control_msg);
 struct dedos_thread_msg* dedos_thread_msg_alloc();
 void dedos_thread_msg_free(struct dedos_thread_msg* msg);
 

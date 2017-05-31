@@ -500,7 +500,8 @@ struct round_robin_hh_key{
  */
 struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_msu *sender,
                                     struct generic_msu_queue_item *data) {
-    struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(sender->routes);
+    struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
+    struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(type_set);
     if ( best_endpoint == NULL ){
         log_error("Cannot enqueue to shortest-length queue when all destinations are remote");
     }
@@ -545,6 +546,7 @@ struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *
 struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic_msu *sender,
                                            uint32_t ip_address){
 
+    struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
     int previous_index = (intptr_t)sender->routing_state;
     int new_index = previous_index++;
 
@@ -553,17 +555,15 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
     struct msu_endpoint *dst;
 
     while ( 1 ) {
-        dst = get_endpoint_by_index(new_index);
+        dst = get_endpoint_by_index(type_set, new_index);
         if ( dst == NULL ){
             if (was_null){
                 break;
             } else {
                 was_null = 1;
                 new_index = 0;
-                new_index++;
             }
-        }
-        if ( dst->ipv4 == ip_address ) {
+        } else if ( dst->ipv4 == ip_address || (dst->locality == MSU_IS_LOCAL && ip_address == 0)) {
             break;
         } else {
             new_index++;
@@ -571,8 +571,8 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
     }
 
     if ( dst == NULL ){
-        log_error("Could not find destination of type %d with correct ip from sender %d",
-                type->type_id, sender->id);
+        log_error("Could not find destination of type %d with correct ip (%d) from sender %d",
+                type->type_id, ip_address, sender->id);
         return NULL;
     }
 

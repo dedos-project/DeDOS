@@ -223,9 +223,9 @@ int main(int argc, char **argv){
     int control_listen_port = local_listen_port;
 
     // Control socket init for listening to connections from other runtimes
-    //if (same_physical_machine == 1){
-    //    control_listen_port++;
-    //}
+    // if (same_physical_machine == 1){
+    //     control_listen_port++;
+    // }
 
     if ( ! db_all){
         log_warn("Connection to mock database not fully instantiated");

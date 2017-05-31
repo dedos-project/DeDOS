@@ -11,9 +11,6 @@ LOGS = \
 	   	CRITICAL \
 	   	CUSTOM
 
-LOGS_OFF = \
-		DEBUG
-
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 
 SELF=./Makefile

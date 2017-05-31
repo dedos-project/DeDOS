@@ -505,6 +505,9 @@ int init_main_thread(void) {
     main_thread->thread_q->mutex = mutex_init();
     main_thread->thread_q->max_msgs = 0;
     main_thread->thread_q->max_size = 0;
+    main_thread->thread_q->head = NULL;
+    main_thread->thread_q->tail = NULL;
+    main_thread->q_sem = NULL;
 
     //initially there are no worker threads, so not stats to keep
     main_thread->thread_stats = (struct thread_msu_stats*) malloc(sizeof(struct thread_msu_stats));

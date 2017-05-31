@@ -59,8 +59,7 @@ static int parse_show_msus(char *args){
         .header_len = sizeof(control_msg),
     };
 
-
-    send_to_runtime(runtime_sock, (char*)&control_msg, sizeof(control_msg));
+    return send_control_msg(runtime_sock, &control_msg);
 
     return 0;
 }

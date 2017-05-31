@@ -9,33 +9,6 @@
 #include "logging.h"
 
 
-
-struct dedos_thread_msg *route_msg_for_msu(int msu_id, struct dfg_route *route){
-    struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
-    if (!thread_msg) {
-        log_error("Could not allocate thread_msg for route creation");
-        return NULL;
-    }
-    struct msu_action_thread_data *add_route_msg = malloc(sizeof(*add_route_msg));
-    if (!add_route_msg) {
-        log_error("Could not allocate msg_control_add_route for route creation");
-        free(thread_msg);
-        return NULL;
-    }
-
-    thread_msg->action = ADD_ROUTE_TO_MSU;
-    thread_msg->action_data = msu_id;
-    thread_msg->next = NULL;
-    thread_msg->buffer_len = sizeof(*add_route_msg);
-    thread_msg->data = add_route_msg;
-
-    add_route_msg->msu_id = msu_id;
-    add_route_msg->action = ADD_ROUTE_TO_MSU;
-    add_route_msg->route_id = route->route_id;
-
-    return thread_msg;
-}
-
 int vertex_thread_id(struct dfg_vertex *vertex){
     return vertex->scheduling.thread_id;
 }
@@ -154,9 +127,11 @@ int add_msus_to_route(struct dfg_route *dfg_route, int runtime_id){
         if ( vertex_locality(vertex, runtime_id) == 0){
             endpoint.locality = MSU_IS_LOCAL;
             endpoint.msu_queue = get_msu_queue(endpoint.id, endpoint.type_id);
+            endpoint.ipv4 = 0;
         } else {
             endpoint.locality = MSU_IS_REMOTE;
             endpoint.ipv4 = vertex->scheduling.runtime->ip;
+            endpoint.msu_queue = NULL;
         }
         int rtn = add_route_endpoint(dfg_route->route_id,
                                      &endpoint,

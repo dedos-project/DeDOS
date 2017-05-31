@@ -63,35 +63,29 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
     char data[data_len];
     snprintf(data, (size_t)data_len, "%s %d %s", msu_mode, thread_id, msu_data);
 
-    struct manage_msu_control_payload create_msu_msg;
-    create_msu_msg.msu_id         = new_msu->msu_id;
-    create_msu_msg.msu_type       = new_msu->msu_type;
-    create_msu_msg.init_data_size = strlen(data);
-    create_msu_msg.init_data      = data;
+    char create_msu_msg_buffer[sizeof(struct manage_msu_control_payload) + strlen(data)];
+    struct manage_msu_control_payload* create_msu_msg =
+            (struct manage_msu_control_payload*) create_msu_msg_buffer;
+    create_msu_msg->msu_id         = new_msu->msu_id;
+    create_msu_msg->msu_type       = new_msu->msu_type;
+    create_msu_msg->init_data_size = strlen(data);
+    create_msu_msg->init_data      = data;
+    memcpy(create_msu_msg_buffer + sizeof(*create_msu_msg), data, strlen(data));
 
     debug("DEBUG: Sock %d\n", runtime_sock);
-    debug("DEBUG: msu_type %d\n", create_msu_msg.msu_type);
-    debug("DEBUG: MSU id : %d\n", create_msu_msg.msu_id);
-    debug("DEBUG: init_data : %s\n", create_msu_msg.init_data);
-    debug("DEBUG: init_data_size: %d\n", create_msu_msg.init_data_size);
+    debug("DEBUG: msu_type %d\n", create_msu_msg->msu_type);
+    debug("DEBUG: MSU id : %d\n", create_msu_msg->msu_id);
+    debug("DEBUG: init_data : %s\n", create_msu_msg->init_data);
+    debug("DEBUG: init_data_size: %d\n", create_msu_msg->init_data_size);
 
     control_msg.msg_type = ACTION_MESSAGE;
     control_msg.msg_code = CREATE_MSU;
     control_msg.header_len = sizeof(struct dedos_control_msg); //might be redundant
     control_msg.payload_len =
-        sizeof(struct manage_msu_control_payload) + create_msu_msg.init_data_size;
+        sizeof(struct manage_msu_control_payload) + create_msu_msg->init_data_size;
+    control_msg.payload = create_msu_msg_buffer;
+    send_control_msg(runtime_sock, &control_msg);
 
-    total_msg_size = sizeof(struct dedos_control_msg) + control_msg.payload_len;
-    buf = (char*) malloc(total_msg_size);
-    if(!buf){
-        debug("ERROR: Unable to allocate memory for sending control command. %s","");
-        return -1;
-    }
-    memcpy(buf, &control_msg, sizeof(struct dedos_control_msg));
-    memcpy(buf + sizeof(struct dedos_control_msg), &create_msu_msg, sizeof(create_msu_msg));
-    memcpy(buf + sizeof(struct dedos_control_msg) + sizeof(create_msu_msg), data, strlen(data));
-
-    send_to_runtime(runtime_sock, buf, total_msg_size);
     //FIXME: assume msu creation goes well.
     //We need some kind of acknowledgement from the runtime
     set_msu(new_msu);
@@ -401,7 +395,8 @@ int create_worker_thread(int runtime_sock) {
     control_msg.payload_len = 0;
     control_msg.header_len = sizeof(struct dedos_control_msg);
 
-    ret = send_to_runtime(runtime_sock, &control_msg, sizeof(struct dedos_control_msg));
+    ret = send_control_msg(runtime_sock, &control_msg);
+
     if (ret == 0) {
         pthread_mutex_lock(&dfg->dfg_mutex);
 

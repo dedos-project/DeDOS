@@ -174,9 +174,6 @@ def make_dfg(yml_filename, pretty=False):
 
 
 if __name__ == '__main__':
-    pretty = '-p' in sys.argv
-    if (pretty and len(sys.argv) > 2) or (not pretty and len(sys.argv) > 1):
-        cfg = sys.argv[-1]
-    else:
-        cfg = 'dfg.yml'
+    pretty = True
+    cfg = sys.argv[-1]
     make_dfg(cfg, pretty)

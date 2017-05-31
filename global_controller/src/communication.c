@@ -145,33 +145,6 @@ void check_comm_sockets(void) {
     }
 }
 
-int send_control_msg(int runtime_sock, struct dedos_control_msg *control_msg){
-    int total_msg_size = control_msg->header_len + control_msg->payload_len;
-
-    char buf[total_msg_size];
-
-    memcpy(buf, control_msg, control_msg->header_len);
-    memcpy(buf + control_msg->header_len, control_msg->payload, control_msg->payload_len);
-
-    return send_to_runtime(runtime_sock, buf, (unsigned int)total_msg_size);
-}
-
-int send_to_runtime(int runtime_sock, char *buf, unsigned int bufsize){
-    log_debug("Sending msg to peer runtime with len: %u", bufsize);
-    int data_len;
-    data_len = (int)send(runtime_sock, buf, bufsize, 0);
-    if (data_len == -1) {
-        log_error("failed to send data on socket");
-        return -1;
-    }
-    if (data_len != bufsize) {
-        log_warn("Failed to send full message to runtime socket %d", runtime_sock);
-        return -1;
-    }
-    log_info("Sent msg to peer runtime with len: %d", data_len);
-    return 0;
-}
-
 int start_communication(int tcp_control_listen_port)
 {
     int ret;

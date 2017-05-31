@@ -103,23 +103,12 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
 
             debug("DEBUG: Payload len of response: %u", response->payload_len);
 
-            sendbuf = malloc(sizeof(struct dedos_control_msg) + ((count-1) * sizeof(uint32_t)));
-            if (!sendbuf) {
-                debug("ERROR: Failed to allocate sendbuf memory %s","");
-                free(response);
-                free(all_peer_ips);
-                free(to_send_peer_ips);
-            }
+            send_control_msg(runtime_sock, response);
 
-            memcpy(sendbuf, response, sizeof(struct dedos_control_msg));
-            memcpy(sendbuf + sizeof(struct dedos_control_msg), to_send_peer_ips, ((count-1) * sizeof(uint32_t)));
-
-            send_to_runtime(runtime_sock, sendbuf, sizeof(struct dedos_control_msg) + ((count-1) * sizeof(uint32_t)));
 
             free(response);
             free(all_peer_ips);
             free(to_send_peer_ips);
-            free(sendbuf);
 
             break;
 
