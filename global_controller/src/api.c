@@ -4,7 +4,7 @@
 #include "logging.h"
 #include "api.h"
 #include "dfg.h"
-#include "dfg_json.h"
+#include "dfg_writer.h"
 #include "control_protocol.h"
 #include "controller_tools.h"
 #include "communication.h"
