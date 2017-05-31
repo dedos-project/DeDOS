@@ -545,7 +545,6 @@ void dedos_control_send(struct dedos_intermsu_message* msg,
     //create output buffer
     size_t sendbuf_len = sizeof(struct dedos_intermsu_message) + bufsize;
 
-
     char *sendbuf = (char*) malloc(sizeof(size_t) + sendbuf_len);
     memcpy(sendbuf, &sendbuf_len, sizeof(size_t));
     memcpy(sendbuf + sizeof(size_t), msg, sizeof(struct dedos_intermsu_message));
@@ -569,7 +568,6 @@ void dedos_control_send(struct dedos_intermsu_message* msg,
     log_debug("Finished sending data over control port len: %u *********",
             bufsize);
 
-    aggregate_stat(MESSAGES_SENT, 0, 1, 1);
     aggregate_stat(BYTES_SENT, 0, bytes_sent, 1);
     err: free(sendbuf);
 }
@@ -609,7 +607,6 @@ void dedos_control_rcv(int peer_sk)
                 log_debug("Reading more...");
         }
     }
-    aggregate_stat(MESSAGES_RECEIVED, 0, 1, 1);
     aggregate_stat(BYTES_RECEIVED, 0, data_len, 1);
     //TODO More check on incoming message sanity for now,
     //assuming inter-runtime communication is safe
