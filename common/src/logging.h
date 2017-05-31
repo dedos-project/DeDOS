@@ -64,5 +64,25 @@
 #define log_custom(...)  do {} while (0)
 #endif
 
+#if defined(LOG_STATS) && LOG_STATS
+#define log_stats(fmt, ...) \
+    log_at_level("STATS", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
+#else
+#define log_stats(...) do {} while (0)
+#endif
+
+#if defined(DATA_PROFILING_PRINT) && DATA_PROFILING_PRINT
+#define log_profile(fmt, ...) \
+    log_at_level("DATA_PROFILE", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
+#else
+#define log_profile(...) do {} while (0)
+#endif
+
+#if defined(LOG_TCP_DBG) && LOG_TCP_DBG
+#define tcp_dbg(fmt, ...) \
+    log_at_level("TCP_DEBUG", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
+#else
+#define tcp_dbg(...) do {} while (0)
+#endif
 
 #endif
