@@ -90,7 +90,7 @@ struct stat_type {
  * This structure defines the format and size of the statistics being logged
  * NOTE: Entries *MUST* be in the same order as the enumerator in stats.h!
  */
-struct stat_type stat_types[] = {
+struct stat_type stat_types[10] = {
    {QUEUE_LEN,           LOG_QUEUE_LEN,           32, MAX_STAT, "%02.0f",  "MSU_QUEUE_LENGTH"},
    {ITEMS_PROCESSED,     LOG_ITEMS_PROCESSED,     32, MAX_STAT, "%03.0f",  "ITEMS_PROCESSED"},
    {MSU_FULL_TIME,       LOG_MSU_FULL_TIME,       32, MAX_STAT, "%0.9f",   "MSU_FULL_TIME"},
