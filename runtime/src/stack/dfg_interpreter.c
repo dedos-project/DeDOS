@@ -209,7 +209,7 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
     if (ret < 0){
         log_warn("check_comm_sockets failed");
     }
-    sleep(5);
+    sleep(2);
 
     // Now add the routes to the MSUs
     for (int i=0; i<dfg->vertex_cnt; i++){

@@ -7,7 +7,6 @@
 #define MAX_JSON_LEN 16384
 
 jsmn_parser jp;
-struct dfg_config dfg;    //The global config for DFG.
 
 /**
  * Compare two JSON strings
@@ -564,37 +563,38 @@ void dump_json(struct dfg_config *dfg_ref) {
  * @return none
  */
 void print_dfg(void) {
-    printf("This DeDOS instance currently manages %d runtimes: \n", dfg.runtimes_cnt);
+    struct dfg_config *dfg = get_dfg();
+    printf("This DeDOS instance currently manages %d runtimes: \n", dfg->runtimes_cnt);
 
-    if (dfg.runtimes_cnt > 0 ) {
+    if (dfg->runtimes_cnt > 0 ) {
         char ip[INET_ADDRSTRLEN];
         int r;
 
-        for (r = 0; r < dfg.runtimes_cnt; r++) {
-            if (dfg.runtimes[r] != NULL) {
-                ipv4_to_string(&ip, dfg.runtimes[r]->ip);
+        for (r = 0; r < dfg->runtimes_cnt; r++) {
+            if (dfg->runtimes[r] != NULL) {
+                ipv4_to_string(&ip, dfg->runtimes[r]->ip);
 
                 printf("runtime #%d. [ip] %s | [socket] %d | [cores] %d | [pin_t] %d | [threads] %d\n",
                         r + 1,
                         ip,
-                        dfg.runtimes[r]->sock,
-                        dfg.runtimes[r]->num_cores,
-                        dfg.runtimes[r]->num_pinned_threads,
-                        dfg.runtimes[r]->num_threads);
+                        dfg->runtimes[r]->sock,
+                        dfg->runtimes[r]->num_cores,
+                        dfg->runtimes[r]->num_pinned_threads,
+                        dfg->runtimes[r]->num_threads);
             }
         }
     }
 
-    printf("The current dataflow graph has %d MSUs\n", dfg.vertex_cnt);
-    if (dfg.vertex_cnt > 0 ) {
+    printf("The current dataflow graph has %d MSUs\n", dfg->vertex_cnt);
+    if (dfg->vertex_cnt > 0 ) {
         int v = 0;
-        for (v = 0; v < dfg.vertex_cnt; v++) {
-            if (dfg.vertices[v] != NULL) {
+        for (v = 0; v < dfg->vertex_cnt; v++) {
+            if (dfg->vertices[v] != NULL) {
                 printf("The %d-th MSU: msu_id=%d, msu_type =%d, msu_mode=%s\n",
                         v + 1,
-                        dfg.vertices[v]->msu_id,
-                        dfg.vertices[v]->msu_type,
-                        dfg.vertices[v]->msu_mode);
+                        dfg->vertices[v]->msu_id,
+                        dfg->vertices[v]->msu_type,
+                        dfg->vertices[v]->msu_mode);
             }
         }
     }

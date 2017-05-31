@@ -187,8 +187,7 @@ struct dfg_route *get_route_from_id(struct dfg_runtime_endpoint *rt, int route_i
 void set_msu(struct dfg_vertex *msu) {
     debug("DEBUG: adding msu %d to the graph", msu->msu_id);
 
-    struct dfg_config *dfg = NULL;
-    dfg = get_dfg();
+    struct dfg_config *dfg = get_dfg();
 
     int new_id = -1;
 
