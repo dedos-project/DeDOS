@@ -182,9 +182,12 @@ static int32_t do_enqueue_segment(struct pico_tcp_queue *tq, void *f, uint16_t p
 {
     int32_t ret = -1;
     PICOTCP_MUTEX_LOCK(Mutex);
+    if (IS_INPUT_QUEUE(tq)) {
+        log_warn("INPUT TCP queue size at %p: %d",tq, tq->size + payload_len);
+    }
     if ((tq->size + payload_len) > tq->max_size)
     {
-        log_error("TCP Queue full max: %d, cur+payload: %d",tq->max_size, tq->size + payload_len);
+        log_error("TCP Queue at %p full max: %d, cur+payload: %d",tq, tq->max_size, tq->size + payload_len);
         ret = 0;
         goto out;
     }
@@ -201,7 +204,6 @@ static int32_t do_enqueue_segment(struct pico_tcp_queue *tq, void *f, uint16_t p
         tq->frames++;
 
     ret = (int32_t)payload_len;
-
 out:
     PICOTCP_MUTEX_UNLOCK(Mutex);
     return ret;

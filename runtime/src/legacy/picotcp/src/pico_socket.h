@@ -20,6 +20,7 @@
 
 #define PICO_DEFAULT_SOCKETQ 0 /* no limit dedos comparison */
 #define PICO_DEFAULT_TCP_SOCKETQ (6 * 1024) /* this in only for data transfer per established socket */
+//#define PICO_DEFAULT_TCP_SOCKETQ (16 * 1024) /* linux default this in only for data transfer per established socket */
 
 #define PICO_SHUT_RD   1
 #define PICO_SHUT_WR   2
