@@ -5,11 +5,18 @@
    Authors: Daniele Lacamera
  *********************************************************************/
 
-
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <signal.h>
 #include <pcap.h>
 #include "pico_device.h"
 #include "pico_dev_pcap.h"
 #include "pico_stack.h"
+
+#ifndef __FreeBSD__
+#include <linux/if_tun.h>
+#endif
 
 #include <sys/poll.h>
 
@@ -42,6 +49,37 @@ static int pico_pcap_poll(struct pico_device *dev, int loop_score)
     return loop_score;
 }
 
+static int pcap_get_mac(char *name, uint8_t *mac)
+{
+    int sck;
+    struct ifreq eth;
+    int retval = -1;
+
+
+
+
+    sck = socket(AF_INET, SOCK_DGRAM, 0);
+    if(sck < 0) {
+        return retval;
+    }
+
+    memset(&eth, 0, sizeof(struct ifreq));
+    strcpy(eth.ifr_name, name);
+    /* call the IOCTL */
+    if (ioctl(sck, SIOCGIFHWADDR, &eth) < 0) {
+        perror("ioctl(SIOCGIFHWADDR)");
+        return -1;
+        ;
+    }
+
+    memcpy (mac, &eth.ifr_hwaddr.sa_data, 6);
+
+
+    close(sck);
+    return 0;
+
+}
+
 /* Public interface: create/destroy. */
 
 void pico_pcap_destroy(struct pico_device *dev)
@@ -69,7 +107,7 @@ static struct pico_device *pico_pcap_create(char *if_file_name, char *name, uint
     pcap->dev.overhead = 0;
 
     if (mode == PICO_PCAP_MODE_LIVE)
-        pcap->conn = pcap_open_live(if_file_name, 2000, 100, 10, errbuf);
+        pcap->conn = pcap_open_live(if_file_name, 2000, 1, 10, errbuf);
     else
         pcap->conn = pcap_open_offline(if_file_name, errbuf);
 
@@ -92,5 +130,13 @@ struct pico_device *pico_pcap_create_fromfile(char *filename, char *name, uint8_
 
 struct pico_device *pico_pcap_create_live(char *ifname, char *name, uint8_t *mac)
 {
+    uint8_t mac_new[6] = {};
+    if(mac == NULL){
+        if (pcap_get_mac(ifname, mac_new) < 0) {
+            dbg("PCAP mac query failed.\n");
+            return NULL;
+        }
+        return pico_pcap_create(ifname, name,  mac_new, PICO_PCAP_MODE_LIVE);
+    }
     return pico_pcap_create(ifname, name, mac, PICO_PCAP_MODE_LIVE);
 }

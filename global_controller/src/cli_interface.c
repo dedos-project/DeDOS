@@ -111,14 +111,14 @@ static void parse_cmd_action(char *cmd)
         msu_mode = strtok(NULL, " ");
 
         if (strncmp(msu_mode, "non_blocking", strlen("non-blocking\0"))) {
-            thread_id = atoi(strtok(NULL, "|"));
+            thread_id = atoi(strtok(NULL, " "));
         }
 
         data = strtok(NULL, "\r\n");
         if (data == NULL)
             data = "\0";
         //assume there is only the thread id after the mode
-
+	printf("Init data: %s\n",data);
         int ret;
         ret = add_msu(data, msu_id, msu_type, msu_mode, thread_id, runtime_sock);
         if (ret == -1) {

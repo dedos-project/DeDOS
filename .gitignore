@@ -15,3 +15,4 @@ runtime/tags
 runtime/build/
 *.swp
 *tags
+src/legacy/picotcp/build

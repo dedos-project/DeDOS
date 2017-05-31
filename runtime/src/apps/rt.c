@@ -13,6 +13,7 @@
 #include "global.h"
 #include "modules/ssl_read_msu.h"
 #include "data_plane_profiling.h"
+#include <pcap.h>
 
 #define USE_OPENSSL
 

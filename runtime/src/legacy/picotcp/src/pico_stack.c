@@ -29,6 +29,7 @@
 #include "pico_tcp.h"
 #include "dedos_msu_msg_type.h"
 #include "modules/msu_tcp_handshake.h"
+#include "modules/msu_pico_tcp.h"
 #include "pico_socket.h"
 #include "heap.h"
 #include "communication.h"
@@ -233,7 +234,7 @@ MOCKABLE int32_t pico_transport_receive(struct pico_frame *f, uint8_t proto)
         /* dedos
          * can the enqueuing of syn be done directly here?
          * THis will bypass the whole tcp state machine.
-         * But the problem will again be differentiating 
+         * But the problem will again be differentiating
          * the third ack, so nevermind
          */
         ret = pico_enqueue(pico_proto_tcp.q_in, f);
@@ -455,12 +456,13 @@ int32_t pico_ethernet_receive(struct pico_frame *f)
     }
 
     hdr = (struct pico_eth_hdr *) f->datalink_hdr;
-    if ((memcmp(hdr->daddr, f->dev->eth->mac.addr, PICO_SIZE_ETH) != 0) &&
-        (memcmp(hdr->daddr, PICO_ETHADDR_MCAST, PICO_SIZE_MCAST) != 0) &&
-#ifdef PICO_SUPPORT_IPV6
-        (memcmp(hdr->daddr, PICO_ETHADDR_MCAST6, PICO_SIZE_MCAST6) != 0) &&
-#endif
-        (memcmp(hdr->daddr, PICO_ETHADDR_ALL, PICO_SIZE_ETH) != 0))
+    if ((memcmp(hdr->daddr, f->dev->eth->mac.addr, PICO_SIZE_ETH) != 0)
+        // && (memcmp(hdr->daddr, PICO_ETHADDR_MCAST, PICO_SIZE_MCAST) != 0) &&
+// #ifdef PICO_SUPPORT_IPV6
+        // (memcmp(hdr->daddr, PICO_ETHADDR_MCAST6, PICO_SIZE_MCAST6) != 0) &&
+// #endif
+        // (memcmp(hdr->daddr, PICO_ETHADDR_ALL, PICO_SIZE_ETH) != 0)
+    )
     {
         pico_frame_discard(f);
         return -1;
@@ -589,7 +591,7 @@ static int32_t pico_ethsend_dispatch(struct pico_frame *f)
 int32_t MOCKABLE pico_ethernet_send(struct pico_frame *f)
 {
     pico_frame_to_buf(f);
-    
+
     struct pico_eth dstmac;
     uint8_t dstmac_valid = 0;
     uint16_t proto = PICO_IDETH_IPV4;
@@ -659,7 +661,7 @@ int32_t MOCKABLE pico_ethernet_send(struct pico_frame *f)
             memcpy(hdr->daddr, &dstmac, PICO_SIZE_ETH);
             hdr->proto = proto;
         }
-        
+
         if (pico_ethsend_local(f, hdr) || pico_ethsend_bcast(f) || pico_ethsend_dispatch(f)) {
             /* one of the above functions has delivered the frame accordingly. (returned != 0)
              * It is safe to directly return success.
@@ -855,7 +857,7 @@ int32_t pico_sendto_dev(struct pico_frame *f)
             memcpy(&rand, f->buffer + mid_frame, sizeof(uint32_t));
             pico_rand_feed(rand);
         }
-        
+
         return pico_enqueue(f->dev->q_out, f);
     }
 }
@@ -1095,7 +1097,7 @@ void pico_stack_tick(void)
 
     ret[10] = pico_devices_loop(score[10], PICO_LOOP_DIR_OUT);
     pico_rand_feed((uint32_t)ret[10]);
-    
+
     /* calculate new loop scores for next iteration */
     calc_score(score, index, (int (*)[])avg, ret);
 }
@@ -1202,4 +1204,3 @@ int pico_stack_init(void)
     pico_stack_tick();
     return 0;
 }
-

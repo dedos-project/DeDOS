@@ -10,12 +10,17 @@
 #include "pico_config.h"
 #include "pico_protocol.h"
 #include "pico_tree.h"
-
+/*
 #ifdef __linux__
-    #define PICO_DEFAULT_SOCKETQ (16 * 1024) /* Linux host, so we want full throttle */
+    #define PICO_DEFAULT_SOCKETQ (16 * 1024) // Linux host, so we want full throttle
 #else
-    #define PICO_DEFAULT_SOCKETQ (6 * 1024) /* seems like an acceptable default for small embedded systems */
+    #define PICO_DEFAULT_SOCKETQ (6 * 1024) //seems like an acceptable default for small embedded systems
 #endif
+*/
+
+#define PICO_DEFAULT_SOCKETQ 0 /* no limit dedos comparison */
+#define PICO_DEFAULT_TCP_SOCKETQ (6 * 1024) /* this in only for data transfer per established socket */
+//#define PICO_DEFAULT_TCP_SOCKETQ (16 * 1024) /* linux default this in only for data transfer per established socket */
 
 #define PICO_SHUT_RD   1
 #define PICO_SHUT_WR   2
@@ -55,7 +60,7 @@ struct pico_socket_dump {
     
     uint16_t max_backlog;
     uint16_t number_of_pending_conn;
-    
+
     int id;
     uint16_t state;
     uint16_t opt_flags;
@@ -74,7 +79,7 @@ struct pico_socket {
 
     struct pico_queue q_in;
     struct pico_queue q_out;
-
+    int flag;
     void (*wakeup)(uint16_t ev, struct pico_socket *s);
 
 

@@ -1,0 +1,1 @@
+{"application_name":"dedos tcp","application_deadline":"10","global_ctl_ip":"127.0.0.1","global_ctl_port":"7888","load_mode":"preload","runtimes":[{"id":"1","ip":"127.0.0.1","port":"1111","num_cores":"8","dram":"67108864","io_network_bw":"10485760"}],"MSUs":[]}

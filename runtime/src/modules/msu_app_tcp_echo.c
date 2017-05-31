@@ -35,6 +35,7 @@
 #include "pico_sntp_client.h"
 #include "pico_mdns.h"
 #include "pico_tftp.h"
+#include "pico_dev_pcap.h"
 
 #include "pico_socket.h"
 #include "pico_queue.h"
@@ -60,15 +61,14 @@
 #include <fcntl.h>
 #include <libgen.h>
 
+#define RECV_MODE 0
+#define SEND_MODE 0
+#define HANDSHAKE_ONLY_MODE 0
+
+#define BSIZE (1024)
 void msu_app_tcpecho(uint16_t listen_port);
 void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s);
-int msu_send_tcpecho(struct pico_socket *s);
-
-#define BSIZE (1024 * 10)
-
-static char recvbuf[BSIZE];
-static int pos = 0, len = 0;
-static int flag = 0;
+int msu_send_tcpecho(struct pico_socket *s, char *recvbuf, int len);
 
 static char *msu_cpy_arg(char **dst, char *str)
 {
@@ -95,9 +95,19 @@ static char *msu_cpy_arg(char **dst, char *str)
     return nxt;
 }
 
-int msu_send_tcpecho(struct pico_socket *s)
+int msu_send_tcpecho(struct pico_socket *s, char *recvbuf, int len)
 {
+#if RECV_MODE == 1
+    //do not send back anything
+    return 1;
+#endif
+    //log_warn("Recvd and sending:\n%s",recvbuf);
+    int pos = 0;
     int w, ww = 0;
+    char sendbuf[BSIZE];
+    memset(sendbuf, '\0', sizeof(char)*BSIZE);
+//    memcpy(&sendbuf, recvbuf, BSIZE);
+
     if (len > pos) {
         do {
             w = pico_socket_write(s, recvbuf + pos, len - pos);
@@ -118,31 +128,11 @@ int msu_send_tcpecho(struct pico_socket *s)
 void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
 {
     int r = 0;
+    int len = 0;
+    char recvbuf[BSIZE];
+    memset(recvbuf, '\0', sizeof(char)*BSIZE);
 
-    // printf("tcpecho> wakeup ev=%u\n", ev);
-
-    if (ev & PICO_SOCK_EV_RD) {
-        if (flag & PICO_SOCK_EV_CLOSE){
-            ;
-        }
-            // printf("SOCKET> EV_RD, FIN RECEIVED\n");
-
-        while (len < BSIZE) {
-            r = pico_socket_read(s, recvbuf + len, BSIZE - len);
-            if (r > 0) {
-                len += r;
-                flag &= ~(PICO_SOCK_EV_RD);
-            } else {
-                flag |= PICO_SOCK_EV_RD;
-                break;
-            }
-        }
-        if (flag & PICO_SOCK_EV_WR) {
-            flag &= ~PICO_SOCK_EV_WR;
-            msu_send_tcpecho(s);
-        }
-    }
-
+    
     if (ev & PICO_SOCK_EV_CONN) {
         uint32_t ka_val = 0;
         struct pico_socket *sock_a = {
@@ -158,6 +148,7 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
         int yes = 1;
 
         sock_a = pico_socket_accept(s, &orig, &port);
+
         pico_ipv4_to_string(peer, orig.addr);
         log_debug("Connection established with %s:%d", peer, short_be(port));
         pico_socket_setoption(sock_a, PICO_TCP_NODELAY, &yes);
@@ -172,30 +163,53 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
 
     if (ev & PICO_SOCK_EV_FIN) {
         ;
-        // printf("Socket closed. Exit normally. \n");
         //pico_timer_add(2000, deferred_exit, NULL);
     }
 
     if (ev & PICO_SOCK_EV_ERR) {
-        // printf("Socket error received: %s. Bailing out.\n", strerror(pico_err));
+        log_error("Socket error received: %s. Bailing out.\n", strerror(pico_err));
+        pico_socket_shutdown(s, PICO_SHUT_RDWR);
         //exit(1);
-        ;
     }
 
     if (ev & PICO_SOCK_EV_CLOSE) {
         // printf("Socket received close from peer.\n");
-        if (flag & PICO_SOCK_EV_RD) {
+        if (s->flag & PICO_SOCK_EV_RD) {
             pico_socket_shutdown(s, PICO_SHUT_WR);
-            // printf("SOCKET> Called shutdown write, ev = %d\n", ev);
         }
     }
 
     if (ev & PICO_SOCK_EV_WR) {
-        r = msu_send_tcpecho(s);
+        r = 0;
+        if(recvbuf[0] != '\0'){
+            //r = msu_send_tcpecho(s, recvbuf, len);
+        }
         if (r == 0)
-            flag |= PICO_SOCK_EV_WR;
+            s->flag |= PICO_SOCK_EV_WR;
         else
-            flag &= (~PICO_SOCK_EV_WR);
+            s->flag &= (~PICO_SOCK_EV_WR);
+    }
+    
+    if (ev & PICO_SOCK_EV_RD) {
+        if (s->flag & PICO_SOCK_EV_CLOSE){
+            ;
+        }
+
+        memset(recvbuf, '\0', sizeof(char)*BSIZE);
+        while (len < BSIZE) {
+            r = pico_socket_read(s, recvbuf + len, BSIZE - len);
+            if (r > 0) {
+                len += r;
+                s->flag &= ~(PICO_SOCK_EV_RD);
+            } else {
+                s->flag |= PICO_SOCK_EV_RD;
+                break;
+            }
+        }
+        if (s->flag & PICO_SOCK_EV_WR) {
+            s->flag &= ~PICO_SOCK_EV_WR;
+            msu_send_tcpecho(s, recvbuf, len);
+        }
     }
 }
 
@@ -249,24 +263,17 @@ int msu_app_tcp_echo_process_queue_item(struct generic_msu *msu, struct generic_
 
     return 0;
 }
-int msu_app_tcp_echo_init(struct generic_msu *self, 
+
+int msu_app_tcp_echo_init(struct generic_msu *self,
         struct create_msu_thread_msg_data *create_action)
 {
+    #define PCAP 1
+    #define TAP 2
+
     struct pico_ip4 ZERO_IP4 = {
         0
     };
     struct pico_ip4 bcastAddr = ZERO_IP4;
-
-    unsigned char macaddr[6] = { 0, 0, 0, 0xa, 0xb, 0x0 };
-    uint16_t *macaddr_low = (uint16_t *) (macaddr + 2);
-    struct pico_device *dev = NULL;
-    struct pico_ip4 addr4 = { 0 };
-
-    *macaddr_low = (uint16_t) (*macaddr_low
-            ^ (uint16_t) ((uint16_t) getpid() & (uint16_t) 0xFFFFU));
-    log_debug("My macaddr base is: %02x %02x\n", macaddr[2], macaddr[3]);
-    log_debug("My macaddr is: %02x %02x %02x %02x %02x %02x\n", macaddr[0],
-            macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
 
     char *nxt, *name = NULL, *addr = NULL, *nm = NULL, *gw = NULL, *lport;
     struct pico_ip4 ipaddr, netmask, gateway, zero = ZERO_IP4;
@@ -274,6 +281,9 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
     char *optarg = (char*)malloc(sizeof(char) * create_action->init_data_len + 1);
     strncpy(optarg, create_action->creation_init_data,create_action->init_data_len);
     optarg[create_action->init_data_len] = '\0';
+    int mode = 0;
+
+    char *if_file_name = "em4";
 
     do {
         nxt = msu_cpy_arg(&name, optarg);
@@ -291,19 +301,51 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
         msu_cpy_arg(&lport, nxt);
 
     } while (0);
+    if(strcmp(name, "myTAP") == 0){
+        mode = TAP;
+    }
+    else{
+        mode = PCAP;
+    }
+    unsigned char macaddr[6] = {0}; 
+    if(mode == PCAP){
+        unsigned char macaddr_pcap[6] = { 0xf8, 0xbc, 0x12, 0x1a, 0xdf, 0xb1 };
+        memcpy(macaddr, macaddr_pcap, sizeof(macaddr_pcap));
+    }else{
+        unsigned char macaddr_tap[6] = { 0, 0, 0, 0xa, 0xb, 0x0 };
+        memcpy(macaddr, macaddr_tap, sizeof(macaddr_tap));
+    }
+    uint16_t *macaddr_low = (uint16_t *) (macaddr + 2);
+    struct pico_device *dev = NULL;
+    struct pico_ip4 addr4 = { 0 };
+    *macaddr_low = (uint16_t) (*macaddr_low
+            ^ (uint16_t) ((uint16_t) getpid() & (uint16_t) 0xFFFFU));
+    log_debug("My macaddr base is: %02x %02x\n", macaddr[2], macaddr[3]);
+    log_debug("My macaddr is: %02x %02x %02x %02x %02x %02x\n", macaddr[0],
+            macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
+
 
     if (!nm) {
-        log_error("Bad tap configuration...%s","");
+        log_error("bad configuration...%s","");
         return -1;
     }
-
-    dev = pico_tap_create(name);
-    if (!dev) {
-        log_error("Failed to create tap device%s","");
-        return -1;
+    
+    if(mode == PCAP){
+        dev = pico_pcap_create_live(if_file_name, name, NULL);
+        if (!dev) {
+            log_error("Failed to create pcap device%s","");
+            return -1;
+        }
+        log_debug("Dev created: name: %s",name);
     }
-    log_debug("Dev created: name: %s",name);
-
+    else {
+        dev = pico_tap_create(name);
+         if (!dev) {
+            log_error("Failed to create pcap device%s","");
+            return -1;
+        }
+        log_debug("Dev created: name: %s",name);
+    }
     pico_string_to_ipv4(addr, &ipaddr.addr);
     pico_string_to_ipv4(nm, &netmask.addr);
     pico_ipv4_link_add(dev, ipaddr, netmask);
@@ -343,6 +385,3 @@ struct msu_type MSU_APP_TCP_ECHO_TYPE = {
     .send_local=default_send_local,
     .send_remote=default_send_remote
 };
-
-
-

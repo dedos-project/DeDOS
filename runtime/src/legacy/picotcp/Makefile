@@ -1,18 +1,18 @@
 -include ../../config.mk
 -include ../../tools/kconfig/.config
 
-CC:=$(CROSS_COMPILE)gcc 
+CC:=$(CROSS_COMPILE)gcc
 LD:=$(CROSS_COMPILE)ld
 AR:=$(CROSS_COMPILE)ar
 RANLIB:=$(CROSS_COMPILE)ranlib
 SIZE:=$(CROSS_COMPILE)size
 STRIP_BIN:=$(CROSS_COMPILE)strip
-TEST_LDFLAGS=-pthread  $(PREFIX)/*.o -lvdeplug -lm -lpcre
+TEST_LDFLAGS=-pthread  $(PREFIX)/*.o -lvdeplug -lm -lpcre -lpcap
 LIBNAME:="libpicotcp.a"
 LIBBASE:=build/
 
 PREFIX?=$(PWD)/build
-DEBUG?=1
+DEBUG?=0
 PROFILE?=0
 PERF?=1
 ENDIAN?=little
@@ -20,11 +20,11 @@ STRIP?=0
 RTOS?=0
 GENERIC?=0
 PTHREAD?=0
-ADDRESS_SANITIZER?=0
+ADDRESS_SANITIZER?=1
 MUTEX?=1
 TIMINGS?=0
 NDEBUG?=1
-SAME_THREAD_TCP_MSUS?=0
+SAME_THREAD_TCP_MSUS?=1
 
 # Default compiled-in protocols
 #
@@ -56,7 +56,7 @@ MEMORY_MANAGER?=0
 MEMORY_MANAGER_PROFILING?=0
 TUN?=0
 TAP?=0
-PCAP?=0
+PCAP?=1
 PPP?=1
 CYASSL?=0
 WOLFSSL?=0
@@ -123,6 +123,10 @@ endif
 
 ifeq ($(SAME_THREAD_TCP_MSUS),1)
   OPTIONS+=-DPICO_SUPPORT_SAME_THREAD_TCP_MSUS
+endif
+
+ifeq ($(DEDOS_MSUS),1)
+	  OPTIONS+=-DPICO_SUPPORT_DEDOS_MSUS
 endif
 
 ifneq ($(ENDIAN),little)

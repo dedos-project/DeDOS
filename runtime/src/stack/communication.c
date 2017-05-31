@@ -421,7 +421,9 @@ int check_comm_sockets() {
             for (j = 0; j < MAX_RUNTIME_PEERS; j++) {
                 if(fds[j + totalSockets].revents & POLLIN && peer_tcp_sockets[j] > 0) {
                     fds[j + totalSockets].revents = 0;
-                    dedos_control_rcv(peer_tcp_sockets[j]);
+                    if(peer_tcp_sockets[j] > 0){
+                        dedos_control_rcv(peer_tcp_sockets[j]);
+                    }
                 }
             }
         }

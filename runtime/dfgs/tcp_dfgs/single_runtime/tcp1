@@ -1,0 +1,6 @@
+create_pinned_thread 4
+addmsu 4 100 55 non-blocking 1
+addmsu 4 101 63 non-blocking 1 em4:10.0.0.10:255.255.255.0:6667
+addmsu 4 400 11 non-blocking 1
+add route 4 55 100 11 400 1
+add route 4 11 400 55 100 1
