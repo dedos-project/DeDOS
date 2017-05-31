@@ -656,10 +656,11 @@ static void check_pending_runtimes() {
                 log_debug("Found unconnected runtime IP: %s:%d", ip_buf, runtime_listener_port);
                 ret = connect_to_runtime(&ip_buf, runtime_listener_port);
                 //zero out the entry in pending_runtime_peers, do not decrement count
-                if (ret == 0) {
-                    pending_runtime_peers->ips[i] = 0;
-                    remaining_count--;
+                if (ret != 0){
+                    log_warn("Could not connect to runtime with ip %s:%d", ip_buf, runtime_listener_port);
                 }
+                pending_runtime_peers->ips[i] = 0;
+                remaining_count--;
             }
         }
     }
