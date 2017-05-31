@@ -340,7 +340,7 @@ void increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
     unlock_item(item);
 }
 
-/** Adds a single stastic for a single item to the log.
+/** Aggregates a statistic, but only if period_ms milliseconds have passed.
  * @param stat_id ID for the statistic being logged
  * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
  * @param stat The specific statistic being logged
