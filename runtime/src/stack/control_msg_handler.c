@@ -165,7 +165,7 @@ void parse_cmd_action(char *cmd) {
                 //starts at tid, jump 2 spaces (why 2 and not 1? strtok?)
                 other_data = tid + tid_digits + 2;
 
-                //FIXME: ugly way to only check for init data if msu id is known to have some
+                //FIXME: ugly way to only check for init data if msu type is known to have some
                 switch (create_action->msu_type) {
                     case DEDOS_SOCKET_HANDLER_MSU_ID:
                         memcpy(create_action->creation_init_data, other_data,
@@ -181,7 +181,8 @@ void parse_cmd_action(char *cmd) {
 
                 /*TODO: handle the case where the request specify a non existing thread within the range of 0-numCPU */
                 if (placement_index < 0 || placement_index > total_threads -1) {
-                    log_error("Placement index must be in range [0,%d] (total_worker_threads), given: %d", total_threads-1, placement_index);
+                    log_error("Placement index must be in range [0,%d] (total_worker_threads), given: %d",
+                              total_threads-1, placement_index);
                     free(create_action->creation_init_data);
                     free(create_action);
                     free(thread_msg);
@@ -189,14 +190,15 @@ void parse_cmd_action(char *cmd) {
                 }
                 log_info("Placement in thread %d", placement_index);
             } else if (!strncasecmp(create_action->creation_init_data, "blocking", 8)) {
-                log_debug("Request for creating a blocking MSU, it says: %s",create_action->creation_init_data);
+                log_debug("Request for creating a blocking MSU, it says: %s",
+                          create_action->creation_init_data);
                 //create a new thread and get it's index in the all_threads array
                 //update the value of placement_index
                 mutex_lock(all_threads_mutex);
                 placement_index = on_demand_create_worker_thread(1);
                 mutex_unlock(all_threads_mutex);
 
-                if(placement_index < 0){
+                if (placement_index < 0) {
                     log_error("On demand worker thread creation failed %s","");
                     free(create_action->creation_init_data);
                     free(create_action);

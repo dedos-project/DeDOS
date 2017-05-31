@@ -259,6 +259,10 @@ static void* non_block_per_thread_loop() {
                     } else if (cur->type->type_id == DEDOS_BAREMETAL_MSU_ID) {
                         //To make sure internal state is cleared
                         msu_receive(cur, NULL);
+                    } else if (cur->type->type_id == DEDOS_SOCKET_HANDLER_MSU_ID) {
+                        log_debug("%s","triggering socket handler receive");
+                        //To poll socket
+                        msu_receive(cur, NULL);
                     }
                     covered_weight++;
                 }

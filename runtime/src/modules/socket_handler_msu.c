@@ -9,8 +9,12 @@
 extern "C" {
 #endif
 
-#include <sys/socket.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/epoll.h>
+#include <sys/types.h>
 
 #include "modules/socket_handler_msu.h"
 #include "dedos_msu_list.h"
@@ -36,83 +40,133 @@ extern "C" {
  */
 int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item) {
     struct socket_handler_state *state = self->internal_state;
-    struct pollfd fd[1];
-    fd[0].fd = state->socketfd;
-    fd[0].events = POLLIN;
+    int ret, opt, i;
 
-    int ret = poll(fd, 1, 0);
+    ret = epoll_wait(state->eventfd, state->events, MAX_EVENTS, 0);
 
-    if (ret == 1) {
-        log_error("%s", "Error in Poll");
-    } else if (ret != 0 && fd[0].revents & POLLIN) {
-        switch (state->target_msu_type) {
-            case DEDOS_SSL_READ_MSU_ID: {
+    for (i = 0; i < ret; ++i) {
+        if ((state->events[i].events & EPOLLERR) ||
+            (state->events[i].events & EPOLLHUP) ||
+            (!(state->events[i].events & EPOLLIN))) {
+            log_error("%s", "epoll error");
+            //what if this is the main socket? Do we reboot the MSU?
+            close(state->events[i].data.fd);
+        } else if (state->socketfd == state->events[i].data.fd) {
+            //main socket is receiving a new connection
+            while (1) {
+                log_debug("%s", "listening for new connections");
                 struct sockaddr_in client_addr;
                 socklen_t addr_len = sizeof(client_addr);
-                int new_sock = accept(state->socketfd,
-                                      (struct sockaddr *) &client_addr,
-                                      &addr_len);
-                if (new_sock < 0) {
-                    log_warn("accept(%d,...) failed with error %s",
-                             state->socketfd,
-                             strerror(errno));
-                    return -1;
-                }
+                int infd, flags;
+                char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 
-                struct timeval timeout;
-                timeout.tv_sec = 0;
-                timeout.tv_usec = 10000;
-
-                if (setsockopt(new_sock, SOL_SOCKET, SO_RCVTIMEO,
-                               (char *) &timeout, sizeof(struct timeval)) == 1) {
-                    log_error("setsockopt(%d,...) failed with error %s", new_sock, strerror(errno));
-                    return -1;
-                }
-
-                if (ssl_request_routing_msu == NULL) {
-                    log_error("*ssl_request_routing_msu is NULL, forgot to create it?%s","");
-                    destroy_msu(self);
-                } else {
-                    struct ssl_data_payload *data = malloc(sizeof(struct ssl_data_payload));
-                    memset(data, '\0', MAX_REQUEST_LEN);
-                    data->socketfd = new_sock;
-                    data->type = READ;
-                    data->state = NULL;
-
-                    struct generic_msu_queue_item *new_item_ws =
-                        malloc(sizeof(struct generic_msu_queue_item));
-                    new_item_ws->buffer = data;
-                    new_item_ws->buffer_len = sizeof(struct ssl_data_payload);
-#ifdef DATAPLANE_PROFILING
-                    new_item_ws->dp_profile_info.dp_id = get_request_id();
-#endif
-                    int ssl_request_queue_len =
-                        generic_msu_queue_enqueue(&ssl_request_routing_msu->q_in, new_item_ws);
-
-                    if (ssl_request_queue_len < 0) {
-                        log_error("Failed to enqueue ssl_request to %s",
-                                  ssl_request_routing_msu->type->name);
-                        free(new_item_ws);
-                        free(data);
+                addr_len = sizeof(client_addr);
+                infd = accept(state->socketfd, (struct sockaddr *) &client_addr, &addr_len);
+                if (infd == -1) {
+                    if ((errno == EAGAIN) ||
+                        (errno == EWOULDBLOCK)) {
+                            //We have processed all incoming connections
+                            //"EWOULDBLOCK means that the socket send buffer is full when sending,
+                            //or that the socket receive buffer is empty when receiving."
+                        break;
                     } else {
-                        log_debug("Enqueued ssl forwarding request, q_len: %u",
-                                  ssl_request_queue_len);
+                        log_debug("%s", "accept failed");
+                        break;
                     }
                 }
 
-                return DEDOS_SSL_READ_MSU_ID;
+                ret = getnameinfo(&client_addr, addr_len,
+                                  hbuf, sizeof(hbuf),
+                                  sbuf, sizeof(sbuf),
+                                  NI_NUMERICHOST | NI_NUMERICSERV);
+                if (ret == 0) {
+                    log_debug("Accepted connection on descriptor %d (host=%s, port=%s)",
+                              infd, hbuf, sbuf);
+                }
+
+                flags |= O_NONBLOCK;
+                ret = fcntl(infd, F_SETFL, flags);
+                if (ret == -1) {
+                    log_error("%s", "error setting socket as O_NONBLOCK");
+                    //close(state->socketfd) ?
+                    return -1;
+                }
+
+                state->event.data.fd = infd;
+                state->events = EPOLLIN | EPOLLET;
+                ret = epoll_ctl(state->eventfd, EPOLL_CTL_ADD, infd, &state->event);
+                if (ret == -1) {
+                    log_error("%s", "epoll_ctl() failed");
+                    return -1;
+                }
             }
-            default:
-                debug("%s", "target MSU type for socket handler msu not recognized");
-                return -1;
+        } else {
+            //Some data has to be read from an established connection
+            log_debug("%s", "listening for data to be read on an established connection");
+            switch (state->target_msu_type) {
+                case DEDOS_SSL_READ_MSU_ID: {
+                    int done = 0;
+                    while (1) {
+                        ssize_t count;
+                        char buf[512];
+
+                        count = read(state->events[i].data.fd, buf, sizeof(buf));
+                        if (count == -1) {
+                            //errno == EAGAIN means that we've read all data
+                            if (errno != EAGAIN) {
+                                log_error("%s", "read failed");
+                                done = 1;
+                            }
+                            break;
+                        } else if (count == 0) {
+                            //EOF. Remote end has closed the connection
+                            done = 1;
+                            break;
+                        }
+
+                        if (ssl_request_routing_msu == NULL) {
+                            log_error("%s",
+                                      "*ssl_request_routing_msu is NULL, forgot to create it?");
+                            destroy_msu(self);
+                        } else {
+                            struct ssl_data_payload *data = malloc(sizeof(struct ssl_data_payload));
+                            memset(data, '\0', MAX_REQUEST_LEN);
+                            data->socketfd = state->events[i].data.fd;
+                            data->type = READ;
+                            data->state = NULL;
+
+                            struct generic_msu_queue_item *new_item_ws =
+                                malloc(sizeof(struct generic_msu_queue_item));
+                            new_item_ws->buffer = data;
+                            new_item_ws->buffer_len = sizeof(struct ssl_data_payload);
+#ifdef DATAPLANE_PROFILING
+                            new_item_ws->dp_profile_info.dp_id = get_request_id();
+#endif
+                            int ssl_request_queue_len =
+                                generic_msu_queue_enqueue(&ssl_request_routing_msu->q_in, new_item_ws);
+
+                            if (ssl_request_queue_len < 0) {
+                                log_error("Failed to enqueue ssl_request to %s",
+                                          ssl_request_routing_msu->type->name);
+                                free(new_item_ws);
+                                free(data);
+                            } else {
+                                log_debug("Enqueued ssl forwarding request, q_len: %u",
+                                          ssl_request_queue_len);
+                            }
+                        }
+
+                        return DEDOS_SSL_READ_MSU_ID;
+                    }
+                }
+                default:
+                    debug("%s", "target MSU type for socket handler msu not recognized");
+                    return -1;
+            }
         }
     }
 
     return 0;
-}
-
-//add or remove fd to list
-int socket_handler_receive_ctrl(struct generic_msu *msu, msu_queue_item *queue_item) {
 }
 
 /*
@@ -121,6 +175,7 @@ int socket_handler_receive_ctrl(struct generic_msu *msu, msu_queue_item *queue_i
 * @param struct create_msu_thread_msg_data *initial_state: contains init data
 **/
 int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_data *initial_state) {
+    int ret, opt, efd, flags;
     struct socket_handler_init_payload *init_data = initial_state->creation_init_data;
 
     struct socket_handler_state *state = malloc(sizeof(struct socket_handler_state));
@@ -129,9 +184,17 @@ int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_d
     state->target_msu_type = init_data->target_msu_type;
 
     state->socketfd = socket(init_data->domain, init_data->type, init_data->protocol);
-    int opt = 1;
+    opt = 1;
     if (setsockopt(state->socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)) == -1) {
         log_warn("setsockopt() failed with error %s (%d)", strerror(errno), errno);
+    }
+
+    flags |= O_NONBLOCK;
+    ret = fcntl(state->socketfd, F_SETFL, flags);
+    if (ret == -1) {
+        log_error("%s", "error setting socket as O_NONBLOCK");
+        //close(state->socketfd) ?
+        return -1;
     }
 
     struct sockaddr_in addr;
@@ -140,7 +203,7 @@ int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_d
     addr.sin_port = htons(init_data->port);
 
     opt = 1;
-    if (setsockopt(state->socketfd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(int)) < 0) {
+    if (setsockopt(state->socketfd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(int)) == -1) {
         log_error("%s", "Failed to set SO_REUSEPORT");
     }
 
@@ -149,7 +212,27 @@ int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_d
         return -1;
     }
 
-    listen(state->socketfd, 5);
+    ret = listen(state->socketfd, 5);
+    if (ret == -1) {
+        log_error("%s", "listen() failed");
+        return -1;
+    }
+
+    state->eventfd = epoll_create1(0);
+    if (efd == -1) {
+        log_error("%s", "epoll_create1(0) failed");
+        return -1;
+    }
+
+    state->event.data.fd = state->socketfd;
+    state->event.events = EPOLLIN | EPOLLET;
+    ret = epoll_ctl(state->eventfd, EPOLL_CTL_ADD, state->socketfd, &state->event);
+    if (ret == -1) {
+        log_error("%s", "epoll_ctl() failed");
+        return -1;
+    }
+
+    state->events = calloc(MAX_EVENTS, sizeof(state->event));
 
     return 0;
 }

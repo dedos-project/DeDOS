@@ -6,8 +6,9 @@
 #define SOCKET_HANDLER_MSU_H_
 
 #include "generic_msu.h"
+#include <sys/epoll.h>
 
-#define MAX_SOCKET_PER_MSU 12
+#define MAX_EVENTS 64
 
 /** All socket handler MSUs contain a reference to this type */
 extern struct msu_type SOCKET_HANDLER_MSU_TYPE;
@@ -23,7 +24,10 @@ struct socket_handler_init_payload {
 
 struct socket_handler_state {
     int socketfd;
+    int eventfd; //descriptor for events
     int target_msu_type;
+    struct epoll_event event;
+    struct epoll_event *events;
 };
 
 #endif /* SOCKET_HANDLER_MSU_H_ */
