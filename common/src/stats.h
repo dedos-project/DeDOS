@@ -10,31 +10,22 @@
  * There must be a unique identifier for each statistic that is gathered.
  */
 enum stat_id{
-    SELF_TIME = 0,
     QUEUE_LEN,
     ITEMS_PROCESSED,
     MSU_FULL_TIME,
     MSU_INTERNAL_TIME,
     MSU_INTERIM_TIME,
-    N_SWAPS,
-    CPUTIME,
-    THREAD_LOOP_TIME,
-    MESSAGES_SENT,
-    MESSAGES_RECEIVED,
+    N_CONTEXT_SWITCH,
     BYTES_SENT,
     BYTES_RECEIVED,
     GATHER_THREAD_STATS,
-    N_STAT_IDS,
     MEMORY_ALLOCATED,
 };
 
 #if STATLOG
 
-/** Writes gathered statistics for an individual item to the log file. */
-void flush_stat_to_log(enum stat_id stat_id, unsigned int item_id);
-
-/** Writes all gathered statistics to the log file if enough time has passed */
-void flush_all_stats_to_log(int force);
+/** Writes all gathered statistics to the log file*/
+void flush_all_stats_to_log(void);
 
 /** Adds the elapsed time as a statistic to the log (must follow aggregate_start_time()) */
 void aggregate_end_time(enum stat_id stat_id, unsigned int item_id);
@@ -44,11 +35,11 @@ void aggregate_end_time(enum stat_id stat_id, unsigned int item_id);
  * */
 void aggregate_start_time(enum stat_id stat_id, unsigned int item_id);
 
-/** Adds a single statistic for a single item to the log */
-void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int relog);
-
 /** Adds elapsed time as a statistic if period_ms milliseconds have passed */
 void periodic_aggregate_end_time(enum stat_id stat_id, unsigned int item_id, int period_ms);
+
+/** Adds a single statistic for a single item to the log */
+void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int relog);
 
 /** Aggregates a statistic, but only if period_ms milliseconds have passed */
 void periodic_aggregate_stat(enum stat_id stat_id, unsigned int item_id,
