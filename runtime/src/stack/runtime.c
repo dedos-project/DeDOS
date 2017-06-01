@@ -102,7 +102,7 @@ static int print_thread_affinity() {
 }
 
 static int pin_thread(pthread_t ptid, int cpu_id) {
-    int s, j;
+    int s;
     cpu_set_t cpuset;
 
     /* Set affinity mask to include CPUs i*/
@@ -119,10 +119,11 @@ static int pin_thread(pthread_t ptid, int cpu_id) {
     }
     /*
      debug("DEBUG: Set returned by pthread_getaffinity_np() contained: %s", "");
-     for (j = 0; j < 8; j++)
-     if (CPU_ISSET(j, &cpuset))
-     printf("\t\tCPU %d\n", j);
-     */
+    int j;
+    for (j = 0; j < 8; j++)
+    if (CPU_ISSET(j, &cpuset))
+    printf("\t\tCPU %d\n", j);
+    */
 
     return 0;
 }
