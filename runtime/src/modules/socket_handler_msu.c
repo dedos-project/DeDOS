@@ -1,6 +1,6 @@
 /**
- * @file dummy_msu.c
- * Example usage of MSU - not to be instantiated.
+ * @file socket_handler_msu.c
+ * MSU to handle network sockets
  */
 
 // These guards around the headers are necessary if the module

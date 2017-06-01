@@ -20,7 +20,7 @@
 
 #define USAGE_ARGS " [-j dfg.json -i runtime_id] | " \
                    "[-g global_ctl_ip -p global_ctl_port -P local_listen_port [--same-machine | -s]] "\
-                   "[--db-ip db_ip --db-port db_port --db-load db_max_load] "\
+                   "-w webserver_port [--db-ip db_ip --db-port db_port --db-load db_max_load] "\
                    "[--prof-tag-probability=prob]"
 
 SSL_CTX* ssl_ctx_global;
@@ -94,6 +94,7 @@ int main(int argc, char **argv){
     int global_ctl_port = -1;
     int local_listen_port = -1;
     int same_physical_machine = 0;
+    int webserver_port = -1;
     // Declared in communication.h, used in webserver_msu
     db_ip = NULL;
     db_port = -1;
@@ -137,6 +138,9 @@ int main(int argc, char **argv){
             case 's':
                 same_physical_machine = 1;
                 break;
+            case 'w':
+                webserver_port = atoi(optarg);
+                break;
             case 'd':
                 db_ip = optarg;
                 break;
@@ -176,19 +180,25 @@ int main(int argc, char **argv){
     int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 ||
                       local_listen_port > 0 ) ;
 
+    if (webserver_port == -1) {
+        printf("Webserver port not provided. Exiting\n");
+        exit(-1);
+    }
+
     int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
 
-    if (!json_all && !manual_all){
+    if (!json_all && !manual_all) {
         printf("One of JSON file and runtime ID or global control IP and port required. Exiting.\n");
         exit(-1);
     }
-    if ((json_all && manual_any) || (json_any && manual_all)){
+
+    if ((json_all && manual_any) || (json_any && manual_all)) {
         printf("Both JSON and manual configuration present. Please provide only one.\n");
         exit(-1);
     }
 
     struct dfg_config *dfg = NULL;
-    if (json_all){
+    if (json_all) {
         int rtn = load_dfg_from_file(dfg_json);
         if (rtn < 0){
             printf("%s is not a valid json DFG. Exiting\n", dfg_json);
@@ -240,6 +250,10 @@ int main(int argc, char **argv){
 
     if (dedos_control_socket_init(control_listen_port) < 0){
        log_error("Could not initialize control socket");
+    }
+
+    if (dedos_webserver_socket_init(webserver_port) < 0) {
+        log_error("Could not initialize webserver socket");
     }
 
 #ifdef DEDOS_SUPPORT_BAREMETAL_MSU
