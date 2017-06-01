@@ -1,6 +1,5 @@
 #ifndef GENERIC_MSU_QUEUE_H_
 #define GENERIC_MSU_QUEUE_H_
-#include "control_protocol.h"
 #include "generic_msu_queue_item.h"
 #include "dedos_threads.h"
 #include "logging.h"

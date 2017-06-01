@@ -3,6 +3,15 @@ CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 TARGET_EXT=out
 
+LOGS = \
+	   INFO \
+	   ERROR \
+	   WARN \
+	   CRITICAL \
+	   CUSTOM
+
+LOG_STATS = 0
+
 PATH_SRC = src/
 PATH_SRC_APP = $(PATH_SRC)apps/
 PATH_SRC_MOD = $(PATH_SRC)modules/
@@ -16,22 +25,39 @@ PATH_DEP = build/depends/
 PATH_OBJ = build/objs/
 PATH_BLD_LEG = build/legacy/
 PATH_RES = build/results/
-ADDRESS_SANITIZER?=1
+ADDRESS_SANITIZER?=0
+
+COMMON = ../common/
+COMMON_SRC = $(COMMON)src/
+COMMON_BLD = $(COMMON)build/
+COMMON_OBJ = $(COMMON_BLD)objs/
+
+COMMON_SRCS = $(wildcard $(COMMON_SRC)*.c)
+COMMON_OBJS = $(patsubst $(COMMON_SRC)%.c, $(COMMON_OBJ)%.o, $(COMMON_SRCS))
 
 #LEGACY_LIBS =
 LEGACY_LIBS = picotcp
 
 COMPILE=gcc -c
 COMPILE_PP=g++ -c
-FINAL=gcc -lstdc++
+FINAL=gcc
 LINK=ld -r
 DEPEND=gcc -MM -MF
 
+SELF=./Makefile
+
 # If specific MSUs need special compilation instructions,
 # they can be specified here, as such:
-# COMPILE_dummy_msu=g++ -c
+CFLAGS_dummy_msu= -lpcre
 
-CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g -DSTATLOG=0 -lpcap
+LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
+ifeq ($(LOG_STATS), 1)
+LOG_DEFINES+= -DSTATLOG=1
+else
+LOG_DEFINES+= -DSTATLOG=0
+endif
+
+CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 -g $(LOG_DEFINES)
 
 ifeq ($(DATAPLANE_PROFILING),1)
         CFLAGS+=-DDATAPLANE_PROFILING
@@ -48,7 +74,7 @@ LEGACY_INC=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/build/in
 LEGACY_SRC=$(foreach leg_lib, $(LEGACY_LIBS, $(wildcard $(PATH_SRC_LEG)$(leg_lib)/src/*)))
 LEGACY_OBJ=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_BLD_LEG)$(leg_lib).o)
 
-INCLUDES= $(PATH_SRC_INC) $(LEGACY_INC)
+INCLUDES= $(PATH_SRC_INC) $(LEGACY_INC) $(COMMON_SRC)
 
 CFLAGS+= $(foreach inc, $(INCLUDES), -I$(inc))
 
@@ -78,6 +104,10 @@ OBJECTS += $(patsubst $(PATH_SRC_STK)%.c, $(PATH_OBJ)%.o, $(SRC_STK))
 OBJECTS += $(patsubst $(PATH_SRC_UTL)%.c, $(PATH_OBJ)%.o, $(SRC_UTL))
 APPS = $(patsubst $(PATH_SRC_APP)%.c, %, $(SRC_APP))
 
+define cflags
+	$(CFLAGS) $(value CFLAGS_$(notdir $(patsubst %.o, %, $(1))))
+endef
+
 all: $(BUILD_PATHS) legacy $(APPS)
 
 legacy: $(LEGACY_OBJ)
@@ -90,9 +120,11 @@ $(PATH_BLD_LEG)%.o:: $(PATH_SRC_LEG)%
 	@echo ___________ $< ___________
 	$(LINK) -o $@ $</build/*.o
 
-%: $(OBJECTS) $(LEGACY_OBJ) $(PATH_SRC_APP)%.c
+%: $(OBJECTS) $(LEGACY_OBJ) $(COMMON_OBJS) $(PATH_SRC_APP)%.c
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
+$(COMMON_SRC)%.o: $(COMMON_SRC)%.c
+	cd .. && make common
 
 test: $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
@@ -128,27 +160,15 @@ $(PATH_BLD)Test_%.$(TARGET_EXT): $(PATH_OBJ)Test_%.o $(OBJECTS) $(LEGACY_OBJ)
 $(PATH_OBJ)%.o:: $(PATH_TST)%.c
 	$(COMPILE) $(CFLAGS) $< -o $@
 
-# Creates object files from the source file
-$(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c
+# Creates object files from the stack source file
+$(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c $(SELF)
 	$(COMPILE) $(CFLAGS) $< -o $@
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c
-	@if [ "$(COMPILE_$(notdir $(@:.o=)))" = "" ]; then \
-		echo $(COMPILE) $(CFLAGS) $< -o $@; \
-		$(COMPILE) $(CFLAGS) $< -o $@; \
-	else \
-		echo $(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
-		$(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
-	fi
+$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c $(SELF)
+	$(COMPILE) $(call cflags, $@) $< -o $@
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc
-	@if [ "$(COMPILE_$(notdir $(@:.o=)))" = "" ]; then \
-		echo $(COMPILE_PP) $(CFLAGS) $< -o $@; \
-		$(COMPILE_PP) $(CFLAGS) $< -o $@; \
-	else \
-		echo $(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
-		$(COMPILE_$(notdir $(@:.o=))) $(CFLAGS) $< -o $@; \
-	fi
+$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc $(SELF)
+	$(COMPILE_PP) $(call cflags, $@) $< -o $@
 
 $(PATH_DEP)%.d: $(PATH_TST)%.c
 	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<

@@ -71,6 +71,7 @@ static inline int32_t dedos_msu_pool_add(struct msu_pool *q, struct generic_msu 
     MUTEX_UNLOCK(q->mutex);
 
 #ifdef DEBUG_MSU_POOL
+    log_debug("Added MSU %d to pool", p->id);
     dedos_msu_pool_print(q);
 #endif
     return 0;

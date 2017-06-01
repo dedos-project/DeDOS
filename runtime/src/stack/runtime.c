@@ -161,7 +161,7 @@ static void* non_block_per_thread_loop() {
     /* Each of these loops is independently run on thread */
     struct dedos_thread* self;
     int thread_index;
-    sleep(2);
+    usleep(1);
     thread_index = get_thread_index(pthread_self());
     log_debug("Index in all thread: %d", thread_index);
     self = &all_threads[thread_index];
@@ -175,7 +175,7 @@ static void* non_block_per_thread_loop() {
         }
     } while (not_done);
 
-    sleep(2); //segfaults because main thread has finished init everything.
+    usleep(1);
     log_info("Starting nonblocking per thread loop: %lu", self->tid);
 
     log_debug("-------------------------%s", "");
@@ -505,6 +505,9 @@ int init_main_thread(void) {
     main_thread->thread_q->mutex = mutex_init();
     main_thread->thread_q->max_msgs = 0;
     main_thread->thread_q->max_size = 0;
+    main_thread->thread_q->head = NULL;
+    main_thread->thread_q->tail = NULL;
+    main_thread->q_sem = NULL;
 
     //initially there are no worker threads, so not stats to keep
     main_thread->thread_stats = (struct thread_msu_stats*) malloc(sizeof(struct thread_msu_stats));
@@ -653,10 +656,11 @@ static void check_pending_runtimes() {
                 log_debug("Found unconnected runtime IP: %s:%d", ip_buf, runtime_listener_port);
                 ret = connect_to_runtime(&ip_buf, runtime_listener_port);
                 //zero out the entry in pending_runtime_peers, do not decrement count
-                if (ret == 0) {
-                    pending_runtime_peers->ips[i] = 0;
-                    remaining_count--;
+                if (ret != 0){
+                    log_warn("Could not connect to runtime with ip %s:%d", ip_buf, runtime_listener_port);
                 }
+                pending_runtime_peers->ips[i] = 0;
+                remaining_count--;
             }
         }
     }

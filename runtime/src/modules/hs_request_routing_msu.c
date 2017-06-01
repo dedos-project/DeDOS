@@ -147,7 +147,7 @@ int hs_request_routing_msu_restore(struct generic_msu *self,
 
         //enqueue the request and also the src msu_id
 
-        msu_queue_item *item = create_generic_msu_queue_item();
+        struct generic_msu_queue_item *item = create_generic_msu_queue_item();
         if (!item) {
             log_error("Failed malloc for generic queue item %s", "");
         }
@@ -240,7 +240,7 @@ struct msu_type HS_REQUEST_ROUTING_MSU_TYPE = {
     .destroy=NULL,
     .receive=hs_request_routing_msu_process_queue_item,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=default_routing,
     .deserialize=hs_request_routing_msu_restore,
     .send_local=default_send_local,
     .send_remote=default_send_remote

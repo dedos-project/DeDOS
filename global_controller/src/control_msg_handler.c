@@ -40,7 +40,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
 
             endpoint_index = get_sock_endpoint_index(runtime_sock);
 
-            pthread_mutex_lock(dfg->dfg_mutex);
+            pthread_mutex_lock(&dfg->dfg_mutex);
 
             if (endpoint_index > -1) {
                 dfg->runtimes[endpoint_index]->num_cores = control_msg->payload_len;
@@ -52,7 +52,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
                 debug("ERROR: Couldn't find endpoint index for sock: %d", runtime_sock);
             }
 
-            pthread_mutex_unlock(dfg->dfg_mutex);
+            pthread_mutex_unlock(&dfg->dfg_mutex);
 
             count = show_connected_peers();
 
@@ -103,23 +103,12 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
 
             debug("DEBUG: Payload len of response: %u", response->payload_len);
 
-            sendbuf = malloc(sizeof(struct dedos_control_msg) + ((count-1) * sizeof(uint32_t)));
-            if (!sendbuf) {
-                debug("ERROR: Failed to allocate sendbuf memory %s","");
-                free(response);
-                free(all_peer_ips);
-                free(to_send_peer_ips);
-            }
+            send_control_msg(runtime_sock, response);
 
-            memcpy(sendbuf, response, sizeof(struct dedos_control_msg));
-            memcpy(sendbuf + sizeof(struct dedos_control_msg), to_send_peer_ips, ((count-1) * sizeof(uint32_t)));
-
-            send_to_runtime(runtime_sock, sendbuf, sizeof(struct dedos_control_msg) + ((count-1) * sizeof(uint32_t)));
 
             free(response);
             free(all_peer_ips);
             free(to_send_peer_ips);
-            free(sendbuf);
 
             break;
 
@@ -164,7 +153,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
                          );
                 }
                 */
-                process_stats_msg(rcvd_stats_array, runtime_sock, stats_items);
+                //process_stats_msg(rcvd_stats_array, runtime_sock, stats_items);
             } else {
                 debug("ERROR: Wrong msg type set for STATISTICS update %u", control_msg->msg_type);
             }

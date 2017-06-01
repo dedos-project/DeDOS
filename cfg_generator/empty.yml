@@ -53,70 +53,36 @@ default_runtime: &default_runtime
     dram: 67108864
     io_network_bw: 10485760
 
-runtimes:
-    1: &rt1
-        <<: *dedos01
-        <<: *default_runtime
-        runtime_id: 1
-    2: &rt2
-        <<: *dedos02
-        <<: *default_runtime
-        runtime_id: 2
+runtimes: {}
+#    1: &rt1
+#        <<: *dedos01
+#        <<: *default_runtime
+#        runtime_id: 1
+#   2: &rt2
+#        <<: *dedos02
+#        <<: *default_runtime
+#        runtime_id: 2
 
-default_msus:
-    - &default_msu
-      vertex_type: nop
-      working_mode: non-blocking
-      profiling:
-          wcet: 10
-          dram: 500MB
-          tx_node_local: 1
-          tx_core_local: 0.5
-          tx_node_remote: 25
-      deadline: 5
-    - &rt1-msu
-      <<: *default_msu
-      scheduling:
-          <<: *rt1
-    - &rt2-msu
-      <<: *default_msu
-      scheduling:
-          <<: *rt2
+default_msus: []
+    #    - &default_msu
+    #  vertex_type: nop
+    #  working_mode: non-blocking
+    #  profiling:
+    #      wcet: 10
+    #      dram: 500MB
+    #      tx_node_local: 1
+    #      tx_core_local: 0.5
+    #      tx_node_remote: 25
+    #  deadline: 5
+    #- &rt1-msu
+    #  <<: *default_msu
+    #  scheduling:
+    #      <<: *rt1
 
-msus:
-    - name: ssl-route-1
-      <<: *rt1-msu
-      <<: *ssl-routing
-      thread: 1
-      reps: 1
-    
-    - name: ssl-read-1
-      <<: *rt1-msu
-      <<: *ssl-read
-      thread: 2
-      reps: 2
-   
-    - name: http
-      <<: *rt1-msu
-      <<: *http
-      thread: 4
-      reps: 1
+msus: []
 
-    - name: ssl-write-1
-      <<: *rt1-msu
-      <<: *ssl-write
-      thread: 5
-      reps: 1
+routes: []
 
-routes:
-    - from: ssl-route-1
-      to: ssl-read-1
-          
-    - from: ssl-read-1
-      to: http
-
-    - from: http
-      to: ssl-write-1
 
       #- from: [http-rt1, http-rt2, http-rt2-2, http-rt2-3, http-rt2-4]
       #to: ssl-write-rt1

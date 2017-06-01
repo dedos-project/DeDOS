@@ -151,7 +151,7 @@ void requested_regex_value(char *request, char *val_out){
  * @param dst MSU destination to receive the message
  * @return -1 on error, >=0 on success
  */
-int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
+int webserver_send_remote(struct generic_msu *src, struct generic_msu_queue_item *data,
                         struct msu_endpoint *dst){
     struct dedos_intermsu_message *msg = malloc(sizeof(*msg));
     if (!msg){
@@ -161,6 +161,7 @@ int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
 
     msg->dst_msu_id = dst->id;
     msg->src_msu_id = src->id;
+    msg->data_id = data->id;
 
     // TODO: Is this next line right? src->proto_number?
     msg->proto_msg_type = src->type->proto_number;
@@ -172,7 +173,7 @@ int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
         return -1;
     }
 
-    if (dst->msu_type != DEDOS_REGEX_MSU_ID && dst->msu_type != DEDOS_REGEX_ROUTING_MSU_ID) {
+    if (dst->type_id != DEDOS_REGEX_MSU_ID && dst->type_id != DEDOS_REGEX_ROUTING_MSU_ID) {
         memcpy(msg->payload, data->buffer, msg->payload_len);
     } else {
         struct regex_data_payload *regex_data =
@@ -223,7 +224,7 @@ int webserver_send_remote(struct generic_msu *src, msu_queue_item *data,
  * @param input_data Data received by the MSU
  * @return type ID of next MSU to receive data on success, -1 on error
  */
-int webserver_receive(struct generic_msu *self, msu_queue_item *input_data) {
+int webserver_receive(struct generic_msu *self, struct generic_msu_queue_item *input_data) {
     if (self && input_data) {
         // printf("web_server_data_handler :Webserver MSU started processing\n");
         int ret;
@@ -269,16 +270,18 @@ int webserver_receive(struct generic_msu *self, msu_queue_item *input_data) {
                 else {
                     char ReturnOk[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length:";
                     char htmlDoc[] =
-                        "<!DOCTYPE html>\n<html>\n<body>\n<h1>Dedos New Runtime</h1>\n</body>\n</html>";
+                        "<!DOCTYPE html>\n<html>\n<body>\n<h1>Dedos New Runtime MSU %03d</h1>\n</body>\n</html>";
+                    char htmlDocOut[strlen(htmlDoc)];
+                    sprintf(htmlDocOut,htmlDoc, self->id);
 
                     // Generate the document to send back to the client
-                    int http_response_len = strlen(ReturnOk) +  strlen(htmlDoc) + 20;
+                    int http_response_len = strlen(ReturnOk) +  strlen(htmlDocOut) + 20;
                     char *finalSend = (char *) malloc (http_response_len);
                     memset(finalSend, '\0', http_response_len);
 
                     snprintf(finalSend, http_response_len, "%s %d\r\n\r\n%s",
-                             ReturnOk, (int) strlen(htmlDoc), htmlDoc);
-                    strncpy(recv_data->msg, finalSend, http_response_len+1);
+                             ReturnOk, (int) strlen(htmlDocOut), htmlDocOut);
+                    strncpy(recv_data->msg, finalSend, strlen(finalSend) + 1);
                     recv_data->type = WRITE;
 
                     free(finalSend);
@@ -322,7 +325,7 @@ const struct msu_type WEBSERVER_MSU_TYPE = {
     .destroy=NULL,
     .receive=webserver_receive,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=default_routing,
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=webserver_send_remote

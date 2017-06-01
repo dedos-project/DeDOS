@@ -2,6 +2,7 @@
 #define COMMUNICATION_H_
 
 #include "logging.h"
+#include "control_protocol.h"
 #include <stdint.h>
 #include <pthread.h>
 
@@ -15,5 +16,6 @@ int start_communication(int tcp_control_listen_port);
 void check_comm_sockets(void);
 //void controller_rcv(struct runtime_endpoint *runtime_peer);
 int send_to_runtime(int runtime_sock, char *buf, unsigned int bufsize);
+int send_control_msg(int runtime_sock, struct dedos_control_msg *control_msg);
 
 #endif

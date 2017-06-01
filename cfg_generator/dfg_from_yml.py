@@ -27,33 +27,81 @@ def sort_msus(msus):
 
 max_id = 1
 
-def add_routing(msu, msus, routes):
+def route_name(runtime_id, type, i):
+    return '%03d%01d' % (type, i)
+    #return '%03d%01d%01d' % (type, runtime_id, i)
 
-    for route in routes:
+def add_pseudo_routing(rt_id, froms, tos, routes, json_route):
+
+    types = [msu['type'] for msu in tos]
+
+    new_routes = {}
+
+    #print("In pseudo %s" % froms)
+
+    for type in set(types):
+        for i in range(99):
+            name = route_name(rt_id, type, i)
+            if name not in routes:
+                routes[name] = {'destinations':{}, 'type': type, 'link': json_route, 'key-max': 0}
+                new_routes[type] = name
+                break
+
+    for msu in tos:
+        route_out = routes[new_routes[msu['type']]]
+        last_max = route_out['key-max']
+        route_out['destinations'][msu['id']] = last_max + 1
+        route_out['key-max'] += 1
+
+    for msu in froms:
+        for type in types:
+            if new_routes[type] not in msu['scheduling']['routing']:
+                msu['scheduling']['routing'].append(new_routes[type])
+
+def runtime_routes(rt_id, msus, routes):
+
+    routes_out = {}
+
+    for i, route in enumerate(routes):
+        if isinstance(route['to'], list):
+            tos = route['to']
+        else:
+            tos = [route['to']]
 
         if isinstance(route['from'], list):
             froms = route['from']
         else:
             froms = [route['from']]
 
-        if isinstance(route['to'], list):
-            tos = route['to']
-        else:
-            tos = [route['to']]
+        from_msus = [msu for msu in msus if msu['name'] in froms and msu['scheduling']['runtime_id'] == rt_id]
 
-        if 'thread-match' in route:
-            thread_match = route['thread-match']
-        else:
-            thread_match = False
+        if len(from_msus) == 0:
+            continue
 
-        for route_from in froms:
-            if route_from == msu['name']:
-                for route_to in tos:
-                    for msu_to in msus:
-                        if route_to == msu_to['name']:
-                            if ( (not thread_match) or
-                                    (thread_match and msu['scheduling']['thread_id'] == msu_to['scheduling']['thread_id']) ):
-                                msu['scheduling']['routing'].append(msu_to['id'])
+        thread_match = route.get('thread-match', False)
+
+        if not thread_match:
+            to_msus = [msu for msu in msus if msu['name'] in tos ]
+            add_pseudo_routing(rt_id, from_msus, to_msus, routes_out, route)
+        else:
+            threads = set(msu['scheduling']['thread_id'] for msu in from_msus)
+            for thread in threads:
+                thread_froms = [msu for msu in msus if msu['scheduling']['thread_id'] == thread
+                                and msu['scheduling']['runtime_id'] == rt_id]
+                thread_tos = [msu for msu in msus if msu['name'] in tos and msu['scheduling']['thread_id'] == thread]
+                add_pseudo_routing(rt_id, thread_froms, thread_tos, routes_out, route)
+
+    for id, route_out in routes_out.items():
+        if 'key-max' in route_out['link']:
+            ratio = route_out['link']['key-max'] / route_out['key-max']
+            for msu_id in route_out['destinations']:
+                route_out['destinations'][msu_id] *= ratio
+        del route_out['key-max']
+        del route_out['link']
+
+    routes_final = [ dict(id=k, **v) for k, v in routes_out.items()]
+
+    return routes_final
 
 def make_msus_out(msu):
     global max_id
@@ -85,7 +133,7 @@ def stringify(output):
             if isinstance(v, dict) or isinstance(v, OrderedDict):
                 stringify(v)
             elif isinstance(v, list):
-                stringify(v) 
+                stringify(v)
             else:
                 output[k] = str(v)
     else:
@@ -93,12 +141,11 @@ def stringify(output):
             if isinstance(v, dict) or isinstance(v, OrderedDict):
                 stringify(v)
             elif isinstance(v, list):
-                stringify(v) 
+                stringify(v)
             else:
                 output[i] = str(v)
-def make_cfg(yml_filename, pretty=False):
+def make_dfg(yml_filename, pretty=False):
     input = yaml.load(open(yml_filename))
-    
     output = OrderedDict()
 
     output['application_name'] = input['application']['name']
@@ -119,18 +166,15 @@ def make_cfg(yml_filename, pretty=False):
         ))
     output['runtimes'] = rts
 
-    msus = sort_msus(input['msus'])
+    msus = input['msus'] #sort_msus(input['msus'])
     msus_out = []
     for msu in msus:
         msus_out.extend(make_msus_out(msu))
-    
-    for msu in msus_out:
-        add_routing(msu, msus_out, input['routes'])
 
-    for msu in msus_out:
-        del msu['name']
-    
-    output['MSUs'] = msus_out[::-1]
+    for rt in output['runtimes']:
+        rt['routes'] = runtime_routes(rt['id'], msus_out, input['routes'])
+
+    output['MSUs'] = msus_out
     stringify(output)
 
     if pretty:
@@ -140,9 +184,6 @@ def make_cfg(yml_filename, pretty=False):
 
 
 if __name__ == '__main__':
-    pretty = '-p' in sys.argv
-    if (pretty and len(sys.argv) > 2) or (not pretty and len(sys.argv) > 1):
-        cfg = sys.argv[-1]
-    else:
-        cfg = 'dfg.yml'
-    make_cfg(cfg, pretty)
+    pretty = True
+    cfg = sys.argv[-1]
+    make_dfg(cfg, pretty)

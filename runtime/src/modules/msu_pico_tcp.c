@@ -273,7 +273,7 @@ int msu_pico_tcp_restore(struct generic_msu *self,
     }
     return 0;
 }
-int msu_pico_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *queue_item){
+int msu_pico_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item){
     /* function called when an item is dequeued */
     /* queue_item can be parsed into the struct with is expected in the queue */
 #ifdef PICO_SUPPORT_TIMINGS
@@ -349,7 +349,7 @@ struct msu_type PICO_TCP_MSU_TYPE= {
     .destroy=NULL,
     .receive=msu_pico_tcp_process_queue_item,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=default_routing,
     .deserialize=msu_pico_tcp_recv_state,
     .send_local=default_send_local,
     .send_remote=default_send_remote

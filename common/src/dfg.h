@@ -5,13 +5,17 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
-#include "runtime.h"
-#include "dfg_json.h"
+struct dfg_config;
+
 #include "logging.h"
-#include "global_controller/communication.h"
+#include "scheduling_cut.h"
 
 /* Some infra properties */
+#define MAX_THREADS 20
 #define MAX_RUNTIMES 20
+#define MAX_MSU 128
+#define NUM_MSU_TYPES 16
+#define MAX_DESTINATIONS 16
 
 /* Some struct related to DFG management protocol */
 struct dedos_dfg_add_endpoint_msg {
@@ -47,6 +51,8 @@ struct dfg_runtime_endpoint {
     uint32_t num_threads;
     struct runtime_thread *threads[MAX_THREADS];
     struct cut *current_alloc;
+    int num_routes;
+    struct dfg_route *routes[MAX_MSU];
 };
 
 struct runtime_thread {
@@ -73,7 +79,9 @@ struct msu_statistics_data {
 struct msu_scheduling {
     struct dfg_runtime_endpoint *runtime;
     uint32_t thread_id;
-    struct dfg_edge_set *routing;
+
+    int num_routes;
+    struct dfg_route *routes[NUM_MSU_TYPES];
     int deadline;
 };
 
@@ -85,14 +93,12 @@ struct msu_meta_routing {
     int num_dst_types;
 };
 
-struct dfg_edge {
-    struct dfg_vertex *from;
-    struct dfg_vertex *to;
-};
-
-struct dfg_edge_set {
-    int num_edges;
-    struct dfg_edge *edges[MAX_MSU];
+struct dfg_route {
+    int route_id;
+    int msu_type;
+    int num_destinations;
+    int destination_keys[MAX_DESTINATIONS];
+    struct dfg_vertex *destinations[MAX_DESTINATIONS];
 };
 
 //Definition of a vertex--an MSU
@@ -106,17 +112,19 @@ struct dfg_vertex {
     char msu_mode[13]; //blocking/non-blocking
 
     //Profiling data
-    struct msu_profiling *profiling;
+    struct msu_profiling profiling;
 
     //Scheduling data
-    struct msu_scheduling *scheduling;
+    struct msu_scheduling scheduling;
 
     //Routing data
-    struct msu_meta_routing *meta_routing;
+    struct msu_meta_routing meta_routing;
 
     //Monitoring data
-    struct msu_statistics_data *statistics;
+    struct msu_statistics_data statistics;
 };
+
+
 
 // Wrapper structure for the DFG
 struct dfg_config {
@@ -134,8 +142,7 @@ struct dfg_config {
     int vertex_cnt;                       //Number of MSUs
     struct dfg_runtime_endpoint *runtimes[MAX_RUNTIMES]; //All runtimes
     int runtimes_cnt;
-
-    pthread_mutex_t *dfg_mutex;
+    pthread_mutex_t dfg_mutex;
 };
 
 extern struct dfg_config dfg_config_g;
@@ -155,8 +162,13 @@ void get_connected_peer_ips(uint32_t *peer_ips);
 uint32_t get_sock_endpoint_ip(int sock);
 int get_sock_endpoint_index(int sock);
 int show_connected_peers(void);
-struct dfg_vertex *dfg_msu_from_id(int msu_id);
 struct msus_of_type *get_msus_from_type(int type);
 struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id);
+struct dfg_vertex *get_msu_from_id(int msu_id);
+
+int add_route_to_msu_vertex(int runtime_index, int msu_id, int route_id);
+int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) ;
+int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end);
+int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id);
 
 #endif //DFG_H_

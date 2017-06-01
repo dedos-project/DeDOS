@@ -26,7 +26,7 @@ static unsigned concatenate(unsigned x, unsigned y) {
     return x * pow + y;
 }
 
-int ssl_request_routing_msu_receive(struct generic_msu *self, msu_queue_item *queue_item)
+int ssl_request_routing_msu_receive(struct generic_msu *self, struct generic_msu_queue_item *queue_item)
 {
     /* function called when an item is dequeued */
     /* here we will make a decision as to which next SSL msu the request be routed to */
@@ -74,25 +74,23 @@ int ssl_request_routing_msu_receive(struct generic_msu *self, msu_queue_item *qu
     return next_msu_type;
 }
 
-
-void ssl_request_routing_msu_destroy(struct generic_msu *self)
-{
-    /* any stuff which it must complete before getting destroyed can be done here */
-    destroy_chord_ring(self->internal_state);
+int ssl_init(struct generic_msu *self, void *init_data, int init_data_len){
+    ssl_request_routing_msu = self;
+    return 0;
 }
 
-int ssl_request_routing_msu_init(struct generic_msu *self, 
-        struct create_msu_thread_msg_data *create_action)
-{
-    /* any other internal state that MSU needs to maintain */
-    //For routing MSU the internal state will be the chord ring
-    ssl_request_routing_msu = self;
-    self->internal_state = (struct chord_ring *)init_chord_ring();
-
-    log_debug("Created %s MSU with id: %u", self->type->name,
-            self->id);
-
-    return 0;
+int ssl_generate_id(struct generic_msu *self, struct generic_msu_queue_item *queue_item){
+    struct ssl_data_payload *data = queue_item->buffer;
+    struct sockaddr_in sockaddr;
+    socklen_t addrlen = sizeof(sockaddr);
+    int rtn = getpeername(data->socketfd, (struct sockaddr*) &sockaddr, &addrlen);
+    if (rtn < 0){
+        log_error("Could not getpeername for determining packet ID: %s", strerror(errno));
+    }
+    uint32_t id;
+    log_debug("Sockaddr port: %d, addr %d", sockaddr.sin_port, sockaddr.sin_addr.s_addr);
+    HASH_VALUE(&sockaddr, addrlen, id);
+    return id;
 }
 
 const struct msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {
@@ -100,12 +98,13 @@ const struct msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {
     .layer=DEDOS_LAYER_TRANSPORT,
     .type_id=DEDOS_SSL_REQUEST_ROUTING_MSU_ID,
     .proto_number=MSU_PROTO_SSL_REQUEST,
-    .init=ssl_request_routing_msu_init,
-    .destroy=ssl_request_routing_msu_destroy,
+    .init=ssl_init,
+    .destroy=NULL,
     .receive=ssl_request_routing_msu_receive,
     .receive_ctrl=NULL,
-    .route=NULL,
+    .route=default_routing,
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,
+    .generate_id=ssl_generate_id
 };

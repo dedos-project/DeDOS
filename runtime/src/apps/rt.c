@@ -7,7 +7,8 @@
 
 #include "stats.h"
 #include "communication.h"
-#include "global_controller/dfg.h"
+#include "dfg.h"
+#include "dfg_reader.h"
 #include "dfg_interpreter.h"
 #include "runtime.h"
 #include "global.h"
@@ -112,7 +113,7 @@ int main(int argc, char **argv){
     int arguments_provided = 0;
     while (1){
         int option_index = 0;
-        int c = getopt_long(argc, argv, "j:i:g:p:P:s:w:d:b:l:z:",
+        int c = getopt_long(argc, argv, "j:i:g:p:P:sw:d:b:l:z:",
                             long_options, &option_index);
         if (c == -1)
             break;
@@ -175,9 +176,9 @@ int main(int argc, char **argv){
     int json_any = (dfg_json != NULL || runtime_id > 0);
 
     int manual_all = (global_ctl_ip != NULL && global_ctl_port > 0 &&
-                      local_listen_port > 0 && same_physical_machine > 0);
+                      local_listen_port > 0 );
     int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 ||
-                      local_listen_port > 0 || same_physical_machine > 0) ;
+                      local_listen_port > 0 ) ;
 
     int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
 
@@ -196,7 +197,7 @@ int main(int argc, char **argv){
 
     struct dfg_config *dfg = NULL;
     if (json_all){
-        int rtn = do_dfg_config(dfg_json);
+        int rtn = load_dfg_from_file(dfg_json);
         if (rtn < 0){
             printf("%s is not a valid json DFG. Exiting\n", dfg_json);
             exit(-1);
@@ -222,9 +223,9 @@ int main(int argc, char **argv){
     int control_listen_port = local_listen_port;
 
     // Control socket init for listening to connections from other runtimes
-    if (same_physical_machine == 1){
-        control_listen_port++;
-    }
+    // if (same_physical_machine == 1){
+    //     control_listen_port++;
+    // }
 
     if ( ! db_all){
         log_warn("Connection to mock database not fully instantiated");

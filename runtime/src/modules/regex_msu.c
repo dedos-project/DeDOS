@@ -49,7 +49,7 @@ int html_len() {
 int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
     if (self){
-        msu_queue_item *recvd =  malloc(sizeof(*recvd));
+        struct generic_msu_queue_item *recvd =  malloc(sizeof(*recvd));
         if (!(recvd)){
             log_error("Could not allocate msu_queue_item");
             return -1;
@@ -74,6 +74,7 @@ int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
 
         recvd->buffer_len = sizeof(*regex_data);
         recvd->buffer = regex_data;
+        recvd->id = msg->data_id;
         regex_data->dst_packet = dst_packet;
         generic_msu_queue_enqueue(&self->q_in, recvd);
         return 0;
@@ -88,7 +89,7 @@ int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
  * @param input_data contains a regex_data_payload* in input_data->buffer
  * @return ID of next MSU-type to receive data, or -1 on error
  */
-int regex_receive(struct generic_msu *self, msu_queue_item *input_data) {
+int regex_receive(struct generic_msu *self, struct generic_msu_queue_item *input_data) {
     if (self && input_data) {
         struct regex_data_payload *regex_data = (struct regex_data_payload *) (input_data->buffer);
         int ret;

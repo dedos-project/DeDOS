@@ -1,447 +1,421 @@
-/*
- * routing.c
- *
- * defines functions for manipulation of msu routing table
- *
- */
-#include <string.h>
 #include "routing.h"
+#include "ip_utils.h"
 #include "msu_tracker.h"
-#include "dedos_msu_pool.h"
-#include "logging.h"
 
-static inline int is_digit(char c)
-{
-    if (c < '0' || c > '9')
-        return 0;
+#define DEFAULT_MAX_DESTINATIONS 16
 
-    return 1;
+struct routing_table{
+    int type_id;
+
+    int n_refs;
+
+    pthread_rwlock_t rwlock;
+
+    int n_destinations;
+    int max_destinations;
+    uint32_t *ranges;
+    struct msu_endpoint *destinations;
+};
+
+static int read_lock(struct routing_table *table){
+    return pthread_rwlock_rdlock(&table->rwlock);
 }
 
-#ifdef PICO_BIGENDIAN
-
-static inline uint32_t long_from(void *_p)
-{
-    unsigned char *p = (unsigned char *)_p;
-    uint32_t r, p0, p1, p2, p3;
-    p0 = p[0];
-    p1 = p[1];
-    p2 = p[2];
-    p3 = p[3];
-    r = (p0 << 24) + (p1 << 16) + (p2 << 8) + p3;
-    return r;
+static int write_lock(struct routing_table *table){
+    return pthread_rwlock_wrlock(&table->rwlock);
 }
 
-#else
-
-static inline uint32_t long_from(void *_p){
-    unsigned char *p = (unsigned char *)_p;
-    uint32_t r, _p0, _p1, _p2, _p3;
-    _p0 = p[0];
-    _p1 = p[1];
-    _p2 = p[2];
-    _p3 = p[3];
-    r = (_p3 << 24) + (_p2 << 16) + (_p1 << 8) + _p0;
-    return r;
+static int unlock(struct routing_table *table){
+    return pthread_rwlock_unlock(&table->rwlock);
 }
-#endif
 
-int ipv4_to_string(char *ipbuf, const uint32_t ip)
-{
-    const unsigned char *addr = (const unsigned char *) &ip;
-    int i;
 
-    if (!ipbuf) {
+static struct route_set *all_routes = NULL;
+
+static int realloc_table_entries(struct routing_table *table, int max_entries){
+    table->ranges = realloc(table->ranges, sizeof(uint32_t) * max_entries);
+    if (table->ranges == NULL){
+        log_error("Error allocating table ranges");
         return -1;
     }
 
-    for (i = 0; i < 4; i++) {
-        if (addr[i] > 99) {
-            *ipbuf++ = (char) ('0' + (addr[i] / 100));
-            *ipbuf++ = (char) ('0' + ((addr[i] % 100) / 10));
-            *ipbuf++ = (char) ('0' + ((addr[i] % 100) % 10));
-        } else if (addr[i] > 9) {
-            *ipbuf++ = (char) ('0' + (addr[i] / 10));
-            *ipbuf++ = (char) ('0' + (addr[i] % 10));
-        } else {
-            *ipbuf++ = (char) ('0' + addr[i]);
-        }
-
-        if (i < 3)
-            *ipbuf++ = '.';
+    table->destinations = realloc(table->destinations, sizeof(struct msu_endpoint) * max_entries);
+    if (table->destinations == NULL){
+        log_error("error allocating table destinations");
+        free(table->ranges);
+        return -1;
     }
-    *ipbuf = '\0';
 
+    table->max_destinations = max_entries;
     return 0;
 }
 
-int string_to_ipv4(const char *ipstr, uint32_t *ip)
-{
-    unsigned char buf[4] = { 0 };
-    int cnt = 0;
-    char p;
+static int find_value_index(struct routing_table *table, uint32_t value){
+    //TODO: Binary search?
+    int i;
+    if (table->n_destinations == 0)
+        return -1;
+    value = value % table->ranges[table->n_destinations-1];
+    for (i=0; i<table->n_destinations; i++){
+        if (table->ranges[i] > value)
+            return i;
+    }
+    return i;
+}
 
-    if (!ipstr || !ip) {
+static int find_id_index(struct routing_table *table, int msu_id){
+    for (int i=0; i<table->n_destinations; i++){
+        if (table->destinations[i].id == msu_id)
+            return i;
+    }
+    return -1;
+}
+
+static struct msu_endpoint *rm_routing_table_entry(struct routing_table *table, int msu_id){
+    write_lock(table);;
+    int index = find_id_index(table, msu_id);
+    if (index == -1){
+        log_error("MSU %d does not exist in specified route", msu_id);
+        unlock(table);
+        return NULL;
+    }
+    struct msu_endpoint *to_remove = &table->destinations[index];
+    for (int i=index; i<table->n_destinations-1; i++){
+        table->ranges[i] = table->ranges[i+1];
+        table->destinations[i] = table->destinations[i+1];
+    }
+    table->n_destinations--;
+    unlock(table);
+    return to_remove;
+}
+
+static int add_routing_table_entry(struct routing_table *table,
+                                   struct msu_endpoint *destination, uint32_t range_end){
+    write_lock(table);
+    if (table->type_id == 0){
+        table->type_id = destination->type_id;
+    }
+
+    if (range_end <= 0){
+        log_error("Cannot add routing table entry with non-positive key %d", range_end);
         return -1;
     }
-    while ((p = *ipstr++) != 0 && cnt < 4) {
-        if (is_digit(p)) {
-            buf[cnt] = (uint8_t) ((10 * buf[cnt]) + (p - '0'));
-        } else if (p == '.') {
-            cnt++;
-        } else {
+
+
+    if (destination->type_id != table->type_id){
+        log_error("Cannot add mixed-types to a single route. "
+                  "Attempting to add %d to route of type %d. ",
+                  destination->type_id, table->type_id);
+        unlock(table);
+        return -1;
+    }
+
+    if (table->n_destinations == table->max_destinations){
+        int rtn = realloc_table_entries(table,
+                table->max_destinations + DEFAULT_MAX_DESTINATIONS);
+        if (rtn < 0){
+            log_error("Could not add new route endpoint");
+            unlock(table);
             return -1;
         }
     }
-    /* Handle short notation */
-    if (cnt == 1) {
-        buf[3] = buf[1];
-        buf[1] = 0;
-        buf[2] = 0;
-    } else if (cnt == 2) {
-        buf[3] = buf[2];
-        buf[2] = 0;
-    } else if (cnt != 3) {
-        /* String could not be parsed, return error */
-        return -1;
+
+    int i;
+    for (i=table->n_destinations; i > 0 && range_end < table->ranges[i-1]; i--) {
+        table->ranges[i] = table->ranges[i-1];
+        table->destinations[i] = table->destinations[i-1];
     }
-
-    *ip = long_from(buf);
-
+    table->ranges[i] = range_end;
+    table->destinations[i] = *destination;
+    table->n_destinations++;
+    unlock(table);
+    log_info("Added destinoation %d to table of type %d", destination->id, table->type_id);
     return 0;
 }
 
-static struct msu_endpoint* add_endpoint_entry(struct msu_endpoint *entries, int id,
-        int msu_type, uint8_t locality, struct generic_msu_queue *next_msu_q_ptr, uint32_t ipv4)
-{
-    //assumption is id's are unique, so if an add call with existing id is given, it will
-    //update the ip of the msu_endpoint
-
-    struct msu_endpoint *entry;
-    HASH_FIND_INT(entries, &id, entry); //msu_type already in a hash?
-    if (entry == NULL) { //See if msu with id already exists, is so then update the entry
-        entry = (struct msu_endpoint*) malloc(sizeof(struct msu_endpoint));
-        entry->id = id;
-        HASH_ADD_INT(entries, id, entry);
+static int alter_routing_table_entry(struct routing_table *table,
+                                     int msu_id, uint32_t new_range_end){
+    struct msu_endpoint *endpoint = rm_routing_table_entry(table, msu_id);
+    if (endpoint == NULL){
+        return -1;
     }
-    entry->msu_type = msu_type;
-    entry->locality = locality;
-    entry->next_msu_input_queue = next_msu_q_ptr;
-    entry->ipv4= ipv4;
-    return entries;
+    return add_routing_table_entry(table, endpoint, new_range_end);
 }
 
-static struct msu_endpoint* del_endpoint_entry(struct msu_endpoint *entries,
-        int id)
-{
-    struct msu_endpoint *endpoint;
-    HASH_FIND_INT(entries, &id, endpoint); //msu_type already in a hash?
-    if(endpoint != NULL){
-        HASH_DEL(entries, endpoint);
-        free(endpoint);
+static struct routing_table *init_routing_table(){
+    struct routing_table *table = malloc(sizeof(*table));
+    if (table == NULL){
+        log_error("Error allocating routing table");
+        return NULL;
     }
-    return entries;
+    table->type_id = 0;
+    table->n_refs = 0;
+    table->n_destinations = 0;
+    table->max_destinations = 0;
+    table->ranges = NULL;
+    table->destinations = NULL;
+    pthread_rwlock_init(&table->rwlock, NULL);
+
+    int rtn = realloc_table_entries(table, DEFAULT_MAX_DESTINATIONS);
+    if (rtn < 0){
+        log_error("Error allocating table entry");
+        free(table);
+        return NULL;
+    }
+
+    return table;
 }
 
-static struct msu_endpoint* del_all_endpoint_entries(struct msu_endpoint *entries)
-{
-    struct msu_endpoint *cur, *tmp;
-    HASH_ITER(hh, entries, cur, tmp)
-    {
-        printf("HASH_ITER Loop\n");
-        HASH_DEL(entries, cur);
-        free(cur);
+static struct routing_table *get_routing_table(int route_id){
+    struct route_set *route = NULL;
+    HASH_FIND_INT(all_routes, &route_id, route);
+    if (route == NULL){
+        log_debug("Creating new routing table (id = %d)", route_id);
+        route = malloc(sizeof(*route));
+        if (route == NULL){
+            log_error("Error allocating new routing table");
+            return NULL;
+        }
+        route->id = route_id;
+        route->table = init_routing_table();
+        if (route->table == NULL){
+            log_error("Error creating routing table");
+            free(route);
+            return NULL;
+        }
+        ++route->table->n_refs;
+        HASH_ADD_INT(all_routes, id, route);
     }
-    return entries;
+    return route->table;
 }
 
-static void print_endpoints(struct msu_endpoint *entries)
-{
-    struct msu_endpoint *tmp;
-    char ip[30];
-    for (tmp = entries; tmp != NULL; tmp =
-            (struct msu_endpoint*) (tmp->hh.next)) {
-        memset(ip, 0, 30);
-        ipv4_to_string(ip, tmp->ipv4);
-        log_debug("\tMSU_TYPE: %d MSU_ID: %d: Locality: %u next_queue at : %p IP: %s", tmp->msu_type, tmp->id,
-        		tmp->locality, tmp->next_msu_input_queue, ip);
+int init_route(int route_id, int type_id){
+    struct routing_table *table = get_routing_table(route_id);
+    if (table->type_id == 0){
+        table->type_id = type_id;
+        log_debug("Set type of route %d to %d", route_id, type_id);
     }
+    if (table->type_id != 0 && table->type_id != type_id){
+        log_warn("Type ID of route %d is %d, not %d", route_id, type_id, table->type_id);
+        return -1;
+    }
+    return 0;
 }
 
-struct msu_routing_table * add_routing_table_entry(struct msu_routing_table* rt_table, unsigned int msu_type,
-        struct msu_endpoint* entry)
-{
-    // add an endpoint of type msu_type to msu's routing table rt_table
-    struct msu_routing_table *tmp;
-    if (entry != NULL && msu_type != entry->msu_type) {
-        log_error("msu_type mismatch..not adding routing table entry%s","");
-        return rt_table;
-    }
-    HASH_FIND_INT(rt_table, &msu_type, tmp); //msu_type already in a hash?
-    if (tmp == NULL) {
-        tmp = (struct msu_routing_table*) malloc(
-                sizeof(struct msu_routing_table));
-        tmp->msu_type = msu_type;
-        HASH_ADD_INT(rt_table, msu_type, tmp);
-        tmp->entries = NULL; //initialize hashtable for msu endpoints
+struct msu_endpoint *get_shortest_queue_endpoint(struct route_set *routes, uint32_t key){
+    struct routing_table *table = routes->table;
+    read_lock(table);
+    struct msu_endpoint *msu = NULL;
+
+    unsigned int shortest_queue = MAX_MSU_Q_SIZE;
+    int n_shortest = 0;
+    struct msu_endpoint *best_endpoints[table->n_destinations];
+
+    for (int i=0; i<table->n_destinations; i++){
+        if ( table->destinations[i].locality == MSU_IS_REMOTE ) {
+            continue;
+        }
+        int length = table->destinations[i].msu_queue->num_msgs;
+        if (length < shortest_queue ) {
+            best_endpoints[0] = &table->destinations[i];
+            shortest_queue = length;
+            n_shortest = 1;
+        } else if (length == shortest_queue ){
+            best_endpoints[n_shortest] = &table->destinations[i];
+            n_shortest++;
+        }
     }
 
-    tmp->entries = add_endpoint_entry(tmp->entries, entry->id, msu_type, entry->locality, entry->next_msu_input_queue, entry->ipv4);
-    return rt_table;
+    struct msu_endpoint *best_endpoint = best_endpoints[key % (int)n_shortest];
+
+    unlock(table);
+    return best_endpoint;
 }
 
-struct msu_routing_table * del_routing_table_entry(struct msu_routing_table* rt_table, unsigned int msu_type,
-        struct msu_endpoint* entry)
-{
-    // del given endpoint of type msu_type from msu's routing routing table rt_table
-    struct msu_routing_table *tmp;
-    if (msu_type != entry->msu_type) {
-        log_error("msu_type mismatch..not deleting routing table entry%s","");
-        return rt_table;
+struct msu_endpoint *get_endpoint_by_index(struct route_set *routes, int index){
+    struct routing_table *table = routes->table;
+    read_lock(table);
+    struct msu_endpoint *msu = NULL;
+    if (table->n_destinations > index) {
+        msu = &table->destinations[index];
     }
-    HASH_FIND_INT(rt_table, &msu_type, tmp);
-    if (tmp != NULL) {
-        log_debug("%s","Found msu_type key...");
-        log_debug("For type: %d, before del_endpoint_entry tmp->entries = %p\n", msu_type, tmp->entries);
-        tmp->entries = del_endpoint_entry(tmp->entries, entry->id);
+    unlock(table);
+    return msu;
+}
+
+struct msu_endpoint *get_endpoint_by_id(struct route_set *routes, int msu_id){
+    struct routing_table *table = routes->table;
+    read_lock(table);
+    struct msu_endpoint *msu = NULL;
+    for (int i=0; i<table->n_destinations; i++){
+        if (table->destinations[i].id == msu_id){
+            msu = &table->destinations[i];
+            break;
+        }
+    }
+    unlock(table);
+    return msu;
+}
+
+struct generic_msu_queue *get_msu_queue(int msu_id, int msu_type_id){
+    struct msu_placement_tracker *tracker= msu_tracker_find(msu_id);
+    if (!tracker){
+        log_error("Couldn't find msu tracker for MSU %d", msu_id);
+        return NULL;
+    }
+
+    struct generic_msu *msu = dedos_msu_pool_find(tracker->dedos_thread->msu_pool,
+                                                  msu_id);
+    if (!msu){
+        log_error("Failed to get ptr to MSU %d from msu pool", msu_id);
+        return NULL;
+    }
+
+    if (msu->type->type_id != msu_type_id){
+        log_error("Found msu with matching ID %d but mismatching types %d!=%d",
+                  msu_id, msu_type_id, msu->type->type_id);
+        return NULL;
+    }
+    return &msu->q_in;
+}
+
+
+struct msu_endpoint *get_route_endpoint(struct route_set *routes, uint32_t key){
+    struct routing_table *table = routes->table;
+    read_lock(table);
+    int index = find_value_index(table, key);
+    if (index < 0){
+        log_error("Could not find index for key %d", key);
+        unlock(table);
+        return NULL;
+    }
+    struct msu_endpoint *endpoint = &table->destinations[index];
+    log_debug("Endpoint for key %u is %d", key, endpoint->id);
+    unlock(table);
+    return endpoint;
+}
+
+struct route_set *init_route_set(int route_id){
+    struct routing_table *table = get_routing_table(route_id);
+    if (table == NULL){
+        log_error("Error getting routing table");
+        return NULL;
+    }
+    struct route_set *route = malloc(sizeof(*route));
+    if (route == NULL){
+        log_error("Error allocating new route set");
+        return NULL;
+    }
+    route->table = table;
+    write_lock(table);
+    ++(route->table->n_refs);
+    unlock(table);
+    return route;
+}
+
+void destroy_route_set(struct route_set *route){
+    struct routing_table *table = route->table;
+    write_lock(table);
+    --(table->n_refs);
+    free(route);
+    unlock(table);
+}
+
+int add_route_to_set(struct route_set **routes, int route_id){
+    // Get the existing route  so we can get the type id
+    struct route_set *route = init_route_set(route_id);
+    if (route == NULL){
+        log_error("Cannot add route %d -- route does not exist", route_id);
+        return -1;
+    }
+
+    // Modify the route ID to match the type ID
+    route->id = route->table->type_id;
+
+    // See if a route of that type already exists in the set
+    struct route_set *existing_route = NULL;
+    HASH_FIND_INT(*routes, &route->id, existing_route);
+    if (existing_route == NULL) {
+        HASH_ADD_INT(*routes, id, route);
+        log_debug("Added route %d (type %d) to set", route_id, route->id);
     } else {
-        log_warn("No entry in routing table for msu_type: %u", msu_type);
+        log_error("Could not add route %d -- route with id %d already exists in set",
+                  route_id, route->id);
+        destroy_route_set(route);
+        return -1;
     }
-    return rt_table;
+    return 0;
 }
 
-struct msu_routing_table * flush_routing_table_entries(struct msu_routing_table* rt_table,
-        int msu_type)
-{
-    // delete all msu_endpoint entries for type msu_type from routing table rt_table
-    struct msu_routing_table *tmp;
-    HASH_FIND_INT(rt_table, &msu_type, tmp);
-    if (tmp != NULL) {
-        tmp->entries = del_all_endpoint_entries(tmp->entries);
-    } else {
-        log_warn("No entry in routing table for msu_type: %u", msu_type);
+int del_route_from_set(struct route_set **routes, int route_id){
+    // First find it in the global table so we can get type id
+    struct route_set *route = NULL;
+    HASH_FIND_INT(all_routes, &route_id, route);
+    if (route == NULL){
+        log_debug("Could not delete route %d -- route does not exist", route_id);
+        return -1;
     }
-    return rt_table;
+    int type_id = route->table->type_id;
+
+    // Now get it from the passed in route set
+    HASH_FIND_INT(*routes, &type_id, route);
+    if (route == NULL){
+        log_debug("Could not delete route %d -- route not in route set", route_id);
+        return -1;
+    }
+
+    HASH_DEL(*routes, route);
+    destroy_route_set(route);
+    log_debug("Removed route %d from set", route_id);
+    return 0;
 }
 
-struct msu_routing_table * del_msu_type_entries(struct msu_routing_table *rt_table, int msu_type)
-{
-    // delete all entries and key for msu_type
-    flush_routing_table_entries(rt_table, msu_type);
-    struct msu_routing_table *tmp;
-    HASH_FIND_INT(rt_table, &msu_type, tmp);
-    if (tmp != NULL) {
-        HASH_DEL(rt_table, tmp);
-        free(tmp);
-    } else {
-        log_warn("No entry in routing table for msu_type: %u", msu_type);
+struct route_set *get_type_from_route_set(struct route_set **routes, int type_id){
+    struct route_set *type_set = NULL;
+    HASH_FIND_INT(*routes, &type_id, type_set);
+    if (type_set == NULL){
+        log_error("No routes available of type %d", type_id);
+        for (struct route_set *route = *routes; route != NULL; route=route->hh.next)
+            log_debug("Available: %d", route->id);
+        return NULL;
     }
-    return rt_table;
+    return type_set;
 }
 
-struct msu_routing_table * destroy_routing_table(struct msu_routing_table* rt_table)
-{
-    struct msu_routing_table *cur, *tmp;
-    HASH_ITER(hh, rt_table, cur, tmp)
-    {
-        rt_table = flush_routing_table_entries(rt_table, cur->msu_type);
-        HASH_DEL(rt_table, cur);
-        free(cur);
-        print_routing_table(rt_table);
-    }
-    print_routing_table(rt_table);
-    return rt_table;
+int add_route_endpoint(int route_id, struct msu_endpoint *endpoint, uint32_t range_end){
+    struct routing_table *table = get_routing_table(route_id);
+    return add_routing_table_entry(table, endpoint, range_end);
 }
 
-void print_routing_table(struct msu_routing_table *rt_table)
-{
-	log_info("Routing table------>%s","");
-    struct msu_routing_table *tmp;
-    for (tmp = rt_table; tmp != NULL;
-            tmp = (struct msu_routing_table*) (tmp->hh.next)) {
-        log_info("MSU_TYPE: %d", tmp->msu_type);
-        // log_info("tmp->entries = %p", tmp->entries);
-        if(tmp->entries){
-            print_endpoints(tmp->entries);
+int remove_route_destination(int route_id, int msu_id){
+    struct routing_table *table = get_routing_table(route_id);
+    struct msu_endpoint *endpoint = rm_routing_table_entry(table, msu_id);
+    if (endpoint == NULL){
+        log_error("Error removing msu %d from route %d", msu_id, route_id);
+        return -1;
+    }
+    free(endpoint);
+    return 0;
+}
+
+
+void remove_destination_from_all_routes(int msu_id){
+    // TODO: This is slow. Should only care about routes we're interested in
+    for (struct route_set *ref = all_routes; ref != NULL; ref=ref->hh.next){
+
+        struct msu_endpoint *endpoint = rm_routing_table_entry(ref->table, msu_id);
+        if (endpoint != NULL){
+            free(endpoint);
         }
     }
 }
 
-
-struct msu_endpoint *get_all_type_msus(struct msu_routing_table *rt_table, unsigned int msu_type)
-{
-    struct msu_routing_table *tmp;
-    HASH_FIND_INT(rt_table, &msu_type, tmp);
-    if (tmp != NULL) {
-       return tmp->entries;
-    } else {
-        log_warn("No entry in routing table for msu_type: %u", msu_type);
-        return NULL;
+int modify_route_key_range(int route_id, int msu_id, uint32_t new_range_end){
+    struct routing_table *table = get_routing_table(route_id);
+    int rtn = alter_routing_table_entry(table, msu_id, new_range_end);
+    if (rtn < 0){
+        log_error("Error altering routing for msu %d on route %d", msu_id, route_id);
+        return -1;
     }
-}
-
-struct msu_endpoint *get_msu_from_id(struct msu_endpoint *entries, int msu_id){
-    struct msu_endpoint *tmp;
-    HASH_FIND_INT(entries, &msu_id, tmp);
-    if (tmp != NULL) {
-       return tmp;
-    } else {
-        log_warn("No entry in routing table for msu_id: %d", msu_id);
-        return NULL;
-    }
-}
-
-/* Helper functions to call from MSU's to update the routing table */
-static struct generic_msu_queue *get_input_queue_ptr(int msu_id, unsigned int msu_type){
-	struct msu_placement_tracker *tracker;
-	struct generic_msu *next_msu;
-	tracker = NULL;
-	next_msu = NULL;
-
-	//first get dedos_thread_ptr from msu_placements
-	tracker = msu_tracker_find(msu_id);
-	if(!tracker){
-		log_error("Couldn't find the msu_tracker for getting to thread with MSU %d", msu_id);
-		return NULL;
-	}
-	//then ask the thread's msu pool to get a pointer to the msu
-	next_msu = dedos_msu_pool_find(tracker->dedos_thread->msu_pool, msu_id);
-	if(!next_msu){
-       log_error("Failed to get ptr to next MSU (%d) from msu_pool", msu_id);
-		return NULL;
-	}
-	if(next_msu->type->type_id != msu_type){
-		log_error("Found msu with matching IDs %d=%d but mismatching types %u != %u",
-				msu_id, next_msu->id, msu_type, next_msu->type->type_id);
-		return NULL;
-	}
-	return &next_msu->q_in;
-}
-
-int is_endpoint_local(struct msu_endpoint *msu_endpoint){
-    if(msu_endpoint->locality == MSU_LOC_SAME_RUNTIME){
-    	return 0;
-    }
-    return 1;
-}
-
-struct msu_routing_table* do_add_route_update(struct msu_routing_table *rt_table, struct msu_control_add_route *add_route_update){
-
-	//create and fill msu_endpoint struct
-    struct msu_endpoint add_entry;
-    add_entry.id = add_route_update->peer_msu_id;
-    add_entry.msu_type = add_route_update->peer_msu_type;
-    add_entry.locality = add_route_update->peer_locality;
-    add_entry.next_msu_input_queue = NULL;
-	add_entry.ipv4 = 0;
-
-    //now based on locality either find the ref to queue to next msu or just populate the ipv4 addr
-    if(add_entry.locality == MSU_LOC_SAME_RUNTIME){
-    	log_debug("Same locality for next msu, finding queue ptr to it %s","");
-    	add_entry.next_msu_input_queue = get_input_queue_ptr(add_entry.id, add_entry.msu_type);
-    	if(add_entry.next_msu_input_queue == NULL){
-    		log_error("Unable to get next msu queue ptr ref %s","");
-    		goto err;
-    	}
-    }
-    else if(add_entry.locality == MSU_LOC_REMOTE_RUNTIME){
-    	log_debug("Remote locality for next msu, adding remote ip %s","");
-    	if(add_route_update->peer_ipv4 == 0){
-    		log_error("peer ip is 0 for remote locality! %s","");
-    		goto err;
-    	}
-    	add_entry.ipv4 = add_route_update->peer_ipv4;
-    }
-    else{
-    	log_error("Unknown locality %u",add_entry.locality);
-    	goto err;
-    }
-
-    rt_table = add_routing_table_entry(rt_table, add_route_update->peer_msu_type, &add_entry);
-    log_debug("Added routing table entry for peer msu: %d",add_entry.id);
-    print_routing_table(rt_table);
-
-	return rt_table;
-err:
-	log_error("Failed to do route_update %s","");
-	return NULL;
-}
-
-struct msu_routing_table* do_del_route_update(struct msu_routing_table *rt_table, struct msu_control_del_route *del_route_update){
-
-	//create and fill msu_endpoint struct
-    struct msu_endpoint del_entry;
-    del_entry.id = del_route_update->peer_msu_id;
-    del_entry.msu_type = del_route_update->peer_msu_type;
-    del_entry.locality = del_route_update->peer_locality;
-    del_entry.next_msu_input_queue = NULL;
-    del_entry.ipv4= 0;
-
-    //now based on locality either find the ref to queue to next msu or just populate the ipv4 addr
-    if(del_entry.locality == MSU_LOC_SAME_RUNTIME){
-    	log_debug("Same locality for next msu, finding queue ptr to it %s","");
-    	del_entry.next_msu_input_queue = get_input_queue_ptr(del_entry.id, del_entry.msu_type);
-    	if(del_entry.next_msu_input_queue == NULL){
-    		log_error("Unable to get next msu queue ptr ref %s","");
-    		goto err;
-    	}
-    }
-    else if(del_entry.locality == MSU_LOC_REMOTE_RUNTIME){
-    	log_debug("Remote locality for next msu, adding remote ip %s","");
-    	if(del_route_update->peer_ipv4 == 0){
-    		log_error("peer ip is 0 for remote locality! %s","");
-    		goto err;
-    	}
-    	del_entry.ipv4= del_route_update->peer_ipv4;
-    }
-    else{
-    	log_error("ERROR: Unknown locality %u",del_entry.locality);
-    	goto err;
-    }
-
-    rt_table = del_routing_table_entry(rt_table, del_route_update->peer_msu_type, &del_entry);
-    log_debug("Deleted routing table entry for peer msu: %d",del_entry.id);
-    print_routing_table(rt_table);
-
-	return rt_table;
-err:
-	log_error("Failed to do route_update %s","");
-	return NULL;
-
-}
-
-void free_msu_control_update(struct msu_control_update *update_msg){
-
-	if(update_msg->payload){
-		free(update_msg->payload);
-	}
-	free(update_msg);
-}
-
-struct msu_routing_table *handle_routing_table_update(struct msu_routing_table *rt_table, struct msu_control_update *update_msg){
-	struct msu_control_add_route *add_update;
-	struct msu_control_del_route *del_update;
-	struct msu_routing_table *tmp_rt;
-
-	add_update = NULL;
-	del_update = NULL;
-
-	//add or delete routing table entry could be the update_type
-	if(update_msg->update_type == MSU_ROUTE_ADD){
-		add_update = (struct msu_control_add_route*)update_msg->payload;
-		tmp_rt = do_add_route_update(rt_table, add_update);
-		if(tmp_rt != NULL){
-			// this of the case when first entry is added, but works with all
-			rt_table = tmp_rt;
-		}
-	}
-	else if(update_msg->update_type == MSU_ROUTE_DEL){
-		del_update = (struct msu_control_del_route*)update_msg->payload;
-		tmp_rt = do_del_route_update(rt_table, del_update);
-		if (tmp_rt != NULL) {
-			// this of the case when last entry is removed, but works with all
-			rt_table = tmp_rt;
-		}
-	}
-	return rt_table;
+    return 0;
 }

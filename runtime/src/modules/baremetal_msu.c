@@ -35,7 +35,7 @@
 static int baremetal_deserialize(struct generic_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
     if (self){
-        msu_queue_item *recvd =  malloc(sizeof(*recvd));
+        struct generic_msu_queue_item *recvd =  malloc(sizeof(*recvd));
         if (!(recvd)){
             log_error("Could not allocate msu_queue_item");
             return -1;
@@ -144,7 +144,7 @@ static void baremetal_remove_socket_poll(struct generic_msu* self, int socketfd)
  * @param input_data contains a baremetal_msu_data_payload* in input_data->buffer
  * @return ID of next MSU-type to receive data, or -1 on error
  */
-int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
+int baremetal_receive(struct generic_msu *self, struct generic_msu_queue_item *input_data) {
     int ret;
     if (self && input_data) {
         struct baremetal_msu_data_payload *baremetal_data =
@@ -181,8 +181,8 @@ int baremetal_receive(struct generic_msu *self, msu_queue_item *input_data) {
             //Maybe check that if my routing table is empty for next type,
             //that means I am the last sink MSU and should send out the final response?
             struct msu_type *type = &BAREMETAL_MSU_TYPE;
-            struct msu_endpoint *dst = get_all_type_msus(self->rt_table, type->type_id);
-            if (dst == NULL){
+            //struct msu_endpoint *dst = get_all_type_msus(self->rt_table, type->type_id);
+            if (self->routes == NULL){
                 log_debug("EXIT: No destination endpoint of type %s (%d) for msu %d so an exit!",
                       type->name, type->type_id, self->id);
                 //Send call
@@ -325,7 +325,7 @@ static int baremetal_init_initial_state(struct generic_msu *self){
  * @return 0 on success, or -1 on error
  */
 int baremetal_msu_init_entry(struct generic_msu *self,
-        struct create_msu_thread_msg_data *create_action)
+        struct create_msu_thread_data *create_action)
 {
     /* any other internal state that MSU needs to maintain */
     //For routing MSU the internal state will be the chord ring
@@ -371,7 +371,7 @@ const struct msu_type BAREMETAL_MSU_TYPE = {
     .destroy=baremetal_msu_destroy_entry,
     .receive=baremetal_receive,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=default_routing,
     .deserialize=baremetal_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,

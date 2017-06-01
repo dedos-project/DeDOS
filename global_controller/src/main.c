@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <pthread.h>
 #include <string.h>
 #include "logging.h"
@@ -8,6 +9,7 @@
 #include "cli_interface.h"
 #include "scheduling.h"
 #include "dfg.h"
+#include "dfg_reader.h"
 
 #define FILENAME_LEN 32
 
@@ -41,7 +43,11 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    do_dfg_config(filename);
+    int rtn = load_dfg_from_file(filename);
+    if (rtn < 0){
+        log_error("Error loading dfg!");
+        return -1;
+    }
 
     start_cli_thread(&cli_thread);
     start_communication(tcp_control_listen_port);

@@ -126,46 +126,44 @@ int msu_type_by_id_corrected(unsigned int type_id, struct msu_type **type){
  * @param queue_item control queue message
  * @return 0 on success, -1 on error
  */
-int msu_receive_ctrl(struct generic_msu *self, msu_queue_item *queue_item){
-    struct msu_control_update *update_msg = queue_item->buffer;
+int msu_receive_ctrl(struct generic_msu *self, struct generic_msu_queue_item *queue_item){
+    struct msu_action_thread_data *update = queue_item->buffer;
+
     int rtn = 0;
-    if (self->id != update_msg->msu_id){
-        log_error("ERROR: MSU %d got updated destined for MSU %d", self->id, update_msg->msu_id);
+    if (self->id != update->msu_id){
+        log_error("ERROR: MSU %d got updated destined for MSU %d", self->id, update->msu_id);
         rtn = -1;
     } else {
-        log_debug("MSU %d got update with type %u", self->id, update_msg->update_type);
-        int handled = 0;
-        if (update_msg->update_type == MSU_ROUTE_ADD || update_msg->update_type == MSU_ROUTE_DEL){
-            int first_entry = (self->rt_table == NULL);
-            self->rt_table = handle_routing_table_update(self->rt_table, update_msg);
-            handled = 1;
-            if (!first_entry){
-                if (update_msg->update_type == MSU_ROUTE_ADD){
-                    self->scheduling_weight++;
-                } else {
-                    self->scheduling_weight--;
-                    if (self->scheduling_weight == 0){
-                        self->scheduling_weight = 1;
-                    }
-                }
-            }
-            log_info("MSU %d now has a scheduling weight of %d", self->id, self->scheduling_weight);
+
+        log_debug("MSU %d got update with type %u", self->id, update->action);
+        int error = 0;
+        switch(update->action){
+            case ADD_ROUTE_TO_MSU:
+                error = add_route_to_set(&self->routes, update->route_id);
+                if ( error )
+                    log_error("Error adding route to MSU %d", self->id);
+                break;
+            case DEL_ROUTE_FROM_MSU:
+                error = del_route_from_set(&self->routes, update->route_id);
+                if ( error )
+                    log_error("Error removing route from MSU %d", self->id);
+                break;
+            default:
+                error = -1;
         }
         if (self->type->receive_ctrl){
-            handled = (self->type->receive_ctrl(self, update_msg)) == 0;
+            error = (self->type->receive_ctrl(self, update)) == 0;
         }
-
-        if (!handled){
-            log_error("Unknown update msg type %u received by MSU %d",
-                    update_msg->update_type, self->id);
-            rtn = -1;
+        if (error){
+            log_error("Error handling update type %u in MSU %d",
+                    update->action, self->id);
         }
     }
 
-    free_msu_control_update(update_msg);
+    free(update);
     free(queue_item);
     log_debug("Freed update_msg and control_q_item %s","");
-    return rtn;
+    return error;
 }
 
 /**
@@ -307,7 +305,7 @@ int msu_failure(int msu_id){
  * @return initialized MSU or NULL if error occurred
  */
 struct generic_msu *init_msu(unsigned int type_id, int msu_id,
-                struct create_msu_thread_msg_data *create_action){
+                             struct create_msu_thread_data *create_action){
     if (type_id < 1){
         return NULL;
     }
@@ -315,7 +313,7 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
     struct generic_msu *msu = msu_alloc();
     msu->id = msu_id;
     msu->type = msu_type_by_id(type_id);
-    msu->data_p->data = create_action->creation_init_data;
+    msu->data_p->data = create_action->init_data;
 
     // TODO: queue_ws, msu_ws, what????
 
@@ -342,7 +340,7 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
         }
     }
     log_info("Created %s MSU: id %d", msu->type->name, msu_id);
-    msu->rt_table = NULL;
+    msu->routes = NULL;
     msu->scheduling_weight = 1;
     msu->routing_state = NULL;
     return msu;
@@ -378,11 +376,12 @@ void destroy_msu(struct generic_msu *msu)
 int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
     if (self){
-        msu_queue_item *recvd =  malloc(sizeof(*recvd));
+        struct generic_msu_queue_item *recvd =  malloc(sizeof(*recvd));
         if (!(recvd))
             return -1;
         recvd->buffer_len = bufsize;
         recvd->buffer = malloc(bufsize);
+        recvd->id = msg->data_id;
         if (!(recvd->buffer)){
             free(recvd);
             return -1;
@@ -392,6 +391,14 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
         return 0;
     }
     return -1;
+}
+
+uint32_t default_generate_id(struct generic_msu *self,
+                             struct generic_msu_queue_item *queue_item){
+    int len = queue_item->buffer_len < 96 ? queue_item->buffer_len : 96;
+    uint32_t id;
+    HASH_VALUE(queue_item->buffer, len, id);
+    return id;
 }
 
 /** Serializes the data of an msu_queue_item and sends it
@@ -408,7 +415,7 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
  * @param dst MSU destination to receive the message
  * @return -1 on error, >=0 on success
  */
-int default_send_remote(struct generic_msu *src, msu_queue_item *data,
+int default_send_remote(struct generic_msu *src, struct generic_msu_queue_item *data,
                         struct msu_endpoint *dst){
     struct dedos_intermsu_message *msg = malloc(sizeof(*msg));
     if (!msg){
@@ -418,6 +425,7 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
 
     msg->dst_msu_id = dst->id;
     msg->src_msu_id = src->id;
+    msg->data_id = data->id;
 
     // TODO: Is this next line right? src->proto_number?
     msg->proto_msg_type = src->type->proto_number;
@@ -478,10 +486,10 @@ int default_send_remote(struct generic_msu *src, msu_queue_item *data,
  * @param dst MSU receiving the data
  * @return 0 on success, -1 on error
  */
-int default_send_local(struct generic_msu *src, msu_queue_item *data,
+int default_send_local(struct generic_msu *src, struct generic_msu_queue_item *data,
                        struct msu_endpoint *dst){
     log_debug("Enqueuing locally to dst with id%d", dst->id);
-    return generic_msu_queue_enqueue(dst->next_msu_input_queue, data);
+    return generic_msu_queue_enqueue(dst->msu_queue, data);
 }
 
 struct round_robin_hh_key{
@@ -489,105 +497,30 @@ struct round_robin_hh_key{
     uint32_t ip_address;
 };
 
-/**
- * Simple structure to store an MSUs routing state when using
- * the round-robin routing method.
- * Will soon be replaced by routing object and hash-based method
- */
-struct round_robin_state {
-    struct round_robin_hh_key id; /**< ID of the type stored in this element in the struct */
-    struct msu_endpoint *last_endpoint; /**< Last endpoint of that type that was sent to */
-    UT_hash_handle hh; /**< Hash-handle */
-};
-
 /** Chooses the destination with the shortest queue length.
  * NOTE: Destination must be local in order to be chosen
  */
 struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_msu *sender,
-                                    msu_queue_item *data) {
-    struct msu_endpoint *dst_msu =
-        get_all_type_msus(sender->rt_table, type->type_id);
-
-    if ( !dst_msu ) {
-        log_error("Source MSU %d did not find target MSU of type %d",
-                  sender->id, type->type_id);
-        return NULL;
-    }
-
-    unsigned int shortest_queue = MAX_MSU_Q_SIZE;
-    struct msu_endpoint *best_endpoint = NULL;
-
-    while ( dst_msu != NULL ) {
-        if ( dst_msu->locality == MSU_LOC_REMOTE_RUNTIME ){
-            dst_msu = dst_msu->hh.next;
-            continue;
-        }
-        int length = dst_msu->next_msu_input_queue->num_msgs;
-        if ( length < shortest_queue ) {
-            shortest_queue = length;
-            best_endpoint = dst_msu;
-        }
-        dst_msu = dst_msu->hh.next;
-    }
-
+                                    struct generic_msu_queue_item *data) {
+    struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
+    struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(type_set, data->id);
     if ( best_endpoint == NULL ){
         log_error("Cannot enqueue to shortest-length queue when all destinations are remote");
     }
     return best_endpoint;
 }
 
-/** Routing function to deliver traffic to a set of MSUs.
- * TODO: This will soon be moved to a "router" object, instead of
- * being handled by the destination type.
- *
- * @param type msu_type to be delivered to
- * @param sender msu sending the data
- * @param data queue item to be delivered
- * @return msu to which the message is to be enqueued, or NULL if no MSU could be found
- */
-struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *sender,
-                                 msu_queue_item *data){
-    struct msu_endpoint *dst_msus =
-        get_all_type_msus(sender->rt_table, type->type_id);
+struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *sender,
+                                     struct generic_msu_queue_item *data){
+    struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
 
-    if (! (dst_msus) ){
-        log_error("Source MSU %d did not find target MSU of type %d",
+    if (type_set == NULL){
+        log_error("No routes available from msu %d to type %d",
                   sender->id, type->type_id);
         return NULL;
     }
-
-    struct round_robin_hh_key key = {type->type_id, 0};
-
-    struct round_robin_state *all_states =
-            (struct round_robin_state *)sender->routing_state;
-    struct round_robin_state *route_state = NULL;
-    HASH_FIND(hh, all_states, &key, sizeof(key), route_state);
-
-    // Routing hasn't been initialized yet, so choose a semi-random
-    // starting point
-    if (route_state == NULL){
-        log_debug("Creating new routing state for type %d from msu %d",
-                  type->type_id, sender->id);
-        struct msu_endpoint *last_endpoint = dst_msus;
-        // TODO: Need to free when freeing msu!
-        route_state = malloc(sizeof(*route_state));
-        for (int i=0; i< (sender->id) % HASH_COUNT(dst_msus); i++){
-            last_endpoint = last_endpoint->hh.next;
-            if (! last_endpoint)
-                last_endpoint = dst_msus;
-        }
-        route_state->id = key;
-        route_state->last_endpoint = last_endpoint;
-        HASH_ADD(hh, all_states, id, sizeof(key), route_state);
-        sender->routing_state = (void*)all_states;
-    }
-
-    // Get the next endpoint of the same type, and replace the current one with it
-    route_state->last_endpoint = route_state->last_endpoint->hh.next;
-    // If it's null, just get the first endpoint
-    if (! route_state->last_endpoint)
-       route_state->last_endpoint = dst_msus;
-    return route_state->last_endpoint;
+    struct msu_endpoint *destination = get_route_endpoint(type_set, data->id);
+    return destination;
 }
 
 /** Calls typical round_robin routing iteratively until it gets a destination
@@ -614,65 +547,42 @@ struct msu_endpoint *round_robin(struct msu_type *type, struct generic_msu *send
  */
 struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic_msu *sender,
                                            uint32_t ip_address){
-    struct msu_endpoint *dst_msus =
-        get_all_type_msus(sender->rt_table, type->type_id);
 
-    if (! (dst_msus) ){
-        log_error("Source MSU %d did not find target MSU of type %d",
-                  sender->id, type->type_id);
-        return NULL;
-    }
+    struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
+    int previous_index = (intptr_t)sender->routing_state;
+    int new_index = previous_index++;
 
-    struct round_robin_hh_key key = {type->type_id, ip_address};
+    int was_null = 0;
 
-    struct round_robin_state *all_states =
-            (struct round_robin_state *)sender->routing_state;
-    struct round_robin_state *route_state = NULL;
-    HASH_FIND(hh, all_states, &key, sizeof(key), route_state);
+    struct msu_endpoint *dst;
 
-    // Routing hasn't been initialized yet, so choose a semi-random
-    // starting point
-    if (route_state == NULL){
-        log_debug("Creating new routing state for type %d from msu %d",
-                  type->type_id, sender->id);
-        struct msu_endpoint *last_endpoint = dst_msus;
-        // TODO: Need to free when freeing msu!
-        route_state = malloc(sizeof(*route_state));
-        for (int i=0; i< (sender->id) % HASH_COUNT(dst_msus); i++){
-            last_endpoint = last_endpoint->hh.next;
-            if (! last_endpoint)
-                last_endpoint = dst_msus;
-        }
-        route_state->id = key;
-        route_state->last_endpoint = last_endpoint;
-        HASH_ADD(hh, all_states, id, sizeof(key), route_state);
-        sender->routing_state = (void*)all_states;
-    }
-
-    // Now loop over until you find an MSU with the right IP
-    for (int i=0; i<HASH_COUNT(dst_msus); i++){
-        // Get the next endpoint of the same type, and replace the current one with it
-        route_state->last_endpoint = route_state->last_endpoint->hh.next;
-        // If it's null, just get the first endpoint
-        if (! route_state->last_endpoint)
-           route_state->last_endpoint = dst_msus;
-
-        if (route_state->last_endpoint->ipv4 == ip_address){
+    while ( 1 ) {
+        dst = get_endpoint_by_index(type_set, new_index);
+        if ( dst == NULL ){
+            if (was_null){
+                break;
+            } else {
+                was_null = 1;
+                new_index = 0;
+            }
+        } else if ( dst->ipv4 == ip_address || (dst->locality == MSU_IS_LOCAL && ip_address == 0)) {
             break;
         } else {
-            log_debug("IP %d is not %d", route_state->last_endpoint->ipv4, ip_address);
+            new_index++;
         }
     }
 
-    if ( route_state->last_endpoint->ipv4 != ip_address){
-        log_error("Could not find destination of type %d with correct ip from sender %d",
-                type->type_id, sender->id);
+    if ( dst == NULL ){
+        log_error("Could not find destination of type %d with correct ip (%d) from sender %d",
+                type->type_id, ip_address, sender->id);
         return NULL;
     }
-    return route_state->last_endpoint;
+
+    sender->routing_state = (intptr_t)new_index;
+    return dst;
 }
 
-/** Picks the next endpoing in a RR fashion while considering 4 tuple. This is to
+/* Picks the next endpoing in a RR fashion while considering 4 tuple. This is to
 * ensure that items for the same flow are sent to same destination
 *
 * TODO: Soon to be handled by router object.
@@ -684,7 +594,7 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
 * @param destination ip of data frame
 * @param destination port of data frame
 * @return msu_endpoint or NULL
-*/
+*
 struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct generic_msu *sender,
                                     uint32_t src_addr, uint16_t src_port,
                                     uint32_t dst_addr, uint16_t dst_port){
@@ -703,7 +613,15 @@ struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct g
 
     return dst;
 }
+*/
 
+struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *sender,
+                                     int msu_id){
+    struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
+    struct msu_endpoint *destination = get_endpoint_by_id(type_set, msu_id);
+
+    return destination;
+}
 
 /**
  * Private function, sends data stored in a queue_item to a destination msu,
@@ -714,9 +632,9 @@ struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct g
  * @param data Data to be enqueued on or sent to destination
  * @return -1 on error, 0 on success
  */
-int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, msu_queue_item *data){
-    if (dst->locality == MSU_LOC_SAME_RUNTIME){
-        if (!(dst->next_msu_input_queue)){
+int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generic_msu_queue_item *data){
+    if (dst->locality == MSU_IS_LOCAL){
+        if (!(dst->msu_queue)){
             log_error("Queue pointer not found%s", "");
             return -1;
         }
@@ -726,7 +644,7 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, msu_queue_ite
             return -1;
         }
         return 0;
-    } else if (dst->locality == MSU_LOC_REMOTE_RUNTIME){
+    } else if (dst->locality == MSU_IS_REMOTE){
         int rtn = src->type->send_remote(src, data, dst);
 #ifdef DATAPLANE_PROFILING
         //copy queue item profile log to in memory log before its freed
@@ -753,6 +671,40 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, msu_queue_ite
     }
 }
 
+int msu_route(struct msu_type *type, struct generic_msu *sender,
+                struct generic_msu_queue_item *data){
+    if (sender->type->generate_id == NULL){
+        if (data->id == 0){
+            log_warn("Data ID not assigned, and sender %d (%s) cannot assign ID",
+                     sender->id, sender->type->name);
+        }
+    } else {
+        if (data->id != 0){
+            log_warn("Data ID being reassigned from %d by msu %d",data->id, sender->id);
+        }
+        data->id = sender->type->generate_id(sender, data);
+        log_debug("Assigned queue item %p id %d", data, data->id);
+    }
+
+    struct msu_endpoint *dst = type->route(type, sender, data);
+    if (dst == NULL){
+        log_error("No destination endpoint of type %s for msu %d",
+                  type->name, sender->id);
+        return -1;
+    }
+
+    int rtn = send_to_dst(dst, sender, data);
+    if (rtn < 0){
+        log_error("Error sending to destination msu");
+        if (data){
+            free(data->buffer);
+            free(data);
+        }
+    }
+    return rtn;
+}
+
+
 /** Receives and handles dequeued data from another MSU.
  * Also handles sending message to the next MSU, if applicable.
  * Calls the receieve function of the provided MSU type if available.
@@ -760,7 +712,7 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, msu_queue_ite
  * @param data received data
  * @return 0 on success, -1 on error
  */
-int msu_receive(struct generic_msu *self, msu_queue_item *data){
+int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
 
     // Check that all of the relevant structures exist
     if (! (self && self->type->receive) ){
@@ -785,7 +737,7 @@ int msu_receive(struct generic_msu *self, msu_queue_item *data){
             return 0;
         }
         if (type_id < 0){
-            ;//log_warn("MSU %d returned error code %d", self->id, type_id);
+            log_warn("MSU %d returned error code %d", self->id, type_id);
         }
         if (data){
             if (data->buffer) {
@@ -808,23 +760,10 @@ int msu_receive(struct generic_msu *self, msu_queue_item *data){
         return -1;
     }
 
-    // Get the specific MSU to deliver to
-    struct msu_endpoint *dst = type->route(type, self, data);
-    if (dst == NULL){
-        log_error("No destination endpoint of type %s (%d) for msu %d",
-                  type->name, type_id, self->id);
-        if (data){
-            free(data->buffer);
-            free(data);
-        }
-        return -1;
-    }
-    log_debug("Next msu id is %d", dst->id);
-
     // Send to the specific destination
-    int rtn = send_to_dst(dst, self, data);
+    int rtn = msu_route(type, self, data);
     if (rtn < 0){
-        log_error("Error sending to destination msu %s", "");
+        log_error("Error sending from msu %d", self->id);
         if (data){
             free(data->buffer);
             free(data);

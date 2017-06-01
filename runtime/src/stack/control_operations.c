@@ -68,201 +68,155 @@ int enqueue_msu_request(struct dedos_thread *d_thread,
     return ret;
 }
 
-void process_control_updates(void) {
-    int index;
-    struct dedos_thread *self;
-    struct dedos_thread_msg *msg;
-    struct generic_msu *tmp;
-    struct msu_control_update *update_msg;
-    struct generic_msu_queue_item *update_queue_item;
-    int ret;
-    pthread_t self_tid;
-    self_tid = pthread_self();
+static int process_create_msu_request(struct dedos_thread_msg *msg,
+                                      struct dedos_thread *thread){
+    if (!msg->data) {
+        log_error("CREATE_MSU requires msg->data to be present and of type int");
+        return -1;
+    }
 
-    index = get_thread_index(self_tid);
+    struct create_msu_thread_data* create_action = msg->data;
+    struct generic_msu *new_msu = init_msu(create_action->msu_type,
+                                           create_action->msu_id,
+                                           create_action);
+    free(create_action->init_data);
+    if (!new_msu){
+        log_error("Could not initialize new MSU %d", create_action->msu_id);
+        return -1;
+    }
+    log_info("Successfully created MSU with ID: %d", create_action->msu_id);
+
+    if (!thread->msu_pool){
+        log_error("No MSU pool to add MSU %d to", create_action->msu_id);
+        return -1;
+    }
+    dedos_msu_pool_add(thread->msu_pool, new_msu);
+    log_debug("Added MSU %d to pool", new_msu->id);
+    register_msu_with_thread_stats(thread->thread_stats, new_msu->id);
+    log_debug("Added MSU %d to thread stats", new_msu->id);
+    return 0;
+}
+
+static int process_destroy_msu_request(struct dedos_thread_msg *msg,
+                                       struct dedos_thread *thread){
+    if (!msg->data) {
+        log_error("DESTROY_MSU requires msg->data to be of type "
+                  "create_msu_thread_data");
+        return -1;
+    }
+    int msu_id = (int)msg->action_data;
+    struct generic_msu* msu = dedos_msu_pool_find(thread->msu_pool, msu_id);
+
+    if (!msu){
+        log_error("Deletion of non-existing msu %d requested", msu_id);
+        return -1;
+    }
+
+    log_debug("Destroying msu %d (type %s)", msu_id, msu->type->name);
+
+    dedos_msu_pool_delete(thread->msu_pool, msu);
+    remove_msu_thread_stats(thread->thread_stats, msu_id);
+
+    destroy_msu(msu);
+
+    log_info("Successfully destroyed MSU %d", msu_id);
+    return 0;
+}
+
+static int process_route_change_request(struct dedos_thread_msg *msg,
+                                        struct dedos_thread *thread){
+    int msu_id = msg->action_data;
+    struct manage_msu_control_payload *payload = msg->data;
+
+    struct generic_msu *msu = dedos_msu_pool_find(thread->msu_pool, msu_id);
+
+    if (!msu){
+        log_error("Addition of route to nonexistent msu %d requested on thread %ld",
+                   msu_id, thread->tid);
+        return -1;
+    }
+
+
+    struct msu_action_thread_data* update_msg = malloc(sizeof(*update_msg));
+    if (!update_msg){
+        log_error("Failed to allocate route update msg");
+        return -1;
+    }
+
+    update_msg->route_id = payload->route_id;
+    update_msg->msu_id = msu_id;
+    update_msg->action = msg->action;
+
+    struct generic_msu_queue_item * update_queue_item =
+            malloc(sizeof(*update_queue_item));
+
+    if (!update_queue_item){
+        log_error("Failed to allocate queue item for route change request");
+        free(update_msg);
+        return -1;
+    }
+
+    update_queue_item->buffer = update_msg;
+    update_queue_item->buffer_len = sizeof(*update_msg);
+
+    int rtn = generic_msu_queue_enqueue(&msu->q_control, update_queue_item);
+    if (rtn < 0){
+        log_error("Error enqueuing route update message for msu %d", msu->id);
+        free(update_msg);
+        free(update_queue_item);
+        return -1;
+    }
+    log_debug("Enqueued route update message on msu %d (queue len: %d)",
+              msu->id, rtn);
+}
+
+void process_control_updates(void)
+{
+    // Get the current dedos_thread
+    pthread_t self_tid = pthread_self();
+    int index = get_thread_index(self_tid);
     if (index < 0) {
-        log_error("Couldnt find index in global all_threads %s", "OOPS!");
+        log_error("Couldnt find index for self in global all_threads");
         return;
     }
 
-    self = &all_threads[index];
-    if (!self) {
-        log_error("Couldnt find self in global all_threads %s", "OOPS!");
+    struct dedos_thread *thread = &all_threads[index];
+    if (!thread) {
+        log_error("Invalid self index in global all_threads");
         return;
     }
-
-    // if (self->thread_q->num_msgs && self->thread_q->num_msgs < 1) {
-    //     log_debug("No control update messages in thread %u", self->tid);
-    //     return;
-    // }
 
     /* dequeue from its own thread queue */
-    msg = dedos_thread_dequeue(self->thread_q);
+    struct dedos_thread_msg *msg = dedos_thread_dequeue(thread->thread_q);
     if (!msg) {
         // log_debug("%s", "Empty queue");
         return;
     }
-    log_debug("dequeued following control msg: " "\n\taction: %u \n\tmsu_id: %d\n\tbuffer_len: %u",
-        msg->action, msg->action_data, msg->buffer_len);
 
-    /* process the thread msg by calling appropriate action handlers */
-    if (!msg->action) {
-        log_error("%s", "No action code present...!");
-        goto end;
+    log_debug("dequeued following control msg: \n"
+              "\taction: %u\n"
+              "\tmsu_id: %d\n"
+              "\tbuffer_len: %u",
+              msg->action, msg->action_data, msg->buffer_len);
+
+    int rtn = -1;
+    switch (msg->action){
+        case CREATE_MSU:
+            rtn = process_create_msu_request(msg, thread);
+            break;
+        case DESTROY_MSU:
+            rtn = process_destroy_msu_request(msg, thread);
+            break;
+        case ADD_ROUTE_TO_MSU:
+        case DEL_ROUTE_FROM_MSU:
+            rtn = process_route_change_request(msg, thread);
+            break;
+        default:
+            log_error("Unknown thread control action %d", msg->action);
     }
-
-    if (msg->action == CREATE_MSU) {
-        if (!msg->data) {
-            log_error(
-                    "CREATE_MSU requires create_msu_thread_msg_data to be present in *data %s",
-                    "");
-            goto end;
-        }
-
-        struct create_msu_thread_msg_data* create_action;
-        create_action = msg->data;
-        log_debug("Init data len: %d",create_action->init_data_len);
-        tmp = init_msu(create_action->msu_type, msg->action_data,
-                       create_action);
-        if (!tmp) {
-            free(create_action->creation_init_data);
-            return;
-        }
-        log_info("Successfully created MSU with ID: %d", msg->action_data);
-
-        //add to msu_pool
-        if(!self->msu_pool){
-            log_error("%s","No msu pool!");
-            free(create_action->creation_init_data);
-            return;
-        }
-        dedos_msu_pool_add(self->msu_pool, tmp);
-        log_debug("Added MSU to pool, msu id: %d", tmp->id);
-        register_msu_with_thread_stats(self->thread_stats, tmp->id);
-        log_debug("Added MSU to thread_stats, msu id: %d", tmp->id);
-
-        free(create_action->creation_init_data);
+    if (rtn < 0){
+        log_error("Error processing thread control queue");
     }
-    else if (msg->action == DESTROY_MSU) {
-
-        if (!msg->data) {
-            log_error("DESTROY_MSU requires msu_type as *data %s", "");
-            goto end;
-        }
-
-        int msu_type = msg->data;
-        struct generic_msu* m;
-        m = dedos_msu_pool_find(self->msu_pool, msg->action_data);
-        if(!m){
-            log_error("Provided MSU id doesn't exist %d",msg->action_data);
-            goto end;
-        }
-        log_debug("Found generic msu in msu_pool id: %d, name: %s",msg->action_data, m->type->name);
-
-        destroy_msu(m);
-
-        //delete from msu_pool
-        dedos_msu_pool_delete(self->msu_pool, m);
-        remove_msu_thread_stats(self->thread_stats, msg->action_data);
-
-        log_info("Successfully destroyed MSU with ID: %d", msg->action_data);
-    }
-    else if(msg->action == MSU_ROUTE_ADD || msg->action == MSU_ROUTE_DEL) {
-
-        struct generic_msu* m;
-        struct msu_control_add_route *msu_add_update_msg;
-        struct msu_control_del_route *msu_del_update_msg;
-
-        m = dedos_msu_pool_find(self->msu_pool, msg->action_data);
-        if(!m){
-            log_error("Provided MSU id doesn't exist %d",msg->action_data);
-            goto end;
-        }
-        log_debug("Found generic msu in msu_pool id: %d, name: %s",msg->action_data, m->type->name);
-
-        //create and fill up msu_control_update struct
-        // this struct will be enqueued by thread into MSU control queue
-        update_msg = (struct msu_control_update *)malloc(sizeof(struct msu_control_update));
-        if(!update_msg){
-        	log_error("Failed to malloc msu_control_update %s","");
-        	goto end;
-        }
-
-        update_msg->msu_id = msg->action_data;
-        update_msg->update_type = msg->action;
-
-        //create and fill msu_control_update struct payload (msu_control_add_route or msu_control_del_route)
-        if(msg->action == MSU_ROUTE_ADD){
-        	msu_add_update_msg = (struct msu_control_add_route*)malloc(sizeof(struct msu_control_add_route));
-            if(!msu_add_update_msg){
-             	log_error("Failed to malloc msu_add_update_msg %s","");
-             	free(update_msg);
-             	goto end;
-            }
-            msu_add_update_msg->peer_ipv4 = 0;
-            log_debug("thread_msg msg->data %s",(char*)(msg->data));
-            memcpy(msu_add_update_msg, msg->data, msg->buffer_len);
-            log_debug("Enqueuing add_update to MSU: %d", update_msg->msu_id);
-            log_debug("\tpeer_msu_id: %d", msu_add_update_msg->peer_msu_id);
-            log_debug("\tpeer_msu_type: %u", msu_add_update_msg->peer_msu_type);
-            log_debug("\tpeer_locality: %u", msu_add_update_msg->peer_locality);
-            log_debug("\tpeer_ip: %u", msu_add_update_msg->peer_ipv4);
-            char ipstr[30];
-            ipv4_to_string(&ipstr, msu_add_update_msg->peer_ipv4);
-            log_debug("\tpeer_ip_str: %s", ipstr);
-            //add pointer to update_msg
-			update_msg->payload = msu_add_update_msg;
-			update_msg->payload_len = sizeof(struct msu_control_add_route);
-
-        }else if(msg->action == MSU_ROUTE_DEL){
-        	msu_del_update_msg = (struct msu_control_del_route*)malloc(sizeof(struct msu_control_del_route));
-            if(!msu_del_update_msg){
-             	log_error("Failed to malloc msu_del_update_msg %s","");
-             	free(update_msg);
-             	goto end;
-            }
-            msu_del_update_msg->peer_ipv4 = 0;
-            log_debug("thread_msg msg->data %s",msg->data);
-            memcpy(msu_del_update_msg, msg->data, msg->buffer_len);
-            log_debug("Enqueuing del_update to MSU: %d", update_msg->msu_id);
-            log_debug("\tpeer_msu_id: %d", msu_del_update_msg->peer_msu_id);
-            log_debug("\tpeer_msu_type: %u", msu_del_update_msg->peer_msu_type);
-            log_debug("\tpeer_locality: %u", msu_del_update_msg->peer_locality);
-            log_debug("\tpeer_ip: %u", msu_del_update_msg->peer_ipv4);
-            char ipstr[30];
-            ipv4_to_string(&ipstr, msu_del_update_msg->peer_ipv4);
-            log_debug("\tpeer_ip_str: %s", ipstr);
-
-            //add pointer to update_msg
-            update_msg->payload = msu_del_update_msg;
-            update_msg->payload_len = sizeof(struct msu_control_del_route);
-        }
-
-        //if all was good above then create a generic msu_queue item
-        update_queue_item = (struct generic_msu_queue_item *)malloc(sizeof(struct generic_msu_queue_item));
-        if(!update_queue_item){
-         	log_error("Failed to malloc update generic_queue_item %s","");
-          	free(update_msg);
-            if(msg->action == MSU_ROUTE_ADD){
-            	free(msu_add_update_msg);
-            }else if(msg->action == MSU_ROUTE_DEL){
-            	free(msu_del_update_msg);
-            }
-            goto end;
-        }
-
-       	update_queue_item->buffer = update_msg;
-        update_queue_item->buffer_len = sizeof(struct msu_control_update) + update_msg->payload_len;
-
-        //enqueue in msu's control data queue.
-        ret = generic_msu_queue_enqueue(&m->q_control, update_queue_item);
-        log_debug("Successfully enqueued update msg for msu: %d", msg->action_data);
-        log_debug("MSU %d control queue size: %d", msg->action_data, ret);
-    }
-    else {
-        log_error("Unknown control action %u", msg->action);
-    }
-    //free the dequeued dedos_thread_msg
-    end: dedos_thread_msg_free(msg);
-    // log_debug("DEBUG: Freed thread msg %s","");
+    // Free the thread message
+    dedos_thread_msg_free(msg);
 }

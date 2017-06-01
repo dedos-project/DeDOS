@@ -116,20 +116,8 @@ static void send_to_next_msu(struct generic_msu *self,
     if (message_type == MSU_PROTO_TCP_CONN_RESTORE) {
         next_msu_type = DEDOS_TCP_DATA_MSU_ID;
     }
-
-    struct msu_endpoint *all_msu_enpoints = get_all_type_msus(self->rt_table,
-            next_msu_type);
-    if (!all_msu_enpoints) {
-        log_error("%s", "No next MSU info...can't continue");
-        return;
-    }
-    //picking up the entry corresponding to the msu that send the request.
-    struct msu_endpoint* tmp = NULL;
-    tmp = get_msu_from_id(all_msu_enpoints, reply_msu_id);
-    if (!tmp) {
-        log_error("Could find msu endpoint with id: %d",reply_msu_id);
-        return;
-    }
+    
+    struct msu_endpoint * tmp = route_by_msu_id(next_msu_type, self, reply_msu_id);
 
     struct dedos_intermsu_message *msg;
 	msg = (struct dedos_intermsu_message*) malloc(
@@ -147,7 +135,7 @@ static void send_to_next_msu(struct generic_msu *self,
     struct pico_frame* new_frame;
     char *restore_buf;
 
-    if (is_endpoint_local(tmp) == 0){
+    if (tmp->locality == MSU_IS_LOCAL){
 		//create intermsu dedos msg as above
         log_debug("next data msu is local, msu id: %d",tmp->id);
         if(message_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE){
@@ -211,7 +199,7 @@ static void send_to_next_msu(struct generic_msu *self,
         queue_item->buffer_len = msg->payload_len + sizeof(struct dedos_intermsu_message);
         queue_item->next = NULL;
 
-        generic_msu_queue_enqueue(tmp->next_msu_input_queue, queue_item);
+        generic_msu_queue_enqueue(tmp->msu_queue, queue_item);
         log_debug("Enqueued msg in next data msu's queue: %s","");
 
         if(message_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE){
@@ -1111,10 +1099,10 @@ int msu_tcp_hs_restore_socket(struct generic_msu *self, struct dedos_intermsu_me
     //handle_incoming_frame(self, msg->src_msu_id, f);
 
     //clone the buf and create msu_queue item and enqueue it
-    msu_queue_item *queue_item;
+    struct generic_msu_queue_item *queue_item;
     void *cloned_buffer;
 
-    queue_item = (msu_queue_item*)malloc(sizeof(msu_queue_item));
+    queue_item = malloc(sizeof(*queue_item));
     if(!queue_item){
         log_error("Failed to malloc msu queue item");
     	return -1;
@@ -1198,7 +1186,7 @@ int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
     return 0;
 }
 
-int msu_tcp_process_queue_item(struct generic_msu *msu, msu_queue_item *queue_item)
+int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item)
 {
     //interface from runtime to picoTCP structures or any other existing code
     struct hs_internal_state *in_state = msu->internal_state;
@@ -1320,7 +1308,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     return 0;
 }
 
-int hs_route(struct msu_type *type, struct generic_msu *sender, msu_queue_item *queue_item){
+int hs_route(struct msu_type *type, struct generic_msu *sender, struct generic_msu_queue_item *queue_item){
     struct tcp_intermsu_queue_item *tcp_queue_item;
     struct msu_endpoint *ret_endpoint = NULL;
     tcp_queue_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
@@ -1352,9 +1340,9 @@ int hs_route(struct msu_type *type, struct generic_msu *sender, msu_queue_item *
     //log_debug("Src addr %s: dst addr : %s", peer, local);
 
     //log_debug("calling rr with 4 tup");
-    ret_endpoint = round_robin_with_four_tuple(type, sender,
-                                    net_hdr->src.addr, short_be(tcp_hdr->trans.sport),
-                                    net_hdr->dst.addr, short_be(tcp_hdr->trans.dport));
+    //ret_endpoint = round_robin_with_four_tuple(type, sender,
+    //                                net_hdr->src.addr, short_be(tcp_hdr->trans.sport),
+    //                                net_hdr->dst.addr, short_be(tcp_hdr->trans.dport));
     free(f);
     return ret_endpoint;
 }
@@ -1368,7 +1356,7 @@ struct msu_type TCP_HANDSHAKE_MSU_TYPE = {
     .destroy=msu_tcp_handshake_destroy,
     .receive=msu_tcp_process_queue_item,
     .receive_ctrl=NULL,
-    .route=hs_route,
+    .route=default_routing, //hs_route,
     .deserialize=msu_tcp_hs_restore_socket,
     .send_local=default_send_local,
     .send_remote=default_send_remote,

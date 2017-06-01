@@ -15,11 +15,11 @@
 void SSLErrorCheck (int err);
 
 struct ssl_data_payload {
+    uint32_t ipAddress;
+    uint32_t port;
+    uint32_t socketfd;
     int sslMsuId;
     int type;
-    int socketfd;
-    uint32_t ipAddress;
-    int port;
     char msg[MAX_REQUEST_LEN];
     SSL *state;
 };

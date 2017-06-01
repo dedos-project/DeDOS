@@ -263,9 +263,8 @@ int msu_app_tcp_echo_process_queue_item(struct generic_msu *msu, struct generic_
 
     return 0;
 }
-
-int msu_app_tcp_echo_init(struct generic_msu *self,
-        struct create_msu_thread_msg_data *create_action)
+int msu_app_tcp_echo_init(struct generic_msu *self, 
+        struct create_msu_thread_data *create_action)
 {
     #define PCAP 1
     #define TAP 2
@@ -279,7 +278,7 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
     struct pico_ip4 ipaddr, netmask, gateway, zero = ZERO_IP4;
     int listen_port;
     char *optarg = (char*)malloc(sizeof(char) * create_action->init_data_len + 1);
-    strncpy(optarg, create_action->creation_init_data,create_action->init_data_len);
+    strncpy(optarg, create_action->init_data,create_action->init_data_len);
     optarg[create_action->init_data_len] = '\0';
     int mode = 0;
 
@@ -380,7 +379,7 @@ struct msu_type MSU_APP_TCP_ECHO_TYPE = {
     .destroy=NULL,
     .receive=msu_app_tcp_echo_process_queue_item,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=default_routing,
     .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote
