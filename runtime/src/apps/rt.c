@@ -93,7 +93,6 @@ int main(int argc, char **argv){
     char *global_ctl_ip = NULL;
     int global_ctl_port = -1;
     int local_listen_port = -1;
-    int same_physical_machine = 0;
     int webserver_port = -1;
     // Declared in communication.h, used in webserver_msu
     db_ip = NULL;
@@ -102,7 +101,6 @@ int main(int argc, char **argv){
     char *tag_probability = NULL;
 
     struct option long_options[] = {
-        {"same-machine", no_argument, 0, 's'},
         {"db-ip", required_argument, 0, 'd'},
         {"db-port", required_argument, 0, 'b'},
         {"db-load", required_argument, 0, 'l'},
@@ -134,9 +132,6 @@ int main(int argc, char **argv){
                 break;
             case 'P':
                 local_listen_port = atoi(optarg);
-                break;
-            case 's':
-                same_physical_machine = 1;
                 break;
             case 'w':
                 webserver_port = atoi(optarg);
@@ -217,17 +212,11 @@ int main(int argc, char **argv){
 
         uint32_t global_ctl_ip_int;
         string_to_ipv4(global_ctl_ip, &global_ctl_ip_int);
-        same_physical_machine = ( global_ctl_ip_int == rt->ip );
 
     }
 
     runtime_listener_port = local_listen_port;
     int control_listen_port = local_listen_port;
-
-    // Control socket init for listening to connections from other runtimes
-    // if (same_physical_machine == 1){
-    //     control_listen_port++;
-    // }
 
     if ( ! db_all){
         log_warn("Connection to mock database not fully instantiated");
