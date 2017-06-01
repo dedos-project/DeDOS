@@ -117,7 +117,7 @@ static void send_to_next_msu(struct generic_msu *self,
         next_msu_type = DEDOS_TCP_DATA_MSU_ID;
     }
     
-    struct msu_endpoint * tmp = route_by_msu_id(next_msu_type, self, reply_msu_id);
+    struct msu_endpoint * tmp = route_by_msu_id(msu_type_by_id(next_msu_type), self, reply_msu_id);
 
     struct dedos_intermsu_message *msg;
 	msg = (struct dedos_intermsu_message*) malloc(
