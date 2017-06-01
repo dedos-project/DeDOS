@@ -503,7 +503,7 @@ struct round_robin_hh_key{
 struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_msu *sender,
                                     struct generic_msu_queue_item *data) {
     struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
-    struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(type_set);
+    struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(type_set, data->id);
     if ( best_endpoint == NULL ){
         log_error("Cannot enqueue to shortest-length queue when all destinations are remote");
     }

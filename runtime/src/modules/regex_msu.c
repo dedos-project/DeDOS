@@ -74,6 +74,7 @@ int regex_deserialize(struct generic_msu *self, intermsu_msg *msg,
 
         recvd->buffer_len = sizeof(*regex_data);
         recvd->buffer = regex_data;
+        recvd->id = msg->data_id;
         regex_data->dst_packet = dst_packet;
         generic_msu_queue_enqueue(&self->q_in, recvd);
         return 0;

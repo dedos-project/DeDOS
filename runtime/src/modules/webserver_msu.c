@@ -161,6 +161,7 @@ int webserver_send_remote(struct generic_msu *src, struct generic_msu_queue_item
 
     msg->dst_msu_id = dst->id;
     msg->src_msu_id = src->id;
+    msg->data_id = data->id;
 
     // TODO: Is this next line right? src->proto_number?
     msg->proto_msg_type = src->type->proto_number;
