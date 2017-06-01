@@ -24,7 +24,7 @@ extern "C" {
 #include "communication.h"
 #include "routing.h"
 #include "dedos_msu_msg_type.h"
-#include "dedos_thread_queue.h" //for enqueuing outgoing control messages
+#include "dedos_thread_queue.h"
 #include "control_protocol.h"
 #include "logging.h"
 
@@ -40,11 +40,11 @@ extern "C" {
  */
 int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item) {
     struct socket_handler_state *state = self->internal_state;
-    int ret, opt, i;
+    int ret, opt, i, n;
 
-    ret = epoll_wait(state->eventfd, state->events, MAX_EVENTS, 0);
+    n = epoll_wait(state->eventfd, state->events, MAX_EVENTS, 0);
 
-    for (i = 0; i < ret; ++i) {
+    for (i = 0; i < n; ++i) {
         if ((state->events[i].events & EPOLLERR) ||
             (state->events[i].events & EPOLLHUP) ||
             (!(state->events[i].events & EPOLLIN))) {
@@ -93,7 +93,7 @@ int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item)
                 }
 
                 state->event.data.fd = infd;
-                state->events = EPOLLIN | EPOLLET;
+                state->event.events = EPOLLIN | EPOLLET;
                 ret = epoll_ctl(state->eventfd, EPOLL_CTL_ADD, infd, &state->event);
                 if (ret == -1) {
                     log_error("%s", "epoll_ctl() failed");
@@ -110,6 +110,7 @@ int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item)
                         ssize_t count;
                         char buf[512];
 
+                        /*
                         count = read(state->events[i].data.fd, buf, sizeof(buf));
                         if (count == -1) {
                             //errno == EAGAIN means that we've read all data
@@ -123,7 +124,7 @@ int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item)
                             done = 1;
                             break;
                         }
-
+                        */
                         if (ssl_request_routing_msu == NULL) {
                             log_error("%s",
                                       "*ssl_request_routing_msu is NULL, forgot to create it?");
@@ -156,7 +157,8 @@ int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item)
                             }
                         }
 
-                        return DEDOS_SSL_READ_MSU_ID;
+                        //We dont' have a queue item as input so we already enqueue by ourself to the next MSU
+                        return 0;
                     }
                 }
                 default:
@@ -166,14 +168,26 @@ int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item)
         }
     }
 
+    //Because this MSU does not expect queue items to process, it has to wake up the
+    //worker thread's queue somehow
+    int thread_index = get_thread_index(pthread_self());
+    struct dedos_thread *dedos_thread = &all_threads[thread_index];
+    if (!pthread_equal(dedos_thread->tid, pthread_self())) {
+        log_error("Unable to get correct pointer to self thread for socket handler msu init");
+        return -1;
+    }
+
+    sem_post(dedos_thread->q_sem);
+
     return 0;
 }
 
-/*
-* Init a socket to listen to
-* @param struct generic_msu *self: pointer to the msu instance
-* @param struct create_msu_thread_msg_data *initial_state: contains init data
-**/
+/**
+ * Init an event structure for epolling
+ * @param struct generic_msu *self: pointer to the msu instance
+ * @param struct create_msu_thread_msg_data *initial_state: contains init data
+ * @return 0/-1 success/failure
+ */
 int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_data *initial_state) {
     int ret, opt, efd, flags;
     struct socket_handler_init_payload *init_data = initial_state->creation_init_data;
@@ -234,13 +248,37 @@ int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_d
 
     state->events = calloc(MAX_EVENTS, sizeof(state->event));
 
+    //Because this MSU does not expect queue items to process, it has to wake up the
+    //worker thread's queue somehow
+    int thread_index = get_thread_index(pthread_self());
+    struct dedos_thread *dedos_thread = &all_threads[thread_index];
+    if (!pthread_equal(dedos_thread->tid, pthread_self())) {
+        log_error("Unable to get correct pointer to self thread for socket handler msu init");
+        return -1;
+    }
+
+    sem_post(dedos_thread->q_sem);
+
     return 0;
 }
 
-//close all sockets
+/**
+ * Close sockets handled by this MSU
+ * @param: struct generic_msu self reference to this MSU
+ * @param create_msu_thread_msg_data initial_state reference to initial data structure
+ * @return 0/-1 success/failure
+ */
 int socket_handler_destroy(struct generic_msu *self, struct create_msu_thread_msg_data *initial_state) {
     struct socket_handler_state *state = self->internal_state;
-    close(state->socketfd);
+    int ret;
+
+    ret = close(state->socketfd);
+    if (ret == - 1) {
+        log_error("%s", "error closing socket");
+        return ret;
+    }
+
+    return ret;
 }
 
 /**

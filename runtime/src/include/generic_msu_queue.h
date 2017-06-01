@@ -48,7 +48,7 @@ static inline int32_t generic_msu_queue_enqueue(struct generic_msu_queue *q, str
     if (q->shared)
         mutex_lock(q->mutex);
 
-    if ((q->max_msgs) && (q->max_msgs <= q->num_msgs)){
+    if ((q->max_msgs) && (q->max_msgs <= q->num_msgs)) {
         log_error("Failure max_msgs = %u, num_msgs = %u",q->max_msgs, q->num_msgs);
 
         if (q->shared)
@@ -56,7 +56,7 @@ static inline int32_t generic_msu_queue_enqueue(struct generic_msu_queue *q, str
 
         return -1;
     }
-    if ((q->max_size) && (q->max_size < (p->buffer_len + q->size))){
+    if ((q->max_size) && (q->max_size < (p->buffer_len + q->size))) {
         log_error("Failure max_size = %u, after enqueuing q_size = %u",q->max_size, p->buffer_len + q->size);
         if (q->shared)
             mutex_unlock(q->mutex);

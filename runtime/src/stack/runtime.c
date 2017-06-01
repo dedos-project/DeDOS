@@ -224,7 +224,7 @@ static void* non_block_per_thread_loop() {
                 unsigned int covered_weight = 0;
                 struct generic_msu_queue_item *queue_item;
 
-                while(covered_weight < cur->scheduling_weight){
+                while (covered_weight < cur->scheduling_weight) {
                     //dequeue from data queue
                     queue_item = generic_msu_queue_dequeue(&cur->q_in);
                     if (queue_item) {
@@ -260,7 +260,6 @@ static void* non_block_per_thread_loop() {
                         //To make sure internal state is cleared
                         msu_receive(cur, NULL);
                     } else if (cur->type->type_id == DEDOS_SOCKET_HANDLER_MSU_ID) {
-                        log_debug("%s","triggering socket handler receive");
                         //To poll socket
                         msu_receive(cur, NULL);
                     }
