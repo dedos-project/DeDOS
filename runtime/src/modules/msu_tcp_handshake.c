@@ -1263,7 +1263,7 @@ void msu_tcp_handshake_destroy(struct generic_msu *self)
 }
 
 struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu, 
-        struct create_msu_thread_msg_data *create_action)
+        struct create_msu_thread_data *create_action)
 {
     //handshake_msu->collect_state = msu_tcp_hs_collect_socket;
     //handshake_msu->restore = msu_tcp_hs_restore_socket;

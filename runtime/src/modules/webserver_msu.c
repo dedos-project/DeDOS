@@ -302,7 +302,7 @@ int webserver_receive(struct generic_msu *self, struct generic_msu_queue_item *i
     return -1;
 }
 
-int webserver_init(struct generic_msu *self, struct create_msu_thread_msg_data *initial_state){
+int webserver_init(struct generic_msu *self, struct create_msu_thread_data *initial_state){
     self->internal_state = malloc(VIDEO_MEMORY / 10);
     return 0;
 }

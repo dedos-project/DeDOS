@@ -310,7 +310,7 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_
 
 
 int msu_pico_tcp_init(struct generic_msu *self,
-        struct create_msu_thread_msg_data *create_action)
+        struct create_msu_thread_data *create_action)
 {
     // pico_tcp_msu->restore = msu_pico_tcp_restore; //called when data is received over control socket i.e. TCP state from HS MSU
 

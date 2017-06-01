@@ -70,7 +70,7 @@ struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex){
     }
     struct create_msu_thread_data *create_action = malloc(sizeof(*create_action));
     if (!create_action) {
-        log_error("Could not allocate thread_msg_data for MSU creation");
+        log_error("Could not allocate thread_data for MSU creation");
         free(thread_msg);
         return NULL;
     }

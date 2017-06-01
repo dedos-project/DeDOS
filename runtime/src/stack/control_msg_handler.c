@@ -65,7 +65,7 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
             malloc(sizeof(*create_action));
 
     if (!create_action){
-        log_error("Failed to allocate thread_msg_data for CREATE_MSU");
+        log_error("Failed to allocate thread_data for CREATE_MSU");
         free(thread_msg);
         return -1;
     }
