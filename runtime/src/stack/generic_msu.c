@@ -580,7 +580,7 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
     return dst;
 }
 
-/** Picks the next endpoing in a RR fashion while considering 4 tuple. This is to
+/* Picks the next endpoing in a RR fashion while considering 4 tuple. This is to
 * ensure that items for the same flow are sent to same destination
 *
 * TODO: Soon to be handled by router object.
@@ -592,7 +592,7 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
 * @param destination ip of data frame
 * @param destination port of data frame
 * @return msu_endpoint or NULL
-*/
+*
 struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct generic_msu *sender,
                                     uint32_t src_addr, uint16_t src_port,
                                     uint32_t dst_addr, uint16_t dst_port){
@@ -611,7 +611,7 @@ struct msu_endpoint *round_robin_with_four_tuple(struct msu_type *type, struct g
 
     return dst;
 }
-
+*/
 
 struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *sender,
                                      int msu_id){

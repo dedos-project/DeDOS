@@ -53,5 +53,5 @@ char* pico_frame_to_buf(struct pico_frame *f);
 void print_frame(struct pico_frame *f);
 int8_t remove_completed_request(struct hs_internal_state *in_state,
         struct pico_socket *s);
-int hs_route(struct msu_type *type, struct generic_msu *sender, msu_queue_item *data);
+int hs_route(struct msu_type *type, struct generic_msu *sender, struct generic_msu_queue_item *data);
 #endif

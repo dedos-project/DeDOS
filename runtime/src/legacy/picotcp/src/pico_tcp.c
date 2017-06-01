@@ -2643,8 +2643,8 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
     //serialize f as a queue item data struct
     int ret;
     struct generic_msu *self = pico_tcp_msu;
-    msu_queue_item *queue_item;
-    queue_item = (msu_queue_item*) malloc(sizeof(msu_queue_item));
+    struct generic_msu_queue_item *queue_item;
+    queue_item = malloc(sizeof(*queue_item));
     if(!queue_item){
         log_error("Failed to malloc queue_item queue item");
         return -1;

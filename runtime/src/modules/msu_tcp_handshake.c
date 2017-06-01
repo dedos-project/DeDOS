@@ -1099,10 +1099,10 @@ int msu_tcp_hs_restore_socket(struct generic_msu *self, struct dedos_intermsu_me
     //handle_incoming_frame(self, msg->src_msu_id, f);
 
     //clone the buf and create msu_queue item and enqueue it
-    msu_queue_item *queue_item;
+    struct generic_msu_queue_item *queue_item;
     void *cloned_buffer;
 
-    queue_item = (msu_queue_item*)malloc(sizeof(msu_queue_item));
+    queue_item = malloc(sizeof(*queue_item));
     if(!queue_item){
         log_error("Failed to malloc msu queue item");
     	return -1;
@@ -1308,7 +1308,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     return 0;
 }
 
-int hs_route(struct msu_type *type, struct generic_msu *sender, msu_queue_item *queue_item){
+int hs_route(struct msu_type *type, struct generic_msu *sender, struct generic_msu_queue_item *queue_item){
     struct tcp_intermsu_queue_item *tcp_queue_item;
     struct msu_endpoint *ret_endpoint = NULL;
     tcp_queue_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
@@ -1340,9 +1340,9 @@ int hs_route(struct msu_type *type, struct generic_msu *sender, msu_queue_item *
     //log_debug("Src addr %s: dst addr : %s", peer, local);
 
     //log_debug("calling rr with 4 tup");
-    ret_endpoint = round_robin_with_four_tuple(type, sender,
-                                    net_hdr->src.addr, short_be(tcp_hdr->trans.sport),
-                                    net_hdr->dst.addr, short_be(tcp_hdr->trans.dport));
+    //ret_endpoint = round_robin_with_four_tuple(type, sender,
+    //                                net_hdr->src.addr, short_be(tcp_hdr->trans.sport),
+    //                                net_hdr->dst.addr, short_be(tcp_hdr->trans.dport));
     free(f);
     return ret_endpoint;
 }
@@ -1356,7 +1356,7 @@ struct msu_type TCP_HANDSHAKE_MSU_TYPE = {
     .destroy=msu_tcp_handshake_destroy,
     .receive=msu_tcp_process_queue_item,
     .receive_ctrl=NULL,
-    .route=hs_route,
+    .route=default_routing, //hs_route,
     .deserialize=msu_tcp_hs_restore_socket,
     .send_local=default_send_local,
     .send_remote=default_send_remote,

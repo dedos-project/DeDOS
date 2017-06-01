@@ -56,7 +56,7 @@ else
 LOG_DEFINES+= -DSTATLOG=0
 endif
 
-CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm --std=gnu99 -g $(LOG_DEFINES)
+CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 -g $(LOG_DEFINES)
 
 ifeq ($(DATAPLANE_PROFILING),1)
         CFLAGS+=-DDATAPLANE_PROFILING
