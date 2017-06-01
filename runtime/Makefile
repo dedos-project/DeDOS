@@ -4,7 +4,6 @@ MKDIR=mkdir -p
 TARGET_EXT=out
 
 LOGS = \
-	   DEBUG \
 	   INFO \
 	   ERROR \
 	   WARN \
@@ -26,7 +25,7 @@ PATH_DEP = build/depends/
 PATH_OBJ = build/objs/
 PATH_BLD_LEG = build/legacy/
 PATH_RES = build/results/
-ADDRESS_SANITIZER?=1
+ADDRESS_SANITIZER?=0
 
 COMMON = ../common/
 COMMON_SRC = $(COMMON)src/
@@ -44,6 +43,8 @@ COMPILE_PP=g++ -c
 FINAL=gcc
 LINK=ld -r
 DEPEND=gcc -MM -MF
+
+SELF=./Makefile
 
 # If specific MSUs need special compilation instructions,
 # they can be specified here, as such:
@@ -160,13 +161,13 @@ $(PATH_OBJ)%.o:: $(PATH_TST)%.c
 	$(COMPILE) $(CFLAGS) $< -o $@
 
 # Creates object files from the stack source file
-$(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c
+$(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c $(SELF)
 	$(COMPILE) $(CFLAGS) $< -o $@
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c
+$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c $(SELF)
 	$(COMPILE) $(call cflags, $@) $< -o $@
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc
+$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc $(SELF)
 	$(COMPILE_PP) $(call cflags, $@) $< -o $@
 
 $(PATH_DEP)%.d: $(PATH_TST)%.c

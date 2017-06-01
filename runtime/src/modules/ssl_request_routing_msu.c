@@ -81,7 +81,16 @@ int ssl_init(struct generic_msu *self, void *init_data, int init_data_len){
 
 int ssl_generate_id(struct generic_msu *self, struct generic_msu_queue_item *queue_item){
     struct ssl_data_payload *data = queue_item->buffer;
-    return data->socketfd;
+    struct sockaddr_in sockaddr;
+    socklen_t addrlen = sizeof(sockaddr);
+    int rtn = getpeername(data->socketfd, (struct sockaddr*) &sockaddr, &addrlen);
+    if (rtn < 0){
+        log_error("Could not getpeername for determining packet ID: %s", strerror(errno));
+    }
+    uint32_t id;
+    log_debug("Sockaddr port: %d, addr %d", sockaddr.sin_port, sockaddr.sin_addr.s_addr);
+    HASH_VALUE(&sockaddr, addrlen, id);
+    return id;
 }
 
 const struct msu_type SSL_REQUEST_ROUTING_MSU_TYPE = {

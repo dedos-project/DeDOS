@@ -381,6 +381,7 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
             return -1;
         recvd->buffer_len = bufsize;
         recvd->buffer = malloc(bufsize);
+        recvd->id = msg->data_id;
         if (!(recvd->buffer)){
             free(recvd);
             return -1;
@@ -424,6 +425,7 @@ int default_send_remote(struct generic_msu *src, struct generic_msu_queue_item *
 
     msg->dst_msu_id = dst->id;
     msg->src_msu_id = src->id;
+    msg->data_id = data->id;
 
     // TODO: Is this next line right? src->proto_number?
     msg->proto_msg_type = src->type->proto_number;
@@ -678,7 +680,7 @@ int msu_route(struct msu_type *type, struct generic_msu *sender,
         }
     } else {
         if (data->id != 0){
-            log_warn("Data ID being reassigned");
+            log_warn("Data ID being reassigned from %d by msu %d",data->id, sender->id);
         }
         data->id = sender->type->generate_id(sender, data);
         log_debug("Assigned queue item %p id %d", data, data->id);

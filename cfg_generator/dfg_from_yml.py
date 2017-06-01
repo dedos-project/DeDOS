@@ -37,6 +37,8 @@ def add_pseudo_routing(rt_id, froms, tos, routes, json_route):
 
     new_routes = {}
 
+    #print("In pseudo %s" % froms)
+
     for type in set(types):
         for i in range(99):
             name = route_name(rt_id, type, i)
@@ -79,12 +81,13 @@ def runtime_routes(rt_id, msus, routes):
         thread_match = route.get('thread-match', False)
 
         if not thread_match:
-            to_msus = [msu for msu in msus if msu['name'] in tos]
+            to_msus = [msu for msu in msus if msu['name'] in tos ]
             add_pseudo_routing(rt_id, from_msus, to_msus, routes_out, route)
         else:
             threads = set(msu['scheduling']['thread_id'] for msu in from_msus)
             for thread in threads:
-                thread_froms = [msu for msu in msus if msu['scheduling']['thread_id'] == thread]
+                thread_froms = [msu for msu in msus if msu['scheduling']['thread_id'] == thread
+                                and msu['scheduling']['runtime_id'] == rt_id]
                 thread_tos = [msu for msu in msus if msu['name'] in tos and msu['scheduling']['thread_id'] == thread]
                 add_pseudo_routing(rt_id, thread_froms, thread_tos, routes_out, route)
 

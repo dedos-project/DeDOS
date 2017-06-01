@@ -8,6 +8,7 @@
 typedef struct dedos_intermsu_message {
     int src_msu_id;
     int dst_msu_id;
+    int data_id;
     unsigned int proto_msg_type;
     unsigned int payload_len;
 #ifdef DATAPLANE_PROFILING
