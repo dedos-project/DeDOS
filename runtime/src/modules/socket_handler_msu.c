@@ -158,7 +158,7 @@ int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item)
                         }
 
                         //We dont' have a queue item as input so we already enqueue by ourself to the next MSU
-                        return 0;
+                        return -10;
                     }
                 }
                 default:
