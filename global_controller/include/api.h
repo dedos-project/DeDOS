@@ -4,6 +4,8 @@
 #include "dfg.h"
 #include "control_protocol.h"
 
+#define MAX_INIT_DATA_LEN 512
+
 int add_msu(char *msu_data, int msu_type, int msu_id,
             char *msu_mode, int thread_id, int runtime_sock);
 

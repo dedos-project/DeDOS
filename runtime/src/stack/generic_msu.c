@@ -728,7 +728,7 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
     aggregate_start_time(MSU_INTERNAL_TIME, self->id);
     int type_id = self->type->receive(self, data);
     aggregate_end_time(MSU_INTERNAL_TIME, self->id);
-    if (type_id <= 0){
+    if (type_id <= 0) {
         // If type_id <= 0 it can either be an error (< 0) or just
         // not have a subsequent destination
         if (type_id == -10){ // Special case for tcp related msus, return this
@@ -751,14 +751,27 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
 
     // Get the MSU type to deliver to
     struct msu_type *type = msu_type_by_id((unsigned int)type_id);
-    if (type == NULL){
+    if (type == NULL) {
         log_error("Type ID %d not recognized", type_id);
-        if (data){
+        if (data) {
             free(data->buffer);
             free(data);
         }
         return -1;
     }
+
+    // Get the specific MSU to deliver to
+    struct msu_endpoint *dst = type->route(type, self, data);
+    if (dst == NULL) {
+        log_error("No destination endpoint of type %s (%d) for msu %d",
+                  type->name, type_id, self->id);
+        if (data) {
+            free(data->buffer);
+            free(data);
+        }
+        return -1;
+    }
+    log_debug("Next msu id is %d", dst->id);
 
     // Send to the specific destination
     int rtn = msu_route(type, self, data);

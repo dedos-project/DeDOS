@@ -46,5 +46,3 @@ struct msu_type DUMMY_MSU_TYPE = {
     .send_remote=default_send_remote,
     .deserialize=default_deserialize
 };
-
-

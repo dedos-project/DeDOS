@@ -40,15 +40,16 @@ int send_to_endpoint(int endpoint_sock, char *buf, unsigned int bufsize){
     return 0;
 }
 
-int send_control_msg(int sock, struct dedos_control_msg *control_msg){
+int send_control_msg(int sock, struct dedos_control_msg *control_msg) {
     int total_msg_size = control_msg->header_len + control_msg->payload_len;
 
     char buf[total_msg_size];
 
     memcpy(buf, control_msg, control_msg->header_len);
 
-    if (control_msg->payload_len > 0)
+    if (control_msg->payload_len > 0) {
         memcpy(buf + control_msg->header_len, control_msg->payload, control_msg->payload_len);
+    }
 
     return send_to_endpoint(sock, buf, (unsigned int)total_msg_size);
 }

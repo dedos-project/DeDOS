@@ -93,7 +93,6 @@ int main(int argc, char **argv){
     char *global_ctl_ip = NULL;
     int global_ctl_port = -1;
     int local_listen_port = -1;
-    int same_physical_machine = 0;
     int webserver_port = -1;
     // Declared in communication.h, used in webserver_msu
     db_ip = NULL;
@@ -102,7 +101,6 @@ int main(int argc, char **argv){
     char *tag_probability = NULL;
 
     struct option long_options[] = {
-        {"same-machine", no_argument, 0, 's'},
         {"db-ip", required_argument, 0, 'd'},
         {"db-port", required_argument, 0, 'b'},
         {"db-load", required_argument, 0, 'l'},
@@ -134,9 +132,6 @@ int main(int argc, char **argv){
                 break;
             case 'P':
                 local_listen_port = atoi(optarg);
-                break;
-            case 's':
-                same_physical_machine = 1;
                 break;
             case 'w':
                 webserver_port = atoi(optarg);
@@ -180,23 +175,25 @@ int main(int argc, char **argv){
     int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 ||
                       local_listen_port > 0 ) ;
 
-    int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
-
-    if (!json_all && !manual_all){
-        printf("One of JSON file and runtime ID or global control IP and port required. Exiting.\n");
-        exit(-1);
-    }
-    if ((json_all && manual_any) || (json_any && manual_all)){
-        printf("Both JSON and manual configuration present. Please provide only one.\n");
-        exit(-1);
-    }
-    if (webserver_port == -1){
+    if (webserver_port == -1) {
         printf("Webserver port not provided. Exiting\n");
         exit(-1);
     }
 
+    int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
+
+    if (!json_all && !manual_all) {
+        printf("One of JSON file and runtime ID or global control IP and port required. Exiting.\n");
+        exit(-1);
+    }
+
+    if ((json_all && manual_any) || (json_any && manual_all)) {
+        printf("Both JSON and manual configuration present. Please provide only one.\n");
+        exit(-1);
+    }
+
     struct dfg_config *dfg = NULL;
-    if (json_all){
+    if (json_all) {
         int rtn = load_dfg_from_file(dfg_json);
         if (rtn < 0){
             printf("%s is not a valid json DFG. Exiting\n", dfg_json);
@@ -215,17 +212,11 @@ int main(int argc, char **argv){
 
         uint32_t global_ctl_ip_int;
         string_to_ipv4(global_ctl_ip, &global_ctl_ip_int);
-        same_physical_machine = ( global_ctl_ip_int == rt->ip );
 
     }
 
     runtime_listener_port = local_listen_port;
     int control_listen_port = local_listen_port;
-
-    // Control socket init for listening to connections from other runtimes
-    // if (same_physical_machine == 1){
-    //     control_listen_port++;
-    // }
 
     if ( ! db_all){
         log_warn("Connection to mock database not fully instantiated");
@@ -250,8 +241,8 @@ int main(int argc, char **argv){
        log_error("Could not initialize control socket");
     }
 
-    if (dedos_webserver_socket_init(webserver_port) < 0){
-        log_error("Could nto initialize webserver socket");
+    if (dedos_webserver_socket_init(webserver_port) < 0) {
+        log_error("Could not initialize webserver socket");
     }
 
 #ifdef DEDOS_SUPPORT_BAREMETAL_MSU

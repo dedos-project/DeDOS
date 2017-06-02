@@ -86,9 +86,14 @@ static int parse_add_msu(char *args){
         thread_id = atoi(arg);
     }
 
-    char *data = strtok(NULL, "\r\n");
-    if (data == NULL)
-        data = "\0";
+    char *init_data;
+    char data[MAX_INIT_DATA_LEN];
+    init_data = strtok(NULL, "\r\n");
+    if (init_data == NULL) {
+        data[0] = "\0";
+    } else {
+        memcpy(data, init_data, strlen(init_data));
+    }
 
     int ret = add_msu(data, msu_id, msu_type, msu_mode, thread_id, runtime_sock);
     if (ret == -1){

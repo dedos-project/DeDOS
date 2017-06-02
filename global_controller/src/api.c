@@ -1,14 +1,15 @@
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include "logging.h"
 #include "api.h"
 #include "dfg.h"
 #include "dfg_writer.h"
 #include "control_protocol.h"
-#include "controller_tools.h"
 #include "communication.h"
 #include "ip_utils.h"
+#include "tmp_msu_headers.h"
 
 int add_msu(char *msu_data, int msu_id, int msu_type,
             char *msu_mode, int thread_id, int runtime_sock) {
@@ -59,24 +60,53 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
     }
 
     // [mode][space][thread_id][\0]
-    int data_len = (int)strlen(msu_data) + 1 + (int)strlen(msu_mode) + 1 + how_many_digits(msu_id) + 1;
-    char data[data_len];
-    snprintf(data, (size_t)data_len, "%s %d %s", msu_mode, thread_id, msu_data);
+    size_t data_len;
+    char data[MAX_INIT_DATA_LEN];
+    memset(data, '\0', MAX_INIT_DATA_LEN);
 
-    char create_msu_msg_buffer[sizeof(struct manage_msu_control_payload) + strlen(data)];
-    struct manage_msu_control_payload* create_msu_msg =
-            (struct manage_msu_control_payload*) create_msu_msg_buffer;
+    data_len = strlen(msu_mode) + 1 + how_many_digits(msu_id) + 2;
+    snprintf(data, data_len, "%s %d ", msu_mode, thread_id);
+
+    //TODO: create a template system for MSU such that we can query initial data.
+    if (msu_type == DEDOS_SOCKET_HANDLER_MSU_ID) {
+        struct socket_handler_init_payload *init_data =
+            malloc(sizeof(struct socket_handler_init_payload));
+
+        init_data->port = 8080;
+        init_data->domain = AF_INET;
+        init_data->type = SOCK_STREAM;
+        init_data->protocol = 0;
+        init_data->bind_ip = INADDR_ANY;
+        /*unsigned char buf[sizeof(struct in_addr)];
+        inet_pton(AF_INET, "192.168.0.1", buf);
+        init_data->bind_ip = buf;*/
+        init_data->target_msu_type = 502; //DEDOS_SSL_REQUEST_ROUTING_MSU_ID;
+
+        size_t len = sizeof(struct socket_handler_init_payload);
+        memcpy(data + data_len, init_data, len);
+        free(init_data);
+        data_len += len;
+    } else {
+        memcpy(data + data_len, msu_data, strlen(msu_data));
+        data_len += strlen(msu_data);
+    }
+
+    char create_msu_msg_buffer[sizeof(struct manage_msu_control_payload) + data_len];
+
+    struct manage_msu_control_payload *create_msu_msg =
+        (struct manage_msu_control_payload*) create_msu_msg_buffer;
     create_msu_msg->msu_id         = new_msu->msu_id;
     create_msu_msg->msu_type       = new_msu->msu_type;
-    create_msu_msg->init_data_size = strlen(data);
+    create_msu_msg->init_data_size = data_len;
     create_msu_msg->init_data      = data;
-    memcpy(create_msu_msg_buffer + sizeof(*create_msu_msg), data, strlen(data));
+    memcpy(create_msu_msg_buffer + sizeof(*create_msu_msg), data, data_len);
 
-    debug("DEBUG: Sock %d\n", runtime_sock);
-    debug("DEBUG: msu_type %d\n", create_msu_msg->msu_type);
-    debug("DEBUG: MSU id : %d\n", create_msu_msg->msu_id);
-    debug("DEBUG: init_data : %s\n", create_msu_msg->init_data);
-    debug("DEBUG: init_data_size: %d\n", create_msu_msg->init_data_size);
+    debug("sock:%d, msu_type: %d, msu id: %d, init_data: %s, init_data_size: %d\n",
+           runtime_sock,
+           create_msu_msg->msu_type,
+           create_msu_msg->msu_id,
+           create_msu_msg->init_data,
+           create_msu_msg->init_data_size);
 
     control_msg.msg_type = ACTION_MESSAGE;
     control_msg.msg_code = CREATE_MSU;
@@ -458,25 +488,31 @@ void show_stats(int msu_id) {
     printf("queue_item_processed\n");
     printf("value, timestamp\n");
     for (i = 0; i < TIME_SLOTS; ++i) {
-        printf("%d, %d\n",
-                msu->statistics.queue_item_processed->data[i],
-                msu->statistics.queue_item_processed->timestamp[i]);
+        if (msu->statistics->queue_item_processed->timestamp[i] > 0) {
+            printf("%d, %d\n",
+                    msu->statistics->queue_item_processed->data[i],
+                    msu->statistics->queue_item_processed->timestamp[i]);
+        }
     }
 
     printf("data_queue_size\n");
     printf("value, timestamp\n");
     for (i = 0; i < TIME_SLOTS; ++i) {
-        printf("%d, %d\n",
-                msu->statistics.data_queue_size->data[i],
-                msu->statistics.data_queue_size->timestamp[i]);
+        if (msu->statistics->data_queue_size->timestamp[i] > 0) {
+            printf("%d, %d\n",
+                    msu->statistics->data_queue_size->data[i],
+                    msu->statistics->data_queue_size->timestamp[i]);
+        }
     }
 
     printf("memory_allocated\n");
     printf("value, timestamp\n");
     for (i = 0; i < TIME_SLOTS; ++i) {
-        printf("%d, %d\n",
-                msu->statistics.memory_allocated->data[i],
-                msu->statistics.memory_allocated->timestamp[i]);
+        if (msu->statistics->memory_allocated->timestamp[i] > 0) {
+            printf("%d, %d\n",
+                    msu->statistics->memory_allocated->data[i],
+                    msu->statistics->memory_allocated->timestamp[i]);
+        }
     }
 }
 */

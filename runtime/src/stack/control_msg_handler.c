@@ -11,6 +11,8 @@
 #include "control_operations.h"
 #include "msu_tracker.h"
 #include "serialization.h"
+#include "modules/socket_handler_msu.h"
+#include "dedos_msu_list.h"
 
 static int request_msu_list(struct dedos_control_msg *control_msg){
     unsigned int total_msu_count = msu_tracker_count();
@@ -65,7 +67,7 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
             malloc(sizeof(*create_action));
 
     if (!create_action){
-        log_error("Failed to allocate thread_data for CREATE_MSU");
+        log_error("Failed to allocate thread_msg_data for CREATE_MSU");
         free(thread_msg);
         return -1;
     }
@@ -75,7 +77,7 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
     create_action->msu_type = create_msu_msg->msu_type;
     create_action->init_data_len = create_msu_msg->init_data_size;
     create_action->init_data = malloc(create_msu_msg->init_data_size);
-    if (!create_action->init_data){
+    if (!create_action->init_data) {
         log_error("Failed to allocate action data for CREATE_MSU");
         free(create_action);
         free(thread_msg);
@@ -88,18 +90,38 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
 
     int placement_index = -1;
 
-    if (create_action->init_data_len > 0){
-        if (strncasecmp(create_msu_msg->init_data, "non-blocking", 12) == 0){
+    if (create_action->init_data_len > 0) {
+        if (strncasecmp(create_msu_msg->init_data, "non-blocking", 12) == 0) {
             log_debug("Request for creation non-blocking MSU");
-            char *type;
-            type = strtok((char*)create_msu_msg->init_data, " ");
-            log_debug("Type: %s", type);
-            type = strtok(NULL, "\r\n");
-            log_debug("Str thread num: %s", type);
-            memset(create_action->init_data, 0, create_action->init_data_len);
-            sscanf(type, "%d %s", &placement_index, (char*)create_action->init_data);
 
-            if (placement_index < 0 || placement_index > total_threads - 1){
+            char *mode, *tid, *other_data;
+            mode = strtok((char*)create_msu_msg->init_data, " ");
+            log_debug("msu mode: %s", mode);
+
+            tid = strtok(NULL, " ");
+            log_debug("thread id: %s", tid);
+            placement_index = atoi(tid);
+            int tid_digits = how_many_digits(placement_index);
+
+            //starts at tid, jump 2 spaces (why 2 and not 1? strtok?)
+            other_data = tid + tid_digits + 2;
+
+            //FIXME: ugly way to only check for init data if msu type is known to have some
+            switch (create_action->msu_type) {
+                case DEDOS_SOCKET_HANDLER_MSU_ID:
+                    memcpy(create_action->init_data, other_data,
+                           sizeof(struct socket_handler_init_payload));
+                break;
+
+                case DEDOS_PICO_TCP_STACK_MSU_ID:
+                    memcpy(create_action->init_data, other_data,
+                           strlen(other_data));
+                break;
+            }
+
+            /*TODO: handle the case where the request specify a non existing
+             * thread within the range of 0-numCPU */
+            if (placement_index < 0 || placement_index > total_threads - 1) {
                 log_error("Placement index must be in range [0,%d] (total_worker_threads), given: %d",
                            total_threads-1, placement_index);
                 free(create_action->init_data);
@@ -108,21 +130,23 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
                 return -1;
             }
             log_info("Placement in thread %d", placement_index);
-        } else if (strncasecmp(create_action->init_data, "blocking", 8) == 0){
+        } else if (strncasecmp(create_action->init_data, "blocking", 8) == 0) {
             log_debug("Request for creation of blocking MSU");
 
             mutex_lock(all_threads_mutex);
             placement_index = on_demand_create_worker_thread(1);
             mutex_unlock(all_threads_mutex);
 
-            if (placement_index < 0){
+            if (placement_index < 0) {
                 log_error("On demand worker thread creation failed");
                 free(create_action->init_data);
                 free(create_action);
                 free(thread_msg);
                 return -1;
             }
-            log_info("Placement in newly created thread, since its a blocking MSU that has its own thread: %d", placement_index);
+            log_info("Placement in newly created thread, \
+                     since its a blocking MSU that has its own thread: %d",
+                     placement_index);
         } else {
             log_error("Blocking type for new MSU not specified (%s)", create_msu_msg->init_data);
             return -1;
@@ -208,7 +232,7 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
 
     if (pending_runtime_peers->count == 0){
         log_debug("No pending connections to runtime");
-			/* no pending stuff, just allocate memorory to hold IPs and done */
+            /* no pending stuff, just allocate memorory to hold IPs and done */
         pending_runtime_peers->ips = malloc(count * sizeof(uint32_t));
         if (!pending_runtime_peers->ips) {
             log_error("Failed to allocate ips array");
@@ -406,27 +430,24 @@ static int parse_response_msg(struct dedos_control_msg *control_msg){
 
 // TODO refactor this into case statements
 void parse_cmd_action(char *cmd) {
-	int count = 0;
-	char *buf;
-	unsigned long *peer_ips = NULL;
-	struct dedos_control_msg *control_msg;
+    struct dedos_control_msg *control_msg;
 
-	control_msg = (struct dedos_control_msg*) cmd;
-	if (control_msg->payload_len) {
-		control_msg->payload = cmd + control_msg->header_len;
-	}
+    control_msg = (struct dedos_control_msg*) cmd;
+    if (control_msg->payload_len) {
+        control_msg->payload = cmd + control_msg->header_len;
+    }
 
-	size_t ln = strlen(cmd) - 1;
-	if (*cmd && cmd[ln] == '\n') {
-		cmd[ln] = '\0';
-	}
+    size_t ln = strlen(cmd) - 1;
+    if (*cmd && cmd[ln] == '\n') {
+        cmd[ln] = '\0';
+    }
 
     if (strncasecmp(cmd, "DUMMY_INIT_CONFIG", 17) == 0){
         cmd_dummy_config(control_msg);
         return;
     }
 
-    switch (control_msg->msg_type){
+    switch (control_msg->msg_type) {
         case REQUEST_MESSAGE:
             if (parse_request_msg(control_msg) < 0){
                 log_error("Error parsing REQUEST_MESSAGE");
@@ -442,7 +463,8 @@ void parse_cmd_action(char *cmd) {
                 log_error("Error parsing RESPONSE_MESSAGE");
             }
             return;
-		default:
+        default:
             log_error("ERROR: Unknown control message type %d", control_msg->msg_type);
-	}
+            return;
+    }
 }

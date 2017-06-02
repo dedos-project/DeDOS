@@ -21,7 +21,7 @@ struct msu_endpoint{
     struct generic_msu_queue *msu_queue;
 };
 
-// Forward declaration so reads and writes have 
+// Forward declaration so reads and writes have
 // to take place through the API (to adhere to mutex)
 struct routing_table;
 

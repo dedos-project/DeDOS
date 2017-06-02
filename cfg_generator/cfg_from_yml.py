@@ -9,7 +9,7 @@ SYNTAX = dict(
         route='add route {socket} {route} {msu}'
 )
 
-MINSOCK=5
+MINSOCK=4
 
 def make_cfg(yml_filename):
     input = yaml.load(open(yml_filename))

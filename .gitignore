@@ -5,6 +5,8 @@ examplecode
 *.orig
 global_controller/cfg_creation/*.yml
 global_controller/cfg_creation/*.json
+global_controller/*.yml
+global_controller/*.json
 global_controller/global_controller
 /.cproject
 /.project

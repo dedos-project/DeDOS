@@ -135,10 +135,8 @@ int dedos_control_socket_init(int tcp_control_port)
     return 0;
 }
 
-
 int dedos_webserver_socket_init(int webserver_port) {
     // Setup the webserver socket
-
     ws_sock = socket(AF_INET, SOCK_STREAM, 0);
     int Set = 1;
     if ( setsockopt(ws_sock, SOL_SOCKET, SO_REUSEADDR, &Set, sizeof(int)) == -1 ) {
@@ -150,11 +148,9 @@ int dedos_webserver_socket_init(int webserver_port) {
     ws.sin_port = htons(webserver_port);
 
     int optval = 1;
-    if (setsockopt(ws_sock, SOL_SOCKET, SO_REUSEPORT, &optval,
-            sizeof(optval)) < 0) {
+    if (setsockopt(ws_sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) < 0) {
         log_error("%s","Failed to set SO_REUSEPORT");
     }
-
 
     if ( bind(ws_sock, (struct sockaddr*) &ws, sizeof(ws)) == -1 ) {
         printf("bind() failed\n");
@@ -167,6 +163,7 @@ int dedos_webserver_socket_init(int webserver_port) {
 
     return 0;
 }
+
 
 int dedos_baremetal_listen_socket_init(int baremetal_listen_port){
     // Setup the baremetal msu listen socket
@@ -185,7 +182,6 @@ int dedos_baremetal_listen_socket_init(int baremetal_listen_port){
             sizeof(optval)) < 0) {
         log_error("%s","Failed to set SO_REUSEPORT");
     }
-
 
     if ( bind(baremetal_sock, (struct sockaddr*) &bm, sizeof(bm)) == -1 ) {
         printf("bind() failed\n");
@@ -235,10 +231,10 @@ int check_comm_sockets() {
 
     int ret = poll(&fds, totalSockets + MAX_RUNTIME_PEERS, 0);
 
-    if(ret != 0) {
-    if(ret == -1) {
-        printf("Error in Poll\n");
-    } else if (fds[0].revents & POLLIN) {
+    if (ret != 0) {
+        if (ret == -1) {
+            printf("Error in Poll\n");
+        } else if (fds[0].revents & POLLIN) {
             fds[0].revents = 0;
            int peer_sk;
             peer_sk = accept(tcp_comm_socket, NULL, NULL);
@@ -303,7 +299,6 @@ int check_comm_sockets() {
                 parse_cmd_action(&rcv_buf);
             }
         } else if (fds[2].revents & POLLIN) {
-
             fds[2].revents = 0;
             // received something on the websocket
             // accept this and then pass it to the queue acceessed by the global variable for now
@@ -313,7 +308,7 @@ int check_comm_sockets() {
             socklen_t AddrLen = sizeof(ClientAddr);
             int new_sock_ws = accept(ws_sock,(struct sockaddr*) &ClientAddr, &AddrLen);
 
-            if (new_sock_ws < 0){
+            if (new_sock_ws < 0) {
                 log_warn("accept(%d,...) failed with error %s ", ws_sock, strerror(errno));
                 return -1;
             }
@@ -321,20 +316,20 @@ int check_comm_sockets() {
             struct timeval timeout;
             timeout.tv_sec = 0;
             timeout.tv_usec = 10000;
-            if ( setsockopt(new_sock_ws, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(struct timeval)) == -1 ) {
+            if (setsockopt(new_sock_ws, SOL_SOCKET, SO_RCVTIMEO,
+                            (char *) &timeout, sizeof(struct timeval)) == -1) {
                 log_warn("setsockopt(%d,...) failed with error %s ", new_sock_ws, strerror(errno));
                 return -1;
             }
 
             // printf("Accepted a new conn : %d \n", new_sock_ws);
-    //        if (queue_ssl == NULL || queue_ws == NULL) {
-    //            log_error("%s","************** WS: Not all msu's wanted initialized ********************");
-    //            close(new_sock_ws);
+            // if (queue_ssl == NULL || queue_ws == NULL) {
+            //     log_error("%s","************** WS: Not all msu's wanted initialized ********************");
+            //     close(new_sock_ws);
             if (ssl_request_routing_msu == NULL) {
                 log_error("*ssl_request_routing_msu is NULL, forgot to create it?%s","");
                 close(new_sock_ws);
-            }
-            else {
+            } else {
                 // enqueue this item into this queue so that the MSU can process it
                 struct ssl_data_payload *data = (struct ssl_data_payload*) malloc(sizeof(struct ssl_data_payload));
                 memset(data, '\0', MAX_REQUEST_LEN);
@@ -343,7 +338,7 @@ int check_comm_sockets() {
                 data->type = READ;
                 data->state = NULL;
                 // get a new queue item and enqueue it into this queue
-                struct generic_msu_queue_item *new_item_ws = create_generic_msu_queue_item();
+                struct generic_msu_queue_item *new_item_ws = malloc(sizeof(struct generic_msu_queue_item));
                 new_item_ws->buffer = data;
                 new_item_ws->buffer_len = sizeof(struct ssl_data_payload);
 #ifdef DATAPLANE_PROFILING
@@ -351,7 +346,7 @@ int check_comm_sockets() {
 #endif
     //            generic_msu_queue_enqueue(queue_ssl, new_item_ws);
                 int ssl_request_queue_len = generic_msu_queue_enqueue(&ssl_request_routing_msu->q_in, new_item_ws); //enqueuing to routing MSU
-                if(ssl_request_queue_len < 0){
+                if (ssl_request_queue_len < 0) {
                     log_error("Failed to enqueue ssl_request to %s",ssl_request_routing_msu->type->name);
                     free(new_item_ws);
                     free(data);
@@ -359,9 +354,8 @@ int check_comm_sockets() {
                     log_debug("Enqueued ssl forwarding request, q_len: %u",ssl_request_queue_len);
                 }
             }
-        }
 #ifdef DEDOS_SUPPORT_BAREMETAL_MSU
-        else if (fds[3].revents & POLLIN) {
+        } else if (fds[3].revents & POLLIN) {
             //BAREMETAL MSU data entry point into dedos
             fds[3].revents = 0;
             // accept this and then pass it to the queue acceessed by the global variable for now
@@ -414,9 +408,8 @@ int check_comm_sockets() {
                     log_debug("Enqueued baremtal request in entry msu, q_len: %d",baremetal_entry_msu_q_len);
                 }
             }
-        }
 #endif
-        else {
+       } else {
             // check for the other runtime sockets
             for (j = 0; j < MAX_RUNTIME_PEERS; j++) {
                 if(fds[j + totalSockets].revents & POLLIN && peer_tcp_sockets[j] > 0) {
@@ -551,7 +544,7 @@ void dedos_control_send(struct dedos_intermsu_message* msg,
 
     //create output buffer
     size_t sendbuf_len = sizeof(struct dedos_intermsu_message) + bufsize;
-    
+
 
     char *sendbuf = (char*) malloc(sizeof(size_t) + sendbuf_len);
     memcpy(sendbuf, &sendbuf_len, sizeof(size_t));
@@ -620,7 +613,7 @@ void dedos_control_rcv(int peer_sk)
     aggregate_stat(BYTES_RECEIVED, 0, data_len, 1);
     //TODO More check on incoming message sanity for now,
     //assuming inter-runtime communication is safe
-    
+
     if (data_len != msg_size){
         log_warn("Received data len of %d, expected %d", (int)data_len, (int)msg_size);
     }

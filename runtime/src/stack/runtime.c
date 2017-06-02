@@ -102,7 +102,7 @@ static int print_thread_affinity() {
 }
 
 static int pin_thread(pthread_t ptid, int cpu_id) {
-    int s, j;
+    int s;
     cpu_set_t cpuset;
 
     /* Set affinity mask to include CPUs i*/
@@ -119,10 +119,11 @@ static int pin_thread(pthread_t ptid, int cpu_id) {
     }
     /*
      debug("DEBUG: Set returned by pthread_getaffinity_np() contained: %s", "");
-     for (j = 0; j < 8; j++)
-     if (CPU_ISSET(j, &cpuset))
-     printf("\t\tCPU %d\n", j);
-     */
+    int j;
+    for (j = 0; j < 8; j++)
+    if (CPU_ISSET(j, &cpuset))
+    printf("\t\tCPU %d\n", j);
+    */
 
     return 0;
 }
@@ -224,7 +225,7 @@ static void* non_block_per_thread_loop() {
                 unsigned int covered_weight = 0;
                 struct generic_msu_queue_item *queue_item;
 
-                while(covered_weight < cur->scheduling_weight){
+                while (covered_weight < cur->scheduling_weight) {
                     //dequeue from data queue
                     queue_item = generic_msu_queue_dequeue(&cur->q_in);
                     if (queue_item) {
@@ -258,6 +259,9 @@ static void* non_block_per_thread_loop() {
                         msu_receive(cur, NULL);
                     } else if (cur->type->type_id == DEDOS_BAREMETAL_MSU_ID) {
                         //To make sure internal state is cleared
+                        msu_receive(cur, NULL);
+                    } else if (cur->type->type_id == DEDOS_SOCKET_HANDLER_MSU_ID) {
+                        //To poll socket
                         msu_receive(cur, NULL);
                     }
                     covered_weight++;
@@ -503,6 +507,7 @@ int init_main_thread(void) {
     main_thread->msu_pool = NULL; //Only sockets with select so no MSUs
     main_thread->thread_q->shared = 1;
     main_thread->thread_q->mutex = mutex_init();
+    main_thread->thread_q->num_msgs = 0;
     main_thread->thread_q->max_msgs = 0;
     main_thread->thread_q->max_size = 0;
     main_thread->thread_q->head = NULL;
