@@ -88,19 +88,20 @@ int parse_into_obj(const char *filename, void *obj, struct key_mapping *km){
     rewind(file);
 
     // Read the file
-    char *contents = malloc(fsize * sizeof(*contents));
+    char *contents = malloc(fsize + 1);
     fread(contents, fsize, 1, file);
+    contents[fsize] = '\0';
 
     // Initialize the JSON parser
     jsmn_parser parser;
     jsmn_init(&parser);
     // Get the number of necessary tokens
-    int n_tokens = jsmn_parse(&parser, contents, strlen(contents)+1, NULL, 16384);
+    int n_tokens = jsmn_parse(&parser, contents, strlen(contents), NULL, 16384);
     log_debug("Allocating %d tokens", n_tokens);
     jsmntok_t *tokens = malloc(n_tokens * sizeof(*tokens));
     // Parse the JSON
     jsmn_init(&parser);
-    n_tokens = jsmn_parse(&parser, contents, strlen(contents)+1, tokens, n_tokens);
+    n_tokens = jsmn_parse(&parser, contents, strlen(contents), tokens, n_tokens);
     log_debug("Allocated %d tokens", n_tokens);
 
     // Set the top-level object so it can be retrieved elsewhere
