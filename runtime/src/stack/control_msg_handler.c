@@ -447,7 +447,7 @@ void parse_cmd_action(char *cmd) {
         return;
     }
 
-    switch (control_msg->msg_type){
+    switch (control_msg->msg_type) {
         case REQUEST_MESSAGE:
             if (parse_request_msg(control_msg) < 0){
                 log_error("Error parsing REQUEST_MESSAGE");
@@ -467,3 +467,4 @@ void parse_cmd_action(char *cmd) {
             log_error("ERROR: Unknown control message type %d", control_msg->msg_type);
             return;
     }
+}
