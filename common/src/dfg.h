@@ -8,6 +8,7 @@
 struct dfg_config;
 
 #include "logging.h"
+#include "statistics.h"
 #include "scheduling_cut.h"
 
 /* Some infra properties */
@@ -71,9 +72,11 @@ struct msu_profiling {
     int tx_node_remote;
 };
 
+
 struct msu_statistics_data {
-    int msu_events_this_intvl;
-    int msu_events_last_intvl;
+    struct timeserie queue_item_processed;
+    struct timeserie data_queue_size;
+    struct timeserie memory_allocated;
 };
 
 struct msu_scheduling {

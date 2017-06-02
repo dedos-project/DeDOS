@@ -124,6 +124,16 @@ struct json_state init_dfg_msu(struct json_state *in, int index){
     cfg->vertex_cnt++;
     cfg->vertices[index] = malloc(sizeof(*cfg->vertices[index]));
 
+    cfg->vertices[index]->statistics.queue_item_processed.timepoint = 0;
+    memset(cfg->vertices[index]->statistics.queue_item_processed.data, 0, TIME_SLOTS);
+    memset(cfg->vertices[index]->statistics.queue_item_processed.timestamp, 0, TIME_SLOTS);
+    cfg->vertices[index]->statistics.data_queue_size.timepoint = 0;
+    memset(cfg->vertices[index]->statistics.data_queue_size.data, 0, TIME_SLOTS);
+    memset(cfg->vertices[index]->statistics.data_queue_size.timestamp, 0, TIME_SLOTS);
+    cfg->vertices[index]->statistics.memory_allocated.timepoint = 0;
+    memset(cfg->vertices[index]->statistics.memory_allocated.data, 0, TIME_SLOTS);
+    memset(cfg->vertices[index]->statistics.memory_allocated.timestamp, 0, TIME_SLOTS);
+
     struct json_state msu_obj = {
         .data = cfg->vertices[index],
         .parent_type = MSUS
