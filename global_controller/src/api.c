@@ -80,7 +80,7 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
         /*unsigned char buf[sizeof(struct in_addr)];
         inet_pton(AF_INET, "192.168.0.1", buf);
         init_data->bind_ip = buf;*/
-        init_data->target_msu_type = DEDOS_SSL_READ_MSU_ID;
+        init_data->target_msu_type = DEDOS_SSL_REQUEST_ROUTING_MSU_ID;
 
         size_t len = sizeof(struct socket_handler_init_payload);
         memcpy(data + data_len, init_data, len);
@@ -101,7 +101,7 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
     create_msu_msg->init_data      = data;
     memcpy(create_msu_msg_buffer + sizeof(*create_msu_msg), data, data_len);
 
-    debug("sock:%d, msu_type: %d, msu id: %d, init_data: %s, init_data_size: %s\n",
+    debug("sock:%d, msu_type: %d, msu id: %d, init_data: %s, init_data_size: %d\n",
            runtime_sock,
            create_msu_msg->msu_type,
            create_msu_msg->msu_id,
