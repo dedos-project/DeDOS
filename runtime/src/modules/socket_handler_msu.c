@@ -38,7 +38,7 @@ extern "C" {
  * @param queue_item: queue item to be received
  * @return Type-id of MSU to receive data next, -1 on error, and 0 if no packet was read.
  */
-int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item) {
+int socket_handler_receive(struct generic_msu *self, struct generic_msu_queue_item *queue_item) {
     struct socket_handler_state *state = self->internal_state;
     int ret, opt, i, n;
 
@@ -185,12 +185,12 @@ int socket_handler_receive(struct generic_msu *self, msu_queue_item *queue_item)
 /**
  * Init an event structure for epolling
  * @param struct generic_msu *self: pointer to the msu instance
- * @param struct create_msu_thread_msg_data *initial_state: contains init data
+ * @param struct create_msu_thread_data *initial_state: contains init data
  * @return 0/-1 success/failure
  */
-int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_data *initial_state) {
+int socket_handler_init(struct generic_msu *self, struct create_msu_thread_data *initial_state) {
     int ret, opt, efd, flags;
-    struct socket_handler_init_payload *init_data = initial_state->creation_init_data;
+    struct socket_handler_init_payload *init_data = initial_state->init_data;
 
     struct socket_handler_state *state = malloc(sizeof(struct socket_handler_state));
     self->internal_state = state;
@@ -265,10 +265,10 @@ int socket_handler_init(struct generic_msu *self, struct create_msu_thread_msg_d
 /**
  * Close sockets handled by this MSU
  * @param: struct generic_msu self reference to this MSU
- * @param create_msu_thread_msg_data initial_state reference to initial data structure
+ * @param create_msu_thread_data initial_state reference to initial data structure
  * @return 0/-1 success/failure
  */
-int socket_handler_destroy(struct generic_msu *self, struct create_msu_thread_msg_data *initial_state) {
+int socket_handler_destroy(struct generic_msu *self, struct create_msu_thread_data *initial_state) {
     struct socket_handler_state *state = self->internal_state;
     int ret;
 
@@ -293,7 +293,7 @@ struct msu_type SOCKET_HANDLER_MSU_TYPE = {
     .destroy=socket_handler_destroy,
     .receive=socket_handler_receive,
     .receive_ctrl=NULL,
-    .route=round_robin,
+    .route=shortest_queue_route,
     .send_local=default_send_local,
     .send_remote=default_send_remote,
     .deserialize=default_deserialize
