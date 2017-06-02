@@ -135,6 +135,8 @@ int parse_into_obj(const char *filename, void *obj, struct key_mapping *km){
         }
     }
 
+    fclose(file);
+
     return 0;
 }
 
