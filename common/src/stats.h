@@ -25,6 +25,7 @@ enum stat_id{
     BYTES_RECEIVED,
     GATHER_THREAD_STATS,
     N_STAT_IDS,
+    MEMORY_ALLOCATED,
 };
 
 #if STATLOG

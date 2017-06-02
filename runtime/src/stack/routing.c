@@ -184,7 +184,7 @@ static int add_routing_table_entry(struct routing_table *table,
     table->destinations[i] = *destination;
     table->n_destinations++;
     unlock(table);
-    log_info("Added destinoation %d to table of type %d", destination->id, table->type_id);
+    log_info("Added destination %d to table of type %d", destination->id, table->type_id);
     return 0;
 }
 
