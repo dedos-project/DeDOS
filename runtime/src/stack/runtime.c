@@ -676,30 +676,44 @@ static void check_pending_runtimes() {
 }
 
 static void push_stats_to_controller() {
-
     struct dedos_control_msg *stats_msg;
-    unsigned int payload_size = main_thread->thread_stats->array_len * sizeof(struct msu_stats_data);
+    unsigned int payload_size = 0;
 
     stats_msg = malloc(sizeof(struct dedos_control_msg));
     if (!stats_msg) {
-        log_error("failed to allocate memory for sending MSU_LIST to master %s","");
+        log_error("failed to allocate memory for sending MSU_LIST to master");
         return;
     }
+
+    char *sendbuf = malloc(sizeof(struct dedos_control_msg));
+    if (!sendbuf) {
+        log_error("ERROR: failed to allocate memory for buf to send MSU_LIST to master");
+        free(stats_msg);
+        return;
+    }
+    bzero(sendbuf, sizeof(struct dedos_control_msg));
+
+    int i;
+    int n = 0;
+    for (i = 0; i < main_thread->thread_stats->array_len; ++i) {
+        if (main_thread->thread_stats->msu_stats_data[i].msu_id > 0) {
+            payload_size += sizeof(struct msu_stats_data);
+            sendbuf = realloc(sendbuf, sizeof(struct dedos_control_msg) + payload_size);
+            int offset = sendbuf
+                         + sizeof(struct dedos_control_msg)
+                         + sizeof(struct msu_stats_data) * n;
+            memcpy(offset,
+                   &main_thread->thread_stats->msu_stats_data[i],
+                   sizeof(struct msu_stats_data));
+            n++;
+        }
+    }
+
     stats_msg->msg_type = ACTION_MESSAGE;
     stats_msg->msg_code = STATISTICS_UPDATE;
     stats_msg->header_len = sizeof(struct dedos_control_msg);
     stats_msg->payload_len = payload_size;
-
-    char *sendbuf = malloc(sizeof(struct dedos_control_msg) + payload_size);
-    if (!sendbuf) {
-        log_error(
-                "ERROR: failed to allocate memory for buf to send MSU_LIST to master %s",
-                "");
-        free(stats_msg);
-        return;
-    }
     memcpy(sendbuf, stats_msg, sizeof(struct dedos_control_msg));
-    memcpy(sendbuf + sizeof(struct dedos_control_msg), main_thread->thread_stats->msu_stats_data, payload_size);
 
 #if DEBUG != 0
 //    print_aggregate_stats(); //UNCOMMENT To see your screen flooded with statistics being sent
@@ -715,8 +729,8 @@ static void push_stats_to_controller() {
 int dedos_runtime_destroy(void){
 
     //TODO Cleanup all threads -> all msus of that thread -> all internal MSU stuff
-    log_critical("TODO Destroying runtime %s","");
-    log_critical("Just exiting for now %s","");
+    log_critical("TODO Destroying runtime");
+    log_critical("Just exiting for now");
 #ifdef DATAPLANE_PROFILING
     deinit_data_plane_profiling();
 #endif
@@ -776,7 +790,7 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
         ret = check_comm_sockets(); //for incoming data processing
         // log_debug("Done check_comm_sockets %s","");
         if (ret == -1) {
-            log_warn("Breaking from dedos_main_thread_loop%s","");
+            log_warn("Breaking from dedos_main_thread_loop");
             break;
         }
 
