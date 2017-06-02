@@ -1,7 +1,6 @@
 #ifndef STATISTICS_H
 #define STATISTICS_H
 
-#include "dfg.h"
 #include <time.h>
 
 #define TIME_SLOTS 60
@@ -12,4 +11,7 @@ struct timeserie {
     short timepoint;
 };
 
+struct dfg_vertex;
+enum stat_id;
+int average(struct dfg_vertex *msu, enum stat_id stat_id);
 #endif
