@@ -141,8 +141,8 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
                 struct msu_stats_data *rcvd_stats_array = (struct msu_stats_data*)control_msg->payload;
                 int stats_items = control_msg->payload_len / (sizeof(struct msu_stats_data));
 
+                /*
                 debug("Received stats: %s","");
-                //unsigned int array_len = control_msg->payload_len / sizeof(struct msu_stats_data);
                 for (i = 0; i < stats_items; ++i) {
                     debug("msu_id: %d, items_processed: %u, mem_usage: %u, q_size: %u",
                             rcvd_stats_array[i].msu_id,
@@ -152,7 +152,7 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
 
                          );
                 }
-
+                */
                 process_stats_msg(rcvd_stats_array, runtime_sock, stats_items);
             } else {
                 debug("ERROR: Wrong msg type set for STATISTICS update %u", control_msg->msg_type);

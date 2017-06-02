@@ -54,45 +54,47 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
     struct msu_stats_data *stats = stats_data;
     short index = 0;
 
-    debug("DEBUG: %s", "processing stat messages");
+    //debug("processing stat messages");
 
     //update controller timeseries
     int i;
     for (i = 0; i <= stats_items; i++) {
         if (stats[i].msu_id > 0) {
-            debug("DEBUG: %s: %d", "payload.msu_id", stats[i].msu_id);
-            debug("DEBUG: %d payload.item_processed at time %d",
+            /*
+            debug("%s: %d", "payload.msu_id", stats[i].msu_id);
+            debug("%d payload.item_processed at time %d",
                   stats[i].queue_item_processed[1],
                   stats[i].queue_item_processed[0]);
-            debug("DEBUG: %d payload.memory_allocated at time %d",
+            debug("%d payload.memory_allocated at time %d",
                   stats[i].memory_allocated[1],
                   stats[i].memory_allocated[0]);
-            debug("DEBUG: %d payload.data_queue_size at time %d",
+            debug("%d payload.data_queue_size at time %d",
                   stats[i].data_queue_size[1],
                   stats[i].data_queue_size[0]);
+            */
 
             struct dfg_vertex *msu = get_msu_from_id(stats[i].msu_id);
 
-            index = msu->statistics.queue_item_processed->timepoint;
-            msu->statistics.queue_item_processed->data[index] =
+            index = msu->statistics.queue_item_processed.timepoint;
+            msu->statistics.queue_item_processed.data[index] =
                 stats[i].queue_item_processed[1];
-            msu->statistics.queue_item_processed->timestamp[index] =
+            msu->statistics.queue_item_processed.timestamp[index] =
                 stats[i].queue_item_processed[0];
-            msu->statistics.queue_item_processed->timepoint = (index + 1) % TIME_SLOTS;
+            msu->statistics.queue_item_processed.timepoint = (index + 1) % TIME_SLOTS;
 
-            index = msu->statistics.memory_allocated->timepoint;
-            msu->statistics.memory_allocated->data[index] =
+            index = msu->statistics.memory_allocated.timepoint;
+            msu->statistics.memory_allocated.data[index] =
                 stats[i].memory_allocated[1];
-            msu->statistics.memory_allocated->timestamp[index] =
+            msu->statistics.memory_allocated.timestamp[index] =
                 stats[i].memory_allocated[0];
-            msu->statistics.memory_allocated->timepoint = (index + 1) % TIME_SLOTS;
+            msu->statistics.memory_allocated.timepoint = (index + 1) % TIME_SLOTS;
 
-            index = msu->statistics.data_queue_size->timepoint;
-            msu->statistics.data_queue_size->data[index] =
+            index = msu->statistics.data_queue_size.timepoint;
+            msu->statistics.data_queue_size.data[index] =
                 stats[i].data_queue_size[1];
-            msu->statistics.data_queue_size->timestamp[index] =
+            msu->statistics.data_queue_size.timestamp[index] =
                 stats[i].data_queue_size[0];
-            msu->statistics.data_queue_size->timepoint = (index + 1) % TIME_SLOTS;
+            msu->statistics.data_queue_size.timepoint = (index + 1) % TIME_SLOTS;
         }
     }
 
