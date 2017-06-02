@@ -189,7 +189,7 @@ int socket_handler_receive(struct generic_msu *self, struct generic_msu_queue_it
  * @return 0/-1 success/failure
  */
 int socket_handler_init(struct generic_msu *self, struct create_msu_thread_data *initial_state) {
-    int ret, opt, efd, flags;
+    int ret, opt, flags;
     struct socket_handler_init_payload *init_data = initial_state->init_data;
 
     struct socket_handler_state *state = malloc(sizeof(struct socket_handler_state));
@@ -233,7 +233,7 @@ int socket_handler_init(struct generic_msu *self, struct create_msu_thread_data 
     }
 
     state->eventfd = epoll_create1(0);
-    if (efd == -1) {
+    if (state->eventfd == -1) {
         log_error("%s", "epoll_create1(0) failed");
         return -1;
     }
