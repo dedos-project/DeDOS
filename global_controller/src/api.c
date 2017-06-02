@@ -80,7 +80,7 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
         /*unsigned char buf[sizeof(struct in_addr)];
         inet_pton(AF_INET, "192.168.0.1", buf);
         init_data->bind_ip = buf;*/
-        init_data->target_msu_type = DEDOS_SSL_REQUEST_ROUTING_MSU_ID;
+        init_data->target_msu_type = 502; //DEDOS_SSL_REQUEST_ROUTING_MSU_ID;
 
         size_t len = sizeof(struct socket_handler_init_payload);
         memcpy(data + data_len, init_data, len);

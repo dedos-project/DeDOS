@@ -104,7 +104,7 @@ int socket_handler_receive(struct generic_msu *self, struct generic_msu_queue_it
             //Some data has to be read from an established connection
             log_debug("%s", "listening for data to be read on an established connection");
             switch (state->target_msu_type) {
-                case DEDOS_SSL_READ_MSU_ID: {
+                case DEDOS_SSL_REQUEST_ROUTING_MSU_ID: {
                     int done = 0;
                     while (1) {
                         ssize_t count;
