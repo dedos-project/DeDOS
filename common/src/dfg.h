@@ -10,15 +10,15 @@
 struct dfg_config;
 struct dfg_vertex;
 
-#include "logging.h"
-#include "timeseries.h"
-#include "scheduling_cut.h"
-
 /* Some infra properties */
 #define MAX_THREADS 20
 #define MAX_RUNTIMES 20
 #define NUM_MSU_TYPES 16
 #define MAX_DESTINATIONS 16
+
+#include "logging.h"
+#include "statistics.h"
+#include "scheduling_cut.h"
 
 /* Some struct related to DFG management protocol */
 struct dedos_dfg_add_endpoint_msg {
@@ -87,7 +87,7 @@ struct msu_scheduling {
 
     int num_routes;
     struct dfg_route *routes[NUM_MSU_TYPES];
-    int deadline;
+    float deadline;
 };
 
 //store the absolute destination and source types
@@ -141,7 +141,7 @@ struct dfg_config {
     char application_name[64];
 
     //scheduling data
-    int application_deadline;
+    float application_deadline;
 
     //Data-flow graph of MSUs
     struct dfg_vertex *vertices[MAX_MSU]; //All MSUs

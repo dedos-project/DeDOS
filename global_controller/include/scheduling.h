@@ -4,7 +4,6 @@
 #include "dfg.h"
 #include "scheduling_cut.h"
 
-
 struct to_schedule {
     int *msu_ids;
     int num_msu;
