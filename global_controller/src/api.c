@@ -316,80 +316,6 @@ int mod_endpoint(int msu_id, int route_id, unsigned int range_end, int runtime_s
 
     return send_control_msg(runtime_sock, &control_msg);
 }
-/*
-int update_route(int action, int runtime_sock, int from_msu_id, int from_msu_type,
-                 int to_msu_id, int to_msu_type, enum locality to_msu_locality, int to_ip) {
-
-    struct dedos_control_msg control_msg;
-    char *buf;
-    long total_msg_size = 0;
-
-    struct manage_route_control_payload data = {
-        .msu_id = to_msu_id,
-        .msu_type_id = to_msu_type,
-        .locality = to_msu_locality,
-        .ipv4 = (uint32_t)to_ip
-    };
-
-    struct dedos_control_msg_manage_msu route_update;
-
-    route_update.msu_id = from_msu_id;
-    route_update.msu_type = from_msu_type;
-    route_update.init_data_size = sizeof(struct msu_control_add_or_del_route);
-    route_update.init_data = (struct msu_control_add_or_del_route *) &data;
-
-    debug("DEBUG: Sock %d", runtime_sock);
-    debug("DEBUG: MSU id : %d", route_update.msu_id);
-    debug("DEBUG: msu_type %d", route_update.msu_type);
-    debug("DEBUG: peer_msu_id: %d", data.peer_msu_id);
-    debug("DEBUG: peer_msu_type: %u", data.peer_msu_type);
-    debug("DEBUG: peer_locality: %u", data.peer_locality);
-    debug("DEBUG: peer_ip: %u", data.peer_ip);
-
-    control_msg.msg_type = ACTION_MESSAGE;
-    control_msg.msg_code = action;
-    control_msg.header_len = sizeof(struct dedos_control_msg); //might be redundant
-    control_msg.payload_len =
-        sizeof(struct dedos_control_msg_manage_msu) + route_update.init_data_size;
-
-    total_msg_size = sizeof(struct dedos_control_msg) + control_msg.payload_len;
-
-    buf = (char*) malloc(total_msg_size);
-    if (!buf) {
-        debug("ERROR: Unable to allocate memory for sending control command. %s","");
-        return -1;
-    }
-    memcpy(buf, &control_msg, sizeof(struct dedos_control_msg));
-    memcpy(buf + sizeof(struct dedos_control_msg),
-           &route_update, sizeof(struct dedos_control_msg_manage_msu));
-    memcpy(buf + sizeof(struct dedos_control_msg) + sizeof(struct dedos_control_msg_manage_msu),
-           &data, sizeof(struct msu_control_add_or_del_route));
-
-    send_to_runtime(runtime_sock, buf, total_msg_size);
-
-    //TODO: assume msu update goes well. We need some kind of acknowledgement.
-    struct dedos_dfg_manage_msg *dfg_manage_msg =
-        (struct dedos_dfg_manage_msg *) malloc(sizeof(struct dedos_dfg_manage_msg));
-
-    dfg_manage_msg->msg_type = ACTION_MESSAGE;
-    dfg_manage_msg->msg_code = action;
-    dfg_manage_msg->header_len = sizeof(struct dedos_dfg_manage_msg);
-    dfg_manage_msg->payload_len = sizeof(struct dedos_dfg_update_msu_route_msg);
-
-    struct dedos_dfg_update_msu_route_msg *route_update_msg =
-        (struct dedos_dfg_update_msu_route_msg *)
-            malloc(sizeof(struct dedos_dfg_update_msu_route_msg));
-
-    route_update_msg->msu_id_from = from_msu_id;
-    route_update_msg->msu_id_to = to_msu_id;
-    dfg_manage_msg->payload = route_update_msg;
-
-    update_dfg(dfg_manage_msg);
-
-    free(buf);
-
-    return 0;
-}*/
 
 int create_worker_thread(int runtime_sock) {
     struct dedos_control_msg control_msg;
@@ -430,6 +356,16 @@ int create_worker_thread(int runtime_sock) {
     if (ret == 0) {
         pthread_mutex_lock(&dfg->dfg_mutex);
 
+        struct runtime_thread *new_thread = NULL;
+        new_thread = malloc(sizeof(struct runtime_thread));
+
+        new_thread->id = dfg->runtimes[endpoint_index]->num_pinned_threads + 1; //+1 for main thread
+        new_thread->mode = 1;
+        new_thread->utilization = 0;
+
+        //assuming we don't store the main thread in this list
+        int new_thread_index = dfg->runtimes[endpoint_index]->num_pinned_threads;
+        dfg->runtimes[endpoint_index]->threads[new_thread_index] = new_thread;
         dfg->runtimes[endpoint_index]->num_pinned_threads++;
         dfg->runtimes[endpoint_index]->num_threads++;
 
