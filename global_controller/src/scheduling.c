@@ -46,6 +46,7 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
         if (ret == -1) {
             debug("Could not create new worker thread on runtime %d", rt->id);
             return ret;
+
         }
 
         sleep(2); // To leave time to runtime to digest the command...
