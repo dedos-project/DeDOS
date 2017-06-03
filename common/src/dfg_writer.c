@@ -100,7 +100,7 @@ void dump_json(struct dfg_config *dfg_ref) {
                          dfg.application_name);
     json_len += snprintf(json_string + json_len, 3, ", ");
 
-    //applicatin dealine
+    //applicatin deadline
     field_len = 25 + how_many_digits(dfg.application_deadline) + 1;
     json_len += snprintf(json_string + json_len,
                          field_len,
@@ -268,11 +268,11 @@ void dump_json(struct dfg_config *dfg_ref) {
                 json_len += snprintf(json_string + json_len, 3, ", ");
 
                 //bissection bw
-                field_len = 19 + how_many_digits(dfg.runtimes[r]->current_alloc->bissection_bw) + 1;
+                field_len = 19 + how_many_digits(dfg.runtimes[r]->current_alloc->io_network_bw) + 1;
                 json_len += snprintf(json_string + json_len,
                                      field_len,
-                                     "\"bissection_bw\":\"%d\"",
-                                     dfg.runtimes[r]->current_alloc->bissection_bw);
+                                     "\"io_network_bw\":\"%d\"",
+                                     dfg.runtimes[r]->current_alloc->io_network_bw);
                 json_len += snprintf(json_string + json_len, 3, ", ");
 
                 //egress bw

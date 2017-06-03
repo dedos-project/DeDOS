@@ -88,6 +88,12 @@ struct json_state init_runtime(struct json_state *in, int index){
     cfg->runtimes_cnt++;
     cfg->runtimes[index] = malloc(sizeof(*cfg->runtimes[index]));
 
+    cfg->runtimes[index]->num_pinned_threads = 0;
+    cfg->runtimes[index]->num_threads = 0;
+    cfg->runtimes[index]->num_cores = 0;
+    cfg->runtimes[index]->ip = 0;
+    cfg->runtimes[index]->current_alloc = NULL;
+
     struct json_state rt_obj = {
         .data = cfg->runtimes[index],
         .parent_type = RUNTIMES
