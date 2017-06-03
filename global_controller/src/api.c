@@ -416,7 +416,7 @@ int add_runtime(char *runtime_ip, int runtime_sock) {
  * exploitatable by anyone calling this API function
  * @param msu_id
  * @return none
- *
+ */
 void show_stats(int msu_id) {
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
     int i;
@@ -426,8 +426,8 @@ void show_stats(int msu_id) {
     for (i = 0; i < RRDB_ENTRIES; ++i) {
         if (msu->statistics->queue_item_processed->timestamp[i] > 0) {
             printf("%d, %d\n",
-                    msu->statistics->queue_item_processed->data[i],
-                    msu->statistics->queue_item_processed->timestamp[i]);
+                    msu->statistics.queue_item_processed.data[i],
+                    msu->statistics.queue_item_processed.timestamp[i]);
         }
     }
 
@@ -436,8 +436,8 @@ void show_stats(int msu_id) {
     for (i = 0; i < RRDB_ENTRIES; ++i) {
         if (msu->statistics->data_queue_size->timestamp[i] > 0) {
             printf("%d, %d\n",
-                    msu->statistics->data_queue_size->data[i],
-                    msu->statistics->data_queue_size->timestamp[i]);
+                    msu->statistics.data_queue_size.data[i],
+                    msu->statistics.data_queue_size.timestamp[i]);
         }
     }
 
@@ -446,9 +446,8 @@ void show_stats(int msu_id) {
     for (i = 0; i < RRDB_ENTRIES; ++i) {
         if (msu->statistics->memory_allocated->timestamp[i] > 0) {
             printf("%d, %d\n",
-                    msu->statistics->memory_allocated->data[i],
-                    msu->statistics->memory_allocated->timestamp[i]);
+                    msu->statistics.memory_allocated.data[i],
+                    msu->statistics.memory_allocated.timestamp[i]);
         }
     }
 }
-*/

@@ -61,7 +61,7 @@ static void parse_allocate() {
     struct to_schedule *ts = NULL;
     ts = malloc(sizeof(struct to_schedule));
     if (ts == NULL) {
-        debug("%s", "Could not allocate memory for to_schedule");
+        debug("Could not allocate memory for to_schedule");
         return;
     }
 
@@ -82,6 +82,24 @@ static void parse_allocate() {
     ts->num_msu = num_to_alloc;
 
     allocate(ts);
+}
+
+/**
+ * Display controller's time series for a given msu
+ * @param *args: string received from the CLI
+ * @return none
+ */
+static void parse_show_stats(char *args) {
+    char *arg;
+    NEXT_ARG(arg, args);
+    int msu_id = atoi(arg);
+
+    if (get_msu_from_id(msu_id) ==  NULL) {
+        printf("MSU id %d is not registered with the controller\n", msu_id);
+        return;
+    }
+
+    show_stats(msu_id);
 }
 
 static int parse_show_msus(char *args) {
@@ -340,6 +358,9 @@ struct cmd_action cmd_actions[] = {
 
     {"allocate", parse_allocate,
         "/* gather all msu not possessing a 'scheduling' object, and compute a placement */"},
+
+    {"show stats", parse_show_stats,
+        "[msu_id] /* display stored time serie for a given msu */"},
 
     {"loadcfg", parse_load_cfg,
         "[filename] /* load a suite of commands from a file */"},
