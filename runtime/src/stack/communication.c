@@ -338,7 +338,7 @@ int check_comm_sockets() {
                 data->type = READ;
                 data->state = NULL;
                 // get a new queue item and enqueue it into this queue
-                struct generic_msu_queue_item *new_item_ws = malloc(sizeof(struct generic_msu_queue_item));
+                struct generic_msu_queue_item *new_item_ws = create_generic_msu_queue_item();
                 new_item_ws->buffer = data;
                 new_item_ws->buffer_len = sizeof(struct ssl_data_payload);
 #ifdef DATAPLANE_PROFILING
