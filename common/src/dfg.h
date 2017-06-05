@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 
 struct dfg_config;
+#define MAX_MSU 128
 
 #include "logging.h"
 #include "statistics.h"
@@ -14,7 +15,6 @@ struct dfg_config;
 /* Some infra properties */
 #define MAX_THREADS 20
 #define MAX_RUNTIMES 20
-#define MAX_MSU 128
 #define NUM_MSU_TYPES 16
 #define MAX_DESTINATIONS 16
 
