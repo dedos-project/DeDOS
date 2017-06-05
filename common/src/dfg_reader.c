@@ -351,12 +351,26 @@ static int set_tx_core_local(jsmntok_t **tok, char *j, struct json_state *in, st
 static int set_source_types(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct msu_meta_routing *meta = in->data;
     int n_srcs = (*tok)->size;
-    for (int i=0; i<n_srcs; i++){
+    for (int i=0; i<n_srcs; i++) {
+        ++(*tok);
         ++(*tok);
         int type = tok_to_int(*tok, j);
         meta->src_types[meta->num_src_types] = type;
         ++meta->num_src_types;
+
+        struct dependent_type *type_dep = malloc(sizeof(struct dependent_type));
+        //setup pointer to dependent_type list
+        //vertex->num_dependencies++
+        //vertex->dependencies[i] = type_dep;
+        //++(*tok);
+        //++(*tok);
+        //vertex->dependencies[i]->msu_type = tok_to_int(*tok, j);
+        //++(*tok);
+        //++(*tok);
+        //vertex->dependencies[i]->locality = tok_to_int(*tok, j);
+        //++(*tok);
     }
+
     return 0;
 }
 
@@ -369,6 +383,7 @@ static int set_dst_types(jsmntok_t **tok, char *j, struct json_state *in, struct
         meta->dst_types[meta->num_dst_types] = type;
         ++meta->num_dst_types;
     }
+
     return 0;
 }
 
