@@ -57,11 +57,13 @@
 
 #if defined(LOG_CUSTOM) && LOG_CUSTOM
 #define log_custom(level, fmt, ...)\
-    if ( level ) { \
-        log_at_level(#level, fmt, ANSI_COLOR_RESET, ##__VA_ARGS__); \
-    }
+    do { \
+        if ( level ) { \
+            log_at_level(#level, ANSI_COLOR_PURPLE, LOG_FD, fmt, ##__VA_ARGS__); \
+        } \
+    } while (0)
 #else
-#define log_custom(...)  do {} while (0)
+#define log_custom(...) do {} while (0)
 #endif
 
 #if defined(LOG_STATS) && LOG_STATS
