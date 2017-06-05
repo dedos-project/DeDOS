@@ -39,7 +39,6 @@ struct dedos_dfg_manage_msg {
     void *payload;
 };
 
-
 /* Structures defining DFG elements */
 struct dfg_runtime_endpoint {
     int id;
@@ -106,6 +105,11 @@ struct dfg_route {
     struct dfg_vertex *destinations[MAX_DESTINATIONS];
 };
 
+struct dependent_type {
+    int msu_type;
+    int locality; // 1/0 -- local/remote
+};
+
 //Definition of a vertex--an MSU
 struct dfg_vertex {
     char vertex_type[12]; //entry, exit, ...
@@ -117,6 +121,8 @@ struct dfg_vertex {
     char msu_name[128]; //Name of the MSU: "handshaking"
     char msu_mode[13]; //blocking/non-blocking
 
+    int num_dependencies;
+    struct dependent_type *dependencies[NUM_MSU_TYPES];
     //Profiling data
     struct msu_profiling profiling;
 
@@ -129,8 +135,6 @@ struct dfg_vertex {
     //Monitoring data
     struct msu_statistics_data statistics;
 };
-
-
 
 // Wrapper structure for the DFG
 struct dfg_config {
@@ -153,7 +157,6 @@ struct dfg_config {
 
 extern struct dfg_config dfg_config_g;
 
-
 //Some utility struct
 struct msus_of_type {
     int *msu_ids;
@@ -171,7 +174,9 @@ int show_connected_peers(void);
 struct msus_of_type *get_msus_from_type(int type);
 struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id);
 struct dfg_vertex *get_msu_from_id(int msu_id);
+struct dfg_route *get_route_from_type(struct dfg_vertex *msu, int msu_type);
 
+int generate_route_id(struct dfg_runtime_endpoint *r);
 int add_route_to_msu_vertex(int runtime_index, int msu_id, int route_id);
 int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) ;
 int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end);
