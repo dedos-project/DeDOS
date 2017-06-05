@@ -162,6 +162,8 @@ static inline int unlock_item(struct item_stats *item) {
 void flush_item_to_log(enum stat_id stat_id, unsigned int item_id) {
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
 
+    lock_item(item);
+
     struct stat_type *stat_type = &stat_types[stat_id];
     int n_stats = item->n_stats;
     if (item->rolled_over)
@@ -178,6 +180,7 @@ void flush_item_to_log(enum stat_id stat_id, unsigned int item_id) {
         fwrite("\n", 1, 1, statlog);
     }
 
+    unlock_item(item);
 }
 
 /** Writes all gathered statistics to the log file
