@@ -69,13 +69,13 @@ struct stat_type {
     char *stat_name;      /**< Name to output for this statistic */
 };
 
-#define MAX_STAT 16384
+#define MAX_STAT 100000
 
 /**
  * This structure defines the format and size of the statistics being logged
  * NOTE: Entries *MUST* be in the same order as the enumerator in stats.h!
  */
-struct stat_type stat_types[10] = {
+struct stat_type stat_types[] = {
    {QUEUE_LEN,           LOG_QUEUE_LEN,           32, MAX_STAT, "%02.0f",  "MSU_QUEUE_LENGTH"},
    {ITEMS_PROCESSED,     LOG_ITEMS_PROCESSED,     32, MAX_STAT, "%03.0f",  "ITEMS_PROCESSED"},
    {MSU_FULL_TIME,       LOG_MSU_FULL_TIME,       32, MAX_STAT, "%0.9f",   "MSU_FULL_TIME"},
@@ -162,34 +162,22 @@ static inline int unlock_item(struct item_stats *item) {
 void flush_item_to_log(enum stat_id stat_id, unsigned int item_id) {
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
 
-    lock_item(item);
-
     struct stat_type *stat_type = &stat_types[stat_id];
     int n_stats = item->n_stats;
     if (item->rolled_over)
         n_stats = stat_type->max_stats;
 
-    int n_chars[n_stats];
-    char to_write[n_stats][128];
+    char label[64];
+    sprintf(label, "%s:%02d:", stat_type->stat_name, item_id);
+    size_t label_size = strlen(label);
+
     for (int i=0; i<n_stats; i++) {
-        int written = sprintf(to_write[i], "%s:%02d:%05ld.%09ld:",
-                              stat_type->stat_name,
-                              item_id,
-                              item->time[i].tv_sec, item->time[i].tv_nsec);
-        written += sprintf(to_write[i]+written, stat_type->stat_format, item->stats[i]);
-        n_chars[i] = written;
-    }
-    item->time[0] = item->time[item->n_stats];
-    item->stats[0] = item->stats[item->n_stats];
-    int n_item_stats = item->n_stats;
-    item->n_stats = 0;
-
-    for (int i=0; i<n_item_stats; i++) {
-        fwrite(to_write[i], sizeof(char), n_chars[i], statlog);
-        fwrite("\n", sizeof(char), 1, statlog);
+        fwrite(label, 1, label_size, statlog);
+        fprintf(statlog, "%05ld.%09ld:", item->time[i].tv_sec, item->time[i].tv_nsec);
+        fprintf(statlog, stat_type->stat_format, item->stats[i]);
+        fwrite("\n", 1, 1, statlog);
     }
 
-    unlock_item(item);
 }
 
 /** Writes all gathered statistics to the log file
@@ -198,7 +186,7 @@ void flush_all_stats_to_log(void) {
     for (int i=0; i<N_STAT_TYPES; i++) {
         if (!stat_types[i].enabled)
             continue;
-        for (int j=0; j<stat_types[i].max_stats; j++) {
+        for (int j=0; j<stat_types[i].n_item_ids; j++) {
             flush_item_to_log(i, j);
         }
     }
@@ -225,7 +213,7 @@ void aggregate_end_time(enum stat_id stat_id, unsigned int item_id) {
     long timediff_ns = newtime.tv_nsec - item->time[item->n_stats].tv_nsec;
     item->stats[item->n_stats] = (double)timediff_s + ((double)timediff_ns/(1000000000.0));
     item->n_stats++;
-    if (item->n_stats == item->n_stats) {
+    if (item->n_stats == stat_type->max_stats) {
         log_warn("Stats for type %s rolling over", stat_type->stat_name);
         item->n_stats = 0;
         item->rolled_over = 1;
@@ -307,7 +295,7 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
         get_elapsed_time(&item->time[item->n_stats]);
         item->stats[item->n_stats] = stat;
         item->n_stats++;
-        if (item->n_stats == item->n_stats) {
+        if (item->n_stats == stat_type->max_stats) {
             log_warn("Stats for type %s rolling over", stat_type->stat_name);
             item->n_stats = 0;
             item->rolled_over = 1;
@@ -383,8 +371,10 @@ void init_statlog(char *filename) {
  * Flushes all stats to the log file, and closes the file
  */
 void close_statlog() {
+    log_info("Outputting stats to log. Do not quit");
     flush_all_stats_to_log();
     fclose(statlog);
+    log_info("Finished outputting stats to log");
 }
 
 #endif

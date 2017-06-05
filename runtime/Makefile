@@ -10,7 +10,7 @@ LOGS = \
 	   CRITICAL \
 	   CUSTOM
 
-LOG_STATS = 0
+LOG_STATS = 1
 
 PATH_SRC = src/
 PATH_SRC_APP = $(PATH_SRC)apps/
