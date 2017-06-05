@@ -1,4 +1,5 @@
 #include "stats.h"
+#include "statistics.h"
 #include "logging.h"
 #include <stdlib.h>
 #include <string.h>
@@ -92,15 +93,6 @@ struct stat_type stat_types[] = {
 };
 
 #define N_STAT_TYPES sizeof(stat_types) / sizeof(struct stat_type)
-
-/**
- * Structure to hold a single timestamped statistic
- */
-struct timed_stat {
-    double stat;
-    struct timespec time;
-};
-
 #define MAX_STAT_SAMPLES 128
 
 /**
