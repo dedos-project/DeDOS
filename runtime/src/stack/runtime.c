@@ -194,21 +194,10 @@ static void* non_block_per_thread_loop() {
         }
 
 #if STATLOG
-        log_warn("STAT_LOG Enabled");
         getrusage(RUSAGE_THREAD, &thread_usage);
-        periodic_aggregate_stat(N_SWAPS, thread_index,
+        periodic_aggregate_stat(N_CONTEXT_SWITCH, thread_index,
                                 thread_usage.ru_nivcsw,
                                 250);
-        struct timespec t;
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t);
-        periodic_aggregate_stat(CPUTIME, thread_index,
-                                (double)t.tv_sec + (double)t.tv_nsec/1000000000.0,
-                                200);
-
-        periodic_aggregate_end_time(THREAD_LOOP_TIME,
-                                    thread_index,
-                                    100);
-        aggregate_start_time(THREAD_LOOP_TIME, thread_index);
 
 #endif
         /* 1. MSU processing */
@@ -786,7 +775,6 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
     begin = clock();
 
     while (1) {
-        flush_all_stats_to_log(0);
         ret = check_comm_sockets(); //for incoming data processing
         // log_debug("Done check_comm_sockets %s","");
         if (ret == -1) {
