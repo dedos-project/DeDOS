@@ -2,7 +2,6 @@
 #include <time.h>
 #include <pthread.h>
 
-
 #ifndef STATLOG
 #define STATLOG 1
 #endif
