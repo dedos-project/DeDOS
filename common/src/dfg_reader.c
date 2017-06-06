@@ -513,7 +513,6 @@ static struct key_mapping key_map[] = {
 
     { "source_types", META_ROUTING,  set_source_types },
     { "dst_types", META_ROUTING, set_dst_types },
-    { "dependencies", META_ROUTING, set_dependencies },
 
     { "id", DEPENDENCIES, set_dependency_id },
     { "locality", DEPENDENCIES, set_dependency_locality },
