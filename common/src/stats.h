@@ -6,13 +6,8 @@
 #define STATLOG 1
 #endif
 
-/**
- * Structure to hold a single timestamped statistic
- */
-struct timed_stat {
-    double stat;
-    struct timespec time;
-};
+#define MAX_STAT_ITEM_IDS 32
+#define MAX_STAT_SAMPLES 128
 
 /**
  * There must be a unique identifier for each statistic that is gathered.
@@ -23,11 +18,31 @@ enum stat_id{
     MSU_FULL_TIME,
     MSU_INTERNAL_TIME,
     MSU_INTERIM_TIME,
+    MEMORY_ALLOCATED,
     N_CONTEXT_SWITCH,
     BYTES_SENT,
     BYTES_RECEIVED,
     GATHER_THREAD_STATS,
-    MEMORY_ALLOCATED,
+};
+
+
+/**
+ * Structure to hold a single timestamped statistic
+ */
+struct timed_stat {
+    double stat;
+    struct timespec time;
+};
+
+/**
+ * Structure to hold a series of timestamped statistics
+ */
+struct stat_sample {
+    enum stat_id stat_id;
+    int item_id;
+    struct timespec cur_time;
+    int n_stats;
+    struct timed_stat *stats;
 };
 
 
@@ -61,6 +76,13 @@ void close_statlog();
 
 /** Opens the log file for statistics and initializes the stat structure */
 void init_statlog(char *filename);
+
+struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t duration,
+                                     int sample_size);
+
+int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
+                 struct stat_sample *sample);
+
 
 #else
 

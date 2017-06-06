@@ -64,6 +64,11 @@ struct manage_msu_control_payload {
     void *init_data;
 };
 
+struct stats_control_payload {
+    int n_samples;
+    struct stat_sample *samples;
+};
+
 struct dedos_control_msg {
     enum dedos_msg_type msg_type; //request or response
     enum dedos_action_type msg_code;

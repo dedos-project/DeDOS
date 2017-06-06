@@ -63,6 +63,10 @@
 #define LOG_GATHER_THREAD_STATS 1
 #endif
 
+#ifndef LOG_MEMORY_ALLOCATED
+#define LOG_MEMORY_ALLOCATED 1
+#endif
+
 struct stat_type {
     enum stat_id stat_id; /**< Stat ID as defined in stats.h */
     int enabled;          /**< If 1, logging for this item is enabled */
@@ -85,6 +89,7 @@ struct stat_type stat_types[] = {
    {MSU_FULL_TIME,       LOG_MSU_FULL_TIME,       32, MAX_STAT, "%0.9f",   "MSU_FULL_TIME"},
    {MSU_INTERNAL_TIME,   LOG_MSU_INTERNAL_TIME,   32, MAX_STAT, "%0.9f",   "MSU_INTERNAL_TIME"},
    {MSU_INTERIM_TIME,    LOG_MSU_INTERIM_TIME,    32, MAX_STAT, "%0.9f",   "MSU_INTERIM_TIME"},
+   {MEMORY_ALLOCATED,    LOG_MEMORY_ALLOCATED,    32, MAX_STAT, "%09.0f",  "MEMORY_ALLOCATED"},
    {N_CONTEXT_SWITCH,    LOG_N_CONTEXT_SWITCH,    8,  MAX_STAT, "%3.0f",   "N_CONTEXT_SWITCHES"},
    {BYTES_SENT,          LOG_BYTES_SENT,          1,  MAX_STAT, "%06.0f",  "BYTES_SENT"},
    {BYTES_RECEIVED,      LOG_BYTES_RECEIVED,      1,  MAX_STAT, "%06.0f",  "BYTES_RECEIVED"},
@@ -92,7 +97,6 @@ struct stat_type stat_types[] = {
 };
 
 #define N_STAT_TYPES sizeof(stat_types) / sizeof(struct stat_type)
-#define MAX_STAT_SAMPLES 128
 
 /**
  * The internal statistics structure where stats are aggregated
@@ -396,13 +400,15 @@ static int sample_stats_between(struct timed_stat *stats, int max_stats, int sta
     return 0;
 }
 
-struct timed_stat *sample_stats(enum stat_id stat_id, int item_id, time_t duration, int n_stats) {
+struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t duration,
+                                     int n_stats) {
     struct stat_type *stat_type = &stat_types[stat_id];
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
 
     if ( n_stats > MAX_STAT_SAMPLES ) {
         log_error("Requested sample size (%d) is bigger than maximum size (%d)",
                   n_stats, MAX_STAT_SAMPLES);
+        return NULL;
     }
 
     lock_item(item);
@@ -411,8 +417,9 @@ struct timed_stat *sample_stats(enum stat_id stat_id, int item_id, time_t durati
     unlock_item(item);
 
     if ( !item->rolled_over && n_stats > write_index ) {
-        log_error("Requested sample size (%d) is larger than collected statistics (%d)",
+        log_custom(LOG_STAT_INTERNALS, "Requested sample size (%d) larger than # collected (%d)",
                   n_stats, item->n_stats);
+        return NULL;
     }
 
     struct timespec start_time = cur_time;
@@ -438,6 +445,30 @@ struct timed_stat *sample_stats(enum stat_id stat_id, int item_id, time_t durati
     }
 
     return item->sample;
+}
+
+int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
+                 struct stat_sample *sample) {
+    struct stat_type *type = &stat_types[stat_id];
+    int sample_index = 0;
+    for ( int item_id=0; item_id<type->n_item_ids; item_id++ ) {
+        struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
+
+        struct timed_stat *item_sample = sample_item_stats(
+                stat_id, item_id, duration, sample_size);
+
+        if (item_sample == NULL) {
+            log_custom(LOG_STAT_INTERNALS, "Skipping sample of item %d.%d", stat_id, item_id);
+            continue;
+        }
+        sample[sample_index].stat_id = stat_id;
+        sample[sample_index].item_id = item_id;
+        get_elapsed_time(&sample[sample_index].cur_time);
+        sample[sample_index].n_stats = sample_size;
+        sample[sample_index].stats = item_sample;
+        sample_index++;
+    }
+    return sample_index;
 }
 
 /**
