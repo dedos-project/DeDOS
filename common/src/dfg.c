@@ -455,6 +455,28 @@ int lookup_type_on_runtime(struct dfg_runtime_endpoint *rt, int msu_type) {
 }
 
 /**
+ * Pick static data (meta routing profiling, etc) from an MSU of similar tye.
+ * FIXME: If we find another "empty shell" MSU, we will get wrong data. We expect all MSU of
+ * a given type to contain the same static data.
+ * @param struct dfg_vertex: MSU to fill
+ * @return none
+ */
+void clone_type_static_data(struct dfg_vertex *msu) {
+    struct msus_of_type *peer_msus = get_msus_from_type(msu->msu_type);
+    int i;
+    for (i = 0; i < peer_msus->num_msus; ++i) {
+        if (peer_msus->msu_ids[i] != msu->msu_id) {
+            struct dfg_vertex *peer_msu = get_msu_from_id(peer_msus->msu_ids[i]);
+            memcpy(&msu->profiling, &peer_msu->profiling, sizeof(struct msu_profiling));
+            memcpy(&msu->meta_routing, &peer_msu->meta_routing, sizeof(struct msu_meta_routing));
+            memcpy(&msu->dependencies, &peer_msu->dependencies,
+                   sizeof(struct dependent_type) * peer_msu->num_dependencies);
+            msu->num_dependencies = peer_msu->num_dependencies;
+        }
+    }
+}
+
+/**
  * Increment the maximum range of a given route (non commit)
  * @param struct dfg_route route: the target route
  */
@@ -479,7 +501,7 @@ int increment_max_range(struct dfg_route *route) {
 int generate_route_id(struct dfg_runtime_endpoint *rt) {
     int highest_id = -1;
     int i;
-    for (i = 0; i <- rt->num_routes; ++i) {
+    for (i = 0; i < rt->num_routes; ++i) {
         if (highest_id == -1 || rt->routes[i]->route_id > highest_id) {
             highest_id = rt->routes[i]->route_id;
         }

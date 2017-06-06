@@ -163,23 +163,24 @@ struct msus_of_type {
     int type;
 };
 
-void set_msu(struct dfg_vertex *msu);
+/*Runtime & DFG management functions */
 void update_dfg(struct dedos_dfg_manage_msg *update_msg);
 struct dfg_config *get_dfg();
 void get_connected_peer_ips(uint32_t *peer_ips);
 uint32_t get_sock_endpoint_ip(int sock);
 int get_sock_endpoint_index(int sock);
 int show_connected_peers(void);
-struct msus_of_type *get_msus_from_type(int type);
 struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id);
-struct dfg_vertex *get_msu_from_id(int msu_id);
-struct dfg_route *get_route_from_type(struct dfg_runtime_endpoint *rt, int msu_type);
-struct dfg_route *get_route_from_id(struct dfg_runtime_endpoint *rt, int route_id);
-struct dependent_type *get_dependent_type(struct dfg_vertex *msu, int msu_type);
-int msu_has_route(struct dfg_vertex *msu, int route_id);
-int route_has_endpoint(struct dfg_route *route, struct dfg_vertex *msu);
 int lookup_type_on_runtime(struct dfg_runtime_endpoint *rt, int msu_type);
 
+/* MSU management functions */
+void set_msu(struct dfg_vertex *msu);
+struct msus_of_type *get_msus_from_type(int type);
+struct dfg_vertex *get_msu_from_id(int msu_id);
+struct dependent_type *get_dependent_type(struct dfg_vertex *msu, int msu_type);
+void clone_type_static_data(struct dfg_vertex *msu);
+
+/* Route management functions */
 int increment_max_range(struct dfg_route *route);
 int generate_msu_id();
 int generate_route_id(struct dfg_runtime_endpoint *rt);
@@ -188,5 +189,9 @@ int add_route_to_msu_vertex(int runtime_index, int msu_id, int route_id);
 int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) ;
 int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end);
 int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id);
+struct dfg_route *get_route_from_type(struct dfg_runtime_endpoint *rt, int msu_type);
+struct dfg_route *get_route_from_id(struct dfg_runtime_endpoint *rt, int route_id);
+int msu_has_route(struct dfg_vertex *msu, int route_id);
+int route_has_endpoint(struct dfg_route *route, struct dfg_vertex *msu);
 
 #endif //DFG_H_
