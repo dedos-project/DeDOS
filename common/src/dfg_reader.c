@@ -422,7 +422,7 @@ struct json_state init_dependency(struct json_state *in, int index){
 
     struct json_state rt_obj = {
         .data = vertex->dependencies[index],
-        .parent_type = RUNTIMES
+        .parent_type = DEPENDENCIES
     };
 
     return rt_obj;
