@@ -6,24 +6,6 @@
 
 #define TIME_SLOTS 60
 
-/**
- * Structure to hold a single timestamped statistic
- */
-struct timed_stat {
-    double stat;
-    struct timespec time;
-};
-
-/**
- * Structure to hold a series of timestamped statistics
- */
-struct stat_sample {
-    enum stat_id stat_id;
-    int item_id;
-    struct timespec cur_time;
-    int n_stats;
-    struct timed_stat stats;
-}
 
 
 struct timeserie {

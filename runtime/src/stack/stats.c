@@ -1,5 +1,4 @@
 #include "stats.h"
-#include "statistics.h"
 #include "logging.h"
 #include <stdlib.h>
 #include <string.h>
@@ -132,9 +131,8 @@ FILE *statlog;
 
 /** Gets the amount of time that has elapsed since logging started .
  * @param *t the elapsed time is output into this variable
- *
  */
-static inline void get_elapsed_time(struct timespec *t) {
+void get_elapsed_time(struct timespec *t) {
     clock_gettime(CLOCK_ID, t);
     t->tv_sec -= start_time_s;
 }

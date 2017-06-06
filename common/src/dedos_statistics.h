@@ -2,6 +2,22 @@
 #define _DEDOS_STATISTICS_H_
 #include "logging.h"
 #include "uthash.h"
+#include "stats.h"
+
+/**
+ * Structure to hold a series of timestamped statistics
+ */
+struct stat_sample {
+    enum stat_id stat_id;
+    int item_id;
+    struct timespec cur_time;
+    int n_stats;
+    struct timed_stat *stats;
+};
+
+////////////////////////////////////////////////////////////
+// BELOW THIS LINE IS DEPRECATED BUT NOT YET FULLY REMOVED
+////////////////////////////////////////////////////////////
 
 //used for stat array
 #define MAX_MSUS_PER_THREAD 10

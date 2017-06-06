@@ -5,6 +5,15 @@
 #ifndef STATLOG
 #define STATLOG 1
 #endif
+
+/**
+ * Structure to hold a single timestamped statistic
+ */
+struct timed_stat {
+    double stat;
+    struct timespec time;
+};
+
 /**
  * There must be a unique identifier for each statistic that is gathered.
  */
@@ -21,7 +30,10 @@ enum stat_id{
     MEMORY_ALLOCATED,
 };
 
+
 #if STATLOG
+/** Gets the amount of time that has elapsed since logging started*/
+void get_elapsed_time(struct timespec *t) ;
 
 /** Writes all gathered statistics to the log file*/
 void flush_all_stats_to_log(void);
@@ -52,6 +64,7 @@ void init_statlog(char *filename);
 
 #else
 
+#define get_elapsed_time(...)
 #define flush_stat_to_log(...)
 #define flush_all_stats_to_log(...)
 #define aggregate_end_time(...)
