@@ -274,8 +274,20 @@ int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) {
     return 0;
 }
 
-int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type){
+/**
+ * Add a new route to a runtime
+ * @param dfg_runtime_endpoint the target runtime
+ * @param route_id: id of the route to be created
+ * @param msu_type: destination type for the route
+ * @return 0/-1: success/failure
+ */
+int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type) {
     struct dfg_route *route = malloc(sizeof(*route));
+    if (route == NULL) {
+        debug("Could not allocate memory for dfg_route object");
+        return -1;
+    }
+
     route->route_id = route_id;
     route->msu_type = msu_type;
     route->num_destinations = 0;
