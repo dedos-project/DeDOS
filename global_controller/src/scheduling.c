@@ -232,7 +232,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 }
 
                 //Is the route attached to the new MSU?
-                if (!msu_has_route(dst, route->route_id)) {
+                if (!msu_has_route(msu, route->route_id)) {
                     ret = add_route_to_msu_vertex(runtime_index, msu->msu_id, route->route_id);
                     if (ret != 0) {
                         debug("Could not attach route %d to msu %d",
@@ -272,8 +272,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
 
                 prepare_clone(dep);
                 dep->msu_type = msu->dependencies[l]->msu_type;
-                //TODO: need template to check for vertex type, meta routing,
-                //      profiling, and dependencies
+                clone_type_static_data(dep);
 
                 ret = schedule_msu(dep, rt);
                 if (ret == -1) {
