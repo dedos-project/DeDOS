@@ -3,40 +3,284 @@
 #include "dfg.h"
 #include "scheduling.h"
 
+/**
+ * Find an ID and clean up data structures for an MSU
+ * @param dfg_vertex msu: target MSU
+ * @return none
+ */
+void prepare_clone(struct dfg_vertex *msu) {
+    msu->msu_id = generate_msu_id();
+
+    memset(&msu->scheduling, '\0', sizeof(struct msu_scheduling));
+
+    msu->statistics.queue_item_processed.timepoint = 0;
+    memset(msu->statistics.queue_item_processed.data, 0, TIME_SLOTS);
+    memset(msu->statistics.queue_item_processed.timestamp, 0, TIME_SLOTS);
+    msu->statistics.data_queue_size.timepoint = 0;
+    memset(msu->statistics.data_queue_size.data, 0, TIME_SLOTS);
+    memset(msu->statistics.data_queue_size.timestamp, 0, TIME_SLOTS);
+    msu->statistics.memory_allocated.timepoint = 0;
+    memset(msu->statistics.memory_allocated.data, 0, TIME_SLOTS);
+    memset(msu->statistics.memory_allocated.timestamp, 0, TIME_SLOTS);
+}
 
 /**
- * Legacy greedy next thread finder
- * @param *runtime_sock placeholder for the target runtime socket
- * @param *thread_id id placeholder for the new thread id
- *
+ * Find a core on which to spawn a new thread for an MSU
+ * @param dfg_runtime_endpoint: the target runtime
+ * @param struct dfg_vertex_msu: the target MSU
+ * @return failure/success: -1/0
  */
-int find_placement(int *runtime_sock, int *thread_id) {
-
-    struct dfg_config *dfg = get_dfg();
-    *runtime_sock = -1;
-    *thread_id = -1;
-
-    /**
-     * For now we always place the new msu on a new thread. Thus this thread must be created on
-     * the target runtime
-     */
-    int m;
-    for (m = 0; m < dfg->runtimes_cnt; m++) {
-        if (dfg->runtimes[m]->num_threads < dfg->runtimes[m]->num_cores) {
-            *runtime_sock = dfg->runtimes[m]->sock;
-            *thread_id    = dfg->runtimes[m]->num_threads;
-            return 0;
+int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
+    if (rt->num_pinned_threads > rt->num_cores) {
+        debug("There are no more free cores to pin a new worker thread on runtime %d", rt->id);
+        return -1;
+    } else {
+        msu->scheduling.thread_id = rt->num_threads;
+        msu->scheduling.runtime = rt;
+        rt->threads[rt->num_threads] = malloc(sizeof(struct runtime_thread));
+        if (rt->threads[rt->num_threads] == NULL) {
+            debug("Could not allocate memory for runtime thread structure");
+            return -1;
         }
-    }
+        rt->threads[rt->num_threads]->id = rt->num_threads;
+        rt->threads[rt->num_threads]->mode = 1;
+        //rt->threads[num_threads]->msus[?] //TODO maintain that list if needed?
+        rt->num_threads++;
+        rt->num_pinned_threads++;
+        //TODO: update rt->current_alloc
 
-    if (*runtime_sock == -1 && *thread_id == -1) {
-        debug("ERROR: %s", "could not find runtime or thread to place new clone");
+        return 0;
+    }
+}
+
+/**
+ * Clone a msu of given ID
+ * @param msu_id: id of the MSU to clone
+ * @return 0/-1 success/failure
+ */
+int clone_msu(int msu_id) {
+    struct dfg_vertex *clone = malloc(sizeof(struct dfg_vertex));
+    if (clone == NULL) {
+        debug("Could not allocate memory for clone msu");
         return -1;
     }
 
-    return 0;
- }
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    memcpy(clone, msu, sizeof(*msu));
 
+    prepare_clone(clone);
+
+    struct dfg_config *dfg = get_dfg();
+    int i;
+    for (i = 0; i < dfg->runtimes_cnt; ++i) {
+        int ret = schedule_msu(clone, dfg->runtimes[i]);
+        if (ret == 0) {
+            break;
+        } else {
+            debug("Could not schedule msu %d on runtime %d",
+                  clone->msu_id, dfg->runtimes[i]->id);
+        }
+    }
+
+    if (clone->scheduling.runtime == NULL) {
+        debug("Unable to clone msu %d of type %d", msu->msu_id, msu->msu_type);
+        free(clone);
+        return 1;
+    } else {
+        debug("Cloned msu %d of type %d into msu %d on runtime %d",
+              msu->msu_id, msu->msu_type, clone->msu_id, clone->scheduling.runtime->id);
+        return 0;
+    }
+}
+
+/**
+ * Tries to place an MSU on a given runtime. Will wire the MSU with all upstream and downstream
+ * MSU, enforcing locality constraints. Also, will spawn any missing dependency.
+ * @param struct dfg_vertex msu: the target MSU
+ * @param struct dfg_runtime_endpoint: the target runtime
+ * @return 0/-1 success/failure
+ */
+int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
+    int ret;
+    // First of all, find a thread on the runtime
+    ret = place_on_runtime(rt, msu);
+    if (ret == -1) {
+        debug("Could not spawn a new worker thread on runtime %d", rt->id);
+        return -1;
+    }
+
+    //update routes
+    int i, j;
+    for (i = 0; i <- msu->meta_routing.num_src_types; ++i) {
+        struct msus_of_type *source_types =
+            get_msus_from_type(msu->meta_routing.src_types[i]);
+
+        if (source_types->num_msus < 1) {
+            continue;
+        }
+
+        struct dependent_type *dependency = get_dependent_type(msu, source_types->type);
+        int need_remote_dep = 0, need_local_dep = 0;
+
+        if (dependency != NULL) {
+            if (dependency->locality == 1 ) {
+                need_local_dep = 1;
+            } else if (dependency->locality == 0) {
+                need_remote_dep = 1;
+            }
+        }
+
+        for (j = 0; j < source_types->num_msus; ++j) {
+            struct dfg_vertex *source = get_msu_from_id(source_types->msu_ids[j]);
+
+            if ((need_local_dep && source->scheduling.runtime->id != msu->scheduling.runtime->id)
+                ||
+                (need_remote_dep && source->scheduling.runtime->id == msu->scheduling.runtime->id)) {
+                continue;
+            } else {
+                struct dfg_runtime_endpoint *src_rt = source->scheduling.runtime;
+                int runtime_index = -1;
+                runtime_index = get_sock_endpoint_index(src_rt->sock);
+                if (runtime_index == -1) {
+                    debug("Couldn't find endpoint index for sock: %d", src_rt->sock);
+                    return -1;
+                }
+
+                //Does the source's runtime has a route toward new MSU's type?
+                struct dfg_route *route = get_route_from_type(src_rt, msu->msu_type);
+                if (route == NULL) {
+                    int route_id = generate_route_id(src_rt);
+                    ret = dfg_add_route(runtime_index, route_id, msu->msu_type);
+                    if (ret != 0) {
+                        debug("Could not add new route on runtime %d toward type %d",
+                              src_rt->id, msu->msu_type);
+                        return -1;
+                    }
+                    route = get_route_from_type(src_rt, msu->msu_type);
+                }
+
+                //Is the route attached to that source msu?
+                if (!msu_has_route(source, route->route_id)) {
+                    ret = add_route_to_msu_vertex(runtime_index, source->msu_id, route->route_id);
+                    if (ret != 0) {
+                        debug("Could not attach route %d to msu %d",
+                              source->msu_id, route->route_id);
+                        return -1;
+                    }
+                }
+
+                int max_range = increment_max_range(route);
+                ret = dfg_add_route_endpoint(runtime_index, route->route_id, msu->msu_id, max_range);
+                if (ret != 0) {
+                    debug("Could not add endpoint %d to route %d",
+                          msu->msu_id, route->route_id);
+                    return -1;
+                }
+            }
+        }
+    }
+
+    for (i = 0; i <- msu->meta_routing.num_dst_types; ++i) {
+        struct msus_of_type *dst_types =
+            get_msus_from_type(msu->meta_routing.dst_types[i]);
+
+        if (dst_types->num_msus < 1) {
+            continue;
+        }
+
+        struct dependent_type *dependency = get_dependent_type(msu, dst_types->type);
+        int need_remote_dep = 0, need_local_dep = 0;
+
+        if (dependency != NULL) {
+            if (dependency->locality == 1 ) {
+                need_local_dep = 1;
+            } else if (dependency->locality == 0) {
+                need_remote_dep = 1;
+            }
+        }
+
+        for (j = 0; j < dst_types->num_msus; ++j) {
+            struct dfg_vertex *dst = get_msu_from_id(dst_types->msu_ids[j]);
+
+            if ((need_local_dep && dst->scheduling.runtime->id != msu->scheduling.runtime->id)
+                ||
+                (need_remote_dep && dst->scheduling.runtime->id == msu->scheduling.runtime->id)) {
+                continue;
+            } else {
+                int runtime_index = -1;
+                runtime_index = get_sock_endpoint_index(rt->sock);
+                if (runtime_index == -1) {
+                    debug("Couldn't find endpoint index for sock: %d", rt->sock);
+                    return -1;
+                }
+
+                //Does the new MSU's runtime has a route toward destination MSU's type?
+                struct dfg_route *route = get_route_from_type(rt, dst->msu_type);
+                if (route == NULL) {
+                    int route_id = generate_route_id(rt);
+                    ret = dfg_add_route(runtime_index, route_id, dst->msu_type);
+                    if (ret != 0) {
+                        debug("Could not add new route on runtime %d toward type %d",
+                              rt->id, dst->msu_type);
+                        return -1;
+                    }
+                    route = get_route_from_type(rt, dst->msu_type);
+                }
+
+                //Is the route attached to the new MSU?
+                if (!msu_has_route(dst, route->route_id)) {
+                    ret = add_route_to_msu_vertex(runtime_index, dst->msu_id, route->route_id);
+                    if (ret != 0) {
+                        debug("Could not attach route %d to msu %d",
+                              dst->msu_id, route->route_id);
+                        return -1;
+                    }
+                }
+
+                int max_range = increment_max_range(route);
+                ret = dfg_add_route_endpoint(runtime_index, route->route_id, dst->msu_id, max_range);
+                if (ret != 0) {
+                    debug("Could not add endpoint %d to route %d",
+                          dst->msu_id, route->route_id);
+                    return -1;
+                }
+            }
+        }
+    }
+
+    //Now handle dependencies which were not directly connected vertices
+    int l;
+    for (l = 0; l < msu->num_dependencies; ++l) {
+        int has_dep = 0;
+        if (msu->dependencies[l]->locality == 1) {
+            has_dep =
+                lookup_type_on_runtime(msu->scheduling.runtime, msu->dependencies[l]->msu_type);
+            if (!has_dep) {
+                //spawn missing local dependency
+                struct dfg_vertex *dep = malloc(sizeof(struct dfg_vertex));
+                if (dep == NULL) {
+                    debug("Could not allocate memory for missing dependency");
+                    return -1;
+                }
+
+                prepare_clone(dep);
+                dep->msu_type = msu->dependencies[l]->msu_type;
+                //TODO: need template to check for vertex type, meta routing,
+                //      profiling, and dependencies
+
+                ret = schedule_msu(dep, rt);
+                if (ret == -1) {
+                    debug("Could not schedule dependency %d on runtime %d",
+                          dep->msu_id, rt->id);
+                    free(dep);
+                    return -1;
+                }
+            }
+        } else {
+            //TODO: check for remote dependency
+        }
+    }
+}
 
 /**
  * Find the least loaded suitable thread in a runtime to place an MSU

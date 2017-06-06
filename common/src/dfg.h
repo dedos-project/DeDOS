@@ -73,7 +73,6 @@ struct msu_profiling {
     int tx_node_remote;
 };
 
-
 struct msu_statistics_data {
     struct timed_rrdb queue_items_processed;
     struct timed_rrdb queue_length;
@@ -174,9 +173,16 @@ int show_connected_peers(void);
 struct msus_of_type *get_msus_from_type(int type);
 struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id);
 struct dfg_vertex *get_msu_from_id(int msu_id);
-struct dfg_route *get_route_from_type(struct dfg_vertex *msu, int msu_type);
+struct dfg_route *get_route_from_type(struct dfg_runtime_endpoint *rt, int msu_type);
+struct dfg_route *get_route_from_id(struct dfg_runtime_endpoint *rt, int route_id);
+struct dependent_type *get_dependent_type(struct dfg_vertex *msu, int msu_type);
+int msu_has_route(struct dfg_vertex *msu, int route_id);
+int lookup_type_on_runtime(struct dfg_runtime_endpoint *rt, int msu_type);
 
-int generate_route_id(struct dfg_runtime_endpoint *r);
+int increment_max_range(struct dfg_route *route);
+int generate_msu_id();
+int generate_route_id(struct dfg_runtime_endpoint *rt);
+int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type);
 int add_route_to_msu_vertex(int runtime_index, int msu_id, int route_id);
 int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) ;
 int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end);
