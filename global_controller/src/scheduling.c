@@ -154,7 +154,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 struct dfg_route *route = get_route_from_type(src_rt, msu->msu_type);
                 if (route == NULL) {
                     int route_id = generate_route_id(src_rt);
-                    ret = dfg_add_route(runtime_index, route_id, msu->msu_type);
+                    ret = dfg_add_route(rt, route_id, msu->msu_type);
                     if (ret != 0) {
                         debug("Could not add new route on runtime %d toward type %d",
                               src_rt->id, msu->msu_type);
@@ -222,7 +222,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 struct dfg_route *route = get_route_from_type(rt, dst->msu_type);
                 if (route == NULL) {
                     int route_id = generate_route_id(rt);
-                    ret = dfg_add_route(runtime_index, route_id, dst->msu_type);
+                    ret = dfg_add_route(rt, route_id, dst->msu_type);
                     if (ret != 0) {
                         debug("Could not add new route on runtime %d toward type %d",
                               rt->id, dst->msu_type);
