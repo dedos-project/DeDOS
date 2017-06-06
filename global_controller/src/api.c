@@ -322,6 +322,7 @@ int create_worker_thread(int runtime_sock) {
     uint32_t num_pinned_threads, num_cores;
     int ret;
     struct dfg_config *dfg;
+    struct dfg_runtime_endpoint *rt;
 
     dfg = get_dfg();
 
@@ -330,19 +331,20 @@ int create_worker_thread(int runtime_sock) {
     if (endpoint_index > -1) {
         pthread_mutex_lock(&dfg->dfg_mutex);
 
-        num_pinned_threads = dfg->runtimes[endpoint_index]->num_pinned_threads;
-        num_cores = dfg->runtimes[endpoint_index]->num_cores;
+        rt = dfg->runtimes[endpoint_index];
+        num_pinned_threads = rt->num_pinned_threads;
+        num_cores = rt->num_cores;
 
         pthread_mutex_unlock(&dfg->dfg_mutex);
 
         if (num_cores == num_pinned_threads) {
-            debug("ERROR: Destination runtime is maxed out. Cores: %u, Pinned threads: %u",
+            debug("Destination runtime is maxed out. Cores: %u, Pinned threads: %u",
                     num_cores, num_pinned_threads);
             return -1;
         }
     }
     else {
-        debug("ERROR: Couldn't find endpoint index for sock: %d", runtime_sock);
+        debug("Couldn't find endpoint index for sock: %d", runtime_sock);
         return -1;
     }
 
@@ -358,18 +360,24 @@ int create_worker_thread(int runtime_sock) {
 
         struct runtime_thread *new_thread = NULL;
         new_thread = malloc(sizeof(struct runtime_thread));
+        if (new_thread == NULL) {
+            debug("Could not allocate memory for runtime thread structure");
+            return -1;
+        }
 
-        new_thread->id = dfg->runtimes[endpoint_index]->num_pinned_threads + 1; //+1 for main thread
+        new_thread->id = rt->num_threads;
         new_thread->mode = 1;
         new_thread->utilization = 0;
 
-        //assuming we don't store the main thread in this list
-        int new_thread_index = dfg->runtimes[endpoint_index]->num_pinned_threads;
-        dfg->runtimes[endpoint_index]->threads[new_thread_index] = new_thread;
-        dfg->runtimes[endpoint_index]->num_pinned_threads++;
-        dfg->runtimes[endpoint_index]->num_threads++;
+        int new_thread_index = rt->num_threads;
+        rt->threads[new_thread_index] = new_thread;
+        rt->num_pinned_threads++;
+        rt->num_threads++;
 
         pthread_mutex_unlock(&dfg->dfg_mutex);
+    } else {
+        debug("Failed to send create worker thread command to runtime");
+        return ret;
     }
 
     return ret;

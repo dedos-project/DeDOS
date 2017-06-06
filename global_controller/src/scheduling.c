@@ -35,18 +35,14 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
         debug("There are no more free cores to pin a new worker thread on runtime %d", rt->id);
         return -1;
     } else {
+        //commit change to runtime
+        create_worker_thread(rt->sock);
+        sleep(2); // To leave time to runtime to digest the command...
+
+        //update local view
         msu->scheduling.thread_id = rt->num_threads;
         msu->scheduling.runtime = rt;
-        rt->threads[rt->num_pinned_threads] = malloc(sizeof(struct runtime_thread));
-        if (rt->threads[rt->num_pinned_threads] == NULL) {
-            debug("Could not allocate memory for runtime thread structure");
-            return -1;
-        }
-        rt->threads[rt->num_pinned_threads]->id = rt->num_threads;
-        rt->threads[rt->num_pinned_threads]->mode = 1;
-        //rt->threads[num_threads]->msus[?] //TODO maintain that list if needed?
-        rt->num_threads++;
-        rt->num_pinned_threads++;
+
         //TODO: update rt->current_alloc
 
         return 0;
