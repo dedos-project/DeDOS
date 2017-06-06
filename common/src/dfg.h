@@ -177,6 +177,7 @@ struct dfg_route *get_route_from_type(struct dfg_runtime_endpoint *rt, int msu_t
 struct dfg_route *get_route_from_id(struct dfg_runtime_endpoint *rt, int route_id);
 struct dependent_type *get_dependent_type(struct dfg_vertex *msu, int msu_type);
 int msu_has_route(struct dfg_vertex *msu, int route_id);
+int route_has_endpoint(struct dfg_route *route, struct dfg_vertex *msu);
 int lookup_type_on_runtime(struct dfg_runtime_endpoint *rt, int msu_type);
 
 int increment_max_range(struct dfg_route *route);

@@ -370,6 +370,23 @@ struct dfg_route *get_route_from_type(struct dfg_runtime_endpoint *rt, int msu_t
 }
 
 /**
+ * Check whether a route has a specific MSU as endpoint
+ * @param struct dfg_route: the target route
+ * @param dfg_vertex: a given MSU
+ * @return 0/1: false/true
+ */
+int route_has_endpoint(struct dfg_route *route, struct dfg_vertex *msu) {
+    int i;
+    for (i = 0; i < route->num_destinations; ++i) {
+        if (route->destinations[i] == msu) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * Check whether a route is attached to a given MSU
  * @param dfg_vertex: the target MSU
  * @param route_id: the target route

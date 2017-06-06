@@ -8,7 +8,7 @@
 
 enum object_type {
     ROOT=0, RUNTIMES=1, ROUTES=2, DESTINATIONS=3, MSUS=4, PROFILING=5,
-    META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8, DEPENDENCY=9
+    META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8
 };
 
 struct dfg_config *dfg_global = NULL;
@@ -325,37 +325,27 @@ static int set_tx_core_local(jsmntok_t **tok, char *j, struct json_state *in, st
     return 0;
 }
 
-struct json_state init_dfg_dependency(struct json_state *in, int index){
-    struct dfg_vertex *vertex = in->data;
-
-    vertex->dependencies[index] = malloc(sizeof(*vertex->dependencies[index]));
-    vertex->num_dependencies++;
-
-    struct json_state msu_obj = {
-        .data = vertex->dependencies[index],
-        .parent_type = DEPENDENCY
-    };
-    return msu_obj;
-}
-
-
 static int set_source_types(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
-    return parse_jsmn_obj_list(tok, j, in, saved, init_dfg_dependency);
-}
-
-static int set_dst_types(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
-    return parse_jsmn_obj_list(tok, j, in, saved, init_dfg_dependency);
-}
-
-static int set_dependency_id(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
-    struct dependent_type *dependency = in->data;
-    dependency->msu_type = tok_to_int(*tok, j);
+    struct msu_meta_routing *meta = in->data;
+    int n_srcs = (*tok)->size;
+    for (int i=0; i<n_srcs; i++){
+        ++(*tok);
+        int type = tok_to_int(*tok, j);
+        meta->src_types[meta->num_src_types] = type;
+        ++meta->num_src_types;
+    }
     return 0;
 }
 
-static int set_dependency_locality(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
-    struct dependent_type *dependency = in->data;
-    dependency->locality = tok_to_int(*tok, j);
+static int set_dst_types(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct msu_meta_routing *meta = in->data;
+    int n_dests = (*tok)->size;
+    for (int i=0; i<n_dests; i++){
+        ++(*tok);
+        int type = tok_to_int(*tok, j);
+        meta->dst_types[meta->num_dst_types] = type;
+        ++meta->num_dst_types;
+    }
     return 0;
 }
 
@@ -465,9 +455,6 @@ static struct key_mapping key_map[] = {
 
     { "source_types", META_ROUTING,  set_source_types },
     { "dst_types", META_ROUTING, set_dst_types },
-
-    { "id", DEPENDENCY, set_dependency_id },
-    { "locality", DEPENDENCY, set_dependency_locality },
 
     { "thread_id", SCHEDULING,  set_thread_id },
     { "deadline", SCHEDULING,  set_deadline },
