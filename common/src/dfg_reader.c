@@ -8,7 +8,7 @@
 
 enum object_type {
     ROOT=0, RUNTIMES=1, ROUTES=2, DESTINATIONS=3, MSUS=4, PROFILING=5,
-    META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8
+    META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8, DEPENDENCIES=9
 };
 
 struct dfg_config *dfg_global = NULL;
@@ -414,6 +414,38 @@ static int set_msu_routing(jsmntok_t **tok, char *j, struct json_state *in, stru
 }
 
 
+struct json_state init_dependency(struct json_state *in, int index){
+    struct dfg_vertex *vertex = in->data;
+
+    vertex->dependencies[index] = malloc(sizeof(*vertex->dependencies[index]));
+    vertex->num_dependencies++;
+
+    struct json_state rt_obj = {
+        .data = vertex->dependencies[index],
+        .parent_type = RUNTIMES
+    };
+
+    return rt_obj;
+}
+
+static int set_dependencies(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    return parse_jsmn_obj_list(tok, j, in, saved, init_dependency);
+}
+
+static int set_dependency_id(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct dependent_type *dep = in->data;
+
+    dep->msu_type = tok_to_int(*tok, j);
+    return 0;
+}
+
+static int set_dependency_locality(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct dependent_type *dep = in->data;
+
+    dep->locality = tok_to_int(*tok, j);
+    return 0;
+}
+
 static struct key_mapping key_map[] = {
     { "application_name", ROOT, set_app_name },
     { "application_deadline", ROOT, set_app_deadline },
@@ -455,6 +487,10 @@ static struct key_mapping key_map[] = {
 
     { "source_types", META_ROUTING,  set_source_types },
     { "dst_types", META_ROUTING, set_dst_types },
+    { "dependencies", META_ROUTING, set_dependencies },
+
+    { "id", DEPENDENCIES, set_dependency_id },
+    { "locality", DEPENDENCIES, set_dependency_locality },
 
     { "thread_id", SCHEDULING,  set_thread_id },
     { "deadline", SCHEDULING,  set_deadline },
