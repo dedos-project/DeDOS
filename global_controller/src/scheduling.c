@@ -37,13 +37,13 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
     } else {
         msu->scheduling.thread_id = rt->num_threads;
         msu->scheduling.runtime = rt;
-        rt->threads[rt->num_threads] = malloc(sizeof(struct runtime_thread));
-        if (rt->threads[rt->num_threads] == NULL) {
+        rt->threads[rt->num_pinned_threads] = malloc(sizeof(struct runtime_thread));
+        if (rt->threads[rt->num_pinned_threads] == NULL) {
             debug("Could not allocate memory for runtime thread structure");
             return -1;
         }
-        rt->threads[rt->num_threads]->id = rt->num_threads;
-        rt->threads[rt->num_threads]->mode = 1;
+        rt->threads[rt->num_pinned_threads]->id = rt->num_threads;
+        rt->threads[rt->num_pinned_threads]->mode = 1;
         //rt->threads[num_threads]->msus[?] //TODO maintain that list if needed?
         rt->num_threads++;
         rt->num_pinned_threads++;
@@ -109,9 +109,13 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
         return -1;
     }
 
+    struct dfg_config *dfg = get_dfg();
+    dfg->vertices[dfg->vertex_cnt] = msu;
+    dfg->vertex_cnt++;
+
     //update routes
     int i, j;
-    for (i = 0; i <- msu->meta_routing.num_src_types; ++i) {
+    for (i = 0; i < msu->meta_routing.num_src_types; ++i) {
         struct msus_of_type *source_types =
             get_msus_from_type(msu->meta_routing.src_types[i]);
 
@@ -180,7 +184,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
         }
     }
 
-    for (i = 0; i <- msu->meta_routing.num_dst_types; ++i) {
+    for (i = 0; i < msu->meta_routing.num_dst_types; ++i) {
         struct msus_of_type *dst_types =
             get_msus_from_type(msu->meta_routing.dst_types[i]);
 
@@ -229,7 +233,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
 
                 //Is the route attached to the new MSU?
                 if (!msu_has_route(dst, route->route_id)) {
-                    ret = add_route_to_msu_vertex(runtime_index, dst->msu_id, route->route_id);
+                    ret = add_route_to_msu_vertex(runtime_index, msu->msu_id, route->route_id);
                     if (ret != 0) {
                         debug("Could not attach route %d to msu %d",
                               dst->msu_id, route->route_id);
@@ -237,12 +241,15 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                     }
                 }
 
-                int max_range = increment_max_range(route);
-                ret = dfg_add_route_endpoint(runtime_index, route->route_id, dst->msu_id, max_range);
-                if (ret != 0) {
-                    debug("Could not add endpoint %d to route %d",
-                          dst->msu_id, route->route_id);
-                    return -1;
+                //Is the destination MSU already an endpoint of that route?
+                if (!route_has_endpoint(route, dst)) {
+                    int max_range = increment_max_range(route);
+                    ret = dfg_add_route_endpoint(runtime_index, route->route_id, dst->msu_id, max_range);
+                    if (ret != 0) {
+                        debug("Could not add endpoint %d to route %d",
+                              dst->msu_id, route->route_id);
+                        return -1;
+                    }
                 }
             }
         }
@@ -280,6 +287,8 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
             //TODO: check for remote dependency
         }
     }
+
+    return 0;
 }
 
 /**
