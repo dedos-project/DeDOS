@@ -291,6 +291,7 @@ int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type) {
     route->route_id = route_id;
     route->msu_type = msu_type;
     route->num_destinations = 0;
+    bzero(route->destination_keys, sizeof(int) * MAX_DESTINATIONS);
     rt->routes[rt->num_routes] = route;
     rt->num_routes++;
     return 0;
@@ -482,7 +483,7 @@ void clone_type_static_data(struct dfg_vertex *msu) {
  */
 
 int increment_max_range(struct dfg_route *route) {
-    int max_range = -1;
+    int max_range = 0;
     int i;
     for (i = 0; i < route->num_destinations; ++i) {
         if (max_range == -1 || route->destination_keys[i] > max_range) {

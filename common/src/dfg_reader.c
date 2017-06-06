@@ -268,6 +268,7 @@ static int set_route_destination(jsmntok_t **tok, char *j, struct json_state *in
         return 1;
     }
     ASSERT_JSMN_TYPE(*tok, JSMN_OBJECT, j);
+    bzero(route->destination_keys, sizeof(int) * MAX_DESTINATIONS);
     for (int i=0; i<n_dests; i++){
         ++(*tok);
         ASSERT_JSMN_TYPE(*tok, JSMN_STRING, j);
