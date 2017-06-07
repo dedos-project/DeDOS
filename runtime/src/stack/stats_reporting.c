@@ -1,39 +1,9 @@
 #include "stats.h"
 #include "logging.h"
 #include "control_protocol.h"
+#include "dedos_statistics.h"
 #include "communication.h"
 #include <string.h>
-
-enum stat_id reported_stats[] = {
-    QUEUE_LEN, MSU_INTERNAL_TIME, MEMORY_ALLOCATED
-};
-
-#define N_REPORTED_STAT_TYPES sizeof(reported_stats) / sizeof(enum stat_id)
-
-#define STAT_DURATION_S  5
-#define STAT_SAMPLE_SIZE 128
-
-#define MAX_STAT_BUFF_SIZE \
-    N_REPORTED_STAT_TYPES * MAX_STAT_ITEM_IDS * \
-    (sizeof(struct stat_sample) + sizeof(struct timed_stat) * MAX_STAT_SAMPLES) + \
-    sizeof(struct stats_control_payload)
-
-int serialize_stat_payload(struct stats_control_payload *payload, void *buffer) {
-    void *buff_loc = buffer;
-    memcpy(buff_loc, payload, sizeof(*payload));
-    buff_loc += sizeof(*payload);
-    for ( int sample_i=0; sample_i<payload->n_samples; sample_i++ ) {
-        struct stat_sample *sample = &payload->samples[sample_i];
-        memcpy(buff_loc, sample, sizeof(*sample));
-        buff_loc += sizeof(*sample);
-        for ( int stat_i=0; stat_i < sample->n_stats; stat_i++ ) {
-            struct timed_stat *stat = &sample->stats[stat_i];
-            memcpy(buff_loc, stat, sizeof(*stat));
-            buff_loc += sizeof(*stat);
-        }
-    }
-    return buff_loc - buffer;
-}
 
 int send_stats_to_controller() {
     struct stat_sample samples[ N_REPORTED_STAT_TYPES * MAX_STAT_ITEM_IDS ];

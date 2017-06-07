@@ -3,6 +3,26 @@
 #include "logging.h"
 #include "uthash.h"
 #include "stats.h"
+
+static enum stat_id reported_stats[] = {
+    QUEUE_LEN, MSU_INTERNAL_TIME, MEMORY_ALLOCATED
+};
+
+#define N_REPORTED_STAT_TYPES sizeof(reported_stats) / sizeof(enum stat_id)
+
+#define STAT_DURATION_S  5
+#define STAT_SAMPLE_SIZE 128
+
+#define MAX_REPORTED_SAMPLES MAX_STAT_SAMPLES * N_REPORTED_STAT_TYPES
+
+#define MAX_STAT_BUFF_SIZE \
+    N_REPORTED_STAT_TYPES * MAX_STAT_ITEM_IDS * \
+    (sizeof(struct stat_sample) + sizeof(struct timed_stat) * MAX_STAT_SAMPLES) + \
+    sizeof(struct stats_control_payload)
+
+int serialize_stat_payload(struct stats_control_payload *payload, void *buffer);
+int deserialize_stat_payload(void *buffer, struct stats_control_payload *payload);
+
 ////////////////////////////////////////////////////////////
 // BELOW THIS LINE IS DEPRECATED BUT NOT YET FULLY REMOVED
 ////////////////////////////////////////////////////////////
