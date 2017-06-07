@@ -539,28 +539,6 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
     dfg = get_dfg();
 
     switch (update_msg->msg_code) {
-            /*
-        case MSU_ROUTE_ADD: {
-            //TODO: don't assume that the src/dst msu did not exist in the table before.
-            struct dedos_dfg_update_msu_route_msg *update;
-            update = (struct dedos_dfg_update_msu_route_msg *) update_msg->payload;
-
-            struct dfg_vertex *msu_from = dfg->vertices[update->msu_id_from - 1];
-            struct dfg_vertex *msu_to = dfg->vertices[update->msu_id_to - 1];
-
-            //TODO: handle "holes" in the list, due to MSU_ROUTE_DEL
-            msu_from->msu_dst_list[msu_from->num_dst_types] = msu_to;
-            msu_from->num_dst_types++;
-
-            msu_to->msu_src_list[msu_to->num_src_types] = msu_from;
-            msu_to->num_src_types++;
-
-            free(update_msg);
-            free(update);
-            break;
-        }
-            */
-
         case RUNTIME_ENDPOINT_ADD: {
             //because both in toload and preload mode we have already been adding some
             //runtimes in the DFG, we need to check if the new runtime isn't actually
@@ -610,5 +588,4 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
             debug("DEBUG: unrecognized update action: %d", update_msg->msg_code);
             break;
     }
-
 }
