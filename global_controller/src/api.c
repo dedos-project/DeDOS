@@ -11,11 +11,18 @@
 #include "ip_utils.h"
 #include "tmp_msu_headers.h"
 
+
+/**
+ * Add a new MSU to the DFG
+ * @param msu_data: data to be used by the new MSU's init function
+ * @param msu_id: ID for the new MSU
+ * @param msu_type: type of the new MSU
+ * @param msu_mode: blocking/non-blocking
+ * @param thread_id: thread on which to place the new MSU
+ * @param runtime_sock: target runtime
+ */
 int add_msu(char *msu_data, int msu_id, int msu_type,
             char *msu_mode, int thread_id, int runtime_sock) {
-    char *buf;
-    long total_msg_size = 0;
-    struct dedos_control_msg control_msg;
     struct dfg_config *dfg = NULL;
     struct dfg_vertex *new_msu = NULL;
 
@@ -59,50 +66,72 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
         return -1;
     }
 
-    // [mode][space][thread_id][\0]
+    if (send_addmsu_msg(new_msu, msu_data) == -1) {
+        debug("Could not send addmsu command to runtime");
+        free(new_msu);
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+
+/**
+ * Order the runtime to spawn a new MSU on a given thread
+ * @param struct dfg_vertex: the new MSU object
+ * @param char *data: initial data used by the MSU's init function
+ * @return -1/0: failure/success
+ */
+int send_addmsu_msg(struct dfg_vertex *msu, char *init_data) {
+    struct dedos_control_msg control_msg;
     size_t data_len;
     char data[MAX_INIT_DATA_LEN];
     memset(data, '\0', MAX_INIT_DATA_LEN);
 
+<<<<<<< HEAD
     data_len = strlen(msu_mode) + 1 + how_many_digits(msu_id) + 1;
     snprintf(data, data_len + 1, "%s %d ", msu_mode, thread_id);
+=======
+    data_len = strlen(msu->msu_mode) + 1 + how_many_digits(msu->msu_id) + 2;
+    snprintf(data, data_len, "%s %d ", msu->msu_mode, msu->scheduling.thread_id);
+>>>>>>> break down adding new msu and sending command to the controller in api.c
 
     //TODO: create a template system for MSU such that we can query initial data.
-    if (msu_type == DEDOS_SOCKET_HANDLER_MSU_ID) {
-        struct socket_handler_init_payload *init_data =
+    if (msu->msu_type == DEDOS_SOCKET_HANDLER_MSU_ID) {
+        struct socket_handler_init_payload *ssl_init_data =
             malloc(sizeof(struct socket_handler_init_payload));
 
-        init_data->port = 8080;
-        init_data->domain = AF_INET;
-        init_data->type = SOCK_STREAM;
-        init_data->protocol = 0;
-        init_data->bind_ip = INADDR_ANY;
+        ssl_init_data->port = 8080;
+        ssl_init_data->domain = AF_INET;
+        ssl_init_data->type = SOCK_STREAM;
+        ssl_init_data->protocol = 0;
+        ssl_init_data->bind_ip = INADDR_ANY;
         /*unsigned char buf[sizeof(struct in_addr)];
-        inet_pton(AF_INET, "192.168.0.1", buf);
-        init_data->bind_ip = buf;*/
-        init_data->target_msu_type = 502; //DEDOS_SSL_REQUEST_ROUTING_MSU_ID;
+        ssl_inet_pton(AF_INET, "192.168.0.1", buf);
+        ssl_init_data->bind_ip = buf;*/
+        ssl_init_data->target_msu_type = 502; //DEDOS_SSL_REQUEST_ROUTING_MSU_ID;
 
         size_t len = sizeof(struct socket_handler_init_payload);
-        memcpy(data + data_len, init_data, len);
-        free(init_data);
+        memcpy(data + data_len, ssl_init_data, len);
+        free(ssl_init_data);
         data_len += len;
     } else {
-        memcpy(data + data_len, msu_data, strlen(msu_data));
-        data_len += strlen(msu_data);
+        memcpy(data + data_len, init_data, strlen(init_data));
+        data_len += strlen(init_data);
     }
 
     char create_msu_msg_buffer[sizeof(struct manage_msu_control_payload) + data_len];
 
     struct manage_msu_control_payload *create_msu_msg =
         (struct manage_msu_control_payload*) create_msu_msg_buffer;
-    create_msu_msg->msu_id         = new_msu->msu_id;
-    create_msu_msg->msu_type       = new_msu->msu_type;
+    create_msu_msg->msu_id         = msu->msu_id;
+    create_msu_msg->msu_type       = msu->msu_type;
     create_msu_msg->init_data_size = data_len;
     create_msu_msg->init_data      = data;
     memcpy(create_msu_msg_buffer + sizeof(*create_msu_msg), data, data_len);
 
     debug("sock:%d, msu_type: %d, msu id: %d, init_data: %s, init_data_size: %d\n",
-           runtime_sock,
+           msu->scheduling.runtime->sock,
            create_msu_msg->msu_type,
            create_msu_msg->msu_id,
            create_msu_msg->init_data,
@@ -114,13 +143,12 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
     control_msg.payload_len =
         sizeof(struct manage_msu_control_payload) + create_msu_msg->init_data_size;
     control_msg.payload = create_msu_msg_buffer;
-    send_control_msg(runtime_sock, &control_msg);
+    send_control_msg(msu->scheduling.runtime->sock, &control_msg);
 
     //FIXME: assume msu creation goes well.
     //We need some kind of acknowledgement from the runtime
-    set_msu(new_msu);
+    set_msu(msu);
     print_dfg();
-    free(buf);
 
     return 0;
 }
@@ -342,8 +370,7 @@ int create_worker_thread(int runtime_sock) {
                     num_cores, num_pinned_threads);
             return -1;
         }
-    }
-    else {
+    } else {
         debug("Couldn't find endpoint index for sock: %d", runtime_sock);
         return -1;
     }
