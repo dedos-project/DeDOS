@@ -157,8 +157,6 @@ static int parse_add_msu(char *args) {
         log_error("Could not trigger new MSU creation");
     }
 
-    bzero(data, MAX_INIT_DATA_LEN);
-
     return ret;
 }
 
