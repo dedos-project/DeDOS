@@ -11,7 +11,6 @@
 #include "ip_utils.h"
 #include "tmp_msu_headers.h"
 
-
 /**
  * Add a new MSU to the DFG
  * @param msu_data: data to be used by the new MSU's init function
@@ -66,6 +65,10 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
         return -1;
     }
 
+    set_msu(new_msu);
+
+    print_dfg();
+
     if (send_addmsu_msg(new_msu, msu_data) == -1) {
         debug("Could not send addmsu command to runtime");
         free(new_msu);
@@ -82,6 +85,7 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
  * @param char *data: initial data used by the MSU's init function
  * @return -1/0: failure/success
  */
+//FIXME: assume msu creation goes well. We need some kind of acknowledgement from the runtime
 int send_addmsu_msg(struct dfg_vertex *msu, char *init_data) {
     struct dedos_control_msg control_msg;
     size_t data_len;
@@ -141,11 +145,6 @@ int send_addmsu_msg(struct dfg_vertex *msu, char *init_data) {
         sizeof(struct manage_msu_control_payload) + create_msu_msg->init_data_size;
     control_msg.payload = create_msu_msg_buffer;
     send_control_msg(msu->scheduling.runtime->sock, &control_msg);
-
-    //FIXME: assume msu creation goes well.
-    //We need some kind of acknowledgement from the runtime
-    set_msu(msu);
-    print_dfg();
 
     return 0;
 }
