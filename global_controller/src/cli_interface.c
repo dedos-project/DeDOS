@@ -91,13 +91,10 @@ static int parse_add_msu(char *args){
     bzero(data, MAX_INIT_DATA_LEN);
 
     init_data = strtok(NULL, "\r\n");
-    if (init_data == NULL) {
-        data[0] = "\0";
-    } else {
+    if (init_data != NULL) {
         debug("init data: %s, len: %zu", init_data, strlen(init_data));
         memcpy(data, init_data, strlen(init_data));
     }
-    debug("data: %s, len: %zu", data, strlen(data));
 
     int ret = add_msu(data, msu_id, msu_type, msu_mode, thread_id, runtime_sock);
     if (ret == -1) {
