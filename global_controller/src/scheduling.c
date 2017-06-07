@@ -181,6 +181,13 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                               source->msu_id, route->route_id);
                         return -1;
                     }
+
+                    ret = send_addroute_msg(route->route_id, source->msu_id, src_rt->sock);
+                    if (ret != 0) {
+                        debug("Could not send add route %d msg to runtime %d",
+                              route->route_id, src_rt->id);
+                        return -1;
+                    }
                 }
 
                 int max_range = increment_max_range(route);
@@ -188,6 +195,14 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 if (ret != 0) {
                     debug("Could not add endpoint %d to route %d",
                           msu->msu_id, route->route_id);
+                    return -1;
+                }
+
+                ret = send_addendpoint_msg(msu->msu_id, runtime_index,
+                                           route->route_id, max_range, src_rt->sock);
+                if (ret != 0) {
+                    debug("Could not send add endpoint %d msg to runtime %d",
+                          msu->msu_id, src_rt->id);
                     return -1;
                 }
             }
@@ -249,6 +264,13 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                               dst->msu_id, route->route_id);
                         return -1;
                     }
+
+                    ret = send_addroute_msg(route->route_id, msu->msu_id, rt->sock);
+                    if (ret != 0) {
+                        debug("Could not send add route %d msg to runtime %d",
+                              route->route_id, rt->id);
+                        return -1;
+                    }
                 }
 
                 //Is the destination MSU already an endpoint of that route?
@@ -258,6 +280,14 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                     if (ret != 0) {
                         debug("Could not add endpoint %d to route %d",
                               dst->msu_id, route->route_id);
+                        return -1;
+                    }
+
+                    ret = send_addendpoint_msg(dst->msu_id, runtime_index,
+                                               route->route_id, max_range, rt->sock);
+                    if (ret != 0) {
+                        debug("Could not send add endpoint %d msg to runtime %d",
+                              dst->msu_id, rt->id);
                         return -1;
                     }
                 }
@@ -284,6 +314,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 dep->msu_type = msu->dependencies[l]->msu_type;
                 clone_type_static_data(dep);
 
+                sleep(1); // leave poor baby the time to digest
                 ret = schedule_msu(dep, rt);
                 if (ret == -1) {
                     debug("Could not schedule dependency %d on runtime %d",

@@ -171,6 +171,13 @@ int del_msu( int msu_id, int msu_type, int runtime_sock ) {
     return send_control_msg(runtime_sock, &control_msg);
 }
 
+/**
+ * Attach a route to an MSU and instruct a runtime to do so
+ * @param msu_id: ID of target MSU
+ * @param route_id: ID of target route
+ * @param runtime_sock: listening socket for target runtime
+ * @return -1/0: failure/success
+ */
 int add_route(int msu_id, int route_id, int runtime_sock){
     // First, update the DFG
     // (this shows that the operation should be valid, and is a stop-gap measure until
@@ -179,10 +186,22 @@ int add_route(int msu_id, int route_id, int runtime_sock){
     int rt_index = get_sock_endpoint_index(runtime_sock);
     int rtn = add_route_to_msu_vertex(rt_index, msu_id, route_id);
 
-    if (rtn < 0){
+    if (rtn < 0) {
         log_error("Error adding route to vertex! Not proceeding!");
         return -1;
     }
+
+    return send_addroute_msg(route_id, msu_id, runtime_sock);
+}
+
+/**
+ * Instruct a runtime to do attach a route to an MSU
+ * @param msu_id: ID of target MSU
+ * @param route_id: ID of target route
+ * @param runtime_sock: listening socket for target runtime
+ * @return -1/0: failure/success
+ */
+int send_addroute_msg(int route_id, int msu_id, int runtime_sock) {
 
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
 
@@ -239,6 +258,13 @@ int del_route(int msu_id, int route_id, int runtime_sock){
     return send_control_msg(runtime_sock, &control_msg);
 }
 
+/**
+ * Attach an endpoint to a route and instruct a runtime to do so
+ * @param msu_id: ID of target MSU
+ * @param route_id: ID of target route
+ * @param runtime_sock: listening socket for target runtime
+ * @return -1/0: failure/success
+ */
 int add_endpoint(int msu_id, int route_num, unsigned int range_end, int runtime_sock){
     int rt_index = get_sock_endpoint_index(runtime_sock);
     int rtn = dfg_add_route_endpoint(rt_index, route_num, msu_id, range_end);
@@ -248,11 +274,23 @@ int add_endpoint(int msu_id, int route_num, unsigned int range_end, int runtime_
         return -1;
     }
 
+    return send_addendpoint_msg(msu_id, rt_index, route_num, range_end, runtime_sock);
+}
+
+/**
+ * Instruct a runtime to add an endpoint to a route
+ * @param msu_id: ID of target MSU
+ * @param route_id: ID of target route
+ * @param runtime_sock: listening socket for target runtime
+ * @return -1/0: failure/success
+ */
+int send_addendpoint_msg(int msu_id, int rt_index, int route_num,
+                         unsigned int range_end, int runtime_sock) {
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
 
     enum locality locality;
     uint32_t ip = 0;
-    if (get_sock_endpoint_index(msu->scheduling.runtime->sock) != rt_index){
+    if (get_sock_endpoint_index(msu->scheduling.runtime->sock) != rt_index) {
         locality = MSU_IS_REMOTE;
         ip = msu->scheduling.runtime->ip;
     } else {
