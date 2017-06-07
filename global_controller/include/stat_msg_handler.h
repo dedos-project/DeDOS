@@ -8,6 +8,6 @@
 #include "dedos_statistics.h"
 #include "control_protocol.h"
 
-void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int stats_items);
+int process_stats_msg(struct stats_control_payload *stats, int runtime_sock);
 
 #endif

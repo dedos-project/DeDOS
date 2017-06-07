@@ -664,57 +664,6 @@ static void check_pending_runtimes() {
     }
 }
 
-static void push_stats_to_controller() {
-    struct dedos_control_msg *stats_msg;
-    unsigned int payload_size = 0;
-
-    stats_msg = malloc(sizeof(struct dedos_control_msg));
-    if (!stats_msg) {
-        log_error("failed to allocate memory for sending MSU_LIST to master");
-        return;
-    }
-
-    char *sendbuf = malloc(sizeof(struct dedos_control_msg));
-    if (!sendbuf) {
-        log_error("ERROR: failed to allocate memory for buf to send MSU_LIST to master");
-        free(stats_msg);
-        return;
-    }
-    bzero(sendbuf, sizeof(struct dedos_control_msg));
-
-    int i;
-    int n = 0;
-    for (i = 0; i < main_thread->thread_stats->array_len; ++i) {
-        if (main_thread->thread_stats->msu_stats_data[i].msu_id > 0) {
-            payload_size += sizeof(struct msu_stats_data);
-            sendbuf = realloc(sendbuf, sizeof(struct dedos_control_msg) + payload_size);
-            int offset = sendbuf
-                         + sizeof(struct dedos_control_msg)
-                         + sizeof(struct msu_stats_data) * n;
-            memcpy(offset,
-                   &main_thread->thread_stats->msu_stats_data[i],
-                   sizeof(struct msu_stats_data));
-            n++;
-        }
-    }
-
-    stats_msg->msg_type = ACTION_MESSAGE;
-    stats_msg->msg_code = STATISTICS_UPDATE;
-    stats_msg->header_len = sizeof(struct dedos_control_msg);
-    stats_msg->payload_len = payload_size;
-    memcpy(sendbuf, stats_msg, sizeof(struct dedos_control_msg));
-
-#if DEBUG != 0
-//    print_aggregate_stats(); //UNCOMMENT To see your screen flooded with statistics being sent
-#endif
-
-    dedos_send_to_master(sendbuf,
-            sizeof(struct dedos_control_msg) + payload_size);
-
-    free(sendbuf);
-    free(stats_msg);
-}
-
 int dedos_runtime_destroy(void){
 
     //TODO Cleanup all threads -> all msus of that thread -> all internal MSU stuff
@@ -799,13 +748,8 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
                 if (ret == -1) {
                     log_error("Failed to copy stats from worker thread at index %d", next_stat_thread);
                 }
-            } else {
-                //send before a reset but not all resets
-                if (main_thread->thread_stats->num_msus > 0) {
-                    push_stats_to_controller();
-                }
-                main_thread->thread_stats->num_msus = 0;
             }
+            send_stats_to_controller();
             next_stat_thread = (next_stat_thread + 1) % total_threads;
             begin = clock();
         }

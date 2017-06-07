@@ -14,15 +14,16 @@
 SSL_CTX* ssl_ctx_global;
 
 enum stat_id test_stat_id = QUEUE_LEN;
-int test_item_id = 1;
+int test_item_id1 = 1;
+int test_item_id2 = 2;
 int sample_size = 100;
 int interval_ms = 10; // .01 seconds
 int n_gathered_stats = 20000; // 20 seconds
 int sample_duration_s = 25;
 int end_time_ms;
 
-static void fill_stats(){
-    struct item_stats *item = &saved_stats[test_stat_id].item_stats[test_item_id];
+static void fill_stats(int item_id){
+    struct item_stats *item = &saved_stats[test_stat_id].item_stats[item_id];
     struct timed_stat *stats = item->stats;
     time_t curtime_s = 0;
     long curtime_ms = 0;
@@ -42,12 +43,14 @@ static void fill_stats(){
 }
 
 
-START_TEST(test_sample_stats){
+START_TEST(test_sample_item_stats){
     init_statlog(NULL);
 
-    fill_stats();
+    fill_stats(test_item_id1);
 
-    struct timed_stat *sample = sample_stats(test_stat_id, test_item_id, sample_duration_s, sample_size);
+    struct timed_stat *sample = sample_item_stats(test_stat_id, test_item_id1, sample_duration_s, sample_size);
+
+    ck_assert(sample != NULL);
 
     int time_start_ms = sample[0].time.tv_sec * 1000 + sample[0].time.tv_nsec / 1000000;
     int time_end_ms = sample[sample_size-1].time.tv_sec * 1000 + \
@@ -79,10 +82,29 @@ START_TEST(test_sample_stats){
     }
 } END_TEST
 
+START_TEST(test_sample_stats){
+    init_statlog(NULL);
+
+    fill_stats(test_item_id1);
+    fill_stats(test_item_id2);
+
+    struct stat_sample *sample = malloc(sizeof(struct stat_sample) * 2);
+
+    int rtn = sample_stats(test_stat_id, sample_duration_s, sample_size, sample);
+
+    ck_assert_msg(rtn == 2);
+    ck_assert_int_eq(sample[0].stat_id, test_stat_id);
+    ck_assert_int_eq(sample[0].item_id, test_item_id1);
+    ck_assert_int_eq(sample[1].stat_id, test_stat_id);
+    ck_assert_int_eq(sample[1].item_id, test_item_id2);
+
+} END_TEST
+
 int main(int argc, char **argv) {
     Suite *s  = suite_create("stats_test");
 
     TCase *tc_stats = tcase_create("stats_sample");
+    tcase_add_test(tc_stats, test_sample_item_stats);
     tcase_add_test(tc_stats, test_sample_stats);
     suite_add_tcase(s, tc_stats);
 

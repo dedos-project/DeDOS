@@ -3,7 +3,7 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
-#include "statistics.h"
+#include "timeseries.h"
 #include "controller_tools.h"
 #include "stat_msg_handler.h"
 #include "communication.h"
@@ -13,92 +13,58 @@
 
 #define NEXT_MSU_LOCAL 1
 #define NEXT_MSU_REMOTE 2
-/*
-static void send_route_update(char *input, int action) {
-    char *cmd = &(*input);
-    int from_msu_id, to_msu_id, runtime_sock, from_msu_type, to_msu_type, to_msu_locality;
-    char *ip_str;
-    int to_ip = 0;
-    int ret;
 
-    debug("DEBUG: Route update *input: %s", input);
-    debug("DEBUG: Route update cmd : %s", cmd);
-    debug("DEBUG: Route update action: %u", action);
-
-    runtime_sock = atoi(strtok(cmd, " "));
-    from_msu_id  = atoi(strtok(NULL, " "));
-    from_msu_type = atoi(strtok(NULL, " "));
-    to_msu_id = atoi(strtok(NULL, " "));
-    to_msu_type = atoi(strtok(NULL, " "));
-    to_msu_locality = atoi(strtok(NULL, " "));
-
-    if (to_msu_locality == NEXT_MSU_REMOTE) {
-        ip_str = strtok(NULL, "\r\n");
-        debug("ip_str :%s", ip_str);
-        string_to_ipv4(ip_str, &to_ip);
-    }
-
-    ret = update_route(action, runtime_sock, from_msu_id, from_msu_type,
-                       to_msu_id, to_msu_type, to_msu_locality, to_ip);
-
-    if (ret < 0 ) {
-        debug("ERROR: %s", "Could not process update route request");
-    }
-}
-
-*/
+#ifndef LOG_PRINT_TIMESERIES
+#define LOG_PRINT_TIMESERIES 0
+#endif
 
 //TODO: update this function for new scheduling & DFG structure
-void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int stats_items) {
-    //TODO: add specific stat report message types and code
-    struct msu_stats_data *stats = stats_data;
-    short index = 0;
+int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
+    int errored = 0;
+    for (int i = 0; i < stats->n_samples; i++) {
 
-    //debug("processing stat messages");
+        struct stat_sample *sample = &stats->samples[i];
+        struct circular_timeseries *to_modify;
 
-    //update controller timeseries
-    //int i;
-    //for (i = 0; i <= stats_items; i++) {
-    //    if (stats[i].msu_id > 0) {
-            /*
-            debug("%s: %d", "payload.msu_id", stats[i].msu_id);
-            debug("%d payload.item_processed at time %d",
-                  stats[i].queue_item_processed[1],
-                  stats[i].queue_item_processed[0]);
-            debug("%d payload.memory_allocated at time %d",
-                  stats[i].memory_allocated[1],
-                  stats[i].memory_allocated[0]);
-            debug("%d payload.data_queue_size at time %d",
-                  stats[i].data_queue_size[1],
-                  stats[i].data_queue_size[0]);
-            */
+        // Will have to move once we get non-msu stats
+        struct dfg_vertex *msu = get_msu_from_id(sample->item_id);
 
-            /*
-            struct dfg_vertex *msu = get_msu_from_id(stats[i].msu_id);
+        if ( msu == NULL ){
+            log_error("Could not get MSU with ID %d", sample->item_id);
+            return -1;
+        }
 
-            index = msu->statistics.queue_item_processed.timepoint;
-            msu->statistics.queue_item_processed.data[index] =
-                stats[i].queue_item_processed[1];
-            msu->statistics.queue_item_processed.timestamp[index] =
-                stats[i].queue_item_processed[0];
-            msu->statistics.queue_item_processed.timepoint = (index + 1) % TIME_SLOTS;
+        switch ( sample->stat_id ) {
+            case QUEUE_LEN:
+                to_modify = &msu->statistics.queue_item_processed;
+                break;
+            case ITEMS_PROCESSED:
+                to_modify = &msu->statistics.queue_items_processed;
+                break;
+            default:
+                log_error("No stat handler for stat_id %d", sample->stat_id);
+                errored=-1;
+                continue;
+        }
 
-            index = msu->statistics.memory_allocated.timepoint;
-            msu->statistics.memory_allocated.data[index] =
-                stats[i].memory_allocated[1];
-            msu->statistics.memory_allocated.timestamp[index] =
-                stats[i].memory_allocated[0];
-            msu->statistics.memory_allocated.timepoint = (index + 1) % TIME_SLOTS;
+        int rtn = append_to_timeseries(sample->stats, sample->n_stats, to_modify);
 
-            index = msu->statistics.data_queue_size.timepoint;
-            msu->statistics.data_queue_size.data[index] =
-                stats[i].data_queue_size[1];
-            msu->statistics.data_queue_size.timestamp[index] =
-                stats[i].data_queue_size[0];
-            msu->statistics.data_queue_size.timepoint = (index + 1) % TIME_SLOTS;
-            */
-    //    }
-    //}
+        if (rtn < 0){
+            errored=-1;
+            log_error("Error appending samples to timeseries");
+        }
+
+#if LOG_PRINT_TIMESERIES
+        log_custom(LOG_PRINT_TIMESERIES, "Timeseries for %d.%d", sample->stat_id, sample->item_id);
+        print_timeseries(to_modify);
+#endif
+
+    }
+
+
+    return errored;
+}
+
 
 /*
     for (i = 0; i <= stats_items; i++) {
@@ -236,5 +202,5 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
             send_route_update(cmd, action);
         }
     }
-*/
 }
+*/

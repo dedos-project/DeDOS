@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include "dedos_statistics.h"
 #include "control_msg_handler.h"
 #include "stat_msg_handler.h"
 #include "communication.h"
@@ -15,6 +16,8 @@
 #define MSG_SIZE 64
 
 #define MAX_SEND_BUFLEN 8192
+
+char stat_msg_buffer[MAX_STAT_BUFF_SIZE];
 
 void process_runtime_msg(char *cmd, int runtime_sock) {
     int count;
@@ -134,29 +137,17 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
             }
             break;
 
-        case STATISTICS_UPDATE:
-            //process received stats update here
-            if (control_msg->msg_type == ACTION_MESSAGE) {
-                int i;
-                struct msu_stats_data *rcvd_stats_array = (struct msu_stats_data*)control_msg->payload;
-                int stats_items = control_msg->payload_len / (sizeof(struct msu_stats_data));
+        case STATISTICS_UPDATE:;
 
-                /*
-                debug("Received stats: %s","");
-                for (i = 0; i < stats_items; ++i) {
-                    debug("msu_id: %d, items_processed: %u, mem_usage: %u, q_size: %u",
-                            rcvd_stats_array[i].msu_id,
-                            rcvd_stats_array[i].queue_item_processed[1],
-                            rcvd_stats_array[i].memory_allocated[1],
-                            rcvd_stats_array[i].data_queue_size[1]
+            struct stats_control_payload stats;
+            int rtn = deserialize_stat_payload(control_msg->payload, &stats);
 
-                         );
-                }
-                */
-                process_stats_msg(rcvd_stats_array, runtime_sock, stats_items);
-            } else {
-                debug("ERROR: Wrong msg type set for STATISTICS update %u", control_msg->msg_type);
+            if ( rtn < 0 ) {
+                log_error("Error deserializing stats payload");
+                break;
             }
+
+            process_stats_msg(&stats, runtime_sock);
 
             break;
 

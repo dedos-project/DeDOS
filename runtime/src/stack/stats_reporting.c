@@ -16,7 +16,7 @@ int send_stats_to_controller() {
     }
 
     struct stats_control_payload payload = {
-        .n_samples = sample_index + 1,
+        .n_samples = sample_index,
         .samples = samples,
     };
 

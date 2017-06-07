@@ -9,7 +9,8 @@ LOGS = \
 	   	ERROR \
 	  	WARN \
 	   	CRITICAL \
-	   	CUSTOM
+	   	CUSTOM \
+		DEDOS_STATISTICS
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 
@@ -93,4 +94,4 @@ $(OBJ)%.o:: $(PATH_TST)%.c $(SELF)
 
 
 .PHONY: test
-.PRECIOUS: $(PATH_BLD)Test_%.$(TARGET_EXT)
+.PRECIOUS: $(BLD)Test_%.out

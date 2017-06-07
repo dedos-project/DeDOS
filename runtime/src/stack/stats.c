@@ -71,7 +71,7 @@ struct stat_type {
     enum stat_id stat_id; /**< Stat ID as defined in stats.h */
     int enabled;          /**< If 1, logging for this item is enabled */
     int n_item_ids;       /**< Number of unique items that can be logged with this statistic
-                               (e.g. # of MSUS) */
+                               e.g. # of MSUS) */
     int max_stats;        /**< Maximum number of statistics that can be held in memory at a time */
     char *stat_format;    /**< Format for printf */
     char *stat_name;      /**< Name to output for this statistic */
@@ -357,6 +357,8 @@ static int find_time_index(struct timed_stat *stats, int max_stats,
     int write_index = stop;
     int last_index = start;
 
+    log_custom(LOG_STAT_INTERNALS, "Last sample index %d", last_index);
+
     struct timespec *last_time = &stats[last_index].time;
 
     int delta = time_cmp(time, last_time);
@@ -372,7 +374,9 @@ static int find_time_index(struct timed_stat *stats, int max_stats,
             return -1;
         } else {
             i += delta;
-            if ( i < 0 || i == max_stats ) {
+            if ( i < 0 ) {
+                i = max_stats + i;
+            } else if ( i == max_stats ) {
                 i %= max_stats;
             }
         }
@@ -393,7 +397,7 @@ static int sample_stats_between(struct timed_stat *stats, int max_stats, int sta
         sample[i] = stats[(int)sample_i];
         sample_i += interval;
         if ( sample_i >= max_stats ) {
-            sample_i = (double) ((int)sample_i % max_stats);
+            sample_i = (double) ((int)sample_i + max_stats);
         }
     }
 
@@ -405,6 +409,7 @@ struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t d
     struct stat_type *stat_type = &stat_types[stat_id];
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
 
+
     if ( n_stats > MAX_STAT_SAMPLES ) {
         log_error("Requested sample size (%d) is bigger than maximum size (%d)",
                   n_stats, MAX_STAT_SAMPLES);
@@ -413,12 +418,17 @@ struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t d
 
     lock_item(item);
     int write_index = item->n_stats - 1;
-    struct timespec cur_time = item->stats[write_index].time;
+    int rolled_over = item->rolled_over;
     unlock_item(item);
 
-    if ( !item->rolled_over && n_stats > write_index ) {
-        log_custom(LOG_STAT_INTERNALS, "Requested sample size (%d) larger than # collected (%d)",
-                  n_stats, item->n_stats);
+    struct timespec cur_time;
+    get_elapsed_time(&cur_time);
+
+    if ( !rolled_over && n_stats > write_index ) {
+        if ( write_index != -1) {
+            log_custom(LOG_STAT_INTERNALS, "Requested sample size (%d) larger than collected (%d)",
+                      n_stats, write_index);
+        }
         return NULL;
     }
 
@@ -432,6 +442,8 @@ struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t d
         log_error("Could not find starting index for sample of length %d", (int)duration);
         return NULL;
     }
+
+    item->last_sample_index = start_index;
 
     log_custom(LOG_STAT_INTERNALS, "Sampling %d/%d samples starting at time %d (currently %d)",
                n_stats,write_index - start_index, (int)start_time.tv_sec, (int)cur_time.tv_sec);
@@ -452,13 +464,11 @@ int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
     struct stat_type *type = &stat_types[stat_id];
     int sample_index = 0;
     for ( int item_id=0; item_id<type->n_item_ids; item_id++ ) {
-        struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
-
         struct timed_stat *item_sample = sample_item_stats(
                 stat_id, item_id, duration, sample_size);
 
         if (item_sample == NULL) {
-            log_custom(LOG_STAT_INTERNALS, "Skipping sample of item %d.%d", stat_id, item_id);
+            //log_custom(LOG_STAT_INTERNALS, "Skipping sample of item %d.%d", stat_id, item_id);
             continue;
         }
         sample[sample_index].stat_id = stat_id;
@@ -497,6 +507,7 @@ void init_statlog(char *filename) {
                 item->stats = calloc(stat_type->max_stats, sizeof(*item->stats));
                 item->n_stats = 0;
                 item->rolled_over = 0;
+                item->last_sample_index = 0;
                 int rtn = pthread_mutex_init(&item->mutex, NULL);
                 if (rtn < 0) {
                     log_warn("Error initializing pthread_mutex for stat item %s(%d)",

@@ -128,7 +128,7 @@ struct json_state init_dfg_msu(struct json_state *in, int index){
     struct dfg_config *cfg = in->data;
 
     cfg->vertex_cnt++;
-    cfg->vertices[index] = malloc(sizeof(*cfg->vertices[index]));
+    cfg->vertices[index] = calloc(1, sizeof(*cfg->vertices[index]));
 
     cfg->vertices[index]->statistics.queue_item_processed.timepoint = 0;
     memset(cfg->vertices[index]->statistics.queue_item_processed.data, 0, TIME_SLOTS);

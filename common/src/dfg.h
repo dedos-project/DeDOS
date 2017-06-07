@@ -9,7 +9,7 @@ struct dfg_config;
 #define MAX_MSU 128
 
 #include "logging.h"
-#include "statistics.h"
+#include "timeseries.h"
 #include "scheduling_cut.h"
 
 /* Some infra properties */
@@ -74,6 +74,9 @@ struct msu_profiling {
 
 
 struct msu_statistics_data {
+    struct circular_timeseries queue_items_processed;
+    struct circular_timeseries queue_length;
+
     struct timeserie queue_item_processed;
     struct timeserie data_queue_size;
     struct timeserie memory_allocated;

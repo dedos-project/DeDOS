@@ -1,17 +1,18 @@
 #ifndef _DEDOS_STATISTICS_H_
 #define _DEDOS_STATISTICS_H_
+#include "control_protocol.h"
 #include "logging.h"
 #include "uthash.h"
 #include "stats.h"
 
 static enum stat_id reported_stats[] = {
-    QUEUE_LEN, MSU_INTERNAL_TIME, MEMORY_ALLOCATED
+    QUEUE_LEN, ITEMS_PROCESSED
 };
 
 #define N_REPORTED_STAT_TYPES sizeof(reported_stats) / sizeof(enum stat_id)
 
 #define STAT_DURATION_S  5
-#define STAT_SAMPLE_SIZE 128
+#define STAT_SAMPLE_SIZE 5
 
 #define MAX_REPORTED_SAMPLES MAX_STAT_SAMPLES * N_REPORTED_STAT_TYPES
 
@@ -21,7 +22,7 @@ static enum stat_id reported_stats[] = {
     sizeof(struct stats_control_payload)
 
 int serialize_stat_payload(struct stats_control_payload *payload, void *buffer);
-int deserialize_stat_payload(void *buffer, struct stats_control_payload *payload);
+int deserialize_stat_payload(void *payload, struct stats_control_payload *stats);
 
 ////////////////////////////////////////////////////////////
 // BELOW THIS LINE IS DEPRECATED BUT NOT YET FULLY REMOVED

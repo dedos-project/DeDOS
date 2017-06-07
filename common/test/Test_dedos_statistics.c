@@ -6,8 +6,8 @@
 
 #define LOG_STAT_SER_TEST 1
 
-#define NUM_STAT_SAMPLES 16
-#define NUM_STATS 100
+#define NUM_STAT_SAMPLES 8
+#define NUM_STATS 128
 
 START_TEST(test_stat_serialization) {
 
@@ -18,17 +18,17 @@ START_TEST(test_stat_serialization) {
 
     for (int i=0; i<NUM_STAT_SAMPLES; i++){
         struct stat_sample *sample = &payload.samples[i];
-        sample->stat_id = i % 3;
-        sample->item_id = i / 3;
+        sample->stat_id = i * 3;
+        sample->item_id = i * 33;
 
-        sample->cur_time.tv_sec = i;
-        sample->cur_time.tv_nsec = i;
+        sample->cur_time.tv_sec = i * 12;
+        sample->cur_time.tv_nsec = i * 14;
 
         sample->n_stats = NUM_STATS;
         sample->stats = malloc(sizeof(struct timed_stat) * NUM_STATS);
 
         for (int j=0; j<NUM_STATS; j++){
-            sample->stats[j].stat = j;
+            sample->stats[j].stat = j + i * 10;
             sample->stats[j].time.tv_sec = i-j % 10;
             sample->stats[j].time.tv_nsec = i + j;
         }
