@@ -35,17 +35,31 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
         debug("There are no more free cores to pin a new worker thread on runtime %d", rt->id);
         return -1;
     } else {
-        //commit change to runtime
-        create_worker_thread(rt->sock);
-        sleep(2); // To leave time to runtime to digest the command...
+        int ret = 0;
 
         //update local view
         msu->scheduling.thread_id = rt->num_threads;
         msu->scheduling.runtime = rt;
 
+        //commit change to runtime
+        ret = create_worker_thread(rt->sock);
+        if (ret == -1) {
+            debug("Could not create new worker thread on runtime %d", rt->id);
+            return ret;
+        }
+
+        sleep(2); // To leave time to runtime to digest the command...
+
+        char *init_data = NULL;
+        ret = send_addmsu_msg(msu, init_data);
+        if (ret == -1) {
+            debug("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);
+            return ret;
+        }
+
         //TODO: update rt->current_alloc
 
-        return 0;
+        return ret;
     }
 }
 
