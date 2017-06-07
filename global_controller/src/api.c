@@ -92,8 +92,8 @@ int send_addmsu_msg(struct dfg_vertex *msu, char *init_data) {
     char data[MAX_INIT_DATA_LEN];
     memset(data, '\0', MAX_INIT_DATA_LEN);
 
-    data_len = strlen(msu_mode) + 1 + how_many_digits(msu_id) + 1;
-    snprintf(data, data_len + 1, "%s %d ", msu_mode, thread_id);
+    data_len = strlen(msu->msu_mode) + 1 + how_many_digits(msu->msu_id) + 2;
+    snprintf(data, data_len, "%s %d ", msu->msu_mode, msu->scheduling.thread_id);
 
     //TODO: create a template system for MSU such that we can query initial data.
     if (msu->msu_type == DEDOS_SOCKET_HANDLER_MSU_ID) {
