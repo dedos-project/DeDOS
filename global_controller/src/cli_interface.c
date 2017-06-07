@@ -151,6 +151,7 @@ static int parse_add_msu(char *args) {
         debug("init data: %s, len: %zu", init_data, strlen(init_data));
         memcpy(data, init_data, strlen(init_data));
     }
+    debug("data: %s, len: %zu", data, strlen(data));
 
     int ret = add_msu(data, msu_id, msu_type, msu_mode, thread_id, runtime_sock);
     if (ret == -1) {
