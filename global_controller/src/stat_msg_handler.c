@@ -57,9 +57,9 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
     //debug("processing stat messages");
 
     //update controller timeseries
-    int i;
-    for (i = 0; i <= stats_items; i++) {
-        if (stats[i].msu_id > 0) {
+    //int i;
+    //for (i = 0; i <= stats_items; i++) {
+    //    if (stats[i].msu_id > 0) {
             /*
             debug("%s: %d", "payload.msu_id", stats[i].msu_id);
             debug("%d payload.item_processed at time %d",
@@ -73,6 +73,7 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
                   stats[i].data_queue_size[0]);
             */
 
+            /*
             struct dfg_vertex *msu = get_msu_from_id(stats[i].msu_id);
 
             index = msu->statistics.queue_item_processed.timepoint;
@@ -95,8 +96,9 @@ void process_stats_msg(struct msu_stats_data *stats_data, int runtime_sock, int 
             msu->statistics.data_queue_size.timestamp[index] =
                 stats[i].data_queue_size[0];
             msu->statistics.data_queue_size.timepoint = (index + 1) % TIME_SLOTS;
-        }
-    }
+            */
+    //    }
+    //}
 
 /*
     for (i = 0; i <= stats_items; i++) {
