@@ -3,6 +3,9 @@
 #include "dedos_statistics.h"
 #include <string.h>
 
+#ifndef LOG_DEDOS_STATISTICS
+#define LOG_DEDOS_STATISTICS 0
+#endif
 
 int serialize_stat_payload(struct stats_control_payload *payload, void *buffer) {
     void *buff_loc = buffer;
@@ -21,7 +24,9 @@ int serialize_stat_payload(struct stats_control_payload *payload, void *buffer) 
             buff_loc += sizeof(*stat);
         }
     }
-    return buff_loc - buffer;
+    log_custom(LOG_DEDOS_STATISTICS, "Serialized stat payload into buffer of length %d",
+               (int)(buff_loc-buffer));
+    return (int)(buff_loc - buffer);
 }
 
 int deserialize_stat_payload(void *buffer, struct stats_control_payload *payload){
@@ -42,6 +47,8 @@ int deserialize_stat_payload(void *buffer, struct stats_control_payload *payload
         payload->samples[i].stats = (struct timed_stat *)offset_buffer;
         offset_buffer += sizeof(struct timed_stat) * payload->samples[i].n_stats;
     }
+    log_custom(LOG_DEDOS_STATISTICS, "Deserialized stat payload from buffer of length %d",
+               (int)(offset_buffer-buffer));
 
-    return offset_buffer - buffer;
+    return (int)(offset_buffer - buffer);
 }

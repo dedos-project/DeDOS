@@ -1,5 +1,10 @@
 #include <check.h>
+#define LOG_DEDOS_STATISTICS 1
+
 #include "dedos_statistics.c"
+#include "logging.h"
+
+#define LOG_STAT_SER_TEST 1
 
 #define NUM_STAT_SAMPLES 16
 #define NUM_STATS 100
@@ -31,10 +36,13 @@ START_TEST(test_stat_serialization) {
 
     char buff[MAX_STAT_BUFF_SIZE];
 
+    log_custom(LOG_STAT_SER_TEST, "SERIALIZING");
+
     int rtn = serialize_stat_payload(&payload, buff);
     ck_assert(rtn >= 0);
 
     struct stats_control_payload payload_out;
+    log_custom(LOG_STAT_SER_TEST, "DESERIALIZING");
     rtn = deserialize_stat_payload(buff, &payload_out);
     ck_assert(rtn >= 0);
 
@@ -55,6 +63,7 @@ START_TEST(test_stat_serialization) {
             ck_assert_int_eq(sample_in->stats[j].stat, sample_out->stats[j].stat);
         }
     }
+    log_custom(LOG_STAT_SER_TEST, "Deserialized matches serialized!");
 
 } END_TEST
 
