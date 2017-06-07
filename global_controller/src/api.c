@@ -13,6 +13,7 @@
 
 int add_msu(char *msu_data, int msu_id, int msu_type,
             char *msu_mode, int thread_id, int runtime_sock) {
+    log_debug("msu_data: %s",msu_data);
     char *buf;
     long total_msg_size = 0;
     struct dedos_control_msg control_msg;
