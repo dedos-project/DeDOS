@@ -111,8 +111,10 @@ int send_addmsu_msg(struct dfg_vertex *msu, char *init_data) {
         free(ssl_init_data);
         data_len += len;
     } else {
-        memcpy(data + data_len, init_data, strlen(init_data));
-        data_len += strlen(init_data);
+        if (init_data != NULL) {
+            memcpy(data + data_len, init_data, strlen(init_data));
+            data_len += strlen(init_data);
+        }
     }
 
     char create_msu_msg_buffer[sizeof(struct manage_msu_control_payload) + data_len];

@@ -473,6 +473,8 @@ void clone_type_static_data(struct dfg_vertex *msu) {
             memcpy(&msu->dependencies, &peer_msu->dependencies,
                    sizeof(struct dependent_type) * peer_msu->num_dependencies);
             msu->num_dependencies = peer_msu->num_dependencies;
+
+            memcpy(&msu->msu_mode, &peer_msu->msu_mode, strlen(&peer_msu->msu_mode));
         }
     }
 }
