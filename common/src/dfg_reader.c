@@ -216,6 +216,28 @@ static int set_rt_dram(jsmntok_t **tok, char *j, struct json_state *in, struct j
     return 0;
 }
 
+static int set_rt_num_threads(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
+    struct dfg_runtime_endpoint *runtime = in->data;
+    runtime->num_threads = tok_to_int(*tok, j);
+    return 0;
+}
+
+static int set_rt_num_pinned_threads(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
+    struct dfg_runtime_endpoint *runtime = in->data;
+    runtime->num_pinned_threads = tok_to_int(*tok, j);
+
+    int i;
+    for (i = 0; i < runtime->num_pinned_threads; ++i) {
+        struct runtime_thread *rt_thread = malloc(sizeof(*rt_thread));
+        rt_thread->id = i + 1;
+        rt_thread->mode = 1;
+
+        runtime->threads[i] = rt_thread;
+    }
+
+    return 0;
+}
+
 static int set_rt_ip(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct dfg_runtime_endpoint *runtime = in->data;
     char *ipstr = tok_to_str(*tok, j);
@@ -476,6 +498,8 @@ static struct key_mapping key_map[] = {
     { "id", RUNTIMES, set_rt_id },
     { "port", RUNTIMES, set_rt_port },
     { "routes", RUNTIMES, set_routes },
+    { "num_threads", RUNTIMES, set_rt_num_threads },
+    { "num_pinned_threads", RUNTIMES, set_rt_num_pinned_threads },
 
     { "id", ROUTES, set_route_id },
     { "destinations", ROUTES, set_route_destination },

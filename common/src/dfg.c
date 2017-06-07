@@ -174,7 +174,7 @@ struct dfg_vertex *get_msu_from_id(int msu_id) {
  * @return dfg route if successful else NULL
  */
 struct dfg_route *get_route_from_id(struct dfg_runtime_endpoint *rt, int route_id) {
-    for (int i=0; i<rt->num_routes; i++) {
+    for (int i = 0; i < rt->num_routes; i++) {
         struct dfg_route *route = rt->routes[i];
         if ( route->route_id == route_id ) {
             return route;

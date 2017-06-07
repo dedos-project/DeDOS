@@ -165,7 +165,9 @@ def make_dfg(yml_filename, pretty=False):
             port = rt['port'],
             num_cores = rt['num_cores'],
             dram = rt['dram'],
-            io_network_bw = rt['io_network_bw']
+            io_network_bw = rt['io_network_bw'],
+            num_threads = rt['num_threads'],
+            num_pinned_threads = rt['num_pinned_threads'],
         ))
     output['runtimes'] = rts
 
