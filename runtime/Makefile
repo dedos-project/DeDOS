@@ -4,13 +4,11 @@ MKDIR=mkdir -p
 TARGET_EXT=out
 
 LOGS = \
-	   DEBUG \
 	   INFO \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   STAT_INTERNALS
 
 DISABLED_LOGS = \
 #	STAT_INTERNALS

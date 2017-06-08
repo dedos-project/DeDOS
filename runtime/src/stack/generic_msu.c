@@ -549,6 +549,12 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
                                            uint32_t ip_address){
 
     struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
+
+    if (type_set == NULL) {
+        log_error("No destinations of type %d in msu %d", type->type_id, sender->id);
+        return NULL;
+    }
+
     int previous_index = (intptr_t)sender->routing_state;
     int new_index = previous_index++;
 

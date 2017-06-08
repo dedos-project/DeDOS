@@ -11,7 +11,7 @@ static enum stat_id reported_stats[] = {
 
 #define N_REPORTED_STAT_TYPES sizeof(reported_stats) / sizeof(enum stat_id)
 
-#define STAT_DURATION_S  5
+#define STAT_DURATION_S  1
 #define STAT_SAMPLE_SIZE 5
 
 #define MAX_REPORTED_SAMPLES MAX_STAT_SAMPLES * N_REPORTED_STAT_TYPES

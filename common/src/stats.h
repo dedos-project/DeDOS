@@ -77,9 +77,6 @@ void close_statlog();
 /** Opens the log file for statistics and initializes the stat structure */
 void init_statlog(char *filename);
 
-struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t duration,
-                                     int sample_size);
-
 int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
                  struct stat_sample *sample);
 

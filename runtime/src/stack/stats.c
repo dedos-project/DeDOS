@@ -354,24 +354,21 @@ static inline int time_cmp(struct timespec *t1, struct timespec *t2) {
 static int find_time_index(struct timed_stat *stats, int max_stats,
                            struct timespec *time, int start, int stop) {
     // FIXME: If max_stats is too low, or time is too long ago, there will be a race condition here
-    int write_index = stop;
-    int last_index = start;
+    log_custom(LOG_STAT_INTERNALS, "Last sample index %d", start);
 
-    log_custom(LOG_STAT_INTERNALS, "Last sample index %d", last_index);
-
-    struct timespec *last_time = &stats[last_index].time;
+    struct timespec *last_time = &stats[start].time;
 
     int delta = time_cmp(time, last_time);
 
-    int i = last_index;
-    int stop_index = write_index - delta;
+    int i = start;
     int n_searched = 0;
 
     // TODO: This is doing a linear search for the time. Could improve if bottlenecked.
     while ( time_cmp(time, &stats[i].time) != -delta ) {
         n_searched++;
-        if ( i == stop_index ) {
-            return -1;
+        if ( i == stop ) {
+            log_custom(LOG_STAT_INTERNALS, "Did not find time, returning last index");
+            return stop;
         } else {
             i += delta;
             if ( i < 0 ) {
@@ -385,27 +382,40 @@ static int find_time_index(struct timed_stat *stats, int max_stats,
     return i;
 }
 
-static int sample_stats_between(struct timed_stat *stats, int max_stats, int start_i, int end_i,
-                                int sample_size, struct timed_stat *sample) {
+static int sample_item_evenly(struct item_stats *item, int max_stats,
+                             struct timespec *start, struct timespec *end,
+                             int sample_size, struct timed_stat *sample) {
+    log_custom(LOG_STAT_INTERNALS, "Sampling %d samples", sample_size);
 
-    log_custom(LOG_STAT_INTERNALS, "Sampling %d stats between %d-%d",sample_size,  start_i, end_i);
+    long length_ns = (1e9) * (end->tv_sec - start->tv_sec) + (end->tv_nsec - start->tv_nsec);
 
-    double interval = (double)((end_i - start_i) % max_stats) / (sample_size - 1);
+    long interval_ns = length_ns / (sample_size-1);
 
-    double sample_i = (double)end_i - (interval * (sample_size - 1));
-    for ( int i=0; i < sample_size; i++ ){
-        sample[i] = stats[(int)sample_i];
-        sample_i += interval;
-        if ( sample_i >= max_stats ) {
-            sample_i = (double) ((int)sample_i + max_stats);
-        }
+    int stop_index = item->n_stats-1;
+
+    struct timespec sample_time = *start;
+    int last_index = -1;
+    for ( int i=0; i < sample_size; i++ ) {
+        int index = find_time_index(item->stats, max_stats, &sample_time,
+                                    item->last_sample_index, stop_index);
+        log_custom(LOG_STAT_INTERNALS, "Sample %d: %d", i, index);
+        //if ( index == last_index ) {
+        //    return i;
+        //}
+        last_index = index;
+        item->last_sample_index = index;
+        sample[i] = item->stats[index];
+        sample[i].time = sample_time;
+        sample_time.tv_nsec += interval_ns;
+        sample_time.tv_sec += (sample_time.tv_nsec / 1e9);
+        sample_time.tv_nsec = sample_time.tv_nsec % (long)1e9;
     }
-
-    return 0;
+    return sample_size;
 }
 
-struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t duration,
-                                     int n_stats) {
+
+static int sample_item_stats(enum stat_id stat_id, int item_id, time_t duration,
+                                     int n_stats, struct timed_stat *sample) {
     struct stat_type *stat_type = &stat_types[stat_id];
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
 
@@ -413,34 +423,35 @@ struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t d
     if ( n_stats > MAX_STAT_SAMPLES ) {
         log_error("Requested sample size (%d) is bigger than maximum size (%d)",
                   n_stats, MAX_STAT_SAMPLES);
-        return NULL;
+        return -1;
     }
 
     lock_item(item);
-    int write_index = item->n_stats - 1;
+    int write_index = item->n_stats;
     int rolled_over = item->rolled_over;
     unlock_item(item);
 
     struct timespec cur_time;
     get_elapsed_time(&cur_time);
 
-    if ( !rolled_over && n_stats > write_index ) {
-        if ( write_index != -1) {
-            log_custom(LOG_STAT_INTERNALS, "Requested sample size (%d) larger than collected (%d)",
-                      n_stats, write_index);
-        }
-        return NULL;
+
+    if ( !rolled_over && write_index == 0) {
+        return -1;
     }
 
     struct timespec start_time = cur_time;
     start_time.tv_sec -= duration;
 
+    int rtn = sample_item_evenly(item, stat_type->max_stats, &start_time, &cur_time,
+                                 n_stats, sample);
+
+/*
     int start_index = find_time_index(item->stats, stat_type->max_stats,
             &start_time, item->last_sample_index, write_index);
 
     if ( start_index < 0 ) {
         log_error("Could not find starting index for sample of length %d", (int)duration);
-        return NULL;
+        return -1;
     }
 
     item->last_sample_index = start_index;
@@ -450,13 +461,13 @@ struct timed_stat *sample_item_stats(enum stat_id stat_id, int item_id, time_t d
 
 
     int rtn = sample_stats_between(item->stats, stat_type->max_stats, start_index, write_index,
-                                   n_stats, item->sample);
+                                   n_stats, sample);
     if ( rtn < 0 ) {
         log_error("Error sampling stats");
-        return NULL;
+        return -1;
     }
-
-    return item->sample;
+*/
+    return rtn;
 }
 
 int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
@@ -464,18 +475,19 @@ int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
     struct stat_type *type = &stat_types[stat_id];
     int sample_index = 0;
     for ( int item_id=0; item_id<type->n_item_ids; item_id++ ) {
-        struct timed_stat *item_sample = sample_item_stats(
-                stat_id, item_id, duration, sample_size);
+        struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
+        int item_sample_size = sample_item_stats( stat_id, item_id, duration,
+                                                 sample_size, item->sample);
 
-        if (item_sample == NULL) {
+        if (item_sample_size <= 0) {
             //log_custom(LOG_STAT_INTERNALS, "Skipping sample of item %d.%d", stat_id, item_id);
             continue;
         }
         sample[sample_index].stat_id = stat_id;
         sample[sample_index].item_id = item_id;
         get_elapsed_time(&sample[sample_index].cur_time);
-        sample[sample_index].n_stats = sample_size;
-        sample[sample_index].stats = item_sample;
+        sample[sample_index].n_stats = item_sample_size;
+        sample[sample_index].stats = item->sample;
         sample_index++;
     }
     return sample_index;

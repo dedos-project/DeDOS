@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <error.h>
 
-#define MAX_RCV_BUFLEN 4096
+#define MAX_RCV_BUFLEN 16384
 
 /* Request or Response control message between runtime and master */
 enum dedos_msg_type {

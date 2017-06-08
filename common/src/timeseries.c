@@ -59,7 +59,7 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
     return 0;
 }
 
-#define PRINT_LEN 5
+#define PRINT_LEN 6
 
 void print_timeseries(struct circular_timeseries *ts){
 
@@ -70,14 +70,16 @@ void print_timeseries(struct circular_timeseries *ts){
 
     for (int i=0; i<PRINT_LEN; i++) {
         int index = (ts->write_index + i) % TIME_SLOTS;
-        buff += sprintf(buff, "| %9d ", (int)ts->time[index].tv_sec);
+        double time = ts->time[index].tv_sec + ((double)ts->time[index].tv_nsec * 1e-9);
+        buff += sprintf(buff, "| %9.4f ", time);
     }
 
     buff += sprintf(buff, "| ... ");
 
     for (int i=TIME_SLOTS-PRINT_LEN; i<TIME_SLOTS; i++) {
         int index = (ts->write_index + i) % TIME_SLOTS;
-        buff += sprintf(buff, "| %9d ", (int)ts->time[index].tv_sec);
+        double time = ts->time[index].tv_sec + ((double)ts->time[index].tv_nsec * 1e-9);
+        buff += sprintf(buff, "| %9.4f ", time);
     }
 
     buff += sprintf(buff, "\nDATA: ");

@@ -689,7 +689,6 @@ int dedos_runtime_destroy(void){
 void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
     int ret;
     static int next_stat_thread = 0;
-    clock_t begin;
     double time_spent;
 
     /* all the blocking networking I/O sockets are checked here */
@@ -721,8 +720,10 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
         }
     }
 
-    begin = clock();
+    struct timespec begin;
+    get_elapsed_time(&begin);
 
+    struct timespec elapsed;
     while (1) {
         ret = check_comm_sockets(); //for incoming data processing
         // log_debug("Done check_comm_sockets %s","");
@@ -738,9 +739,9 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
         check_pending_runtimes();
 
         // TODO policy as to when we pull stats from worker threads
-
-        time_spent = (double) (clock() - begin) / CLOCKS_PER_SEC;
-        if (total_threads > 1 && time_spent > 5.0) {
+        get_elapsed_time(&elapsed);
+        time_spent = elapsed.tv_sec - begin.tv_sec;
+        if (total_threads > 1 && time_spent > STAT_DURATION_S ) {
             if (next_stat_thread != 0) { //main thread not welcome
                 aggregate_start_time(GATHER_THREAD_STATS, next_stat_thread);
                 ret = copy_stats_from_worker(next_stat_thread);
@@ -751,7 +752,7 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
             }
             send_stats_to_controller();
             next_stat_thread = (next_stat_thread + 1) % total_threads;
-            begin = clock();
+            get_elapsed_time(&begin);
         }
 
     }
