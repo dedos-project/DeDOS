@@ -125,6 +125,12 @@ def make_msus_out(msu):
         msu_out['type'] = msu['type']
         msu_out['id'] = max_id
         msu_out['name'] = msu['name']
+        if ('dependencies' in msu and len(msu['dependencies']) > 0):
+            msu_out['dependencies'] = []
+            for dep in msu['dependencies']:
+                msu_out['dependencies'].append(dict(
+                    msu_type = dep['msu_type'],
+                    locality = dep['locality']))
         max_id += 1
         msus.append(msu_out)
     return msus
