@@ -100,7 +100,7 @@ struct stat_type stat_types[10] = {
    {N_CONTEXT_SWITCH,    LOG_N_CONTEXT_SWITCH,    8,  MAX_STAT, "%3.0f",   "N_CONTEXT_SWITCHES"},
    {BYTES_SENT,          LOG_BYTES_SENT,          1,  MAX_STAT, "%06.0f",  "BYTES_SENT"},
    {BYTES_RECEIVED,      LOG_BYTES_RECEIVED,      1,  MAX_STAT, "%06.0f",  "BYTES_RECEIVED"},
-   {GATHER_THREAD_STATS, LOG_GATHER_THREAD_STATS, 8,  MAX_STAT, "%0.9f",   "GATHER_THREAD_STATS"}
+   {GATHER_THREAD_STATS, LOG_GATHER_THREAD_STATS, 9,  MAX_STAT, "%0.9f",   "GATHER_THREAD_STATS"}
 };
 
 #define N_STAT_TYPES sizeof(stat_types) / sizeof(struct stat_type)
