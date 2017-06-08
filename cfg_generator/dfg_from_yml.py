@@ -120,6 +120,10 @@ def make_msus_out(msu):
         msu_out['scheduling']['runtime_id'] = msu['scheduling']['runtime_id']
         if msu_out['vertex_type'] != 'exit':
             msu_out['scheduling']['routing'] = []
+        if 'depedencies' in msu:
+            msu_out['dependencies'] = []
+            for dependency in msu['dependencies']:
+                msu_out['dependencies'].append(dependency)
         msu_out['type'] = msu['type']
         msu_out['id'] = max_id
         msu_out['name'] = msu['name']
