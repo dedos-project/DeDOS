@@ -15,7 +15,7 @@ index 756466d..e680cca 100644
 @@ -31,7 +31,8 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
      return 0;
  }
-
+ 
 -int AcceptSSL(SSL *State){
 +int AcceptSSL(SSL *State, char *Buffer){
 +/*
@@ -27,7 +27,7 @@ index 756466d..e680cca 100644
      return 0;
  }
 +*/
-
+ 
 -/*
 -    //do {
 +    int NumBytes;
@@ -48,22 +48,22 @@ index 756466d..e680cca 100644
          }
 -    //} while (err == SSL_ERROR_WANT_READ);
 +    } while (err == SSL_ERROR_WANT_READ);
-
-
+ 
+ 
 -    if ( (NumBytes = SSL_read(State, Buffer, BufferSize)) <= 0 ) {
 +    if ( (NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN)) <= 0 ) {
          err = SSL_get_error(State, NumBytes);
 +        //SSLErrorCheck(err);
-
+ 
 -        if ( err == SSL_ERROR_WANT_READ ){
 -            return 0;
 -        }
 +        //if ( err == SSL_ERROR_WANT_READ ){
 +        //    return 0;
 +        //}
-
+ 
          char *error;
-
+ 
          while (err == SSL_ERROR_WANT_READ) {
              log_debug("SSL_read returned ret: %d. Errno: %s",
                        NumBytes, error);
@@ -74,21 +74,21 @@ index 756466d..e680cca 100644
              err = SSL_get_error(State, NumBytes);
 +            //SSLErrorCheck(err);
          }
-
+ 
          SSLErrorCheck(err);
 @@ -82,7 +89,7 @@ int AcceptSSL(SSL *State){
-
+ 
      return NumBytes;
  }
 -*/
 +
  void InitServerSSLCtx(SSL_CTX **Ctx) {
      const SSL_METHOD *Method;
-
+ 
 @@ -149,7 +156,7 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
      }
-
-
+ 
+ 
 -    int rtn = AcceptSSL(State);
 +    int rtn = AcceptSSL(State, Request);
      if (rtn < 0){
@@ -96,8 +96,8 @@ index 756466d..e680cca 100644
          close(SocketFD);
 @@ -160,7 +167,7 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
      debug("MSU %d calling SSL_read", self->id);
-
-
+ 
+ 
 -
 +/*
      int ReadBytes;
@@ -111,3 +111,4 @@ index 756466d..e680cca 100644
 +*/
      return Request;
  }
+ 
