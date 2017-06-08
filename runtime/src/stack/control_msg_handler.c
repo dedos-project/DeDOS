@@ -127,6 +127,13 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
                     other_data = strtok(NULL,"\r\n");
                     log_debug("create_action->init_data: %s",create_action->init_data);
                     log_debug("Other data: %s",other_data);
+                    if(other_data == '\0'){
+                        log_error("No init data for ECHO APP MSU");
+                        free(create_action->init_data);
+                        free(create_action);
+                        free(thread_msg);
+                        return -1;
+                    }
                     strncpy(create_action->init_data, other_data,
                            strlen(other_data));
                     log_debug("create_action->init_data: %s",create_action->init_data);
