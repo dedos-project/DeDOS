@@ -314,7 +314,7 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
     msu->id = msu_id;
     msu->type = msu_type_by_id(type_id);
     msu->data_p->data = create_action->init_data;
-
+    log_debug("init data: %s",create_action->init_data);
     // TODO: queue_ws, msu_ws, what????
 
     // TODO: What's all that stuff about global pointers in the old code ???

@@ -268,7 +268,7 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
 {
     #define PCAP 1
     #define TAP 2
-
+    log_debug("create_action->init_data: %s",create_action->init_data);
     struct pico_ip4 ZERO_IP4 = {
         0
     };
