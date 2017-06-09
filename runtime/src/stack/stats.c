@@ -296,6 +296,50 @@ void periodic_aggregate_end_time(enum stat_id stat_id, unsigned int item_id, int
     }
 }
 
+/** Access the last-entered value for a statistic.
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the stat refers ( < MAX_ITEM_ID )
+ */
+double get_last_stat(enum stat_id stat_id, unsigned int item_id ) {
+    struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
+
+    lock_item(item);
+    double last_stat = item->n_stats == 0 ? 0 : item->stats[item->n_stats-1].stat;
+    unlock_item(item);
+
+    return last_stat;
+}
+
+/** Adds a value to a stastic for a single item.
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
+ * @param value The amount to add to the given statistic
+ */
+void increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
+    struct stat_type *stat_type = &stat_types[stat_id];
+    if ( !stat_types->enabled ) {
+        return;
+    }
+    struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
+
+    lock_item(item);
+
+    double last_stat = item->n_stats == 0 ? 0 : item->stats[item->n_stats-1].stat;
+
+    get_elapsed_time(&item->stats[item->n_stats].time);
+    item->stats[item->n_stats].stat = last_stat + value;
+    item->n_stats++;
+    if (item->n_stats == stat_type->max_stats) {
+#if DUMP_STATS
+        log_warn("Stats for type %s rolling over", stat_type->stat_name);
+#endif
+        item->n_stats = 0;
+        item->rolled_over = 1;
+    }
+
+    unlock_item(item);
+}
+
 /** Adds a single stastic for a single item to the log.
  * @param stat_id ID for the statistic being logged
  * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
@@ -311,9 +355,13 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
 
     lock_item(item);
 
-    int last_idx = item->n_stats % stat_type->max_stats;
+    int do_log = 1;
+    int last_idx = item->n_stats-1;
+    if ( last_idx >= 0 ) {
+        do_log = item->stats[last_idx].stat != stat;
+    }
 
-    if ( relog || (item->stats[last_idx].stat != stat ) ) {
+    if ( relog || do_log ) {
         get_elapsed_time(&item->stats[item->n_stats].time);
         item->stats[item->n_stats].stat = stat;
         item->n_stats++;
@@ -541,19 +589,25 @@ void init_statlog(char *filename) {
 
         }
     }
+#if DUMP_STATS
     if ( filename != NULL ) {
         statlog = fopen(filename, "w");
     }
+#endif
 }
 
 /**
  * Flushes all stats to the log file, and closes the file
  */
 void close_statlog() {
+#if DUMP_STATS
     log_info("Outputting stats to log. Do not quit");
     flush_all_stats_to_log();
     fclose(statlog);
     log_info("Finished outputting stats to log");
+#else
+    log_info("Skipping dump to stat log. Set DUMP_STATS=1 to enable");
+#endif
 }
 
 #endif

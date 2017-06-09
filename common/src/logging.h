@@ -66,13 +66,6 @@
 #define log_custom(...) do {} while (0)
 #endif
 
-#if defined(LOG_STATS) && LOG_STATS
-#define log_stats(fmt, ...) \
-    log_at_level("STATS", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
-#else
-#define log_stats(...) do {} while (0)
-#endif
-
 #if defined(DATA_PROFILING_PRINT) && DATA_PROFILING_PRINT
 #define log_profile(fmt, ...) \
     log_at_level("DATA_PROFILE", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)

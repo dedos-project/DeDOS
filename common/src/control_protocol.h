@@ -64,9 +64,10 @@ struct manage_msu_control_payload {
     void *init_data;
 };
 
+/** Used to report statistics to the global controller */
 struct stats_control_payload {
-    int n_samples;
-    struct stat_sample *samples;
+    int n_samples;  /**< The number of stat_samples */
+    struct stat_sample *samples; /**< The reported statistic samples*/
 };
 
 struct dedos_control_msg {

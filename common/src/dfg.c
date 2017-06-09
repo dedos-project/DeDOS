@@ -204,15 +204,7 @@ void set_msu(struct dfg_vertex *msu) {
     dfg->vertices[new_id] = msu;
     dfg->vertex_cnt++;
 
-    msu->statistics.queue_item_processed.timepoint = 0;
-    memset(msu->statistics.queue_item_processed.data, 0, TIME_SLOTS);
-    memset(msu->statistics.queue_item_processed.timestamp, 0, TIME_SLOTS);
-    msu->statistics.data_queue_size.timepoint = 0;
-    memset(msu->statistics.data_queue_size.data, 0, TIME_SLOTS);
-    memset(msu->statistics.data_queue_size.timestamp, 0, TIME_SLOTS);
-    msu->statistics.memory_allocated.timepoint = 0;
-    memset(msu->statistics.memory_allocated.data, 0, TIME_SLOTS);
-    memset(msu->statistics.memory_allocated.timestamp, 0, TIME_SLOTS);
+    memset(&msu->statistics, 0, sizeof(msu->statistics));
 }
 
 /**

@@ -41,13 +41,11 @@ static void *msu_track_alloc(struct generic_msu *msu, size_t bytes) {
         log_error("Failed to allocate %d bytes for MSU id %d, %s",
             (int)bytes, msu->id, msu->type->name);
     } else {
-        msu->stats.memory_allocated[1] += bytes;
-        msu->stats.memory_allocated[0] = time(NULL);
+        increment_stat(MEMORY_ALLOCATED, msu->id, (double)bytes);
         log_debug("Successfully allocated %d bytes for MSU id %d, \
-                  %s memory footprint: %u bytes at time %d",
+                  %s memory footprint: %l",
                   (int)bytes, msu->id, msu->type->name,
-                  msu->stats.memory_allocated[1],
-                  msu->stats.memory_allocated[0]);
+                  get_last_stat(MEMORY_ALLOCATED, msu->id));
     }
     return ptr;
 }
@@ -60,12 +58,10 @@ static void *msu_track_alloc(struct generic_msu *msu, size_t bytes) {
  * @param bytes number of bytes being freed
  */
 static void msu_track_free(void* ptr, struct generic_msu * msu, size_t bytes) {
-    msu->stats.memory_allocated[1] -= bytes;
-    msu->stats.memory_allocated[0] = time(NULL);
-    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes at time %d",
+    increment_stat(MEMORY_ALLOCATED, msu->id, -1 * (double)bytes);
+    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %l bytes",
               (int)bytes, msu->id, msu->type->name,
-              msu->stats.memory_allocated[1],
-              msu->stats.memory_allocated[0]);
+              get_last_stat(MEMORY_ALLOCATED, msu->id));
 
     free(ptr);
 }
@@ -191,36 +187,30 @@ struct msu_data{
 void *msu_data_alloc(struct generic_msu * msu, size_t bytes)
 {
     void *ptr = realloc(msu->data_p->data, bytes);
-    if (ptr == NULL){
+    if (!ptr) {
         log_error("Failed to allocate %d bytes for MSU id %d, %s",
-                  (int)bytes, msu->id, msu->type->name);
+            (int)bytes, msu->id, msu->type->name);
     } else {
-        msu->stats.memory_allocated[1] += (bytes - msu->data_p->n_bytes);
-        msu->stats.memory_allocated[0] = time(NULL);
-        log_debug("Successfully allocated %d bytes for MSU id %d, "
-                  "%s memory footprint: %u bytes at time %d",
+        increment_stat(MEMORY_ALLOCATED, msu->id, (double)bytes);
+        log_debug("Successfully allocated %d bytes for MSU id %d, \
+                  %s memory footprint: %l",
                   (int)bytes, msu->id, msu->type->name,
-                  msu->stats.memory_allocated[1],
-                  msu->stats.memory_allocated[0]);
-
-        msu->data_p->n_bytes = bytes;
+                  get_last_stat(MEMORY_ALLOCATED, msu->id));
         msu->data_p->data = ptr;
     }
     return ptr;
 }
+
 
 /**
  * Frees data stored within an MSU and tracks that the data has been freed.
  * @param msu MSU in which to track the freed data
  */
 void msu_data_free(struct generic_msu *msu) {
-    msu->stats.memory_allocated[1] -= msu->data_p->n_bytes;
-    msu->stats.memory_allocated[0] = time(NULL);
-    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %u bytes at time %d",
+    increment_stat(MEMORY_ALLOCATED, msu->id, -1 * (double)msu->data_p->n_bytes);
+    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %l bytes",
               (int)msu->data_p->n_bytes, msu->id, msu->type->name,
-              msu->stats.memory_allocated[1],
-              msu->stats.memory_allocated[0]);
-
+              get_last_stat(MEMORY_ALLOCATED, msu->id));
     free(msu->data_p->data);
 }
 
@@ -242,9 +232,6 @@ struct generic_msu *msu_alloc(void) {
         log_error("%s", "Failed to allocate msu");
         return msu;
     }
-
-    msu->stats.memory_allocated[1] = 0;
-    msu->stats.queue_item_processed[1] = 0;
 
     int thread_index = get_thread_index(pthread_self());
     struct dedos_thread *dedos_thread = &all_threads[thread_index];

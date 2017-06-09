@@ -423,7 +423,7 @@ void show_stats(int msu_id) {
 
     printf("queue_item_processed\n");
     printf("value, timestamp\n");
-    for (i = 0; i < TIME_SLOTS; ++i) {
+    for (i = 0; i < RRDB_ENTRIES; ++i) {
         if (msu->statistics->queue_item_processed->timestamp[i] > 0) {
             printf("%d, %d\n",
                     msu->statistics->queue_item_processed->data[i],
@@ -433,7 +433,7 @@ void show_stats(int msu_id) {
 
     printf("data_queue_size\n");
     printf("value, timestamp\n");
-    for (i = 0; i < TIME_SLOTS; ++i) {
+    for (i = 0; i < RRDB_ENTRIES; ++i) {
         if (msu->statistics->data_queue_size->timestamp[i] > 0) {
             printf("%d, %d\n",
                     msu->statistics->data_queue_size->data[i],
@@ -443,7 +443,7 @@ void show_stats(int msu_id) {
 
     printf("memory_allocated\n");
     printf("value, timestamp\n");
-    for (i = 0; i < TIME_SLOTS; ++i) {
+    for (i = 0; i < RRDB_ENTRIES; ++i) {
         if (msu->statistics->memory_allocated->timestamp[i] > 0) {
             printf("%d, %d\n",
                     msu->statistics->memory_allocated->data[i],

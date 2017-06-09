@@ -24,7 +24,7 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
     for (int i = 0; i < stats->n_samples; i++) {
 
         struct stat_sample *sample = &stats->samples[i];
-        struct circular_timeseries *to_modify;
+        struct timed_rrdb *to_modify;
 
         // Will have to move once we get non-msu stats
         struct dfg_vertex *msu = get_msu_from_id(sample->item_id);
@@ -36,7 +36,7 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
 
         switch ( sample->stat_id ) {
             case QUEUE_LEN:
-                to_modify = &msu->statistics.queue_item_processed;
+                to_modify = &msu->statistics.queue_length;
                 break;
             case ITEMS_PROCESSED:
                 to_modify = &msu->statistics.queue_items_processed;

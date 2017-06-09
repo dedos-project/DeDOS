@@ -23,12 +23,6 @@ enum layer {
     DEDOS_LAYER_ALL = 6
 };
 
-typedef struct msu_stats {
-    int queue_item_processed[2];
-    int memory_allocated[2];
-    //data queue size can directly be queried from msu->q_in->size
-} msu_stats;
-
 // Forward definition, necessary due to circular dependency between
 // msu_type and generic_msu
 struct generic_msu;
@@ -184,8 +178,6 @@ struct generic_msu{
 
     /** The number of items that should be dequeued on this MSU for each tick.*/
     unsigned int scheduling_weight;
-    /** Pointer to statistics struct */
-    msu_stats stats;
 
     /** Input queue to the MSU */
     struct generic_msu_queue q_in;

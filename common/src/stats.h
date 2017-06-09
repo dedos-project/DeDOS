@@ -1,12 +1,23 @@
+/**
+ * stats.h
+ *
+ * Code related to the gathering of statistics on the runtime,
+ * and the definition of the statistics that are passed to the controller
+ */
 #pragma once
+
 #include <time.h>
 #include <pthread.h>
 
 #ifndef COLLECT_STATS
+/** Whether or not to enable stat collection at all. System may be unstable without it. */
 #define COLLECT_STATS 1
 #endif
 
+/** The maximum number of items that may be collected within each statistic */
 #define MAX_STAT_ITEM_IDS 32
+
+/** When downsampling statistics, the maximum number of samples that may be collected */
 #define MAX_STAT_SAMPLES 128
 
 /**
@@ -30,19 +41,19 @@ enum stat_id{
  * Structure to hold a single timestamped statistic
  */
 struct timed_stat {
-    double stat;
-    struct timespec time;
+    double stat;            /**< The statistic being collected */
+    struct timespec time;   /**< The time at which the statistic was collected */
 };
 
 /**
- * Structure to hold a series of timestamped statistics
+ * Structure to hold a sample of timestamped statistics
  */
 struct stat_sample {
-    enum stat_id stat_id;
-    int item_id;
-    struct timespec cur_time;
-    int n_stats;
-    struct timed_stat *stats;
+    enum stat_id stat_id;     /**< ID for the statistic itself */
+    int item_id;              /**< ID for the item to which the stat refers */
+    struct timespec cur_time; /**< The time at which the statistics were sampled */
+    int n_stats;              /**< The number of statistics that have been sampled */
+    struct timed_stat *stats; /**< The statistics themselved */
 };
 
 
@@ -80,6 +91,11 @@ void init_statlog(char *filename);
 int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
                  struct stat_sample *sample);
 
+/** Access the last-entered value for a statistic.*/
+double get_last_stat(enum stat_id stat_id, unsigned int item_id );
+
+/** Adds a value to a stastic for a single item.*/
+void increment_stat(enum stat_id stat_id, unsigned int item_id, double value);
 
 #else
 
@@ -91,5 +107,8 @@ int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
 #define aggregate_stat(...)
 #define close_statlog(...)
 #define init_statlog(...)
+#define sample_stats(...) 0
+#define get_last_stat(...) 0
+#define increment_stat(...)
 
 #endif

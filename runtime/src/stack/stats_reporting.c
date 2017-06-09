@@ -1,3 +1,9 @@
+/**
+ * stats_reporting.c
+ *
+ * Functions relevant to the reporting of statistics to the global controller
+ */
+
 #include "stats.h"
 #include "logging.h"
 #include "control_protocol.h"
@@ -5,6 +11,10 @@
 #include "communication.h"
 #include <string.h>
 
+/**
+ * Samples statistics and sends them to the global controller
+ * @return 0 on succeess, -1 on error
+ */
 int send_stats_to_controller() {
     struct stat_sample samples[ N_REPORTED_STAT_TYPES * MAX_STAT_ITEM_IDS ];
     int sample_index = 0;

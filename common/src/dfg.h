@@ -5,8 +5,10 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
-struct dfg_config;
+// Putting these up here helps deal with circular dependency warnings
 #define MAX_MSU 128
+struct dfg_config;
+struct dfg_vertex;
 
 #include "logging.h"
 #include "timeseries.h"
@@ -74,12 +76,9 @@ struct msu_profiling {
 
 
 struct msu_statistics_data {
-    struct circular_timeseries queue_items_processed;
-    struct circular_timeseries queue_length;
-
-    struct timeserie queue_item_processed;
-    struct timeserie data_queue_size;
-    struct timeserie memory_allocated;
+    struct timed_rrdb queue_items_processed;
+    struct timed_rrdb queue_length;
+    struct timed_rrdb memory_allocated;
 };
 
 struct msu_scheduling {

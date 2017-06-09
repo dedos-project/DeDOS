@@ -187,7 +187,7 @@ void dump_json(struct dfg_config *dfg_ref) {
 
             //ip
             char ipstr[INET_ADDRSTRLEN];
-            ipv4_to_string(&ipstr, dfg.runtimes[r]->ip);
+            ipv4_to_string(ipstr, dfg.runtimes[r]->ip);
             field_len = 7 + strlen(ipstr) + 1;
             json_len += snprintf(json_string + json_len,
                                  field_len,
@@ -216,7 +216,7 @@ void dump_json(struct dfg_config *dfg_ref) {
             json_len += snprintf(json_string + json_len,
                                  field_len,
                                  "\"dram\":\"%d\"",
-                                 dfg.runtimes[r]->dram);
+                                 (int)dfg.runtimes[r]->dram);
             json_len += snprintf(json_string + json_len, 3, ", ");
 
             //io_network_bw
@@ -224,7 +224,7 @@ void dump_json(struct dfg_config *dfg_ref) {
             json_len += snprintf(json_string + json_len,
                                  field_len,
                                  "\"io_network_bw\":\"%d\"",
-                                 dfg.runtimes[r]->io_network_bw);
+                                 (int)dfg.runtimes[r]->io_network_bw);
 
             //current state
             if (dfg.runtimes[r]->current_alloc != NULL) {
@@ -272,7 +272,7 @@ void dump_json(struct dfg_config *dfg_ref) {
                 json_len += snprintf(json_string + json_len,
                                      field_len,
                                      "\"io_network_bw\":\"%d\"",
-                                     dfg.runtimes[r]->current_alloc->io_network_bw);
+                                     (int)dfg.runtimes[r]->current_alloc->io_network_bw);
                 json_len += snprintf(json_string + json_len, 3, ", ");
 
                 //egress bw
@@ -280,7 +280,7 @@ void dump_json(struct dfg_config *dfg_ref) {
                 json_len += snprintf(json_string + json_len,
                                      field_len,
                                      "\"egress_bw\":\"%d\"",
-                                     dfg.runtimes[r]->current_alloc->egress_bw);
+                                     (int)dfg.runtimes[r]->current_alloc->egress_bw);
                 json_len += snprintf(json_string + json_len, 3, ", ");
 
                 //ingress bw
@@ -288,7 +288,7 @@ void dump_json(struct dfg_config *dfg_ref) {
                 json_len += snprintf(json_string + json_len,
                                      field_len,
                                      "\"ingress_bw\":\"%d\"",
-                                     dfg.runtimes[r]->current_alloc->ingress_bw);
+                                     (int)dfg.runtimes[r]->current_alloc->ingress_bw);
                 json_len += snprintf(json_string + json_len, 3, ", ");
 
                 //num msus
@@ -296,7 +296,7 @@ void dump_json(struct dfg_config *dfg_ref) {
                 json_len += snprintf(json_string + json_len,
                                      field_len,
                                      "\"num_msus\":\"%d\"",
-                                     dfg.runtimes[r]->current_alloc->num_msu);
+                                     (int)dfg.runtimes[r]->current_alloc->num_msu);
 
                 json_len += snprintf(json_string + json_len, 2, "}");
             }
@@ -377,7 +377,7 @@ void dump_json(struct dfg_config *dfg_ref) {
             json_len += snprintf(json_string + json_len,
                                  field_len,
                                  "\"mem_footprint\":\"%d\"",
-                                 dfg.vertices[m]->profiling.dram);
+                                 (int)dfg.vertices[m]->profiling.dram);
             json_len += snprintf(json_string + json_len, 3, ", ");
 
             //tx_node_local
@@ -548,7 +548,7 @@ void dump_json(struct dfg_config *dfg_ref) {
     }
 
 
-    json_len += snprintf(json_string + json_len, 2, "}\0");
+    json_len += snprintf(json_string + json_len, 2, "}");
 
 
     printf("%s\n", json_string);
@@ -572,7 +572,7 @@ void print_dfg(void) {
 
         for (r = 0; r < dfg->runtimes_cnt; r++) {
             if (dfg->runtimes[r] != NULL) {
-                ipv4_to_string(&ip, dfg->runtimes[r]->ip);
+                ipv4_to_string(ip, dfg->runtimes[r]->ip);
 
                 printf("runtime #%d. [ip] %s | [socket] %d | [cores] %d | [pin_t] %d | [threads] %d\n",
                         r + 1,
