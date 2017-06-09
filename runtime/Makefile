@@ -177,13 +177,13 @@ $(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc $(SELF)
 	$(COMPILE_PP) $(call cflags, $@) $< -o $@
 
 $(PATH_DEP)%.d: $(PATH_TST)%.c
-	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(TEST_CFLAGS) $<
+	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(TEST_CFLAGS) $<
 
 $(PATH_DEP)%.d: $(PATH_SRC_STK)%.c $(LEGACY_OBJ)
-	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
+	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
 
 $(PATH_DEP)%.d: $(PATH_SRC_MOD)%.c $(LEGACY_OBJ)
-	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
+	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
 
 
 $(PATH_BLD):

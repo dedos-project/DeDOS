@@ -3,6 +3,8 @@ LD=ld -r
 DEPENDS=gcc -MM -MF
 FINAL=gcc
 
+PRINT_COMPILATION=0
+
 LOGS = \
 		DEBUG\
 	   	INFO \
@@ -45,11 +47,18 @@ dirs: $(DIRS)
 $(DIRS):
 	mkdir -p $@
 
+ifeq ($(PRINT_COMPILATION), 1)
 $(OBJ)%.o: $(SRC)%.c $(SELF)
 	$(CC) -c $< -o $@ $(CFLAGS) -I$(SRC)
+else
+$(OBJ)%.o: $(SRC)%.c $(SELF)
+	@echo "*** COMPILING: $@ "
+	@$(CC) -c $< -o $@ $(CFLAGS) -I$(SRC)
+endif
+
 
 $(DEP)%.d: $(SRC)%.c $(DEP)
-	$(DEPENDS) $@ -MT $(patsubst $(DEP)%.d, $(OBJ)%.o, $@) $(CFLAGS) $<
+	@$(DEPENDS) $@ -MT $(patsubst $(DEP)%.d, $(OBJ)%.o, $@) $(CFLAGS) $<
 
 clean:
 	rm -rf $(DIRS)
@@ -87,11 +96,9 @@ $(RES)%.txt: $(BLD)%.out $(TEST_RESOURCES)
 $(BLD)Test_%.out: $(OBJ)Test_%.o $(OBJS)
 	$(FINAL) -o $@ $(filter-out $(patsubst $(BLD)Test_%.out, $(OBJ)%.o, $@), $^) $(TEST_CFLAGS)
 
-
 # Creates object files from the test sources
 $(OBJ)%.o:: $(PATH_TST)%.c $(SELF)
 	$(CC) $(TEST_CFLAGS) $< -o $@
-
 
 .PHONY: test
 .PRECIOUS: $(BLD)Test_%.out
