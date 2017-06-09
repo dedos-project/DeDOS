@@ -193,7 +193,7 @@ static void* non_block_per_thread_loop() {
             log_error("Error waiting on thread queue semaphore");
         }
 
-#if STATLOG
+#if COLLECT_STATS
         getrusage(RUSAGE_THREAD, &thread_usage);
         periodic_aggregate_stat(N_CONTEXT_SWITCH, thread_index - 1,
                                 thread_usage.ru_nivcsw,

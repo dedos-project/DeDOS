@@ -2,8 +2,8 @@
 #include <time.h>
 #include <pthread.h>
 
-#ifndef STATLOG
-#define STATLOG 1
+#ifndef COLLECT_STATS
+#define COLLECT_STATS 1
 #endif
 
 #define MAX_STAT_ITEM_IDS 32
@@ -46,7 +46,7 @@ struct stat_sample {
 };
 
 
-#if STATLOG
+#if COLLECT_STATS
 /** Gets the amount of time that has elapsed since logging started*/
 void get_elapsed_time(struct timespec *t) ;
 

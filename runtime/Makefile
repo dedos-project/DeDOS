@@ -10,10 +10,8 @@ LOGS = \
 	   CRITICAL \
 	   CUSTOM \
 
-DISABLED_LOGS = \
-#	STAT_INTERNALS
-
-LOG_STATS = 1
+COLLECT_STATS = 1
+DUMP_STATS = 1
 
 PATH_SRC = src/
 PATH_SRC_APP = $(PATH_SRC)apps/
@@ -55,11 +53,6 @@ CFLAGS_dummy_msu= -lpcre
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 LOG_DEFINES+=$(foreach logname, $(DISABLED_LOGS), -DLOG_$(logname)=0)
-ifeq ($(LOG_STATS), 1)
-LOG_DEFINES+= -DSTATLOG=1
-else
-LOG_DEFINES+= -DSTATLOG=0
-endif
 
 CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 -g $(LOG_DEFINES)
 
@@ -71,6 +64,13 @@ ifeq ($(ADDRESS_SANITIZER),1)
   CFLAGS+=-fsanitize=address -fno-omit-frame-pointer
 endif
 
+ifeq ($(COLLECT_STATS), 1)
+	CFLAGS+=-DCOLLECT_STATS=1
+endif
+
+ifeq ($(DUMP_STATS), 1)
+	CFLAGS+=-DDUMP_STATS=1
+endif
 
 LEGACY_MAKE=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/Makefile)
 LEGACY_INC=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/build/include)

@@ -6,10 +6,13 @@
 #include <stdio.h>
 #include <pthread.h>
 
-
-// If STATLOG is defined to be 0, these functions are defined as
+// If COLLECT_STATS is defined to be 0, these functions are defined as
 // empty macros in the header file
-#if STATLOG
+#if COLLECT_STATS
+
+#ifndef DUMP_STATS
+#define DUMP_STATS 0
+#endif 
 
 #ifndef LOG_STAT_INTERNALS
 #define LOG_STAT_INTERNALS 0
@@ -77,7 +80,11 @@ struct stat_type {
     char *stat_name;      /**< Name to output for this statistic */
 };
 
+#if DUMP_STATS
 #define MAX_STAT 100000
+#else
+#define MAX_STAT 8192
+#endif
 
 /**
  * This structure defines the format and size of the statistics being logged
@@ -227,7 +234,9 @@ void aggregate_end_time(enum stat_id stat_id, unsigned int item_id) {
     item->stats[item->n_stats].stat  = (double)timediff_s + ((double)timediff_ns/(1000000000.0));
     item->n_stats++;
     if (item->n_stats == stat_type->max_stats) {
+#if DUMP_STATS
         log_warn("Stats for type %s rolling over", stat_type->stat_name);
+#endif
         item->n_stats = 0;
         item->rolled_over = 1;
     }
@@ -309,7 +318,9 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
         item->stats[item->n_stats].stat = stat;
         item->n_stats++;
         if (item->n_stats == stat_type->max_stats) {
+#if DUMP_STATS
             log_warn("Stats for type %s rolling over", stat_type->stat_name);
+#endif
             item->n_stats = 0;
             item->rolled_over = 1;
         }
