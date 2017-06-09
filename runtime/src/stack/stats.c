@@ -322,7 +322,11 @@ void periodic_aggregate_stat(enum stat_id stat_id, unsigned int item_id, double 
     get_elapsed_time(&curr_time);
 
     lock_item(item);
-    int do_log = get_time_diff_ms(&item->time[item->n_stats-1], &curr_time) > period_ms;
+    int index = item->n_stats-1;
+    int do_log = 1;
+    if (index >= 0){
+        do_log = get_time_diff_ms(&item->time[item->n_stats-1], &curr_time) > period_ms;
+    }
     unlock_item(item);
     if (do_log) {
         aggregate_stat(stat_id, item_id, stat, 1);
