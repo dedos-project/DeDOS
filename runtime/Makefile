@@ -123,7 +123,7 @@ $(PATH_BLD_LEG)%.o:: $(PATH_SRC_LEG)%
 %: $(OBJECTS) $(LEGACY_OBJ) $(COMMON_OBJS) $(PATH_SRC_APP)%.c
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
-$(COMMON_SRC)%.o: $(COMMON_SRC)%.c
+$(COMMON_OBJ)%.o: $(COMMON_SRC)%.c
 	cd .. && make common
 
 test: $(RESULTS)

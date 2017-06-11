@@ -51,8 +51,17 @@ static int request_msu_list(struct dedos_control_msg *control_msg){
 }
 
 static int action_create_msu(struct dedos_control_msg *control_msg){
+
     struct manage_msu_control_payload *create_msu_msg = control_msg->payload;
     create_msu_msg->init_data = (void*)(create_msu_msg+1);
+//    struct create_msu_thread_data *create_msu_msg = control_msg->payload;
+//    create_msu_msg->init_data = control_msg->payload + sizeof(struct create_msu_thread_data);
+
+    log_debug("create_msu_msg \n \
+               msu_type: %u\n \
+               msu_id: %d\n \
+               init_data_len: %u",
+               create_msu_msg->msu_type, create_msu_msg->msu_id, create_msu_msg->init_data_size);
 
     struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
     if (!thread_msg){
@@ -103,19 +112,31 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
             placement_index = atoi(tid);
             int tid_digits = how_many_digits(placement_index);
 
-            //starts at tid, jump 2 spaces (why 2 and not 1? strtok?)
-            other_data = tid + tid_digits + 2;
-
+            //FIX: the memcpy calls below were overwriting the previos memcpy (:96)
+            memset(create_action->init_data, '\0', create_msu_msg->init_data_size);
             //FIXME: ugly way to only check for init data if msu type is known to have some
             switch (create_action->msu_type) {
                 case DEDOS_SOCKET_HANDLER_MSU_ID:
+                    //starts at tid, jump 2 spaces (why 2 and not 1? strtok?)
+                    other_data = tid + tid_digits + 2;
                     memcpy(create_action->init_data, other_data,
                            sizeof(struct socket_handler_init_payload));
                 break;
 
-                case DEDOS_PICO_TCP_STACK_MSU_ID:
-                    memcpy(create_action->init_data, other_data,
+                case DEDOS_PICO_TCP_APP_TCP_ECHO_ID:
+                    other_data = strtok(NULL,"\r\n");
+                    log_debug("create_action->init_data: %s",create_action->init_data);
+                    log_debug("Other data: %s",other_data);
+                    if(other_data == '\0'){
+                        log_error("No init data for ECHO APP MSU");
+                        free(create_action->init_data);
+                        free(create_action);
+                        free(thread_msg);
+                        return -1;
+                    }
+                    strncpy(create_action->init_data, other_data,
                            strlen(other_data));
+                    log_debug("create_action->init_data: %s",create_action->init_data);
                 break;
             }
 
@@ -431,7 +452,6 @@ static int parse_response_msg(struct dedos_control_msg *control_msg){
 // TODO refactor this into case statements
 void parse_cmd_action(char *cmd) {
     struct dedos_control_msg *control_msg;
-
     control_msg = (struct dedos_control_msg*) cmd;
     if (control_msg->payload_len) {
         control_msg->payload = cmd + control_msg->header_len;

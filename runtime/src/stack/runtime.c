@@ -195,7 +195,7 @@ static void* non_block_per_thread_loop() {
 
 #if STATLOG
         getrusage(RUSAGE_THREAD, &thread_usage);
-        periodic_aggregate_stat(N_CONTEXT_SWITCH, thread_index,
+        periodic_aggregate_stat(N_CONTEXT_SWITCH, thread_index - 1,
                                 thread_usage.ru_nivcsw,
                                 250);
 
