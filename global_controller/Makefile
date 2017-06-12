@@ -10,7 +10,6 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   PRINT_TIMESERIES
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 

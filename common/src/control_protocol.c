@@ -37,7 +37,6 @@ int send_to_endpoint(int endpoint_sock, char *buf, unsigned int bufsize){
         log_warn("Failed to send full message to socket %d", endpoint_sock);
         return -1;
     }
-    log_info("Sent msg to peer runtime with len: %d", data_len);
     return 0;
 }
 

@@ -6,13 +6,11 @@ FINAL=gcc
 PRINT_COMPILATION=0
 
 LOGS = \
-		DEBUG\
 	   	INFO \
 	   	ERROR \
 	  	WARN \
 	   	CRITICAL \
 	   	CUSTOM \
-		DEDOS_STATISTICS
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 

@@ -24,7 +24,7 @@ static enum stat_id reported_stats[] __attribute__((unused)) = {
 #define N_REPORTED_STAT_TYPES sizeof(reported_stats) / sizeof(enum stat_id)
 
 /** The frequency in seconds with which statistics are reported to the global controller. */
-#define STAT_DURATION_S  1
+#define STAT_DURATION_S  5
 /** The number of statistics that are reported to the global controller every duration*/
 #define STAT_SAMPLE_SIZE 5
 
