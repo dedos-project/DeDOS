@@ -6,10 +6,17 @@
 #include <stdio.h>
 #include <pthread.h>
 
-
-// If STATLOG is defined to be 0, these functions are defined as
+// If COLLECT_STATS is defined to be 0, these functions are defined as
 // empty macros in the header file
-#if STATLOG
+#if COLLECT_STATS
+
+#ifndef DUMP_STATS
+#define DUMP_STATS 0
+#endif 
+
+#ifndef LOG_STAT_INTERNALS
+#define LOG_STAT_INTERNALS 0
+#endif
 
 /** The maximum number of statistics that can be gathered about
  * a single item before the structure is written to disk */
@@ -59,17 +66,25 @@
 #define LOG_GATHER_THREAD_STATS 1
 #endif
 
+#ifndef LOG_MEMORY_ALLOCATED
+#define LOG_MEMORY_ALLOCATED 1
+#endif
+
 struct stat_type {
     enum stat_id stat_id; /**< Stat ID as defined in stats.h */
     int enabled;          /**< If 1, logging for this item is enabled */
     int n_item_ids;       /**< Number of unique items that can be logged with this statistic
-                               (e.g. # of MSUS) */
+                               e.g. # of MSUS) */
     int max_stats;        /**< Maximum number of statistics that can be held in memory at a time */
     char *stat_format;    /**< Format for printf */
     char *stat_name;      /**< Name to output for this statistic */
 };
 
+#if DUMP_STATS
 #define MAX_STAT 100000
+#else
+#define MAX_STAT 8192
+#endif
 
 /**
  * This structure defines the format and size of the statistics being logged
@@ -81,6 +96,7 @@ struct stat_type stat_types[] = {
    {MSU_FULL_TIME,       LOG_MSU_FULL_TIME,       32, MAX_STAT, "%0.9f",   "MSU_FULL_TIME"},
    {MSU_INTERNAL_TIME,   LOG_MSU_INTERNAL_TIME,   32, MAX_STAT, "%0.9f",   "MSU_INTERNAL_TIME"},
    {MSU_INTERIM_TIME,    LOG_MSU_INTERIM_TIME,    32, MAX_STAT, "%0.9f",   "MSU_INTERIM_TIME"},
+   {MEMORY_ALLOCATED,    LOG_MEMORY_ALLOCATED,    32, MAX_STAT, "%09.0f",  "MEMORY_ALLOCATED"},
    {N_CONTEXT_SWITCH,    LOG_N_CONTEXT_SWITCH,    8,  MAX_STAT, "%3.0f",   "N_CONTEXT_SWITCHES"},
    {BYTES_SENT,          LOG_BYTES_SENT,          1,  MAX_STAT, "%06.0f",  "BYTES_SENT"},
    {BYTES_RECEIVED,      LOG_BYTES_RECEIVED,      1,  MAX_STAT, "%06.0f",  "BYTES_RECEIVED"},
@@ -96,11 +112,13 @@ struct stat_type stat_types[] = {
  */
 struct item_stats
 {
-    unsigned int item_id;   /**< A unique identifier for the item being logged */
-    int n_stats;            /**< The number of stats currently aggregated in the struct */
-    int rolled_over;        /**< Whether the stats structure has rolled over at least once */
-    struct timespec *time;  /**< The time at which each statistic was gathered */
-    double *stats;          /**< The actual statistics gathered */
+    unsigned int item_id;     /**< A unique identifier for the item being logged */
+    int n_stats;              /**< The number of stats currently aggregated in the struct */
+    int rolled_over;          /**< Whether the stats structure has rolled over at least once */
+    struct timed_stat *stats; /**< Timestamp and data for each gathered statistic */
+    int last_sample_index;    /**< Index at which the stat was sampled last */
+    struct timed_stat sample[MAX_STAT_SAMPLES]; /**< Filled with stat samples on call to
+                                                     sample_stats() */
     pthread_mutex_t mutex;
 };
 
@@ -124,9 +142,8 @@ FILE *statlog;
 
 /** Gets the amount of time that has elapsed since logging started .
  * @param *t the elapsed time is output into this variable
- *
  */
-static inline void get_elapsed_time(struct timespec *t) {
+void get_elapsed_time(struct timespec *t) {
     clock_gettime(CLOCK_ID, t);
     t->tv_sec -= start_time_s;
 }
@@ -175,8 +192,8 @@ void flush_item_to_log(enum stat_id stat_id, unsigned int item_id) {
 
     for (int i=0; i<n_stats; i++) {
         fwrite(label, 1, label_size, statlog);
-        fprintf(statlog, "%05ld.%09ld:", item->time[i].tv_sec, item->time[i].tv_nsec);
-        fprintf(statlog, stat_type->stat_format, item->stats[i]);
+        fprintf(statlog, "%05ld.%09ld:", item->stats[i].time.tv_sec, item->stats[i].time.tv_nsec);
+        fprintf(statlog, stat_type->stat_format, item->stats[i].stat);
         fwrite("\n", 1, 1, statlog);
     }
 
@@ -212,12 +229,14 @@ void aggregate_end_time(enum stat_id stat_id, unsigned int item_id) {
 
     lock_item(item);
 
-    time_t timediff_s = newtime.tv_sec - item->time[item->n_stats].tv_sec;
-    long timediff_ns = newtime.tv_nsec - item->time[item->n_stats].tv_nsec;
-    item->stats[item->n_stats] = (double)timediff_s + ((double)timediff_ns/(1000000000.0));
+    time_t timediff_s = newtime.tv_sec - item->stats[item->n_stats].time.tv_sec;
+    long timediff_ns = newtime.tv_nsec - item->stats[item->n_stats].time.tv_nsec;
+    item->stats[item->n_stats].stat  = (double)timediff_s + ((double)timediff_ns/(1000000000.0));
     item->n_stats++;
     if (item->n_stats == stat_type->max_stats) {
+#if DUMP_STATS
         log_warn("Stats for type %s rolling over", stat_type->stat_name);
+#endif
         item->n_stats = 0;
         item->rolled_over = 1;
     }
@@ -237,7 +256,7 @@ void aggregate_start_time(enum stat_id stat_id, unsigned int item_id) {
     }
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
     lock_item(item);
-    get_elapsed_time(&item->time[item->n_stats]);
+    get_elapsed_time(&item->stats[item->n_stats].time);
     unlock_item(item);
 }
 
@@ -269,12 +288,56 @@ void periodic_aggregate_end_time(enum stat_id stat_id, unsigned int item_id, int
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
 
     lock_item(item);
-    int do_log = get_time_diff_ms(&item->time[item->n_stats-1], &curr_time) > period_ms;
+    int do_log = get_time_diff_ms(&item->stats[item->n_stats-1].time, &curr_time) > period_ms;
     unlock_item(item);
 
     if (do_log) {
         aggregate_end_time(stat_id, item_id);
     }
+}
+
+/** Access the last-entered value for a statistic.
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the stat refers ( < MAX_ITEM_ID )
+ */
+double get_last_stat(enum stat_id stat_id, unsigned int item_id ) {
+    struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
+
+    lock_item(item);
+    double last_stat = item->n_stats == 0 ? 0 : item->stats[item->n_stats-1].stat;
+    unlock_item(item);
+
+    return last_stat;
+}
+
+/** Adds a value to a stastic for a single item.
+ * @param stat_id ID for the statistic being logged
+ * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
+ * @param value The amount to add to the given statistic
+ */
+void increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
+    struct stat_type *stat_type = &stat_types[stat_id];
+    if ( !stat_types->enabled ) {
+        return;
+    }
+    struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
+
+    lock_item(item);
+
+    double last_stat = item->n_stats == 0 ? 0 : item->stats[item->n_stats-1].stat;
+
+    get_elapsed_time(&item->stats[item->n_stats].time);
+    item->stats[item->n_stats].stat = last_stat + value;
+    item->n_stats++;
+    if (item->n_stats == stat_type->max_stats) {
+#if DUMP_STATS
+        log_warn("Stats for type %s rolling over", stat_type->stat_name);
+#endif
+        item->n_stats = 0;
+        item->rolled_over = 1;
+    }
+
+    unlock_item(item);
 }
 
 /** Adds a single stastic for a single item to the log.
@@ -292,14 +355,20 @@ void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int
 
     lock_item(item);
 
-    int last_idx = item->n_stats % stat_type->max_stats;
+    int do_log = 1;
+    int last_idx = item->n_stats-1;
+    if ( last_idx >= 0 ) {
+        do_log = item->stats[last_idx].stat != stat;
+    }
 
-    if ( relog || (item->stats[last_idx] != stat ) ) {
-        get_elapsed_time(&item->time[item->n_stats]);
-        item->stats[item->n_stats] = stat;
+    if ( relog || do_log ) {
+        get_elapsed_time(&item->stats[item->n_stats].time);
+        item->stats[item->n_stats].stat = stat;
         item->n_stats++;
         if (item->n_stats == stat_type->max_stats) {
+#if DUMP_STATS
             log_warn("Stats for type %s rolling over", stat_type->stat_name);
+#endif
             item->n_stats = 0;
             item->rolled_over = 1;
         }
@@ -325,7 +394,7 @@ void periodic_aggregate_stat(enum stat_id stat_id, unsigned int item_id, double 
     int index = item->n_stats-1;
     int do_log = 1;
     if (index >= 0){
-        do_log = get_time_diff_ms(&item->time[item->n_stats-1], &curr_time) > period_ms;
+        do_log = get_time_diff_ms(&item->stats[item->n_stats-1].time, &curr_time) > period_ms;
     }
     unlock_item(item);
     if (do_log) {
@@ -333,6 +402,155 @@ void periodic_aggregate_stat(enum stat_id stat_id, unsigned int item_id, double 
     }
 }
 
+
+static inline int time_cmp(struct timespec *t1, struct timespec *t2) {
+    return t1->tv_sec > t2->tv_sec ? 1 :
+            ( t1->tv_sec < t2->tv_sec ? -1 :
+             ( t1->tv_nsec > t2->tv_nsec ? 1 :
+               ( t1->tv_nsec < t2->tv_nsec ? -1 : 0 ) ) );
+}
+
+static int find_time_index(struct timed_stat *stats, int max_stats,
+                           struct timespec *time, int start, int stop) {
+    // FIXME: If max_stats is too low, or time is too long ago, there will be a race condition here
+    log_custom(LOG_STAT_INTERNALS, "Last sample index %d", start);
+
+    struct timespec *last_time = &stats[start].time;
+
+    int delta = time_cmp(time, last_time);
+
+    int i = start;
+    int n_searched = 0;
+
+    // TODO: This is doing a linear search for the time. Could improve if bottlenecked.
+    while ( time_cmp(time, &stats[i].time) != -delta ) {
+        n_searched++;
+        if ( i == stop ) {
+            log_custom(LOG_STAT_INTERNALS, "Did not find time, returning last index");
+            return stop;
+        } else {
+            i += delta;
+            if ( i < 0 ) {
+                i = max_stats + i;
+            } else if ( i == max_stats ) {
+                i %= max_stats;
+            }
+        }
+    }
+    log_custom(LOG_STAT_INTERNALS, "Found time at index %d (searched %d)", i, n_searched);
+    return i;
+}
+
+static int sample_item_evenly(struct item_stats *item, int max_stats,
+                             struct timespec *start, struct timespec *end,
+                             int sample_size, struct timed_stat *sample) {
+    log_custom(LOG_STAT_INTERNALS, "Sampling %d samples", sample_size);
+
+    long length_ns = (1e9) * (end->tv_sec - start->tv_sec) + (end->tv_nsec - start->tv_nsec);
+
+    long interval_ns = length_ns / (sample_size-1);
+
+    int stop_index = item->n_stats-1;
+
+    struct timespec sample_time = *start;
+    int last_index = -1;
+    for ( int i=0; i < sample_size; i++ ) {
+        int index = find_time_index(item->stats, max_stats, &sample_time,
+                                    item->last_sample_index, stop_index);
+        log_custom(LOG_STAT_INTERNALS, "Sample %d: %d", i, index);
+        //if ( index == last_index ) {
+        //    return i;
+        //}
+        last_index = index;
+        item->last_sample_index = index;
+        sample[i] = item->stats[index];
+        sample[i].time = sample_time;
+        sample_time.tv_nsec += interval_ns;
+        sample_time.tv_sec += (sample_time.tv_nsec / 1e9);
+        sample_time.tv_nsec = sample_time.tv_nsec % (long)1e9;
+    }
+    return sample_size;
+}
+
+
+static int sample_item_stats(enum stat_id stat_id, int item_id, time_t duration,
+                                     int n_stats, struct timed_stat *sample) {
+    struct stat_type *stat_type = &stat_types[stat_id];
+    struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
+
+
+    if ( n_stats > MAX_STAT_SAMPLES ) {
+        log_error("Requested sample size (%d) is bigger than maximum size (%d)",
+                  n_stats, MAX_STAT_SAMPLES);
+        return -1;
+    }
+
+    lock_item(item);
+    int write_index = item->n_stats;
+    int rolled_over = item->rolled_over;
+    unlock_item(item);
+
+    struct timespec cur_time;
+    get_elapsed_time(&cur_time);
+
+
+    if ( !rolled_over && write_index == 0) {
+        return -1;
+    }
+
+    struct timespec start_time = cur_time;
+    start_time.tv_sec -= duration;
+
+    int rtn = sample_item_evenly(item, stat_type->max_stats, &start_time, &cur_time,
+                                 n_stats, sample);
+
+/*
+    int start_index = find_time_index(item->stats, stat_type->max_stats,
+            &start_time, item->last_sample_index, write_index);
+
+    if ( start_index < 0 ) {
+        log_error("Could not find starting index for sample of length %d", (int)duration);
+        return -1;
+    }
+
+    item->last_sample_index = start_index;
+
+    log_custom(LOG_STAT_INTERNALS, "Sampling %d/%d samples starting at time %d (currently %d)",
+               n_stats,write_index - start_index, (int)start_time.tv_sec, (int)cur_time.tv_sec);
+
+
+    int rtn = sample_stats_between(item->stats, stat_type->max_stats, start_index, write_index,
+                                   n_stats, sample);
+    if ( rtn < 0 ) {
+        log_error("Error sampling stats");
+        return -1;
+    }
+*/
+    return rtn;
+}
+
+int sample_stats(enum stat_id stat_id, time_t duration, int sample_size,
+                 struct stat_sample *sample) {
+    struct stat_type *type = &stat_types[stat_id];
+    int sample_index = 0;
+    for ( int item_id=0; item_id<type->n_item_ids; item_id++ ) {
+        struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
+        int item_sample_size = sample_item_stats( stat_id, item_id, duration,
+                                                 sample_size, item->sample);
+
+        if (item_sample_size <= 0) {
+            //log_custom(LOG_STAT_INTERNALS, "Skipping sample of item %d.%d", stat_id, item_id);
+            continue;
+        }
+        sample[sample_index].stat_id = stat_id;
+        sample[sample_index].item_id = item_id;
+        get_elapsed_time(&sample[sample_index].cur_time);
+        sample[sample_index].n_stats = item_sample_size;
+        sample[sample_index].stats = item->sample;
+        sample_index++;
+    }
+    return sample_index;
+}
 
 /**
  * Opens the log file for statistics and initializes the stat structure
@@ -357,10 +575,10 @@ void init_statlog(char *filename) {
 
             for (int j=0; j<stat_type->n_item_ids; j++) {
                 struct item_stats *item = &item_stats[j];
-                item->time = calloc(stat_type->max_stats, sizeof(*item->time));
                 item->stats = calloc(stat_type->max_stats, sizeof(*item->stats));
                 item->n_stats = 0;
                 item->rolled_over = 0;
+                item->last_sample_index = 0;
                 int rtn = pthread_mutex_init(&item->mutex, NULL);
                 if (rtn < 0) {
                     log_warn("Error initializing pthread_mutex for stat item %s(%d)",
@@ -371,17 +589,25 @@ void init_statlog(char *filename) {
 
         }
     }
-    statlog = fopen(filename, "w");
+#if DUMP_STATS
+    if ( filename != NULL ) {
+        statlog = fopen(filename, "w");
+    }
+#endif
 }
 
 /**
  * Flushes all stats to the log file, and closes the file
  */
 void close_statlog() {
+#if DUMP_STATS
     log_info("Outputting stats to log. Do not quit");
     flush_all_stats_to_log();
     fclose(statlog);
     log_info("Finished outputting stats to log");
+#else
+    log_info("Skipping dump to stat log. Set DUMP_STATS=1 to enable");
+#endif
 }
 
 #endif

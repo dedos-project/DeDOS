@@ -37,8 +37,6 @@ def add_pseudo_routing(rt_id, froms, tos, routes, json_route):
 
     new_routes = {}
 
-    #print("In pseudo %s" % froms)
-
     for type in set(types):
         for i in range(99):
             name = route_name(rt_id, type, i)
@@ -87,7 +85,8 @@ def runtime_routes(rt_id, msus, routes):
             threads = set(msu['scheduling']['thread_id'] for msu in from_msus)
             for thread in threads:
                 thread_froms = [msu for msu in msus if msu['scheduling']['thread_id'] == thread
-                                and msu['scheduling']['runtime_id'] == rt_id]
+                                and msu['scheduling']['runtime_id'] == rt_id
+                                and msu['name'] in froms]
                 thread_tos = [msu for msu in msus if msu['name'] in tos and msu['scheduling']['thread_id'] == thread]
                 add_pseudo_routing(rt_id, thread_froms, thread_tos, routes_out, route)
 
@@ -119,6 +118,10 @@ def make_msus_out(msu):
         msu_out['scheduling']['runtime_id'] = msu['scheduling']['runtime_id']
         if msu_out['vertex_type'] != 'exit':
             msu_out['scheduling']['routing'] = []
+        if 'depedencies' in msu:
+            msu_out['dependencies'] = []
+            for dependency in msu['dependencies']:
+                msu_out['dependencies'].append(dependency)
         msu_out['type'] = msu['type']
         msu_out['id'] = max_id
         msu_out['name'] = msu['name']

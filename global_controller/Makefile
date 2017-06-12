@@ -9,7 +9,8 @@ LOGS = \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   CUSTOM
+	   CUSTOM \
+
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 
 SELF=./Makefile

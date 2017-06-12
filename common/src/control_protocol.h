@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <error.h>
 
-#define MAX_RCV_BUFLEN 4096
+#define MAX_RCV_BUFLEN 16384
 
 /* Request or Response control message between runtime and master */
 enum dedos_msg_type {
@@ -64,6 +64,12 @@ struct manage_msu_control_payload {
     void *init_data;
 };
 
+/** Used to report statistics to the global controller */
+struct stats_control_payload {
+    int n_samples;  /**< The number of stat_samples */
+    struct stat_sample *samples; /**< The reported statistic samples*/
+};
+
 struct dedos_control_msg {
     enum dedos_msg_type msg_type; //request or response
     enum dedos_action_type msg_code;
@@ -95,6 +101,10 @@ struct dedos_thread_msg
      the message should know how to handle this data */
 };
 
+/**
+ * Serializes a control message (assuming payload is already serialized) and sends to the
+ * global controller or runtime indicated by the given socket number
+ */
 int send_control_msg(int sock, struct dedos_control_msg *control_msg);
 struct dedos_thread_msg* dedos_thread_msg_alloc();
 void dedos_thread_msg_free(struct dedos_thread_msg* msg);

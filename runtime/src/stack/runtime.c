@@ -128,36 +128,6 @@ static int pin_thread(pthread_t ptid, int cpu_id) {
     return 0;
 }
 
-static inline void update_thread_stats(struct dedos_thread* thread, struct generic_msu *msu){
-    //find MSU stats entry in thread struct
-    struct index_tracker* index_tracker;
-    index_tracker = find_index_tracking_entry(thread->thread_stats->msu_stats_index_tracker, msu->id);
-    if(!index_tracker){
-        log_error("Cannot update stats for msu id: %d", msu->id);
-        return;
-    }
-    struct msu_stats_data *msu_stats_data = index_tracker->stats_data_ptr;
-    mutex_lock(thread->thread_stats->mutex);
-    // inside a lock because main thread might read it intermittently to update systemwide statistics
-    if (msu_stats_data->msu_id != msu->id) {
-        log_error("MSU id mismatch for updating stats from msu to thread struct, id: %d", msu->id);
-        return;
-    } else {
-        // copy msu statistics into thread's statistics collector struct,
-        msu_stats_data->queue_item_processed[1] = msu->stats.queue_item_processed[1];
-        msu_stats_data->queue_item_processed[0] = msu->stats.queue_item_processed[0];
-        msu_stats_data->memory_allocated[1] = msu->stats.memory_allocated[1];
-        msu_stats_data->memory_allocated[0] = msu->stats.memory_allocated[0];
-        msu_stats_data->data_queue_size[1] = msu->q_in.size;
-        msu_stats_data->data_queue_size[0] = time(NULL);
-        /* Print stats */
-#if DEBUG != 0
-//        iterate_print_thread_stats_array(thread->thread_stats);
-#endif
-    }
-    mutex_unlock(thread->thread_stats->mutex);
-}
-
 static void* non_block_per_thread_loop() {
     /* Each of these loops is independently run on thread */
     struct dedos_thread* self;
@@ -167,6 +137,7 @@ static void* non_block_per_thread_loop() {
     log_debug("Index in all thread: %d", thread_index);
     self = &all_threads[thread_index];
     int not_done = 1;
+    long int queue_items_processed = 0;
     do {
         if(!pthread_equal(self->tid, pthread_self())){
             log_error("Unable to get correct pointer to self thread struct %s","");
@@ -193,7 +164,7 @@ static void* non_block_per_thread_loop() {
             log_error("Error waiting on thread queue semaphore");
         }
 
-#if STATLOG
+#if COLLECT_STATS
         getrusage(RUSAGE_THREAD, &thread_usage);
         periodic_aggregate_stat(N_CONTEXT_SWITCH, thread_index - 1,
                                 thread_usage.ru_nivcsw,
@@ -229,15 +200,11 @@ static void* non_block_per_thread_loop() {
                         msu_receive(cur, queue_item);
                         aggregate_end_time(MSU_FULL_TIME, cur->id);
 
-                        //increment queue item processed
-                        cur->stats.queue_item_processed[1]++; //FIXME UINT OVERFLOW
-                        cur->stats.queue_item_processed[0] = time(NULL);
+                        /** Increment the number of items processed */
+                        increment_stat(ITEMS_PROCESSED, cur->id, 1);
 
-                        aggregate_stat(ITEMS_PROCESSED, cur->id, cur->stats.queue_item_processed[1], 0);
-
-                        debug("DEBUG: msu %d has processed MD %d items at time %d",
-                              cur->id, cur->stats.queue_item_processed[1],
-                              cur->stats.queue_item_processed[0]);
+                        log_debug("MSU %d has processed %d items", cur->id,
+                                  get_last_stat(ITEMS_PROCESSED, cur->id));
 
                         aggregate_start_time(MSU_INTERIM_TIME, cur->id);
                     } else if (cur->type->type_id == DEDOS_TCP_DATA_MSU_ID) {
@@ -266,7 +233,6 @@ static void* non_block_per_thread_loop() {
                     }
                 }
 
-                update_thread_stats(self, cur);
                 cur = cur->next;
 
             } while (cur);
@@ -361,18 +327,6 @@ int on_demand_create_worker_thread(int is_blocking) {
     all_threads[index].msu_pool->head = NULL;
     all_threads[index].msu_pool->tail = NULL;
 
-    cur_thread->thread_stats = (struct thread_msu_stats*) malloc(sizeof(struct thread_msu_stats));
-    if (!(cur_thread->thread_stats)) {
-        log_error("%s", "Unable to allocate memory for thread_stats");
-        return -1; //FIXME tell global controller of failure
-    }
-
-    ret = init_thread_stats(cur_thread->thread_stats);
-    if(ret){
-        free(cur_thread->thread_stats);
-        return -1;
-    }
-
     cur_thread->thread_q = (struct dedos_thread_queue*) malloc(sizeof(struct dedos_thread_queue));
     if (!(cur_thread->thread_q)) {
         log_error("%s", "Unable to allocate memory for thread queue");
@@ -429,11 +383,6 @@ int on_demand_create_worker_thread(int is_blocking) {
     //update the tracker variable
     total_threads = new_total_threads;
 
-    //update main threads aggregate stat tracker array size
-    ret = update_aggregate_stats_size(main_thread->thread_stats, total_threads - 1); //(total_threads - 1) because only worker threads
-    if(ret == -1){
-        log_error("Failed to update the size of aggregate stats for main thread %s","");
-    }
     log_info("Total threads: %u", total_threads);
 
 #if INFO != 0
@@ -452,8 +401,6 @@ int destroy_worker_thread(struct dedos_thread *dedos_thread){
     log_debug("Destroyed msu pool for thread%s","");
     //empty & free thread_queue
     dedos_thread_queue_empty(dedos_thread->thread_q);
-    //empty & free thread_stats
-    destroy_thread_stats(dedos_thread->thread_stats);
 
     free(dedos_thread->thread_q);
     destroy_pthread(dedos_thread->tid);
@@ -502,21 +449,6 @@ int init_main_thread(void) {
     main_thread->thread_q->head = NULL;
     main_thread->thread_q->tail = NULL;
     main_thread->q_sem = NULL;
-
-    //initially there are no worker threads, so not stats to keep
-    main_thread->thread_stats = (struct thread_msu_stats*) malloc(sizeof(struct thread_msu_stats));
-    if (!main_thread->thread_stats) {
-        log_error("%s", "Unable to allocate memory for thread_stats");
-        return -1; //FIXME tell global controller of failure
-    }
-    ret = init_aggregate_thread_stats(main_thread->thread_stats, 0);
-    if(ret){
-        log_error("Unable to malloc thread stats for main thread %s","");
-        free(main_thread->thread_stats);
-        return -1;
-    }
-
-    log_debug("Main thread struct init %s", "");
 
     return 0;
 }
@@ -664,57 +596,6 @@ static void check_pending_runtimes() {
     }
 }
 
-static void push_stats_to_controller() {
-    struct dedos_control_msg *stats_msg;
-    unsigned int payload_size = 0;
-
-    stats_msg = malloc(sizeof(struct dedos_control_msg));
-    if (!stats_msg) {
-        log_error("failed to allocate memory for sending MSU_LIST to master");
-        return;
-    }
-
-    char *sendbuf = malloc(sizeof(struct dedos_control_msg));
-    if (!sendbuf) {
-        log_error("ERROR: failed to allocate memory for buf to send MSU_LIST to master");
-        free(stats_msg);
-        return;
-    }
-    bzero(sendbuf, sizeof(struct dedos_control_msg));
-
-    int i;
-    int n = 0;
-    for (i = 0; i < main_thread->thread_stats->array_len; ++i) {
-        if (main_thread->thread_stats->msu_stats_data[i].msu_id > 0) {
-            payload_size += sizeof(struct msu_stats_data);
-            sendbuf = realloc(sendbuf, sizeof(struct dedos_control_msg) + payload_size);
-            int offset = sendbuf
-                         + sizeof(struct dedos_control_msg)
-                         + sizeof(struct msu_stats_data) * n;
-            memcpy(offset,
-                   &main_thread->thread_stats->msu_stats_data[i],
-                   sizeof(struct msu_stats_data));
-            n++;
-        }
-    }
-
-    stats_msg->msg_type = ACTION_MESSAGE;
-    stats_msg->msg_code = STATISTICS_UPDATE;
-    stats_msg->header_len = sizeof(struct dedos_control_msg);
-    stats_msg->payload_len = payload_size;
-    memcpy(sendbuf, stats_msg, sizeof(struct dedos_control_msg));
-
-#if DEBUG != 0
-//    print_aggregate_stats(); //UNCOMMENT To see your screen flooded with statistics being sent
-#endif
-
-    dedos_send_to_master(sendbuf,
-            sizeof(struct dedos_control_msg) + payload_size);
-
-    free(sendbuf);
-    free(stats_msg);
-}
-
 int dedos_runtime_destroy(void){
 
     //TODO Cleanup all threads -> all msus of that thread -> all internal MSU stuff
@@ -739,8 +620,6 @@ int dedos_runtime_destroy(void){
 
 void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
     int ret;
-    static int next_stat_thread = 0;
-    clock_t begin;
     double time_spent;
 
     /* all the blocking networking I/O sockets are checked here */
@@ -772,8 +651,10 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
         }
     }
 
-    begin = clock();
+    struct timespec begin;
+    get_elapsed_time(&begin);
 
+    struct timespec elapsed;
     while (1) {
         ret = check_comm_sockets(); //for incoming data processing
         // log_debug("Done check_comm_sockets %s","");
@@ -789,29 +670,13 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
         check_pending_runtimes();
 
         // TODO policy as to when we pull stats from worker threads
-
-        time_spent = (double) (clock() - begin) / CLOCKS_PER_SEC;
-        if (total_threads > 1 && time_spent > 5.0) {
-            if (next_stat_thread != 0) { //main thread not welcome
-                aggregate_start_time(GATHER_THREAD_STATS, next_stat_thread);
-                ret = copy_stats_from_worker(next_stat_thread);
-                aggregate_end_time(GATHER_THREAD_STATS, next_stat_thread);
-                if (ret == -1) {
-                    log_error("Failed to copy stats from worker thread at index %d", next_stat_thread);
-                }
-            } else {
-                //send before a reset but not all resets
-                if (main_thread->thread_stats->num_msus > 0) {
-                    push_stats_to_controller();
-                }
-                main_thread->thread_stats->num_msus = 0;
-            }
-            next_stat_thread = (next_stat_thread + 1) % total_threads;
-            begin = clock();
+        get_elapsed_time(&elapsed);
+        time_spent = elapsed.tv_sec - begin.tv_sec;
+        if (total_threads > 1 && time_spent > STAT_DURATION_S ) {
+            send_stats_to_controller();
+            get_elapsed_time(&begin);
         }
-
     }
-
     dedos_runtime_destroy();
 }
 

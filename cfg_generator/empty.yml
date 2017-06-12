@@ -15,6 +15,11 @@ types:
         meta_routing:
             source_types: [502]
             dst_types: [501]
+        dependencies:
+            - msu_type: 502
+              locality: 1
+            - msu_type: 503
+              locality: 1
     http: &http
         vertex_type: nop
         type: 501
@@ -26,18 +31,36 @@ types:
         type: 502
         meta_routing:
             dst_types: [500]
+        dependencies:
+            - msu_type: 500
+              locality: 1
+            - msu_type: 503
+              locality: 1
     ssl_write: &ssl-write
         vertex_type: exit
         type: 503
         meta_routing:
             source_types: [505, 501]
+        dependencies:
+            - msu_type: 500
+              locality: 1
+            - msu_type: 502
+              locality: 1
     regex: &regex
         vertex_type: nop
         type: 505
         meta_routing:
-            source_types: [500]
+            source_types: [500, 504]
             dst_types: [503]
-
+    regex_route: &regex_route
+        vertex_type: nop
+        type: 504
+        meta_routing:
+            source_types: [500]
+            dst_types: [505]
+        dependencies:
+            - msu_type: 505
+              locality: 1
 global_ctl:
     <<: *dedos01
     port: 8090
