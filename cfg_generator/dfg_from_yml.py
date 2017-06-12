@@ -37,8 +37,6 @@ def add_pseudo_routing(rt_id, froms, tos, routes, json_route):
 
     new_routes = {}
 
-    print("In pseudo %s" % froms)
-
     for type in set(types):
         for i in range(99):
             name = route_name(rt_id, type, i)
