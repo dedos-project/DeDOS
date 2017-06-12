@@ -2682,7 +2682,8 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
         return -1;
     }
     log_debug("retrieved msu type from id. name: %s", type->name);
-
+/* 
+ *  NOW CALLED within msu_route()
     // Get the specific MSU to deliver to
     struct msu_endpoint *dst = type->route(type, self, queue_item);
     if (dst == NULL){
@@ -2695,9 +2696,9 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
         return -1;
     }
     log_debug("Next msu id is %d", dst->id);
-
+*/
     // Send to the specific destination
-    int rtn = send_to_dst(dst, self, queue_item);
+    int rtn = msu_route(type, self, queue_item);
     if (rtn < 0){
         log_error("Error sending to destination msu %s", "");
         if (queue_item){
@@ -2705,7 +2706,7 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
             free(queue_item);
         }
     }
-    return 0;
+    return rtn;
 }
 
 static int forward_to_routing_MSU_deprecated(struct pico_socket *s, struct pico_frame *f, char *flag)
