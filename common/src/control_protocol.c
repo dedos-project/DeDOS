@@ -37,10 +37,16 @@ int send_to_endpoint(int endpoint_sock, char *buf, unsigned int bufsize){
         log_warn("Failed to send full message to socket %d", endpoint_sock);
         return -1;
     }
-    log_info("Sent msg to peer runtime with len: %d", data_len);
     return 0;
 }
 
+/**
+ * Serializes a control message (assuming payload is already serialized) and sends to the
+ * global controller or runtime indicated by the given socket number
+ * @param sock The socket to which to send the control message
+ * @param control_msg The control message to send
+ * @return 0 on success, -1 on error
+ */
 int send_control_msg(int sock, struct dedos_control_msg *control_msg) {
     int total_msg_size = control_msg->header_len + control_msg->payload_len;
 

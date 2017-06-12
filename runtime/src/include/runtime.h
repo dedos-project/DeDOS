@@ -33,7 +33,6 @@ struct dedos_thread
     uint8_t thread_behavior; //blocking or not
     struct dedos_thread_queue *thread_q; //queue for incoming control messages
     struct msu_pool *msu_pool; //pointer to struct that will keep track of msu's assigned to the thread
-    struct thread_msu_stats *thread_stats;
     sem_t *q_sem;
 };
 

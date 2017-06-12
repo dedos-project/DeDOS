@@ -10,7 +10,6 @@
 #include "logging.h"
 #include "control_operations.h"
 #include "msu_tracker.h"
-#include "serialization.h"
 #include "modules/socket_handler_msu.h"
 #include "dedos_msu_list.h"
 

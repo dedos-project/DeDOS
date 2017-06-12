@@ -8,9 +8,10 @@ LOGS = \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   CUSTOM
+	   CUSTOM \
 
-LOG_STATS = 1
+COLLECT_STATS = 1
+DUMP_STATS = 1
 
 PATH_SRC = src/
 PATH_SRC_APP = $(PATH_SRC)apps/
@@ -51,11 +52,7 @@ SELF=./Makefile
 CFLAGS_dummy_msu= -lpcre
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
-ifeq ($(LOG_STATS), 1)
-LOG_DEFINES+= -DSTATLOG=1
-else
-LOG_DEFINES+= -DSTATLOG=0
-endif
+LOG_DEFINES+=$(foreach logname, $(DISABLED_LOGS), -DLOG_$(logname)=0)
 
 CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 -g $(LOG_DEFINES)
 
@@ -67,7 +64,13 @@ ifeq ($(ADDRESS_SANITIZER),1)
   CFLAGS+=-fsanitize=address -fno-omit-frame-pointer
 endif
 
-TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc -lpcap
+ifeq ($(COLLECT_STATS), 1)
+	CFLAGS+=-DCOLLECT_STATS=1
+endif
+
+ifeq ($(DUMP_STATS), 1)
+	CFLAGS+=-DDUMP_STATS=1
+endif
 
 LEGACY_MAKE=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/Makefile)
 LEGACY_INC=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/build/include)
@@ -77,6 +80,8 @@ LEGACY_OBJ=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_BLD_LEG)$(leg_lib).o)
 INCLUDES= $(PATH_SRC_INC) $(LEGACY_INC) $(COMMON_SRC)
 
 CFLAGS+= $(foreach inc, $(INCLUDES), -I$(inc))
+
+TEST_CFLAGS= $(CFLAGS) -I$(PATH_SRC_STK) -lcheck_pic -lrt -lc -lpcap
 
 BUILD_PATHS = $(PATH_BLD) $(PATH_OBJ) $(PATH_RES) $(PATH_DEP) $(PATH_BLD_LEG)
 
@@ -108,6 +113,7 @@ define cflags
 	$(CFLAGS) $(value CFLAGS_$(notdir $(patsubst %.o, %, $(1))))
 endef
 
+
 all: $(BUILD_PATHS) legacy $(APPS)
 
 legacy: $(LEGACY_OBJ)
@@ -135,9 +141,9 @@ test: $(RESULTS)
 		fi;\
 	done
 	@echo "-----------------------\nFAILURES:\n-----------------------"
-	@grep -s "F:" $(PATH_RES)*.txt
+	@-grep -s "F:" $^; echo "";
 	@echo "-----------------------\nERRORS:\n-----------------------"
-	@grep -s "E:" $(PATH_RES)*.txt
+	@-grep -s "E:" $^; echo "";
 	@echo "\nDONE"
 
 $(TEST_RESOURCES): $(RESOURCE_IN)
@@ -152,13 +158,13 @@ $(PATH_RES)%.txt: $(PATH_BLD)%.$(TARGET_EXT) $(TEST_RESOURCES)
 
 # creates the test executables by linking the test objects with
 # the build objects, unity, and the test dependencies
-$(PATH_BLD)Test_%.$(TARGET_EXT): $(PATH_OBJ)Test_%.o $(OBJECTS) $(LEGACY_OBJ)
-	$(FINAL) -o $@ $^ $(TEST_CFLAGS)
+$(PATH_BLD)Test_%.$(TARGET_EXT): $(PATH_OBJ)Test_%.o $(OBJECTS) $(LEGACY_OBJ) $(COMMON_OBJS)
+	$(FINAL) -o $@ $(filter-out $(patsubst $(PATH_BLD)Test_%.$(TARGET_EXT), $(PATH_OBJ)%.o, $@), $^) $(TEST_CFLAGS)
 
 
 # Creates object files from the test sources
-$(PATH_OBJ)%.o:: $(PATH_TST)%.c
-	$(COMPILE) $(CFLAGS) $< -o $@
+$(PATH_OBJ)%.o:: $(PATH_TST)%.c $(SELF)
+	$(COMPILE) $(TEST_CFLAGS) $< -o $@
 
 # Creates object files from the stack source file
 $(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c $(SELF)
@@ -171,13 +177,13 @@ $(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc $(SELF)
 	$(COMPILE_PP) $(call cflags, $@) $< -o $@
 
 $(PATH_DEP)%.d: $(PATH_TST)%.c
-	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
+	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(TEST_CFLAGS) $<
 
 $(PATH_DEP)%.d: $(PATH_SRC_STK)%.c $(LEGACY_OBJ)
-	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
+	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
 
 $(PATH_DEP)%.d: $(PATH_SRC_MOD)%.c $(LEGACY_OBJ)
-	$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
+	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
 
 
 $(PATH_BLD):

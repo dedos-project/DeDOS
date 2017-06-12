@@ -92,8 +92,6 @@ static int process_create_msu_request(struct dedos_thread_msg *msg,
     }
     dedos_msu_pool_add(thread->msu_pool, new_msu);
     log_debug("Added MSU %d to pool", new_msu->id);
-    register_msu_with_thread_stats(thread->thread_stats, new_msu->id);
-    log_debug("Added MSU %d to thread stats", new_msu->id);
     return 0;
 }
 
@@ -115,7 +113,6 @@ static int process_destroy_msu_request(struct dedos_thread_msg *msg,
     log_debug("Destroying msu %d (type %s)", msu_id, msu->type->name);
 
     dedos_msu_pool_delete(thread->msu_pool, msu);
-    remove_msu_thread_stats(thread->thread_stats, msu_id);
 
     destroy_msu(msu);
 
