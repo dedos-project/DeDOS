@@ -347,24 +347,35 @@ int msu_pico_tcp_init(struct generic_msu *self,
  * @return queue item's ID
  */
 int pico_tcp_generate_id(struct generic_msu *self, struct pico_frame *f){
-    log_debug("frame inside....");
-    print_frame(f);
-    return 0;
-    /*
- *  struct ssl_data_payload *data = queue_item->buffer;
-    struct sockaddr_in sockaddr;
-    socklen_t addrlen = sizeof(sockaddr);
-    // Get the client's IP and port
-    int rtn = getpeername(data->socketfd, (struct sockaddr*) &sockaddr, &addrlen);
-    if (rtn < 0){
-        log_error("Could not getpeername for determining packet ID: %s", strerror(errno));
-    }
     uint32_t id;
-    log_debug("Sockaddr port: %d, addr %d", sockaddr.sin_port, sockaddr.sin_addr.s_addr);
-    // Hash the client's address into the id
-    HASH_VALUE(&sockaddr, addrlen, id);
+    int num_bytes;
+    id = 0;
+    num_bytes = 3 * sizeof(uint32_t);
+
+    void *buf = malloc(num_bytes);
+    if(!buf){
+        log_error("failed to malloc buf for 4 tuple");
+        return id;
+    }
+    struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
+    struct pico_ipv4_hdr *net_hdr = (struct pico_ipv4_hdr *) f->net_hdr;
+    char peer[30], local[30];
+    pico_ipv4_to_string(peer, net_hdr->src.addr);
+    pico_ipv4_to_string(local, net_hdr->dst.addr);
+    log_debug("Src addr %s: dst addr : %s", peer, local);
+    log_debug("> dst port:%u src port: %u", short_be(hdr->trans.dport), short_be(hdr->trans.sport));
+    uint16_t sport = short_be(hdr->trans.sport);
+    uint16_t dport = short_be(hdr->trans.dport);
+
+    memcpy(buf, &(net_hdr->src.addr), sizeof(uint32_t));
+    memcpy(buf + sizeof(uint32_t), &(net_hdr->dst.addr), sizeof(uint32_t));
+    memcpy(buf + 2 * sizeof(uint32_t),&sport, sizeof(uint16_t));
+    memcpy(buf + 5 * sizeof(uint16_t),&dport, sizeof(uint16_t));
+
+    // Hash the 4 tuple into id
+    HASH_VALUE(buf, num_bytes, id);
+    free(buf);
     return id;
-*/
 }
 
 struct msu_type PICO_TCP_MSU_TYPE= {
