@@ -28,7 +28,7 @@ int create_msu_request(struct dedos_thread *d_thread,
     ret = dedos_thread_enqueue(d_thread, thread_msg);
     pthread_t self_id = pthread_self();
     log_debug("SELF ID: %lu", self_id);
-    log_debug("Enqueued create_msu_request, thread_q->size: %d, thread_q->num_msgs %d",
+    log_debug("Enqueued create_msu_request, thread_q->size: %d, thread_q->num_msgs %u",
             ret, d_thread->thread_q->num_msgs);
 
     return ret;
