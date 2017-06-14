@@ -11,13 +11,11 @@
 #include "modules/regex_msu.h"
 #include "generic_msu.h"
 
-int GetLine(char *Request, int Offset, char EndChar, char *out) {
+void GetLine(char *Request, int Offset, char EndChar, char *out) {
     if (Request == NULL) {
-        return  NULL;
+        return;
     }
 
-    int Start = Offset;
-    int End = Offset;
     int i;
     for (i = Offset; i <= strlen(Request); i++) {
         if (Request[i] == '\0' || Request[i] == EndChar) {
@@ -27,7 +25,7 @@ int GetLine(char *Request, int Offset, char EndChar, char *out) {
         }
     }
     out[i - Offset] = '\0';
-    return i - Offset;;
+    //return i - Offset;
 }
 
 int query_db(char *ip, int port, const char *query, int param, struct generic_msu *self)
@@ -54,17 +52,17 @@ int query_db(char *ip, int port, const char *query, int param, struct generic_ms
     db_addr.sin_port = htons(port);
 
     // create a connection
-    if (connect(sockfd, (struct sockaddr_in*)&db_addr, sizeof(db_addr)) < 0) {
+    if (connect(sockfd, (struct sockaddr *)&db_addr, sizeof(db_addr)) < 0) {
         log_error("%s", "connect failed");
         close(sockfd);
         return -1;
     }
 
     // send request
-    int req_buf_len= 15;
-    char *req_buf = (char *) malloc(req_buf_len);
-    sprintf(req_buf, "%s %d\0", query, param);
-    if (send(sockfd, req_buf, strlen(req_buf), 0) == -1) {
+    int req_buf_len= strlen(query) + 1 + how_many_digits(param);
+    char *req_buf = malloc(req_buf_len + 1);
+    snprintf(req_buf, req_buf_len + 1, "%s %d", query, param);
+    if (send(sockfd, req_buf, req_buf_len, 0) == -1) {
         log_error("%s", "send failed");
         free(req_buf);
         return -1;
@@ -78,7 +76,7 @@ int query_db(char *ip, int port, const char *query, int param, struct generic_ms
     size_t res_len = 0;
 
     res_len = recvfrom(sockfd, res_buf, res_buf_len, 0,
-        (void*) &db_addr, sizeof(db_addr));
+        (void*) &db_addr, sizeof(struct sockaddr_in));
     if (res_len < 0) {
         log_error("%s", "recv failed");
         return -1;
@@ -227,7 +225,6 @@ int webserver_send_remote(struct generic_msu *src, struct generic_msu_queue_item
 int webserver_receive(struct generic_msu *self, struct generic_msu_queue_item *input_data) {
     if (self && input_data) {
         // printf("web_server_data_handler :Webserver MSU started processing\n");
-        int ret;
         struct ssl_data_payload *recv_data = (struct ssl_data_payload *) (input_data->buffer);
         char *Request =  recv_data->msg;
         debug("DEBUG: WS MSU received data from source ssl msu %d",
@@ -311,6 +308,8 @@ int webserver_destroy(struct generic_msu *self){
     if (self->internal_state != NULL){
         free(self->internal_state);
     }
+
+    return 0;
 }
 
 /**
