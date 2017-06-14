@@ -14,68 +14,38 @@
 #include "logging.h"
 #include "global.h"
 
-int ReadSSL(SSL *State, char *Buffer, int BufferSize)
-{
+int AcceptSSL(SSL *State, char *Buffer){
     int NumBytes;
     int ret, err;
 
-    ERR_clean_error();
-    if ( ( NumBytes = SSL_read(State, Buffer, BufferSize) ) <= 0) {
-        log_error("SSL_read failed with ret: %d\n", NumBytes);
-        err = SSL_get_error(State, NumBytes);
-        SSLErrorCheck(err);
-        return -1;
-    }
-
-    Buffer[NumBytes] = '\0';
-
-    return 0;
-}
-
-int AcceptSSL(SSL *State){
-    int ret;
-    ERR_clean_error();
-    if ( (ret = SSL_accept(State) ) < 0 ){
-        log_error("SSL_accept failed with ret: %d\n");
-        int err = SSL_get_error(State, ret);
-        SSLErrorCheck(err);
-        return -1;
-    }
-    //SSL_set_mode(State, SSL_MODE_AUTO_RETRY);
-    return 0;
-}
-
-/*
-    //do {
+        ERR_clear_error();
         ret = SSL_accept(State);
         err = 0;
         if (ret < 0){
             log_warn("SSL_accept failed with ret = %d", ret);
             err = SSL_get_error(State, ret);
+
             if (err != SSL_ERROR_WANT_READ){
                 return -1;
             } else {
                 log_warn("SSL_accept got SSL_ERROR_WANT_READ");
             }
         }
-    //} while (err == SSL_ERROR_WANT_READ);
+    } while (err == SSL_ERROR_WANT_READ);
 
 
-    if ( (NumBytes = SSL_read(State, Buffer, BufferSize)) <= 0 ) {
+    ERR_clear_error();
+    if ( (NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN)) <= 0 ) {
         err = SSL_get_error(State, NumBytes);
-
-        if ( err == SSL_ERROR_WANT_READ ){
-            return 0;
-        }
 
         char *error;
 
         while (err == SSL_ERROR_WANT_READ) {
             log_debug("SSL_read returned ret: %d. Errno: %s",
                       NumBytes, error);
-            NumBytes = SSL_read(State, Buffer, BufferSize);
-            //strerror is not thread safe
-            error = strerror(errno);
+            ERR_clear_error();
+            NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN);
+
             err = SSL_get_error(State, NumBytes);
         }
 
@@ -84,7 +54,7 @@ int AcceptSSL(SSL *State){
 
     return NumBytes;
 }
-*/
+
 void InitServerSSLCtx(SSL_CTX **Ctx) {
     const SSL_METHOD *Method;
 
@@ -150,27 +120,13 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
         return NULL;
     }
 
-
-    int rtn = AcceptSSL(State);
+    int rtn = AcceptSSL(State, Request);
     if (rtn < 0){
         SSL_free(State);
         close(SocketFD);
-        log_error("Error accepting SSL");
+        log_error("Error accepting/reading SSL");
         return -1;
     }
-
-    debug("MSU %d calling SSL_read", self->id);
-
-
-
-    int ReadBytes;
-    if ( ( ReadBytes = ReadSSL(State, Request, MAX_REQUEST_LEN) ) < 0 ) {
-        log_error("SSL_read on socket %d failed. Data read: %s", SocketFD, Request);
-        SSL_free(State);
-        close(SocketFD);
-        return NULL;
-    }
-    log_debug("ReadSSL returned: %d", ReadBytes);
 
     return Request;
 }
