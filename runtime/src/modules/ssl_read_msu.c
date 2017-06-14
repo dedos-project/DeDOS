@@ -19,6 +19,7 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
     int NumBytes;
     int ret, err;
 
+    ERR_clean_error();
     if ( ( NumBytes = SSL_read(State, Buffer, BufferSize) ) <= 0) {
         log_error("SSL_read failed with ret: %d\n", NumBytes);
         err = SSL_get_error(State, NumBytes);
@@ -33,6 +34,7 @@ int ReadSSL(SSL *State, char *Buffer, int BufferSize)
 
 int AcceptSSL(SSL *State){
     int ret;
+    ERR_clean_error();
     if ( (ret = SSL_accept(State) ) < 0 ){
         log_error("SSL_accept failed with ret: %d\n");
         int err = SSL_get_error(State, ret);
