@@ -21,6 +21,7 @@
 #define PROTO(s) ((s)->proto->proto_number)
 #define PICO_MIN_MSS (1280)
 #define TCP_STATE(s) (s->state & PICO_SOCKET_STATE_TCP)
+#define SYN_STATE_MEMORY_LIMIT (1 * 1024 * 1024)
 
 volatile pico_time hs_pico_tick;
 
@@ -425,7 +426,13 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
     log_debug("%s", "Removed completed request from socket tree");
 
 #endif
-
+    in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
+    log_warn("Decremented syn_state in stale sock: %ld", in_state->syn_state_used_memory);
+    if(in_state->syn_state_used_memory < 0){
+        log_warn("syn_state_used_memory: %ld", in_state->syn_state_used_memory);
+        log_critical("Underflow or overflow in syn state size, reset");
+        in_state->syn_state_used_memory = 0;
+    }
     return 0;
 }
 
@@ -562,6 +569,9 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
      */
     log_debug("%s", "Handling SYN packet...");
     struct hs_internal_state *in_state = self->internal_state;
+    if(in_state->syn_state_used_memory > in_state->syn_state_memory_limit){
+        log_warn("Dropping SYN Packet, pending syn state is full: %ld", in_state->syn_state_used_memory);
+    }
     struct pico_socket *s = hs_pico_socket_tcp_open(PICO_PROTO_IPV4, in_state->hs_timers);
     if (!s) {
         log_error("%s", "Error creating local socket");
@@ -614,7 +624,11 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
     new->sock.state = PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_CONNECTED
             | PICO_SOCKET_STATE_TCP_SYN_RECV;
 
-    add_pending_request(msu_table, &new->sock);
+    int stat = add_pending_request(msu_table, &new->sock);
+    if(stat == 0){
+        in_state->syn_state_used_memory += sizeof(struct pico_tree_node);
+        log_warn("SYN state memory used: %ld", in_state->syn_state_used_memory);
+    }
     //print_tcp_socket(&new->sock);
 
     dedos_tcp_send_synack(self, &new->sock, reply_msu_id);
@@ -644,9 +658,10 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         log_debug("snd_nxt is now %08x", t->snd_nxt);
         log_debug("rcv_nxt is now %08x", t->rcv_nxt);
 #endif
+        return 0;
     }
 
-    return 0;
+    return 1;
 }
 
 static int handle_bad_con(struct pico_frame *f)
@@ -793,8 +808,17 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
                 PICO_SOCKET_STATE_CONNECTED)) /* First ACK */
         {
             log_debug("%s", "This is the first ack");
-            handle_ack(self, f, tcp_sock_found, reply_msu_id);
-
+            int stat = handle_ack(self, f, tcp_sock_found, reply_msu_id);
+/*
+                if(stat == 0){
+                in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
+                log_warn("Syn state decremented on ACK: %ld", in_state->syn_state_used_memory);
+                if(in_state->syn_state_used_memory < 0){
+                    log_critical("Underflow or overflow in syn state size, reset");
+                    in_state->syn_state_used_memory = 0;
+                }
+            }
+*/
 #ifdef PICO_SUPPORT_SAME_THREAD_TCP_MSUS
             {
                 //create a new clone socket to add
@@ -1294,7 +1318,8 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
         return -1;
     }
     in_state->hs_table = hs_table;
-
+    in_state->syn_state_used_memory = 0;
+    in_state->syn_state_memory_limit = SYN_STATE_MEMORY_LIMIT;
     handshake_msu->internal_state = in_state;
 
     log_debug("Created %s MSU with id: %u", handshake_msu->type->name,

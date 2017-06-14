@@ -14,7 +14,9 @@ struct hs_internal_state
 {
     heap_hs_timer_ref*hs_timers;
     struct pico_tree *hs_table;
-//can add more internal state to store here
+    //can add more internal state to store here
+    long int syn_state_used_memory;
+    long int syn_state_memory_limit;
 };
 
 struct hs_queue_item
