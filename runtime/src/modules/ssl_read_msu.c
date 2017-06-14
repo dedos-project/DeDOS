@@ -18,6 +18,8 @@ int AcceptSSL(SSL *State, char *Buffer){
     int NumBytes;
     int ret, err;
 
+    do
+    {
         ERR_clear_error();
         ret = SSL_accept(State);
         err = 0;
