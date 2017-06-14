@@ -427,7 +427,7 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
 
 #endif
     in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
-    log_warn("Decremented syn_state in stale sock: %ld", in_state->syn_state_used_memory);
+    log_warn("Decremented syn_state: %ld", in_state->syn_state_used_memory);
     if(in_state->syn_state_used_memory < 0){
         log_warn("syn_state_used_memory: %ld", in_state->syn_state_used_memory);
         log_critical("Underflow or overflow in syn state size, reset");
@@ -1267,6 +1267,12 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
     //check expired timers
     hs_check_timers(in_state->hs_timers);
+
+    msu_queue *q_data = &msu->q_in;
+    int rtn = sem_post(q_data->thread_q_sem);
+    if(rtn < 0){
+        log_error("Failed to increment semaphore for handshake msu");
+    }
 
     return -10;
 }
