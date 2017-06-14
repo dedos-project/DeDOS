@@ -16,8 +16,8 @@ struct dfg_vertex;
 #define NUM_MSU_TYPES 16
 #define MAX_DESTINATIONS 16
 
+#include "timeseries.h"
 #include "logging.h"
-#include "statistics.h"
 #include "scheduling_cut.h"
 
 /* Some struct related to DFG management protocol */

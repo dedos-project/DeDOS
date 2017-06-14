@@ -493,30 +493,30 @@ void show_stats(int msu_id) {
     printf("queue_item_processed\n");
     printf("value, timestamp\n");
     for (i = 0; i < RRDB_ENTRIES; ++i) {
-        if (msu->statistics->queue_item_processed->timestamp[i] > 0) {
+        if (msu->statistics.queue_items_processed.time[i].tv_sec > 0) {
             printf("%d, %d\n",
-                    msu->statistics.queue_item_processed.data[i],
-                    msu->statistics.queue_item_processed.timestamp[i]);
+                    msu->statistics.queue_items_processed.data[i],
+                    msu->statistics.queue_items_processed.time[i]);
         }
     }
 
     printf("data_queue_size\n");
     printf("value, timestamp\n");
     for (i = 0; i < RRDB_ENTRIES; ++i) {
-        if (msu->statistics->data_queue_size->timestamp[i] > 0) {
+        if (msu->statistics.queue_length.time[i].tv_sec > 0) {
             printf("%d, %d\n",
-                    msu->statistics.data_queue_size.data[i],
-                    msu->statistics.data_queue_size.timestamp[i]);
+                    msu->statistics.queue_length.data[i],
+                    msu->statistics.queue_length.time[i]);
         }
     }
 
     printf("memory_allocated\n");
     printf("value, timestamp\n");
     for (i = 0; i < RRDB_ENTRIES; ++i) {
-        if (msu->statistics->memory_allocated->timestamp[i] > 0) {
+        if (msu->statistics.memory_allocated.time[i].tv_sec > 0) {
             printf("%d, %d\n",
                     msu->statistics.memory_allocated.data[i],
-                    msu->statistics.memory_allocated.timestamp[i]);
+                    msu->statistics.memory_allocated.time[i]);
         }
     }
 }

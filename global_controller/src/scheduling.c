@@ -13,15 +13,15 @@ void prepare_clone(struct dfg_vertex *msu) {
 
     memset(&msu->scheduling, '\0', sizeof(struct msu_scheduling));
 
-    msu->statistics.queue_item_processed.timepoint = 0;
-    memset(msu->statistics.queue_item_processed.data, 0, TIME_SLOTS);
-    memset(msu->statistics.queue_item_processed.timestamp, 0, TIME_SLOTS);
-    msu->statistics.data_queue_size.timepoint = 0;
-    memset(msu->statistics.data_queue_size.data, 0, TIME_SLOTS);
-    memset(msu->statistics.data_queue_size.timestamp, 0, TIME_SLOTS);
-    msu->statistics.memory_allocated.timepoint = 0;
-    memset(msu->statistics.memory_allocated.data, 0, TIME_SLOTS);
-    memset(msu->statistics.memory_allocated.timestamp, 0, TIME_SLOTS);
+    msu->statistics.queue_items_processed.write_index = 0;
+    memset(msu->statistics.queue_items_processed.data, 0, RRDB_ENTRIES);
+    memset(msu->statistics.queue_items_processed.time, 0, RRDB_ENTRIES);
+    msu->statistics.queue_length.write_index = 0;
+    memset(msu->statistics.queue_length.data, 0, RRDB_ENTRIES);
+    memset(msu->statistics.queue_length.time, 0, RRDB_ENTRIES);
+    msu->statistics.memory_allocated.write_index = 0;
+    memset(msu->statistics.memory_allocated.data, 0, RRDB_ENTRIES);
+    memset(msu->statistics.memory_allocated.time, 0, RRDB_ENTRIES);
 }
 
 /**
