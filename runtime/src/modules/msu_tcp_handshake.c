@@ -21,7 +21,7 @@
 #define PROTO(s) ((s)->proto->proto_number)
 #define PICO_MIN_MSS (1280)
 #define TCP_STATE(s) (s->state & PICO_SOCKET_STATE_TCP)
-#define SYN_STATE_MEMORY_LIMIT (40 * 10)
+#define SYN_STATE_MEMORY_LIMIT (1 * 1024 * 1024)
 
 volatile pico_time hs_pico_tick;
 
