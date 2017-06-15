@@ -434,7 +434,6 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
                 short_be(s->remote_port));
     }
     log_debug("%s", "Removed completed request from socket tree");
-
 #endif
     return 0;
 }
@@ -480,6 +479,7 @@ static int8_t add_pending_request(struct pico_tree *msu_table,
     pico_tree_insert(&sp->socks, s);
     s->state |= PICO_SOCKET_STATE_BOUND;
 //    PICOTCP_MUTEX_UNLOCK(Mutex);
+
 #if DEBUG != 0
     log_info("Current sockets for port %u >>>", short_be(s->local_port));
     struct pico_tree_node *index;
@@ -1219,9 +1219,16 @@ int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
 int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item)
 {
     //interface from runtime to picoTCP structures or any other existing code
+
+    msu_queue *q_data = &msu->q_in;
+    int rtn = sem_post(q_data->thread_q_sem);
+    if(rtn < 0){
+        log_error("Failed to increment semaphore for handshake msu");
+    }
+
     struct hs_internal_state *in_state = msu->internal_state;
 
-    log_warn("----------------->>%s", "Processing HS MSU item handler");
+    log_debug("----------------->>%s", "Processing HS MSU item handler");
     //process item
     if(queue_item){
 
@@ -1273,14 +1280,7 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
     //check expired timers
     hs_check_timers(in_state->hs_timers);
-/*
-    msu_queue *q_data = &msu->q_in;
-    int rtn = sem_post(q_data->thread_q_sem);
-    if(rtn < 0){
-        log_error("Failed to increment semaphore for handshake msu");
-    }
-*/
-    log_warn("----------------->>%s", "Exiting HS MSU item handler");
+    log_debug("----------------->>%s", "Exiting HS MSU item handler");
     return -10;
 }
 
