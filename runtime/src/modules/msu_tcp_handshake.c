@@ -21,7 +21,7 @@
 #define PROTO(s) ((s)->proto->proto_number)
 #define PICO_MIN_MSS (1280)
 #define TCP_STATE(s) (s->state & PICO_SOCKET_STATE_TCP)
-#define SYN_STATE_MEMORY_LIMIT (1 * 1024 * 1024)
+#define SYN_STATE_MEMORY_LIMIT (40 * 10)
 
 volatile pico_time hs_pico_tick;
 
@@ -400,6 +400,16 @@ static int8_t create_hs_sockport(struct pico_tree* msu_table,
 int8_t remove_completed_request(struct hs_internal_state *in_state,
         struct pico_socket *s)
 {
+    //only dec SYN state if stale half open conn
+    if (check_socket_sanity(s) < 0) {
+        in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
+        log_warn("Decremented syn_state: %ld", in_state->syn_state_used_memory);
+        if(in_state->syn_state_used_memory < 0){
+            log_warn("syn_state_used_memory: %ld", in_state->syn_state_used_memory);
+            log_critical("Underflow or overflow in syn state size, reset");
+            in_state->syn_state_used_memory = 0;
+        }
+    }
     struct pico_tree *msu_table = in_state->hs_table;
     struct pico_sockport *sp = NULL;
     sp = find_hs_sockport(msu_table, s->local_port);
@@ -426,13 +436,6 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
     log_debug("%s", "Removed completed request from socket tree");
 
 #endif
-    in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
-    log_warn("Decremented syn_state: %ld", in_state->syn_state_used_memory);
-    if(in_state->syn_state_used_memory < 0){
-        log_warn("syn_state_used_memory: %ld", in_state->syn_state_used_memory);
-        log_critical("Underflow or overflow in syn state size, reset");
-        in_state->syn_state_used_memory = 0;
-    }
     return 0;
 }
 
@@ -571,6 +574,7 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
     struct hs_internal_state *in_state = self->internal_state;
     if(in_state->syn_state_used_memory > in_state->syn_state_memory_limit){
         log_warn("Dropping SYN Packet, pending syn state is full: %ld", in_state->syn_state_used_memory);
+        return -1;
     }
     struct pico_socket *s = hs_pico_socket_tcp_open(PICO_PROTO_IPV4, in_state->hs_timers);
     if (!s) {
@@ -809,8 +813,8 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
         {
             log_debug("%s", "This is the first ack");
             int stat = handle_ack(self, f, tcp_sock_found, reply_msu_id);
-/*
-                if(stat == 0){
+
+            if(stat == 0){
                 in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
                 log_warn("Syn state decremented on ACK: %ld", in_state->syn_state_used_memory);
                 if(in_state->syn_state_used_memory < 0){
@@ -818,7 +822,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
                     in_state->syn_state_used_memory = 0;
                 }
             }
-*/
+
 #ifdef PICO_SUPPORT_SAME_THREAD_TCP_MSUS
             {
                 //create a new clone socket to add
@@ -902,9 +906,11 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     }
 
 end2:
+end:
+/** Now called in msu_process_queue_item anyway
     pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
     pico_sockets_pending_restore_check(in_state); //for sockets pending restore
-end:
+*/
     return ret;
 }
 /*
@@ -1215,9 +1221,9 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
     //interface from runtime to picoTCP structures or any other existing code
     struct hs_internal_state *in_state = msu->internal_state;
 
+    log_warn("----------------->>%s", "Processing HS MSU item handler");
     //process item
     if(queue_item){
-        log_debug("----------------->>%s", "Processing HS MSU item handler");
 
         struct tcp_intermsu_queue_item *tcp_queue_item;
         tcp_queue_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
@@ -1257,23 +1263,24 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
         //free the queue item's memory that was processed.
         delete_generic_msu_queue_item(queue_item);
-        log_debug("----------------->>%s", "Exiting HS MSU item handler");
 
-    } else {
-        //any to do when item is not but you need to do some internal stuff anyway
-        pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
-        pico_sockets_pending_restore_check(in_state); //for sockets pending restore
     }
+//    else {
+        //any to do when item is not but you need to do some internal stuff anyway
+    pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
+    pico_sockets_pending_restore_check(in_state); //for sockets pending restore
+//    }
 
     //check expired timers
     hs_check_timers(in_state->hs_timers);
-
+/*
     msu_queue *q_data = &msu->q_in;
     int rtn = sem_post(q_data->thread_q_sem);
     if(rtn < 0){
         log_error("Failed to increment semaphore for handshake msu");
     }
-
+*/
+    log_warn("----------------->>%s", "Exiting HS MSU item handler");
     return -10;
 }
 
