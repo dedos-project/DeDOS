@@ -1545,6 +1545,7 @@ int pico_socket_bind(struct pico_socket *s, void *local_addr, uint16_t *port)
 {
     if (!s || !local_addr || !port) {
         pico_err = PICO_ERR_EINVAL;
+        log_error("Error binding listen sock");
         return -1;
     }
 

@@ -70,6 +70,14 @@ void msu_app_tcpecho(uint16_t listen_port);
 void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s);
 int msu_send_tcpecho(struct pico_socket *s, char *recvbuf, int len);
 
+union {
+    struct pico_ip4 ip4;
+    struct pico_ip6 ip6;
+} inaddr_any = {
+    .ip4 = {0}, .ip6 = {{0}}
+};
+
+
 static char *msu_cpy_arg(char **dst, char *str)
 {
     char *p, *nxt = NULL;
@@ -167,7 +175,7 @@ void msu_cb_tcpecho(uint16_t ev, struct pico_socket *s)
     }
 
     if (ev & PICO_SOCK_EV_ERR) {
-        log_error("Socket error received: %s. Bailing out.\n", strerror(pico_err));
+        log_warn("Socket error received: %s. Bailing out.\n", strerror(pico_err));
         pico_socket_shutdown(s, PICO_SHUT_RDWR);
         //exit(1);
     }
@@ -218,13 +226,6 @@ void msu_app_tcpecho(uint16_t listen_port)
 
     int ret = 0, yes = 1;
     struct pico_socket *s = NULL;
-    union {
-        struct pico_ip4 ip4;
-        struct pico_ip6 ip6;
-    } inaddr_any = {
-        .ip4 = {0}, .ip6 = {{0}}
-    };
-
     s = pico_socket_open(PICO_PROTO_IPV4, PICO_PROTO_TCP, &msu_cb_tcpecho);
 
     if (!s) {
@@ -237,7 +238,7 @@ void msu_app_tcpecho(uint16_t listen_port)
     ret = pico_socket_bind(s, &inaddr_any.ip4, &listen_port);
 
     if (ret < 0) {
-        printf("%s: error binding socket to port %u: %s\n", __FUNCTION__, short_be(listen_port), strerror(pico_err));
+        log_error("%s: error binding socket to port %u: %s\n", __FUNCTION__, short_be(listen_port), strerror(pico_err));
         exit(1);
     }
 
