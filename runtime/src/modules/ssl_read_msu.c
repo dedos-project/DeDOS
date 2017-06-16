@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "communication.h"
 #include "dedos_msu_list.h"
@@ -18,22 +19,26 @@ int AcceptSSL(SSL *State, char *Buffer){
     int NumBytes;
     int ret, err;
 
-    do
-    {
+    do {
         ERR_clear_error();
         ret = SSL_accept(State);
         err = 0;
-        if (ret < 0){
-            log_warn("SSL_accept failed with ret = %d", ret);
+        if (ret < 0) {
+            log_warn("msu %d: SSL_accept failed with ret = %d", ret);
             err = SSL_get_error(State, ret);
 
-            if (err != SSL_ERROR_WANT_READ){
+            if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE) {
+                SSLErrorCheck(err);
                 return -1;
             } else {
-                log_warn("SSL_accept got SSL_ERROR_WANT_READ");
+                if (err == SSL_ERROR_WANT_READ) {
+                    log_warn("SSL_accept got SSL_ERROR_WANT_READ");
+                } else {
+                    log_warn("SSL_accept got SSL_ERROR_WANT_WRITE");
+                }
             }
         }
-    } while (err == SSL_ERROR_WANT_READ);
+    } while (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE);
 
 
     ERR_clear_error();
@@ -42,8 +47,13 @@ int AcceptSSL(SSL *State, char *Buffer){
 
         char *error;
 
+        if (err != SSL_ERROR_WANT_READ) {
+            SSLErrorCheck(err);
+            return -1;
+        }
+
         while (err == SSL_ERROR_WANT_READ) {
-            log_debug("SSL_read returned ret: %d. Errno: %s",
+            log_warn("SSL_read returned ret: %d. Errno: %s",
                       NumBytes, error);
             ERR_clear_error();
             NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN);
@@ -65,9 +75,14 @@ void InitServerSSLCtx(SSL_CTX **Ctx) {
     OpenSSL_add_all_algorithms();
 
     /* create new SSL context */
-    Method = SSLv23_server_method();
+    //Method = SSLv23_server_method();
+    Method = TLSv1_2_server_method();
     *Ctx = SSL_CTX_new(Method);
-    SSL_CTX_set_options(*Ctx, SSL_OP_NO_SSLv3);
+    //SSL_CTX_set_options(*Ctx, SSL_OP_NO_SSLv3);
+
+    int rc;
+    rc = SSL_CTX_set_cipher_list(*Ctx, "HIGH:!aNULL:!MD5:!RC4");
+    assert(rc >= 1);
 
     //SSL_CTX_set_session_cache_mode(*Ctx, SSL_SESS_CACHE_OFF);
     //SSL_CTX_set_options(*Ctx, SSL_OP_NO_TICKET);
@@ -127,7 +142,7 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
         SSL_free(State);
         close(SocketFD);
         log_error("Error accepting/reading SSL");
-        return -1;
+        return NULL;
     }
 
     return Request;

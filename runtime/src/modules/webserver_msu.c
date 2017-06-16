@@ -296,6 +296,7 @@ int webserver_receive(struct generic_msu *self, struct generic_msu_queue_item *i
     } else {
         log_warn("Either self or input data to webserver was null??","");
     }
+
     return -1;
 }
 
