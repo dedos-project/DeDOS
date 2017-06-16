@@ -70,6 +70,44 @@ void *get_jsmn_obj(){
     return global_obj;
 }
 
+int jsmn_ignore_list(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    int size = (*tok)->size;
+    log_custom(LOG_JSMN_PARSING, "Ignoring list of size %d", size);
+    for (int i=0; i<size; i++){
+        ++(*tok); // Move to the next value
+        jsmn_ignore(tok, j, in, saved);
+    }
+    return 0;
+}
+
+int jsmn_ignore_obj(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    int size = (*tok)->size;
+    log_custom(LOG_JSMN_PARSING, "Ignoring object of size %d", size);
+    for (int i=0; i<size; i++) {
+        ++(*tok); // Ignore the key
+        ++(*tok); // Move to the next value
+        jsmn_ignore(tok, j, in, saved);
+    }
+    return 0;
+}
+
+/**
+ * Ignores a JSMN value
+ */
+int jsmn_ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    switch ( (*tok)->type ) {
+        case JSMN_OBJECT:
+            jsmn_ignore_obj(tok, j, in, saved);
+            break;
+        case JSMN_ARRAY:
+            jsmn_ignore_list(tok, j, in, saved);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+
 /**
  * Using the provided functions, parses the JSON present in
  * 'filename' and stores the resulting object in 'obj'.

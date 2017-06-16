@@ -44,11 +44,6 @@ struct dfg_config *parse_dfg_json(const char *filename){
         return NULL;
     }
 }
-
-static int ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
-    return 0;
-}
-
 static int set_app_name(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct dfg_config *cfg = in->data;
     strcpy(cfg->application_name, tok_to_str(*tok, j));
@@ -73,7 +68,7 @@ static int set_ctl_port(jsmntok_t **tok, char *j, struct json_state *in, struct 
     return 0;
 }
 
-static int set_load_mode(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+static int set_load_mode(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
     char *load_mode = tok_to_str(*tok, j);
     if (strcasecmp(load_mode, "preload")){
         return 0;
@@ -429,7 +424,8 @@ static struct key_mapping key_map[] = {
     { "scheduling", MSUS,  set_scheduling },
     { "type", MSUS,  set_msu_type },
     { "id", MSUS,  set_msu_id },
-    { "name", MSUS, ignore },
+    { "name", MSUS, jsmn_ignore },
+    { "statistics", MSUS, jsmn_ignore },
 
     { "dram", RUNTIMES, set_rt_dram },
     { "ip", RUNTIMES,  set_rt_ip },
