@@ -208,6 +208,13 @@ static int set_msu_id(jsmntok_t **tok, char *j, struct json_state *in, struct js
     return 0;
 }
 
+static int set_msu_init_data(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct dfg_vertex *vertex = in->data;
+    strcpy(vertex->init_data, tok_to_str(*tok, j));
+    log_debug("Set MSU init data to %s", vertex->init_data);
+    return 0;
+}
+
 static int set_rt_dram(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct dfg_runtime_endpoint *runtime = in->data;
     runtime->dram = tok_to_int(*tok, j);
@@ -429,6 +436,7 @@ static struct key_mapping key_map[] = {
     { "scheduling", MSUS,  set_scheduling },
     { "type", MSUS,  set_msu_type },
     { "id", MSUS,  set_msu_id },
+    { "init_data", MSUS, set_msu_init_data },
     { "name", MSUS, ignore },
 
     { "dram", RUNTIMES, set_rt_dram },
