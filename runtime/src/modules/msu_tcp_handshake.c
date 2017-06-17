@@ -6,7 +6,7 @@
 #include "pico_config.h"
 #include "pico_protocol.h"
 #include "runtime.h"
-#include "modules/hs_request_routing_msu.h"
+//#include "hs_request_routing_msu.h"
 #include "modules/msu_tcp_handshake.h"
 #include "pico_socket_tcp.h"
 #include "communication.h"
@@ -24,6 +24,7 @@
 #define SYN_STATE_MEMORY_LIMIT (1 * 1024 * 1024)
 
 volatile pico_time hs_pico_tick;
+static long int timers_count;
 
 uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)(pico_time, void *, void*), void *arg){
     struct hs_timer *t = PICO_ZALLOC(sizeof(struct hs_timer));
@@ -37,7 +38,7 @@ uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)
         return 0;
     }
 
-    log_debug("Adding timer with fn addr %p", timer);
+    log_debug("Adding timer with fn addr %p arg %p", timer, arg);
 
     tref.expire = PICO_TIME_MS() + expire;
     t->arg = arg;
@@ -45,21 +46,25 @@ uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)
     tref.tmr = t;
     tref.id = base_tmr_id++;
     hs_heap_insert(timers, &tref);
-    // if (timers->n) {
-    //     log_warn("HS Warning: I have %d timers", (int)timers->n);
-    // }
+//    if (timers->n) {
+//         printf("HS Warning: I have %d timers\n", (int)timers->n);
+//    }
+    timers_count++;
     return tref.id;
 }
 
 void hs_timer_cancel(heap_hs_timer_ref *timers, uint32_t id){
     uint32_t i;
     struct hs_timer_ref *tref = timers->top;
+    struct hs_timer_ref tref_unused;
     if (id == 0u)
         return;
     for (i = 1; i <= timers->n; i++) {
         if (tref[i].id == id) {
             PICO_FREE(timers->top[i].tmr);
             timers->top[i].tmr = NULL;
+            hs_heap_peek(timers, &tref_unused);
+            timers_count--;
             break;
         }
     }
@@ -91,7 +96,9 @@ void hs_check_timers(heap_hs_timer_ref *timers){
         // log_debug("%s","Inside check timers while, after if, after peek\n");
         tref = hs_heap_first(timers);
         // log_debug("%s","Inside check timers while, after heap_first\n");
+        log_debug("%s","Exiting check timers function");
     }
+
 }
 
 extern int socket_cmp(void *ka, void *kb);
@@ -422,19 +429,19 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
     pico_tree_delete(&sp->socks, s);
     pico_socket_tcp_delete(s);
     s->state = PICO_SOCKET_STATE_CLOSED;
+    log_debug("Calling hs_timer_add from remove_completed_request!");
     hs_timer_add(in_state->hs_timers, (pico_time) 10, hs_socket_garbage_collect, s);
+    log_debug("done calling hs_timer_add from remove_completed_request!");
 
     struct pico_tree_node *index;
-#if DEBUG != 0
-    log_info("Current sockets for port %u >>>", short_be(s->local_port));
+    log_debug("Current sockets for port %u >>>", short_be(s->local_port));
     pico_tree_foreach(index, &sp->socks)
     {
         s = index->keyValue;
-        log_info(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
+        log_debug(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
                 short_be(s->remote_port));
     }
     log_debug("%s", "Removed completed request from socket tree");
-#endif
     return 0;
 }
 
@@ -480,16 +487,14 @@ static int8_t add_pending_request(struct pico_tree *msu_table,
     s->state |= PICO_SOCKET_STATE_BOUND;
 //    PICOTCP_MUTEX_UNLOCK(Mutex);
 
-#if DEBUG != 0
-    log_info("Current sockets for port %u >>>", short_be(s->local_port));
+    log_debug("Current sockets for port %u >>>", short_be(s->local_port));
     struct pico_tree_node *index;
     pico_tree_foreach(index, &sp->socks)
     {
         s = index->keyValue;
-        log_info(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
+        log_debug(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
                 short_be(s->remote_port));
     }
-#endif
     return 0;
 }
 
@@ -653,8 +658,11 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         tcp_set_init_point(s);
         //print_tcp_socket(&t->sock);
         f->sock = s;
-        hs_tcp_ack(s, f, in_state->hs_timers);
+        //hs_tcp_ack(s, f, in_state->hs_timers);
+        t->snd_old_ack = ACKN(f);
         //print_tcp_socket(&t->sock);
+        //printf("snd_nxt is now %08x", t->snd_nxt);
+        //printf("rcv_nxt is now %08x", t->rcv_nxt);
         s->state &= 0x00FFU;
         s->state |= PICO_SOCKET_STATE_TCP_ESTABLISHED;
 #if DEBUG != 0
@@ -662,10 +670,11 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         log_debug("snd_nxt is now %08x", t->snd_nxt);
         log_debug("rcv_nxt is now %08x", t->rcv_nxt);
 #endif
-        return 0;
     }
-
-    return 1;
+    else {
+        remove_completed_request(in_state,  (struct pico_socket *)t);
+    }
+    return 0;
 }
 
 static int handle_bad_con(struct pico_frame *f)
@@ -1228,7 +1237,7 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
     struct hs_internal_state *in_state = msu->internal_state;
 
-    log_debug("----------------->>%s", "Processing HS MSU item handler");
+//    log_debug("----------------->>%s", "Processing HS MSU item handler");
     //process item
     if(queue_item){
 
@@ -1280,7 +1289,7 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
     //check expired timers
     hs_check_timers(in_state->hs_timers);
-    log_debug("----------------->>%s", "Exiting HS MSU item handler");
+//    log_debug("----------------->>%s", "Exiting HS MSU item handler");
     return -10;
 }
 
@@ -1306,7 +1315,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     //handshake_msu->restore = msu_tcp_hs_restore_socket;
     //handshake_msu->same_machine_move_state = msu_tcp_hs_same_thread_transfer;
 
-
+    handshake_msu->scheduling_weight = 1000;
     struct hs_internal_state *in_state = (struct hs_internal_state*)malloc(sizeof(struct hs_internal_state));
     if(!in_state){
         return -1;
