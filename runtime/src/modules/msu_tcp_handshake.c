@@ -6,6 +6,7 @@
 #include "pico_config.h"
 #include "pico_protocol.h"
 #include "runtime.h"
+#include "pico_tree.h"
 //#include "hs_request_routing_msu.h"
 #include "modules/msu_tcp_handshake.h"
 #include "pico_socket_tcp.h"
@@ -410,7 +411,7 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
     //only dec SYN state if stale half open conn
     if (check_socket_sanity(s) < 0) {
         in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
-        log_warn("Decremented syn_state: %ld", in_state->syn_state_used_memory);
+        log_debug("Decremented syn_state: %ld\n", in_state->syn_state_used_memory);
         if(in_state->syn_state_used_memory < 0){
             log_warn("syn_state_used_memory: %ld", in_state->syn_state_used_memory);
             log_critical("Underflow or overflow in syn state size, reset");
@@ -487,6 +488,7 @@ static int8_t add_pending_request(struct pico_tree *msu_table,
     s->state |= PICO_SOCKET_STATE_BOUND;
 //    PICOTCP_MUTEX_UNLOCK(Mutex);
 
+#if DEBUG != 0
     log_debug("Current sockets for port %u >>>", short_be(s->local_port));
     struct pico_tree_node *index;
     pico_tree_foreach(index, &sp->socks)
@@ -495,6 +497,7 @@ static int8_t add_pending_request(struct pico_tree *msu_table,
         log_debug(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
                 short_be(s->remote_port));
     }
+#endif
     return 0;
 }
 
@@ -578,7 +581,7 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
     log_debug("%s", "Handling SYN packet...");
     struct hs_internal_state *in_state = self->internal_state;
     if(in_state->syn_state_used_memory > in_state->syn_state_memory_limit){
-        log_warn("Dropping SYN Packet, pending syn state is full: %ld", in_state->syn_state_used_memory);
+        log_debug("Dropping SYN Packet, pending syn state is full: %ld\n", in_state->syn_state_used_memory);
         return -1;
     }
     struct pico_socket *s = hs_pico_socket_tcp_open(PICO_PROTO_IPV4, in_state->hs_timers);
@@ -636,7 +639,7 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
     int stat = add_pending_request(msu_table, &new->sock);
     if(stat == 0){
         in_state->syn_state_used_memory += sizeof(struct pico_tree_node);
-        log_warn("SYN state memory used: %ld", in_state->syn_state_used_memory);
+        log_debug("SYN state memory used: %ld, cap: %ld\n", in_state->syn_state_used_memory, in_state->syn_state_memory_limit);
     }
     //print_tcp_socket(&new->sock);
 
