@@ -170,13 +170,14 @@ int msu_pico_tcp_restore(struct generic_msu *self,
 
             struct pico_device *dev = pico_ipv4_source_dev_find(&iphdr->dst.addr);
             f->dev = dev;
-            log_debug("Dev name being used: %s",f->dev->name);
+/*
             if(!f->dev){
                 log_error("%s","No device found to forward SYNACK from HS to client");
                 return -1;
             }
-            log_debug("sending frame to dev %s","");
-            print_frame(f);
+            log_debug("Dev name being used: %s",f->dev->name);
+*/
+            //print_frame(f);
             pico_sendto_dev(f);
             log_debug("%s","Enqueued SYNACK for sending to client");
         }
@@ -238,13 +239,14 @@ int msu_pico_tcp_restore(struct generic_msu *self,
         if (!data_sp) {
             log_error("No such port %u", short_be(s->local_port));
             pico_socket_close(s);
-            return -1;
+            goto end;
         }
         // log_debug("After getting sockport %s","");
         struct pico_socket *listen_sock = find_listen_sock(data_sp, s);
         if (!listen_sock) {
             pico_socket_close(s);
             log_error("ERROR: No listen sock in orig %s", "");
+            goto end;
         }
         log_debug("Found listen sock %s","");
 
@@ -271,39 +273,38 @@ int msu_pico_tcp_restore(struct generic_msu *self,
         }
         s->ev_pending |= PICO_SOCK_EV_WR;
     }
+end:
+    free(buf);
+    free(msg);
     return 0;
 }
+
 int msu_pico_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item){
     /* function called when an item is dequeued */
     /* queue_item can be parsed into the struct with is expected in the queue */
-#ifdef PICO_SUPPORT_TIMINGS
-    START_TIME;
-#endif
 
-    pico_stack_tick();
     msu_queue *q = &msu->q_in;
     int rtn = sem_post(q->thread_q_sem);
     if (rtn < 0){
         log_error("error incrementing thread queue semaphore");
     }
 
-#ifdef PICO_SUPPORT_TIMINGS
-    END_TIME("dedos_pico_stack_tick");
-#endif
-
     //case when queue_item is NULL to keep the stack ticking
-    if(!queue_item){
-    	return 0;
+    if(queue_item){
+        //queue items playload should be an intermsu msg
+        //intermsu's msg payload should be a pico frame
+        struct dedos_intermsu_message *msg;
+        log_debug("Dequeued an item in msu id: %d",msu->id);
+
+        msg = (struct dedos_intermsu_message*)queue_item->buffer;
+        msu_pico_tcp_restore(msu, msg, msg->payload, msg->payload_len);
+
+        log_debug("Processed queue item of %s",msu->type->name);
+
+        free(queue_item);
     }
-    //queue items playload should be an intermsu msg
-    //intermsu's msg payload should be a pico frame
-    struct dedos_intermsu_message *msg;
-    log_debug("Dequeued an item in msu id: %d",msu->id);
 
-    msg = (struct dedos_intermsu_message*)queue_item->buffer;
-    msu_pico_tcp_restore(msu, msg, msg->payload, msg->payload_len);
-
-    log_debug("Processed queue item of %s",msu->type->name);
+    pico_stack_tick();
 
     return -10;
 }
@@ -322,20 +323,14 @@ int msu_pico_tcp_init(struct generic_msu *self,
     log_info("Initializing pico_tcp_stack by calling pico_stack_init %s","");
     pico_tcp_msu = self;
     pico_stack_init();
-    // Following is for pico_tcp busy loop
+    self->scheduling_weight = 2000;
     msu_queue *q_data = &self->q_in;
+
     int rtn = sem_post(q_data->thread_q_sem);
     if (rtn < 0){
         log_error("error incrementing thread queue semaphore");
     }
     log_debug("post semaphore for tcp msu");
-//
-//    struct generic_msu_queue_item *dummy_item;
-//    dummy_item = malloc(sizeof(struct generic_msu_queue_item));
-//    dummy_item->buffer = NULL;
-//    dummy_item->buffer_len = 0;
-//    generic_msu_queue_enqueue(pico_tcp_msu->q_in, dummy_item);
-//    debug("DEBUG: Enqueued an empty frame to keep the thread loop happy and get a call to data handler %s","");
 
     return 0;
 }

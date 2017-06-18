@@ -359,14 +359,6 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
 
     log_debug("Created %s MSU with id: %u", self->type->name,
             self->id);
-    /* for sake of running this msu since no msu writes to this MSU's input queue,
-     * we will write some dummy data to its own queue to be dequeued when thread loop
-     * iterates over all MSU to check it they should run it.
-     */
-    // struct generic_msu_queue_item *dummy_item;
-    // dummy_item = malloc(sizeof(struct generic_msu_queue_item));
-    // generic_msu_queue_enqueue(tcp_echo_msu->q_in, dummy_item);
-    // log_debug("Enqueued an empty frame to keep the thread loop happy and get a call to data handler %s","");
 
     return 0;
 }
