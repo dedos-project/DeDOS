@@ -107,7 +107,7 @@ static struct pico_device *pico_pcap_create(char *if_file_name, char *name, uint
     pcap->dev.overhead = 0;
 
     if (mode == PICO_PCAP_MODE_LIVE)
-        pcap->conn = pcap_open_live(if_file_name, 2000, 1, 10, errbuf);
+        pcap->conn = pcap_open_live(if_file_name, 2000, 1, 1, errbuf);
     else
         pcap->conn = pcap_open_offline(if_file_name, errbuf);
 
