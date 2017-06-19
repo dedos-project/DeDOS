@@ -226,19 +226,14 @@ void *msu_data(struct generic_msu *msu) {
  * Private function to allocate a new MSU.
  * MSU creation should be handled through init_msu()
  */
-struct generic_msu *msu_alloc(void) {
+struct generic_msu *msu_alloc(int thread_index) {
     struct generic_msu *msu = malloc(sizeof(*msu));
     if (msu == NULL){
         log_error("%s", "Failed to allocate msu");
         return msu;
     }
 
-    int thread_index = get_thread_index(pthread_self());
     struct dedos_thread *dedos_thread = &all_threads[thread_index];
-    if(!pthread_equal(dedos_thread->tid, pthread_self())){
-        log_error("Unable to get correct pointer to self thread struct for msu queue init");
-        return NULL;
-    }
 
     msu->data_p = malloc(sizeof(struct msu_data));
     msu->data_p->n_bytes = 0;
@@ -282,22 +277,22 @@ int msu_failure(int msu_id){
     return -1;
 }
 
-
 /**
- * Malloc's and creates a new MSU of the specified type and id.
+ * Malloc's and creates a new MSU of the specified type and id on the given thread.
  *
  * @param type_id ID of the MSU type to be created
  * @param msu_id ID of the instance of the MSU to be created
+ * @param thread_id ID of the thread on which the MSU is to be created
  * @param create_action Initial data to be provided to the MSU
  * @return initialized MSU or NULL if error occurred
  */
-struct generic_msu *init_msu(unsigned int type_id, int msu_id,
-                             struct create_msu_thread_data *create_action){
+struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thread_id,
+        struct create_msu_thread_data *create_action) {
     if (type_id < 1){
         return NULL;
     }
 
-    struct generic_msu *msu = msu_alloc();
+    struct generic_msu *msu = msu_alloc(thread_id);
     msu->id = msu_id;
     msu->type = msu_type_by_id(type_id);
     msu->data_p->data = create_action->init_data;
@@ -331,6 +326,20 @@ struct generic_msu *init_msu(unsigned int type_id, int msu_id,
     msu->scheduling_weight = 1;
     msu->routing_state = NULL;
     return msu;
+}
+
+/**
+ * Malloc's and creates a new MSU of the specified type and id on the current thread.
+ *
+ * @param type_id ID of the MSU type to be created
+ * @param msu_id ID of the instance of the MSU to be created
+ * @param create_action Initial data to be provided to the MSU
+ * @return initialized MSU or NULL if error occurred
+ */
+struct generic_msu *init_msu(unsigned int type_id, int msu_id,
+                             struct create_msu_thread_data *create_action){
+    int thread_index = get_thread_index(pthread_self());
+    return init_msu_external(type_id, msu_id, thread_index, create_action);
 }
 
 /** Frees an instance of an MSU along with associated structures.

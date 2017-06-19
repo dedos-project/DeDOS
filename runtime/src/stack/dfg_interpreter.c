@@ -62,53 +62,28 @@ struct dfg_runtime_endpoint *get_local_runtime(struct dfg_config *dfg, int runti
     return NULL;
 }
 
-struct dedos_thread_msg *msu_msg_from_vertex(struct dfg_vertex *vertex){
-    struct dedos_thread_msg *thread_msg = malloc(sizeof(*thread_msg));
-    if (!thread_msg) {
-        log_error("Could not allocate thread_msg for MSU creation");
-        return NULL;
-    }
-    struct create_msu_thread_data *create_action = malloc(sizeof(*create_action));
-    if (!create_action) {
-        log_error("Could not allocate thread_data for MSU creation");
-        free(thread_msg);
-        return NULL;
-    }
-    thread_msg->action = CREATE_MSU;
-    thread_msg->action_data = vertex->msu_id;
-    thread_msg->data = create_action;
-    thread_msg->next = NULL;
-
-    create_action->msu_type = vertex->msu_type;
-    create_action->msu_id = vertex->msu_id;
-    //TODO(IMP): Initial data
-    create_action->init_data_len = 0;
-    create_action->init_data = NULL;
-
-    //Size of initial data will have to be added to this value
-    thread_msg->buffer_len = sizeof(*create_action);
-
-    return thread_msg;
-}
-
 int create_msu_from_vertex(struct dfg_vertex *vertex){
     int thread_id = vertex_thread_id(vertex);
     if (thread_id > total_threads){
         log_error("Cannot create MSU on nonexistent thread %d", thread_id);
         return -1;
     }
-    struct dedos_thread_msg *msg = msu_msg_from_vertex(vertex);
-    if (!msg)
+    struct create_msu_thread_data create_action;
+    create_action.init_data = vertex->init_data;
+
+    struct generic_msu *new_msu = init_msu_external(vertex->msu_type,
+                                                    vertex->msu_id,
+                                                    thread_id, 
+                                                    &create_action);
+
+    int rtn = dedos_msu_pool_add(all_threads[thread_id].msu_pool, new_msu);
+    if (rtn < 0) {
+        log_error("Error adding MSU %d to dedos MSU pool!", vertex->msu_id);
+        destroy_msu(new_msu);
         return -1;
-    log_debug("Requesting MSU creation");
-    create_msu_request(&all_threads[thread_id], msg);
-    // Store the placement info in msu_placements hash structure,
-    // though we don't know yet if the creation will succeed.
-    // If the creation fails the thread creating the MSU should
-    // enqueue a FAIL_CREATE_MSU msg.
-    log_debug("Tracking MSU %d", vertex->msu_id);
+    }
     msu_tracker_add(vertex->msu_id, &all_threads[thread_id]);
-    log_debug("Creation of MSU %d (type %d) requested", vertex->msu_id, vertex->msu_type);
+    log_debug("Creation of MSU %d (type %d) complete", vertex->msu_id, vertex->msu_type);
     return 0;
 }
 
@@ -183,6 +158,13 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
         return -1;
     }
 
+    // Make sure the thread creation goes through
+    int ret = check_comm_sockets();
+    if (ret < 0){
+        log_warn("check_comm_sockets failed");
+    }
+    sleep(2);
+
     // First, create all routes
     struct dfg_runtime_endpoint *runtime = get_local_runtime(dfg, runtime_id);
     for (int i=0; i<runtime->num_routes; i++){
@@ -204,12 +186,7 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
             msus_created++;
         }
     }
-    // Make sure the MSU creation goes through
-    int ret = check_comm_sockets();
-    if (ret < 0){
-        log_warn("check_comm_sockets failed");
-    }
-    sleep(2);
+
 
     // Now add the routes to the MSUs
     for (int i=0; i<dfg->vertex_cnt; i++){
@@ -224,7 +201,7 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
             }
         }
     }
-
+    
     // Now add the MSUs to the routes
     for (int i=0; i<runtime->num_routes; i++){
         if (add_msus_to_route(runtime->routes[i], runtime_id) != 0){

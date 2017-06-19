@@ -109,6 +109,7 @@ struct dfg_route {
 //Definition of a vertex--an MSU
 struct dfg_vertex {
     char vertex_type[12]; //entry, exit, ...
+    char init_data[32];
 
     //Meta data as parsed from the dataflow graph file.
     int msu_id;

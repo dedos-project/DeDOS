@@ -9,7 +9,7 @@
  */
 #define ASSERT_JSMN_TYPE(tok, toktype, j) \
     if ((tok)->type != toktype){ \
-        log_error("Got type %d, expected %d while parsing %s", (tok)->type, toktype, &j[(tok)->start]); \
+        log_error("Got type %d, expected %d while parsing %.50s", (tok)->type, toktype, &j[(tok)->start]); \
         return -1; \
     } \
 
@@ -53,6 +53,10 @@ struct key_mapping {
  */
 int parse_into_obj(const char *filename, void *obj, struct key_mapping *km);
 
+/**
+ * Can be used as a jsmn_parsing_fn that ignores any value passed into it
+ */
+int jsmn_ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved);
 
 /**
  * Typedef for a json_state initializer, used when iterating over lists of objects.
