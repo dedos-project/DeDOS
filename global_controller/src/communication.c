@@ -15,6 +15,7 @@
 #include <sys/mman.h>
 #include <netinet/tcp.h>
 #include <errno.h>
+#include <time.h>
 
 #include "api.h"
 #include "communication.h"
@@ -23,6 +24,7 @@
 #include "stat_msg_handler.h"
 #include "controller_tools.h"
 #include "dfg.h"
+#include "dfg_writer.h"
 
 static fd_set readfds;
 int control_listen_sock;
@@ -145,7 +147,7 @@ void check_comm_sockets(void) {
     }
 }
 
-int start_communication(int tcp_control_listen_port)
+int start_communication(int tcp_control_listen_port, char *dfg_filename)
 {
     int ret;
 
@@ -158,8 +160,19 @@ int start_communication(int tcp_control_listen_port)
         ret = 0;
     }
 
+    struct timespec begin;
+    clock_gettime(CLOCK_MONOTONIC, &begin);
+
+    struct timespec elapsed;
     while (1) {
         check_comm_sockets();
+        if ( dfg_filename != NULL ) {
+            clock_gettime(CLOCK_MONOTONIC, &elapsed);
+            if ( elapsed.tv_sec - begin.tv_sec > STAT_DURATION_S ) {
+                dfg_to_file(get_dfg(), STAT_SAMPLE_SIZE, dfg_filename);
+                clock_gettime(CLOCK_MONOTONIC, &begin);
+            }
+        }
     }
     return ret;
 }

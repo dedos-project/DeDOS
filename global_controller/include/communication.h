@@ -12,7 +12,7 @@ struct msu_thread_info {
     pthread_t thread_id;
 };
 
-int start_communication(int tcp_control_listen_port);
+int start_communication(int tcp_control_listen_port, char *output_filename);
 void check_comm_sockets(void);
 //void controller_rcv(struct runtime_endpoint *runtime_peer);
 int send_to_runtime(int runtime_sock, char *buf, unsigned int bufsize);

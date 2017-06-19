@@ -4,6 +4,10 @@
 #include <string.h>
 #include <strings.h>
 
+#ifndef LOG_JSMN_PARSING
+#define LOG_JSMN_PARSING 0
+#endif
+
 /** Destructively extracts an int from a jsmn token.
  * Sets the "end" char to \0, and converts converts the resulting
  * string to an integer
@@ -66,6 +70,44 @@ void *get_jsmn_obj(){
     return global_obj;
 }
 
+int jsmn_ignore_list(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    int size = (*tok)->size;
+    log_custom(LOG_JSMN_PARSING, "Ignoring list of size %d", size);
+    for (int i=0; i<size; i++){
+        ++(*tok); // Move to the next value
+        jsmn_ignore(tok, j, in, saved);
+    }
+    return 0;
+}
+
+int jsmn_ignore_obj(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    int size = (*tok)->size;
+    log_custom(LOG_JSMN_PARSING, "Ignoring object of size %d", size);
+    for (int i=0; i<size; i++) {
+        ++(*tok); // Ignore the key
+        ++(*tok); // Move to the next value
+        jsmn_ignore(tok, j, in, saved);
+    }
+    return 0;
+}
+
+/**
+ * Ignores a JSMN value
+ */
+int jsmn_ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    switch ( (*tok)->type ) {
+        case JSMN_OBJECT:
+            jsmn_ignore_obj(tok, j, in, saved);
+            break;
+        case JSMN_ARRAY:
+            jsmn_ignore_list(tok, j, in, saved);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+
 /**
  * Using the provided functions, parses the JSON present in
  * 'filename' and stores the resulting object in 'obj'.
@@ -97,12 +139,12 @@ int parse_into_obj(const char *filename, void *obj, struct key_mapping *km){
     jsmn_init(&parser);
     // Get the number of necessary tokens
     int n_tokens = jsmn_parse(&parser, contents, strlen(contents), NULL, 16384);
-    log_debug("Allocating %d tokens", n_tokens);
+    log_custom(LOG_JSMN_PARSING, "Allocating %d tokens", n_tokens);
     jsmntok_t *tokens = malloc(n_tokens * sizeof(*tokens));
     // Parse the JSON
     jsmn_init(&parser);
     n_tokens = jsmn_parse(&parser, contents, strlen(contents), tokens, n_tokens);
-    log_debug("Allocated %d tokens", n_tokens);
+    log_custom(LOG_JSMN_PARSING, "Allocated %d tokens", n_tokens);
 
     // Set the top-level object so it can be retrieved elsewhere
     global_obj = obj;
@@ -123,12 +165,12 @@ int parse_into_obj(const char *filename, void *obj, struct key_mapping *km){
         return -1;
     }
 
-    log_debug("Parsed %d top-level objects", rtn);
+    log_custom(LOG_JSMN_PARSING, "Parsed %d top-level objects", rtn);
 
     // Go back through and retry each of the tokens that couldn't be parsed
     // the first time around
     while (saved_state != NULL){
-        log_debug("Retrying saved states");
+        log_custom(LOG_JSMN_PARSING, "Retrying saved states");
         rtn = retry_saved(&saved_state, contents);
         if (rtn < 0){
             log_error("Failed to re-interpret saved JSMN tokens");
@@ -176,7 +218,7 @@ static int retry_saved(struct json_state **saved_states, char *j){
     while (saved != NULL){
         jsmntok_t *tok = saved->tok;
         char *key = tok_to_str(tok, j);
-        log_debug("Retrying key: %s", key);
+        log_custom(LOG_JSMN_PARSING, "Retrying key: %s", key);
 
         jsmn_parsing_fn parser = get_parse_fn(key, saved->parent_type);
         tok += 1;
@@ -196,7 +238,7 @@ static int retry_saved(struct json_state **saved_states, char *j){
             saved = saved->next;
             free(tmp);
         } else if (rtn == 1){
-            log_debug("Will try again on the next pass...");
+            log_custom(LOG_JSMN_PARSING, "Will try again on the next pass...");
             prev = saved;
             saved = saved->next;
         }
@@ -223,7 +265,7 @@ int parse_jsmn_obj_list(jsmntok_t **tok, char *j, struct json_state *state,
     // Advance to the object inside the list
     ++(*tok);
     for (int i=0; i<size; i++){
-        log_debug("Parsing list item %d", i);
+        log_custom(LOG_JSMN_PARSING, "Parsing list item %d", i);
         // This is only for lists of OBJECTS.
         ASSERT_JSMN_TYPE(*tok, JSMN_OBJECT, j);
 
@@ -286,7 +328,7 @@ int parse_jsmn_obj(jsmntok_t **tok, char *j, struct json_state *state,
             log_error("Error parsing token at %s", &j[pre_tok->start]);
             return -1;
         } else if (rtn > 0){
-            log_debug("Deferring parsing of %s", key);
+            log_custom(LOG_JSMN_PARSING, "Deferring parsing of %s", key);
             struct json_state *to_save = malloc(sizeof(*to_save));
             to_save->data = pre_data;
             to_save->parent_type = parent_type;
@@ -294,7 +336,7 @@ int parse_jsmn_obj(jsmntok_t **tok, char *j, struct json_state *state,
             to_save->tok = pre_tok;
             *saved = to_save;
         } else {
-            log_debug("Successfully parsed %s", key);
+            log_custom(LOG_JSMN_PARSING, "Successfully parsed %s", key);
         }
         ++(*tok);
     }
