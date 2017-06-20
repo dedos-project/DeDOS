@@ -28,6 +28,7 @@ int AcceptSSL(SSL *State, char *Buffer){
             log_warn("TLS/SSL handshake was not successful but was shut down controlled and by the \
                       specifications of the TLS/SSL protocol");
             SSLErrorCheck(err);
+            return -1;
         }
 
         if (ret < 0) {
