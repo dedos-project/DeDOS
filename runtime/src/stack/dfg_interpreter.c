@@ -187,7 +187,6 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
         }
     }
 
-
     // Now add the routes to the MSUs
     for (int i=0; i<dfg->vertex_cnt; i++){
         struct dfg_vertex *vertex = dfg->vertices[i];
@@ -201,7 +200,7 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
             }
         }
     }
-    
+
     // Now add the MSUs to the routes
     for (int i=0; i<runtime->num_routes; i++){
         if (add_msus_to_route(runtime->routes[i], runtime_id) != 0){
@@ -211,4 +210,3 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
     log_info("Created %d MSUs", msus_created);
     return 0;
 }
-

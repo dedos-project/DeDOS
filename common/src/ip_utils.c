@@ -3,7 +3,9 @@
 #include <stdlib.h>
 
 int how_many_digits(int num) {
-    if (num >= 0) {
+    if (num == 0) {
+        return 1;
+    } else if (num > 0) {
         return (int) floor(log10(abs((double) num)) + 1);
     } else {
         return -1;

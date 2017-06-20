@@ -174,7 +174,7 @@ struct dfg_vertex *get_msu_from_id(int msu_id) {
  * @return dfg route if successful else NULL
  */
 struct dfg_route *get_route_from_id(struct dfg_runtime_endpoint *rt, int route_id) {
-    for (int i=0; i<rt->num_routes; i++) {
+    for (int i = 0; i < rt->num_routes; i++) {
         struct dfg_route *route = rt->routes[i];
         if ( route->route_id == route_id ) {
             return route;
@@ -274,11 +274,24 @@ int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) {
     return 0;
 }
 
-static int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type){
+/**
+ * Add a new route to a runtime
+ * @param dfg_runtime_endpoint the target runtime
+ * @param route_id: id of the route to be created
+ * @param msu_type: destination type for the route
+ * @return 0/-1: success/failure
+ */
+int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type) {
     struct dfg_route *route = malloc(sizeof(*route));
+    if (route == NULL) {
+        debug("Could not allocate memory for dfg_route object");
+        return -1;
+    }
+
     route->route_id = route_id;
     route->msu_type = msu_type;
     route->num_destinations = 0;
+    bzero(route->destination_keys, sizeof(int) * MAX_DESTINATIONS);
     rt->routes[rt->num_routes] = route;
     rt->num_routes++;
     return 0;
@@ -352,8 +365,171 @@ int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id){
     return 0;
 }
 
+/**
+ * Lookup a route going from a given MSU toward a given type
+ * @param struct dfg_vertex msu: the given MSU
+ * @param msu_type: the target MSU type
+ * @return struct dfg_route: the route object. NULL if not found.
+ */
+struct dfg_route *get_route_from_type(struct dfg_runtime_endpoint *rt, int msu_type) {
+    int i;
+    for (i = 0; i < rt->num_routes; ++i) {
+        if (rt->routes[i]->msu_type == msu_type) {
+            return rt->routes[i];
+        }
+    }
 
+    return NULL;
+}
 
+/**
+ * Check whether a route has a specific MSU as endpoint
+ * @param struct dfg_route: the target route
+ * @param dfg_vertex: a given MSU
+ * @return 0/1: false/true
+ */
+int route_has_endpoint(struct dfg_route *route, struct dfg_vertex *msu) {
+    int i;
+    for (i = 0; i < route->num_destinations; ++i) {
+        if (route->destinations[i] == msu) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Check whether a route is attached to a given MSU
+ * @param dfg_vertex: the target MSU
+ * @param route_id: the target route
+ * @return 0/1: false/true
+ */
+int msu_has_route(struct dfg_vertex *msu, int route_id) {
+    int has_route = 0;
+    int i;
+    for (i = 0; i < msu->scheduling.num_routes; ++i) {
+        if (msu->scheduling.routes[i]->route_id == route_id) {
+            has_route = 1;
+        }
+    }
+
+    return has_route;
+}
+
+/**
+ * Parse a given MSU dependencies to retrieve a type dependency
+ * @param: struct dfg_vertex msu: the target MSU
+ * @param msu_type: the potential MSU type dependency
+ * @return struct dependent_type: the dependency
+ */
+struct dependent_type *get_dependent_type(struct dfg_vertex *msu, int msu_type) {
+    int i;
+    for (i = 0; i < msu->num_dependencies; ++i) {
+        if (msu->dependencies[i]->msu_type == msu_type) {
+            return msu->dependencies[i];
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * Lookup the presence of an instance of an MSU of a given type on a runtime
+ * @param struct dfg_runtime_endpoint: runtime to inquire
+ * @param msu_type: target MSU type
+ * @return 0/1: false/true
+ */
+int lookup_type_on_runtime(struct dfg_runtime_endpoint *rt, int msu_type) {
+    //TODO: Keep count of num_msus in a runtime_thread, so that we can
+    //      simply parse the runtime threads and no the whole DFG
+    struct dfg_config *dfg = get_dfg();
+    int i;
+    for (i = 0; i < dfg->vertex_cnt; ++i) {
+        if (dfg->vertices[i]->scheduling.runtime == rt &&
+            dfg->vertices[i]->msu_type == msu_type) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Pick static data (meta routing profiling, etc) from an MSU of similar tye.
+ * FIXME: If we find another "empty shell" MSU, we will get wrong data. We expect all MSU of
+ * a given type to contain the same static data.
+ * @param struct dfg_vertex: MSU to fill
+ * @return none
+ */
+void clone_type_static_data(struct dfg_vertex *msu) {
+    struct msus_of_type *peer_msus = get_msus_from_type(msu->msu_type);
+    int i;
+    for (i = 0; i < peer_msus->num_msus; ++i) {
+        if (peer_msus->msu_ids[i] != msu->msu_id) {
+            struct dfg_vertex *peer_msu = get_msu_from_id(peer_msus->msu_ids[i]);
+            memcpy(&msu->profiling, &peer_msu->profiling, sizeof(struct msu_profiling));
+            memcpy(&msu->meta_routing, &peer_msu->meta_routing, sizeof(struct msu_meta_routing));
+            memcpy(&msu->dependencies, &peer_msu->dependencies,
+                   sizeof(struct dependent_type) * peer_msu->num_dependencies);
+            msu->num_dependencies = peer_msu->num_dependencies;
+
+            memcpy(&msu->msu_mode, &peer_msu->msu_mode, strlen(&peer_msu->msu_mode));
+        }
+    }
+}
+
+/**
+ * Increment the maximum range of a given route (non commit)
+ * @param struct dfg_route route: the target route
+ */
+
+int increment_max_range(struct dfg_route *route) {
+    int max_range = 0;
+    int i;
+    for (i = 0; i < route->num_destinations; ++i) {
+        if (max_range == -1 || route->destination_keys[i] > max_range) {
+            max_range = route->destination_keys[i];
+        }
+    }
+
+    return max_range + 1;
+}
+
+/**
+ * Generate a new route id on a given runtime
+ * @param struct dfg_runtime_endpoint: pointer to the target runtime
+ * @return route_id: the newly generated route id
+ */
+int generate_route_id(struct dfg_runtime_endpoint *rt) {
+    int highest_id = -1;
+    int i;
+    for (i = 0; i < rt->num_routes; ++i) {
+        if (highest_id == -1 || rt->routes[i]->route_id > highest_id) {
+            highest_id = rt->routes[i]->route_id;
+        }
+    }
+
+    return highest_id + 1;
+}
+
+/**
+ * Generate a new ID
+ * @return msu_id: the newly generated MSU id
+ */
+int generate_msu_id() {
+    struct dfg_config *dfg = get_dfg();
+    int highest_id = -1;
+
+    int i;
+    for (i = 0; i < dfg->vertex_cnt; ++i) {
+        if (highest_id == -1 || dfg->vertices[i]->msu_id > highest_id) {
+            highest_id = dfg->vertices[i]->msu_id;
+        }
+    }
+
+    return highest_id + 1;
+}
 
 /* Big mess of create, updates, etc */
 void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
@@ -363,28 +539,6 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
     dfg = get_dfg();
 
     switch (update_msg->msg_code) {
-            /*
-        case MSU_ROUTE_ADD: {
-            //TODO: don't assume that the src/dst msu did not exist in the table before.
-            struct dedos_dfg_update_msu_route_msg *update;
-            update = (struct dedos_dfg_update_msu_route_msg *) update_msg->payload;
-
-            struct dfg_vertex *msu_from = dfg->vertices[update->msu_id_from - 1];
-            struct dfg_vertex *msu_to = dfg->vertices[update->msu_id_to - 1];
-
-            //TODO: handle "holes" in the list, due to MSU_ROUTE_DEL
-            msu_from->msu_dst_list[msu_from->num_dst_types] = msu_to;
-            msu_from->num_dst_types++;
-
-            msu_to->msu_src_list[msu_to->num_src_types] = msu_from;
-            msu_to->num_src_types++;
-
-            free(update_msg);
-            free(update);
-            break;
-        }
-            */
-
         case RUNTIME_ENDPOINT_ADD: {
             //because both in toload and preload mode we have already been adding some
             //runtimes in the DFG, we need to check if the new runtime isn't actually
@@ -434,5 +588,4 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
             debug("DEBUG: unrecognized update action: %d", update_msg->msg_code);
             break;
     }
-
 }

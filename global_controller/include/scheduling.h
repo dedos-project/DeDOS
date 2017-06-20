@@ -4,14 +4,20 @@
 #include "dfg.h"
 #include "scheduling_cut.h"
 
+#define DYN_SCHED 0
 
 struct to_schedule {
     int *msu_ids;
     int num_msu;
 };
 
+void prepare_clone(struct dfg_vertex *msu);
+int clone_msu(int msu_id);
+int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt);
+int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu);
+
+/* Related to previous allocation draft */
 int (*policy)(struct to_schedule *ts, struct dfg_config *dfg);
-int find_placement(int *runtime_sock, int *thread_id);
 int allocate(struct to_schedule *ts);
 int init_scheduler(const char *policy);
 struct runtime_thread *find_thread(struct dfg_vertex *msu, struct dfg_runtime_endpoint *runtime);

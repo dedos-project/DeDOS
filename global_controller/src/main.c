@@ -52,6 +52,9 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    //const char *policy = "greedy";
+    //init_scheduler(policy);
+
     start_cli_thread(&cli_thread);
     start_communication(tcp_control_listen_port, output_filename);
 

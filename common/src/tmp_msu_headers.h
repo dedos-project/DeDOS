@@ -4,6 +4,7 @@
 //Temporary declaration for controller
 #define DEDOS_SOCKET_HANDLER_MSU_ID 600
 #define DEDOS_SSL_READ_MSU_ID 500
+#define DEDOS_WEBSERVER_MSU_ID 501
 
 struct socket_handler_init_payload {
     int port;
