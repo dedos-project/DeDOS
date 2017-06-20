@@ -215,7 +215,7 @@ void process_control_updates(void)
         log_error("Error processing thread control queue");
     }
     log_critical("BADFIX: Sleeping in process control updates to keep ASAN happy with some race condition\n");
-    sleep(2);
+    sleep(5);
     // Free the thread message
     dedos_thread_msg_free(msg);
 }
