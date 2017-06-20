@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
+#include "tmp_msu_headers.h"
 #include "timeseries.h"
 #include "controller_tools.h"
 #include "stat_msg_handler.h"
@@ -22,19 +23,18 @@
 int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
     int errored = 0;
     for (int i = 0; i < stats->n_samples; i++) {
-
         struct stat_sample *sample = &stats->samples[i];
         struct timed_rrdb *to_modify;
 
         // Will have to move once we get non-msu stats
         struct dfg_vertex *msu = get_msu_from_id(sample->item_id);
 
-        if ( msu == NULL ){
+        if (msu == NULL) {
             log_error("Could not get MSU with ID %d", sample->item_id);
             return -1;
         }
 
-        switch ( sample->stat_id ) {
+        switch (sample->stat_id) {
             case QUEUE_LEN:
                 to_modify = &msu->statistics.queue_length;
                 break;
@@ -43,14 +43,14 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
                 break;
             default:
                 log_error("No stat handler for stat_id %d", sample->stat_id);
-                errored=-1;
+                errored = -1;
                 continue;
         }
 
         int rtn = append_to_timeseries(sample->stats, sample->n_stats, to_modify);
 
-        if (rtn < 0){
-            errored=-1;
+        if (rtn < 0) {
+            errored = -1;
             log_error("Error appending samples to timeseries");
         }
 
@@ -61,24 +61,41 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
 
     }
 
+#if DYN_SCHED
+    int has_cloned = 0;
+
+    for (int i = 0; i < stats->n_samples; i++) {
+        struct stat_sample *sample = &stats->samples[i];
+
+        // Will have to move once we get non-msu stats
+        struct dfg_vertex *msu = get_msu_from_id(sample->item_id);
+
+        if (msu == NULL) {
+            log_error("Could not get MSU with ID %d", sample->item_id);
+            return -1;
+        }
+
+        switch (sample->stat_id) {
+            case QUEUE_LEN:
+                if (has_cloned == 0) {
+                    //There is an odious situation bellow. Can you figure it out?
+                    if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
+                        if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 1000) {
+                            struct msus_of_type *http_dep = get_msus_from_type(DEDOS_WEBSERVER_MSU_ID);
+
+                            errored = clone_msu(http_dep->msu_ids[0]);
+                            has_cloned = 1;
+                        }
+                    }
+                }
+
+                break;
+            default:
+                log_debug("No action implemented for stat_id %d", sample->stat_id);
+                continue;
+        }
+    }
+#endif
 
     return errored;
 }
-
-
-/*
-    for (i = 0; i <= stats_items; i++) {
-        if (stats[i].msu_id > 0) {
-            struct dfg_vertex *msu = get_msu_from_id(stats[i].msu_id);
-            short index;
-            index = msu->statistics.data_queue_size.timepoint;
-
-            // Manage queue length
-            if (stats[i].data_queue_size > average(msu, QUEUE_LEN) * 2) {
-                debug("reported queue length for msu %d is twice the current average",
-                      stats[i].msu_id);
-                clone_msu(stats[i].msu_id);
-            }
-        }
-    }
-*/
