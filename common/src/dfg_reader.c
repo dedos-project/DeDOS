@@ -486,6 +486,7 @@ static struct key_mapping key_map[] = {
     { "scheduling", MSUS,  set_scheduling },
     { "type", MSUS,  set_msu_type },
     { "id", MSUS,  set_msu_id },
+    { "dependencies", MSUS,  set_dependencies },
 
     { "init_data", MSUS, set_msu_init_data },
     { "name", MSUS, jsmn_ignore },
@@ -513,9 +514,6 @@ static struct key_mapping key_map[] = {
 
     { "source_types", META_ROUTING,  set_source_types },
     { "dst_types", META_ROUTING, set_dst_types },
-
-    { "msu_type", DEPENDENCIES, set_dependency_id },
-    { "locality", DEPENDENCIES, set_dependency_locality },
 
     { "msu_type", DEPENDENCIES, set_dependency_id },
     { "locality", DEPENDENCIES, set_dependency_locality },
