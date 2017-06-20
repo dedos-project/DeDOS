@@ -157,7 +157,7 @@ int dedos_webserver_socket_init(int webserver_port) {
         return -1;
     }
 
-    listen(ws_sock, 5);
+    listen(ws_sock, 1024);
 
     log_info("Started webserver listen port: %d",webserver_port);
 
