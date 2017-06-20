@@ -635,8 +635,6 @@ int allocate(struct to_schedule *ts) {
 
     pthread_mutex_unlock(&dfg->dfg_mutex);
 
-    dump_json();
-
     free(ts);
 
     return 0;
