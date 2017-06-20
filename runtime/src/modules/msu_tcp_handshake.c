@@ -1238,6 +1238,8 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
         log_error("Failed to increment semaphore for handshake msu");
     }
 
+    static int check_timers_count;
+
     struct hs_internal_state *in_state = msu->internal_state;
 
 //    log_debug("----------------->>%s", "Processing HS MSU item handler");
@@ -1284,14 +1286,15 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
         delete_generic_msu_queue_item(queue_item);
 
     }
-//    else {
-        //any to do when item is not but you need to do some internal stuff anyway
-    pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
-    pico_sockets_pending_restore_check(in_state); //for sockets pending restore
-//    }
-
+    if(check_timers_count == 20000){
+        printf("Check timer count reached\n");
+        pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
+        pico_sockets_pending_restore_check(in_state); //for sockets pending restore
+        hs_check_timers(in_state->hs_timers);
+        check_timers_count = 0;
+    }
+    check_timers_count++;
     //check expired timers
-    hs_check_timers(in_state->hs_timers);
 //    log_debug("----------------->>%s", "Exiting HS MSU item handler");
     return -10;
 }
