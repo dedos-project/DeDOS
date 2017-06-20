@@ -560,6 +560,14 @@ void dedos_control_send(struct dedos_intermsu_message* msg,
      dst_addr.sin_port = htons(tcp_control_port);
      dst_addr.sin_addr.s_addr = endpoint->ipv4.addr;
      */
+    int disable = 0, enable = 1;
+
+    if (setsockopt(peer_sk, IPPROTO_TCP, TCP_CORK, (void *) &enable, sizeof(enable))) {
+        log_error("%s","Error setting TCP_CORK");
+    }
+    if (setsockopt(peer_sk, IPPROTO_TCP, TCP_CORK, (void *) &disable, sizeof(disable))) {
+        log_error("%s","Error setting TCP_CORK");
+    }
     int bytes_sent;
     if ((bytes_sent = send(peer_sk, sendbuf, sendbuf_len + sizeof(size_t), 0)) == -1) {
         log_error("%s", "sendto failed");
