@@ -14,20 +14,38 @@
 #include "global.h"
 
 int WriteSSL(SSL *State, char *Buffer, int BufferSize) {
-    int NumBytes, SockFd, err;
+    int NumBytes, SockFd, err, ret;
 
+    ERR_clear_error();
     if ( ( NumBytes = SSL_write(State, Buffer, BufferSize) ) <= 0 ) {
         log_error("SSL_write failed with ret = %d", NumBytes);
         err = SSL_get_error(State, NumBytes);
         SSLErrorCheck(err);
 
         SockFd = SSL_get_fd(State);
+        ret = SSL_shutdown(State);
+        if (ret == 0) {
+            ret = SSL_shutdown(State);
+        } else if (ret == -1) {
+            err = SSL_get_error(State, ret);
+            SSLErrorCheck(err);
+        }
+
         SSL_free(State);
         close(SockFd);
         return -1;
     }
-    
+
     SockFd = SSL_get_fd(State);
+
+    ret = SSL_shutdown(State);
+    if (ret == 0) {
+        ret = SSL_shutdown(State);
+    } else if (ret == -1) {
+        err = SSL_get_error(State, ret);
+        SSLErrorCheck(err);
+    }
+
     SSL_free(State);
     close(SockFd);
 
