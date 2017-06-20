@@ -126,90 +126,6 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
 
     //update routes
     int i, j;
-    for (i = 0; i < msu->meta_routing.num_src_types; ++i) {
-        struct msus_of_type *source_types =
-            get_msus_from_type(msu->meta_routing.src_types[i]);
-
-        if (source_types->num_msus < 1) {
-            continue;
-        }
-
-        struct dependent_type *dependency = get_dependent_type(msu, source_types->type);
-        int need_remote_dep = 0, need_local_dep = 0;
-
-        if (dependency != NULL) {
-            if (dependency->locality == 1 ) {
-                need_local_dep = 1;
-            } else if (dependency->locality == 0) {
-                need_remote_dep = 1;
-            }
-        }
-
-        for (j = 0; j < source_types->num_msus; ++j) {
-            struct dfg_vertex *source = get_msu_from_id(source_types->msu_ids[j]);
-
-            if ((need_local_dep && source->scheduling.runtime->id != msu->scheduling.runtime->id)
-                ||
-                (need_remote_dep && source->scheduling.runtime->id == msu->scheduling.runtime->id)) {
-                continue;
-            } else {
-                struct dfg_runtime_endpoint *src_rt = source->scheduling.runtime;
-                int runtime_index = -1;
-                runtime_index = get_sock_endpoint_index(src_rt->sock);
-                if (runtime_index == -1) {
-                    debug("Couldn't find endpoint index for sock: %d", src_rt->sock);
-                    return -1;
-                }
-
-                //Does the source's runtime has a route toward new MSU's type?
-                struct dfg_route *route = get_route_from_type(src_rt, msu->msu_type);
-                if (route == NULL) {
-                    int route_id = generate_route_id(src_rt);
-                    ret = dfg_add_route(rt, route_id, msu->msu_type);
-                    if (ret != 0) {
-                        debug("Could not add new route on runtime %d toward type %d",
-                              src_rt->id, msu->msu_type);
-                        return -1;
-                    }
-                    route = get_route_from_type(src_rt, msu->msu_type);
-                }
-
-                //Is the route attached to that source msu?
-                if (!msu_has_route(source, route->route_id)) {
-                    ret = add_route_to_msu_vertex(runtime_index, source->msu_id, route->route_id);
-                    if (ret != 0) {
-                        debug("Could not attach route %d to msu %d",
-                              source->msu_id, route->route_id);
-                        return -1;
-                    }
-
-                    ret = send_addroute_msg(route->route_id, source->msu_id, src_rt->sock);
-                    if (ret != 0) {
-                        debug("Could not send add route %d msg to runtime %d",
-                              route->route_id, src_rt->id);
-                        return -1;
-                    }
-                }
-
-                int max_range = increment_max_range(route);
-                ret = dfg_add_route_endpoint(runtime_index, route->route_id, msu->msu_id, max_range);
-                if (ret != 0) {
-                    debug("Could not add endpoint %d to route %d",
-                          msu->msu_id, route->route_id);
-                    return -1;
-                }
-
-                ret = send_addendpoint_msg(msu->msu_id, runtime_index,
-                                           route->route_id, max_range, src_rt->sock);
-                if (ret != 0) {
-                    debug("Could not send add endpoint %d msg to runtime %d",
-                          msu->msu_id, src_rt->id);
-                    return -1;
-                }
-            }
-        }
-    }
-
     for (i = 0; i < msu->meta_routing.num_dst_types; ++i) {
         struct msus_of_type *dst_types =
             get_msus_from_type(msu->meta_routing.dst_types[i]);
@@ -291,6 +207,90 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                               dst->msu_id, rt->id);
                         return -1;
                     }
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < msu->meta_routing.num_src_types; ++i) {
+        struct msus_of_type *source_types =
+            get_msus_from_type(msu->meta_routing.src_types[i]);
+
+        if (source_types->num_msus < 1) {
+            continue;
+        }
+
+        struct dependent_type *dependency = get_dependent_type(msu, source_types->type);
+        int need_remote_dep = 0, need_local_dep = 0;
+
+        if (dependency != NULL) {
+            if (dependency->locality == 1 ) {
+                need_local_dep = 1;
+            } else if (dependency->locality == 0) {
+                need_remote_dep = 1;
+            }
+        }
+
+        for (j = 0; j < source_types->num_msus; ++j) {
+            struct dfg_vertex *source = get_msu_from_id(source_types->msu_ids[j]);
+
+            if ((need_local_dep && source->scheduling.runtime->id != msu->scheduling.runtime->id)
+                ||
+                (need_remote_dep && source->scheduling.runtime->id == msu->scheduling.runtime->id)) {
+                continue;
+            } else {
+                struct dfg_runtime_endpoint *src_rt = source->scheduling.runtime;
+                int runtime_index = -1;
+                runtime_index = get_sock_endpoint_index(src_rt->sock);
+                if (runtime_index == -1) {
+                    debug("Couldn't find endpoint index for sock: %d", src_rt->sock);
+                    return -1;
+                }
+
+                //Does the source's runtime has a route toward new MSU's type?
+                struct dfg_route *route = get_route_from_type(src_rt, msu->msu_type);
+                if (route == NULL) {
+                    int route_id = generate_route_id(src_rt);
+                    ret = dfg_add_route(rt, route_id, msu->msu_type);
+                    if (ret != 0) {
+                        debug("Could not add new route on runtime %d toward type %d",
+                              src_rt->id, msu->msu_type);
+                        return -1;
+                    }
+                    route = get_route_from_type(src_rt, msu->msu_type);
+                }
+
+                //Is the route attached to that source msu?
+                if (!msu_has_route(source, route->route_id)) {
+                    ret = add_route_to_msu_vertex(runtime_index, source->msu_id, route->route_id);
+                    if (ret != 0) {
+                        debug("Could not attach route %d to msu %d",
+                              source->msu_id, route->route_id);
+                        return -1;
+                    }
+
+                    ret = send_addroute_msg(route->route_id, source->msu_id, src_rt->sock);
+                    if (ret != 0) {
+                        debug("Could not send add route %d msg to runtime %d",
+                              route->route_id, src_rt->id);
+                        return -1;
+                    }
+                }
+
+                int max_range = increment_max_range(route);
+                ret = dfg_add_route_endpoint(runtime_index, route->route_id, msu->msu_id, max_range);
+                if (ret != 0) {
+                    debug("Could not add endpoint %d to route %d",
+                          msu->msu_id, route->route_id);
+                    return -1;
+                }
+
+                ret = send_addendpoint_msg(msu->msu_id, runtime_index,
+                                           route->route_id, max_range, src_rt->sock);
+                if (ret != 0) {
+                    debug("Could not send add endpoint %d msg to runtime %d",
+                          msu->msu_id, src_rt->id);
+                    return -1;
                 }
             }
         }
