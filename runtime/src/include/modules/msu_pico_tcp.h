@@ -8,6 +8,6 @@
 
 struct msu_type PICO_TCP_MSU_TYPE;
 struct generic_msu *pico_tcp_msu;
-int pico_tcp_generate_id(struct generic_msu *self, struct pico_frame *f);
+uint32_t pico_tcp_generate_id(struct generic_msu *self, struct pico_frame *f);
 
 #endif
