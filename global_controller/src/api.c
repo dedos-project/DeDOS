@@ -55,7 +55,7 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
         pthread_mutex_unlock(&dfg->dfg_mutex);
 
         if (num_pinned_threads == 0 || num_pinned_threads < thread_id) {
-            debug("ERROR: Destination runtime has %d worker threads. Can't fit new msu on thread %d",
+            debug("Destination runtime has %d worker threads. Can't fit new msu on thread %d",
                   num_pinned_threads, thread_id);
             free(new_msu);
             return -1;
