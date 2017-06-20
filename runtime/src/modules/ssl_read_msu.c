@@ -23,8 +23,15 @@ int AcceptSSL(SSL *State, char *Buffer){
         ERR_clear_error();
         ret = SSL_accept(State);
         err = 0;
+
+        if (ret == 0) {
+            log_warn("TLS/SSL handshake was not successful but was shut down controlled and by the \
+                      specifications of the TLS/SSL protocol");
+            SSLErrorCheck(err);
+        }
+
         if (ret < 0) {
-            log_warn("msu %d: SSL_accept failed with ret = %d", ret);
+            log_warn("SSL_accept failed with ret = %d", ret);
             err = SSL_get_error(State, ret);
 
             if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE) {
@@ -45,7 +52,7 @@ int AcceptSSL(SSL *State, char *Buffer){
     if ( (NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN)) <= 0 ) {
         err = SSL_get_error(State, NumBytes);
 
-        char *error;
+        char error[256];
 
         if (err != SSL_ERROR_WANT_READ) {
             SSLErrorCheck(err);
@@ -53,8 +60,8 @@ int AcceptSSL(SSL *State, char *Buffer){
         }
 
         while (err == SSL_ERROR_WANT_READ) {
-            log_warn("SSL_read returned ret: %d. Errno: %s",
-                      NumBytes, error);
+            ERR_error_string(err, error);
+            log_warn("SSL_read returned ret: %d. %s", NumBytes, error);
             ERR_clear_error();
             NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN);
 
