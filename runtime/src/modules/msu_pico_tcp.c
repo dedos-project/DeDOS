@@ -341,7 +341,7 @@ int msu_pico_tcp_init(struct generic_msu *self,
  * @param queue_item the queue item on which the ID is to be set
  * @return queue item's ID
  */
-int pico_tcp_generate_id(struct generic_msu *self, struct pico_frame *f){
+uint32_t pico_tcp_generate_id(struct generic_msu *self, struct pico_frame *f){
     uint32_t id;
     int num_bytes;
     id = 0;
