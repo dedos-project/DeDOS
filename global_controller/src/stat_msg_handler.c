@@ -16,7 +16,7 @@
 #define NEXT_MSU_REMOTE 2
 
 #ifndef DYN_SCHED
-#define DYN_SCHED 1
+#define DYN_SCHED 0
 #endif
 
 #ifndef LOG_PRINT_TIMESERIES
