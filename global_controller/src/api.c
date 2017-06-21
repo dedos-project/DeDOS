@@ -213,6 +213,13 @@ int send_addroute_msg(int route_id, int msu_id, int runtime_sock) {
         .init_data = NULL
     };
 
+    debug("sock:%d, msu_type: %d, msu id: %d, init_data: %s, init_data_size: %d\n",
+           msu->scheduling.runtime->sock,
+           add_route_msg.msu_type,
+           add_route_msg.msu_id,
+           add_route_msg.init_data,
+           add_route_msg.init_data_size);
+
     struct dedos_control_msg control_msg = {
         .msg_type = ACTION_MESSAGE,
         .msg_code = ADD_ROUTE_TO_MSU,
@@ -305,6 +312,15 @@ int send_addendpoint_msg(int msu_id, int rt_index, int route_num,
         .locality = locality,
         .ipv4 = ip
     };
+
+    debug("sock:%d, msu_type: %d, msu id: %d, route_id: %d, key_range: %d, loc: %d, ipv4: %d\n",
+           msu->scheduling.runtime->sock,
+           route_msg.msu_type_id,
+           route_msg.msu_id,
+           route_msg.route_id,
+           route_msg.key_range,
+           route_msg.locality,
+           route_msg.ipv4);
 
     struct dedos_control_msg control_msg = {
         .msg_type = ACTION_MESSAGE,
