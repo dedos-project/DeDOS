@@ -275,7 +275,7 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
                                              new_count * sizeof(uint32_t));
         for (int j=pending_runtime_peers->count; j<new_count; j++){
             pending_runtime_peers->ips[j] = peers[j - pending_runtime_peers->count];
-            char ip[4] = {'\0'};
+            char ip[40] = {'\0'};
             ipv4_to_string(&ip, pending_runtime_peers->ips[j]);
             log_debug("IP: %s", ip);
             j++;
