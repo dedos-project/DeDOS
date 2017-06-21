@@ -19,4 +19,5 @@ void InitServerSSLCtx(SSL_CTX **ctx);
 int LoadCertificates(SSL_CTX *Ctx, char *CertFile, char *KeyFile);
 char* GetSSLStateAndRequest(int SocketFD, SSL** State, struct generic_msu *self, char *);
 int ReadSSL(SSL *State, char *Buffer, int BufferSize);
+int AcceptSSL(SSL *State, char *Buffer);
 #endif /* __SSL_READ_MSU_H__ */

@@ -125,6 +125,12 @@ def make_msus_out(msu):
         msu_out['type'] = msu['type']
         msu_out['id'] = max_id
         msu_out['name'] = msu['name']
+        if ('dependencies' in msu and len(msu['dependencies']) > 0):
+            msu_out['dependencies'] = []
+            for dep in msu['dependencies']:
+                msu_out['dependencies'].append(dict(
+                    msu_type = dep['msu_type'],
+                    locality = dep['locality']))
         max_id += 1
         msus.append(msu_out)
     return msus
@@ -165,7 +171,9 @@ def make_dfg(yml_filename, pretty=False):
             port = rt['port'],
             num_cores = rt['num_cores'],
             dram = rt['dram'],
-            io_network_bw = rt['io_network_bw']
+            io_network_bw = rt['io_network_bw'],
+            num_threads = rt['num_threads'],
+            num_pinned_threads = rt['num_pinned_threads'],
         ))
     output['runtimes'] = rts
 

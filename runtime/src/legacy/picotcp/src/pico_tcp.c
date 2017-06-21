@@ -2649,6 +2649,9 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
         log_error("Failed to malloc queue_item queue item");
         return -1;
     }
+
+    queue_item->id = pico_tcp_generate_id(self, f);
+    log_debug("Assigned id to item: %d", queue_item->id);
     queue_item->buffer_len = sizeof(struct tcp_intermsu_queue_item) + f->buffer_len;
 
     queue_item->buffer = (char*)malloc(sizeof(char) * queue_item->buffer_len);

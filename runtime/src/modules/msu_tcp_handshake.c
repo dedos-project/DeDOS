@@ -6,7 +6,8 @@
 #include "pico_config.h"
 #include "pico_protocol.h"
 #include "runtime.h"
-#include "modules/hs_request_routing_msu.h"
+#include "pico_tree.h"
+//#include "hs_request_routing_msu.h"
 #include "modules/msu_tcp_handshake.h"
 #include "pico_socket_tcp.h"
 #include "communication.h"
@@ -16,13 +17,16 @@
 #include "dedos_hs_timers.h"
 #include "dedos_msu_list.h"
 #include "dedos_msu_msg_type.h"
+#include "pico_tree.h"
 
 #define INIT_SOCKPORT { {&LEAF, NULL}, 0, 0 }
 #define PROTO(s) ((s)->proto->proto_number)
 #define PICO_MIN_MSS (1280)
 #define TCP_STATE(s) (s->state & PICO_SOCKET_STATE_TCP)
+#define SYN_STATE_MEMORY_LIMIT (1 * 1024 * 1024)
 
 volatile pico_time hs_pico_tick;
+static long int timers_count;
 
 uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)(pico_time, void *, void*), void *arg){
     struct hs_timer *t = PICO_ZALLOC(sizeof(struct hs_timer));
@@ -36,7 +40,7 @@ uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)
         return 0;
     }
 
-    log_debug("Adding timer with fn addr %p", timer);
+    log_debug("Adding timer with fn addr %p arg %p", timer, arg);
 
     tref.expire = PICO_TIME_MS() + expire;
     t->arg = arg;
@@ -44,21 +48,25 @@ uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)
     tref.tmr = t;
     tref.id = base_tmr_id++;
     hs_heap_insert(timers, &tref);
-    // if (timers->n) {
-    //     log_warn("HS Warning: I have %d timers", (int)timers->n);
-    // }
+//    if (timers->n) {
+//         printf("HS Warning: I have %d timers\n", (int)timers->n);
+//    }
+    timers_count++;
     return tref.id;
 }
 
 void hs_timer_cancel(heap_hs_timer_ref *timers, uint32_t id){
     uint32_t i;
     struct hs_timer_ref *tref = timers->top;
+    struct hs_timer_ref tref_unused;
     if (id == 0u)
         return;
     for (i = 1; i <= timers->n; i++) {
         if (tref[i].id == id) {
             PICO_FREE(timers->top[i].tmr);
             timers->top[i].tmr = NULL;
+            hs_heap_peek(timers, &tref_unused);
+            timers_count--;
             break;
         }
     }
@@ -90,7 +98,9 @@ void hs_check_timers(heap_hs_timer_ref *timers){
         // log_debug("%s","Inside check timers while, after if, after peek\n");
         tref = hs_heap_first(timers);
         // log_debug("%s","Inside check timers while, after heap_first\n");
+        log_debug("%s","Exiting check timers function");
     }
+
 }
 
 extern int socket_cmp(void *ka, void *kb);
@@ -269,7 +279,30 @@ static int check_socket_established_restore_timeout(struct pico_socket *s){
     return 0;
 }
 
-static int pico_sockets_pending_restore_check(struct hs_internal_state *in_state)
+static int get_loop_score(long int syn_state_used_memory, long int max_limit){
+    int loop_score = 0;
+    int load = syn_state_used_memory * 10 / max_limit;
+
+    if(load > 8){
+        loop_score = 128;
+    }
+    else if(load > 6){
+        loop_score = 64;
+    }
+    else if(load > 4){
+        loop_score = 32;
+    }
+    else if(load > 2){
+        loop_score = 16;
+    }
+    else{
+        loop_score = 8;
+    }
+
+    return loop_score;
+}
+
+static int pico_sockets_check(struct hs_internal_state *in_state)
 {
     struct pico_sockport *start;
     struct pico_socket *s;
@@ -280,13 +313,33 @@ static int pico_sockets_pending_restore_check(struct hs_internal_state *in_state
         return 0;
     }
     index_msu = pico_tree_firstNode(msu_table->root);
+
     sp_msu = index_msu->keyValue;
     start = sp_msu;
-    while (sp_msu != NULL) {
+    int loop_score;
+
+    loop_score = get_loop_score(in_state->syn_state_used_memory, in_state->syn_state_memory_limit);
+
+    while (sp_msu != NULL && loop_score > 0) {
         struct pico_tree_node *index = NULL, *safe_index = NULL;
         pico_tree_foreach_safe(index, &sp_msu->socks, safe_index)
         {
             s = index->keyValue;
+            //only dec SYN state if stale half open conn
+            if (check_socket_sanity(s) < 0) {
+                remove_completed_request(in_state, s);
+                index_msu = NULL; /* forcing the restart of loop */
+                sp_msu = NULL;
+
+                in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
+                log_debug("Decremented syn_state: %ld\n", in_state->syn_state_used_memory);
+                if(in_state->syn_state_used_memory < 0){
+                    log_warn("syn_state_used_memory: %ld", in_state->syn_state_used_memory);
+                    log_critical("Underflow or overflow in syn state size, reset");
+                    in_state->syn_state_used_memory = 0;
+                }
+                break;
+            }
             if (check_socket_established_restore_timeout(s) < 0) {
                 remove_completed_request(in_state, s);
                 index_msu = NULL; /* forcing the restart of loop */
@@ -308,6 +361,8 @@ static int pico_sockets_pending_restore_check(struct hs_internal_state *in_state
 
         if (sp_msu == start)
             break;
+
+        loop_score--;
     }
 
     return 0;
@@ -399,7 +454,7 @@ static int8_t create_hs_sockport(struct pico_tree* msu_table,
 int8_t remove_completed_request(struct hs_internal_state *in_state,
         struct pico_socket *s)
 {
-    struct pico_tree *msu_table = in_state->hs_table;
+   struct pico_tree *msu_table = in_state->hs_table;
     struct pico_sockport *sp = NULL;
     sp = find_hs_sockport(msu_table, s->local_port);
 
@@ -411,21 +466,21 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
     pico_tree_delete(&sp->socks, s);
     pico_socket_tcp_delete(s);
     s->state = PICO_SOCKET_STATE_CLOSED;
-    hs_timer_add(in_state->hs_timers, (pico_time) 10, hs_socket_garbage_collect, s);
-
+    log_debug("Calling hs_timer_add from remove_completed_request!");
+    hs_socket_garbage_collect(10, s, in_state->hs_timers);
+//    hs_timer_add(in_state->hs_timers, (pico_time) 10, hs_socket_garbage_collect, s);
+    log_debug("done calling hs_timer_add from remove_completed_request!");
+/*
     struct pico_tree_node *index;
-#if DEBUG != 0
-    log_info("Current sockets for port %u >>>", short_be(s->local_port));
+    log_debug("Current sockets for port %u >>>", short_be(s->local_port));
     pico_tree_foreach(index, &sp->socks)
     {
         s = index->keyValue;
-        log_info(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
+        log_debug(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
                 short_be(s->remote_port));
     }
     log_debug("%s", "Removed completed request from socket tree");
-
-#endif
-
+*/
     return 0;
 }
 
@@ -470,13 +525,14 @@ static int8_t add_pending_request(struct pico_tree *msu_table,
     pico_tree_insert(&sp->socks, s);
     s->state |= PICO_SOCKET_STATE_BOUND;
 //    PICOTCP_MUTEX_UNLOCK(Mutex);
+
 #if DEBUG != 0
-    log_info("Current sockets for port %u >>>", short_be(s->local_port));
+    log_debug("Current sockets for port %u >>>", short_be(s->local_port));
     struct pico_tree_node *index;
     pico_tree_foreach(index, &sp->socks)
     {
         s = index->keyValue;
-        log_info(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
+        log_debug(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
                 short_be(s->remote_port));
     }
 #endif
@@ -562,6 +618,10 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
      */
     log_debug("%s", "Handling SYN packet...");
     struct hs_internal_state *in_state = self->internal_state;
+    if(in_state->syn_state_used_memory > in_state->syn_state_memory_limit){
+        log_debug("Dropping SYN Packet, pending syn state is full: %ld\n", in_state->syn_state_used_memory);
+        return -1;
+    }
     struct pico_socket *s = hs_pico_socket_tcp_open(PICO_PROTO_IPV4, in_state->hs_timers);
     if (!s) {
         log_error("%s", "Error creating local socket");
@@ -614,7 +674,11 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
     new->sock.state = PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_CONNECTED
             | PICO_SOCKET_STATE_TCP_SYN_RECV;
 
-    add_pending_request(msu_table, &new->sock);
+    int stat = add_pending_request(msu_table, &new->sock);
+    if(stat == 0){
+        in_state->syn_state_used_memory += sizeof(struct pico_tree_node);
+        log_debug("SYN state memory used: %ld, cap: %ld\n", in_state->syn_state_used_memory, in_state->syn_state_memory_limit);
+    }
     //print_tcp_socket(&new->sock);
 
     dedos_tcp_send_synack(self, &new->sock, reply_msu_id);
@@ -635,8 +699,11 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         tcp_set_init_point(s);
         //print_tcp_socket(&t->sock);
         f->sock = s;
-        hs_tcp_ack(s, f, in_state->hs_timers);
+        //hs_tcp_ack(s, f, in_state->hs_timers);
+        t->snd_old_ack = ACKN(f);
         //print_tcp_socket(&t->sock);
+        //printf("snd_nxt is now %08x", t->snd_nxt);
+        //printf("rcv_nxt is now %08x", t->rcv_nxt);
         s->state &= 0x00FFU;
         s->state |= PICO_SOCKET_STATE_TCP_ESTABLISHED;
 #if DEBUG != 0
@@ -645,7 +712,9 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         log_debug("rcv_nxt is now %08x", t->rcv_nxt);
 #endif
     }
-
+    else {
+        remove_completed_request(in_state,  (struct pico_socket *)t);
+    }
     return 0;
 }
 
@@ -757,7 +826,8 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
         log_debug("Received SYN duplicate %s","");
         if (sock_found->state
                 == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
-                PICO_SOCKET_STATE_CONNECTED)) {
+                PICO_SOCKET_STATE_CONNECTED)) 
+        {
             if (tcp_sock_found->rcv_nxt == long_be(hdr->seq) + 1u) {
                 /* take back our own SEQ number to its original value,
                  * so the synack retransmitted is identical to the original.
@@ -793,7 +863,16 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
                 PICO_SOCKET_STATE_CONNECTED)) /* First ACK */
         {
             log_debug("%s", "This is the first ack");
-            handle_ack(self, f, tcp_sock_found, reply_msu_id);
+            int stat = handle_ack(self, f, tcp_sock_found, reply_msu_id);
+
+            if(stat == 0){
+                in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
+                log_warn("Syn state decremented on ACK: %ld", in_state->syn_state_used_memory);
+                if(in_state->syn_state_used_memory < 0){
+                    log_critical("Underflow or overflow in syn state size, reset");
+                    in_state->syn_state_used_memory = 0;
+                }
+            }
 
 #ifdef PICO_SUPPORT_SAME_THREAD_TCP_MSUS
             {
@@ -878,9 +957,11 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     }
 
 end2:
+end:
+/** Now called in msu_process_queue_item anyway
     pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
     pico_sockets_pending_restore_check(in_state); //for sockets pending restore
-end:
+*/
     return ret;
 }
 /*
@@ -1095,7 +1176,7 @@ int msu_tcp_hs_restore_socket(struct generic_msu *self, struct dedos_intermsu_me
     }
 
     int ret;
-    log_debug("%s", "Received a valid TCP frame on control socket");
+    log_debug("Received serialized buffer size: %u",bufsize);
     //handle_incoming_frame(self, msg->src_msu_id, f);
 
     //clone the buf and create msu_queue item and enqueue it
@@ -1126,6 +1207,14 @@ int msu_tcp_hs_restore_socket(struct generic_msu *self, struct dedos_intermsu_me
     ret = generic_msu_queue_enqueue(&self->q_in, queue_item);
     log_debug("Enqueued MSU_PROTO_TCP_HANDSHAKE request: %d", ret);
 
+    log_debug("Recvd bufsize: %u", bufsize);
+    log_debug("First frame len: %u",tcp_queue_item->data_len);
+    log_debug("tcp_intermsu_queue_item size: %u",sizeof(struct tcp_intermsu_queue_item));
+    log_debug("dedos_intermsu_message size: %u",sizeof(struct dedos_intermsu_message));
+    if(bufsize > tcp_queue_item->data_len + sizeof(struct tcp_intermsu_queue_item) + sizeof(struct 
+                dedos_intermsu_message)){
+        log_debug("MULTIPLE messages in same tcp transmission!, HANDLE THIS");
+    }
 
 /*
     struct pico_frame *f = pico_frame_alloc(bufsize);
@@ -1189,11 +1278,18 @@ int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
 int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item)
 {
     //interface from runtime to picoTCP structures or any other existing code
+
+    msu_queue *q_data = &msu->q_in;
+    int rtn = sem_post(q_data->thread_q_sem);
+    if(rtn < 0){
+        log_error("Failed to increment semaphore for handshake msu");
+    }
+
+    static int check_timers_count;
+
     struct hs_internal_state *in_state = msu->internal_state;
 
-    //process item
     if(queue_item){
-        log_debug("----------------->>%s", "Processing HS MSU item handler");
 
         struct tcp_intermsu_queue_item *tcp_queue_item;
         tcp_queue_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
@@ -1233,17 +1329,19 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
         //free the queue item's memory that was processed.
         delete_generic_msu_queue_item(queue_item);
-        log_debug("----------------->>%s", "Exiting HS MSU item handler");
 
-    } else {
-        //any to do when item is not but you need to do some internal stuff anyway
-        pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
-        pico_sockets_pending_restore_check(in_state); //for sockets pending restore
     }
-
+    if(check_timers_count % 1000 == 0){
+        //pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
+        pico_sockets_check(in_state); //for sockets pending restore
+    }
+    if(check_timers_count % 30000 == 0){
+        hs_check_timers(in_state->hs_timers);
+        check_timers_count = 0;
+    }
+    check_timers_count++;
     //check expired timers
-    hs_check_timers(in_state->hs_timers);
-
+//    log_debug("----------------->>%s", "Exiting HS MSU item handler");
     return -10;
 }
 
@@ -1269,7 +1367,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     //handshake_msu->restore = msu_tcp_hs_restore_socket;
     //handshake_msu->same_machine_move_state = msu_tcp_hs_same_thread_transfer;
 
-
+    handshake_msu->scheduling_weight = 2000;
     struct hs_internal_state *in_state = (struct hs_internal_state*)malloc(sizeof(struct hs_internal_state));
     if(!in_state){
         return -1;
@@ -1294,7 +1392,8 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
         return -1;
     }
     in_state->hs_table = hs_table;
-
+    in_state->syn_state_used_memory = 0;
+    in_state->syn_state_memory_limit = SYN_STATE_MEMORY_LIMIT;
     handshake_msu->internal_state = in_state;
 
     log_debug("Created %s MSU with id: %u", handshake_msu->type->name,

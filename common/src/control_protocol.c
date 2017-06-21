@@ -26,7 +26,7 @@ void dedos_thread_msg_free(struct dedos_thread_msg* msg){
 }
 
 int send_to_endpoint(int endpoint_sock, char *buf, unsigned int bufsize){
-    log_debug("Sending msg to peer runtime with len: %u", bufsize);
+    log_debug("Sending msg to endpoint sock %d with len: %u", endpoint_sock, bufsize);
     int data_len;
     data_len = (int)send(endpoint_sock, buf, bufsize, 0);
     if (data_len == -1) {

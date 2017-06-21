@@ -75,483 +75,301 @@ int json_test(jsmntok_t *t, int r) {
     return 0;
 }
 
+#define START_JSON(json) \
+    (json).length = 0
+
+#define START_LIST(json) \
+    (json).length += sprintf((json).string + (json).length, "[ ")
+
+// This is a hacky trick. Steps back by one to overwrite the previous comma
+// If list/obj is empty, it will overwrite the space at the start of the list/obj
+#define END_LIST(json) \
+    (json).length += sprintf((json).string + (json).length - 1, "],") - 1
+
+#define START_OBJ(json)\
+    (json).length += sprintf((json).string + (json).length, "{ " )
+
+#define END_OBJ(json) \
+    (json).length += sprintf((json).string + (json).length - 1 , "},") - 1
+
+#define KEY_VAL(json, key, fmt, value) \
+    (json).length += sprintf((json).string + (json).length, "\"" key "\":\"" fmt "\",", value)
+
+#define KEY(json, key)\
+    (json).length += sprintf((json).string + (json).length, "\"" key "\":")
+
+#define VALUE(json, fmt, value) \
+    (json).length += sprintf((json).string + (json).length, "\"" fmt "\",", value)
+
+#define END_JSON(json) \
+    (json).string[(json).length-1] = '\0'
+
+struct json_output_state {
+    char string[MAX_JSON_LEN];
+    int list_cnt;
+    int length;
+};
+
+static struct json_output_state json;
+
+#ifndef LOG_DFG_WRITER
+#define LOG_DFG_WRITER 1
+#endif
+
+static inline void output_statistic(struct json_output_state *json,
+                                    struct timed_rrdb *stat,
+                                    int n_statistics) {
+    int write_index = stat->write_index;
+    START_OBJ(*json);
+    KEY(*json, "timestamps");
+    START_LIST(*json);
+    int skip = 0;
+    for (int i=write_index - n_statistics; i<write_index; ++i) {
+        if (stat->time[i].tv_sec == 0) {
+            ++skip;
+            continue;
+        }
+        VALUE(*json, "%ld", (long)stat->time[i].tv_sec);
+    }
+    END_LIST(*json);
+    KEY(*json, "values");
+    START_LIST(*json);
+    for (int i=write_index - n_statistics + skip; i<write_index; ++i) {
+        VALUE(*json, "%.3f", stat->data[i]);
+    }
+    END_LIST(*json);
+    END_OBJ(*json);
+}
+
 /**
  * Parse the DFG and format it as a JSON string
  * @return none
  */
-void dump_json(struct dfg_config *dfg_ref) {
-    struct dfg_config dfg = *dfg_ref;
-    char json_string[MAX_JSON_LEN];
-    int json_len = 0;
-    int field_len;
+char *dfg_to_json(struct dfg_config *dfg, int n_statistics) {
 
-    //note that all snprintf must add 1 bytes for the \0, which it includes automatically
-    json_len += snprintf(json_string, 2, "{");
+    START_JSON(json);
+
+    START_OBJ(json);
 
     /**
      *  APPLICATION
      */
 
     //application name
-    field_len = 21 + strlen(dfg.application_name) + 1;
-    json_len += snprintf(json_string + json_len,
-                         field_len,
-                         "\"application_name\":\"%s\"",
-                         dfg.application_name);
-    json_len += snprintf(json_string + json_len, 3, ", ");
+    KEY_VAL(json, "application_name", "%s", dfg->application_name);
 
     //applicatin deadline
-    field_len = 25 + how_many_digits(dfg.application_deadline) + 1;
-    json_len += snprintf(json_string + json_len,
-                         field_len,
-                         "\"application_deadline\":\"%d\"",
-                         dfg.application_deadline);
-    json_len += snprintf(json_string + json_len, 3, ", ");
+    KEY_VAL(json, "application_deadline", "%d", dfg->application_deadline);
 
     //global ctl ip
-    field_len = 18 + strlen(dfg.global_ctl_ip) + 1;
-    json_len += snprintf(json_string + json_len,
-                         field_len,
-                         "\"global_ctl_ip\":\"%s\"",
-                         dfg.global_ctl_ip);
-    json_len += snprintf(json_string + json_len, 3, ", ");
+    KEY_VAL(json, "global_ctl_ip", "%s", dfg->global_ctl_ip);
 
     //global ctl port
-    field_len = 20 + how_many_digits(dfg.global_ctl_port) + 1;
-    json_len += snprintf(json_string + json_len,
-                         field_len,
-                         "\"global_ctl_port\":\"%d\"",
-                         dfg.global_ctl_port);
+    KEY_VAL(json, "global_ctl_port", "%d", dfg->global_ctl_port);
 
     /**
      *  RUNTIMES
      */
-    if (dfg.runtimes_cnt > 0) {
-        json_len += snprintf(json_string + json_len, 3, ", ");
-        field_len = 12 + 1;
-        json_len += snprintf(json_string + json_len,
-                             field_len,
-                             "\"runtimes\":[");
 
-        int r;
-        for (r = 0; r < dfg.runtimes_cnt; ++r) {
-            if (r > 0) {
-                json_len += snprintf(json_string + json_len, 3, ", ");
+    if (dfg->runtimes_cnt > 0 ){
+
+        KEY(json, "runtimes");
+        START_LIST(json);
+
+        for (int r=0; r<dfg->runtimes_cnt; ++r) {
+            log_custom(LOG_DFG_WRITER, "writing runtime %d", r);
+            struct dfg_runtime_endpoint *rt = dfg->runtimes[r];
+
+            START_OBJ(json);
+
+            KEY_VAL(json, "id", "%d", rt->id);
+            if ( rt->sock != -1 ) {
+                KEY_VAL(json, "sock", "%d", rt->sock);
+            }
+            KEY(json, "routes");
+
+            START_LIST(json);
+
+            for (int route_i = 0; route_i < rt->num_routes; ++route_i) {
+                struct dfg_route *route = rt->routes[route_i];
+
+                START_OBJ(json);
+                KEY_VAL(json, "id", "%d", route->route_id);
+
+                KEY(json, "destinations");
+                START_LIST(json);
+
+                for (int dest_i = 0; dest_i < route->num_destinations; ++dest_i) {
+                    VALUE(json, "%d", route->destinations[dest_i]->msu_id);
+                }
+
+                END_LIST(json);
+                END_OBJ(json);
+            }
+            END_LIST(json);
+
+            struct in_addr addr;
+            addr.s_addr = rt->ip;
+            char *ipstr = inet_ntoa(addr);
+            log_custom(LOG_DFG_WRITER, "Got IP string: %s", ipstr);
+            if ( ipstr != NULL ) {
+                KEY_VAL(json, "ip", "%s", ipstr);
+            } else {
+                log_error("Could not convert IP to string");
             }
 
-            json_len += snprintf(json_string + json_len, 2, "{");
+            // port
+            KEY_VAL(json, "port", "%d", rt->port);
+            // Number of cores
+            KEY_VAL(json, "num_cores", "%d", rt->num_cores);
+            // dram
+            KEY_VAL(json, "dram", "%ld", rt->dram);
+            // io_network_bw
+            KEY_VAL(json, "io_network_bw", "%ld", rt->io_network_bw);
 
-            //id
-            field_len = 7 + how_many_digits(dfg.runtimes[r]->id) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"id\":\"%d\"",
-                                 dfg.runtimes[r]->id);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            if (dfg.runtimes[r]->sock != -1) {
-                //socket
-                field_len = 9 + how_many_digits(dfg.runtimes[r]->sock) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"sock\":\"%d\"",
-                                     dfg.runtimes[r]->sock);
-                json_len += snprintf(json_string + json_len, 3, ", ");
-            }
-
-            field_len = 11;
-            json_len += snprintf(json_string + json_len, field_len, "\"routes\":[");
-            // Routes
-            for (int route_i = 0; route_i < dfg.runtimes[r]->num_routes; route_i++){
-               struct dfg_route *route = dfg.runtimes[r]->routes[route_i];
-               if (route_i == 0)
-                   json_len += snprintf(json_string + json_len, 2, "{");
-               else
-                   json_len += snprintf(json_string + json_len, 3, ",{");
-
-               field_len = 9 + how_many_digits(route->route_id);
-               json_len += snprintf(json_string+json_len, field_len, "\"id\":\"%d\",", route->route_id);
-
-               field_len = 17;
-               json_len += snprintf(json_string+json_len, field_len, "\"destinations\":[");
-
-               for (int dest_i = 0; dest_i < route->num_destinations; dest_i++){
-                    if (dest_i > 0)
-                        json_len += snprintf(json_string + json_len, 3, ", ");
-                    field_len = 3 + how_many_digits(route->destinations[dest_i]->msu_id);
-                    json_len += snprintf(json_string + json_len, field_len, "\"%d\"", route->destinations[dest_i]->msu_id);
-               }
-               json_len += snprintf(json_string+json_len, 3, "]}");
-            }
-            json_len += snprintf(json_string + json_len, 3, "],");
-
-            //ip
-            char ipstr[INET_ADDRSTRLEN];
-            ipv4_to_string(ipstr, dfg.runtimes[r]->ip);
-            field_len = 7 + strlen(ipstr) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"ip\":\"%s\"",
-                                 ipstr);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //port
-            field_len = 9 + how_many_digits(dfg.runtimes[r]->port) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"port\":\"%d\"",
-                                 dfg.runtimes[r]->port);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //number of cores
-            field_len = 14 + how_many_digits(dfg.runtimes[r]->num_cores) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"num_cores\":\"%d\"",
-                                 dfg.runtimes[r]->num_cores);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //dram
-            field_len = 9 + how_many_digits(dfg.runtimes[r]->dram) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"dram\":\"%d\"",
-                                 (int)dfg.runtimes[r]->dram);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //io_network_bw
-            field_len = 18 + how_many_digits(dfg.runtimes[r]->io_network_bw) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"io_network_bw\":\"%d\"",
-                                 (int)dfg.runtimes[r]->io_network_bw);
-
-            //current state
-            if (dfg.runtimes[r]->current_alloc != NULL) {
+            if (rt->current_alloc != NULL) {
                 int timestamp = time(NULL);
 
-                json_len += snprintf(json_string + json_len, 3, ", ");
-                json_len += snprintf(json_string + json_len, 2, "{");
+                START_OBJ(json);
+                KEY_VAL(json, "timestamp", "%d", timestamp);
+                // non-blocking-threads
+                KEY_VAL(json, "non_blocking_workers", "%d", rt->num_pinned_threads);
+                // blocking threads
+                int num_blocking = rt->num_threads - rt->num_pinned_threads;
+                KEY_VAL(json, "blocking_workers", "%d", num_blocking);
+                // cores
+                KEY_VAL(json, "cores", "%d",  rt->current_alloc->num_cores);
+                // bissection bw
+                KEY_VAL(json, "io_network_bw", "%ld", rt->current_alloc->io_network_bw);
+                // egress bw
+                KEY_VAL(json, "egress_bw", "%ld", rt->current_alloc->egress_bw);
+                // Incress bw
+                KEY_VAL(json, "ingress_bw", "%ld", rt->current_alloc->ingress_bw);
+                // num msus
+                KEY_VAL(json, "num_msus", "%d", rt->current_alloc->num_msu);
 
-                //timestamp
-                field_len = 14 + how_many_digits(timestamp) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"timestamp\":\"%d\"",
-                                     timestamp);
-                json_len += snprintf(json_string + json_len, 3, ", ");
-
-                //non-blocking threads
-                field_len = 25 + how_many_digits(dfg.runtimes[r]->num_pinned_threads) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"non_blocking_workers\":\"%d\"",
-                                     dfg.runtimes[r]->num_pinned_threads);
-                json_len += snprintf(json_string + json_len, 3, ", ");
-
-                //blocking threads
-                int num_blocking =
-                    dfg.runtimes[r]->num_threads - dfg.runtimes[r]->num_pinned_threads;
-                field_len = 21 + how_many_digits(num_blocking) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"blocking_workers\":\"%d\"",
-                                     num_blocking);
-                json_len += snprintf(json_string + json_len, 3, ", ");
-
-                //used cores
-                field_len = 10 + how_many_digits(dfg.runtimes[r]->current_alloc->num_cores) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"cores\":\"%d\"",
-                                     dfg.runtimes[r]->current_alloc->num_cores);
-                json_len += snprintf(json_string + json_len, 3, ", ");
-
-                //bissection bw
-                field_len = 19 + how_many_digits(dfg.runtimes[r]->current_alloc->io_network_bw) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"io_network_bw\":\"%d\"",
-                                     (int)dfg.runtimes[r]->current_alloc->io_network_bw);
-                json_len += snprintf(json_string + json_len, 3, ", ");
-
-                //egress bw
-                field_len = 14 + how_many_digits(dfg.runtimes[r]->current_alloc->egress_bw) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"egress_bw\":\"%d\"",
-                                     (int)dfg.runtimes[r]->current_alloc->egress_bw);
-                json_len += snprintf(json_string + json_len, 3, ", ");
-
-                //ingress bw
-                field_len = 15 + how_many_digits(dfg.runtimes[r]->current_alloc->ingress_bw) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"ingress_bw\":\"%d\"",
-                                     (int)dfg.runtimes[r]->current_alloc->ingress_bw);
-                json_len += snprintf(json_string + json_len, 3, ", ");
-
-                //num msus
-                field_len = 15 + how_many_digits(dfg.runtimes[r]->current_alloc->num_msu) + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"num_msus\":\"%d\"",
-                                     (int)dfg.runtimes[r]->current_alloc->num_msu);
-
-                json_len += snprintf(json_string + json_len, 2, "}");
+                END_OBJ(json);
             }
 
-            json_len += snprintf(json_string + json_len, 2, "}");
+            END_OBJ(json);
+
         }
 
-        json_len += snprintf(json_string + json_len, 2, "]");
+        END_LIST(json);
     }
 
     /**
      *  MSUS
      */
 
-    if (dfg.vertex_cnt > 0 ) {
-        json_len += snprintf(json_string + json_len, 3, ", ");
+    if (dfg->vertex_cnt > 0 ) {
+        log_custom(LOG_DFG_WRITER, "Writing %d MSUs", dfg->vertex_cnt);
+        KEY(json, "MSUs");
+        START_LIST(json);
 
-        field_len = 8 + 1;
-        json_len += snprintf(json_string + json_len,
-                             field_len,
-                             "\"MSUs\":[");
+        for (int msu_i=0; msu_i < dfg->vertex_cnt; ++msu_i) {
+            log_custom(LOG_DFG_WRITER, "Writing MSU %d", msu_i);
+            struct dfg_vertex *msu = dfg->vertices[msu_i];
+            START_OBJ(json);
+            // id
+            KEY_VAL(json, "id", "%d", msu->msu_id);
+            // name
+            KEY_VAL(json, "name", "%s", msu->msu_name);
+            // type
+            KEY_VAL(json, "type", "%d", msu->msu_type);
+            // mode
+            KEY_VAL(json, "working-mode", "%s", msu->msu_mode);
+            // profiling
+            KEY(json, "profiling");
+            START_OBJ(json);
 
-        int m;
-        for (m = 0; m < dfg.vertex_cnt; ++m) {
-            if (m > 0) {
-                json_len += snprintf(json_string + json_len, 3, ", ");
+            log_custom(LOG_DFG_WRITER, "Writing Profiling");
+            // wcet
+            KEY_VAL(json, "wcet", "%d", msu->profiling.wcet);
+            // footprint
+            KEY_VAL(json, "mem_footprint", "%ld", msu->profiling.dram);
+            // tx_node_local
+            KEY_VAL(json, "tx_node_local", "%d", msu->profiling.tx_node_local);
+            // tx_core_local
+            KEY_VAL(json, "tx_core_local", "%d", msu->profiling.tx_core_local);
+            // tx_node_remote
+            KEY_VAL(json, "tx_node_remote", "%d", msu->profiling.tx_node_remote);
+            END_OBJ(json);
+
+            KEY(json, "meta_routing");
+            START_OBJ(json);
+
+            // sources
+            if (strcmp(msu->vertex_type, "entry") != 0 &&
+                    msu->meta_routing.num_src_types > 0 ) {
+                KEY(json, "sources_types");
+                START_LIST(json);
+                for (int s=0; s < msu->meta_routing.num_src_types; ++s) {
+                    VALUE(json, "%d", msu->meta_routing.src_types[s]);
+                }
+                END_LIST(json);
             }
 
-            json_len += snprintf(json_string + json_len, 2, "{");
-            //id
-            field_len = 7 + how_many_digits(dfg.vertices[m]->msu_id) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"id\":\"%d\"",
-                                 dfg.vertices[m]->msu_id);
-            json_len += snprintf(json_string + json_len, 3, ", ");
+            // destinations
+            if (strcmp(msu->vertex_type, "exit") != 0 &&
+                    msu->meta_routing.num_dst_types > 0) {
 
-            //name
-            field_len = 9 + strlen(dfg.vertices[m]->msu_name) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"name\":\"%s\"",
-                                 dfg.vertices[m]->msu_name);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //type
-            field_len = 9 + how_many_digits(dfg.vertices[m]->msu_type) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"type\":\"%d\"",
-                                 dfg.vertices[m]->msu_type);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //mode
-            field_len = 17 + strlen(dfg.vertices[m]->msu_mode) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"working-mode\":\"%s\"",
-                                 dfg.vertices[m]->msu_mode);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //profiling
-            field_len = 13 + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"profiling\":{");
-
-            //wcet
-            field_len = 9 + how_many_digits(dfg.vertices[m]->profiling.wcet) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"wcet\":\"%d\"",
-                                 dfg.vertices[m]->profiling.wcet);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //footprint
-            field_len = 18 + how_many_digits(dfg.vertices[m]->profiling.dram) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"mem_footprint\":\"%d\"",
-                                 (int)dfg.vertices[m]->profiling.dram);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //tx_node_local
-            field_len = 18 + how_many_digits(dfg.vertices[m]->profiling.tx_node_local) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"tx_node_local\":\"%d\"",
-                                 dfg.vertices[m]->profiling.tx_node_local);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //tx_core_local
-            field_len = 18 + how_many_digits(dfg.vertices[m]->profiling.tx_core_local) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"tx_core_local\":\"%d\"",
-                                 dfg.vertices[m]->profiling.tx_core_local);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            //tx_node_remote
-            field_len = 19 + how_many_digits(dfg.vertices[m]->profiling.tx_node_remote) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"tx_node_remote\":\"%d\"",
-                                 dfg.vertices[m]->profiling.tx_node_remote);
-
-            json_len += snprintf(json_string + json_len, 3, "},");
-
-            //meta routing
-            field_len = 17 + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"meta_routing\":{");
-
-            //sources
-            int has_sources = 0;
-            if (strncmp(dfg.vertices[m]->vertex_type, "entry", strlen("entry\0")) != 0 &&
-                dfg.vertices[m]->meta_routing.num_src_types > 0) {
-
-                has_sources = 1;
-
-                field_len = 17 + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"sources_types\":[");
-
-                int s;
-                for (s = 0; s < dfg.vertices[m]->meta_routing.num_src_types; ++s) {
-                    if (s > 0) {
-                        json_len += snprintf(json_string + json_len, 3, ", ");
-                    }
-
-                    //id
-                    field_len = 2 + how_many_digits(dfg.vertices[m]->meta_routing.src_types[s]) + 1;
-                    json_len += snprintf(json_string + json_len,
-                                         field_len,
-                                         "\"%d\"",
-                                         dfg.vertices[m]->meta_routing.src_types[s]);
-
+                KEY(json, "dst_types");
+                START_LIST(json);
+                for (int s=0; s<msu->meta_routing.num_dst_types; ++s) {
+                    VALUE(json, "%d", msu->meta_routing.dst_types[s]);
                 }
-
-                json_len += snprintf(json_string + json_len, 2, "]");
+                END_LIST(json);
             }
 
-            //destinations
-            if (strncmp(dfg.vertices[m]->vertex_type, "exit", strlen("entry\0")) != 0 &&
-                dfg.vertices[m]->meta_routing.num_dst_types > 0) {
+            END_OBJ(json);
 
-                if (has_sources == 1) {
-                    json_len += snprintf(json_string + json_len, 3, ", ");
+            log_custom(LOG_DFG_WRITER, "writing scheduling");
+            KEY(json, "scheduling");
+            START_OBJ(json);
+
+            KEY_VAL(json, "runtime_id", "%d", msu->scheduling.runtime->id);
+            KEY_VAL(json, "thread_id", "%d", msu->scheduling.thread_id);
+            KEY_VAL(json, "deadline", "%d", msu->scheduling.deadline);
+
+            log_custom(LOG_DFG_WRITER, "writing routes");
+            if (msu->scheduling.num_routes > 0) {
+                KEY(json, "routing");
+                START_LIST(json);
+
+                for (int r=0; r<msu->scheduling.num_routes; ++r) {
+                    VALUE(json, "%d", msu->scheduling.routes[r]->route_id);
                 }
-
-                field_len = 13 + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"dst_types\":[");
-
-                int s;
-                for (s = 0; s < dfg.vertices[m]->meta_routing.num_dst_types; ++s) {
-                    if (s > 0) {
-                        json_len += snprintf(json_string + json_len, 3, ", ");
-                    }
-
-                    //id
-                    field_len = 2 + how_many_digits(dfg.vertices[m]->meta_routing.dst_types[s]) + 1;
-                    json_len += snprintf(json_string + json_len,
-                                         field_len,
-                                         "\"%d\"",
-                                         dfg.vertices[m]->meta_routing.dst_types[s]);
-
-                }
-
-                json_len += snprintf(json_string + json_len, 2, "]");
+                END_LIST(json);
             }
 
-            json_len += snprintf(json_string + json_len, 2, "}");
-
-            //scheduling
-            json_len += snprintf(json_string + json_len, 3, ", ");
-            field_len = 14 + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"scheduling\":{");
-
-            field_len = 15 + how_many_digits(dfg.vertices[m]->scheduling.runtime->id) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"runtime_id\":\"%d\"",
-                                 dfg.vertices[m]->scheduling.runtime->id);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            field_len = 14 + how_many_digits(dfg.vertices[m]->scheduling.thread_id) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"thread_id\":\"%d\"",
-                                 dfg.vertices[m]->scheduling.thread_id);
-            json_len += snprintf(json_string + json_len, 3, ", ");
-
-            field_len = 13 + how_many_digits(dfg.vertices[m]->scheduling.deadline) + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"deadline\":\"%d\"",
-                                 dfg.vertices[m]->scheduling.deadline);
-
-            // Routing
-            if (dfg.vertices[m]->scheduling.num_routes > 0) {
-                json_len += snprintf(json_string + json_len, 3, ", ");
-
-                field_len = 12 + 1;
-                json_len += snprintf(json_string + json_len,
-                                     field_len,
-                                     "\"routing\": [");
-                int d;
-                for (d = 0; d < dfg.vertices[m]->scheduling.num_routes; ++d) {
-                    if (d > 0) {
-                        json_len += snprintf(json_string + json_len, 3, ", ");
-                    }
-
-                    int msu_id =
-                            dfg.vertices[m]->scheduling.routes[d]->route_id;
-
-                    field_len = 2 + how_many_digits(msu_id) + 1;
-                    json_len += snprintf(json_string + json_len,
-                                         field_len,
-                                         "\"%d\"",
-                                         msu_id);
-                }
-
-                json_len += snprintf(json_string + json_len, 2, "]");
-            }
+            END_OBJ(json);
 
 
-            json_len += snprintf(json_string + json_len, 2, "}");
+            KEY(json, "statistics");
+            START_OBJ(json);
 
-            //statistics
-            json_len += snprintf(json_string + json_len, 3, ", ");
-            field_len = 14 + 1;
-            json_len += snprintf(json_string + json_len,
-                                 field_len,
-                                 "\"statistics\":{");
+            KEY(json, "queue_items_processed");
+            output_statistic(&json, &msu->statistics.queue_items_processed, n_statistics);
+            KEY(json, "queue_length");
+            output_statistic(&json, &msu->statistics.queue_length, n_statistics);
+            KEY(json, "memory_allocated");
+            output_statistic(&json, &msu->statistics.memory_allocated, n_statistics);
+            // END statistics
+            END_OBJ(json);
 
-            json_len += snprintf(json_string + json_len, 2, "}");
-
-
-            json_len += snprintf(json_string + json_len, 2, "}");
+            // END MSU
+            END_OBJ(json);
         }
-
-        json_len += snprintf(json_string + json_len, 2, "]");
+        // END MSUs
+        END_LIST(json);
     }
 
+    // END top-level object
+    END_OBJ(json);
 
-    json_len += snprintf(json_string + json_len, 2, "}");
-
-
-    printf("%s\n", json_string);
+    END_JSON(json);
+    return json.string;
 }
 
 
@@ -599,4 +417,15 @@ void print_dfg(void) {
         }
     }
 }
+
+
+void dfg_to_file(struct dfg_config *dfg, int n_statistics, char *filename) {
+    char *dfg_json = dfg_to_json(dfg, n_statistics);
+    int json_size = strlen(dfg_json);
+    FILE *file = fopen(filename, "w");
+    fwrite(dfg_json, sizeof(char), json_size, file);
+    fclose(file);
+    log_custom(LOG_DFG_WRITER, "Wrote DFG with length %d to %s", json_size, filename);
+}
+
 

@@ -216,9 +216,12 @@ struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *
 struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *sender,
                                       int msu_id);
 
- /** Malloc's and creates a new MSU of the specified type and id. */
+ /** Malloc's and creates a new MSU of the specified type and id on the current thread*/
 struct generic_msu *init_msu(unsigned int type_id, int msu_id,
                              struct create_msu_thread_data *create_action);
+ /** Malloc's and creates a new MSU of the specified type and id on the given thread*/
+struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thread_id,
+                                      struct create_msu_thread_data *create_action);
 
 /** Destroys an msu, freeing all relevant data. */
 void destroy_msu(struct generic_msu *self);

@@ -8,7 +8,7 @@
 
 enum object_type {
     ROOT=0, RUNTIMES=1, ROUTES=2, DESTINATIONS=3, MSUS=4, PROFILING=5,
-    META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8
+    META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8, DEPENDENCIES=9
 };
 
 struct dfg_config *dfg_global = NULL;
@@ -44,11 +44,6 @@ struct dfg_config *parse_dfg_json(const char *filename){
         return NULL;
     }
 }
-
-static int ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
-    return 0;
-}
-
 static int set_app_name(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct dfg_config *cfg = in->data;
     strcpy(cfg->application_name, tok_to_str(*tok, j));
@@ -73,7 +68,7 @@ static int set_ctl_port(jsmntok_t **tok, char *j, struct json_state *in, struct 
     return 0;
 }
 
-static int set_load_mode(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+static int set_load_mode(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
     char *load_mode = tok_to_str(*tok, j);
     if (strcasecmp(load_mode, "preload")){
         return 0;
@@ -208,9 +203,38 @@ static int set_msu_id(jsmntok_t **tok, char *j, struct json_state *in, struct js
     return 0;
 }
 
+static int set_msu_init_data(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct dfg_vertex *vertex = in->data;
+    strcpy(vertex->init_data, tok_to_str(*tok, j));
+    log_debug("Set MSU init data to %s", vertex->init_data);
+    return 0;
+}
+
 static int set_rt_dram(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct dfg_runtime_endpoint *runtime = in->data;
     runtime->dram = tok_to_int(*tok, j);
+    return 0;
+}
+
+static int set_rt_num_threads(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
+    struct dfg_runtime_endpoint *runtime = in->data;
+    runtime->num_threads = tok_to_int(*tok, j);
+    return 0;
+}
+
+static int set_rt_num_pinned_threads(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
+    struct dfg_runtime_endpoint *runtime = in->data;
+    runtime->num_pinned_threads = tok_to_int(*tok, j);
+
+    int i;
+    for (i = 0; i < runtime->num_pinned_threads; ++i) {
+        struct runtime_thread *rt_thread = malloc(sizeof(*rt_thread));
+        rt_thread->id = i + 1;
+        rt_thread->mode = 1;
+
+        runtime->threads[i] = rt_thread;
+    }
+
     return 0;
 }
 
@@ -266,6 +290,7 @@ static int set_route_destination(jsmntok_t **tok, char *j, struct json_state *in
         return 1;
     }
     ASSERT_JSMN_TYPE(*tok, JSMN_OBJECT, j);
+    bzero(route->destination_keys, sizeof(int) * MAX_DESTINATIONS);
     for (int i=0; i<n_dests; i++){
         ++(*tok);
         ASSERT_JSMN_TYPE(*tok, JSMN_STRING, j);
@@ -412,6 +437,38 @@ static int set_msu_routing(jsmntok_t **tok, char *j, struct json_state *in, stru
 }
 
 
+struct json_state init_dependency(struct json_state *in, int index){
+    struct dfg_vertex *vertex = in->data;
+
+    vertex->dependencies[index] = malloc(sizeof(*vertex->dependencies[index]));
+    vertex->num_dependencies++;
+
+    struct json_state rt_obj = {
+        .data = vertex->dependencies[index],
+        .parent_type = DEPENDENCIES
+    };
+
+    return rt_obj;
+}
+
+static int set_dependencies(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    return parse_jsmn_obj_list(tok, j, in, saved, init_dependency);
+}
+
+static int set_dependency_id(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct dependent_type *dep = in->data;
+
+    dep->msu_type = tok_to_int(*tok, j);
+    return 0;
+}
+
+static int set_dependency_locality(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct dependent_type *dep = in->data;
+
+    dep->locality = tok_to_int(*tok, j);
+    return 0;
+}
+
 static struct key_mapping key_map[] = {
     { "application_name", ROOT, set_app_name },
     { "application_deadline", ROOT, set_app_deadline },
@@ -429,7 +486,11 @@ static struct key_mapping key_map[] = {
     { "scheduling", MSUS,  set_scheduling },
     { "type", MSUS,  set_msu_type },
     { "id", MSUS,  set_msu_id },
-    { "name", MSUS, ignore },
+    { "dependencies", MSUS,  set_dependencies },
+
+    { "init_data", MSUS, set_msu_init_data },
+    { "name", MSUS, jsmn_ignore },
+    { "statistics", MSUS, jsmn_ignore },
 
     { "dram", RUNTIMES, set_rt_dram },
     { "ip", RUNTIMES,  set_rt_ip },
@@ -438,6 +499,8 @@ static struct key_mapping key_map[] = {
     { "id", RUNTIMES, set_rt_id },
     { "port", RUNTIMES, set_rt_port },
     { "routes", RUNTIMES, set_routes },
+    { "num_threads", RUNTIMES, set_rt_num_threads },
+    { "num_pinned_threads", RUNTIMES, set_rt_num_pinned_threads },
 
     { "id", ROUTES, set_route_id },
     { "destinations", ROUTES, set_route_destination },
@@ -451,6 +514,9 @@ static struct key_mapping key_map[] = {
 
     { "source_types", META_ROUTING,  set_source_types },
     { "dst_types", META_ROUTING, set_dst_types },
+
+    { "msu_type", DEPENDENCIES, set_dependency_id },
+    { "locality", DEPENDENCIES, set_dependency_locality },
 
     { "thread_id", SCHEDULING,  set_thread_id },
     { "deadline", SCHEDULING,  set_deadline },

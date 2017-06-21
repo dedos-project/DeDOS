@@ -158,7 +158,6 @@ static void* non_block_per_thread_loop() {
     struct rusage thread_usage;
 
     while (1) {
-
         int rtn  = sem_wait(self->q_sem);
         if (rtn < 0){
             log_error("Error waiting on thread queue semaphore");
@@ -207,7 +206,7 @@ static void* non_block_per_thread_loop() {
                                   get_last_stat(ITEMS_PROCESSED, cur->id));
 
                         aggregate_start_time(MSU_INTERIM_TIME, cur->id);
-                    } else if (cur->type->type_id == DEDOS_TCP_DATA_MSU_ID) {
+                    } else if (cur->type->type_id == DEDOS_PICO_TCP_STACK_MSU_ID) {
                         //To make sure stack ticks even if there was no item
                         msu_receive(cur, NULL);
                     } else if (cur->type->type_id == DEDOS_TCP_HANDSHAKE_MSU_ID) {

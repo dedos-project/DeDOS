@@ -90,7 +90,7 @@ struct stat_type {
  * This structure defines the format and size of the statistics being logged
  * NOTE: Entries *MUST* be in the same order as the enumerator in stats.h!
  */
-struct stat_type stat_types[] = {
+struct stat_type stat_types[10] = {
    {QUEUE_LEN,           LOG_QUEUE_LEN,           32, MAX_STAT, "%02.0f",  "MSU_QUEUE_LENGTH"},
    {ITEMS_PROCESSED,     LOG_ITEMS_PROCESSED,     32, MAX_STAT, "%03.0f",  "ITEMS_PROCESSED"},
    {MSU_FULL_TIME,       LOG_MSU_FULL_TIME,       32, MAX_STAT, "%0.9f",   "MSU_FULL_TIME"},
@@ -100,7 +100,7 @@ struct stat_type stat_types[] = {
    {N_CONTEXT_SWITCH,    LOG_N_CONTEXT_SWITCH,    8,  MAX_STAT, "%3.0f",   "N_CONTEXT_SWITCHES"},
    {BYTES_SENT,          LOG_BYTES_SENT,          1,  MAX_STAT, "%06.0f",  "BYTES_SENT"},
    {BYTES_RECEIVED,      LOG_BYTES_RECEIVED,      1,  MAX_STAT, "%06.0f",  "BYTES_RECEIVED"},
-   {GATHER_THREAD_STATS, LOG_GATHER_THREAD_STATS, 8,  MAX_STAT, "%0.9f",   "GATHER_THREAD_STATS"}
+   {GATHER_THREAD_STATS, LOG_GATHER_THREAD_STATS, 9,  MAX_STAT, "%0.9f",   "GATHER_THREAD_STATS"}
 };
 
 #define N_STAT_TYPES sizeof(stat_types) / sizeof(struct stat_type)
@@ -179,8 +179,6 @@ static inline int unlock_item(struct item_stats *item) {
 void flush_item_to_log(enum stat_id stat_id, unsigned int item_id) {
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
 
-    lock_item(item);
-
     struct stat_type *stat_type = &stat_types[stat_id];
     int n_stats = item->n_stats;
     if (item->rolled_over)
@@ -197,7 +195,6 @@ void flush_item_to_log(enum stat_id stat_id, unsigned int item_id) {
         fwrite("\n", 1, 1, statlog);
     }
 
-    unlock_item(item);
 }
 
 /** Writes all gathered statistics to the log file
@@ -340,7 +337,7 @@ void increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
     unlock_item(item);
 }
 
-/** Adds a single stastic for a single item to the log.
+/** Aggregates a statistic, but only if period_ms milliseconds have passed.
  * @param stat_id ID for the statistic being logged
  * @param item_id ID for the item to which the statistic refers (< MAX_ITEM_ID)
  * @param stat The specific statistic being logged
@@ -611,4 +608,3 @@ void close_statlog() {
 }
 
 #endif
-

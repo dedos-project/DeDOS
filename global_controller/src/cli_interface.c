@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <strings.h>
 
+#include "scheduling.h"
 #include "logging.h"
 #include "controller_tools.h"
 #include "cli_interface.h"
@@ -35,7 +36,7 @@ struct cmd_action {
 
 static void parse_cmd_action(char *cmd);
 
-static int parse_show_runtimes(char *args){
+static int parse_show_runtimes(char *args) {
     show_connected_peers();
     return 0;
 }
@@ -46,7 +47,62 @@ static int parse_show_runtimes(char *args){
         return -1; \
     }
 
-static int parse_show_msus(char *args){
+/**
+ * //FIXME: broken behavior since dfg_vertex members are not pointers anymore
+ * Get a list of all MSU not possessing a "scheduling" object, and ask for an allocation plan
+ * @param none
+ * @return none
+ */
+static void parse_allocate() {
+    // Pick only msus where no scheduling item is initialized
+    struct dfg_config *dfg;
+    dfg = get_dfg();
+
+    struct to_schedule *ts = NULL;
+    ts = malloc(sizeof(struct to_schedule));
+    if (ts == NULL) {
+        debug("Could not allocate memory for to_schedule");
+        return;
+    }
+
+    int to_allocate_msus[MAX_MSU];
+    int num_to_alloc = 0;
+
+    int n;
+    /*
+    for (n = 0; n < dfg->vertex_cnt; ++n) {
+        if (dfg->vertices[n]->scheduling == NULL) {
+            to_allocate_msus[n] = dfg->vertices[n]->msu_id;
+            num_to_alloc++;
+        }
+    }
+    */
+
+    ts->msu_ids = to_allocate_msus;
+    ts->num_msu = num_to_alloc;
+
+    allocate(ts);
+}
+
+/**
+ * Display controller's time series for a given msu
+ * @param *args: string received from the CLI
+ * @return none
+ */
+static void parse_show_stats(char *args) {
+    char *arg;
+    NEXT_ARG(arg, args);
+    int msu_id = atoi(arg);
+
+    if (get_msu_from_id(msu_id) ==  NULL) {
+        printf("MSU id %d is not registered with the controller\n", msu_id);
+        return;
+    }
+
+    show_stats(msu_id);
+}
+
+static int parse_show_msus(char *args) {
     char *arg;
     NEXT_ARG(arg, args);
     int runtime_sock = atoi(arg);
@@ -64,7 +120,7 @@ static int parse_show_msus(char *args){
     return 0;
 }
 
-static int parse_add_msu(char *args){
+static int parse_add_msu(char *args) {
     char *arg;
     NEXT_ARG(arg, args);
     int runtime_sock = atoi(arg);
@@ -101,8 +157,6 @@ static int parse_add_msu(char *args){
         log_error("Could not trigger new MSU creation");
     }
 
-    bzero(data, MAX_INIT_DATA_LEN);
-
     return ret;
 }
 
@@ -124,7 +178,7 @@ static int parse_del_msu(char *args) {
     return rtn;
 }
 
-static int parse_add_route(char *args){
+static int parse_add_route(char *args) {
     char *arg;
     NEXT_ARG(arg, args);
     int runtime_sock = atoi(arg);
@@ -142,7 +196,7 @@ static int parse_add_route(char *args){
     return rtn;
 }
 
-static int parse_del_route(char *args){
+static int parse_del_route(char *args) {
     char *arg;
     NEXT_ARG(arg, args);
     int runtime_sock = atoi(arg);
@@ -160,7 +214,7 @@ static int parse_del_route(char *args){
     return rtn;
 }
 
-static int parse_add_endpoint(char *args){
+static int parse_add_endpoint(char *args) {
     char *arg;
     NEXT_ARG(arg, args);
     int runtime_sock = atoi(arg);
@@ -181,7 +235,7 @@ static int parse_add_endpoint(char *args){
     return rtn;
 }
 
-static int parse_del_endpoint(char *args){
+static int parse_del_endpoint(char *args) {
     char *arg;
     NEXT_ARG(arg, args);
     int runtime_sock = atoi(arg);
@@ -199,7 +253,7 @@ static int parse_del_endpoint(char *args){
     return rtn;
 }
 
-static int parse_mod_endpoint(char *args){
+static int parse_mod_endpoint(char *args) {
     char *arg;
     NEXT_ARG(arg, args);
     int runtime_sock = atoi(arg);
@@ -222,7 +276,7 @@ static int parse_mod_endpoint(char *args){
 }
 
 
-static int parse_create_thread(char *args){
+static int parse_create_thread(char *args) {
     char *arg;
     NEXT_ARG(arg, args);
     int runtime_sock = atoi(arg);
@@ -236,7 +290,7 @@ static int parse_create_thread(char *args){
     return rtn;
 }
 
-static int parse_load_cfg(char *args){
+static int parse_load_cfg(char *args) {
     char *filename;
     NEXT_ARG(filename, args);
 
@@ -300,6 +354,12 @@ struct cmd_action cmd_actions[] = {
     {"create_pinned_thread", parse_create_thread,
         "[runtime_socket_num] /* Creates a pinned worker thread on an unused core */"},
 
+    {"allocate", parse_allocate,
+        "/* gather all msu not possessing a 'scheduling' object, and compute a placement */"},
+
+    {"show stats", parse_show_stats,
+        "[msu_id] /* display stored time serie for a given msu */"},
+
     {"loadcfg", parse_load_cfg,
         "[filename] /* load a suite of commands from a file */"},
 
@@ -310,42 +370,8 @@ struct cmd_action cmd_actions[] = {
     {"\0", NULL, "\0"}
 };
 
-/*
-static void send_route_update(char **input, int action){
-    char *cmd = *input;
-    int from_msu_id, to_msu_id, runtime_sock, from_msu_type, to_msu_type, to_msu_locality;
-    char *ip_str;
-    uint32_t to_ip = 0;
-    int ret;
-
-    debug("DEBUG: Route update *input: %s", *input);
-    debug("DEBUG: Route update cmd : %s", cmd);
-    debug("DEBUG: Route update action: %u", action);
-
-    runtime_sock = atoi(strtok(&cmd[9], " "));
-    from_msu_id  = atoi(strtok(NULL, " "));
-    from_msu_type = atoi(strtok(NULL, " "));
-    to_msu_id = atoi(strtok(NULL, " "));
-    to_msu_type = atoi(strtok(NULL, " "));
-    to_msu_locality = atoi(strtok(NULL, " "));
-
-    if (to_msu_locality == NEXT_MSU_REMOTE) {
-        ip_str = strtok(NULL, "\r\n");
-        debug("ip_str :%s", ip_str);
-        string_to_ipv4(ip_str, &to_ip);
-    }
-
-    ret = update_route(action, runtime_sock, from_msu_id, from_msu_type,
-                       to_msu_id, to_msu_type, to_msu_locality, to_ip);
-
-    if ( ret < 0 ) {
-        debug("ERROR: %s", "Could not process update route request");
-    }
-}
-*/
 //TODO: need to check whether an msu or a route are already present in the CFG before proceeding to action
-static void parse_cmd_action(char *cmd)
-{
+static void parse_cmd_action(char *cmd) {
     size_t ln = strlen(cmd) - 1;
     if (*cmd && cmd[ln] == '\n') {
         cmd[ln] = '\0';
@@ -372,7 +398,7 @@ static void parse_cmd_action(char *cmd)
     return;
 }
 
-static int parse_help(char *args){
+static int parse_help(char *args) {
     printf(HELP_PREAMBLE);
     for (int i=0; cmd_actions[i].cmd[0] != '\0'; i++){
         printf("\t%d. %s %s\n", i, cmd_actions[i].cmd, cmd_actions[i].help);
@@ -380,8 +406,7 @@ static int parse_help(char *args){
     return 0;
 }
 
-static void* cli_loop()
-{
+static void* cli_loop() {
     int next = 0;
     char *line = NULL;
     size_t size;
@@ -403,14 +428,13 @@ static void* cli_loop()
     return NULL;
 }
 
-int start_cli_thread(pthread_t *cli_thread)
-{
+int start_cli_thread(pthread_t *cli_thread) {
     int err;
     err = pthread_create(cli_thread, NULL, cli_loop, NULL);
     if (err != 0) {
         debug("ERROR: can't create thread :[%s]", strerror(err));
     } else {
-        debug("INFO: %s", "CLI Thread created successfully");
+        debug("CLI Thread created successfully");
     }
     return err;
 }

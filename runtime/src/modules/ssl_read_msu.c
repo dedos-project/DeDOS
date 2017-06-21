@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "communication.h"
 #include "dedos_msu_list.h"
@@ -14,66 +15,57 @@
 #include "logging.h"
 #include "global.h"
 
-int ReadSSL(SSL *State, char *Buffer, int BufferSize)
-{
+int AcceptSSL(SSL *State, char *Buffer){
     int NumBytes;
     int ret, err;
 
-    if ( ( NumBytes = SSL_read(State, Buffer, BufferSize) ) <= 0) {
-        log_error("SSL_read failed with ret: %d\n", NumBytes);
-        err = SSL_get_error(State, NumBytes);
-        SSLErrorCheck(err);
-        return -1;
-    }
-
-    Buffer[NumBytes] = '\0';
-
-    return 0;
-}
-
-int AcceptSSL(SSL *State){
-    int ret;
-    if ( (ret = SSL_accept(State) ) < 0 ){
-        log_error("SSL_accept failed with ret: %d\n");
-        int err = SSL_get_error(State, ret);
-        SSLErrorCheck(err);
-        return -1;
-    }
-    //SSL_set_mode(State, SSL_MODE_AUTO_RETRY);
-    return 0;
-}
-
-/*
-    //do {
+    do {
+        ERR_clear_error();
         ret = SSL_accept(State);
         err = 0;
-        if (ret < 0){
+
+        if (ret == 0) {
+            log_warn("TLS/SSL handshake was not successful but was shut down controlled and by the \
+                      specifications of the TLS/SSL protocol");
+            SSLErrorCheck(err);
+            return -1;
+        }
+
+        if (ret < 0) {
             log_warn("SSL_accept failed with ret = %d", ret);
             err = SSL_get_error(State, ret);
-            if (err != SSL_ERROR_WANT_READ){
+
+            if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE) {
+                SSLErrorCheck(err);
                 return -1;
             } else {
-                log_warn("SSL_accept got SSL_ERROR_WANT_READ");
+                if (err == SSL_ERROR_WANT_READ) {
+                    log_warn("SSL_accept got SSL_ERROR_WANT_READ");
+                } else {
+                    log_warn("SSL_accept got SSL_ERROR_WANT_WRITE");
+                }
             }
         }
-    //} while (err == SSL_ERROR_WANT_READ);
+    } while (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE);
 
 
-    if ( (NumBytes = SSL_read(State, Buffer, BufferSize)) <= 0 ) {
+    ERR_clear_error();
+    if ( (NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN)) <= 0 ) {
         err = SSL_get_error(State, NumBytes);
 
-        if ( err == SSL_ERROR_WANT_READ ){
-            return 0;
+        char error[256];
+
+        if (err != SSL_ERROR_WANT_READ) {
+            SSLErrorCheck(err);
+            return -1;
         }
 
-        char *error;
-
         while (err == SSL_ERROR_WANT_READ) {
-            log_debug("SSL_read returned ret: %d. Errno: %s",
-                      NumBytes, error);
-            NumBytes = SSL_read(State, Buffer, BufferSize);
-            //strerror is not thread safe
-            error = strerror(errno);
+            ERR_error_string(err, error);
+            log_warn("SSL_read returned ret: %d. %s", NumBytes, error);
+            ERR_clear_error();
+            NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN);
+
             err = SSL_get_error(State, NumBytes);
         }
 
@@ -82,7 +74,7 @@ int AcceptSSL(SSL *State){
 
     return NumBytes;
 }
-*/
+
 void InitServerSSLCtx(SSL_CTX **Ctx) {
     const SSL_METHOD *Method;
 
@@ -91,9 +83,14 @@ void InitServerSSLCtx(SSL_CTX **Ctx) {
     OpenSSL_add_all_algorithms();
 
     /* create new SSL context */
-    Method = SSLv23_server_method();
+    //Method = SSLv23_server_method();
+    Method = TLSv1_2_server_method();
     *Ctx = SSL_CTX_new(Method);
-    SSL_CTX_set_options(*Ctx, SSL_OP_NO_SSLv3);
+    //SSL_CTX_set_options(*Ctx, SSL_OP_NO_SSLv3);
+
+    int rc;
+    rc = SSL_CTX_set_cipher_list(*Ctx, "HIGH:!aNULL:!MD5:!RC4");
+    assert(rc >= 1);
 
     //SSL_CTX_set_session_cache_mode(*Ctx, SSL_SESS_CACHE_OFF);
     //SSL_CTX_set_options(*Ctx, SSL_OP_NO_TICKET);
@@ -148,27 +145,13 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
         return NULL;
     }
 
-
-    int rtn = AcceptSSL(State);
+    int rtn = AcceptSSL(State, Request);
     if (rtn < 0){
         SSL_free(State);
         close(SocketFD);
-        log_error("Error accepting SSL");
-        return -1;
-    }
-
-    debug("MSU %d calling SSL_read", self->id);
-
-
-
-    int ReadBytes;
-    if ( ( ReadBytes = ReadSSL(State, Request, MAX_REQUEST_LEN) ) < 0 ) {
-        log_error("SSL_read on socket %d failed. Data read: %s", SocketFD, Request);
-        SSL_free(State);
-        close(SocketFD);
+        log_error("Error accepting/reading SSL");
         return NULL;
     }
-    log_debug("ReadSSL returned: %d", ReadBytes);
 
     return Request;
 }

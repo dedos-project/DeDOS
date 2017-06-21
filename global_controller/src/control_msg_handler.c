@@ -38,24 +38,8 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
 
     switch (control_msg->msg_code) {
         case GET_INIT_CONFIG:
-            /* send initial info to the runtime at the end of runtime_sock */
-            debug("Recvd core count from runtime: %d", control_msg->payload_len);
-
-            endpoint_index = get_sock_endpoint_index(runtime_sock);
-
-            pthread_mutex_lock(&dfg->dfg_mutex);
-
-            if (endpoint_index > -1) {
-                dfg->runtimes[endpoint_index]->num_cores = control_msg->payload_len;
-                // just the one main thread
-                dfg->runtimes[endpoint_index]->num_threads = 1;
-                dfg->runtimes[endpoint_index]->num_pinned_threads = 0;
-
-            } else {
-                debug("ERROR: Couldn't find endpoint index for sock: %d", runtime_sock);
-            }
-
-            pthread_mutex_unlock(&dfg->dfg_mutex);
+            //FIXME: either unknown runtime must send detailed profile info, either we forbid
+            //registration of unknown runtime.
 
             count = show_connected_peers();
 

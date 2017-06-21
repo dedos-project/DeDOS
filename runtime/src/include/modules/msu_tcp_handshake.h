@@ -12,9 +12,11 @@
 
 struct hs_internal_state
 {
-    heap_hs_timer_ref*hs_timers;
+    heap_hs_timer_ref *hs_timers;
     struct pico_tree *hs_table;
-//can add more internal state to store here
+    //can add more internal state to store here
+    long int syn_state_used_memory;
+    long int syn_state_memory_limit;
 };
 
 struct hs_queue_item
@@ -54,4 +56,7 @@ void print_frame(struct pico_frame *f);
 int8_t remove_completed_request(struct hs_internal_state *in_state,
         struct pico_socket *s);
 int hs_route(struct msu_type *type, struct generic_msu *sender, struct generic_msu_queue_item *data);
+int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item);
 #endif
+
+

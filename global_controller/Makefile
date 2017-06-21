@@ -21,7 +21,7 @@ COMMON_BLD = $(COMMON)build/
 COMMON_OBJ = $(COMMON_BLD)objs/
 
 
-CFLAGS= -std=c99 -I$(PREFIX)/include -I$(COMMON_SRC) -Iinclude -Wall
+CFLAGS= -std=gnu99 -I$(PREFIX)/include -I$(COMMON_SRC) -Iinclude -Wall
 CFLAGS+= -Wconversion
 CFLAGS+= -Wcast-align
 CFLAGS+= -Wmissing-prototypes
