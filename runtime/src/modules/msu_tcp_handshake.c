@@ -17,6 +17,7 @@
 #include "dedos_hs_timers.h"
 #include "dedos_msu_list.h"
 #include "dedos_msu_msg_type.h"
+#include "pico_tree.h"
 
 #define INIT_SOCKPORT { {&LEAF, NULL}, 0, 0 }
 #define PROTO(s) ((s)->proto->proto_number)
@@ -312,6 +313,7 @@ static int pico_sockets_check(struct hs_internal_state *in_state)
         return 0;
     }
     index_msu = pico_tree_firstNode(msu_table->root);
+
     sp_msu = index_msu->keyValue;
     start = sp_msu;
     int loop_score;
