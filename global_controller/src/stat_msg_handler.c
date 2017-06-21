@@ -15,6 +15,10 @@
 #define NEXT_MSU_LOCAL 1
 #define NEXT_MSU_REMOTE 2
 
+#ifndef DYN_SCHED
+#define DYN_SCHED 1
+#endif
+
 #ifndef LOG_PRINT_TIMESERIES
 #define LOG_PRINT_TIMESERIES 0
 #endif
@@ -62,8 +66,6 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
     }
 
 #if DYN_SCHED
-    int has_cloned = 0;
-
     for (int i = 0; i < stats->n_samples; i++) {
         struct stat_sample *sample = &stats->samples[i];
 
@@ -77,15 +79,12 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
 
         switch (sample->stat_id) {
             case QUEUE_LEN:
-                if (has_cloned == 0) {
-                    //There is an odious situation bellow. Can you figure it out?
-                    if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
-                        if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 1000) {
-                            struct msus_of_type *http_dep = get_msus_from_type(DEDOS_WEBSERVER_MSU_ID);
+                //There is an odious situation bellow. Can you figure it out?
+                if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
+                    if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 0) {
+                        struct msus_of_type *http_dep = get_msus_from_type(DEDOS_WEBSERVER_MSU_ID);
 
-                            errored = clone_msu(http_dep->msu_ids[0]);
-                            has_cloned = 1;
-                        }
+                        errored = clone_msu(http_dep->msu_ids[0]);
                     }
                 }
 

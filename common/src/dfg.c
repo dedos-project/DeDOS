@@ -294,6 +294,7 @@ int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type) {
     bzero(route->destination_keys, sizeof(int) * MAX_DESTINATIONS);
     rt->routes[rt->num_routes] = route;
     rt->num_routes++;
+
     return 0;
 }
 

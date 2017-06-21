@@ -4,8 +4,6 @@
 #include "dfg.h"
 #include "scheduling_cut.h"
 
-#define DYN_SCHED 0
-
 struct to_schedule {
     int *msu_ids;
     int num_msu;
