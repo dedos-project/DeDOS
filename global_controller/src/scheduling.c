@@ -123,6 +123,39 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
     dfg->vertices[dfg->vertex_cnt] = msu;
     dfg->vertex_cnt++;
 
+    //Handle dependencies before wiring
+    int l;
+    for (l = 0; l < msu->num_dependencies; ++l) {
+        int has_dep = 0;
+        if (msu->dependencies[l]->locality == 1) {
+            has_dep =
+                lookup_type_on_runtime(msu->scheduling.runtime, msu->dependencies[l]->msu_type);
+            if (!has_dep) {
+                //spawn missing local dependency
+                struct dfg_vertex *dep = malloc(sizeof(struct dfg_vertex));
+                if (dep == NULL) {
+                    debug("Could not allocate memory for missing dependency");
+                    return -1;
+                }
+
+                prepare_clone(dep);
+                dep->msu_type = msu->dependencies[l]->msu_type;
+                clone_type_static_data(dep);
+
+                sleep(1); // leave poor baby the time to digest
+                ret = schedule_msu(dep, rt);
+                if (ret == -1) {
+                    debug("Could not schedule dependency %d on runtime %d",
+                          dep->msu_id, rt->id);
+                    free(dep);
+                    return -1;
+                }
+            }
+        } else {
+            //TODO: check for remote dependency
+        }
+    }
+
     //update routes
     int i, j;
     for (i = 0; i < msu->meta_routing.num_dst_types; ++i) {
@@ -161,7 +194,6 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 }
 
                 //Does the new MSU's runtime has a route toward destination MSU's type?
-                //FIXME: we need to send the create route command on the runtime.
                 struct dfg_route *route = get_route_from_type(rt, dst->msu_type);
                 if (route == NULL) {
                     int route_id = generate_route_id(rt);
@@ -252,7 +284,6 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 }
 
                 //Does the source's runtime has a route toward new MSU's type?
-                //FIXME: we need to send the create route command on the runtime.
                 struct dfg_route *route = get_route_from_type(src_rt, msu->msu_type);
                 if (route == NULL) {
                     int route_id = generate_route_id(src_rt);
@@ -305,39 +336,6 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
 
         free(source_types->msu_ids);
         free(source_types);
-    }
-
-    //Now handle dependencies which were not directly connected vertices
-    int l;
-    for (l = 0; l < msu->num_dependencies; ++l) {
-        int has_dep = 0;
-        if (msu->dependencies[l]->locality == 1) {
-            has_dep =
-                lookup_type_on_runtime(msu->scheduling.runtime, msu->dependencies[l]->msu_type);
-            if (!has_dep) {
-                //spawn missing local dependency
-                struct dfg_vertex *dep = malloc(sizeof(struct dfg_vertex));
-                if (dep == NULL) {
-                    debug("Could not allocate memory for missing dependency");
-                    return -1;
-                }
-
-                prepare_clone(dep);
-                dep->msu_type = msu->dependencies[l]->msu_type;
-                clone_type_static_data(dep);
-
-                sleep(1); // leave poor baby the time to digest
-                ret = schedule_msu(dep, rt);
-                if (ret == -1) {
-                    debug("Could not schedule dependency %d on runtime %d",
-                          dep->msu_id, rt->id);
-                    free(dep);
-                    return -1;
-                }
-            }
-        } else {
-            //TODO: check for remote dependency
-        }
     }
 
     return 0;
