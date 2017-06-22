@@ -21,6 +21,7 @@
 #include "modules/ssl_request_routing_msu.h"
 #include "modules/baremetal_msu.h"
 #include <assert.h>
+
 static fd_set readfds;
 struct sockaddr_in ws, cli_addr, bm;
 int clilen = sizeof(cli_addr);
@@ -109,15 +110,6 @@ int dedos_control_socket_init(int tcp_control_port)
     //TODO Maybe only on an internal interface and not the external one?
     tcp_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    struct ifreq ifr;
-    char array[] = "em1";
-
-    //Type of address to retrieve - IPv4 IP address
-    ifr.ifr_addr.sa_family = AF_INET;
-    //Copy the interface name in the ifreq structure
-    strncpy(ifr.ifr_name , array , IFNAMSIZ - 1);
-    ioctl(tcp_comm_socket, SIOCGIFADDR, &ifr);
-    runtimeIpAddress = (((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr).s_addr;
     if (bind(tcp_comm_socket, (struct sockaddr *) &tcp_addr, slen) == -1) {
         log_error("%s","Failed to bind to TCP socket");
         return -1;

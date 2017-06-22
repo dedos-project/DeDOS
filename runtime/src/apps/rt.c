@@ -209,6 +209,7 @@ int main(int argc, char **argv){
         global_ctl_ip = dfg->global_ctl_ip;
         global_ctl_port = dfg->global_ctl_port;
         local_listen_port = rt->port;
+        runtimeIpAddress = rt->ip;
 
         uint32_t global_ctl_ip_int;
         string_to_ipv4(global_ctl_ip, &global_ctl_ip_int);
