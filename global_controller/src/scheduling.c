@@ -174,19 +174,21 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                     route = get_route_from_type(rt, dst->msu_type);
                 }
 
-                //Add the route to the new MSU
-                ret = add_route_to_msu_vertex(runtime_index, msu->msu_id, route->route_id);
-                if (ret != 0) {
-                    debug("Could not attach route %d to msu %d",
-                          dst->msu_id, route->route_id);
-                    return -1;
-                }
+                //Is the route already attached to the new MSU?
+                if (!msu_has_route(msu, route->route_id)) {
+                    ret = add_route_to_msu_vertex(runtime_index, msu->msu_id, route->route_id);
+                    if (ret != 0) {
+                        debug("Could not attach route %d to msu %d",
+                              dst->msu_id, route->route_id);
+                        return -1;
+                    }
 
-                ret = send_addroute_msg(route->route_id, msu->msu_id, rt->sock);
-                if (ret != 0) {
-                    debug("Could not send add route %d msg to runtime %d",
-                          route->route_id, rt->id);
-                    return -1;
+                    ret = send_addroute_msg(route->route_id, msu->msu_id, rt->sock);
+                    if (ret != 0) {
+                        debug("Could not send add route %d msg to runtime %d",
+                              route->route_id, rt->id);
+                        return -1;
+                    }
                 }
 
                 //Is the destination MSU already an endpoint of that route?
@@ -280,21 +282,23 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                     }
                 }
 
-                //Add the new MSU as an endpoint for the route
-                int max_range = increment_max_range(route);
-                ret = dfg_add_route_endpoint(runtime_index, route->route_id, msu->msu_id, max_range);
-                if (ret != 0) {
-                    debug("Could not add endpoint %d to route %d",
-                          msu->msu_id, route->route_id);
-                    return -1;
-                }
+                //Is the new MSU already an endpoint of that route?
+                if (!route_has_endpoint(route, msu)) {
+                    int max_range = increment_max_range(route);
+                    ret = dfg_add_route_endpoint(runtime_index, route->route_id, msu->msu_id, max_range);
+                    if (ret != 0) {
+                        debug("Could not add endpoint %d to route %d",
+                              msu->msu_id, route->route_id);
+                        return -1;
+                    }
 
-                ret = send_addendpoint_msg(msu->msu_id, runtime_index,
-                                           route->route_id, max_range, src_rt->sock);
-                if (ret != 0) {
-                    debug("Could not send add endpoint %d msg to runtime %d",
-                          msu->msu_id, src_rt->id);
-                    return -1;
+                    ret = send_addendpoint_msg(msu->msu_id, runtime_index,
+                                               route->route_id, max_range, src_rt->sock);
+                    if (ret != 0) {
+                        debug("Could not send add endpoint %d msg to runtime %d",
+                              msu->msu_id, src_rt->id);
+                        return -1;
+                    }
                 }
             }
         }
