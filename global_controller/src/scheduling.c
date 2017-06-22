@@ -209,6 +209,9 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 }
             }
         }
+
+        free(dst_types->msu_ids);
+        free(dst_types);
     }
 
     for (i = 0; i < msu->meta_routing.num_src_types; ++i) {
@@ -295,6 +298,9 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 }
             }
         }
+
+        free(source_types->msu_ids);
+        free(source_types);
     }
 
     //Now handle dependencies which were not directly connected vertices

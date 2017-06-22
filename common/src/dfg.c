@@ -124,7 +124,7 @@ int get_sock_endpoint_index(int sock) {
  * @return struct msus_of_type *msu_of_type
  */
 struct msus_of_type *get_msus_from_type(int type) {
-    int msu_ids[MAX_MSU];
+    int *msu_ids = malloc(sizeof(int) * MAX_MSU);
     struct dfg_config *dfg = NULL;
     dfg = get_dfg();
     struct msus_of_type *s = NULL;
@@ -503,7 +503,7 @@ int increment_max_range(struct dfg_route *route) {
  * @return route_id: the newly generated route id
  */
 int generate_route_id(struct dfg_runtime_endpoint *rt) {
-    int highest_id = -1;
+    int highest_id = 0;
     int i;
     for (i = 0; i < rt->num_routes; ++i) {
         if (highest_id == -1 || rt->routes[i]->route_id > highest_id) {
