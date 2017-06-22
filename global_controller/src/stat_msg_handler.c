@@ -79,6 +79,7 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
 
         switch (sample->stat_id) {
             case QUEUE_LEN:
+/*
                 //There is an odious situation bellow. Can you figure it out?
                 if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
                     if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 0) {
@@ -87,10 +88,16 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
                         errored = clone_msu(http_dep->msu_ids[0]);
                     }
                 }
+*/
+                if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
+                    if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 5) {
+                        clone_msu(msu->msu_id);
+                    }
+                }
 
                 break;
             default:
-                log_debug("No action implemented for stat_id %d", sample->stat_id);
+                //log_debug("No action implemented for stat_id %d", sample->stat_id);
                 continue;
         }
     }
