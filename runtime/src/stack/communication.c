@@ -603,8 +603,9 @@ void dedos_control_rcv(int peer_sk)
             return;
         } else {
             data_len += new_len;
-            if (data_len < msg_size)
-                log_debug("Reading more...");
+            if (data_len < msg_size){
+                //log_debug("Reading more...");
+            }
         }
     }
     aggregate_stat(BYTES_RECEIVED, 0, data_len, 1);
