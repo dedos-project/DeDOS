@@ -66,3 +66,4 @@ struct route_set *get_type_from_route_set(struct route_set **routes, int type_id
 int add_route_to_set(struct route_set **routes, int route_id);
 /** Deletes a route from the provided set */
 int del_route_from_set(struct route_set **routes, int route_id);
+void print_route_set(struct route_set *routes);

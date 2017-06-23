@@ -405,6 +405,27 @@ struct msu_endpoint *get_route_endpoint(struct route_set *routes, uint32_t key) 
 }
 
 /**
+ * prints the route set
+ * @param route set to print
+*/
+void print_route_set(struct route_set *routes){
+    struct route_set *tmp;
+    int i;
+
+    for(tmp = routes; tmp!= NULL; tmp=(struct route_set*)(tmp->hh.next)) {
+        struct routing_table *t = tmp->table;
+        read_lock(t);
+
+        log_debug("type id %d: num_dsts %d", t->type_id, t->n_destinations);
+        for(i = 0; i < t->n_destinations; i++){
+            struct msu_endpoint *endpoints = &t->destinations[0];
+            log_debug("\tkey: %d, endpoint %d",t->ranges[i], endpoints[i].id);
+        }
+        unlock(t);
+    }
+}
+
+/**
  * Initialize a reference to a route with the given ID, which can be added to an MSU's route set
  * @param route_id the ID of the routing table to reference
  * @return pointer to the newly allocated route set if the route exists, NULL otherwise
