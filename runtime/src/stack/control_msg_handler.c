@@ -237,10 +237,10 @@ static int action_destroy_msu(struct dedos_control_msg *control_msg){
 }
 
 static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_msg){
-    log_debug("Received Peer IP list");
     uint32_t *peers = control_msg->payload;
     int count = (control_msg->payload_len) / sizeof(uint32_t);
     log_debug("Count of IPs received: %d",count);
+    log_debug("Received Peer IP list with count: %d", count);
     if (!pending_runtime_peers) { /* struct not allocated */
         pending_runtime_peers = malloc(sizeof(struct pending_runtimes));
         if (!pending_runtime_peers) {
@@ -251,7 +251,7 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
     }
 
     if (pending_runtime_peers->count == 0){
-        log_debug("No pending connections to runtime");
+        log_debug("dont have any pending connections to runtime");
             /* no pending stuff, just allocate memorory to hold IPs and done */
         pending_runtime_peers->ips = malloc(count * sizeof(uint32_t));
         if (!pending_runtime_peers->ips) {
@@ -265,10 +265,9 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
             char ip[40] = {'\0'};
             ipv4_to_string(&ip, pending_runtime_peers->ips[j]);
             log_debug("Received peer IP: %s", ip);
-            j++;
         }
     } else {
-        log_debug("Pending connections to runtimes: %d", pending_runtime_peers->count);
+        log_debug("Already have pending connections to runtimes: %d", pending_runtime_peers->count);
         // Malloc and increase the size
         int new_count = pending_runtime_peers->count + count;
         pending_runtime_peers->ips = realloc(pending_runtime_peers->ips,
