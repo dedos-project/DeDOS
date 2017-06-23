@@ -31,7 +31,7 @@ void prepare_clone(struct dfg_vertex *msu) {
  * @return failure/success: -1/0
  */
 int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
-    if (rt->num_pinned_threads > rt->num_cores) {
+    if (rt->num_threads > rt->num_cores) {
         debug("There are no more free cores to pin a new worker thread on runtime %d", rt->id);
         return -1;
     } else {
@@ -39,7 +39,7 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
 
         sleep(5); // To leave time to runtime to digest the command...
         //commit change to runtime
-        ret = create_worker_thread(rt->sock);
+        ret = create_worker_thread(rt->sock);//num_threads and num_pinned_threads are incremented
         if (ret == -1) {
             debug("Could not create new worker thread on runtime %d", rt->id);
             return ret;
