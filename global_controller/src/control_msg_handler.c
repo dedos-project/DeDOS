@@ -40,38 +40,61 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
         case GET_INIT_CONFIG:
             //FIXME: either unknown runtime must send detailed profile info, either we forbid
             //registration of unknown runtime.
-
+	    log_debug("Got a GET_INIT_CONFIG message");
             count = show_connected_peers();
 
             if (count == 1) {
                 debug("%s", "1 connected runtime: no need to sync with itself. Quitting.");
                 return;
             }
+	    debug("Connected peers count including requesting runtime: %d",count);
 
             all_peer_ips = malloc(count * sizeof(uint32_t));
-            //assume one of the peer will also be the recipient
-            to_send_peer_ips = malloc((count - 1) * sizeof(uint32_t));
-            if (!all_peer_ips || !to_send_peer_ips) {
+            if (!all_peer_ips) {
                 debug("ERROR: Unable to allocate memory for peer list %s","");
+		return;
             }
 
-            get_connected_peer_ips(all_peer_ips);
-            dst_runtime_ip = get_sock_endpoint_ip(runtime_sock);
+            //assume one of the peer will also be the recipient
+	    memset(all_peer_ips, 0, count * sizeof(uint32_t));
 
+            count = get_connected_peer_ips(all_peer_ips);
+
+	    int t;
+	    char ipstr[INET_ADDRSTRLEN];
+	    for(t = 0; t < count; t++){
+	        ipv4_to_string(ipstr, all_peer_ips[t] );
+		debug("connected list: %s", ipstr);
+            }
+
+            dst_runtime_ip = get_sock_endpoint_ip(runtime_sock);
             if (dst_runtime_ip == -1) {
                 debug("Could not find ip associated with socket %d", runtime_sock);
                 return;
             }
 
+            to_send_peer_ips = malloc((count - 1) * sizeof(uint32_t));
+            if (!to_send_peer_ips) {
+                debug("ERROR: Unable to allocate memory for peer list %s","");
+		free(all_peer_ips);
+	        return;
+            }
+	    memset(to_send_peer_ips, 0, (count-1) * sizeof(uint32_t));
+
             int c;
-            int d = 0;
+            int send_count = 0;
             for (c = 0; c < count; c++) {
                 if (all_peer_ips[c] != dst_runtime_ip) {
-                    to_send_peer_ips[d] = all_peer_ips[c];
-                    d++;
+                    to_send_peer_ips[send_count] = all_peer_ips[c];
+		    ipv4_to_string(ipstr, to_send_peer_ips[send_count] );
+		    debug("to send: %s", ipstr);
+      	            send_count++;
                 }
             }
 
+	    if(send_count != count -1){
+                debug("Send count - count != -1");
+            }
             //prepare response
             struct dedos_control_msg *response;
             response = malloc(sizeof(struct dedos_control_msg));
@@ -83,12 +106,12 @@ void process_runtime_msg(char *cmd, int runtime_sock) {
             }
             response->msg_type = RESPONSE_MESSAGE;
             response->msg_code = SET_DEDOS_RUNTIMES_LIST;
-            response->payload_len = ((count-1) * sizeof(uint32_t));
+            response->payload_len = (send_count * sizeof(uint32_t));
 
             response->payload = to_send_peer_ips;
             response->header_len = sizeof(struct dedos_control_msg);
 
-            debug("DEBUG: Payload len of response: %u", response->payload_len);
+            debug("DEBUG: Payload len of response list: %u", response->payload_len);
 
             send_control_msg(runtime_sock, response);
 

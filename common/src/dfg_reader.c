@@ -88,6 +88,7 @@ struct json_state init_runtime(struct json_state *in, int index){
     cfg->runtimes[index]->num_cores = 0;
     cfg->runtimes[index]->ip = 0;
     cfg->runtimes[index]->current_alloc = NULL;
+    cfg->runtimes[index]->sock = -1;
 
     struct json_state rt_obj = {
         .data = cfg->runtimes[index],

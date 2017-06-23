@@ -240,7 +240,7 @@ static int response_set_dedos_runtimes_list(struct dedos_control_msg *control_ms
     log_debug("Received Peer IP list");
     uint32_t *peers = control_msg->payload;
     int count = (control_msg->payload_len) / sizeof(uint32_t);
-
+    log_debug("Count of IPs received: %d",count);
     if (!pending_runtime_peers) { /* struct not allocated */
         pending_runtime_peers = malloc(sizeof(struct pending_runtimes));
         if (!pending_runtime_peers) {
