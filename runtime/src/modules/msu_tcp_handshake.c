@@ -28,6 +28,34 @@
 volatile pico_time hs_pico_tick;
 static long int timers_count;
 
+static void dummy_state_cleanup(struct hs_internal_state *in_state){
+    static uint64_t last_ts;
+    uint64_t ts;
+    static int once_full;
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    ts = now.tv_sec;
+
+    if(last_ts == 0){
+        last_ts = ts;
+    }
+    if(in_state->syn_state_used_memory >= in_state->syn_state_memory_limit){
+        once_full = 1;
+    }
+
+    //printf("used mem: %ld\n", in_state->syn_state_used_memory);
+    if(ts - last_ts > 1 && once_full){
+        in_state->syn_state_used_memory -= (400 * sizeof(struct pico_tree_node));
+     //   printf("used mem: %ld\n", in_state->syn_state_used_memory);
+        if(in_state->syn_state_used_memory < 0)
+        {
+            in_state->syn_state_used_memory = 0;
+            printf("used mem: %ld\n", in_state->syn_state_used_memory);
+        }
+        last_ts = ts;
+    }
+}
+
 uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)(pico_time, void *, void*), void *arg){
     struct hs_timer *t = PICO_ZALLOC(sizeof(struct hs_timer));
     struct hs_timer_ref tref;
@@ -467,8 +495,8 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
     pico_socket_tcp_delete(s);
     s->state = PICO_SOCKET_STATE_CLOSED;
     log_debug("Calling hs_timer_add from remove_completed_request!");
-    hs_socket_garbage_collect(10, s, in_state->hs_timers);
-//    hs_timer_add(in_state->hs_timers, (pico_time) 10, hs_socket_garbage_collect, s);
+    //hs_socket_garbage_collect(10, s, in_state->hs_timers);
+    hs_timer_add(in_state->hs_timers, (pico_time) 10, hs_socket_garbage_collect, s);
     log_debug("done calling hs_timer_add from remove_completed_request!");
 /*
     struct pico_tree_node *index;
@@ -619,7 +647,7 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
     log_debug("%s", "Handling SYN packet...");
     struct hs_internal_state *in_state = self->internal_state;
     if(in_state->syn_state_used_memory > in_state->syn_state_memory_limit){
-        log_debug("Dropping SYN Packet, pending syn state is full: %ld\n", in_state->syn_state_used_memory);
+        log_debug("Drop syn full: %ld ", in_state->syn_state_used_memory);
         return -1;
     }
     struct pico_socket *s = hs_pico_socket_tcp_open(PICO_PROTO_IPV4, in_state->hs_timers);
@@ -780,7 +808,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     //DONT NOT FREE THE INCOMING FRAME HERE
     /* check what flags are set and take appropriate action */
     log_debug("Received frame: %s","");
-    print_frame(f);
+//    print_frame(f);
     struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
     struct pico_trans *trans_hdr = (struct pico_trans *) f->transport_hdr;
     int ret = -1;
@@ -1278,14 +1306,13 @@ int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
 int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item)
 {
     //interface from runtime to picoTCP structures or any other existing code
-
     msu_queue *q_data = &msu->q_in;
     int rtn = sem_post(q_data->thread_q_sem);
     if(rtn < 0){
         log_error("Failed to increment semaphore for handshake msu");
     }
 
-    static int check_timers_count;
+    static unsigned long int items_processed; //remove this since its static and shared
 
     struct hs_internal_state *in_state = msu->internal_state;
 
@@ -1331,17 +1358,17 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
         delete_generic_msu_queue_item(queue_item);
 
     }
-    if(check_timers_count % 1000 == 0){
-        //pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
+
+    //pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
+
+    if(items_processed % msu->scheduling_weight*10 == 0){
         pico_sockets_check(in_state); //for sockets pending restore
-    }
-    if(check_timers_count % 30000 == 0){
         hs_check_timers(in_state->hs_timers);
-        check_timers_count = 0;
     }
-    check_timers_count++;
-    //check expired timers
-//    log_debug("----------------->>%s", "Exiting HS MSU item handler");
+    items_processed++;
+
+    //dummy_state_cleanup(in_state);
+
     return -10;
 }
 
