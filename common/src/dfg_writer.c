@@ -113,7 +113,7 @@ struct json_output_state {
 static struct json_output_state json;
 
 #ifndef LOG_DFG_WRITER
-#define LOG_DFG_WRITER 1
+#define LOG_DFG_WRITER 0
 #endif
 
 static inline void output_statistic(struct json_output_state *json,
@@ -129,7 +129,7 @@ static inline void output_statistic(struct json_output_state *json,
             ++skip;
             continue;
         }
-        VALUE(*json, "%ld", (long)stat->time[i].tv_sec);
+        VALUE(*json, "%.2f", (double)stat->time[i].tv_sec + (double)stat->time[i].tv_nsec / 1e9);
     }
     END_LIST(*json);
     KEY(*json, "values");
