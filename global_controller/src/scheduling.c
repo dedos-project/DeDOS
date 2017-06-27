@@ -257,13 +257,13 @@ int clone_msu(int msu_id) {
         debug("Cloned msu %d of type %d into msu %d on runtime %d",
               msu->msu_id, msu->msu_type, clone->msu_id, clone->scheduling.runtime->id);
 
-        int rtn = fix_all_route_ranges(dfg);
+        /*int rtn = fix_all_route_ranges(dfg);
         if (rtn < 0) {
             log_error("Unable to properly modify route ranges");
             return -1;
         }
         log_debug("properly changed route ranges");
-
+        */
         return 0;
     }
 }

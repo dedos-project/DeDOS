@@ -12,6 +12,7 @@
 #include "tmp_msu_headers.h"
 
 #define SLEEP_AMOUNT_US 100000
+
 /**
  * Add a new MSU to the DFG
  * @param msu_data: data to be used by the new MSU's init function
@@ -407,7 +408,9 @@ int mod_endpoint(int msu_id, int route_id, unsigned int range_end, int runtime_s
         .payload = &route_msg
     };
 
-    return send_control_msg(runtime_sock, &control_msg);
+    rtn = send_control_msg(runtime_sock, &control_msg);
+    usleep(SLEEP_AMOUNT_US);
+    return rtn;
 }
 
 int create_worker_thread(int runtime_sock) {
