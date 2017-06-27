@@ -12,6 +12,8 @@
 #include "pico_socket.h"
 #include "pico_queue.h"
 
+void print_forwarding_stats(void);
+
 extern struct pico_protocol pico_proto_tcp;
 
 PACKED_STRUCT_DEF pico_tcp_hdr {

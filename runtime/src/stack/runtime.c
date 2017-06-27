@@ -603,6 +603,7 @@ int dedos_runtime_destroy(void){
 #ifdef DATAPLANE_PROFILING
     deinit_data_plane_profiling();
 #endif
+    print_forwarding_stats();
 /*
     int i;
     for(i = total_threads-1; i >=1; i--){
