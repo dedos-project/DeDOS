@@ -24,9 +24,9 @@ COMMON_OBJ = $(COMMON_BLD)objs/
 CFLAGS= -std=gnu99 -I$(PREFIX)/include -I$(COMMON_SRC) -Iinclude -Wall
 CFLAGS+= -Wconversion
 CFLAGS+= -Wcast-align
-CFLAGS+= -Wmissing-prototypes
 CFLAGS+= -Wno-missing-field-initializers
 CFLAGS+= $(LOG_DEFINES)
+CFLAGS+= -DDYN_SCHED=1
 
 ifeq ($(DEBUG),1)
   CFLAGS+=-ggdb

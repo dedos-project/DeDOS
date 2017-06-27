@@ -81,6 +81,20 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
         int ret;
         switch (sample->stat_id) {
             case QUEUE_LEN:
+                //There is an odious situation bellow. Can you figure it out?
+                if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
+                    if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 0) {
+                        struct msus_of_type *http_dep = get_msus_from_type(DEDOS_WEBSERVER_MSU_ID);
+
+                        errored = clone_msu(http_dep->msu_ids[0]);
+                    }
+                }
+/*
+                if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 5) {
+                    clone_msu(17);
+                }
+*/
+/*
                 if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
                     struct msus_of_type *sslreads = get_msus_from_type(500);
                     //Assume fixed initial number of MSUs on rt1
@@ -96,7 +110,7 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
                         }
                     }
                 }
-
+*/
                 break;
 
             default:

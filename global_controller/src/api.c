@@ -12,7 +12,6 @@
 #include "tmp_msu_headers.h"
 
 #define SLEEP_AMOUNT_US 100000
-
 /**
  * Add a new MSU to the DFG
  * @param msu_data: data to be used by the new MSU's init function
@@ -235,7 +234,7 @@ int send_addroute_msg(int route_id, int msu_id, int runtime_sock) {
         .payload = &add_route_msg
     };
 
-    rtn = send_control_msg(runtime_sock, &control_msg);
+    int rtn = send_control_msg(runtime_sock, &control_msg);
     usleep(SLEEP_AMOUNT_US);
     return rtn;
 }

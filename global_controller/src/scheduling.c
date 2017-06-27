@@ -3,6 +3,73 @@
 #include "dfg.h"
 #include "scheduling.h"
 
+int64_t get_absent_msus(struct dfg_vertex *msu) {
+    // NOTE: This will not work if there are more than 64 MSUs
+
+    int64_t absent_msus = 0xFFFFFFFF;
+
+    absent_msus &= 1<<msu->msu_id;
+
+    struct dfg_route **routes = msu->scheduling.routes;
+
+    for (int r_i=0; r_i<msu->scheduling.num_routes; ++r_i) {
+        struct dfg_route *r = routes[r_i];
+        for (int v_i=0; v_i< r->num_destinations; ++v_i) {
+            struct dfg_vertex *v = r->destinations[v_i];
+            if (absent_msus&1<<v->msu_id) {
+                int64_t v_downstream = get_absent_msus(v);
+                absent_msus &= v_downstream;
+            }
+        }
+    }
+    return absent_msus;
+}
+
+
+int n_downstream_msus(struct dfg_vertex * msu) {
+
+    int64_t absent_msus = get_absent_msus(msu);
+
+    int n_downstream = 64;
+    for (int i=0; i<64; i++) {
+        if (absent_msus&1<<i)
+            n_downstream--;
+    }
+
+    return n_downstream-1;
+}
+
+int fix_route_ranges(struct dfg_route *route, int runtime_sock) {
+    for (int i=0; i<route->num_destinations; ++i) {
+        int orig_key = route->destination_keys[i];
+        struct dfg_vertex *v = route->destinations[i];
+        int new_key = n_downstream_msus(v);
+
+        if (orig_key != new_key) {
+            int rtn = mod_endpoint(v->msu_id, route->route_id, new_key, runtime_sock);
+            if (rtn < 0) {
+                log_error("Error modifying endpoint");
+                return -1;
+            }
+        }
+    }
+}
+
+int fix_all_route_ranges(struct dfg_config *dfg) {
+
+    for (int i=0; i<dfg->runtimes_cnt; ++i) {
+        struct dfg_runtime_endpoint *rt = dfg->runtimes[i];
+        for (int route_i=0; route_i<rt->num_routes; ++route_i) {
+            struct dfg_route *route = rt->routes[route_i];
+            int rtn = fix_route_ranges(route, rt->sock);
+            if (rtn < 0){
+                log_error("Error fixing route ranges!");
+                return -1;
+            }
+        }
+    }
+}
+
 /**
  * Based on the meta routing, sort msus in a list in ascending order (from leaf to root)
  * @param struct dfg_vertex *msus: decayed pointer to a list of MSU pointers
@@ -152,6 +219,7 @@ int clone_msu(int msu_id) {
         debug("Could not sort MSUs");
     }
 
+    usleep(50000);
 
     int n = 0;
     while (msus[n] != NULL) {
@@ -171,6 +239,14 @@ int clone_msu(int msu_id) {
     } else {
         debug("Cloned msu %d of type %d into msu %d on runtime %d",
               msu->msu_id, msu->msu_type, clone->msu_id, clone->scheduling.runtime->id);
+
+        int rtn = fix_all_route_ranges(dfg);
+        if (rtn < 0) {
+            log_error("Unable to properly modify route ranges");
+            return -1;
+        }
+        log_debug("properly changed route ranges");
+
         return 0;
     }
 }
