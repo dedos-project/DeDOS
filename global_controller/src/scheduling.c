@@ -8,7 +8,7 @@ int64_t get_absent_msus(struct dfg_vertex *msu) {
 
     int64_t absent_msus = 0xFFFFFFFF;
 
-    absent_msus &= 1<<msu->msu_id;
+    absent_msus &= ~(1<<msu->msu_id);
 
     struct dfg_route **routes = msu->scheduling.routes;
 
@@ -16,7 +16,7 @@ int64_t get_absent_msus(struct dfg_vertex *msu) {
         struct dfg_route *r = routes[r_i];
         for (int v_i=0; v_i< r->num_destinations; ++v_i) {
             struct dfg_vertex *v = r->destinations[v_i];
-            if (absent_msus&1<<v->msu_id) {
+            if (absent_msus&(1<<v->msu_id)) {
                 int64_t v_downstream = get_absent_msus(v);
                 absent_msus &= v_downstream;
             }
@@ -32,18 +32,31 @@ int n_downstream_msus(struct dfg_vertex * msu) {
 
     int n_downstream = 64;
     for (int i=0; i<64; i++) {
-        if (absent_msus&1<<i)
+        if (absent_msus&(1<<i)) {
             n_downstream--;
+        }
     }
 
     return n_downstream-1;
 }
 
 int fix_route_ranges(struct dfg_route *route, int runtime_sock) {
+    int max_key = 0;
+
+    int new_keys[route->num_destinations];
+    int old_keys[route->num_destinations];
+    struct dfg_vertex *destinations[route->num_destinations];
     for (int i=0; i<route->num_destinations; ++i) {
-        int orig_key = route->destination_keys[i];
+        old_keys[i] = route->destination_keys[i];
         struct dfg_vertex *v = route->destinations[i];
-        int new_key = n_downstream_msus(v);
+        new_keys[i] = max_key += n_downstream_msus(v);
+        destinations[i] = v;
+    }
+
+    for (int i=0; i<route->num_destinations; ++i) {
+        int orig_key = old_keys[i];
+        struct dfg_vertex *v = destinations[i];
+        int new_key = new_keys[i];
 
         if (orig_key != new_key) {
             int rtn = mod_endpoint(v->msu_id, route->route_id, new_key, runtime_sock);
@@ -51,8 +64,11 @@ int fix_route_ranges(struct dfg_route *route, int runtime_sock) {
                 log_error("Error modifying endpoint");
                 return -1;
             }
+            log_debug("Modified endpoint %d in route %d to have key %d (old: %d)",
+                      v->msu_id, route->route_id, new_key, orig_key);
         }
     }
+    return 0;
 }
 
 int fix_all_route_ranges(struct dfg_config *dfg) {
@@ -68,6 +84,7 @@ int fix_all_route_ranges(struct dfg_config *dfg) {
             }
         }
     }
+    return 0;
 }
 
 /**
