@@ -11,6 +11,7 @@
 #include "logging.h"
 #include "ip_utils.h"
 #include "control_protocol.h"
+#include "tmp_msu_headers.h"
 
 /* Display information about runtimes */
 int show_connected_peers(void) {
@@ -476,6 +477,20 @@ void clone_type_static_data(struct dfg_vertex *msu) {
             msu->num_dependencies = peer_msu->num_dependencies;
 
             memcpy(&msu->msu_mode, &peer_msu->msu_mode, strlen(&peer_msu->msu_mode));
+
+            switch (msu->msu_type) {
+                case DEDOS_SSL_REQUEST_ROUTING_MSU_ID:
+                    snprintf(msu->vertex_type, 6, "entry");
+                    break;
+
+                case DEDOS_SSL_WRITE_MSU_ID:
+                    snprintf(msu->vertex_type, 5, "exit");
+                    break;
+
+                default:
+                    snprintf(msu->vertex_type, 4, "nop");
+                    break;
+            }
         }
     }
 }
