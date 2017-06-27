@@ -4,7 +4,7 @@
 #include "jsmn.h"
 #include "logging.h"
 
-#define MAX_JSON_LEN 16384
+#define MAX_JSON_LEN 32768
 
 jsmn_parser jp;
 
@@ -159,7 +159,7 @@ char *dfg_to_json(struct dfg_config *dfg, int n_statistics) {
     KEY_VAL(json, "application_name", "%s", dfg->application_name);
 
     //applicatin deadline
-    KEY_VAL(json, "application_deadline", "%d", dfg->application_deadline);
+    KEY_VAL(json, "application_deadline", "%d", (int)dfg->application_deadline);
 
     //global ctl ip
     KEY_VAL(json, "global_ctl_ip", "%s", dfg->global_ctl_ip);
@@ -330,7 +330,7 @@ char *dfg_to_json(struct dfg_config *dfg, int n_statistics) {
 
             KEY_VAL(json, "runtime_id", "%d", msu->scheduling.runtime->id);
             KEY_VAL(json, "thread_id", "%d", msu->scheduling.thread_id);
-            KEY_VAL(json, "deadline", "%d", msu->scheduling.deadline);
+            KEY_VAL(json, "deadline", "%d", (int)msu->scheduling.deadline);
 
             log_custom(LOG_DFG_WRITER, "writing routes");
             if (msu->scheduling.num_routes > 0) {
