@@ -108,6 +108,7 @@ def count_downstream(msu, dfg, found_already=None):
     found_already = [] if found_already is None else found_already
 
     if 'routing' not in msu['scheduling']:
+        found_already.extend(these_found)
         return 1
 
     for route in msu['scheduling']['routing']:
