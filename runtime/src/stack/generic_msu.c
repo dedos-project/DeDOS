@@ -138,6 +138,8 @@ int msu_receive_ctrl(struct generic_msu *self, struct generic_msu_queue_item *qu
                 error = add_route_to_set(&self->routes, update->route_id);
                 if ( error )
                     log_error("Error adding route to MSU %d", self->id);
+                else
+                    log_info("Added route %d to MSU %d", update->route_id, self->id);
                 break;
             case DEL_ROUTE_FROM_MSU:
                 error = del_route_from_set(&self->routes, update->route_id);
@@ -499,6 +501,10 @@ struct round_robin_hh_key{
 struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_msu *sender,
                                     struct generic_msu_queue_item *data) {
     struct route_set *type_set = get_type_from_route_set(&sender->routes, type->type_id);
+    if (type_set == NULL) {
+        log_error("No endpoints of type %d to route to from msu %d", type->type_id, sender->id);
+        return NULL;
+    }
     struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(type_set, data->id);
     if ( best_endpoint == NULL ){
         log_error("Cannot enqueue to shortest-length queue when all destinations are remote");

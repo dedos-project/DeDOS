@@ -2,6 +2,10 @@
 #include "ip_utils.h"
 #include "msu_tracker.h"
 
+#ifndef LOG_PRINT_ROUTING
+#define LOG_PRINT_ROUTING 0
+#endif
+
 /** The number of destinations a route can have before it is reallocated */
 #define DEFAULT_MAX_DESTINATIONS 16
 
@@ -20,6 +24,7 @@ struct routing_table{
     uint32_t *ranges;        /**< The keys associated with each of the destinations */
     struct msu_endpoint *destinations; /**< The destinations themselves */
 };
+
 
 /**
  * This file keeps track of all of the created routes
@@ -148,6 +153,7 @@ static int add_routing_table_entry(struct routing_table *table,
                                    struct msu_endpoint *destination, uint32_t range_end) {
     write_lock(table);
     if (table->type_id == 0) {
+        log_info("Set type id of table to %d", destination->type_id);
         table->type_id = destination->type_id;
     }
 
@@ -241,7 +247,7 @@ static struct routing_table *get_routing_table(int route_id) {
     struct route_set *route = NULL;
     HASH_FIND_INT(all_routes, &route_id, route);
     if (route == NULL) {
-        log_debug("Creating new routing table (id = %d)", route_id);
+        log_info("Creating new routing table (id = %d)", route_id);
         route = malloc(sizeof(*route));
         if (route == NULL) {
             log_error("Error allocating new routing table");
@@ -482,7 +488,7 @@ int add_route_to_set(struct route_set **routes, int route_id) {
     HASH_FIND_INT(*routes, &route->id, existing_route);
     if (existing_route == NULL) {
         HASH_ADD_INT(*routes, id, route);
-        log_debug("Added route %d (type %d) to set", route_id, route->id);
+        log_info("Added route %d (type %d) to set", route_id, route->id);
     } else {
         log_error("Could not add route %d -- route with id %d already exists in set",
                   route_id, route->id);
@@ -528,15 +534,11 @@ int del_route_from_set(struct route_set **routes, int route_id) {
  * @return pointer to the route_set with the correct type_id on success, NULL on failure
  */
 struct route_set *get_type_from_route_set(struct route_set **routes, int type_id) {
-    struct route_set *type_set = NULL;
-    HASH_FIND_INT(*routes, &type_id, type_set);
-    if (type_set == NULL) {
-        log_error("No routes available of type %d", type_id);
-        for (struct route_set *route = *routes; route != NULL; route=route->hh.next)
-            log_debug("Available: %d", route->id);
-        return NULL;
-    }
-    return type_set;
+    for (struct route_set *route = *routes; route != NULL; route=route->hh.next)
+        if (route->table->type_id == type_id)
+            return route;
+    log_error("No routes available of type %d", type_id);
+    return NULL;
 }
 
 /**
@@ -547,6 +549,7 @@ struct route_set *get_type_from_route_set(struct route_set **routes, int type_id
  * @return 0 on success, -1 on error
  */
 int add_route_endpoint(int route_id, struct msu_endpoint *endpoint, uint32_t range_end) {
+    log_info("Adding endpoint %d to route %d", endpoint->id, route_id);
     struct routing_table *table = get_routing_table(route_id);
     return add_routing_table_entry(table, endpoint, range_end);
 }
