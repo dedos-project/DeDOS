@@ -28,6 +28,14 @@
 volatile pico_time hs_pico_tick;
 static long int timers_count;
 
+static void print_packet_stats(struct hs_internal_state* in_state){
+    printf("items_dequeued: %lu\n",in_state->items_dequeued);
+    printf("syns_processed: %lu\n",in_state->syns_processed);
+    printf("syns_dropped: %lu\n",in_state->syns_dropped);
+    printf("synacks_generated: %lu\n",in_state->synacks_generated);
+    exit_flag++;
+}
+
 static void dummy_state_cleanup(struct hs_internal_state *in_state){
     static uint64_t last_ts;
     uint64_t ts;
@@ -630,6 +638,8 @@ static int dedos_tcp_send_synack(struct generic_msu* self,
 
     send_to_next_msu(self, MSU_PROTO_TCP_HANDSHAKE_RESPONSE, synack->buffer,
             synack->buffer_len, reply_msu_id);
+    struct hs_internal_state *in_state = (struct hs_internal_state*) self->internal_state;
+    in_state->synacks_generated++;
 
 // #endif
     pico_frame_discard(synack);
@@ -646,8 +656,10 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
      */
     log_debug("%s", "Handling SYN packet...");
     struct hs_internal_state *in_state = self->internal_state;
+    in_state->syns_processed++;
     if(in_state->syn_state_used_memory > in_state->syn_state_memory_limit){
         log_debug("Drop syn full: %ld ", in_state->syn_state_used_memory);
+        in_state->syns_dropped++;
         return -1;
     }
     struct pico_socket *s = hs_pico_socket_tcp_open(PICO_PROTO_IPV4, in_state->hs_timers);
@@ -1312,12 +1324,10 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
         log_error("Failed to increment semaphore for handshake msu");
     }
 
-    static unsigned long int items_processed; //remove this since its static and shared
-
     struct hs_internal_state *in_state = msu->internal_state;
 
     if(queue_item){
-
+        in_state->items_dequeued++;
         struct tcp_intermsu_queue_item *tcp_queue_item;
         tcp_queue_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
         int src_msu_id = tcp_queue_item->src_msu_id;
@@ -1350,22 +1360,25 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
         f->transport_len = (uint16_t) (f->len - f->net_len
             - (uint16_t) (f->net_hdr - f->buffer));
         log_debug("Fixed frame pointers..");
+
         msu_process_hs_request_in(msu, tcp_queue_item->src_msu_id, f);
 
         pico_frame_discard(f);
 
         //free the queue item's memory that was processed.
         delete_generic_msu_queue_item(queue_item);
-
     }
+    if(exit_flag == 1){
+        print_packet_stats(msu->internal_state);
+    }
+    return -10; //FIXME Remove this return
 
     //pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
 
-    if(items_processed % msu->scheduling_weight*10 == 0){
+    if(in_state->items_dequeued % msu->scheduling_weight*10 == 0){
         pico_sockets_check(in_state); //for sockets pending restore
         hs_check_timers(in_state->hs_timers);
     }
-    items_processed++;
 
     //dummy_state_cleanup(in_state);
 
@@ -1421,6 +1434,10 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     in_state->hs_table = hs_table;
     in_state->syn_state_used_memory = 0;
     in_state->syn_state_memory_limit = SYN_STATE_MEMORY_LIMIT;
+    in_state->items_dequeued = 0;
+    in_state->syns_dropped = 0;
+    in_state->synacks_generated = 0;
+    in_state->syns_processed = 0;
     handshake_msu->internal_state = in_state;
 
     log_debug("Created %s MSU with id: %u", handshake_msu->type->name,

@@ -17,6 +17,10 @@ struct hs_internal_state
     //can add more internal state to store here
     long int syn_state_used_memory;
     long int syn_state_memory_limit;
+    long unsigned int items_dequeued;
+    long unsigned int syns_processed;
+    long unsigned int syns_dropped;
+    long unsigned int synacks_generated;
 };
 
 struct hs_queue_item
