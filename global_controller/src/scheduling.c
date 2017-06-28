@@ -89,14 +89,12 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
     } else {
         int ret = 0;
 
-        sleep(2); // To leave time to runtime to digest the command...
         //commit change to runtime
         ret = create_worker_thread(rt->sock);//num_threads and num_pinned_threads are incremented
         if (ret == -1) {
             debug("Could not create new worker thread on runtime %d", rt->id);
             return ret;
         }
-        sleep(2); // To leave time to runtime to digest the command...
 
         //update local view
         msu->scheduling.thread_id = rt->num_pinned_threads;
@@ -219,7 +217,6 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt, struct
                 dep->msu_type = msu->dependencies[l]->msu_type;
                 clone_type_static_data(dep);
 
-                sleep(1); // leave poor baby the time to digest
                 ret = schedule_msu(dep, rt, new_msus + l + 1);
                 if (ret == -1) {
                     debug("Could not schedule dependency %d on runtime %d",

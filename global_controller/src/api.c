@@ -11,6 +11,8 @@
 #include "ip_utils.h"
 #include "tmp_msu_headers.h"
 
+#define SLEEP_AMOUNT_US 100000
+
 /**
  * Add a new MSU to the DFG
  * @param msu_data: data to be used by the new MSU's init function
@@ -147,6 +149,8 @@ int send_addmsu_msg(struct dfg_vertex *msu, char *init_data) {
     control_msg.payload = create_msu_msg_buffer;
     send_control_msg(msu->scheduling.runtime->sock, &control_msg);
 
+    usleep(SLEEP_AMOUNT_US);
+
     return 0;
 }
 
@@ -192,7 +196,8 @@ int add_route(int msu_id, int route_id, int runtime_sock){
         return -1;
     }
 
-    return send_addroute_msg(route_id, msu_id, runtime_sock);
+    rtn = send_addroute_msg(route_id, msu_id, runtime_sock);
+    return rtn;
 }
 
 /**
@@ -203,8 +208,8 @@ int add_route(int msu_id, int route_id, int runtime_sock){
  * @return -1/0: failure/success
  */
 int send_addroute_msg(int route_id, int msu_id, int runtime_sock) {
-
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    int rtn;
 
     struct manage_msu_control_payload add_route_msg = {
         .msu_id = msu_id,
@@ -214,10 +219,11 @@ int send_addroute_msg(int route_id, int msu_id, int runtime_sock) {
         .init_data = NULL
     };
 
-    debug("sock:%d, msu_type: %d, msu id: %d, init_data: %s, init_data_size: %d\n",
+    debug("sock:%d, msu_type: %d, msu id: %d, route_id: %d, init_data: %s, init_data_size: %d\n",
            msu->scheduling.runtime->sock,
            add_route_msg.msu_type,
            add_route_msg.msu_id,
+           add_route_msg.route_id,
            add_route_msg.init_data,
            add_route_msg.init_data_size);
 
@@ -229,7 +235,9 @@ int send_addroute_msg(int route_id, int msu_id, int runtime_sock) {
         .payload = &add_route_msg
     };
 
-    return send_control_msg(runtime_sock, &control_msg);
+    rtn = send_control_msg(runtime_sock, &control_msg);
+    usleep(SLEEP_AMOUNT_US);
+    return rtn;
 }
 
 int del_route(int msu_id, int route_id, int runtime_sock){
@@ -263,7 +271,9 @@ int del_route(int msu_id, int route_id, int runtime_sock){
         .payload = &del_route_msg
     };
 
-    return send_control_msg(runtime_sock, &control_msg);
+    rtn =send_control_msg(runtime_sock, &control_msg);
+    usleep(SLEEP_AMOUNT_US);
+    return rtn;
 }
 
 /**
@@ -295,6 +305,7 @@ int add_endpoint(int msu_id, int route_num, unsigned int range_end, int runtime_
 int send_addendpoint_msg(int msu_id, int rt_index, int route_num,
                          unsigned int range_end, int runtime_sock) {
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    int rtn;
 
     enum locality locality;
     uint32_t ip = 0;
@@ -315,7 +326,7 @@ int send_addendpoint_msg(int msu_id, int rt_index, int route_num,
     };
 
     debug("sock:%d, msu_type: %d, msu id: %d, route_id: %d, key_range: %d, loc: %d, ipv4: %d\n",
-           msu->scheduling.runtime->sock,
+           runtime_sock,
            route_msg.msu_type_id,
            route_msg.msu_id,
            route_msg.route_id,
@@ -331,7 +342,9 @@ int send_addendpoint_msg(int msu_id, int rt_index, int route_num,
         .payload = &route_msg
     };
 
-    return send_control_msg(runtime_sock, &control_msg);
+    rtn = send_control_msg(runtime_sock, &control_msg);
+    usleep(SLEEP_AMOUNT_US);
+    return rtn;
 }
 
 int del_endpoint(int msu_id, int route_id, int runtime_sock) {
@@ -359,7 +372,9 @@ int del_endpoint(int msu_id, int route_id, int runtime_sock) {
         .payload = &route_msg
     };
 
-    return send_control_msg(runtime_sock, &control_msg);
+    rtn = send_control_msg(runtime_sock, &control_msg);
+    usleep(SLEEP_AMOUNT_US);
+    return rtn;
 }
 
 int mod_endpoint(int msu_id, int route_id, unsigned int range_end, int runtime_sock) {
@@ -416,7 +431,7 @@ int create_worker_thread(int runtime_sock) {
 
         pthread_mutex_unlock(&dfg->dfg_mutex);
 
-        if (num_cores == num_pinned_threads) {
+        if (num_cores == (num_pinned_threads + 1)) {
             debug("Destination runtime is maxed out. Cores: %u, Pinned threads: %u",
                     num_cores, num_pinned_threads);
             return -1;

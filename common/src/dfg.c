@@ -118,7 +118,6 @@ int get_sock_endpoint_index(int sock) {
     return -1;
 }
 
-
 /**
  * Retrieve all MSU ids of a given type
  * @param integer type
