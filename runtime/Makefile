@@ -10,6 +10,7 @@ LOGS = \
 	   CRITICAL \
 	   CUSTOM \
 
+DEBUG = 0
 COLLECT_STATS = 1
 DUMP_STATS = 1
 
@@ -54,7 +55,11 @@ CFLAGS_dummy_msu= -lpcre
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 LOG_DEFINES+=$(foreach logname, $(DISABLED_LOGS), -DLOG_$(logname)=0)
 
-CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 -g $(LOG_DEFINES)
+CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 $(LOG_DEFINES)
+
+ifeq ($(DEBUG), 1)
+	CFLAGS+=-ggdb
+endif
 
 ifeq ($(DATAPLANE_PROFILING),1)
         CFLAGS+=-DDATAPLANE_PROFILING

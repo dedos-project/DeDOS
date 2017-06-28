@@ -4,6 +4,7 @@ DEPENDS=gcc -MM -MF
 FINAL=gcc
 
 PRINT_COMPILATION=0
+DEBUG = 0
 
 LOGS = \
 	   	INFO \
@@ -17,6 +18,10 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 SELF=./Makefile
 
 CFLAGS=-Wall -g --std=gnu99 $(LOG_DEFINES)
+
+ifeq ($(DEBUG), 1)
+	CFLAGS+=-ggdb
+endif
 
 SRC=src/
 BLD=build/
