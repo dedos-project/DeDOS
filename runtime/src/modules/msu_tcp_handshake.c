@@ -784,27 +784,24 @@ struct pico_socket *find_tcp_socket(struct pico_sockport *sp, struct pico_frame 
 static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id, struct pico_frame *f)
 {
     //DONT NOT FREE THE INCOMING FRAME HERE
-    /* check what flags are set and take appropriate action */
-    log_debug("Received frame: %s","");
-    struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
-    struct pico_trans *trans_hdr = (struct pico_trans *) f->transport_hdr;
     int ret = -1;
-    uint8_t flags = hdr->flags;
-
-    // Check if sockport exists for incoming frame, if not create one
-    struct pico_sockport *sp = NULL;
     struct hs_internal_state *in_state = self->internal_state;
-
     if (!in_state->hs_table) {
         log_error("%s", "No internal state found!");
         goto end;
     }
+    /* check what flags are set and take appropriate action */
+    struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
+    struct pico_trans *trans_hdr = (struct pico_trans *) f->transport_hdr;
+    uint8_t flags = hdr->flags;
+
+    // Check if sockport exists for incoming frame, if not create one
+    struct pico_sockport *sp = NULL;
     sp = find_hs_sockport(in_state->hs_table, trans_hdr->dport);
     if (!sp) {
         ret = create_hs_sockport(in_state->hs_table, trans_hdr->dport);
         if (ret) {
-            log_error("Failed to create sockport for %u",
-                    short_be(trans_hdr->dport));
+            log_error("Failed to create sockport for %u", short_be(trans_hdr->dport));
             goto end2;
         }
         log_debug("Sockport creation complete %u", short_be(trans_hdr->dport));
@@ -819,57 +816,53 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
 
     // take care socket found or not based of flags and current state of socket
     if (flags == PICO_TCP_SYN && !tcp_sock_found) /* First SYN */
-    {
-        // first syn
-        log_debug("Received SYN %d", 1);
+    {   // first syn
         ret = handle_syn(self, in_state->hs_table, f, reply_msu_id);
-        if (ret != 0) {
-            log_error("%s", "Failed to handle_syn");
-        }
-    } else if (flags == PICO_TCP_SYN && tcp_sock_found) /* Duplicate SYN */
+        if (ret != 0) { log_error("%s", "Failed to handle_syn"); }
+    }
+    else if (flags == PICO_TCP_SYN && tcp_sock_found) /* Duplicate SYN */
     {
         log_debug("Received SYN duplicate %s","");
-        if (sock_found->state
-                == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
-                PICO_SOCKET_STATE_CONNECTED))
+        if (sock_found->state == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
+                                  PICO_SOCKET_STATE_CONNECTED))
         {
             if (tcp_sock_found->rcv_nxt == long_be(hdr->seq) + 1u) {
-                /* take back our own SEQ number to its original value,
-                 * so the synack retransmitted is identical to the original.
-                 */
+                /* take back our own SEQ number to its original value, so the synack retransmitted
+                is identical to the original. */
                 tcp_sock_found->snd_nxt--;
                 log_debug("Sending original SYN ACK %s", "");
                 dedos_tcp_send_synack(self, &tcp_sock_found->sock, reply_msu_id);
-            } else {
-                    log_warn("Bad seqs...cleaning up socket..%s","");
-                    // tcp_send_rst(sock_found, f);
-                    /* non-synchronized state */
-                    /* go to CLOSED here to prevent timer callback to go on after timeout */
-                    (tcp_sock_found->sock).state &= 0x00FFU;
-                    (tcp_sock_found->sock).state |= PICO_SOCKET_STATE_TCP_CLOSED;
-                    // ret = tcp_do_send_rst(s, long_be(t->snd_nxt));
-
-                    /* Set generic socket state to CLOSED, too */
-                    (tcp_sock_found->sock).state &= 0xFF00U;
-                    (tcp_sock_found->sock).state |= PICO_SOCKET_STATE_CLOSED;
-
-                    remove_completed_request(in_state,  (struct pico_socket *)tcp_sock_found);
-                    goto end;
             }
-        } else if (sock_found->state  == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED | PICO_SOCKET_STATE_CONNECTED)) {
+            else
+            {
+                log_warn("Bad seqs...cleaning up socket..%s","");
+                // tcp_send_rst(sock_found, f);
+                /* non-synchronized state, go to CLOSED here to prevent timer callback to go on after timeout */
+                (tcp_sock_found->sock).state &= 0x00FFU;
+                (tcp_sock_found->sock).state |= PICO_SOCKET_STATE_TCP_CLOSED;
+                // ret = tcp_do_send_rst(s, long_be(t->snd_nxt));
+                /* Set generic socket state to CLOSED, too */
+                (tcp_sock_found->sock).state &= 0xFF00U;
+                (tcp_sock_found->sock).state |= PICO_SOCKET_STATE_CLOSED;
+                remove_completed_request(in_state,  (struct pico_socket *)tcp_sock_found);
+                goto end;
+            }
+        }
+/*
+        else if (sock_found->state  == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED | PICO_SOCKET_STATE_CONNECTED)) {
             log_warn("SYN for established socket..ignoring..%s","");
             goto end;
         }
-    } else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK ) && sock_found) /* ACK for prev seen SYN */
+*/
+    }
+    else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK ) && sock_found) /* ACK for prev seen SYN */
     {
         log_debug("Recieved an ACK, with a known socket %s", "");
-        if (sock_found->state
-                == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
-                PICO_SOCKET_STATE_CONNECTED)) /* First ACK */
+        if (sock_found->state == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
+                                  PICO_SOCKET_STATE_CONNECTED)) /* First ACK */
         {
             log_debug("%s", "This is the first ack");
             int stat = handle_ack(self, f, tcp_sock_found, reply_msu_id);
-
             if(stat == 0){
                 in_state->syn_state_used_memory -= sizeof(struct pico_tree_node);
                 log_warn("Syn state decremented on ACK: %ld", in_state->syn_state_used_memory);
@@ -925,16 +918,14 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
 #endif
             void *transfer_buf = NULL;
             log_debug("Collecting socket info %s","");
-            struct pico_socket_tcp_dump *collected_tcp_sock =
-                    msu_tcp_hs_collect_socket((void*) sock_found);
+            struct pico_socket_tcp_dump *collected_tcp_sock = msu_tcp_hs_collect_socket((void*) sock_found);
 
             //send to next msu
             send_to_next_msu(self, MSU_PROTO_TCP_CONN_RESTORE,
                     (char*)collected_tcp_sock, sizeof(struct pico_socket_tcp_dump), reply_msu_id);
 
             //free collected_tcp_sock after sending the buff
-            PICO_FREE(collected_tcp_sock);
-            log_debug("%s","Freed collected socket");
+            free(collected_tcp_sock);
         }
         //Duplicate first ACK
         else if(sock_found->state == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED |
@@ -953,14 +944,15 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
             //first ACK and all things will be happy thereafter.
             // dedos_tcp_send_synack(self, &tcp_sock_found->sock, reply_msu_id);
         }
-    } else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK) && !sock_found) {
+    }
+    else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK) && !sock_found) {
     	log_warn("ACK with no associated socket %s","");
     }
-    else {
+    else
+    {
         log_warn("%s", "Unexpected flags set.or a random ack. Ignoring");
         log_warn("Ignoring frame %s", "");
     }
-
 end2:
 end:
 /** Now called in msu_process_queue_item anyway
