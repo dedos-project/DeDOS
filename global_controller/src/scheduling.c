@@ -4,10 +4,62 @@
 #include "scheduling.h"
 
 /**
+ * Based on the meta routing, sort msus in a list in ascending order (from leaf to root)
+ * @param struct dfg_vertex *msus: decayed pointer to a list of MSU pointers
+ * @return -1/0: failure/success
+ */
+int msu_hierarchical_sort(struct dfg_vertex **msus) {
+    //Find number of MSUs :D
+    int n = 0;
+    while (msus[n] != NULL) {
+        n++;
+    }
+
+    if (n == 1) {
+        return 0;
+    }
+
+    int i,j;
+    //First find any "exit" vertex and swap them with the first entry
+    for (i = 0; i < n; ++i) {
+        struct dfg_vertex *msu = msus[i];
+
+        if (strncmp(msu->vertex_type, "exit", 4) == 0) {
+            for (j = 0; j != i, j < n; ++j) {
+                if (strncmp(msus[j]->vertex_type, "exit", 4) != 0) {
+                    struct dfg_vertex *tmp = msus[j];
+                    msus[j] = msus[i];
+                    msus[i] = tmp;
+                }
+            }
+        }
+    }
+
+    //Awful linear search to sort
+
+    for (i = 0; i < n; ++i) {
+        struct dfg_vertex *msu = msus[i];
+        int up;
+        for (up = 0; up < msu->meta_routing.num_dst_types; ++up) {
+            for (j = 0; j != i, j < n; ++j) {
+                if (msus[j]->msu_type == msu->meta_routing.dst_types[up] && j > i) {
+                    struct dfg_vertex *tmp = msus[j];
+                    msus[j] = msus[i];
+                    msus[i] = tmp;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+/**
  * Find an ID and clean up data structures for an MSU
  * @param dfg_vertex msu: target MSU
  * @return none
  */
+//FIXME: add error handling
 void prepare_clone(struct dfg_vertex *msu) {
     msu->msu_id = generate_msu_id();
 
@@ -31,20 +83,18 @@ void prepare_clone(struct dfg_vertex *msu) {
  * @return failure/success: -1/0
  */
 int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
-    if (rt->num_pinned_threads > rt->num_cores) {
+    if (rt->num_threads > rt->num_cores) {
         debug("There are no more free cores to pin a new worker thread on runtime %d", rt->id);
         return -1;
     } else {
         int ret = 0;
 
-        sleep(5); // To leave time to runtime to digest the command...
         //commit change to runtime
-        ret = create_worker_thread(rt->sock);
+        ret = create_worker_thread(rt->sock);//num_threads and num_pinned_threads are incremented
         if (ret == -1) {
             debug("Could not create new worker thread on runtime %d", rt->id);
             return ret;
         }
-        sleep(5); // To leave time to runtime to digest the command...
 
         //update local view
         msu->scheduling.thread_id = rt->num_pinned_threads;
@@ -69,6 +119,8 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
  * @return 0/-1 success/failure
  */
 int clone_msu(int msu_id) {
+    int ret;
+
     struct dfg_vertex *clone = malloc(sizeof(struct dfg_vertex));
     if (clone == NULL) {
         debug("Could not allocate memory for clone msu");
@@ -81,15 +133,35 @@ int clone_msu(int msu_id) {
     prepare_clone(clone);
 
     struct dfg_config *dfg = get_dfg();
+    struct dfg_vertex *msus[MAX_MSU];
+    bzero(msus, MAX_MSU * sizeof(struct dfg_vertex *));
+
     int i;
     for (i = 0; i < dfg->runtimes_cnt; ++i) {
-        int ret = schedule_msu(clone, dfg->runtimes[i]);
+        ret = schedule_msu(clone, dfg->runtimes[i], msus);
         if (ret == 0) {
             break;
         } else {
             debug("Could not schedule msu %d on runtime %d",
                   clone->msu_id, dfg->runtimes[i]->id);
         }
+    }
+
+    ret = msu_hierarchical_sort(msus);
+    if (ret == -1) {
+        debug("Could not sort MSUs");
+    }
+
+
+    int n = 0;
+    while (msus[n] != NULL) {
+        ret = wire_msu(msus[n]);
+        if (ret == -1) {
+            debug("Could not update routes for msu %d", msus[n]->msu_id);
+            return -1;
+        }
+
+        n++;
     }
 
     if (clone->scheduling.runtime == NULL) {
@@ -110,7 +182,7 @@ int clone_msu(int msu_id) {
  * @param struct dfg_runtime_endpoint: the target runtime
  * @return 0/-1 success/failure
  */
-int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
+int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt, struct dfg_vertex **new_msus) {
     int ret;
     // First of all, find a thread on the runtime
     ret = place_on_runtime(rt, msu);
@@ -122,6 +194,9 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
     struct dfg_config *dfg = get_dfg();
     dfg->vertices[dfg->vertex_cnt] = msu;
     dfg->vertex_cnt++;
+
+    //Add the new MSU to the list of new additions
+    memcpy(new_msus, &msu, sizeof(struct dfg_vertex *));
 
     //Handle dependencies before wiring
     int l;
@@ -142,8 +217,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
                 dep->msu_type = msu->dependencies[l]->msu_type;
                 clone_type_static_data(dep);
 
-                sleep(1); // leave poor baby the time to digest
-                ret = schedule_msu(dep, rt);
+                ret = schedule_msu(dep, rt, new_msus + l + 1);
                 if (ret == -1) {
                     debug("Could not schedule dependency %d on runtime %d",
                           dep->msu_id, rt->id);
@@ -155,6 +229,13 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
             //TODO: check for remote dependency
         }
     }
+
+    return 0;
+}
+
+int wire_msu(struct dfg_vertex *msu) {
+    struct dfg_runtime_endpoint *rt = msu->scheduling.runtime;
+    int ret;
 
     //update routes
     int i, j;
@@ -178,7 +259,6 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt) {
         }
 
         for (j = 0; j < dst_types->num_msus; ++j) {
-            sleep(5);
             struct dfg_vertex *dst = get_msu_from_id(dst_types->msu_ids[j]);
 
             if ((need_local_dep && dst->scheduling.runtime->id != msu->scheduling.runtime->id)

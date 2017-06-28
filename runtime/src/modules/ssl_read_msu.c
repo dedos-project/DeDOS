@@ -32,7 +32,7 @@ int AcceptSSL(SSL *State, char *Buffer){
         }
 
         if (ret < 0) {
-            log_warn("SSL_accept failed with ret = %d", ret);
+            //log_warn("SSL_accept failed with ret = %d", ret);
             err = SSL_get_error(State, ret);
 
             if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE) {
@@ -40,7 +40,7 @@ int AcceptSSL(SSL *State, char *Buffer){
                 return -1;
             } else {
                 if (err == SSL_ERROR_WANT_READ) {
-                    log_warn("SSL_accept got SSL_ERROR_WANT_READ");
+                    //log_warn("SSL_accept got SSL_ERROR_WANT_READ");
                 } else {
                     log_warn("SSL_accept got SSL_ERROR_WANT_WRITE");
                 }
@@ -62,7 +62,7 @@ int AcceptSSL(SSL *State, char *Buffer){
 
         while (err == SSL_ERROR_WANT_READ) {
             ERR_error_string(err, error);
-            log_warn("SSL_read returned ret: %d. %s", NumBytes, error);
+            //log_warn("SSL_read returned ret: %d. %s", NumBytes, error);
             ERR_clear_error();
             NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN);
 

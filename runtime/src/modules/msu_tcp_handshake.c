@@ -1180,7 +1180,7 @@ int msu_hs_deserialize(struct generic_msu *self, intermsu_msg* msg,
     log_debug("data len: %d",tcp_queue_item->data_len);
 
     if(tcp_queue_item->msg_type != MSU_PROTO_TCP_HANDSHAKE){
-        log_error("Unexpected msg type: %d",msg_type);
+        log_error("Unexpected msg type: %d", tcp_queue_item->msg_type);
         free(cloned_buffer);
         free(queue_item);
         return -1;
