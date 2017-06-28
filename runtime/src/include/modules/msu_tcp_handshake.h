@@ -9,6 +9,7 @@
 #include "generic_msu_queue_item.h"
 #include "hs_heap.h"
 #include "dedos_hs_timers.h"
+#include "comm_protocol.h"
 
 struct hs_internal_state
 {
@@ -51,8 +52,8 @@ struct pico_tree msu_hs_table;
 struct pico_socket *find_tcp_socket(struct pico_sockport *sp,
         struct pico_frame *f);
 void* msu_tcp_hs_collect_socket(void *data);
-int msu_tcp_hs_restore_socket(struct generic_msu *self,
-        struct dedos_intermsu_message* msg, void *buf, uint16_t bufsize);
+int msu_hs_deserialize(struct generic_msu *self,
+        intermsu_msg* msg, void *buf, uint16_t bufsize);
 //int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data);
 void buf_to_pico_frame(struct pico_frame **f, void **buf, uint16_t bufsize);
 char* pico_frame_to_buf(struct pico_frame *f);

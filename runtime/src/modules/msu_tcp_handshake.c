@@ -28,6 +28,8 @@
 volatile pico_time hs_pico_tick;
 static long int timers_count;
 
+extern int socket_cmp(void *ka, void *kb);
+
 static void print_packet_stats(struct hs_internal_state* in_state){
     printf("items_dequeued: %lu\n",in_state->items_dequeued);
     printf("syns_processed: %lu\n",in_state->syns_processed);
@@ -50,11 +52,9 @@ static void dummy_state_cleanup(struct hs_internal_state *in_state){
     if(in_state->syn_state_used_memory >= in_state->syn_state_memory_limit){
         once_full = 1;
     }
-
-    //printf("used mem: %ld\n", in_state->syn_state_used_memory);
     if(ts - last_ts > 1 && once_full){
         in_state->syn_state_used_memory -= (400 * sizeof(struct pico_tree_node));
-     //   printf("used mem: %ld\n", in_state->syn_state_used_memory);
+        //   printf("used mem: %ld\n", in_state->syn_state_used_memory);
         if(in_state->syn_state_used_memory < 0)
         {
             in_state->syn_state_used_memory = 0;
@@ -69,7 +69,7 @@ uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)
     struct hs_timer_ref tref;
     /* zero is guard for timers */
     if (base_tmr_id == 0u)
-        base_tmr_id++;
+    base_tmr_id++;
 
     if (!t) {
         log_error("Failed to allocate memory for timer %s","");
@@ -84,9 +84,9 @@ uint32_t hs_timer_add(heap_hs_timer_ref *timers, pico_time expire, void (*timer)
     tref.tmr = t;
     tref.id = base_tmr_id++;
     hs_heap_insert(timers, &tref);
-//    if (timers->n) {
-//         printf("HS Warning: I have %d timers\n", (int)timers->n);
-//    }
+    //    if (timers->n) {
+    //         printf("HS Warning: I have %d timers\n", (int)timers->n);
+    //    }
     timers_count++;
     return tref.id;
 }
@@ -95,8 +95,9 @@ void hs_timer_cancel(heap_hs_timer_ref *timers, uint32_t id){
     uint32_t i;
     struct hs_timer_ref *tref = timers->top;
     struct hs_timer_ref tref_unused;
-    if (id == 0u)
+    if (id == 0u){
         return;
+    }
     for (i = 1; i <= timers->n; i++) {
         if (tref[i].id == id) {
             PICO_FREE(timers->top[i].tmr);
@@ -127,7 +128,6 @@ void hs_check_timers(heap_hs_timer_ref *timers){
             // log_debug("%s","----Freed a timer ----");
             PICO_FREE(t);
         }
-
         t = NULL;
         // log_debug("%s","Inside check timers while, after if, before peek\n");
         hs_heap_peek(timers, &tref_unused);
@@ -136,25 +136,12 @@ void hs_check_timers(heap_hs_timer_ref *timers){
         // log_debug("%s","Inside check timers while, after heap_first\n");
         log_debug("%s","Exiting check timers function");
     }
-
 }
 
-extern int socket_cmp(void *ka, void *kb);
 
-static void send_to_next_msu(struct generic_msu *self,
-        unsigned int message_type, char *buf, int bufsize, int reply_msu_id)
+static void send_to_next_msu(struct generic_msu *self, unsigned int message_type, char *buf,
+                            int bufsize, int reply_msu_id)
 {
-	//the received buff will be discarded by calling function
-	// buf is f->buffer, bufsize is f->buffer_len
-
-    /* TODO Lookup flow table for persistent next hop by parsing buf
-     * based on next MSU type, e.g. if its next is HS, then buf should be
-     * a frame and this function should extract the relevant info to find
-     * the next MSU or some way of managing state in the flow table
-     * and associate it with buf!
-     * or
-     * Lookup routing table to pick the msu of the next time
-     */
     int next_msu_type = -1;
     if (message_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE) {
         next_msu_type = DEDOS_TCP_DATA_MSU_ID;
@@ -162,12 +149,11 @@ static void send_to_next_msu(struct generic_msu *self,
     if (message_type == MSU_PROTO_TCP_CONN_RESTORE) {
         next_msu_type = DEDOS_TCP_DATA_MSU_ID;
     }
-    
+
     struct msu_endpoint * tmp = route_by_msu_id(msu_type_by_id(next_msu_type), self, reply_msu_id);
 
     struct dedos_intermsu_message *msg;
-	msg = (struct dedos_intermsu_message*) malloc(
-			sizeof(struct dedos_intermsu_message));
+	msg = (struct dedos_intermsu_message*) malloc(sizeof(struct dedos_intermsu_message));
 	if (!msg) {
 		log_error("Unable to allocate memory for intermsu message: %s", "");
 		return;
@@ -208,7 +194,7 @@ static void send_to_next_msu(struct generic_msu *self,
             print_frame(new_frame);
             msg->payload = new_frame->buffer;
 
-        } else if(message_type == MSU_PROTO_TCP_CONN_RESTORE) {
+        } else if (message_type == MSU_PROTO_TCP_CONN_RESTORE) {
             // then payload is just a buffer
             restore_buf = malloc(bufsize);
             if(!restore_buf){
@@ -449,10 +435,8 @@ static int pico_sockets_pending_ack_check(struct hs_internal_state *in_state)
     return 0;
 }
 
-static struct pico_sockport* find_hs_sockport(struct pico_tree* msu_table,
-        uint16_t local_port)
+static struct pico_sockport* find_hs_sockport(struct pico_tree* msu_table, uint16_t local_port)
 {
-
     struct pico_sockport *found = NULL;
     struct pico_sockport test = INIT_SOCKPORT;
     test.number = local_port;
@@ -460,20 +444,17 @@ static struct pico_sockport* find_hs_sockport(struct pico_tree* msu_table,
     return found;
 }
 
-static int8_t create_hs_sockport(struct pico_tree* msu_table,
-        uint16_t localport)
+static int8_t create_hs_sockport(struct pico_tree* msu_table, uint16_t localport)
 {
-    //the request will only reach here if the picoTCP is
-    //actually listening on this socket, so attacker cannot
-    //cause creation of sockports on random ports
+    /* the request will only reach here if the picoTCP is actually listening on this socket,
+    so attacker cannot cause creation of sockports on random ports
+    */
     struct pico_sockport *sp = NULL;
-//    PICOTCP_MUTEX_LOCK(Mutex);
     log_debug("Creating sockport..%04x", localport);
     sp = PICO_ZALLOC(sizeof(struct pico_sockport));
 
     if (!sp) {
         pico_err = PICO_ERR_ENOMEM;
-//        PICOTCP_MUTEX_UNLOCK(Mutex);
         return -1;
     }
     log_debug("Allocated sockport memory for %u", short_be(localport));
@@ -483,14 +464,12 @@ static int8_t create_hs_sockport(struct pico_tree* msu_table,
     sp->socks.compare = socket_cmp;
 
     pico_tree_insert(msu_table, sp);
-    //    PICOTCP_MUTEX_UNLOCK(Mutex);
     return 0;
 }
 
-int8_t remove_completed_request(struct hs_internal_state *in_state,
-        struct pico_socket *s)
+int8_t remove_completed_request(struct hs_internal_state *in_state, struct pico_socket *s)
 {
-   struct pico_tree *msu_table = in_state->hs_table;
+    struct pico_tree *msu_table = in_state->hs_table;
     struct pico_sockport *sp = NULL;
     sp = find_hs_sockport(msu_table, s->local_port);
 
@@ -506,7 +485,7 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
     //hs_socket_garbage_collect(10, s, in_state->hs_timers);
     hs_timer_add(in_state->hs_timers, (pico_time) 10, hs_socket_garbage_collect, s);
     log_debug("done calling hs_timer_add from remove_completed_request!");
-/*
+    /*
     struct pico_tree_node *index;
     log_debug("Current sockets for port %u >>>", short_be(s->local_port));
     pico_tree_foreach(index, &sp->socks)
@@ -520,8 +499,7 @@ int8_t remove_completed_request(struct hs_internal_state *in_state,
     return 0;
 }
 
-static inline void tcp_send_add_tcpflags(struct pico_socket_tcp *ts,
-        struct pico_frame *f)
+static inline void tcp_send_add_tcpflags(struct pico_socket_tcp *ts, struct pico_frame *f)
 {
     struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) f->transport_hdr;
     if (ts->rcv_nxt != 0) {
@@ -545,14 +523,11 @@ static inline void tcp_send_add_tcpflags(struct pico_socket_tcp *ts,
     }
 }
 
-static int8_t add_pending_request(struct pico_tree *msu_table,
-        struct pico_socket *s)
+static int8_t add_pending_request(struct pico_tree *msu_table, struct pico_socket *s)
 {
-
     struct pico_sockport *sp = NULL;
     sp = find_hs_sockport(msu_table, s->local_port);
 
-//    PICOTCP_MUTEX_LOCK(Mutex);
     if (!sp) {
         log_error("Cannot find sockport for port: %u", short_be(s->local_port));
         return -1;
@@ -560,7 +535,6 @@ static int8_t add_pending_request(struct pico_tree *msu_table,
 
     pico_tree_insert(&sp->socks, s);
     s->state |= PICO_SOCKET_STATE_BOUND;
-//    PICOTCP_MUTEX_UNLOCK(Mutex);
 
 #if DEBUG != 0
     log_debug("Current sockets for port %u >>>", short_be(s->local_port));
@@ -572,11 +546,11 @@ static int8_t add_pending_request(struct pico_tree *msu_table,
                 short_be(s->remote_port));
     }
 #endif
+
     return 0;
 }
 
-static int dedos_tcp_send_synack(struct generic_msu* self,
-        struct pico_socket *s, int reply_msu_id)
+static int dedos_tcp_send_synack(struct generic_msu* self, struct pico_socket *s, int reply_msu_id)
 {
     struct pico_socket_tcp *ts = TCP_SOCK(s);
     struct pico_frame *synack;
@@ -598,10 +572,7 @@ static int dedos_tcp_send_synack(struct generic_msu* self,
     tcp_add_options(ts, synack, hdr->flags, opt_len);
     synack->payload_len = 0;
     synack->timestamp = TCP_TIME;
-// #ifdef MSU_SAME_HOST
-//     msu_dbg("DEBUG: %s", "Same host MSU\n");
-//     tcp_send(ts, synack);
-// #else
+
     hdr->trans.sport = ts->sock.local_port;
     hdr->trans.dport = ts->sock.remote_port;
     if (!hdr->seq)
@@ -638,16 +609,16 @@ static int dedos_tcp_send_synack(struct generic_msu* self,
 
     send_to_next_msu(self, MSU_PROTO_TCP_HANDSHAKE_RESPONSE, synack->buffer,
             synack->buffer_len, reply_msu_id);
+
     struct hs_internal_state *in_state = (struct hs_internal_state*) self->internal_state;
     in_state->synacks_generated++;
 
-// #endif
     pico_frame_discard(synack);
     return 0;
 }
 
-static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
-        struct pico_frame *f, int reply_msu_id)
+static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table, struct pico_frame *f,
+                        int reply_msu_id)
 {
 
     /* normally would clone of listen socket
@@ -684,10 +655,8 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
     new->sock.local_port = ((struct pico_trans *) f->transport_hdr)->dport;
     log_debug("%s", "local and remote port assigned to socket...");
 
-    new->sock.remote_addr.ip4.addr =
-            ((struct pico_ipv4_hdr *) (f->net_hdr))->src.addr;
-    new->sock.local_addr.ip4.addr =
-            ((struct pico_ipv4_hdr *) (f->net_hdr))->dst.addr;
+    new->sock.remote_addr.ip4.addr = ((struct pico_ipv4_hdr *) (f->net_hdr))->src.addr;
+    new->sock.local_addr.ip4.addr = ((struct pico_ipv4_hdr *) (f->net_hdr))->dst.addr;
 
     log_debug("remote port : %u, local port: %u", short_be(new->sock.remote_port), short_be(new->sock.local_port));
 
@@ -729,7 +698,6 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table,
 
 static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pico_socket_tcp *t, int reply_msu_id)
 {
-
     struct pico_socket *s = (struct pico_socket *) t;
     struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) f->transport_hdr;
     log_debug("Handling ACK, expecting %08x got %08x", t->snd_nxt, ACKN(f));
@@ -765,11 +733,9 @@ static int handle_bad_con(struct pico_frame *f)
     return 0;
 }
 
-static struct pico_socket *match_tcp_socket(struct pico_socket *s,
-        struct pico_frame *f)
+static struct pico_socket *match_tcp_socket(struct pico_socket *s, struct pico_frame *f)
 {
     struct pico_socket *found = NULL;
-
     struct pico_ip4 s_local, s_remote, p_src, p_dst;
     struct pico_ipv4_hdr *ip4hdr = (struct pico_ipv4_hdr*) (f->net_hdr);
     struct pico_trans *tr = (struct pico_trans *) f->transport_hdr;
@@ -778,23 +744,23 @@ static struct pico_socket *match_tcp_socket(struct pico_socket *s,
     p_src.addr = ip4hdr->src.addr;
     p_dst.addr = ip4hdr->dst.addr;
     if ((s->remote_port == tr->sport) && /* remote port check */
-    (s_remote.addr == p_src.addr) && /* remote addr check */
-    ((s_local.addr == PICO_IPV4_INADDR_ANY) || (s_local.addr == p_dst.addr))) { /* Either local socket is ANY, or matches dst */
+        (s_remote.addr == p_src.addr) && /* remote addr check */
+        ((s_local.addr == PICO_IPV4_INADDR_ANY) || (s_local.addr == p_dst.addr)))  /* Either local socket is ANY, or matches dst */
+    {
         found = s;
         return found;
-    } else if ((s->remote_port == 0) && /* not connected... listening */
-    ((s_local.addr == PICO_IPV4_INADDR_ANY) || (s_local.addr == p_dst.addr))) { /* Either local socket is ANY, or matches dst */
-        /* listen socket */
+    }
+    else if ((s->remote_port == 0) && /* not connected... listening */
+              ((s_local.addr == PICO_IPV4_INADDR_ANY) || (s_local.addr == p_dst.addr))) /* Either local socket is ANY, or matches dst */
+    {/* listen socket */
         found = s;
     }
 
     return found;
 }
 
-struct pico_socket *find_tcp_socket(struct pico_sockport *sp,
-        struct pico_frame *f)
+struct pico_socket *find_tcp_socket(struct pico_sockport *sp, struct pico_frame *f)
 {
-
     struct pico_socket *found = NULL;
     struct pico_tree_node *index = NULL;
     struct pico_tree_node *_tmp;
@@ -820,7 +786,6 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     //DONT NOT FREE THE INCOMING FRAME HERE
     /* check what flags are set and take appropriate action */
     log_debug("Received frame: %s","");
-//    print_frame(f);
     struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
     struct pico_trans *trans_hdr = (struct pico_trans *) f->transport_hdr;
     int ret = -1;
@@ -866,7 +831,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
         log_debug("Received SYN duplicate %s","");
         if (sock_found->state
                 == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
-                PICO_SOCKET_STATE_CONNECTED)) 
+                PICO_SOCKET_STATE_CONNECTED))
         {
             if (tcp_sock_found->rcv_nxt == long_be(hdr->seq) + 1u) {
                 /* take back our own SEQ number to its original value,
@@ -1004,31 +969,16 @@ end:
 */
     return ret;
 }
-/*
- static int msu_process_hs_requeset_out(struct pico_protocol *self,
- struct pico_frame *f)
- {
- printf(
- "msu_process_hs_requeset_out: will output the connected socket data\n");
- Shoud enqueue in tcp_layer queue
- * then need to modify the processing of this kind of data on the other end
-
- return 0;
- }
- */
 
 void* msu_tcp_hs_collect_socket(void *data)
 {
-
     struct pico_socket *s = (struct pico_socket*) data;
     struct pico_socket_tcp *t = (struct pico_socket_tcp*) s;
 
-    struct pico_socket_tcp_dump *t_dump = PICO_ZALLOC(
-            sizeof(struct pico_socket_tcp_dump));
+    struct pico_socket_tcp_dump *t_dump = PICO_ZALLOC(sizeof(struct pico_socket_tcp_dump));
     struct pico_socket_dump *s_dump = (struct pico_socket_dump*) t_dump;
 
     //copy pico_socket data
-
     s_dump->l4_proto = s->proto->proto_number;
     s_dump->l3_net = s->net->proto_number;
 
@@ -1059,13 +1009,11 @@ void* msu_tcp_hs_collect_socket(void *data)
     return (void*) t_dump;
 }
 
-static struct pico_socket *match_tcp_sockets(struct pico_socket *s1,
-        struct pico_socket *s2)
+static struct pico_socket *match_tcp_sockets(struct pico_socket *s1, struct pico_socket *s2)
 {
     struct pico_socket *found = NULL;
     if ((s1->remote_port == s2->remote_port) && /* remote port check */
-    (s1->remote_addr.ip4.addr == s2->remote_addr.ip4.addr)
-            && /* remote addr check */
+        (s1->remote_addr.ip4.addr == s2->remote_addr.ip4.addr) && /* remote addr check */
             ((s1->local_addr.ip4.addr == PICO_IPV4_INADDR_ANY)
                     || (s1->local_addr.ip4.addr == s2->local_addr.ip4.addr))) { /* Either local socket is ANY, or matches dst */
         found = s1;
@@ -1081,7 +1029,6 @@ static struct pico_socket *match_tcp_sockets(struct pico_socket *s1,
 
 static struct pico_socket *find_listen_sock(struct pico_sockport *sp, struct pico_socket *sock)
 {
-
     struct pico_socket *found = NULL;
     struct pico_tree_node *index = NULL;
     struct pico_tree_node *_tmp;
@@ -1158,19 +1105,16 @@ void print_frame(struct pico_frame *f)
     log_debug("Src addr %s: dst addr : %s", peer, local);
 }
 
-static void handle_incoming_frame(struct generic_msu *self, int reply_dst_msu_id,
-        struct pico_frame *f)
+static void handle_incoming_frame(struct generic_msu *self, int reply_dst_msu_id, struct pico_frame *f)
 {
-
-    struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
     int ret = 0;
-    uint8_t flags = hdr->flags;
+    struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
     struct pico_ipv4_hdr *iphdr = (struct pico_ipv4_hdr *) f->net_hdr;
+    uint8_t flags = hdr->flags;
 
     if (flags == (PICO_TCP_SYN | PICO_TCP_ACK)) {
         //forwarding logic only relevant at data MSU
         log_warn("%s", "HS Shouldn't be getting a SYNACK FRAME!");
-
     } else {
         log_debug("%s", "Non SYNACK frame, enqueuing for processing");
         struct generic_msu_queue_item *item = create_generic_msu_queue_item();
@@ -1194,20 +1138,19 @@ static void handle_incoming_frame(struct generic_msu *self, int reply_dst_msu_id
 
 static int valid_ip_tcp_flags(struct pico_frame *f)
 {
-
     struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
     uint8_t flags = hdr->flags;
     if (IS_IPV4(f)
-            && (flags == PICO_TCP_SYN || flags == (PICO_TCP_SYN | PICO_TCP_ACK)
-                    || flags == PICO_TCP_ACK)) {
-
+        && (flags == PICO_TCP_SYN || flags == (PICO_TCP_SYN | PICO_TCP_ACK)
+        || flags == PICO_TCP_ACK))
+    {
         return 0; //if valid
     } else {
         return -1;
     }
 }
 
-int msu_tcp_hs_restore_socket(struct generic_msu *self, struct dedos_intermsu_message* msg, 
+int msu_hs_deserialize(struct generic_msu *self, intermsu_msg* msg,
                               void *buf, uint16_t bufsize)
 {
     if (msg->proto_msg_type != MSU_PROTO_PICO_TCP_STACK) {
@@ -1251,7 +1194,7 @@ int msu_tcp_hs_restore_socket(struct generic_msu *self, struct dedos_intermsu_me
     log_debug("First frame len: %u",tcp_queue_item->data_len);
     log_debug("tcp_intermsu_queue_item size: %u",sizeof(struct tcp_intermsu_queue_item));
     log_debug("dedos_intermsu_message size: %u",sizeof(struct dedos_intermsu_message));
-    if(bufsize > tcp_queue_item->data_len + sizeof(struct tcp_intermsu_queue_item) + sizeof(struct 
+    if(bufsize > tcp_queue_item->data_len + sizeof(struct tcp_intermsu_queue_item) + sizeof(struct
                 dedos_intermsu_message)){
         log_debug("MULTIPLE messages in same tcp transmission!, HANDLE THIS");
     }
@@ -1400,7 +1343,7 @@ void msu_tcp_handshake_destroy(struct generic_msu *self)
     log_debug("%s","Freed internal state");
 }
 
-struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu, 
+struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
         struct create_msu_thread_data *create_action)
 {
     //handshake_msu->collect_state = msu_tcp_hs_collect_socket;
@@ -1440,8 +1383,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     in_state->syns_processed = 0;
     handshake_msu->internal_state = in_state;
 
-    log_debug("Created %s MSU with id: %u", handshake_msu->type->name,
-            handshake_msu->id);
+    log_debug("Created %s MSU with id: %u", handshake_msu->type->name, handshake_msu->id);
 
     msu_queue *q_data = &handshake_msu->q_in;
     int rtn = sem_post(q_data->thread_q_sem);
@@ -1500,7 +1442,7 @@ struct msu_type TCP_HANDSHAKE_MSU_TYPE = {
     .receive=msu_tcp_process_queue_item,
     .receive_ctrl=NULL,
     .route=default_routing, //hs_route,
-    .deserialize=msu_tcp_hs_restore_socket,
+    .deserialize=msu_hs_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote,
 };
