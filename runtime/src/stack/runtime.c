@@ -408,6 +408,7 @@ int destroy_worker_thread(struct dedos_thread *dedos_thread){
 
 int init_main_thread(void) {
     /* create threads = number of cores and associate a queue with each thread */
+    exit_flag = 0;
     int ret;
     //Get number number of cores
     int i = 0, j = 0;
@@ -604,6 +605,7 @@ int dedos_runtime_destroy(void){
     deinit_data_plane_profiling();
 #endif
     print_forwarding_stats();
+    exit_flag = 1;
 /*
     int i;
     for(i = total_threads-1; i >=1; i--){
