@@ -3,12 +3,12 @@
 #include "dfg.h"
 #include "scheduling.h"
 
-int64_t get_absent_msus(struct dfg_vertex *msu) {
+uint64_t get_absent_msus(struct dfg_vertex *msu) {
     // NOTE: This will not work if there are more than 64 MSUs
 
-    int64_t absent_msus = 0xFFFFFFFF;
+    uint64_t absent_msus = 0xFFFFFFFFFFFFFFFF;
 
-    absent_msus &= ~(1<<msu->msu_id);
+    absent_msus &= ~(uint64_t)(1<<msu->msu_id);
 
     struct dfg_route **routes = msu->scheduling.routes;
 
@@ -16,8 +16,8 @@ int64_t get_absent_msus(struct dfg_vertex *msu) {
         struct dfg_route *r = routes[r_i];
         for (int v_i=0; v_i< r->num_destinations; ++v_i) {
             struct dfg_vertex *v = r->destinations[v_i];
-            if (absent_msus&(1<<v->msu_id)) {
-                int64_t v_downstream = get_absent_msus(v);
+            if (absent_msus&((uint64_t)1<<v->msu_id)) {
+                uint64_t v_downstream = get_absent_msus(v);
                 absent_msus &= v_downstream;
             }
         }
@@ -28,16 +28,16 @@ int64_t get_absent_msus(struct dfg_vertex *msu) {
 
 int n_downstream_msus(struct dfg_vertex * msu) {
 
-    int64_t absent_msus = get_absent_msus(msu);
+    uint64_t absent_msus = get_absent_msus(msu);
 
     int n_downstream = 64;
     for (int i=0; i<64; i++) {
-        if (absent_msus&(1<<i)) {
+        if (absent_msus&(uint64_t)1<<i) {
             n_downstream--;
         }
     }
 
-    return n_downstream-1;
+    return n_downstream;
 }
 
 int fix_route_ranges(struct dfg_route *route, int runtime_sock) {

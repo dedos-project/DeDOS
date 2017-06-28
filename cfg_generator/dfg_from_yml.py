@@ -222,7 +222,7 @@ def make_dfg(yml_filename, pretty=False):
         rt['routes'] = runtime_routes(rt['id'], msus_out, input['routes'])
 
     output['MSUs'] = msus_out
-    #fix_route_keys(output)
+    fix_route_keys(output)
     stringify(output)
 
     return output
