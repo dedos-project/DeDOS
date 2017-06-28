@@ -16,7 +16,7 @@
 #define NEXT_MSU_REMOTE 2
 
 #ifndef DYN_SCHED
-#define DYN_SCHED 0
+#define DYN_SCHED 1
 #endif
 
 #ifndef LOG_PRINT_TIMESERIES
@@ -77,25 +77,28 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
             return -1;
         }
 
+
+        int ret;
         switch (sample->stat_id) {
             case QUEUE_LEN:
-/*
-                //There is an odious situation bellow. Can you figure it out?
                 if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
-                    if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 0) {
-                        struct msus_of_type *http_dep = get_msus_from_type(DEDOS_WEBSERVER_MSU_ID);
+                    struct msus_of_type *sslreads = get_msus_from_type(500);
+                    //Assume fixed initial number of MSUs on rt1
+                    int n_msu = sslreads->num_msus - 6;
 
-                        errored = clone_msu(http_dep->msu_ids[0]);
-                    }
-                }
-*/
-                if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
-                    if (average(get_msu_from_id(sample->item_id), sample->stat_id) > 5) {
-                        clone_msu(msu->msu_id);
+                    if (sample->stats->stat > 5) {
+                        ret = clone_msu(msu->msu_id);
+                        sleep(5);
+                        if (ret != -1) {
+                            const char cmd[64];
+                            snprintf(cmd, 64, "echo 'set weight https/s2 %d' | socat stdio /tmp/haproxy.socket", n_msu + 1);
+                            system(cmd);
+                        }
                     }
                 }
 
                 break;
+
             default:
                 //log_debug("No action implemented for stat_id %d", sample->stat_id);
                 continue;
