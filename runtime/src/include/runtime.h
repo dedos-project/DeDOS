@@ -23,6 +23,8 @@
 #define BLOCKING_THREAD 1
 #define NON_BLOCKING_THREAD 2
 
+int exit_flag;
+
 /** Forward declaration to solve circular dependency */
 struct dedos_thread_queue;
 

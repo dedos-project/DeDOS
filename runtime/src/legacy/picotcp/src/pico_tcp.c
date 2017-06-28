@@ -7,6 +7,7 @@
    Authors: Daniele Lacamera, Philippe Mariman
  *********************************************************************/
 
+#include "legacy_logging.h"
 #include "pico_tcp.h"
 #include "pico_config.h"
 #include "pico_eth.h"
@@ -24,7 +25,14 @@
 #include "dedos_msu_list.h"
 #include "modules/msu_pico_tcp.h"
 #include "modules/hs_request_routing_msu.h" //for struct routing item
-#include "logging.h"
+
+static long unsigned int syns_forwarded;
+static long unsigned int acks_forwarded;
+
+void print_forwarding_stats(void){
+    printf("Picotcp Syns forwarded: %lu\n",syns_forwarded);
+    printf("picotcp Acks forwarded: %lu\n",acks_forwarded);
+}
 
 #define TCP_IS_STATE(s, st) ((s->state & PICO_SOCKET_STATE_TCP) == st)
 #define TCP_SOCK(s) ((struct pico_socket_tcp *)s)
@@ -2651,7 +2659,7 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
     }
 
     queue_item->id = pico_tcp_generate_id(self, f);
-    log_debug("Assigned id to item: %d", queue_item->id);
+    log_debug("Assigned id to item: %u", queue_item->id);
     queue_item->buffer_len = sizeof(struct tcp_intermsu_queue_item) + f->buffer_len;
 
     queue_item->buffer = (char*)malloc(sizeof(char) * queue_item->buffer_len);
@@ -2667,7 +2675,8 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
     tcp_queue_data_item->data = queue_item->buffer + sizeof(struct tcp_intermsu_queue_item);
     memcpy(tcp_queue_data_item->data, f->buffer, tcp_queue_data_item->data_len);
     log_debug("routing to handshake msu msg_type: %d",tcp_queue_data_item->msg_type);
-    log_debug("routing to handshake frome len: %d",tcp_queue_data_item->data_len);
+    log_debug("routing to handshake frame len: %d",tcp_queue_data_item->data_len);
+    log_debug("routing to handshake msg len: %d",queue_item->buffer_len);
 
     //next msu type id
     unsigned int type_id = DEDOS_TCP_HANDSHAKE_MSU_ID;
@@ -2816,6 +2825,7 @@ static int tcp_syn(struct pico_socket *s, struct pico_frame *f)
 #ifdef PICO_SUPPORT_DEDOS_MSUS
     log_debug("Requesting Handshake from MSU","");
     route_to_handshake_msu(s, f, "SYN");
+    syns_forwarded++;
     //FIXME: How to handle pending connections number provided by listen?
     // Should not be incremented here, because we dont want to drop syn requests
     //s->number_of_pending_conn++;
@@ -2977,6 +2987,7 @@ static int tcp_first_ack(struct pico_socket *s, struct pico_frame *f)
     route_to_handshake_msu(s, f, "FIRST_ACK");
     log_debug("Done enqueuing FIRST_ACK request","");
 
+    acks_forwarded++;
     return 0;
 #endif
 

@@ -62,9 +62,9 @@ struct dfg_runtime_endpoint *get_runtime_from_id(int runtime_id) {
 /**
  * Get runtimes IPs
  * @param uint32_t *peer_ips
- * @return void
+ * @return int count of connected ips
  */
-void get_connected_peer_ips(uint32_t *peer_ips) {
+int get_connected_peer_ips(uint32_t *peer_ips) {
     int count = 0;
     int i;
     struct dfg_config *dfg = NULL;
@@ -76,7 +76,7 @@ void get_connected_peer_ips(uint32_t *peer_ips) {
             count++;
         }
     }
-
+    return count;
 }
 
 /**

@@ -166,7 +166,7 @@ struct msus_of_type {
 /*Runtime & DFG management functions */
 void update_dfg(struct dedos_dfg_manage_msg *update_msg);
 struct dfg_config *get_dfg();
-void get_connected_peer_ips(uint32_t *peer_ips);
+int get_connected_peer_ips(uint32_t *peer_ips);
 uint32_t get_sock_endpoint_ip(int sock);
 int get_sock_endpoint_index(int sock);
 int show_connected_peers(void);

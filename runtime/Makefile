@@ -40,7 +40,7 @@ COMMON_OBJS = $(patsubst $(COMMON_SRC)%.c, $(COMMON_OBJ)%.o, $(COMMON_SRCS))
 #LEGACY_LIBS =
 LEGACY_LIBS = picotcp
 
-COMPILE=gcc -c
+COMPILE=gcc -c -O3
 COMPILE_PP=g++ -c
 FINAL=gcc
 LINK=ld -r
