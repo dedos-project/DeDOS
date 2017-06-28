@@ -3,7 +3,7 @@
 #include "dfg.h"
 #include "scheduling.h"
 
-uint64_t get_absent_msus(struct dfg_vertex *msu) {
+static uint64_t get_absent_msus(struct dfg_vertex *msu) {
     // NOTE: This will not work if there are more than 64 MSUs
 
     uint64_t absent_msus = 0xFFFFFFFFFFFFFFFF;
@@ -26,7 +26,7 @@ uint64_t get_absent_msus(struct dfg_vertex *msu) {
 }
 
 
-int n_downstream_msus(struct dfg_vertex * msu) {
+static int n_downstream_msus(struct dfg_vertex * msu) {
 
     uint64_t absent_msus = get_absent_msus(msu);
 
@@ -257,13 +257,13 @@ int clone_msu(int msu_id) {
         debug("Cloned msu %d of type %d into msu %d on runtime %d",
               msu->msu_id, msu->msu_type, clone->msu_id, clone->scheduling.runtime->id);
 
-        /*int rtn = fix_all_route_ranges(dfg);
+        int rtn = fix_all_route_ranges(dfg);
         if (rtn < 0) {
             log_error("Unable to properly modify route ranges");
             return -1;
         }
         log_debug("properly changed route ranges");
-        */
+        
         return 0;
     }
 }
