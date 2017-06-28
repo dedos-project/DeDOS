@@ -1191,7 +1191,7 @@ int msu_hs_deserialize(struct generic_msu *self, intermsu_msg* msg,
         log_error("Unexpected msg type: %d",msg_type);
         free(cloned_buffer);
         free(queue_item);
-        return -1
+        return -1;
     }
 
     ret = generic_msu_queue_enqueue(&self->q_in, queue_item);
