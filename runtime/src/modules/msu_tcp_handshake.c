@@ -557,8 +557,9 @@ static int dedos_tcp_send_synack(struct generic_msu* self, struct pico_socket *s
     struct pico_tcp_hdr *hdr;
     uint16_t opt_len = tcp_options_size(ts, PICO_TCP_SYN | PICO_TCP_ACK);
     synack = s->net->alloc(s->net, (uint16_t) (PICO_SIZE_TCPHDR + opt_len));
-    if (!synack)
+    if (!synack){
         return -1;
+    }
     hdr = (struct pico_tcp_hdr *) synack->transport_hdr;
 
     synack->sock = s;
@@ -604,11 +605,9 @@ static int dedos_tcp_send_synack(struct generic_msu* self, struct pico_socket *s
     iphdr->crc = 0;
     iphdr->crc = short_be(pico_checksum(iphdr, synack->net_len));
 
-    log_debug("Sending following SYNACK frame to data for forwarding: %s","");
-    print_frame(synack);
-
-    send_to_next_msu(self, MSU_PROTO_TCP_HANDSHAKE_RESPONSE, synack->buffer,
-            synack->buffer_len, reply_msu_id);
+    // log_debug("Sending following SYNACK frame to data for forwarding: %s","");
+    // print_frame(synack);
+    send_to_next_msu(self, MSU_PROTO_TCP_HANDSHAKE_RESPONSE, synack->buffer, synack->buffer_len, reply_msu_id);
 
     struct hs_internal_state *in_state = (struct hs_internal_state*) self->internal_state;
     in_state->synacks_generated++;
@@ -628,6 +627,7 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table, str
     log_debug("%s", "Handling SYN packet...");
     struct hs_internal_state *in_state = self->internal_state;
     in_state->syns_processed++;
+
     if(in_state->syn_state_used_memory > in_state->syn_state_memory_limit){
         log_debug("Drop syn full: %ld ", in_state->syn_state_used_memory);
         in_state->syns_dropped++;
@@ -638,6 +638,7 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table, str
         log_error("%s", "Error creating local socket");
         return -1;
     }
+
     struct pico_socket_tcp *new = NULL;
     struct pico_tcp_hdr *hdr = NULL;
     uint16_t mtu;
@@ -680,8 +681,7 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table, str
     new->sock.wakeup = NULL;
     rto_set(new, PICO_TCP_RTO_MIN);
     /* Initialize timestamp values */
-    new->sock.state = PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_CONNECTED
-            | PICO_SOCKET_STATE_TCP_SYN_RECV;
+    new->sock.state = PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_CONNECTED | PICO_SOCKET_STATE_TCP_SYN_RECV;
 
     int stat = add_pending_request(msu_table, &new->sock);
     if(stat == 0){
