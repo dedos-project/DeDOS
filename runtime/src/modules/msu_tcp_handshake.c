@@ -1160,19 +1160,18 @@ int msu_hs_deserialize(struct generic_msu *self, intermsu_msg* msg,
 
     int ret;
     log_debug("Received serialized buffer size: %u",bufsize);
-    //handle_incoming_frame(self, msg->src_msu_id, f);
 
     //clone the buf and create msu_queue item and enqueue it
     struct generic_msu_queue_item *queue_item;
     void *cloned_buffer;
 
-    queue_item = malloc(sizeof(*queue_item));
+    queue_item = (struct generic_msu_queue_item*)malloc(sizeof(*queue_item));
     if(!queue_item){
         log_error("Failed to malloc msu queue item");
     	return -1;
     }
 
-    queue_item->buffer = malloc(bufsize * sizeof(char));
+    queue_item->buffer = (void*)malloc(bufsize * sizeof(char));
     if(!queue_item->buffer){
         log_error("Failed to malloc buffer to hold recevied data");
         free(queue_item);
@@ -1187,6 +1186,14 @@ int msu_hs_deserialize(struct generic_msu *self, intermsu_msg* msg,
     log_debug("src msu id: %d",tcp_queue_item->src_msu_id);
     log_debug("msg type: %d",tcp_queue_item->msg_type);
     log_debug("data len: %d",tcp_queue_item->data_len);
+
+    if(tcp_queue_item->msg_type != MSU_PROTO_TCP_HANDSHAKE){
+        log_error("Unexpected msg type: %d",msg_type);
+        free(cloned_buffer);
+        free(queue_item);
+        return -1
+    }
+
     ret = generic_msu_queue_enqueue(&self->q_in, queue_item);
     log_debug("Enqueued MSU_PROTO_TCP_HANDSHAKE request: %d", ret);
 
@@ -1196,24 +1203,9 @@ int msu_hs_deserialize(struct generic_msu *self, intermsu_msg* msg,
     log_debug("dedos_intermsu_message size: %u",sizeof(struct dedos_intermsu_message));
     if(bufsize > tcp_queue_item->data_len + sizeof(struct tcp_intermsu_queue_item) + sizeof(struct
                 dedos_intermsu_message)){
-        log_debug("MULTIPLE messages in same tcp transmission!, HANDLE THIS");
+        log_critical("MULTIPLE messages in same tcp transmission!, HANDLE THIS");
     }
 
-/*
-    struct pico_frame *f = pico_frame_alloc(bufsize);
-    char *bufs = (char *) buf + sizeof(struct routing_queue_item);
-    int frame_len = bufsize - sizeof(struct routing_queue_item);
-    memcpy(f->buffer, bufs, bufsize);
-    f->buffer_len = frame_len;
-    f->start = f->buffer;
-    f->len = f->buffer_len;
-    f->datalink_hdr = f->buffer;
-    f->net_hdr = f->datalink_hdr + PICO_SIZE_ETHHDR;
-    f->net_len = 20;
-    f->transport_hdr = f->net_hdr + f->net_len;
-    f->transport_len = (uint16_t) (f->len - f->net_len
-            - (uint16_t) (f->net_hdr - f->buffer));
-*/
     return 0;
 }
 
@@ -1279,18 +1271,19 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
         tcp_queue_item->data = queue_item->buffer + sizeof(struct tcp_intermsu_queue_item);
 
-        if(msg_type != MSU_PROTO_TCP_HANDSHAKE){
-            log_error("Unexpected msg type: %d",msg_type);
-            delete_generic_msu_queue_item(queue_item);
-        }
+        /* Following moved to deserialize to prevent enqueue of bad item */
+        // if(msg_type != MSU_PROTO_TCP_HANDSHAKE){
+        //     log_error("Unexpected msg type: %d",msg_type);
+        //     delete_generic_msu_queue_item(queue_item);
+        // }
 
         struct pico_frame *f = pico_frame_alloc(frame_len);
         if(!f || !f->buffer){
             log_error("Failed to allocate pico frame");
-            delete_generic_msu_queue_item(queue_item);
+            free(queue_item->buffer);
+            free(queue_item);
         }
         memcpy(f->buffer, tcp_queue_item->data, frame_len);
-        log_debug("copied frame");
 
         //Fix frame pointers
         f->buffer_len = frame_len;
@@ -1300,16 +1293,14 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
         f->net_hdr = f->datalink_hdr + PICO_SIZE_ETHHDR;
         f->net_len = 20;
         f->transport_hdr = f->net_hdr + f->net_len;
-        f->transport_len = (uint16_t) (f->len - f->net_len
-            - (uint16_t) (f->net_hdr - f->buffer));
+        f->transport_len = (uint16_t) (f->len - f->net_len - (uint16_t) (f->net_hdr - f->buffer));
         log_debug("Fixed frame pointers..");
 
         msu_process_hs_request_in(msu, tcp_queue_item->src_msu_id, f);
 
         pico_frame_discard(f);
-
-        //free the queue item's memory that was processed.
-        delete_generic_msu_queue_item(queue_item);
+        free(queue_item->buffer);
+        free(queue_item);
     }
     if(exit_flag == 1){
         print_packet_stats(msu->internal_state);
