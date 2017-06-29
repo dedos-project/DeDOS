@@ -15,7 +15,7 @@
 #include "logging.h"
 #include "global.h"
 
-int AcceptSSL(SSL *State, char *Buffer){
+int AcceptSSL(SSL *State) {
     int NumBytes;
     int ret, err;
 
@@ -48,6 +48,12 @@ int AcceptSSL(SSL *State, char *Buffer){
         }
     } while (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE);
 
+    return 0;
+}
+
+int ReadSSL(SSL *State, char *Buffer) {
+    int NumBytes;
+    int ret, err;
 
     ERR_clear_error();
     if ( (NumBytes = SSL_read(State, Buffer, MAX_REQUEST_LEN)) <= 0 ) {
@@ -145,13 +151,28 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
         return NULL;
     }
 
-    int rtn = AcceptSSL(State, Request);
-    if (rtn < 0){
+    int rtn;
+
+    rtn = AcceptSSL(State);
+    if (rtn < 0) {
+        SSL_shutdown(State);
         SSL_free(State);
         close(SocketFD);
-        log_error("Error accepting/reading SSL");
+        log_error("Error accepting SSL");
+
         return NULL;
     }
+
+    rtn = ReadSSL(State, Request);
+    if (rtn < 0) {
+        SSL_shutdown(State);
+        SSL_free(State);
+        close(SocketFD);
+        log_error("Error reading SSL");
+
+        return NULL;
+    }
+
 
     return Request;
 }
