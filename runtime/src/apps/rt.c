@@ -2,6 +2,7 @@
  * @file rt.c
  * The main executable file to start the runtime.
  */
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -83,6 +84,7 @@ static void kill_locks(void) {
 #endif
 
 int main(int argc, char **argv){
+    signal(SIGPIPE, SIG_IGN);
     // initialize the context and read the certificates
 #ifdef DATAPLANE_PROFILING
     log_warn("Data plane profiling enabled");
