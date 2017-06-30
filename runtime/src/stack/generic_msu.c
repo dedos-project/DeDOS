@@ -739,7 +739,7 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
             return 0;
         }
         if (type_id < 0){
-            log_warn("MSU %d returned error code %d", self->id, type_id);
+            log_debug("MSU %d returned error code %d", self->id, type_id);
         }
         if (data){
             if (data->buffer) {

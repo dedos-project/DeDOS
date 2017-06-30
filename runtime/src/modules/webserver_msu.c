@@ -288,7 +288,7 @@ int webserver_receive(struct generic_msu *self, struct generic_msu_queue_item *i
                     return DEDOS_SSL_WRITE_MSU_ID;
                 }
             } else {
-                log_warn("Webserver received unknown request type %s", RequestType);
+                log_debug("Webserver received unknown request type %s", RequestType);
             }
         } else {
             log_warn("Webserver received NULL request type", "");
