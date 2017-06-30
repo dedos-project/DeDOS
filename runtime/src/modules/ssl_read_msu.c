@@ -92,15 +92,14 @@ void InitServerSSLCtx(SSL_CTX **Ctx) {
     //Method = SSLv23_server_method();
     Method = TLSv1_2_server_method();
     *Ctx = SSL_CTX_new(Method);
-    //SSL_CTX_set_options(*Ctx, SSL_OP_NO_SSLv3);
+
+    SSL_CTX_set_session_cache_mode(Ctx, SSL_SESS_CACHE_OFF);
+    SSL_CTX_set_options(*Ctx, SSL_OP_NO_SSLv3 | SSL_OP_NO_TICKET | SSL_OP_SINGLE_DH_USE);
 
     int rc;
     rc = SSL_CTX_set_cipher_list(*Ctx, "HIGH:!aNULL:!MD5:!RC4");
     assert(rc >= 1);
 
-    //SSL_CTX_set_session_cache_mode(*Ctx, SSL_SESS_CACHE_OFF);
-    //SSL_CTX_set_options(*Ctx, SSL_OP_NO_TICKET);
-    //SSL_CTX_set_options(*Ctx, SSL_OP_SINGLE_DH_USE);
     //SSL_CTX_set_options(*Ctx, SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);
     //SSL_CTX_set_options(*Ctx, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
     //SSL_CTX_set_mode(*Ctx, SSL_MODE_AUTO_RETRY);
