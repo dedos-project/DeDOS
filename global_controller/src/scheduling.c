@@ -8,7 +8,7 @@ static uint64_t get_absent_msus(struct dfg_vertex *msu) {
 
     uint64_t absent_msus = 0xFFFFFFFFFFFFFFFF;
 
-    absent_msus &= ~(uint64_t)(1<<msu->msu_id);
+    absent_msus &= ~((uint64_t)1<<msu->msu_id);
 
     struct dfg_route **routes = msu->scheduling.routes;
 
@@ -46,26 +46,39 @@ int fix_route_ranges(struct dfg_route *route, int runtime_sock) {
     int new_keys[route->num_destinations];
     int old_keys[route->num_destinations];
     struct dfg_vertex *destinations[route->num_destinations];
+    int found_downstream = -1;
+    int changes = 0;
     for (int i=0; i<route->num_destinations; ++i) {
         old_keys[i] = route->destination_keys[i];
         struct dfg_vertex *v = route->destinations[i];
-        new_keys[i] = max_key += n_downstream_msus(v);
+        int downstream = n_downstream_msus(v);
+        if (found_downstream != downstream) {
+            if (found_downstream == -1) {
+                found_downstream = downstream;
+            } else {
+                changes = 1;
+            }
+        }
+
+        new_keys[i] = max_key += downstream;
         destinations[i] = v;
     }
 
-    for (int i=0; i<route->num_destinations; ++i) {
-        int orig_key = old_keys[i];
-        struct dfg_vertex *v = destinations[i];
-        int new_key = new_keys[i];
+    if (changes) {
+        for (int i=0; i<route->num_destinations; ++i) {
+            int orig_key = old_keys[i];
+            struct dfg_vertex *v = destinations[i];
+            int new_key = new_keys[i];
 
-        if (orig_key != new_key) {
-            int rtn = mod_endpoint(v->msu_id, route->route_id, new_key, runtime_sock);
-            if (rtn < 0) {
-                log_error("Error modifying endpoint");
-                return -1;
+            if (orig_key != new_key) {
+                int rtn = mod_endpoint(v->msu_id, route->route_id, new_key, runtime_sock);
+                if (rtn < 0) {
+                    log_error("Error modifying endpoint");
+                    return -1;
+                }
+                log_debug("Modified endpoint %d in route %d to have key %d (old: %d)",
+                          v->msu_id, route->route_id, new_key, orig_key);
             }
-            log_debug("Modified endpoint %d in route %d to have key %d (old: %d)",
-                      v->msu_id, route->route_id, new_key, orig_key);
         }
     }
     return 0;
