@@ -298,6 +298,18 @@ int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type) {
     return 0;
 }
 
+int dfg_mod_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end){
+    int rtn = dfg_del_route_endpoint(runtime_index, route_id, msu_id);
+    if (rtn < 0) {
+        log_error("Cannot modify route endpoint that does not exist");
+    }
+    rtn = dfg_add_route_endpoint(runtime_index, route_id, msu_id, range_end);
+    if (rtn < 0) {
+        log_error("Error re-adding route endpoint after deletion");
+    }
+    return rtn;
+}
+
 int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end){
     struct dfg_config *dfg = get_dfg();
     struct dfg_runtime_endpoint *rt = dfg->runtimes[runtime_index];
@@ -365,6 +377,7 @@ int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id){
     route->num_destinations--;
     return 0;
 }
+
 
 /**
  * Lookup a route going from a given MSU toward a given type

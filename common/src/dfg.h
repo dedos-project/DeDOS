@@ -187,6 +187,7 @@ int generate_route_id(struct dfg_runtime_endpoint *rt);
 int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type);
 int add_route_to_msu_vertex(int runtime_index, int msu_id, int route_id);
 int del_route_from_msu_vertex(int runtime_index, int msu_id, int route_id) ;
+int dfg_mod_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end);
 int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end);
 int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id);
 struct dfg_route *get_route_from_type(struct dfg_runtime_endpoint *rt, int msu_type);

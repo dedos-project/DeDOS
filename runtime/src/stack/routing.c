@@ -124,22 +124,26 @@ static int find_id_index(struct routing_table *table, int msu_id) {
  * @param msu_id the ID of the msu to remove from the routing table
  * @return pointer to the msu_endpoint removed from the routing table, or NULL if not found
  */
-static struct msu_endpoint *rm_routing_table_entry(struct routing_table *table, int msu_id) {
-    write_lock(table);;
+static int rm_routing_table_entry(struct routing_table *table, int msu_id,
+                                  struct msu_endpoint *removed) {
+    write_lock(table);
     int index = find_id_index(table, msu_id);
     if (index == -1) {
         log_error("MSU %d does not exist in specified route", msu_id);
         unlock(table);
-        return NULL;
+        return -1;
     }
-    struct msu_endpoint *to_remove = &table->destinations[index];
+    if (removed != NULL) {
+        *removed = table->destinations[index];
+    }
     for (int i=index; i<table->n_destinations-1; i++) {
         table->ranges[i] = table->ranges[i+1];
         table->destinations[i] = table->destinations[i+1];
     }
     table->n_destinations--;
     unlock(table);
-    return to_remove;
+    log_info("Removed destination %d from table of type %d", msu_id,  table->type_id);
+    return 0;
 }
 
 /**
@@ -203,11 +207,12 @@ static int add_routing_table_entry(struct routing_table *table,
  */
 static int alter_routing_table_entry(struct routing_table *table,
                                      int msu_id, uint32_t new_range_end) {
-    struct msu_endpoint *endpoint = rm_routing_table_entry(table, msu_id);
-    if (endpoint == NULL) {
+    struct msu_endpoint endpoint;
+    int rtn = rm_routing_table_entry(table, msu_id, &endpoint);
+    if (rtn == -1) {
         return -1;
     }
-    return add_routing_table_entry(table, endpoint, new_range_end);
+    return add_routing_table_entry(table, &endpoint, new_range_end);
 }
 
 /**
@@ -562,12 +567,11 @@ int add_route_endpoint(int route_id, struct msu_endpoint *endpoint, uint32_t ran
  */
 int remove_route_destination(int route_id, int msu_id) {
     struct routing_table *table = get_routing_table(route_id);
-    struct msu_endpoint *endpoint = rm_routing_table_entry(table, msu_id);
-    if (endpoint == NULL) {
+    int rtn = rm_routing_table_entry(table, msu_id, NULL);
+    if (rtn == -1) {
         log_error("Error removing msu %d from route %d", msu_id, route_id);
         return -1;
     }
-    free(endpoint);
     return 0;
 }
 
@@ -579,9 +583,9 @@ void remove_destination_from_all_routes(int msu_id) {
     // TODO: This is slow. Should only care about routes we're interested in
     for (struct route_set *ref = all_routes; ref != NULL; ref=ref->hh.next) {
 
-        struct msu_endpoint *endpoint = rm_routing_table_entry(ref->table, msu_id);
-        if (endpoint != NULL) {
-            free(endpoint);
+        int rtn = rm_routing_table_entry(ref->table, msu_id, NULL);
+        if (rtn == -1 ){
+            log_error("Error removing routing table entry");
         }
     }
 }
