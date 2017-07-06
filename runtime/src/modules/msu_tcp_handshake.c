@@ -1250,6 +1250,15 @@ int msu_tcp_hs_same_thread_transfer(void *data, void *optional_data)
     return 0;
 }
 
+static inline long unsigned int get_ts(){
+    struct timeval st;
+    long unsigned int ts_usec;
+    gettimeofday(&st, CLOCK_REALTIME);
+    ts_usec =  st.tv_sec * 1000000 + st.tv_usec;
+
+    return ts_usec;
+}
+
 int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item)
 {
     //interface from runtime to picoTCP structures or any other existing code
@@ -1308,12 +1317,25 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
     //pico_sockets_pending_ack_check(in_state); //for connection that only sent SYN
     pico_rand_feed(32);
+    //TODO 1) make the following calls based on elapsed time
+
+    long unsigned int cur_ts_usec = get_ts();
+    //TODO 2_ play around with loop score and see the numbers (diff in microseconds)
+    if(cur_ts_usec - in_state->last_ts > 5 * 1000){
+        //printf("Tick: %lu - %lu = %lu\n", cur_ts_usec, in_state->last_ts, cur_ts_usec - in_state->last_ts);
+        in_state->last_ts = cur_ts_usec;
+        pico_sockets_check(in_state, 32); //for sockets pending restore
+        hs_check_timers(in_state->hs_timers);
+    }
+
+/*
     if(in_state->items_dequeued % (msu->scheduling_weight*1000) == 0){
         pico_sockets_check(in_state, 32); //for sockets pending restore
     }
     if(in_state->items_dequeued % (msu->scheduling_weight*1000) == 0){
         hs_check_timers(in_state->hs_timers);
     }
+*/
     //dummy_state_cleanup(in_state);
 
     return -10;
@@ -1372,6 +1394,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     in_state->syns_dropped = 0;
     in_state->synacks_generated = 0;
     in_state->syns_processed = 0;
+    in_state->last_ts = 0;
     handshake_msu->internal_state = in_state;
 
     log_debug("Created %s MSU with id: %u", handshake_msu->type->name, handshake_msu->id);
