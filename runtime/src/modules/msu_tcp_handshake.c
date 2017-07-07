@@ -789,6 +789,76 @@ struct pico_socket *find_tcp_socket(struct pico_sockport *sp, struct pico_frame 
     return found;
 }
 
+static int hs_tcp_send_rst(struct generic_msu *self, struct pico_socket *s, struct pico_frame *fr,
+        int reply_msu_id)
+{
+
+    struct pico_socket_tcp *t = (struct pico_socket_tcp *) s;
+    struct pico_tcp_hdr *hdr_rcv;
+    int ret;
+
+    /* non-synchronized state, go to CLOSED here to prevent timer callback to go on after timeout */
+    (t->sock).state &= 0x00FFU;
+    (t->sock).state |= PICO_SOCKET_STATE_TCP_CLOSED;
+    // ret = tcp_do_send_rst(s, long_be(t->snd_nxt));
+    // all the reset frame generation is done here
+    hdr_rcv = (struct pico_tcp_hdr *) fr->transport_hdr;
+    int seq = hdr_rcv->ack;
+
+    uint16_t opt_len = tcp_options_size(t, PICO_TCP_RST);
+    struct pico_frame *f;
+    struct pico_tcp_hdr *hdr;
+    f = t->sock.net->alloc(t->sock.net, (uint16_t)(PICO_SIZE_TCPHDR + opt_len));
+    if (!f) {
+        return -1;
+    }
+    f->sock = &t->sock;
+    log_debug("TCP SEND_RST >>>>>>>>>>>>>>> START\n");
+
+    hdr = (struct pico_tcp_hdr *) f->transport_hdr;
+    hdr->len = (uint8_t)((PICO_SIZE_TCPHDR + opt_len) << 2 | t->jumbo);
+    hdr->flags = PICO_TCP_RST;
+    hdr->rwnd = short_be(t->wnd);
+    tcp_set_space(t);
+    tcp_add_options(t, f, PICO_TCP_RST, opt_len);
+    hdr->trans.sport = t->sock.local_port;
+    hdr->trans.dport = t->sock.remote_port;
+    hdr->seq = seq;
+    hdr->ack = long_be(t->rcv_nxt);
+    t->rcv_ackd = t->rcv_nxt;
+    f->start = f->transport_hdr + PICO_SIZE_TCPHDR;
+    hdr->rwnd = short_be(t->wnd);
+    hdr->crc = 0;
+    hdr->crc = short_be(pico_tcp_checksum(f));
+    //copy ip4 stuff to frame from socket
+    uint8_t ttl = PICO_IPV4_DEFAULT_TTL;
+    uint8_t vhl = 0x45; /* version 4, header length 20 */
+    static uint16_t ipv4_progressive_id = 0x91c0;
+    uint8_t proto = s->proto->proto_number;
+    struct pico_ipv4_hdr *iphdr;
+    iphdr = (struct pico_ipv4_hdr *) f->net_hdr;
+
+    iphdr->vhl = vhl;
+    iphdr->len = short_be((uint16_t) (f->transport_len + f->net_len));
+    iphdr->id = short_be(ipv4_progressive_id);
+    iphdr->dst.addr = s->remote_addr.ip4.addr;
+    iphdr->src.addr = s->local_addr.ip4.addr;
+    iphdr->ttl = ttl;
+    iphdr->tos = f->send_tos;
+    iphdr->proto = proto;
+    iphdr->frag = short_be(PICO_IPV4_DONTFRAG);
+    iphdr->crc = 0;
+    iphdr->crc = short_be(pico_checksum(iphdr, f->net_len));
+
+    send_to_next_msu(self, MSU_PROTO_TCP_HANDSHAKE_RESPONSE, f->buffer, f->buffer_len, reply_msu_id);
+
+    /* Set generic socket state to CLOSED, too */
+    (t->sock).state &= 0xFF00U;
+    (t->sock).state |= PICO_SOCKET_STATE_CLOSED;
+
+    return ret;
+}
+
 static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id, struct pico_frame *f)
 {
     //DONT NOT FREE THE INCOMING FRAME HERE
@@ -844,14 +914,16 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
             else
             {
                 log_warn("Bad seqs...cleaning up socket..%s","");
-                // tcp_send_rst(sock_found, f);
+                hs_tcp_send_rst(self, sock_found, f, reply_msu_id);
+
                 /* non-synchronized state, go to CLOSED here to prevent timer callback to go on after timeout */
-                (tcp_sock_found->sock).state &= 0x00FFU;
-                (tcp_sock_found->sock).state |= PICO_SOCKET_STATE_TCP_CLOSED;
+                //(tcp_sock_found->sock).state &= 0x00FFU;
+                //(tcp_sock_found->sock).state |= PICO_SOCKET_STATE_TCP_CLOSED;
                 // ret = tcp_do_send_rst(s, long_be(t->snd_nxt));
                 /* Set generic socket state to CLOSED, too */
-                (tcp_sock_found->sock).state &= 0xFF00U;
-                (tcp_sock_found->sock).state |= PICO_SOCKET_STATE_CLOSED;
+                //(tcp_sock_found->sock).state &= 0xFF00U;
+                //(tcp_sock_found->sock).state |= PICO_SOCKET_STATE_CLOSED;
+
                 remove_completed_request(in_state,  (struct pico_socket *)tcp_sock_found);
                 goto end;
             }
