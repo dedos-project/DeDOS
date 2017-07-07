@@ -557,6 +557,69 @@ static int8_t add_pending_request(struct pico_tree *msu_table, struct pico_socke
     return 0;
 }
 
+static int hs_tcp_nosync_rst(struct generic_msu *self, struct pico_socket *s, struct pico_frame *fr,
+        int reply_msu_id)
+{
+    struct pico_socket_tcp *t = (struct pico_socket_tcp *) s;
+    struct pico_frame *f;
+    struct pico_tcp_hdr *hdr, *hdr_rcv;
+    uint16_t opt_len = tcp_options_size(t, PICO_TCP_RST | PICO_TCP_ACK);
+    hdr_rcv = (struct pico_tcp_hdr *) fr->transport_hdr;
+
+    /***************************************************************************/
+    /* sending RST */
+    f = t->sock.net->alloc(t->sock.net, (uint16_t)(PICO_SIZE_TCPHDR + opt_len));
+
+    if (!f) {
+        return -1;
+    }
+
+    f->sock = &t->sock;
+    hdr = (struct pico_tcp_hdr *) f->transport_hdr;
+    hdr->len = (uint8_t)((PICO_SIZE_TCPHDR + opt_len) << 2 | t->jumbo);
+    hdr->flags = PICO_TCP_RST | PICO_TCP_ACK;
+    hdr->rwnd = short_be(t->wnd);
+    tcp_set_space(t);
+    tcp_add_options(t, f, PICO_TCP_RST | PICO_TCP_ACK, opt_len);
+    hdr->trans.sport = t->sock.local_port;
+    hdr->trans.dport = t->sock.remote_port;
+
+    /* non-synchronized state */
+    if (hdr_rcv->flags & PICO_TCP_ACK) {
+        hdr->seq = hdr_rcv->ack;
+    } else {
+        hdr->seq = 0U;
+    }
+
+    hdr->ack = long_be(SEQN(fr) + fr->payload_len);
+
+    t->rcv_ackd = t->rcv_nxt;
+    f->start = f->transport_hdr + PICO_SIZE_TCPHDR;
+    hdr->rwnd = short_be(t->wnd);
+    hdr->crc = 0;
+    hdr->crc = short_be(pico_tcp_checksum(f));
+    //copy ip4 stuff to frame from socket
+    uint8_t ttl = PICO_IPV4_DEFAULT_TTL;
+    uint8_t vhl = 0x45; /* version 4, header length 20 */
+    static uint16_t ipv4_progressive_id = 0x91c0;
+    uint8_t proto = s->proto->proto_number;
+    struct pico_ipv4_hdr *iphdr;
+    iphdr = (struct pico_ipv4_hdr *) f->net_hdr;
+
+    iphdr->vhl = vhl;
+    iphdr->len = short_be((uint16_t) (f->transport_len + f->net_len));
+    iphdr->id = short_be(ipv4_progressive_id);
+    iphdr->dst.addr = s->remote_addr.ip4.addr;
+    iphdr->src.addr = s->local_addr.ip4.addr;
+    iphdr->ttl = ttl;
+    iphdr->tos = f->send_tos;
+    iphdr->proto = proto;
+    iphdr->frag = short_be(PICO_IPV4_DONTFRAG);
+    iphdr->crc = 0;
+    iphdr->crc = short_be(pico_checksum(iphdr, f->net_len));
+
+    send_to_next_msu(self, MSU_PROTO_TCP_HANDSHAKE_RESPONSE, f->buffer, f->buffer_len, reply_msu_id);
+}
 static int dedos_tcp_send_synack(struct generic_msu* self, struct pico_socket *s, int reply_msu_id)
 {
     struct pico_socket_tcp *ts = TCP_SOCK(s);
@@ -620,6 +683,22 @@ static int dedos_tcp_send_synack(struct generic_msu* self, struct pico_socket *s
     in_state->synacks_generated++;
 
     pico_frame_discard(synack);
+    return 0;
+}
+
+static int handle_rst(struct generic_msu* self, struct pico_socket *s, struct pico_frame *f,
+                        int reply_msu_id){
+    struct pico_socket_tcp *t = (struct pico_socket_tcp *) s;
+    struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
+    uint32_t this_seq = long_be(hdr->seq);
+    if ((this_seq >= t->rcv_ackd) && (this_seq <= ((uint32_t)(short_be(hdr->rwnd) << (t->wnd_scale)) + t->rcv_ackd)))
+    {
+        (t->sock).state &= 0x00FFU;
+        (t->sock).state |= PICO_SOCKET_STATE_TCP_CLOSED;
+        (t->sock).state &= 0xFF00U;
+        (t->sock).state |= PICO_SOCKET_STATE_CLOSED;
+        remove_completed_request(self->internal_state, s);
+    }
     return 0;
 }
 
@@ -728,9 +807,12 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         log_debug("rcv_nxt is now %08x", t->rcv_nxt);
 #endif
     }
-    else {
+    else if ((hdr->flags & PICO_TCP_RST) == 0) {
+        hs_tcp_nosync_rst(self, s, f, reply_msu_id);
         remove_completed_request(in_state,  (struct pico_socket *)t);
+        return -1;
     }
+
     return 0;
 }
 
@@ -788,6 +870,8 @@ struct pico_socket *find_tcp_socket(struct pico_sockport *sp, struct pico_frame 
 
     return found;
 }
+
+
 
 static int hs_tcp_send_rst(struct generic_msu *self, struct pico_socket *s, struct pico_frame *fr,
         int reply_msu_id)
@@ -950,8 +1034,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
                     log_critical("Underflow or overflow in syn state size, reset");
                     in_state->syn_state_used_memory = 0;
                 }
-            }
-
+/*
 #ifdef PICO_SUPPORT_SAME_THREAD_TCP_MSUS
             {
                 //create a new clone socket to add
@@ -996,16 +1079,18 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
                 goto end2;
             }
 #endif
-            void *transfer_buf = NULL;
-            log_debug("Collecting socket info %s","");
-            struct pico_socket_tcp_dump *collected_tcp_sock = msu_tcp_hs_collect_socket((void*) sock_found);
+*/
+                void *transfer_buf = NULL;
+                log_debug("Collecting socket info %s","");
+                struct pico_socket_tcp_dump *collected_tcp_sock = msu_tcp_hs_collect_socket((void*) sock_found);
 
-            //send to next msu
-            send_to_next_msu(self, MSU_PROTO_TCP_CONN_RESTORE,
-                    (char*)collected_tcp_sock, sizeof(struct pico_socket_tcp_dump), reply_msu_id);
+                //send to next msu
+                send_to_next_msu(self, MSU_PROTO_TCP_CONN_RESTORE,
+                        (char*)collected_tcp_sock, sizeof(struct pico_socket_tcp_dump), reply_msu_id);
 
-            //free collected_tcp_sock after sending the buff
-            free(collected_tcp_sock);
+                //free collected_tcp_sock after sending the buff
+                free(collected_tcp_sock);
+            } //if stat == 0
         }
         //Duplicate first ACK
         else if(sock_found->state == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED |
@@ -1027,6 +1112,9 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     }
     else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK) && !sock_found) {
     	log_warn("ACK with no associated socket %s","");
+    }
+    else if ((flags == PICO_TCP_RST || flags == PICO_TCP_PSHACK) && sock_found) {
+        handle_rst(self, sock_found, f, reply_msu_id);
     }
     else
     {

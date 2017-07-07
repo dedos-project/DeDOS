@@ -3149,6 +3149,19 @@ static void tcp_wakeup_pending(struct pico_socket *s, uint16_t ev)
         (t->sock).wakeup(ev, &(t->sock));
 }
 
+static int dedos_tcp_rst(struct pico_socket *s, struct pico_frame *f)
+{
+#ifdef PICO_SUPPORT_DEDOS_MSUS
+    log_debug("Forwarding reset to Handshake MSU","");
+    route_to_handshake_msu(s, f, "RST");
+    //FIXME: How to handle pending connections number provided by listen?
+    // Should not be incremented here, because we dont want to drop syn requests
+    //s->number_of_pending_conn++;
+    return 0;
+#endif
+
+}
+
 static int tcp_rst(struct pico_socket *s, struct pico_frame *f)
 {
     struct pico_socket_tcp *t = (struct pico_socket_tcp *) s;
@@ -3227,7 +3240,7 @@ static const struct tcp_action_entry tcp_fsm[] = {
     { PICO_SOCKET_STATE_TCP_UNDEF,        NULL,            NULL,              NULL,              NULL,            NULL,            NULL,            NULL     },
     { PICO_SOCKET_STATE_TCP_CLOSED,       NULL,            NULL,              NULL,              NULL,            NULL,            NULL,            NULL     },
 #ifdef PICO_SUPPORT_DEDOS_MSUS
-    { PICO_SOCKET_STATE_TCP_LISTEN,       &tcp_syn,        NULL,              &tcp_first_ack,              NULL,            NULL,            NULL,            NULL     },
+    { PICO_SOCKET_STATE_TCP_LISTEN,       &tcp_syn,        NULL,              &tcp_first_ack,              NULL,            NULL,            NULL,            &dedos_tcp_rst },
 #else
     { PICO_SOCKET_STATE_TCP_LISTEN,       &tcp_syn,        NULL,              NULL,              NULL,            NULL,            NULL,            NULL     },
 #endif
