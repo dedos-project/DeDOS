@@ -100,7 +100,7 @@ struct tcp_input_segment
 };
 
 /* Function to compare input segments */
-static int input_segment_compare(void *ka, void *kb)
+int input_segment_compare(void *ka, void *kb)
 {
     struct tcp_input_segment *a = ka, *b = kb;
     return pico_seq_compare(a->seq, b->seq);
@@ -1056,11 +1056,7 @@ struct pico_socket *hs_pico_tcp_open(uint16_t family, void *timer_heap)
 
     /* Set default linger for the socket */
     t->linger_timeout = PICO_SOCKET_LINGER_TIMEOUT;
-
-#ifdef PICO_TCP_SUPPORT_SOCKET_STATS
-    tcp_dbg("SOCKET STATS ENABLED\n");
-    pico_timer_add(2000, sock_stats, t);
-#endif
+    //call to hs_timer_add is sloooowwwwwww
     t->keepalive_tmr = hs_timer_add(timer_heap, 1000, hs_pico_tcp_keepalive, t);
     tcp_set_space(t);
 
