@@ -15,6 +15,7 @@
 void print_forwarding_stats(void);
 
 extern struct pico_protocol pico_proto_tcp;
+int input_segment_compare(void *ka, void *kb);
 
 PACKED_STRUCT_DEF pico_tcp_hdr {
     struct pico_trans trans;
