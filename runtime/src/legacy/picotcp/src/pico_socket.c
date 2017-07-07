@@ -454,6 +454,40 @@ void socket_garbage_collect(pico_time now, void *arg)
     PICO_FREE(s);
 }
 
+struct tcp_input_segment
+{
+    uint32_t seq;
+    /* Pointer to payload */
+    unsigned char *payload;
+    uint16_t payload_len;
+};
+
+#define IS_INPUT_QUEUE(q)  (q->pool.compare == input_segment_compare)
+inline static void tcp_discard_all_segments(struct pico_tcp_queue *tq)
+{
+    struct pico_tree_node *index = NULL, *index_safe = NULL;
+    PICOTCP_MUTEX_LOCK(Mutex);
+    pico_tree_foreach_safe(index, &tq->pool, index_safe)
+    {
+        void *f = index->keyValue;
+        if(!f)
+            break;
+
+        pico_tree_delete(&tq->pool, f);
+        if(IS_INPUT_QUEUE(tq))
+        {
+            struct tcp_input_segment *inp = (struct tcp_input_segment *)f;
+            PICO_FREE(inp->payload);
+            PICO_FREE(inp);
+        }
+        else
+            pico_frame_discard(f);
+    }
+    tq->frames = 0;
+    tq->size = 0;
+    PICOTCP_MUTEX_UNLOCK(Mutex);
+}
+
 
 void hs_socket_garbage_collect(pico_time now, void *arg, void *timers)
 {
@@ -476,7 +510,9 @@ void hs_socket_garbage_collect(pico_time now, void *arg, void *timers)
             f_out = pico_dequeue(&s->q_out);
         }
     }
-//    socket_clean_queues(s);
+    pico_queue_deinit(&s->q_in);
+    pico_queue_deinit(&s->q_out);//    socket_clean_queues(s);
+
     if(is_sock_tcp(s)){
 
         struct pico_socket_tcp *tcp = (struct pico_socket_tcp *)s;
@@ -487,8 +523,11 @@ void hs_socket_garbage_collect(pico_time now, void *arg, void *timers)
         tcp->retrans_tmr = 0;
         tcp->keepalive_tmr = 0;
         tcp->fin_tmr = 0;
+
+        tcp_discard_all_segments(&tcp->tcpq_in);
+        tcp_discard_all_segments(&tcp->tcpq_out);
+        tcp_discard_all_segments(&tcp->tcpq_hold);
     }
-//    pico_socket_tcp_cleanup(sock);
     PICO_FREE(s);
 }
 
