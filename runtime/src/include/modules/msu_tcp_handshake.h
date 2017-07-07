@@ -22,6 +22,7 @@ struct hs_internal_state
     long unsigned int syns_processed;
     long unsigned int syns_dropped;
     long unsigned int synacks_generated;
+    long unsigned int last_ts; //for storing last ts to measure elapsed time for calling cleanup
 };
 
 struct hs_queue_item
