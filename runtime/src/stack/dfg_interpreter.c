@@ -130,21 +130,19 @@ int create_route_from_dfg(struct dfg_route *dfg_route){
 }
 
 int spawn_threads_from_dfg(struct dfg_config *dfg, int runtime_id){
+
+    struct dfg_runtime_endpoint *rt = get_local_runtime(dfg, runtime_id);
+
     int n_spawned_threads = 0;
-    for (int i=0; i<dfg->vertex_cnt; i++){
-        if (vertex_locality(dfg->vertices[i], runtime_id) == 0) {
-            int thread_id = vertex_thread_id(dfg->vertices[i]);
-            while (thread_id >= total_threads){
-                n_spawned_threads++;
-                int rtn = on_demand_create_worker_thread(0);
-                if (rtn >= 0){
-                    log_debug("Created worker thread to accomodate MSU");
-                } else {
-                    log_error("Could not create necessary worker thread");
-                    return -1;
-                }
-            }
+    for (int i=0; i<rt->num_pinned_threads; i++) {
+        int rtn = on_demand_create_worker_thread(0);
+        if (rtn >= 0){
+            log_debug("Created worker thread to accomodate MSU");
+        } else {
+            log_error("Could not create necessary worker thread");
+            return -1;
         }
+        n_spawned_threads++;
     }
     return n_spawned_threads;
 }
