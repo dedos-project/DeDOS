@@ -235,7 +235,7 @@ int send_addroute_msg(int route_id, int msu_id, int runtime_sock) {
         .payload = &add_route_msg
     };
 
-    int rtn = send_control_msg(runtime_sock, &control_msg);
+    rtn = send_control_msg(runtime_sock, &control_msg);
     usleep(SLEEP_AMOUNT_US);
     return rtn;
 }
@@ -463,6 +463,7 @@ int create_worker_thread(int runtime_sock) {
         new_thread->id = rt->num_threads;
         new_thread->mode = 1;
         new_thread->utilization = 0;
+        new_thread->num_msus = 0;
 
         int new_thread_index = rt->num_threads;
         rt->threads[new_thread_index] = new_thread;
