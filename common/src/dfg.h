@@ -62,6 +62,7 @@ struct runtime_thread {
     int mode; // not-pinned/pinned
     //TODO: define a more reasonable upper limit on msu per thread
     struct dfg_vertex *msus[MAX_MSU];
+    int num_msus;
     int utilization; //sum(msu.wcet / msu.deadline)
 };
 
@@ -77,6 +78,7 @@ struct msu_statistics_data {
     struct timed_rrdb queue_items_processed;
     struct timed_rrdb queue_length;
     struct timed_rrdb memory_allocated;
+    struct timed_rrdb execution_time;
 };
 
 struct msu_scheduling {
@@ -86,6 +88,8 @@ struct msu_scheduling {
     int num_routes;
     struct dfg_route *routes[NUM_MSU_TYPES];
     float deadline;
+    int cloneable;
+    int colocation_group;
 };
 
 //store the absolute destination and source types
@@ -121,7 +125,7 @@ struct dfg_vertex {
     char msu_mode[13]; //blocking/non-blocking
 
     int num_dependencies;
-    struct dependent_type *dependencies[NUM_MSU_TYPES];
+    struct dependent_type dependencies[NUM_MSU_TYPES];
     //Profiling data
     struct msu_profiling profiling;
 

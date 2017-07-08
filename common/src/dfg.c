@@ -440,8 +440,8 @@ int msu_has_route(struct dfg_vertex *msu, int route_id) {
 struct dependent_type *get_dependent_type(struct dfg_vertex *msu, int msu_type) {
     int i;
     for (i = 0; i < msu->num_dependencies; ++i) {
-        if (msu->dependencies[i]->msu_type == msu_type) {
-            return msu->dependencies[i];
+        if (msu->dependencies[i].msu_type == msu_type) {
+            return &msu->dependencies[i];
         }
     }
 
@@ -487,6 +487,8 @@ void clone_type_static_data(struct dfg_vertex *msu) {
             memcpy(&msu->dependencies, &peer_msu->dependencies,
                    sizeof(struct dependent_type) * peer_msu->num_dependencies);
             msu->num_dependencies = peer_msu->num_dependencies;
+            msu->scheduling.cloneable = peer_msu->scheduling.cloneable;
+            msu->scheduling.colocation_group = peer_msu->scheduling.colocation_group;
 
             memcpy(&msu->msu_mode, &peer_msu->msu_mode, strlen(&peer_msu->msu_mode));
 
