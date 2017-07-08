@@ -488,6 +488,12 @@ int add_route_to_set(struct route_set **routes, int route_id) {
     // Modify the route ID to match the type ID
     route->id = route->table->type_id;
 
+    if (route->id == 0) {
+        log_warn("Attempting to add route with no type id. Assigning id to route_id");
+        //FIXME: BADDDDD! VERY HACKY! SH
+        route->id = route_id;
+    }
+
     // See if a route of that type already exists in the set
     struct route_set *existing_route = NULL;
     HASH_FIND_INT(*routes, &route->id, existing_route);
