@@ -10,7 +10,7 @@ struct to_schedule {
 };
 
 void prepare_clone(struct dfg_vertex *msu);
-int clone_msu(int msu_id);
+struct dfg_vertex *clone_msu(int msu_id);
 int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt, struct dfg_vertex **new_msus);
 int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu);
 

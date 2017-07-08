@@ -84,7 +84,7 @@ static int process_create_msu_request(struct dedos_thread_msg *msg,
         log_error("Could not initialize new MSU %d", create_action->msu_id);
         return -1;
     }
-    log_info("Successfully created MSU with ID: %d", create_action->msu_id);
+    log_info("Successfully created MSU of type %s with ID: %d", new_msu->type->name, create_action->msu_id);
 
     if (!thread->msu_pool){
         log_error("No MSU pool to add MSU %d to", create_action->msu_id);
@@ -214,8 +214,8 @@ void process_control_updates(void)
     if (rtn < 0){
         log_error("Error processing thread control queue");
     }
-    log_critical("BADFIX: Sleeping in process control updates to keep ASAN happy with some race condition\n");
-    sleep(5);
+    //log_critical("BADFIX: Sleeping in process control updates to keep ASAN happy with some race condition\n");
+    //  sleep(5);
     // Free the thread message
     dedos_thread_msg_free(msg);
 }

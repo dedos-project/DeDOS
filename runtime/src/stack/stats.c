@@ -86,17 +86,19 @@ struct stat_type {
 #define MAX_STAT 8192
 #endif
 
+#define MAX_MSU 36
+
 /**
  * This structure defines the format and size of the statistics being logged
  * NOTE: Entries *MUST* be in the same order as the enumerator in stats.h!
  */
 struct stat_type stat_types[10] = {
-   {QUEUE_LEN,           LOG_QUEUE_LEN,           32, MAX_STAT, "%02.0f",  "MSU_QUEUE_LENGTH"},
-   {ITEMS_PROCESSED,     LOG_ITEMS_PROCESSED,     32, MAX_STAT, "%03.0f",  "ITEMS_PROCESSED"},
-   {MSU_FULL_TIME,       LOG_MSU_FULL_TIME,       32, MAX_STAT, "%0.9f",   "MSU_FULL_TIME"},
-   {MSU_INTERNAL_TIME,   LOG_MSU_INTERNAL_TIME,   32, MAX_STAT, "%0.9f",   "MSU_INTERNAL_TIME"},
-   {MSU_INTERIM_TIME,    LOG_MSU_INTERIM_TIME,    32, MAX_STAT, "%0.9f",   "MSU_INTERIM_TIME"},
-   {MEMORY_ALLOCATED,    LOG_MEMORY_ALLOCATED,    32, MAX_STAT, "%09.0f",  "MEMORY_ALLOCATED"},
+   {QUEUE_LEN,           LOG_QUEUE_LEN,           MAX_MSU, MAX_STAT, "%02.0f",  "MSU_QUEUE_LENGTH"},
+   {ITEMS_PROCESSED,     LOG_ITEMS_PROCESSED,     MAX_MSU, MAX_STAT, "%03.0f",  "ITEMS_PROCESSED"},
+   {MSU_FULL_TIME,       LOG_MSU_FULL_TIME,       MAX_MSU, MAX_STAT, "%0.9f",   "MSU_FULL_TIME"},
+   {MSU_INTERNAL_TIME,   LOG_MSU_INTERNAL_TIME,   MAX_MSU, MAX_STAT, "%0.9f",   "MSU_INTERNAL_TIME"},
+   {MSU_INTERIM_TIME,    LOG_MSU_INTERIM_TIME,    MAX_MSU, MAX_STAT, "%0.9f",   "MSU_INTERIM_TIME"},
+   {MEMORY_ALLOCATED,    LOG_MEMORY_ALLOCATED,    MAX_MSU, MAX_STAT, "%09.0f",  "MEMORY_ALLOCATED"},
    {N_CONTEXT_SWITCH,    LOG_N_CONTEXT_SWITCH,    8,  MAX_STAT, "%3.0f",   "N_CONTEXT_SWITCHES"},
    {BYTES_SENT,          LOG_BYTES_SENT,          1,  MAX_STAT, "%06.0f",  "BYTES_SENT"},
    {BYTES_RECEIVED,      LOG_BYTES_RECEIVED,      1,  MAX_STAT, "%06.0f",  "BYTES_RECEIVED"},

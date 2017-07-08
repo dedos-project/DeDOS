@@ -102,6 +102,42 @@ def runtime_routes(rt_id, msus, routes):
 
     return routes_final
 
+def count_downstream(msu, dfg, found_already=None):
+
+    these_found = [msu['id']]
+    found_already = [] if found_already is None else found_already
+
+    if 'routing' not in msu['scheduling']:
+        found_already.extend(these_found)
+        return 1
+
+    for route in msu['scheduling']['routing']:
+        runtime = [rt for rt in dfg['runtimes'] if rt['id'] == msu['scheduling']['runtime_id']][0]
+        dfg_route = [r for r in runtime['routes'] if r['id'] == route][0]
+
+        for dst in dfg_route['destinations']:
+            if not dst in found_already:
+                dst_msus = [m for m in dfg['MSUs'] if m['id'] == dst]
+                if len(dst_msus) == 0:
+                    print "MSU %s can't find" % dst
+                dst_msu = dst_msus[0]
+                count_downstream(dst_msu, dfg, these_found)
+
+    found_already.extend(these_found)
+    return len(these_found)
+
+def fix_route_keys(dfg):
+
+    msus = {msu['id']:msu for msu in dfg['MSUs']}
+
+    for runtime in dfg['runtimes']:
+        for route in runtime['routes']:
+            min_key = 0
+            for destination in route['destinations']:
+                msu = msus[destination]
+                min_key += count_downstream(msu, dfg)
+                route['destinations'][destination] = min_key
+
 def make_msus_out(msu):
     global max_id
     reps = msu['reps'] if 'reps' in msu else 1
@@ -116,6 +152,8 @@ def make_msus_out(msu):
         msu_out['scheduling']['thread_id'] = msu['thread']+i
         msu_out['scheduling']['deadline'] = msu['deadline']
         msu_out['scheduling']['runtime_id'] = msu['scheduling']['runtime_id']
+        msu_out['scheduling']['cloneable'] = msu['cloneable']
+        msu_out['scheduling']['colocation_group'] = msu['colocation_group'] if 'colocation_group' in msu else 0
         if msu_out['vertex_type'] != 'exit':
             msu_out['scheduling']['routing'] = []
         if 'depedencies' in msu:
@@ -186,15 +224,16 @@ def make_dfg(yml_filename, pretty=False):
         rt['routes'] = runtime_routes(rt['id'], msus_out, input['routes'])
 
     output['MSUs'] = msus_out
+    fix_route_keys(output)
     stringify(output)
 
-    if pretty:
-        print(json.dumps(output, indent=2))
-    else:
-        print(json.dumps(output))
-
+    return output
 
 if __name__ == '__main__':
     pretty = True
     cfg = sys.argv[-1]
-    make_dfg(cfg, pretty)
+    output = make_dfg(cfg, pretty)
+    if pretty:
+        print(json.dumps(output, indent=2))
+    else:
+        print(json.dumps(output))

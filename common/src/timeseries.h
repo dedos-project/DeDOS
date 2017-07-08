@@ -10,7 +10,7 @@
 #include <time.h>
 
 /** The maximum length of the round-robin database */
-#define RRDB_ENTRIES 60
+#define RRDB_ENTRIES 120
 
 /** Round-robin database (circular buffer) for storing timeseries data.
  * Meant for reporting statistics to the global controller */
@@ -22,6 +22,14 @@ struct timed_rrdb {
 
 // Have to put this here to deal with ciruclar depedency :(
 #include "dfg.h"
+
+/** Calculates the minimum of a timeseries over the last n samples */
+double timeseries_min(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples);
+/** Calculates the amount by which a statistic has changed over the last n samples */
+double stat_increase(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples);
+
+/** Calculates the average of the last n stats for a given MSU */
+double average_n(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples);
 
 /** Calculates the average of a statistic for a given MSU */
 int average(struct dfg_vertex *msu, enum stat_id stat_id);

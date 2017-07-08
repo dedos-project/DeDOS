@@ -298,6 +298,18 @@ int dfg_add_route(struct dfg_runtime_endpoint *rt, int route_id, int msu_type) {
     return 0;
 }
 
+int dfg_mod_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end){
+    int rtn = dfg_del_route_endpoint(runtime_index, route_id, msu_id);
+    if (rtn < 0) {
+        log_error("Cannot modify route endpoint that does not exist");
+    }
+    rtn = dfg_add_route_endpoint(runtime_index, route_id, msu_id, range_end);
+    if (rtn < 0) {
+        log_error("Error re-adding route endpoint after deletion");
+    }
+    return rtn;
+}
+
 int dfg_add_route_endpoint(int runtime_index, int route_id, int msu_id, unsigned int range_end){
     struct dfg_config *dfg = get_dfg();
     struct dfg_runtime_endpoint *rt = dfg->runtimes[runtime_index];
@@ -366,6 +378,7 @@ int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id){
     return 0;
 }
 
+
 /**
  * Lookup a route going from a given MSU toward a given type
  * @param struct dfg_vertex msu: the given MSU
@@ -427,8 +440,8 @@ int msu_has_route(struct dfg_vertex *msu, int route_id) {
 struct dependent_type *get_dependent_type(struct dfg_vertex *msu, int msu_type) {
     int i;
     for (i = 0; i < msu->num_dependencies; ++i) {
-        if (msu->dependencies[i]->msu_type == msu_type) {
-            return msu->dependencies[i];
+        if (msu->dependencies[i].msu_type == msu_type) {
+            return &msu->dependencies[i];
         }
     }
 
@@ -474,6 +487,8 @@ void clone_type_static_data(struct dfg_vertex *msu) {
             memcpy(&msu->dependencies, &peer_msu->dependencies,
                    sizeof(struct dependent_type) * peer_msu->num_dependencies);
             msu->num_dependencies = peer_msu->num_dependencies;
+            msu->scheduling.cloneable = peer_msu->scheduling.cloneable;
+            msu->scheduling.colocation_group = peer_msu->scheduling.colocation_group;
 
             memcpy(&msu->msu_mode, &peer_msu->msu_mode, strlen(&peer_msu->msu_mode));
 

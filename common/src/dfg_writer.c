@@ -4,7 +4,7 @@
 #include "jsmn.h"
 #include "logging.h"
 
-#define MAX_JSON_LEN 16384
+#define MAX_JSON_LEN 65536
 
 jsmn_parser jp;
 
@@ -95,6 +95,9 @@ int json_test(jsmntok_t *t, int r) {
 #define KEY_VAL(json, key, fmt, value) \
     (json).length += sprintf((json).string + (json).length, "\"" key "\":\"" fmt "\",", value)
 
+#define FMT_KEY_VAL(json, key_fmt, key, val_fmt, value) \
+    (json).length += sprintf((json).string + (json).length, "\"" key_fmt "\":\"" val_fmt "\",", key, value)
+
 #define KEY(json, key)\
     (json).length += sprintf((json).string + (json).length, "\"" key "\":")
 
@@ -125,17 +128,19 @@ static inline void output_statistic(struct json_output_state *json,
     START_LIST(*json);
     int skip = 0;
     for (int i=write_index - n_statistics; i<write_index; ++i) {
-        if (stat->time[i].tv_sec == 0) {
+        int index = i > 0 ? i : n_statistics - i;
+        if (stat->time[index].tv_sec == 0) {
             ++skip;
             continue;
         }
-        VALUE(*json, "%.2f", (double)stat->time[i].tv_sec + (double)stat->time[i].tv_nsec / 1e9);
+        VALUE(*json, "%.2f", (double)stat->time[index].tv_sec + (double)stat->time[index].tv_nsec / 1e9);
     }
     END_LIST(*json);
     KEY(*json, "values");
     START_LIST(*json);
     for (int i=write_index - n_statistics + skip; i<write_index; ++i) {
-        VALUE(*json, "%.3f", stat->data[i]);
+        int index = i > 0 ? i : n_statistics - i;
+        VALUE(*json, "%.3f", stat->data[index]);
     }
     END_LIST(*json);
     END_OBJ(*json);
@@ -159,7 +164,7 @@ char *dfg_to_json(struct dfg_config *dfg, int n_statistics) {
     KEY_VAL(json, "application_name", "%s", dfg->application_name);
 
     //applicatin deadline
-    KEY_VAL(json, "application_deadline", "%d", dfg->application_deadline);
+    KEY_VAL(json, "application_deadline", "%d", (int)dfg->application_deadline);
 
     //global ctl ip
     KEY_VAL(json, "global_ctl_ip", "%s", dfg->global_ctl_ip);
@@ -197,13 +202,14 @@ char *dfg_to_json(struct dfg_config *dfg, int n_statistics) {
                 KEY_VAL(json, "id", "%d", route->route_id);
 
                 KEY(json, "destinations");
-                START_LIST(json);
+                START_OBJ(json);
 
                 for (int dest_i = 0; dest_i < route->num_destinations; ++dest_i) {
-                    VALUE(json, "%d", route->destinations[dest_i]->msu_id);
+                    FMT_KEY_VAL(json, "%d", route->destinations[dest_i]->msu_id,
+                                      "%d", route->destination_keys[dest_i]);
                 }
 
-                END_LIST(json);
+                END_OBJ(json);
                 END_OBJ(json);
             }
             END_LIST(json);
@@ -330,7 +336,7 @@ char *dfg_to_json(struct dfg_config *dfg, int n_statistics) {
 
             KEY_VAL(json, "runtime_id", "%d", msu->scheduling.runtime->id);
             KEY_VAL(json, "thread_id", "%d", msu->scheduling.thread_id);
-            KEY_VAL(json, "deadline", "%d", msu->scheduling.deadline);
+            KEY_VAL(json, "deadline", "%d", (int)msu->scheduling.deadline);
 
             log_custom(LOG_DFG_WRITER, "writing routes");
             if (msu->scheduling.num_routes > 0) {

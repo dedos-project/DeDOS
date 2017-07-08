@@ -408,7 +408,9 @@ int mod_endpoint(int msu_id, int route_id, unsigned int range_end, int runtime_s
         .payload = &route_msg
     };
 
-    return send_control_msg(runtime_sock, &control_msg);
+    rtn = send_control_msg(runtime_sock, &control_msg);
+    usleep(SLEEP_AMOUNT_US);
+    return rtn;
 }
 
 int create_worker_thread(int runtime_sock) {
@@ -461,6 +463,7 @@ int create_worker_thread(int runtime_sock) {
         new_thread->id = rt->num_threads;
         new_thread->mode = 1;
         new_thread->utilization = 0;
+        new_thread->num_msus = 0;
 
         int new_thread_index = rt->num_threads;
         rt->threads[new_thread_index] = new_thread;

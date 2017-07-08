@@ -1,7 +1,7 @@
 TARGETS = global_controller
 CC:=$(CROSS_COMPILE)gcc
 ADDRESS_SANITIZER?=0
-DEBUG=0
+DEBUG=1
 
 LOGS = \
 	   DEBUG \
@@ -10,6 +10,7 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
+	   CLONE_DECISIONS \
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 
@@ -24,9 +25,9 @@ COMMON_OBJ = $(COMMON_BLD)objs/
 CFLAGS= -std=gnu99 -I$(PREFIX)/include -I$(COMMON_SRC) -Iinclude -Wall
 CFLAGS+= -Wconversion
 CFLAGS+= -Wcast-align
-CFLAGS+= -Wmissing-prototypes
 CFLAGS+= -Wno-missing-field-initializers
 CFLAGS+= $(LOG_DEFINES)
+CFLAGS+= -DDYN_SCHED=1
 
 ifeq ($(DEBUG),1)
   CFLAGS+=-ggdb
@@ -41,13 +42,12 @@ CORE_OBJ= src/main.o \
 		  src/communication.o \
 		  src/cli_interface.o \
 		  src/control_msg_handler.o\
-		  src/stat_msg_handler.o
+		  src/stat_msg_handler.o \
+	      src/haproxy.o 
 COMMON_SRCS = $(wildcard $(COMMON_SRC)*.c)
 COMMON_OBJS = $(patsubst $(COMMON_SRC)%.c, $(COMMON_OBJ)%.o, $(COMMON_SRCS))
 
 all: $(TARGETS)
-
-global_controller:: $(SELF)
 
 $(COMMON_OBJ)%.o: $(COMMON_SRC)%.c
 	cd .. && make common
@@ -57,3 +57,4 @@ global_controller:: $(CORE_OBJ) $(COMMON_OBJS)
 
 clean:
 	rm -f $(TARGETS) $(CORE_OBJ)
+

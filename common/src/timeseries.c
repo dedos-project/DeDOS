@@ -8,6 +8,111 @@
 #include "stats.h"
 #include "dfg.h"
 
+struct timed_rrdb *get_timeseries(struct dfg_vertex *msu, enum stat_id stat_id) {
+    switch (stat_id) {
+        case QUEUE_LEN:
+            return &msu->statistics.queue_length;
+            break;
+        case ITEMS_PROCESSED:
+            return &msu->statistics.queue_items_processed;
+            break;
+        case MEMORY_ALLOCATED:
+            return &msu->statistics.memory_allocated;
+           break;
+        default:
+            debug("%s", "Unknown statistic");
+    }
+    return NULL;
+}
+
+double timeseries_min(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
+    struct timed_rrdb *timeseries = get_timeseries(msu, stat_id);
+    if (timeseries == NULL) {
+        return -1;
+    }
+
+    double min = -1;
+    for (int i=0; i<n_samples; i++) {
+        int index = timeseries->write_index - i - 1;
+        if (index < 0) {
+            index = RRDB_ENTRIES + index;
+        }
+        if (timeseries->time[index].tv_sec == 0) {
+            return min;
+        }
+        if (min < 0 || timeseries->data[index] < min) {
+            min = timeseries->data[index];
+        }
+    }
+    return min;
+}
+
+double stat_increase(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
+    struct timed_rrdb *timeseries = get_timeseries(msu, stat_id);
+    if (timeseries == NULL) {
+        return -1;
+    }
+
+    int index = timeseries->write_index - 1;
+    if (index < 0) {
+        index = RRDB_ENTRIES + index;
+    }
+    if (timeseries->time[index].tv_sec == 0) {
+        return 0;
+    }
+    double end = timeseries->data[index];
+    index -= n_samples;
+    if (index < 0) {
+        index = RRDB_ENTRIES + index;
+    }
+    if (timeseries->time[index].tv_sec == 0) {
+        return end;
+    }
+    return end - timeseries->data[index];
+}
+
+double average_n(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
+    struct timed_rrdb *timeseries;
+    switch (stat_id) {
+        case QUEUE_LEN:
+            timeseries = &msu->statistics.queue_length;
+            break;
+        case ITEMS_PROCESSED:
+            timeseries = &msu->statistics.queue_items_processed;
+            break;
+        case MEMORY_ALLOCATED:
+            timeseries = &msu->statistics.memory_allocated;
+           break;
+        default:
+            debug("%s", "Unknown statistic");
+            return -1;
+    }
+
+    double sum = -1;
+    int i;
+    int start_index = timeseries->write_index - 1;
+    log_debug("Start index %d", start_index);
+    for (i=0; i<n_samples; i++) {
+        int index = start_index - i;
+        if ( index < 0 ) 
+            index = RRDB_ENTRIES + index;
+        if ( timeseries->time[index].tv_sec == 0 ){
+            log_debug("Break on %d" index);
+            break;
+        }
+        if ( sum == -1 ) {
+            sum = timeseries->data[index];
+        } else {
+            sum += timeseries->data[index];
+        }
+    }
+    if (i==0)
+        return -1;
+    return sum / i;
+}
+
+
+
 /** Calculates the average of a statistic for a specific MSU.
  * @param msu The msu to which the statistics refer
  * @param stat_id The specific statstic to measure
@@ -63,6 +168,7 @@ int average(struct dfg_vertex *msu, enum stat_id stat_id) {
 int append_to_timeseries(struct timed_stat *input, int input_size,
                          struct timed_rrdb *timeseries) {
     int write_index = timeseries->write_index;
+    int tmp = RRDB_ENTRIES + 1;
     for (int i=0; i<input_size; i++) {
         timeseries->data[write_index] = input[i].stat;
         timeseries->time[write_index] = input[i].time;
@@ -75,7 +181,7 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
 
 /** The length of the begnning and end of the timeseries that's printed
  * when print_timeseries() is called */
-#define PRINT_LEN 6
+#define PRINT_LEN 3
 
 /** Prints the beginning and end of a timeseries.
  * @param timeseries The timeseries to print
