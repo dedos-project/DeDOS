@@ -17,16 +17,16 @@
  * The __attribute__ flag disables the warning about unused variables
  */
 static enum stat_id reported_stats[] __attribute__((unused)) = {
-    QUEUE_LEN, ITEMS_PROCESSED
+    QUEUE_LEN, ITEMS_PROCESSED, MSU_INTERNAL_TIME
 };
 
 /** The number of statistic types that are reported to the global controller. */
 #define N_REPORTED_STAT_TYPES sizeof(reported_stats) / sizeof(enum stat_id)
 
 /** The frequency in seconds with which statistics are reported to the global controller. */
-#define STAT_DURATION_S  5
+#define STAT_DURATION_S  1
 /** The number of statistics that are reported to the global controller every duration*/
-#define STAT_SAMPLE_SIZE 5
+#define STAT_SAMPLE_SIZE 10
 
 /** The maximum number of samples the runtime might report to the global controller
  * in a single message. */
