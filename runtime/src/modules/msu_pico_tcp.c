@@ -50,6 +50,8 @@
 #include "control_protocol.h"
 #include "logging.h"
 
+extern long unsigned int synacks_to_client;
+
 static struct pico_socket *match_tcp_sockets(struct pico_socket *s1,
         struct pico_socket *s2)
 {
@@ -137,7 +139,6 @@ int msu_pico_tcp_recv_state(struct generic_msu *self, struct dedos_intermsu_mess
 int msu_pico_tcp_restore(struct generic_msu *self,
         struct dedos_intermsu_message* msg, void *buf, uint16_t bufsize)
 {
-
     if (msg->proto_msg_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE) {
         log_debug("%s", "Received a valid TCP frame as queue item");
         struct pico_frame *f = pico_frame_alloc(bufsize);
@@ -161,8 +162,8 @@ int msu_pico_tcp_restore(struct generic_msu *self,
         uint8_t flags = hdr->flags;
         struct pico_ipv4_hdr *iphdr = (struct pico_ipv4_hdr *)f->net_hdr;
 
-        if (flags == (PICO_TCP_SYN | PICO_TCP_ACK)){
-            log_debug("%s","SYNACK from HS, pushing out to client");
+        if (flags == (PICO_TCP_SYN | PICO_TCP_ACK) || PICO_TCP_RST){
+            log_debug("%s","Stuff from HS, pushing out to client");
 
             f->len = f->len - PICO_SIZE_ETHHDR;
             f->start = f->net_hdr;
@@ -178,11 +179,14 @@ int msu_pico_tcp_restore(struct generic_msu *self,
             log_debug("Dev name being used: %s",f->dev->name);
 */
             //print_frame(f);
-            pico_sendto_dev(f);
+            int32_t stat = pico_sendto_dev(f);
+            if(stat > -1 && flags == (PICO_TCP_SYN | PICO_TCP_ACK)) {
+                synacks_to_client++;
+            }
             log_debug("%s","Enqueued SYNACK for sending to client");
         }
         else {
-            log_warn("Should never be here...ever...%s","");
+            log_critical("Should never be here...ever...%0x",flags);
         }
     } else if (msg->proto_msg_type == MSU_PROTO_TCP_CONN_RESTORE) { //socket to restore
         //Part of restore code never executed on HS

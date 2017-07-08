@@ -28,10 +28,12 @@
 
 static long unsigned int syns_forwarded;
 static long unsigned int acks_forwarded;
+long unsigned int synacks_to_client;
 
 void print_forwarding_stats(void){
     printf("Picotcp Syns forwarded: %lu\n",syns_forwarded);
     printf("picotcp Acks forwarded: %lu\n",acks_forwarded);
+    printf("picotcp SynAcks to client: %lu\n",synacks_to_client);
 }
 
 #define TCP_IS_STATE(s, st) ((s->state & PICO_SOCKET_STATE_TCP) == st)
