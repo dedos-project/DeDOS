@@ -7,6 +7,8 @@
 #define DEDOS_WEBSERVER_MSU_ID 501
 #define DEDOS_SSL_WRITE_MSU_ID 503
 #define DEDOS_SSL_REQUEST_ROUTING_MSU_ID 502
+#define DEDOS_REGEX_ROUTING_MSU_ID 504
+#define DEDOS_REGEX_MSU_ID 505
 
 struct socket_handler_init_payload {
     int port;
