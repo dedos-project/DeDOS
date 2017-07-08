@@ -152,6 +152,8 @@ def make_msus_out(msu):
         msu_out['scheduling']['thread_id'] = msu['thread']+i
         msu_out['scheduling']['deadline'] = msu['deadline']
         msu_out['scheduling']['runtime_id'] = msu['scheduling']['runtime_id']
+        msu_out['scheduling']['cloneable'] = msu['cloneable']
+        msu_out['scheduling']['colocation_group'] = msu['colocation_group'] if 'colocation_group' in msu else 0
         if msu_out['vertex_type'] != 'exit':
             msu_out['scheduling']['routing'] = []
         if 'depedencies' in msu:
