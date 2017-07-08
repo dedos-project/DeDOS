@@ -30,8 +30,7 @@ static struct key_mapping key_map[];
 
 struct dfg_config *parse_dfg_json(const char *filename){
 
-    struct dfg_config *cfg = malloc(sizeof(*cfg));
-    bzero(cfg, sizeof(*cfg));
+    struct dfg_config *cfg = calloc(1, sizeof(*cfg));
 
     int rtn = parse_into_obj(filename, cfg, key_map);
 
@@ -81,7 +80,7 @@ struct json_state init_runtime(struct json_state *in, int index){
     struct dfg_config *cfg = in->data;
 
     cfg->runtimes_cnt++;
-    cfg->runtimes[index] = malloc(sizeof(*cfg->runtimes[index]));
+    cfg->runtimes[index] = calloc(1, sizeof(*cfg->runtimes[index]));
 
     cfg->runtimes[index]->num_pinned_threads = 0;
     cfg->runtimes[index]->num_threads = 0;
@@ -106,7 +105,7 @@ static struct json_state init_dfg_route(struct json_state *in, int index){
     struct dfg_runtime_endpoint *rt = in->data;
 
     rt->num_routes++;
-    rt->routes[index] = malloc(sizeof(*rt->routes[index]));
+    rt->routes[index] = calloc(1, sizeof(*rt->routes[index]));
 
     struct json_state route_obj = {
         .data = rt->routes[index],
@@ -124,7 +123,7 @@ struct json_state init_dfg_msu(struct json_state *in, int index){
     struct dfg_config *cfg = in->data;
 
     cfg->vertex_cnt++;
-    cfg->vertices[index] = calloc(1, sizeof(*cfg->vertices[index]));
+    cfg->vertices[index] = calloc(1, sizeof(struct dfg_vertex));
 
     struct json_state msu_obj = {
         .data = cfg->vertices[index],
@@ -229,7 +228,7 @@ static int set_rt_num_pinned_threads(jsmntok_t **tok, char *j, struct json_state
 
     int i;
     for (i = 0; i < runtime->num_pinned_threads; ++i) {
-        struct runtime_thread *rt_thread = malloc(sizeof(*rt_thread));
+        struct runtime_thread *rt_thread = calloc(1, sizeof(*rt_thread));
         rt_thread->id = i + 1;
         rt_thread->mode = 1;
 
@@ -376,7 +375,40 @@ static int set_dst_types(jsmntok_t **tok, char *j, struct json_state *in, struct
 static int set_thread_id(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct msu_scheduling *sched = in->data;
     sched->thread_id = tok_to_int(*tok, j);
-    return 0;
+
+    if (sched->runtime == NULL) {
+        return 1;
+    }
+
+    struct dfg_config *cfg = get_jsmn_obj();
+    if (cfg->runtimes_cnt == 0){
+        return 1;
+    }
+
+    // Bit of a convoluted process to find the current MSU...
+    // Go through the vertices and find the msu with the scheduling pointer
+    // that is equal to this MSUs
+    struct msu_vertex *this_msu = NULL;
+    for (int i=0; i<cfg->vertex_cnt; i++) {
+        if (&cfg->vertices[i]->scheduling == sched) {
+            this_msu = cfg->vertices[i];
+        }
+    }
+    if (this_msu == NULL)
+        return 1;
+
+    struct dfg_runtime_endpoint *rt = sched->runtime;
+    for (int i=0; i<rt->num_threads; i++) {
+        struct runtime_thread *thread = rt->threads[i];
+        if (thread->id == sched->thread_id) {
+            thread->msus[thread->num_msus] = this_msu;
+            thread->num_msus++;
+            return 0;
+        }
+    }
+
+    // Thread object was not found
+    return 1;
 }
 
 static int set_deadline(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
@@ -437,15 +469,24 @@ static int set_msu_routing(jsmntok_t **tok, char *j, struct json_state *in, stru
     return 0;
 }
 
+static int set_msu_cloneable(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct msu_scheduling *sched = in->data;
+    sched->cloneable = tok_to_int(*tok, j);
+    return 0;
+}
+
+static int set_msu_colocation(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    struct msu_scheduling *sched = in->data;
+    sched->colocation_group = tok_to_int(*tok, j);
+    return 0;
+}
 
 struct json_state init_dependency(struct json_state *in, int index){
     struct dfg_vertex *vertex = in->data;
 
-    vertex->dependencies[index] = malloc(sizeof(*vertex->dependencies[index]));
     vertex->num_dependencies++;
-
     struct json_state rt_obj = {
-        .data = vertex->dependencies[index],
+        .data = &vertex->dependencies[index],
         .parent_type = DEPENDENCIES
     };
 
@@ -523,6 +564,8 @@ static struct key_mapping key_map[] = {
     { "deadline", SCHEDULING,  set_deadline },
     { "runtime_id", SCHEDULING,  set_msu_rt_id },
     { "routing", SCHEDULING, set_msu_routing },
+    { "cloneable", SCHEDULING, set_msu_cloneable },
+    { "colocation_group", SCHEDULING, set_msu_colocation },
 
     { NULL, 0, NULL }
 };
