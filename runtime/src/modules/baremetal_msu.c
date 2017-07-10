@@ -146,6 +146,11 @@ static void baremetal_remove_socket_poll(struct generic_msu* self, int socketfd)
  */
 int baremetal_receive(struct generic_msu *self, struct generic_msu_queue_item *input_data) {
     int ret;
+    msu_queue *q_data = &self->q_in;
+    int rtn = sem_post(q_data->thread_q_sem);
+    if(rtn < 0){
+        log_error("Failed to increment semaphore for handshake msu");
+    }
     if (self && input_data) {
         struct baremetal_msu_data_payload *baremetal_data =
             (struct baremetal_msu_data_payload*) (input_data->buffer);
@@ -170,7 +175,10 @@ int baremetal_receive(struct generic_msu *self, struct generic_msu_queue_item *i
             //because this will happen only at entry MSU and the entry msu should poll and recv
             //thus the main listen thread enqueued the accepted socket which the entry msu will
             //now poll on. Here we added that socket to be polled
-            return -1;
+            free(baremetal_data);
+            free(input_data);
+
+            return -11;
 
         } else if(baremetal_data->type == FORWARD){
             baremetal_data->int_data += 1;
@@ -211,9 +219,11 @@ int baremetal_receive(struct generic_msu *self, struct generic_msu_queue_item *i
                     log_dp_event(-1, DEDOS_EXIT, &input_data->dp_profile_info);
 #endif
                 }
-                return -1; //since nothing to forward
+                free(baremetal_data);
+                free(input_data);
+                return -11; //since nothing to forward
             }
-            return DEDOS_BAREMETAL_MSU_ID;
+            return -11;
         }
     }
 
