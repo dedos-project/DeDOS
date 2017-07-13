@@ -744,6 +744,9 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
             //takes care of freeing the buffer
             return 0;
         }
+        if (type_id == -11){ //special case for baremetal msus
+            return 0;
+        }
         if (type_id < 0){
             log_debug("MSU %d returned error code %d", self->id, type_id);
         }
