@@ -12,7 +12,7 @@ static uint64_t get_absent_msus(struct dfg_vertex *msu) {
 
     struct dfg_route **routes = msu->scheduling.routes;
 
-    for (int r_i=0; r_i<msu->scheduling.num_routes; ++r_i) {
+    for (int r_i = 0; r_i < msu->scheduling.num_routes; ++r_i) {
         struct dfg_route *r = routes[r_i];
         for (int v_i=0; v_i< r->num_destinations; ++v_i) {
             struct dfg_vertex *v = r->destinations[v_i];
@@ -31,7 +31,7 @@ static int n_downstream_msus(struct dfg_vertex * msu) {
     uint64_t absent_msus = get_absent_msus(msu);
 
     int n_downstream = 64;
-    for (int i=0; i<64; i++) {
+    for (int i = 0; i < 64; i++) {
         if (absent_msus&(uint64_t)1<<i) {
             n_downstream--;
         }
@@ -48,7 +48,7 @@ int fix_route_ranges(struct dfg_route *route, int runtime_sock) {
     struct dfg_vertex *destinations[route->num_destinations];
     int found_downstream = -1;
     int changes = 0;
-    for (int i=0; i<route->num_destinations; ++i) {
+    for (int i = 0; i < route->num_destinations; ++i) {
         old_keys[i] = route->destination_keys[i];
         struct dfg_vertex *v = route->destinations[i];
         int downstream = n_downstream_msus(v);
@@ -65,7 +65,7 @@ int fix_route_ranges(struct dfg_route *route, int runtime_sock) {
     }
 
     if (changes) {
-        for (int i=0; i<route->num_destinations; ++i) {
+        for (int i = 0; i < route->num_destinations; ++i) {
             int orig_key = old_keys[i];
             struct dfg_vertex *v = destinations[i];
             int new_key = new_keys[i];
@@ -85,10 +85,10 @@ int fix_route_ranges(struct dfg_route *route, int runtime_sock) {
 }
 
 int fix_all_route_ranges(struct dfg_config *dfg) {
-
-    for (int i=0; i<dfg->runtimes_cnt; ++i) {
+    int i;
+    for (i = 0; i < dfg->runtimes_cnt; ++i) {
         struct dfg_runtime_endpoint *rt = dfg->runtimes[i];
-        for (int route_i=0; route_i<rt->num_routes; ++route_i) {
+        for (int route_i = 0; route_i < rt->num_routes; ++route_i) {
             struct dfg_route *route = rt->routes[route_i];
             int rtn = fix_route_ranges(route, rt->sock);
             if (rtn < 0){
@@ -97,6 +97,7 @@ int fix_all_route_ranges(struct dfg_config *dfg) {
             }
         }
     }
+
     return 0;
 }
 
@@ -106,7 +107,6 @@ int fix_all_route_ranges(struct dfg_config *dfg) {
  * @return -1/0: failure/success
  */
 int msu_hierarchical_sort(struct dfg_vertex **msus) {
-    //Find number of MSUs :D
     int n = 0;
     while (msus[n] != NULL) {
         n++;
@@ -116,8 +116,9 @@ int msu_hierarchical_sort(struct dfg_vertex **msus) {
         return 0;
     }
 
-    int i,j;
+    int i, j;
     //First find any "exit" vertex and swap them with the first entry
+    //FIXME: atm assumes there is only 1 new exit node
     for (i = 0; i < n; ++i) {
         struct dfg_vertex *msu = msus[i];
 
@@ -133,7 +134,6 @@ int msu_hierarchical_sort(struct dfg_vertex **msus) {
     }
 
     //Awful linear search to sort
-
     for (i = 0; i < n; ++i) {
         struct dfg_vertex *msu = msus[i];
         int up;
@@ -148,9 +148,10 @@ int msu_hierarchical_sort(struct dfg_vertex **msus) {
         }
     }
 
-    for (i=0; i<n; ++i) {
-        log_debug("msu %d: %d", i, msus[i]->msu_id);
+    for (i = 0; i < n; ++i) {
+        log_debug("new msu n°%d has ID %d and type", i, msus[i]->msu_id, msus[i]->msu_type);
     }
+
     return 0;
 }
 
@@ -271,7 +272,7 @@ struct dfg_vertex *clone_msu(int msu_id) {
 
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
 
-    if (msu->scheduling.cloneable == 0){
+    if (msu->scheduling.cloneable == 0) {
         debug("Cannot clone msu %d", clone->msu_id);
         return NULL;
     }
@@ -334,7 +335,7 @@ struct dfg_vertex *clone_msu(int msu_id) {
             return -1;
         }
         log_debug("properly changed route ranges");
-        
+
         return clone;
     }
 }
@@ -364,7 +365,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt, struct
 
     //Handle dependencies before wiring
     int l;
-    int skipped=0;
+    int skipped = 0;
     for (l = 0; l < msu->num_dependencies; ++l) {
         int has_dep = 0;
         if (msu->dependencies[l].locality == 1) {
@@ -401,6 +402,7 @@ int schedule_msu(struct dfg_vertex *msu, struct dfg_runtime_endpoint *rt, struct
             //TODO: check for remote dependency
         }
     }
+
     log_debug("Processed %d dependencies", l);
     return 0;
 }

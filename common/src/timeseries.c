@@ -92,9 +92,9 @@ double average_n(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
     int i;
     int start_index = timeseries->write_index - 1;
     log_debug("Start index %d", start_index);
-    for (i=0; i<n_samples; i++) {
+    for (i = 0; i < n_samples; i++) {
         int index = start_index - i;
-        if ( index < 0 ) 
+        if ( index < 0 )
             index = RRDB_ENTRIES + index;
         if ( timeseries->time[index].tv_sec == 0 ){
             log_debug("Break on %d" index);
@@ -106,7 +106,8 @@ double average_n(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
             sum += timeseries->data[index];
         }
     }
-    if (i==0)
+
+    if (i == 0)
         return -1;
     return sum / i;
 }

@@ -32,7 +32,7 @@ int reweight_haproxy(int server, int weight){
        FILE *f = fdopen(fd[WRITE_END], "w");
        if (f == NULL) {
            log_error("Error opening FILE to pipe");
-       } 
+       }
        int rtn = fprintf(f, SOCAT_INPUT, server, weight);
        if (rtn == -1) {
            perror("fprintf");

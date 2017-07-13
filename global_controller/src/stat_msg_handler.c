@@ -48,16 +48,16 @@ int CLONING_INFO_LEN = sizeof(CLONING_INFO) / sizeof(struct cloning_info);
 
 int gather_cloning_info(struct stats_control_payload *stats, struct cloning_info *cloning_info) {
 
-    for (int i=0; i<CLONING_INFO_LEN; i++) {
+    for (int i = 0; i < CLONING_INFO_LEN; i++) {
         cloning_info[i].n_msu = 0;
     }
 
     struct dfg_config *dfg = get_dfg();
 
-    for (int i=0; i < dfg->vertex_cnt; i++) {
+    for (int i = 0; i < dfg->vertex_cnt; i++) {
         struct dfg_vertex *msu = dfg->vertices[i];
         struct cloning_info *type_cloning_info = NULL;
-        for (int j=0; j<CLONING_INFO_LEN; j++) {
+        for (int j = 0; j < CLONING_INFO_LEN; j++) {
             if (cloning_info[j].type_id == msu->msu_type) {
                 type_cloning_info = &cloning_info[j];
                 break;
@@ -71,10 +71,14 @@ int gather_cloning_info(struct stats_control_payload *stats, struct cloning_info
         double stat = average_n(msu, QUEUE_LEN, STAT_SAMPLE_SIZE * 2);
         if (stat != -1) {
             type_cloning_info->stat[type_cloning_info->n_msu] = stat;
-            log_custom(LOG_CLONE_DECISIONS, "Stat of msu %d (%d) is %.2f", i, type_cloning_info->type_id,  type_cloning_info->stat[type_cloning_info->n_msu]);
+            log_custom(LOG_CLONE_DECISIONS, "Stat of msu %d (%d) is %.2f",
+                       i,
+                       type_cloning_info->type_id,
+                       type_cloning_info->stat[type_cloning_info->n_msu]);
             type_cloning_info->n_msu++;
         } else {
-            log_custom(LOG_CLONE_DECISIONS, "Could not get %d stats for msu %d (%d)", STAT_SAMPLE_SIZE, i, type_cloning_info->type_id);
+            log_custom(LOG_CLONE_DECISIONS, "Could not get %d stats for msu %d (%d)",
+                       STAT_SAMPLE_SIZE, i, type_cloning_info->type_id);
         }
 
     }
@@ -84,10 +88,10 @@ int gather_cloning_info(struct stats_control_payload *stats, struct cloning_info
 int make_cloning_decision(struct cloning_info *cloning_info, int info_len, struct dfg_vertex **to_clone) {
 
     double sum_stat[info_len];
-    for (int i=0; i<info_len; i++) {
+    for (int i = 0; i < info_len; i++) {
         sum_stat[i] = 0;
         struct cloning_info *type_info = &cloning_info[i];
-        for (int j=0; j<type_info->n_msu; j++) {
+        for (int j = 0; j < type_info->n_msu; j++) {
             sum_stat[i] += type_info->stat[j];
             log_custom(LOG_CLONE_DECISIONS, "%d %.2f", j, type_info->stat[j]);
         }
@@ -96,7 +100,7 @@ int make_cloning_decision(struct cloning_info *cloning_info, int info_len, struc
 
     double min_ratio_stat = sum_stat[0];
     double ratio_stats[info_len];
-    for (int i=0; i<info_len; i++) {
+    for (int i = 0; i < info_len; i++) {
         double ratio_stat = sum_stat[i]; // / (double)cloning_info[i].n_msu;
         if (min_ratio_stat > ratio_stat) {
             min_ratio_stat = ratio_stat;
@@ -107,7 +111,7 @@ int make_cloning_decision(struct cloning_info *cloning_info, int info_len, struc
     log_custom(LOG_CLONE_DECISIONS, "Minimum ratio stat: %.3f", min_ratio_stat);
     int n_to_clone = 0;
     double to_clone_stats[info_len];
-    for (int i=0; i<info_len; i++) {
+    for (int i = 0; i < info_len; i++) {
         log_custom(LOG_CLONE_DECISIONS, "Ratio stat %d (%d): %.3f", i, cloning_info[i].type_id, ratio_stats[i]);
 
         if (ratio_stats[i] > 1) {
@@ -135,15 +139,15 @@ void set_haproxy_weights() {
     int n_handshakes[MAX_RUNTIMES];
     bzero(n_handshakes, sizeof(n_handshakes));
     int n_runtimes = 0;
-    for (int i=0; i<dfg->vertex_cnt; i++) {
+    for (int i = 0; i < dfg->vertex_cnt; i++) {
         struct dfg_vertex *msu = dfg->vertices[i];
-        if (msu->msu_type == DEDOS_SSL_READ_MSU_ID){
+        if (msu->msu_type == DEDOS_SSL_READ_MSU_ID) {
             n_handshakes[msu->scheduling.runtime->id]++;
             if (n_runtimes < msu->scheduling.runtime->id)
                 n_runtimes = msu->scheduling.runtime->id;
         }
     }
-    for (int i=1; i<=n_runtimes; i++) {
+    for (int i = 1; i <= n_runtimes; i++) {
         log_info("Reweighting s%d to %d", i, n_handshakes[i]);
         reweight_haproxy(i, n_handshakes[i]);
     }
@@ -208,7 +212,7 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
         struct dfg_vertex *to_clone[info_len];
         int n_to_clone = make_cloning_decision(CLONING_INFO, info_len, to_clone);
         log_custom(LOG_CLONE_DECISIONS, "Cloning %d MSUs", n_to_clone);
-        for (int i=0; i<n_to_clone; i++) {
+        for (int i = 0; i < n_to_clone; i++) {
             struct dfg_vertex *msu = clone_msu(to_clone[i]->msu_id);
             if (msu == NULL) {
                 log_error("Clone msu failed for msu %d", to_clone[i]->msu_id);

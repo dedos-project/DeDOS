@@ -12,7 +12,7 @@
 
 #ifndef DUMP_STATS
 #define DUMP_STATS 0
-#endif 
+#endif
 
 #ifndef LOG_STAT_INTERNALS
 #define LOG_STAT_INTERNALS 0
