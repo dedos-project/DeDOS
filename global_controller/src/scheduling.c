@@ -167,45 +167,48 @@ void prepare_clone(struct dfg_vertex *msu) {
     memset(&msu->scheduling, '\0', sizeof(struct msu_scheduling));
 
     memset(&msu->statistics, 0, sizeof(struct msu_statistics_data));
-/*
-    msu->statistics.queue_items_processed.write_index = 0;
-    memset(msu->statistics.queue_items_processed.data, 0, RRDB_ENTRIES);
-    memset(msu->statistics.queue_items_processed.time, 0, RRDB_ENTRIES);
-    msu->statistics.queue_length.write_index = 0;
-    memset(msu->statistics.queue_length.data, 0, RRDB_ENTRIES);
-    memset(msu->statistics.queue_length.time, 0, RRDB_ENTRIES);
-    msu->statistics.memory_allocated.write_index = 0;
-    memset(msu->statistics.memory_allocated.data, 0, RRDB_ENTRIES);
-    memset(msu->statistics.memory_allocated.time, 0, RRDB_ENTRIES);
-    */
 }
 
+/**
+ * Find a suitable thread for an MSU
+ * @param dfg_runtime_endpoint *runtime: pointer to runtime endpoint
+ * @param int colocation_group: colocation group ID to filter
+ * @param int msu_type: MSU type ID to filter
+ * @return: pointer to runtime_thread or NULL
+ */
 struct runtime_thread *find_unused_pinned_thread(struct dfg_runtime_endpoint *runtime, int colocation_group, int msu_type) {
-    if (colocation_group > 0) {
-        for (int i=0; i<runtime->num_pinned_threads; i++) {
-            if (runtime->threads[i]->mode == 1 && runtime->threads[i]->num_msus > 0 &&
-                    runtime->threads[i]->msus[0]->scheduling.colocation_group == colocation_group) {
-                int has_already = 0;
-                for (int j=0; j<runtime->threads[i]->num_msus; j++) {
-                    if ( runtime->threads[i]->msus[j]->msu_type == msu_type ) {
-                        has_already = 1;
-                        break;
-                    }
-                }
+    int i;
+    for (i = 0; i < runtime->num_pinned_threads; ++i) {
+        if (runtime->threads[i]->mode != 1) {
+            continue;
+        }
 
-                if (!has_already) {
-                    log_info("colocating on thread %d", i);
-                    return runtime->threads[i];
+        if (colocation_group > 0 && runtime->threads[i]->num_msus > 0) {
+            int j;
+            int get_out = 0;
+            for (j = 0; j < runtime->threads[i]->num_msus; ++j) {
+                if (runtime->threads[i]->msus[j]->msu_type == msu_type ||
+                    runtime->threads[i]->msus[j]->scheduling.colocation_group != colocation_group) {
+                    get_out = 1;
+                    break;
                 }
             }
-        }
-    }
 
-    for (int i=0; i<runtime->num_pinned_threads; i++) {
-        if (runtime->threads[i]->mode == 1 && runtime->threads[i]->num_msus == 0) {
+            if (get_out == 1) {
+                continue;
+            }
+
+            log_info("using thread %d", i);
+            return runtime->threads[i];
+
+        } else if (colocation_group == 0 && runtime->threads[i]->num_msus > 0) {
+            continue;
+        } else {
+            log_info("using thread %d", i);
             return runtime->threads[i];
         }
     }
+
     return NULL;
 }
 
@@ -216,44 +219,31 @@ struct runtime_thread *find_unused_pinned_thread(struct dfg_runtime_endpoint *ru
  * @return failure/success: -1/0
  */
 int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
+    int ret = 0;
 
-   // if (rt->num_threads > rt->num_cores) {
-   //     debug("There are no more free cores to pin a new worker thread on runtime %d", rt->id);
-   //     return -1;
-   // } else {
-        int ret = 0;
+    struct runtime_thread *free_thread = find_unused_pinned_thread(rt, msu->scheduling.colocation_group, msu->msu_type);
+    //struct runtime_thread *free_thread = find_unused_pinned_thread(rt, msu);
+    if (free_thread == NULL) {
+        debug("There are no free worker threads on runtime %d", rt->id);
+        return -1;
+    }
 
-        /*
-        //commit change to runtime
-        ret = create_worker_thread(rt->sock);//num_threads and num_pinned_threads are incremented
-        if (ret == -1) {
-            debug("Could not create new worker thread on runtime %d", rt->id);
-            return ret;
-        }
-        */
-        struct runtime_thread *free_thread = find_unused_pinned_thread(rt, msu->scheduling.colocation_group, msu->msu_type);
-        if (free_thread == NULL) {
-            debug("There are no free worker threads on runtime %d", rt->id);
-            return -1;
-        }
+    free_thread->msus[free_thread->num_msus] = msu;
+    free_thread->num_msus++;
+    //update local view
+    msu->scheduling.thread_id = free_thread->id;
+    msu->scheduling.runtime = rt;
 
-        free_thread->msus[free_thread->num_msus] = msu;
-        free_thread->num_msus++;
-        //update local view
-        msu->scheduling.thread_id = free_thread->id;
-        msu->scheduling.runtime = rt;
-
-        char *init_data = NULL;
-        ret = send_addmsu_msg(msu, init_data);
-        if (ret == -1) {
-            debug("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);
-            return ret;
-        }
-
-        //TODO: update rt->current_alloc
-
+    char *init_data = NULL;
+    ret = send_addmsu_msg(msu, init_data);
+    if (ret == -1) {
+        debug("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);
         return ret;
-    //}
+    }
+
+    //TODO: update rt->current_alloc
+
+    return ret;
 }
 
 /**
