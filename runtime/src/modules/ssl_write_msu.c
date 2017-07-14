@@ -55,6 +55,10 @@ int ssl_write_receive(struct generic_msu *self, struct generic_msu_queue_item *i
     if (input_data != NULL) {
         struct ssl_data_payload *data = (struct ssl_data_payload*) input_data->buffer;
         WriteSSL(data->state, data->msg, strlen(data->msg));
+
+#ifdef DATAPLANE_PROFILING
+    log_dp_event(self->id, DEDOS_EXIT, &input_data->dp_profile_info);
+#endif
         return 0;
     }
     return -1;

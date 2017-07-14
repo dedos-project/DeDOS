@@ -335,6 +335,7 @@ int check_comm_sockets() {
                 new_item_ws->buffer_len = sizeof(struct ssl_data_payload);
 #ifdef DATAPLANE_PROFILING
                 new_item_ws->dp_profile_info.dp_id = get_request_id();
+                log_dp_event(-1, DEDOS_ENTRY, &new_item_ws->dp_profile_info);
 #endif
     //            generic_msu_queue_enqueue(queue_ssl, new_item_ws);
                 int ssl_request_queue_len = generic_msu_queue_enqueue(&ssl_request_routing_msu->q_in, new_item_ws); //enqueuing to routing MSU

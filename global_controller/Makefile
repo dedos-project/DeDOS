@@ -1,7 +1,7 @@
 TARGETS = global_controller
 CC:=$(CROSS_COMPILE)gcc
 ADDRESS_SANITIZER?=0
-DEBUG=1
+DEBUG=0
 
 LOGS = \
 	   DEBUG \
