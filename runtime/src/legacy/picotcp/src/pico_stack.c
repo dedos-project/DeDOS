@@ -1100,6 +1100,12 @@ void pico_stack_tick(void)
 
     /* calculate new loop scores for next iteration */
     calc_score(score, index, (int (*)[])avg, ret);
+
+    msu_queue *q = &pico_tcp_msu->q_in;
+    int rtn = sem_post(q->thread_q_sem);
+    if (rtn < 0){
+        log_error("error incrementing thread queue semaphore");
+    }
 }
 
 void pico_stack_loop(void)

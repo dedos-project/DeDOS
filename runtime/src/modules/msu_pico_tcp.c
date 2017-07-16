@@ -51,6 +51,7 @@
 #include "logging.h"
 
 extern long unsigned int synacks_to_client;
+extern long unsigned int forwarding_items_dequeued;
 
 static struct pico_socket *match_tcp_sockets(struct pico_socket *s1,
         struct pico_socket *s2)
@@ -164,6 +165,7 @@ int msu_pico_tcp_restore(struct generic_msu *self,
 
         if (flags == (PICO_TCP_SYN | PICO_TCP_ACK) || PICO_TCP_RST){
             log_debug("%s","Stuff from HS, pushing out to client");
+            forwarding_items_dequeued++;
 
             f->len = f->len - PICO_SIZE_ETHHDR;
             f->start = f->net_hdr;

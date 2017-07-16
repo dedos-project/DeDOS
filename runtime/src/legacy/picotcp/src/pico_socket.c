@@ -753,6 +753,7 @@ struct pico_socket *pico_socket_clone(struct pico_socket *facsimile)
     s->q_in.max_size = PICO_DEFAULT_SOCKETQ;
     s->q_out.max_size = PICO_DEFAULT_SOCKETQ;
     s->wakeup = NULL;
+    s->flag = 0;
     return s;
 }
 
