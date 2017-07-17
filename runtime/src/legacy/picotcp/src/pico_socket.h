@@ -17,7 +17,7 @@
     #define PICO_DEFAULT_SOCKETQ (6 * 1024) //seems like an acceptable default for small embedded systems
 #endif
 */
-
+extern long int syn_state_used_memory;
 #define PICO_DEFAULT_SOCKETQ 0 /* no limit dedos comparison */
 #define PICO_DEFAULT_TCP_SOCKETQ (6 * 1024) /* this in only for data transfer per established socket */
 //#define PICO_DEFAULT_TCP_SOCKETQ (16 * 1024) /* linux default this in only for data transfer per established socket */

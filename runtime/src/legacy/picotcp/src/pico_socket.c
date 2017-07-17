@@ -2055,8 +2055,14 @@ static int check_socket_sanity(struct pico_socket *s)
 
     /* checking for pending connections */
     if(TCP_STATE(s) == PICO_SOCKET_STATE_TCP_SYN_RECV) {
-        if((PICO_TIME_MS() - s->timestamp) >= PICO_SOCKET_BOUND_TIMEOUT)
+        if((PICO_TIME_MS() - s->timestamp) >= PICO_SOCKET_BOUND_TIMEOUT){
+            syn_state_used_memory = syn_state_used_memory - sizeof(struct pico_tree_node);
+            if(syn_state_used_memory<= 0){
+    //          printf("syn_state_cleanup RESET:  %ld\n",syn_state_used_memory);
+                syn_state_used_memory = 0;
+            }
             return -1;
+        }
     }
     return 0;
 }

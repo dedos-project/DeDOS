@@ -29,12 +29,20 @@
 static long unsigned int syns_forwarded;
 static long unsigned int acks_forwarded;
 long unsigned int synacks_to_client;
+long unsigned int forwarding_items_dequeued;
 
 void print_forwarding_stats(void){
     printf("Picotcp Syns forwarded: %lu\n",syns_forwarded);
     printf("picotcp Acks forwarded: %lu\n",acks_forwarded);
+    printf("picotcp forwarding item dequeuend: %lu\n",forwarding_items_dequeued);
     printf("picotcp SynAcks to client: %lu\n",synacks_to_client);
 }
+
+long int syn_state_used_memory = 0;
+long int SYN_MEMORY_LIMIT = 1 * 1024 * 1024; //1 MB
+static unsigned long int syn_processed;
+static unsigned long int syn_dropped;
+static unsigned long int synacks_generated;
 
 #define TCP_IS_STATE(s, st) ((s->state & PICO_SOCKET_STATE_TCP) == st)
 #define TCP_SOCK(s) ((struct pico_socket_tcp *)s)
@@ -193,18 +201,18 @@ static int32_t do_enqueue_segment(struct pico_tcp_queue *tq, void *f, uint16_t p
     int32_t ret = -1;
     PICOTCP_MUTEX_LOCK(Mutex);
     if (IS_INPUT_QUEUE(tq)) {
-        log_warn("INPUT TCP queue size at %p: %d",tq, tq->size + payload_len);
+        log_debug("INPUT TCP queue size at %p: %d",tq, tq->size + payload_len);
     }
     if ((tq->size + payload_len) > tq->max_size)
     {
-        log_error("TCP Queue at %p full max: %d, cur+payload: %d",tq, tq->max_size, tq->size + payload_len);
+        log_debug("TCP Queue at %p full max: %d, cur+payload: %d",tq, tq->max_size, tq->size + payload_len);
         ret = 0;
         goto out;
     }
 
     if (pico_tree_insert(&tq->pool, f) != 0)
     {
-        log_warn("TCP tree insert failed %s","");
+        log_debug("TCP tree insert failed %s","");
         ret = 0;
         goto out;
     }
@@ -230,7 +238,7 @@ static int32_t pico_enqueue_segment(struct pico_tcp_queue *tq, void *f)
 
 
     if (payload_len == 0) {
-        tcp_dbg("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRIED TO ENQUEUE INVALID SEGMENT!%s\n","");
+        log_debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TRIED TO ENQUEUE INVALID SEGMENT!%s\n","");
         return -1;
     }
 
@@ -1240,11 +1248,10 @@ int tcp_send_synack(struct pico_socket *s)
     tcp_add_options(ts, synack, hdr->flags, opt_len);
     synack->payload_len = 0;
     synack->timestamp = TCP_TIME;
-#ifdef MSU_SAME_HOST
-    log_debug("%s", "Same host MSU");
+//#ifdef MSU_SAME_HOST
     tcp_send(ts, synack);
-#else
-    log_debug("%s", "Sending SYNACK Frame to data MSU for forwarding");
+//#else
+/*
     hdr->trans.sport = ts->sock.local_port;
     hdr->trans.dport = ts->sock.remote_port;
     if (!hdr->seq)
@@ -1258,7 +1265,7 @@ int tcp_send_synack(struct pico_socket *s)
     hdr->crc = short_be(pico_tcp_checksum(synack));
     //copy ip4 stuff to frame from socket
     uint8_t ttl = PICO_IPV4_DEFAULT_TTL;
-    uint8_t vhl = 0x45; /* version 4, header length 20 */
+    uint8_t vhl = 0x45;
     static uint16_t ipv4_progressive_id = 0x91c0;
     uint8_t proto = s->proto->proto_number;
     struct pico_ipv4_hdr *iphdr;
@@ -1277,6 +1284,7 @@ int tcp_send_synack(struct pico_socket *s)
     iphdr->crc = short_be(pico_checksum(iphdr, synack->net_len));
 
 #endif
+*/
     pico_frame_discard(synack);
     return 0;
 }
@@ -1661,6 +1669,7 @@ static inline int tcp_data_in_expected(struct pico_socket_tcp *t, struct pico_fr
         if(pico_enqueue_segment(&t->tcpq_in, input) <= 0)
         {
             /* failed to enqueue, destroy segment */
+            log_debug("Failed to enqueue segment in input queue");
             PICO_FREE(input->payload);
             PICO_FREE(input);
             return -1;
@@ -1717,6 +1726,7 @@ static inline void tcp_data_in_send_ack(struct pico_socket_tcp *t, struct pico_f
 
 static int tcp_data_in(struct pico_socket *s, struct pico_frame *f)
 {
+    log_debug("TCP data in");
     struct pico_socket_tcp *t = (struct pico_socket_tcp *)s;
     struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) f->transport_hdr;
     uint16_t payload_len = (uint16_t)(f->transport_len - ((hdr->len & 0xf0u) >> 2u));
@@ -1727,7 +1737,7 @@ static int tcp_data_in(struct pico_socket *s, struct pico_frame *f)
         tcp_parse_options(f);
         f->payload = f->transport_hdr + ((hdr->len & 0xf0u) >> 2u);
         f->payload_len = payload_len;
-        tcp_dbg("TCP> Received segment. (exp: %x got: %x)\n", t->rcv_nxt, SEQN(f));
+        log_debug("TCP> Received segment. (exp: %x got: %x)\n", t->rcv_nxt, SEQN(f));
 
         if (pico_seq_compare(SEQN(f), t->rcv_nxt) <= 0) {
             ret = tcp_data_in_expected(t, f);
@@ -2829,23 +2839,31 @@ static int tcp_syn(struct pico_socket *s, struct pico_frame *f)
     //s->number_of_pending_conn++;
     return 0;
 #endif
-
+/*
     if(s->number_of_pending_conn >= s->max_backlog){
         tcp_dbg("Pending connections greater than backlog, doing nothing %s\n","");
         return -1;
     }
-//    tcp_dbg("No MSU support, proceeding normally\n");
+*/
+
+    log_debug("No MSU support, proceeding normally\n");
     /* dedos
      * this starts the picotcp handshake procedure.
      * 1. clones the listening socket to create a child that will be
      * returned
      * 2. adds the socket to the socket tree
      */
+
+    syn_processed++;
+    if(syn_state_used_memory > SYN_MEMORY_LIMIT){
+       //printf("SYN State memory full %ld, limit: %ld\n",syn_state_used_memory, SYN_MEMORY_LIMIT);
+        syn_dropped++;
+        return -1;
+    }
+
     struct pico_socket_tcp *new = NULL;
     struct pico_tcp_hdr *hdr = NULL;
     uint16_t mtu;
-    if(s->number_of_pending_conn >= s->max_backlog)
-        return -1;
 
     new = (struct pico_socket_tcp *)pico_socket_clone(s);
     hdr = (struct pico_tcp_hdr *)f->transport_hdr;
@@ -2875,14 +2893,14 @@ static int tcp_syn(struct pico_socket *s, struct pico_frame *f)
     tcp_parse_options(f);
     mtu = (uint16_t)pico_socket_get_mss(&new->sock);
     new->mss = (uint16_t)(mtu - PICO_SIZE_TCPHDR);
-    new->tcpq_in.max_size = PICO_DEFAULT_SOCKETQ;
-    new->tcpq_out.max_size = PICO_DEFAULT_SOCKETQ;
+    new->tcpq_in.max_size = PICO_DEFAULT_TCP_SOCKETQ;
+    new->tcpq_out.max_size = PICO_DEFAULT_TCP_SOCKETQ;
     new->tcpq_hold.max_size = 2u * mtu;
     new->rcv_nxt = long_be(hdr->seq) + 1;
     new->snd_nxt = long_be(pico_paws());
     new->snd_last = new->snd_nxt;
     new->cwnd = PICO_TCP_IW;
-    new->ssthresh = (uint16_t)((uint16_t)(PICO_DEFAULT_SOCKETQ / new->mss) -  (((uint16_t)(PICO_DEFAULT_SOCKETQ / new->mss)) >> 3u));
+    new->ssthresh = (uint16_t)((uint16_t)(PICO_DEFAULT_TCP_SOCKETQ / new->mss) -  (((uint16_t)(PICO_DEFAULT_TCP_SOCKETQ / new->mss)) >> 3u));
     new->recv_wnd = short_be(hdr->rwnd);
     new->jumbo = hdr->len & 0x07;
     new->linger_timeout = PICO_SOCKET_LINGER_TIMEOUT;
@@ -2892,8 +2910,13 @@ static int tcp_syn(struct pico_socket *s, struct pico_frame *f)
     rto_set(new, PICO_TCP_RTO_MIN);
     /* Initialize timestamp values */
     new->sock.state = PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_CONNECTED | PICO_SOCKET_STATE_TCP_SYN_RECV;
-    pico_socket_add(&new->sock);
     // print_tcp_socket(&new->sock);
+    int stat = -1;
+    stat = pico_socket_add(&new->sock);
+    if(stat == 0){
+        syn_state_used_memory += sizeof(struct pico_tree_node);
+    //printf("Added SYN state size %ld, total %ld, limit is %ld\n",sizeof(struct pico_tree_node), syn_state_used_memory, SYN_MEMORY_LIMIT);
+    }
     tcp_send_synack(&new->sock);
     tcp_dbg("PICO> SYNACK sent, socket added. snd_nxt is %08x\n", new->snd_nxt);
     // print_tcp_socket(&new->sock);
@@ -2955,7 +2978,7 @@ static int tcp_synack(struct pico_socket *s, struct pico_frame *f)
 
         s->state &= 0x00FFU;
         s->state |= PICO_SOCKET_STATE_TCP_ESTABLISHED;
-        tcp_dbg("TCP> Established. State: %x\n", s->state);
+        log_debug("TCP> Established. State: %x\n", s->state);
 
         if (s->wakeup)
             s->wakeup(PICO_SOCK_EV_CONN, s);
@@ -3016,7 +3039,15 @@ static int tcp_first_ack(struct pico_socket *s, struct pico_frame *f)
         s->ev_pending |= PICO_SOCK_EV_WR;
         tcp_dbg("%s: snd_nxt is now %08x\n", __FUNCTION__, t->snd_nxt);
         tcp_dbg("%s: rcv_nxt is now %08x\n", __FUNCTION__, t->rcv_nxt);
+        syn_state_used_memory = syn_state_used_memory - sizeof(struct pico_tree_node);
+        //printf("Established conn decrement...%ld\n",syn_state_used_memory);
+        if(syn_state_used_memory < 0){
+            //printf("RESET TO ZERO...%ld\n",syn_state_used_memory);
+            syn_state_used_memory = 0;
+        }
+
         return 0;
+
     } else if ((hdr->flags & PICO_TCP_RST) == 0) {
         tcp_nosync_rst(s, f);
         return 0;
@@ -3300,6 +3331,7 @@ static int tcp_action_by_flags(const struct tcp_action_entry *action, struct pic
     int ret = 0;
 
     if ((flags == PICO_TCP_ACK) || (flags == (PICO_TCP_ACK | PICO_TCP_PSH))) {
+        log_debug("ACK || ACK | PSH");
         tcp_action_call(action->ack, s, f);
     }
 
@@ -3307,6 +3339,7 @@ static int tcp_action_by_flags(const struct tcp_action_entry *action, struct pic
         !(s->state & PICO_SOCKET_STATE_CLOSED) && !TCP_IS_STATE(s, PICO_SOCKET_STATE_TCP_LISTEN))
     {
         ret = f->payload_len;
+        log_debug("action->data");
         tcp_action_call(action->data, s, f);
     }
 
@@ -3338,7 +3371,7 @@ int pico_tcp_input(struct pico_socket *s, struct pico_frame *f)
     tcp_dbg("[sam] TCP> [tcp input] t_len: %u\n", f->transport_len);
     tcp_dbg("[sam] TCP> flags = 0x%02x\n", hdr->flags);
     tcp_dbg("[sam] TCP> s->state >> 8 = %u\n", s->state >> 8);
-    tcp_dbg("[sam] TCP> [tcp input] socket: %p state: %d <-- local port:%u remote port: %u seq: 0x%08x ack: 0x%08x flags: 0x%02x t_len: %u, hdr: %u payload: %d\n", s, s->state >> 8, short_be(hdr->trans.dport), short_be(hdr->trans.sport), SEQN(f), ACKN(f), hdr->flags, f->transport_len, (hdr->len & 0xf0) >> 2, f->payload_len );
+    log_debug("[sam] TCP> [tcp input] socket: %p state: %d <-- local port:%u remote port: %u seq: 0x%08x ack: 0x%08x flags: 0x%02x t_len: %u, hdr: %u payload: %d\n", s, s->state >> 8, short_be(hdr->trans.dport), short_be(hdr->trans.sport), SEQN(f), ACKN(f), hdr->flags, f->transport_len, (hdr->len & 0xf0) >> 2, f->payload_len );
 
     /* This copy of the frame has the current socket as owner */
     f->sock = s;
@@ -3353,9 +3386,9 @@ int pico_tcp_input(struct pico_socket *s, struct pico_frame *f)
         log_debug("pico_tcp_input: SYN %s","");
         tcp_action_call(action->syn, s, f);
     } else if (flags == (PICO_TCP_SYN | PICO_TCP_ACK)) {
-        log_debug("pico_tcp_input: SYNACK %s","");
         tcp_action_call(action->synack, s, f);
     } else {
+        log_debug("tcp action by flags");
         ret = tcp_action_by_flags(action, s, f, flags);
     }
 
