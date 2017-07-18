@@ -200,6 +200,12 @@ int webserver_send_remote(struct generic_msu *src, struct generic_msu_queue_item
 
     /* add to allthreads[0] queue,since main thread is always at index 0 */
     /* need to create thread_msg struct with action = forward */
+#ifdef DATAPLANE_PROFILING
+    msg->payload_seq_count = data->dp_profile_info.dp_seq_count;
+    msg->payload_request_id = data->dp_profile_info.dp_id;
+    log_dp_event(src->id, REMOTE_SEND, &data->dp_profile_info);
+    log_debug("Copied item request id: %d", msg->payload_request_id);
+#endif
 
     int rtn = dedos_thread_enqueue(main_thread, thread_msg);
     if (rtn < 0){
