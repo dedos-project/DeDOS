@@ -447,11 +447,15 @@ static int sample_item_evenly(struct item_stats *item, int max_stats,
 
     long length_ns = (1e9) * (end->tv_sec - start->tv_sec) + (end->tv_nsec - start->tv_nsec);
 
-    long interval_ns = length_ns / (sample_size-1);
+    long interval_ns = length_ns / (sample_size);
 
     int stop_index = item->n_stats-1;
 
     struct timespec sample_time = *start;
+    sample_time.tv_nsec += interval_ns;
+    sample_time.tv_sec += (sample_time.tv_nsec / 1e9);
+    sample_time.tv_nsec = sample_time.tv_nsec % (long)1e9;
+
     int last_index = -1;
     for ( int i=0; i < sample_size; i++ ) {
         int index = find_time_index(item->stats, max_stats, &sample_time,
