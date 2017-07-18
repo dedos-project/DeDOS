@@ -25,7 +25,7 @@
 #endif
 
 #ifndef LOG_CLONE_DECISIONS
-#define LOG_CLONE_DECISIONS 1
+#define LOG_CLONE_DECISIONS 0
 #endif
 
 struct cloning_info {
@@ -36,12 +36,9 @@ struct cloning_info {
 };
 
 struct cloning_info CLONING_INFO[] = {
-    { DEDOS_SSL_REQUEST_ROUTING_MSU_ID },
     { DEDOS_SSL_READ_MSU_ID },
-    { DEDOS_WEBSERVER_MSU_ID },
-    { DEDOS_SSL_WRITE_MSU_ID },
-    { DEDOS_REGEX_MSU_ID },
-    { DEDOS_REGEX_ROUTING_MSU_ID }
+//    { DEDOS_WEBSERVER_MSU_ID },
+//     { DEDOS_REGEX_MSU_ID },
 };
 
 int CLONING_INFO_LEN = sizeof(CLONING_INFO) / sizeof(struct cloning_info);
