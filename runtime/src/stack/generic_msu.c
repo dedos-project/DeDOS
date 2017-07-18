@@ -385,6 +385,11 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
             return -1;
         }
         memcpy(recvd->buffer, msg->payload, bufsize);
+#ifdef DATAPLANE_PROFILING
+        recvd->dp_profile_info.dp_seq_count = msg->payload_seq_count;
+        recvd->dp_profile_info.dp_id = msg->payload_request_id;
+        log_dp_event(self->id, REMOTE_RECV, &recvd->dp_profile_info);
+#endif
         generic_msu_queue_enqueue(&self->q_in, recvd);
         return 0;
     }
