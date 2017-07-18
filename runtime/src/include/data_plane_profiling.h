@@ -99,9 +99,8 @@ static void copy_queue_item_dp_data(struct dataplane_profile_info *dp_profile_in
 }
 
 static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
-    struct dataplane_profile_info *dp_profile_info)
-{
-    if(dp_profile_info->dp_id == 0){
+                         struct dataplane_profile_info *dp_profile_info) {
+    if (dp_profile_info->dp_id == 0) {
         return;
     }
 

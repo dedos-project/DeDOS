@@ -373,9 +373,9 @@ void destroy_msu(struct generic_msu *msu)
  */
 int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
                         void *buf, uint16_t bufsize){
-    if (self){
-        struct generic_msu_queue_item *recvd =  malloc(sizeof(*recvd));
-        if (!(recvd))
+    if (self) {
+        struct generic_msu_queue_item *recvd = create_generic_msu_queue_item();
+        if (recvd == NULL)
             return -1;
         recvd->buffer_len = bufsize;
         recvd->buffer = malloc(bufsize);
