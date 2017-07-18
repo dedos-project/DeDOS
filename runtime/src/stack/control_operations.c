@@ -165,6 +165,8 @@ static int process_route_change_request(struct dedos_thread_msg *msg,
     }
     log_debug("Enqueued route update message on msu %d (queue len: %d)",
               msu->id, rtn);
+
+    return 0;
 }
 
 void process_control_updates(void)
