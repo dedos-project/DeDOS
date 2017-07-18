@@ -128,7 +128,7 @@ static inline void output_statistic(struct json_output_state *json,
     START_LIST(*json);
     int skip = 0;
     for (int i=write_index - n_statistics; i<write_index; ++i) {
-        int index = i >= 0 ? i : n_statistics + i;
+        int index = i >= 0 ? i : RRDB_ENTRIES + i;
         if (stat->time[index].tv_sec == 0) {
             ++skip;
             continue;
@@ -139,7 +139,7 @@ static inline void output_statistic(struct json_output_state *json,
     KEY(*json, "values");
     START_LIST(*json);
     for (int i=write_index - n_statistics + skip; i<write_index; ++i) {
-        int index = i >= 0 ? i : n_statistics + i;
+        int index = i >= 0 ? i : RRDB_ENTRIES + i;
         VALUE(*json, "%.3f", stat->data[index]);
     }
     END_LIST(*json);

@@ -168,7 +168,7 @@ int start_communication(int tcp_control_listen_port, char *dfg_filename)
         check_comm_sockets();
         if ( dfg_filename != NULL ) {
             clock_gettime(CLOCK_MONOTONIC, &elapsed);
-            if ( elapsed.tv_sec - begin.tv_sec > STAT_DURATION_S ) {
+            if ( elapsed.tv_sec - begin.tv_sec >= STAT_DURATION_S ) {
                 dfg_to_file(get_dfg(), STAT_SAMPLE_SIZE, dfg_filename);
                 clock_gettime(CLOCK_MONOTONIC, &begin);
             }

@@ -10,7 +10,7 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   CLONE_DECISIONS \
+	   #CLONE_DECISIONS \
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 

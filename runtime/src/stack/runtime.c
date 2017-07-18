@@ -674,7 +674,7 @@ void dedos_main_thread_loop(struct dfg_config *dfg, int runtime_id) {
         // TODO policy as to when we pull stats from worker threads
         get_elapsed_time(&elapsed);
         time_spent = elapsed.tv_sec - begin.tv_sec;
-        if (total_threads > 1 && time_spent > STAT_DURATION_S ) {
+        if (total_threads > 1 && time_spent >= STAT_DURATION_S ) {
             send_stats_to_controller();
             get_elapsed_time(&begin);
         }
