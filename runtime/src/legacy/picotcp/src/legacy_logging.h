@@ -11,6 +11,7 @@
 #define ANSI_COLOR_PURPLE   "\x1b[35m"
 
 #define PICO_SUPPORT_NDEBUG
+//#define DATAPLANE_PROFILING
 //#define LOG_DEBUG 1
 
 #define LOG_FD stderr

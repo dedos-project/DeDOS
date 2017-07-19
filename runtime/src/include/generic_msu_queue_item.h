@@ -32,6 +32,7 @@ static inline struct generic_msu_queue_item * create_generic_msu_queue_item(){
     item->buffer_len = 0;
     item->buffer = NULL;
 #ifdef DATAPLANE_PROFILING
+    memset(&item->dp_profile_info.dp_log_entries, 0, sizeof(item->dp_profile_info.dp_log_entries));
     memset(&item->dp_profile_info, 0, sizeof(struct dataplane_profile_info));
 #endif
     return item;
