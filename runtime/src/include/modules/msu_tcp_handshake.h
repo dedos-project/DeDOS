@@ -34,9 +34,9 @@ struct hs_queue_item
 struct tcp_intermsu_queue_item
 {
         int src_msu_id;
-            int msg_type;
-                int data_len;
-                    void *data;
+        int msg_type;
+        int data_len;
+        void *data;
 };
 
 struct msu_type TCP_HANDSHAKE_MSU_TYPE;

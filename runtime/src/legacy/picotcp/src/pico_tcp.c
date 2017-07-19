@@ -19,6 +19,7 @@
 #include "runtime.h"
 #include "generic_msu.h"
 #include "communication.h"
+#include "data_plane_profiling.h"
 #include "dedos_thread_queue.h"
 #include "modules/msu_tcp_handshake.h"
 #include "dedos_msu_msg_type.h"
@@ -2660,11 +2661,15 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
     int ret;
     struct generic_msu *self = pico_tcp_msu;
     struct generic_msu_queue_item *queue_item;
-    queue_item = malloc(sizeof(*queue_item));
+    queue_item = create_generic_msu_queue_item();
     if(!queue_item){
         log_error("Failed to malloc queue_item queue item");
         return -1;
     }
+#ifdef DATAPLANE_PROFILING
+    queue_item->dp_profile_info.dp_id = get_request_id();
+    log_dp_event(self->id, DEDOS_ENTRY, &queue_item->dp_profile_info);
+#endif
 
     queue_item->id = pico_tcp_generate_id(self, f);
     log_debug("Assigned id to item: %u", queue_item->id);

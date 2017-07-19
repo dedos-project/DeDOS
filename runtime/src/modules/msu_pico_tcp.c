@@ -117,7 +117,7 @@ int msu_pico_tcp_recv_state(struct generic_msu *self, struct dedos_intermsu_mess
     memcpy(intermsu_msg->payload, buf, bufsize);
 
     //create a queue item
-    struct generic_msu_queue_item *queue_item = (struct generic_msu_queue_item*)malloc(sizeof(struct generic_msu_queue_item));
+    struct generic_msu_queue_item *queue_item = create_generic_msu_queue_item();
     if(!queue_item){
         log_error("Failed to malloc queue item in recv state %s","");
         free(intermsu_msg->payload);
@@ -289,6 +289,10 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_
     /* function called when an item is dequeued */
     /* queue_item can be parsed into the struct with is expected in the queue */
 
+    //FIXME: Assuming that there will only be 1 picotcp msu per runtime
+    //else move the static function var to internal state
+    static int covered_weight;
+
     msu_queue *q = &msu->q_in;
     int rtn = sem_post(q->thread_q_sem);
     if (rtn < 0){
@@ -306,11 +310,23 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_
         msu_pico_tcp_restore(msu, msg, msg->payload, msg->payload_len);
 
         log_debug("Processed queue item of %s",msu->type->name);
+#ifdef DATAPLANE_PROFILING
+        if (msg->proto_msg_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE) {
+            log_dp_event(msu->id, DEDOS_EXIT, &queue_item->dp_profile_info);
+        } else if (msg->proto_msg_type == MSU_PROTO_TCP_CONN_RESTORE) { //socket to restore
+            log_dp_event(msu->id, DEDOS_SINK, &queue_item->dp_profile_info);
+        }
+#endif
 
         free(queue_item);
     }
 
-    pico_stack_tick();
+    if(covered_weight > pico_tcp_msu->scheduling_weight){
+        pico_stack_tick();
+        covered_weight = 0;
+    }
+
+    covered_weight++;
 
     return -10;
 }
@@ -329,7 +345,7 @@ int msu_pico_tcp_init(struct generic_msu *self,
     log_info("Initializing pico_tcp_stack by calling pico_stack_init %s","");
     pico_tcp_msu = self;
     pico_stack_init();
-    self->scheduling_weight = 2000;
+    self->scheduling_weight = 64;
     msu_queue *q_data = &self->q_in;
 
     int rtn = sem_post(q_data->thread_q_sem);

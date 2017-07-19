@@ -222,7 +222,7 @@ static void send_to_next_msu(struct generic_msu *self, unsigned int message_type
 
         //create queue item here and then enqueue
         struct generic_msu_queue_item *queue_item;
-        queue_item = (struct generic_msu_queue_item*)malloc(sizeof(struct generic_msu_queue_item));
+        queue_item = (struct generic_msu_queue_item*)create_generic_msu_queue_item();
 
         if(!queue_item){
         	log_error("Failed to malloc queue item %s","");
@@ -235,6 +235,10 @@ static void send_to_next_msu(struct generic_msu *self, unsigned int message_type
             free(msg);
             return;
         }
+#ifdef DATAPLANE_PROFILING
+        queue_item->dp_profile_info.dp_id = get_request_id();
+        log_dp_event(self->id, DEDOS_START, &queue_item->dp_profile_info);
+#endif
 
         queue_item->buffer = msg;
         queue_item->buffer_len = msg->payload_len + sizeof(struct dedos_intermsu_message);
@@ -1422,6 +1426,7 @@ static inline long unsigned int get_ts(){
 int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue_item *queue_item)
 {
     //interface from runtime to picoTCP structures or any other existing code
+
     msu_queue *q_data = &msu->q_in;
     int rtn = sem_post(q_data->thread_q_sem);
     if(rtn < 0){
@@ -1465,6 +1470,9 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
         f->transport_len = (uint16_t) (f->len - f->net_len - (uint16_t) (f->net_hdr - f->buffer));
         log_debug("Fixed frame pointers..");
 
+#ifdef DATAPLANE_PROFILING
+        log_dp_event(msu->id, DEDOS_SINK, &queue_item->dp_profile_info);
+#endif
         msu_process_hs_request_in(msu, tcp_queue_item->src_msu_id, f);
 
         pico_frame_discard(f);
@@ -1523,7 +1531,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     //handshake_msu->restore = msu_tcp_hs_restore_socket;
     //handshake_msu->same_machine_move_state = msu_tcp_hs_same_thread_transfer;
 
-    handshake_msu->scheduling_weight = 2000;
+    handshake_msu->scheduling_weight = 64;
     struct hs_internal_state *in_state = (struct hs_internal_state*)malloc(sizeof(struct hs_internal_state));
     if(!in_state){
         return -1;

@@ -18,7 +18,9 @@ typedef enum {
     REMOTE_SEND, //When sent over TCP conn b/w runtimes
     REMOTE_RECV, //When recevied over TCP conn b/w runtimes
     DEDOS_ENTRY,
-    DEDOS_EXIT
+    DEDOS_EXIT,
+    DEDOS_START,
+    DEDOS_SINK
 } enum_dataplane_op_id;
 
 static const char *enum_dataplane_op_name[] = {
@@ -27,7 +29,9 @@ static const char *enum_dataplane_op_name[] = {
     "REMOTE_SEND", //When sent over TCP conn b/w runtimes
     "REMOTE_RECV", //When recevied over TCP conn b/w runtimes
     "DEDOS_ENTRY",
-    "DEDOS_EXIT"
+    "DEDOS_EXIT",
+    "DEDOS_START",
+    "DEDOS_SINK"
 };
 
 struct dataplane_profile_info {
@@ -132,7 +136,7 @@ static void log_dp_event(int msu_id, enum_dataplane_op_id dataplane_op_id,
     } //if(dataplane_op_id == DEDOS_EXIT)
 */
     //instead memory logging just write to disk, since it is buffered
-    if(dataplane_op_id == DEDOS_EXIT){
+    if(dataplane_op_id == DEDOS_EXIT || dataplane_op_id == DEDOS_SINK){
         int i = 0;
         pthread_mutex_lock(&fp_log_mutex);
         for(i = 0; i < dp_profile_info->dp_entry_count; i++){

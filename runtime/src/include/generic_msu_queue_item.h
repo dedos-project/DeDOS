@@ -15,10 +15,10 @@ struct generic_msu_queue_item{
      to be in
      */
     uint32_t buffer_len;
+    void *buffer;
 #ifdef DATAPLANE_PROFILING
     struct dataplane_profile_info dp_profile_info;
 #endif
-    void *buffer;
 } ;
 
 static inline struct generic_msu_queue_item * create_generic_msu_queue_item(){
