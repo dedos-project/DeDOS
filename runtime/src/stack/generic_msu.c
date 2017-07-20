@@ -313,6 +313,7 @@ struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thre
 
     // Call the type-specific initialization function
     // TODO: What is this "creation_init_data"
+    msu->scheduling_weight = 1;
     if (msu->type->init){
         int rtn = msu->type->init(msu, create_action);
         if (rtn){
@@ -325,7 +326,6 @@ struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thre
     }
     log_info("Created %s MSU: id %d", msu->type->name, msu_id);
     msu->routes = NULL;
-    msu->scheduling_weight = 1;
     msu->routing_state = NULL;
     return msu;
 }
