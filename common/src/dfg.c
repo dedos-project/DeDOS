@@ -27,12 +27,12 @@ int show_connected_peers(void) {
     for (i = 0; i < dfg->runtimes_cnt; ++i) {
         if (dfg->runtimes[i]->sock != -1) {
             ipv4_to_string(ipstr, dfg->runtimes[i]->ip);
-            debug("INFO => Socket: %d, IP: %s, Cores: %u, Pinned Threads: %u  Total Threads: %u",
-                  dfg->runtimes[i]->sock,
-                  ipstr,
-                  dfg->runtimes[i]->num_cores,
-                  dfg->runtimes[i]->num_pinned_threads,
-                  dfg->runtimes[i]->num_threads);
+            printf("INFO => Socket: %d, IP: %s, Cores: %u, Pinned Threads: %u  Total Threads: %u\n",
+                   dfg->runtimes[i]->sock,
+                   ipstr,
+                   dfg->runtimes[i]->num_cores,
+                   dfg->runtimes[i]->num_pinned_threads,
+                   dfg->runtimes[i]->num_threads);
             count++;
         }
     }
