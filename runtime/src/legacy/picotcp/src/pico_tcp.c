@@ -2667,8 +2667,10 @@ static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, c
         return -1;
     }
 #ifdef DATAPLANE_PROFILING
-    queue_item->dp_profile_info.dp_id = get_request_id();
-    log_dp_event(self->id, DEDOS_ENTRY, &queue_item->dp_profile_info);
+    if(strncmp(flag,"SYN",3) == 0){
+        queue_item->dp_profile_info.dp_id = get_request_id();
+        log_dp_event(self->id, DEDOS_ENTRY, &queue_item->dp_profile_info);
+    }
 #endif
 
     queue_item->id = pico_tcp_generate_id(self, f);
