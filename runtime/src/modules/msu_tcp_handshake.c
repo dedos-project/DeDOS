@@ -236,8 +236,10 @@ static void send_to_next_msu(struct generic_msu *self, unsigned int message_type
             return;
         }
 #ifdef DATAPLANE_PROFILING
+    if (message_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE) {
         queue_item->dp_profile_info.dp_id = get_request_id();
         log_dp_event(self->id, DEDOS_START, &queue_item->dp_profile_info);
+    }
 #endif
 
         queue_item->buffer = msg;
@@ -1531,7 +1533,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     //handshake_msu->restore = msu_tcp_hs_restore_socket;
     //handshake_msu->same_machine_move_state = msu_tcp_hs_same_thread_transfer;
 
-    handshake_msu->scheduling_weight = 64;
+    handshake_msu->scheduling_weight = 32;
     struct hs_internal_state *in_state = (struct hs_internal_state*)malloc(sizeof(struct hs_internal_state));
     if(!in_state){
         return -1;
