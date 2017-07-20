@@ -180,10 +180,13 @@ static void* non_block_per_thread_loop() {
         struct generic_msu *end = pool->tail;
 
         if (cur != NULL) {
+            if(cur->type->type_id == DEDOS_PICO_TCP_APP_TCP_ECHO_ID){
+                continue;
+            }
             do {
                 unsigned int covered_weight = 0;
                 struct generic_msu_queue_item *queue_item;
-
+                log_debug("id: %d, schd_weight: %d\n",cur->id, cur->scheduling_weight);
                 while (covered_weight < cur->scheduling_weight) {
                     //dequeue from data queue
                     queue_item = generic_msu_queue_dequeue(&cur->q_in);
