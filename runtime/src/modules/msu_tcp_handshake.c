@@ -75,7 +75,7 @@ static void dummy_state_cleanup(struct hs_internal_state *in_state){
         if(in_state->syn_state_used_memory < 0)
         {
             in_state->syn_state_used_memory = 0;
-            printf("used mem: %ld\n", in_state->syn_state_used_memory);
+            log_debug("used mem: %ld\n", in_state->syn_state_used_memory);
         }
         last_ts = ts;
     }
@@ -1533,7 +1533,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     //handshake_msu->restore = msu_tcp_hs_restore_socket;
     //handshake_msu->same_machine_move_state = msu_tcp_hs_same_thread_transfer;
 
-    handshake_msu->scheduling_weight = 32;
+    handshake_msu->scheduling_weight = 64;
     struct hs_internal_state *in_state = (struct hs_internal_state*)malloc(sizeof(struct hs_internal_state));
     if(!in_state){
         return -1;
