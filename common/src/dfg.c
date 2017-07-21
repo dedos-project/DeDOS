@@ -561,6 +561,69 @@ int generate_msu_id() {
     return highest_id + 1;
 }
 
+int remove_msu_from_runtime_threads(int msu_id, struct dfg_runtime_endpoint *rt) {
+    int error = -1;
+    //TODO: We're assuming the only threads are pinned threads
+    for (int i=0; i<rt->num_pinned_threads; i++) {
+        struct runtime_thread *rt_t = rt->threads[i];
+        int j;
+        for (j=0; j<rt_t->num_msus; j++) {
+            if (rt_t->msus[j]->msu_id == msu_id) {
+                rt_t->num_msus--;
+                error = 0;
+                break;
+            }
+        }
+        // Shift next MSUs backwards
+        for (; j<rt_t->num_msus; j++) {
+            rt_t->msus[j] = rt_t->msus[j+1];
+        }
+    }
+    return error;
+}
+
+
+int remove_msu_from_dfg(int msu_id) {
+    struct dfg_config *dfg = get_dfg();
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+
+    int errored = -1;
+    for (int i=0; i<dfg->runtimes_cnt; i++) {
+        if ( (errored = remove_msu_from_runtime_threads(msu_id, dfg->runtimes[i])) < 0 ){
+            break;
+        }
+    }
+    if (errored < 0) {
+        log_error("Could not find MSU %d in runtime threads", msu_id);
+        return -1;
+    }
+
+    int found = 0;
+    int i;
+    for (i=0; i<dfg->vertex_cnt; i++) {
+        if (dfg->vertices[i]->msu_id == msu_id) {
+            dfg->vertex_cnt--;
+            found = 1;
+            break;
+        }
+    }
+
+    // Shift next MSUs backwards
+    for (; i<dfg->vertex_cnt; i++) {
+        dfg->vertices[i] = dfg->vertices[i+1];
+    }
+
+    if (!found) {
+        log_error("Could not find MSU %d in dfg", msu_id);
+    }
+
+    free(msu);
+    log_info("Removed MSU %d from dfg", msu_id);
+    return 0;
+}
+
+
+
 /* Big mess of create, updates, etc */
 void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
     debug("DEBUG: updating MSU for action: %d", update_msg->msg_code);
@@ -619,3 +682,5 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
             break;
     }
 }
+
+
