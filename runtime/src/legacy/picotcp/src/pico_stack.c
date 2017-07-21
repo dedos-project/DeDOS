@@ -787,6 +787,17 @@ int32_t pico_stack_recv(struct pico_device *dev, uint8_t *buffer, uint32_t len)
     }
 
     memcpy(f->buffer, buffer, len);
+#ifdef PICO_SUPPORT_DEDOS_MSUS
+    //first ack tracking and not 
+    //forward duplicate ack to handshake MSU
+
+    if(is_duplicate_fack(f)){
+        duplicates++;
+        pico_frame_discard(f);
+        return -1;
+    }
+
+#endif
     ret = pico_enqueue(dev->q_in, f);
     if (ret <= 0) {
         pico_frame_discard(f);
@@ -1100,12 +1111,13 @@ void pico_stack_tick(void)
 
     /* calculate new loop scores for next iteration */
     calc_score(score, index, (int (*)[])avg, ret);
-
+/*
     msu_queue *q = &pico_tcp_msu->q_in;
     int rtn = sem_post(q->thread_q_sem);
     if (rtn < 0){
         log_error("error incrementing thread queue semaphore");
     }
+*/
 }
 
 void pico_stack_loop(void)
