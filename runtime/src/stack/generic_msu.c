@@ -324,7 +324,7 @@ struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thre
             return NULL;
         }
     }
-    log_info("Created %s MSU: id %d", msu->type->name, msu_id);
+    log_info("Created %s MSU: id %d, sched_weight: %d", msu->type->name, msu_id, msu->scheduling_weight);
     msu->routes = NULL;
     msu->routing_state = NULL;
     return msu;
