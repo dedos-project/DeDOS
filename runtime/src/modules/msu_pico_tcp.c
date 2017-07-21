@@ -49,6 +49,7 @@
 #include "dedos_thread_queue.h" //for enqueuing outgoing control messages
 #include "control_protocol.h"
 #include "logging.h"
+#include "data_plane_profiling.h"
 
 extern long unsigned int synacks_to_client;
 extern long unsigned int forwarding_items_dequeued;
@@ -291,7 +292,7 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_
 
     //FIXME: Assuming that there will only be 1 picotcp msu per runtime
     //else move the static function var to internal state
-    static int covered_weight;
+    static int covered_count;
 
     msu_queue *q = &msu->q_in;
     int rtn = sem_post(q->thread_q_sem);
@@ -307,26 +308,26 @@ int msu_pico_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_
         log_debug("Dequeued an item in msu id: %d",msu->id);
 
         msg = (struct dedos_intermsu_message*)queue_item->buffer;
+        unsigned int proto_msg_type = msg->proto_msg_type;
         msu_pico_tcp_restore(msu, msg, msg->payload, msg->payload_len);
 
         log_debug("Processed queue item of %s",msu->type->name);
 #ifdef DATAPLANE_PROFILING
-        if (msg->proto_msg_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE) {
+        if (proto_msg_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE) {
             log_dp_event(msu->id, DEDOS_EXIT, &queue_item->dp_profile_info);
-        } else if (msg->proto_msg_type == MSU_PROTO_TCP_CONN_RESTORE) { //socket to restore
+        } else if (proto_msg_type == MSU_PROTO_TCP_CONN_RESTORE) { //socket to restore
             log_dp_event(msu->id, DEDOS_SINK, &queue_item->dp_profile_info);
         }
 #endif
-
         free(queue_item);
     }
 
-    if(covered_weight > pico_tcp_msu->scheduling_weight){
+    if(covered_count > (pico_tcp_msu->scheduling_weight * 2)){
         pico_stack_tick();
-        covered_weight = 0;
+        covered_count = 0;
     }
 
-    covered_weight++;
+    covered_count++;
 
     return -10;
 }
@@ -348,6 +349,9 @@ int msu_pico_tcp_init(struct generic_msu *self,
     self->scheduling_weight = 64;
     msu_queue *q_data = &self->q_in;
 
+    //printf("self ptr in init: %p\n", self);
+    //printf("pico_tcp_msu: %p\n",pico_tcp_msu);
+    //printf("sched weight; %d, %d\n", self->scheduling_weight, pico_tcp_msu->scheduling_weight);
     int rtn = sem_post(q_data->thread_q_sem);
     if (rtn < 0){
         log_error("error incrementing thread queue semaphore");
