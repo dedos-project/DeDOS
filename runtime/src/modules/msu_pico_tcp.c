@@ -346,7 +346,7 @@ int msu_pico_tcp_init(struct generic_msu *self,
     log_info("Initializing pico_tcp_stack by calling pico_stack_init %s","");
     pico_tcp_msu = self;
     pico_stack_init();
-    self->scheduling_weight = 64;
+    self->scheduling_weight = 32;
     msu_queue *q_data = &self->q_in;
 
     //printf("self ptr in init: %p\n", self);
@@ -380,11 +380,13 @@ uint32_t pico_tcp_generate_id(struct generic_msu *self, struct pico_frame *f){
     }
     struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
     struct pico_ipv4_hdr *net_hdr = (struct pico_ipv4_hdr *) f->net_hdr;
+/*
     char peer[30], local[30];
     pico_ipv4_to_string(peer, net_hdr->src.addr);
     pico_ipv4_to_string(local, net_hdr->dst.addr);
     log_debug("Src addr %s: dst addr : %s", peer, local);
     log_debug("> dst port:%u src port: %u", short_be(hdr->trans.dport), short_be(hdr->trans.sport));
+*/
     uint16_t sport = short_be(hdr->trans.sport);
     uint16_t dport = short_be(hdr->trans.dport);
 

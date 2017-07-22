@@ -26,15 +26,26 @@
 #include "dedos_msu_list.h"
 #include "modules/msu_pico_tcp.h"
 #include "modules/hs_request_routing_msu.h" //for struct routing item
+#include "uthash.h"
+
+struct fack_track {
+    int id;                    /* key */
+    unsigned long long last_ts;
+    UT_hash_handle hh;         /* makes this structure hashable */
+};
+
+struct fack_track *fack_tracker = NULL;
 
 static long unsigned int syns_forwarded;
 static long unsigned int acks_forwarded;
+long unsigned int duplicates;
 long unsigned int synacks_to_client;
 long unsigned int forwarding_items_dequeued;
 
 void print_forwarding_stats(void){
     printf("Picotcp Syns forwarded: %lu\n",syns_forwarded);
     printf("picotcp Acks forwarded: %lu\n",acks_forwarded);
+    printf("picotcp dupulicates: %lu\n",duplicates);
     printf("picotcp forwarding item dequeuend: %lu\n",forwarding_items_dequeued);
     printf("picotcp SynAcks to client: %lu\n",synacks_to_client);
 }
@@ -2653,7 +2664,7 @@ static void forward_data_over_sock(struct msu_endpoint *tmp, char *buf, unsigned
             ret);
 }
 
-static int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, char *flag)
+static inline int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, char *flag)
 {
     //the incoming f pointer will be freed when this function returs, so need to create
     //a copy of it
@@ -3007,10 +3018,74 @@ static int tcp_synack(struct pico_socket *s, struct pico_frame *f)
         return 0;
     }
 }
+static inline unsigned long long int get_ts(){
+
+    struct timespec cur_timestamp;
+    unsigned long long int ts;
+    clock_gettime(CLOCK_ID, &cur_timestamp);
+    ts = (cur_timestamp.tv_sec * 1000 * 1000) + (cur_timestamp.tv_nsec / 1000);
+    return ts;
+}
+
+int is_duplicate_fack(struct pico_frame *f){
+    //FIX frame pointers here RESUME HERE
+    f->datalink_hdr = f->buffer;
+    f->net_hdr = f->datalink_hdr + PICO_SIZE_ETHHDR;
+    f->net_len = 20;
+    f->transport_hdr = f->net_hdr + f->net_len;
+    f->transport_len = (uint16_t) (f->len - f->net_len
+                - (uint16_t) (f->net_hdr - f->buffer));
+
+    struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
+    uint8_t flags = hdr->flags;
+    if (!(flags == PICO_TCP_ACK || flags == (PICO_TCP_ACK | PICO_TCP_PSH))){
+        return 0;
+    }
+    //Check if item is hash table
+    int ack = ACKN(f);
+    unsigned long long int cur_ts = 0;
+    struct fack_track *s;
+    int duplicate = 0;
+    HASH_FIND_INT(fack_tracker, &ack, s);  /* id already in the hash? */
+    if (s == NULL) { //ack no seen, add it
+        s = (struct fack_track*)malloc(sizeof(struct fack_track));
+        s->id = ack;
+        s->last_ts = get_ts();
+//        printf("cur ts: %llu\n",s->last_ts);
+        HASH_ADD_INT(fack_tracker, id, s );  /* id: name of key field */
+        return 0;
+    }
+    else{
+        cur_ts = get_ts();
+//        printf("cur ts: %llu, last ts: %llu, diff: %llu\n",cur_ts, s->last_ts, cur_ts - s->last_ts);
+        if(cur_ts - s->last_ts < 1000){ //FIXME check the diff
+            duplicate = 1;
+        }
+        else {
+            duplicate = 0;
+        }
+
+//        printf("Deleting ack with last ts: %llu\n",s->last_ts);
+        HASH_DEL(fack_tracker, s);
+        free(s);
+
+    }
+    return duplicate;
+//TODO FIXME no cleanup for single acks, odd acks, maybe use restore info
+// to delete from here also
+}
 
 static int tcp_first_ack(struct pico_socket *s, struct pico_frame *f)
 {
 #ifdef PICO_SUPPORT_DEDOS_MSUS
+    //first ack tracking and not 
+    //forward duplicate ack to handshake MSU
+/*
+    if(is_duplicate_fack(f)){
+        duplicates++;
+        return 0;
+    }
+*/
     log_debug("Forwarding FIRST ACK to MSU","");
     route_to_handshake_msu(s, f, "FIRST_ACK");
     log_debug("Done enqueuing FIRST_ACK request","");
