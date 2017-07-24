@@ -9,8 +9,11 @@
 #include "generic_msu_queue_item.h"
 
 #define MAX_REQUEST_LEN 256
-#define READ 0
-#define WRITE 1
+
+enum ssl_data_type {
+    READ=0,
+    WRITE=1
+};
 
 void SSLErrorCheck (int err);
 
@@ -19,7 +22,7 @@ struct ssl_data_payload {
     uint32_t port;
     uint32_t socketfd;
     int sslMsuId;
-    int type;
+    enum ssl_data_type type;
     char msg[MAX_REQUEST_LEN];
     SSL *state;
 };
