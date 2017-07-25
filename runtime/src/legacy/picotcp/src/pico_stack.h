@@ -13,8 +13,9 @@
 #define PICO_ETH_MRU (1514u)
 #define PICO_IP_MRU (1500u)
 
-int is_duplicate_fack(struct pico_frame *f);
+int is_data_ack(struct pico_frame *f);
 extern long unsigned int duplicates;
+extern long unsigned int frames_received;
 
 /* ===== RECEIVING FUNCTIONS (from dev up to socket) ===== */
 

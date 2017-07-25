@@ -163,10 +163,10 @@ int msu_pico_tcp_restore(struct generic_msu *self,
         int ret = 0;
         uint8_t flags = hdr->flags;
         struct pico_ipv4_hdr *iphdr = (struct pico_ipv4_hdr *)f->net_hdr;
+        forwarding_items_dequeued++;
 
         if (flags == (PICO_TCP_SYN | PICO_TCP_ACK) || PICO_TCP_RST){
             log_debug("%s","Stuff from HS, pushing out to client");
-            forwarding_items_dequeued++;
 
             f->len = f->len - PICO_SIZE_ETHHDR;
             f->start = f->net_hdr;

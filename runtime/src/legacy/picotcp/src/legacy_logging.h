@@ -13,6 +13,7 @@
 #define PICO_SUPPORT_NDEBUG
 //#define DATAPLANE_PROFILING
 //#define LOG_DEBUG 1
+#define LOG_ERROR 1
 
 #define LOG_FD stderr
 

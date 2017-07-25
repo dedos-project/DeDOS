@@ -45,13 +45,13 @@ static int hs_count_sockets(struct pico_tree *hs_table){
 }
 
 static void print_packet_stats(struct hs_internal_state* in_state){
-    printf("items_dequeued: %lu\n",in_state->items_dequeued);
-    printf("syns_processed: %lu\n",in_state->syns_processed);
-    printf("syns_dropped: %lu\n",in_state->syns_dropped);
-    printf("synacks_generated: %lu\n",in_state->synacks_generated);
+    printf("HS items_dequeued: %lu\n",in_state->items_dequeued);
+    printf("HS syns_processed: %lu\n",in_state->syns_processed);
+    printf("HS syns_dropped: %lu\n",in_state->syns_dropped);
+    printf("HS synacks_generated: %lu\n",in_state->synacks_generated);
     int count;
     count = hs_count_sockets(in_state->hs_table);
-    printf("Sockets count: %d\n",count);
+    printf("HS Sockets count: %d\n",count);
     exit_flag++;
 }
 

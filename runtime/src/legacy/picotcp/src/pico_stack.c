@@ -790,20 +790,21 @@ int32_t pico_stack_recv(struct pico_device *dev, uint8_t *buffer, uint32_t len)
 #ifdef PICO_SUPPORT_DEDOS_MSUS
     //first ack tracking and not 
     //forward duplicate ack to handshake MSU
-
-    if(is_duplicate_fack(f)){
+/*
+    if(is_data_ack(f)){
         duplicates++;
         pico_frame_discard(f);
         return -1;
     }
-
+*/
 #endif
     ret = pico_enqueue(dev->q_in, f);
     if (ret <= 0) {
         pico_frame_discard(f);
     }
-
-    return ret;
+    else{
+        frames_received++;
+    }return ret;
 }
 
 static int32_t _pico_stack_recv_zerocopy(struct pico_device *dev, uint8_t *buffer, uint32_t len, int ext_buffer, void (*notify_free)(uint8_t *))
