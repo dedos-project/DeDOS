@@ -13,6 +13,7 @@
 #include "pico_device.h"
 #include "pico_dev_pcap.h"
 #include "pico_stack.h"
+#include "legacy_logging.h"
 
 #ifndef __FreeBSD__
 #include <linux/if_tun.h>
@@ -115,7 +116,15 @@ static struct pico_device *pico_pcap_create(char *if_file_name, char *name, uint
         pico_pcap_destroy((struct pico_device *)pcap);
         return NULL;
     }
-
+    if(pcap_set_snaplen(pcap->conn, 2000) != 0){
+        log_error("Error setting PCAP snaplen");
+    }
+    if(pcap_set_buffer_size(pcap->conn, 100<<20) != 0){
+        log_error("Error setting pcap buffer size");
+    }
+    if(pcap_activate(pcap->conn) != 0){
+        log_error("Error activating pcap conn");
+    }
     pcap->dev.send = pico_pcap_send;
     pcap->dev.poll = pico_pcap_poll;
     pcap->dev.destroy = pico_pcap_destroy;
