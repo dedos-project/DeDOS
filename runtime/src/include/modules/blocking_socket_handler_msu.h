@@ -12,11 +12,6 @@
 /** All socket handler MSUs contain a reference to this type */
 extern struct msu_type BLOCKING_SOCKET_HANDLER_MSU_TYPE;
 
-struct blocking_socket_handler_init_payload {
-    char *init_cmd;
-};
-
-
 /**
  * Adds the file descriptor to the epoll instance, without necessarily having the reference
  * to the socket handler MSU itself.

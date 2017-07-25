@@ -169,6 +169,8 @@ def make_msus_out(msu):
                 msu_out['dependencies'].append(dict(
                     msu_type = dep['msu_type'],
                     locality = dep['locality']))
+        if 'init_data' in msu:
+            msu_out['init_data'] = msu['init_data']
         max_id += 1
         msus.append(msu_out)
     return msus

@@ -274,11 +274,15 @@ static int parse_init_payload (char *to_parse, struct blocking_sock_init *parsed
         }
         parsed->port = atoi(tok);
 
-        if ( (tok = strtok_r(to_parse, " ,", saveptr)) == NULL) {
+        if ( (tok = strtok_r(NULL, " ,", saveptr)) == NULL) {
             parsed->target_msu_type = default_init.target_msu_type;
             return 0;
         }
         parsed->target_msu_type = atoi(tok);
+
+        if ( (tok = strtok_r(NULL, " ,", saveptr)) != NULL) {
+            log_warn("Discarding extra tokens from socket initialzation: %s", tok);
+        }
     }
     return 0;
 }
@@ -295,10 +299,10 @@ static int socket_handler_init(struct generic_msu *self, struct create_msu_threa
         log_error("Socket handler already instantiated! There can only be one.");
         return -1;
     }
-    struct blocking_socket_handler_init_payload *initialization = initial_state->init_data;
+    char *init_cmd= initial_state->init_data;
 
     struct blocking_sock_init init;
-    parse_init_payload(initialization->init_cmd, &init);
+    parse_init_payload(init_cmd, &init);
     log_info("Initializing socket handler with port: %d, target_msu: %d",
              init.port, init.target_msu_type);
 

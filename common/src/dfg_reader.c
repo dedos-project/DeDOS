@@ -186,7 +186,7 @@ static int set_working_mode(jsmntok_t **tok, char *j, struct json_state *in, str
                 log_error("MSUs of mixed types placed on thread %d! Cannot proceed!", thread->id);
                 return -1;
             } else {
-                log_warn("Changing working mode of thread %d to non-blocking", thread->id);
+                log_warn("Changing working mode of thread %d to non-blocking. Count of non-blocking threads may now be innacurate.", thread->id);
                 thread->mode = 1;
                 return 0;
             }
@@ -197,7 +197,7 @@ static int set_working_mode(jsmntok_t **tok, char *j, struct json_state *in, str
                 log_error("MSUs of mixed types placed on thread %d! Cannot proceed", thread->id);
                 return -1;
             } else {
-                log_warn("Changing working mode of thread %d to blocking", thread->id);
+                log_warn("Changing working mode of thread %d to blocking. Count of non-blocking threads may now be innacurate.", thread->id);
                 thread->mode = 2;
                 return 0;
             }
