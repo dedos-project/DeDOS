@@ -107,23 +107,44 @@ static struct pico_device *pico_pcap_create(char *if_file_name, char *name, uint
 
     pcap->dev.overhead = 0;
 
-    if (mode == PICO_PCAP_MODE_LIVE)
-        pcap->conn = pcap_open_live(if_file_name, 2000, 1, 1, errbuf);
-    else
-        pcap->conn = pcap_open_offline(if_file_name, errbuf);
+    if (mode == PICO_PCAP_MODE_LIVE){
+        int status;
+        pcap->conn = pcap_create(if_file_name, errbuf);
 
+        if (pcap->conn == NULL){
+            log_error("error creating pcap dev");
+            goto end;
+        }
+        status = pcap_set_snaplen(pcap->conn, 2000);
+        if (status < 0)
+            log_error("error setting snaplen in pcap");
+
+        status = pcap_set_promisc(pcap->conn, 1);
+        if (status < 0)
+            log_error("error setting promiscuous mode");
+
+        status = pcap_set_timeout(pcap->conn, 1);
+        if (status < 0)
+            log_error("error setting pcap timeout");
+
+        status = pcap_set_buffer_size(pcap->conn, 100<<20);
+        if(status < 0)
+            log_error("Error setting pcap buffer size");
+
+        status = pcap_activate(pcap->conn);
+        if (status < 0){
+            log_error("Failed to activate pcap dev");
+            goto end;
+        }
+//        pcap->conn = pcap_open_live(if_file_name, 2000, 1, 1, errbuf);
+
+    } else {
+        pcap->conn = pcap_open_offline(if_file_name, errbuf);
+    }
+end:
     if (!pcap->conn) {
         pico_pcap_destroy((struct pico_device *)pcap);
         return NULL;
-    }
-    if(pcap_set_snaplen(pcap->conn, 2000) != 0){
-        log_error("Error setting PCAP snaplen");
-    }
-    if(pcap_set_buffer_size(pcap->conn, 100<<20) != 0){
-        log_error("Error setting pcap buffer size");
-    }
-    if(pcap_activate(pcap->conn) != 0){
-        log_error("Error activating pcap conn");
     }
     pcap->dev.send = pico_pcap_send;
     pcap->dev.poll = pico_pcap_poll;
