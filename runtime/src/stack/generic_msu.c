@@ -692,11 +692,12 @@ int msu_route(struct msu_type *type, struct generic_msu *sender,
                      sender->id, sender->type->name);
         }
     } else {
-        if (data->id != 0){
-            log_warn("Data ID being reassigned from %d by msu %d",data->id, sender->id);
-        }
+        uint32_t orig_id = data->id;
         data->id = sender->type->generate_id(sender, data);
-        log_debug("Assigned queue item %p id %d", data, data->id);
+        if (orig_id != 0){
+            log_warn("Data ID reassigned from %u to %u by msu %d",orig_id, data->id, sender->id);
+        }
+        log_debug("Assigned queue item %p id %u", data, data->id);
     }
 
     struct msu_endpoint *dst = type->route(type, sender, data);

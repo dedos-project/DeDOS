@@ -173,6 +173,40 @@ static int set_meta_routing(jsmntok_t **tok, char *j, struct json_state *in, str
 static int set_working_mode(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct dfg_vertex *vertex = in->data;
     strcpy(vertex->msu_mode, tok_to_str(*tok, j));
+
+    struct runtime_thread *thread = vertex->scheduling.thread;
+    if (thread == NULL) {
+        // Have to wait for the thread to be instantiated
+        return 1;
+    }
+
+    if (strcasecmp(vertex->msu_mode, "non-blocking") == 0) {
+        if (thread->mode != 1) {
+            if (thread->num_msus > 1) {
+                log_error("MSUs of mixed types placed on thread %d! Cannot proceed!", thread->id);
+                return -1;
+            } else {
+                log_warn("Changing working mode of thread %d to non-blocking", thread->id);
+                thread->mode = 1;
+                return 0;
+            }
+        }
+    } else if (strcasecmp(vertex->msu_mode, "blocking") == 0) {
+        if (thread->mode != 2) {
+            if (thread->num_msus > 1) {
+                log_error("MSUs of mixed types placed on thread %d! Cannot proceed", thread->id);
+                return -1;
+            } else {
+                log_warn("Changing working mode of thread %d to blocking", thread->id);
+                thread->mode = 2;
+                return 0;
+            }
+        }
+    } else {
+        log_error("Unknown working mode: %s", vertex->msu_mode);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -219,6 +253,16 @@ static int set_rt_dram(jsmntok_t **tok, char *j, struct json_state *in, struct j
 static int set_rt_num_threads(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
     struct dfg_runtime_endpoint *runtime = in->data;
     runtime->num_threads = tok_to_int(*tok, j);
+
+    int i;
+    for (i = 0; i < runtime->num_threads; ++i) {
+        struct runtime_thread *rt_thread = calloc(1, sizeof(*rt_thread));
+        rt_thread->id = i + 1;
+        rt_thread->mode = 2;
+
+        runtime->threads[i] = rt_thread;
+    }
+
     return 0;
 }
 
@@ -226,13 +270,18 @@ static int set_rt_num_pinned_threads(jsmntok_t **tok, char *j, struct json_state
     struct dfg_runtime_endpoint *runtime = in->data;
     runtime->num_pinned_threads = tok_to_int(*tok, j);
 
-    int i;
-    for (i = 0; i < runtime->num_pinned_threads; ++i) {
-        struct runtime_thread *rt_thread = calloc(1, sizeof(*rt_thread));
-        rt_thread->id = i + 1;
-        rt_thread->mode = 1;
+    if (runtime->num_threads <= 0) {
+        // num_threads must be instantiated before num_pinned_threads
+        return 1;
+    }
 
-        runtime->threads[i] = rt_thread;
+    if (runtime->num_threads < runtime->num_pinned_threads) {
+        log_error("Cannot instantiate more pinned threads than threads");
+        return -1;
+    }
+
+    for (int i=0; i<runtime->num_pinned_threads; ++i) {
+        runtime->threads[i]->mode = 1;
     }
 
     return 0;
@@ -374,7 +423,7 @@ static int set_dst_types(jsmntok_t **tok, char *j, struct json_state *in, struct
 
 static int set_thread_id(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
     struct msu_scheduling *sched = in->data;
-    sched->thread_id = tok_to_int(*tok, j);
+    int thread_id = tok_to_int(*tok, j);
 
     if (sched->runtime == NULL) {
         return 1;
@@ -388,7 +437,7 @@ static int set_thread_id(jsmntok_t **tok, char *j, struct json_state *in, struct
     // Bit of a convoluted process to find the current MSU...
     // Go through the vertices and find the msu with the scheduling pointer
     // that is equal to this MSUs
-    struct msu_vertex *this_msu = NULL;
+    struct dfg_vertex *this_msu = NULL;
     for (int i=0; i<cfg->vertex_cnt; i++) {
         if (&cfg->vertices[i]->scheduling == sched) {
             this_msu = cfg->vertices[i];
@@ -400,9 +449,12 @@ static int set_thread_id(jsmntok_t **tok, char *j, struct json_state *in, struct
     struct dfg_runtime_endpoint *rt = sched->runtime;
     for (int i=0; i<rt->num_threads; i++) {
         struct runtime_thread *thread = rt->threads[i];
-        if (thread->id == sched->thread_id) {
+        if (thread != NULL && thread->id == thread_id) {
             thread->msus[thread->num_msus] = this_msu;
             thread->num_msus++;
+            sched->thread = thread;
+            sched->thread_id = thread_id;
+            log_info("Setting thread of msu %d to %d", this_msu->msu_id, thread_id);
             return 0;
         }
     }

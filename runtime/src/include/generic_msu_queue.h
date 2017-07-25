@@ -36,6 +36,9 @@ static inline void generic_msu_queue_init(struct generic_msu_queue *q, sem_t *th
     q->head = NULL;
     q->tail = NULL;
     q->overhead = 0;
+    if (thread_q_sem == NULL) {
+        log_warn("Initializing MSU Queue with null Thread Queue Semaphore");
+    }
     q->thread_q_sem = thread_q_sem;
 }
 

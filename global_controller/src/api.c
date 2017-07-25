@@ -52,6 +52,7 @@ int add_msu(char *msu_data, int msu_id, int msu_type,
 
         new_msu->scheduling.runtime = dfg->runtimes[endpoint_index];
         new_msu->scheduling.thread_id = (uint32_t)thread_id;
+        // TODO: Assign actual scheduling.thread pointer
 
         num_pinned_threads = dfg->runtimes[endpoint_index]->num_pinned_threads;
 

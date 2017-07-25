@@ -128,6 +128,76 @@ static int pin_thread(pthread_t ptid, int cpu_id) {
     return 0;
 }
 
+/** 
+ * This is the main thread loop for blocking threads.
+ * I believe that it does the same thing as the non-block loop though...
+ */
+static void* blocking_per_thread_loop() {
+    /* Each of these loops is independently run on thread */
+    usleep(1);
+    int thread_index = get_thread_index(pthread_self());
+    struct dedos_thread *self = &all_threads[thread_index];
+
+    while (!pthread_equal(self->tid, pthread_self())) {
+        log_error("Unable to get correct pointer to self thread struct");
+        sleep(1);
+    }
+
+    log_info("Starting blocking thread loop: %lu", self->tid);
+
+    while (1) {
+        int rtn = sem_wait(self->q_sem);
+        if (rtn < 0) {
+            log_error("Error waiting on thread queue semaphore");
+        }
+
+        struct msu_pool *pool = self->msu_pool;
+        struct generic_msu *cur = pool->head;
+        struct generic_msu *end = pool->tail;
+
+        while (cur != NULL) {
+            unsigned int covered_weight = 0;
+            struct generic_msu_queue_item *queue_item;
+            while (covered_weight < cur->scheduling_weight) {
+                queue_item = generic_msu_queue_dequeue(&cur->q_in);
+                if (queue_item) {
+
+                    aggregate_stat(QUEUE_LEN, cur->id, cur->q_in.num_msgs, 1);
+                    aggregate_end_time(MSU_INTERIM_TIME,  cur->id);
+
+                    aggregate_start_time(MSU_FULL_TIME, cur->id);
+                    msu_receive(cur, queue_item);
+                    aggregate_end_time(MSU_FULL_TIME, cur->id);
+
+                    /** Increment the number of items processed */
+                    increment_stat(ITEMS_PROCESSED, cur->id, 1);
+
+                    log_debug("MSU %d has processed %d items", cur->id,
+                              get_last_stat(ITEMS_PROCESSED, cur->id));
+                }
+                covered_weight++;
+            }
+
+            // Dequeue from control queue
+            queue_item = generic_msu_queue_dequeue(&cur->q_control);
+            if (queue_item) {
+                msu_receive_ctrl(cur, queue_item);
+            }
+            cur = cur->next;
+        }
+
+        if (!self->thread_q) {
+            log_error("Missing thread q!");
+        } else {
+            process_control_updates();
+        }
+    }
+
+    log_debug("Leaving thread %u", pthread_self());
+    free(self->thread_q);
+    return NULL;
+}
+
 static void* non_block_per_thread_loop() {
     /* Each of these loops is independently run on thread */
     struct dedos_thread* self;
@@ -255,11 +325,11 @@ static void* non_block_per_thread_loop() {
     free(self->thread_q);
     return NULL;
 }
-
-static int create_thread(int id) {
-    int err;
-    err = pthread_create(&(all_threads[id].tid), NULL,
-            &non_block_per_thread_loop, NULL);
+static int create_thread(int id, int is_blocking) {
+    int err = pthread_create(&(all_threads[id].tid),
+                             NULL,
+                             is_blocking ? &blocking_per_thread_loop : &non_block_per_thread_loop,
+                             NULL);
     if (err != 0) {
         log_error("Can't create thread :[%s]", strerror(err));
         return -1;
@@ -349,7 +419,7 @@ int on_demand_create_worker_thread(int is_blocking) {
 
     //actually create thread
     mutex_lock(all_threads_mutex);
-    ret = create_thread(index);
+    ret = create_thread(index, is_blocking);
     if (ret == -1) {
         log_error("Failure %s","");
         return -1;
@@ -461,47 +531,6 @@ static int destroy_main_thread(void){
     mutex_destroy(main_thread->thread_q->mutex);
     free(main_thread->thread_q);
     log_debug("Destroyed main thread%s","");
-    return 0;
-}
-
-int create_worker_threads(void) {
-    /* create threads = number of cores and associate a queue with each thread */
-    int ret;
-    //Get number number of cores
-    unsigned int i = 0;
-    int j = 0;
-    numCPU = sysconf(_SC_NPROCESSORS_ONLN);
-    log_debug("Num of cores : %d", numCPU);
-
-    i = 0;
-    while (i < total_threads && j < numCPU) {
-        ret = create_thread(i);
-        all_threads[i].thread_behavior = NON_BLOCKING_THREAD;
-        all_threads[i].msu_pool = (struct msu_pool*) malloc(
-                sizeof(struct msu_pool));
-        if (!(all_threads[i].msu_pool)) {
-            log_error("%s", "Unable to allocate memory for MSU pool");
-            exit(1);
-        }
-        all_threads[i].thread_q = (struct dedos_thread_queue*) malloc(
-                sizeof(struct dedos_thread_queue));
-        if (!(all_threads[i].thread_q)) {
-            log_error("%s", "Unable to allocate memory for thread queue");
-            free(all_threads);
-            return -1;
-        }
-        /* since msgs will be enqueued by socket I/O thread and
-         * dequeued by the thread itself in its while loop
-         */
-        all_threads[i].thread_q->shared = 1;
-        all_threads[i].thread_q->max_size = MAX_THREAD_Q_SIZE;
-        all_threads[i].thread_q->max_msgs = MAX_THREAD_Q_MSGS;
-
-        ret = pin_thread(all_threads[i].tid, j);
-        i++;
-        j++;
-    }
-    log_info("Total worker threads (excluding main): %d", total_threads);
     return 0;
 }
 

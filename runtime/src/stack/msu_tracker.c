@@ -4,6 +4,7 @@
 #include "modules/dummy_msu.h"
 #include "modules/regex_msu.h"
 #include "modules/socket_handler_msu.h"
+#include "modules/blocking_socket_handler_msu.h"
 #include "modules/ssl_request_routing_msu.h"
 #include "modules/ssl_read_msu.h"
 #include "modules/ssl_write_msu.h"
@@ -16,7 +17,6 @@
 #include "modules/baremetal_msu.h"
 #include "modules/regex_routing_msu.h"
 
-#define N_MSU_TYPES 13
 
 static struct msu_type *MSU_TYPES[] = {
     &SSL_REQUEST_ROUTING_MSU_TYPE,
@@ -31,8 +31,11 @@ static struct msu_type *MSU_TYPES[] = {
     &MSU_APP_TCP_ECHO_TYPE,
     &TCP_HANDSHAKE_MSU_TYPE,
     &BAREMETAL_MSU_TYPE,
-    &SOCKET_HANDLER_MSU_TYPE
+    &SOCKET_HANDLER_MSU_TYPE,
+    &BLOCKING_SOCKET_HANDLER_MSU_TYPE
 };
+
+#define N_MSU_TYPES (sizeof(MSU_TYPES) / sizeof(struct msu_type*))
 
 void register_known_msu_types(){
     for (int i=0; i<N_MSU_TYPES; i++){

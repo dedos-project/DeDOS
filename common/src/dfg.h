@@ -83,8 +83,9 @@ struct msu_statistics_data {
 
 struct msu_scheduling {
     struct dfg_runtime_endpoint *runtime;
-    uint32_t thread_id;
-
+    int thread_id;
+    // TODO: ^ and v are redundant
+    struct runtime_thread *thread;
     int num_routes;
     struct dfg_route *routes[NUM_MSU_TYPES];
     float deadline;
@@ -125,6 +126,7 @@ struct dfg_vertex {
     char msu_mode[13]; //blocking/non-blocking
 
     int num_dependencies;
+
     struct dependent_type dependencies[NUM_MSU_TYPES];
     //Profiling data
     struct msu_profiling profiling;

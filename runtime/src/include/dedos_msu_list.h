@@ -18,6 +18,7 @@
 
 // Socket handling MSU
 #define DEDOS_SOCKET_HANDLER_MSU_ID 600
+#define DEDOS_BLOCKING_SOCKET_HANDLER_MSU_ID 601
 
 // Regex parsing MSU
 #define DEDOS_REGEX_ROUTING_MSU_ID 504

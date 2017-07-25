@@ -47,6 +47,12 @@ extern "C" {
 #define MAX_EPOLL_EVENTS 64
 
 /**
+ * A reference to the instance of the socket handler MSU, so epoll can be accessed
+ * from outside of the thread
+ */
+struct generic_msu *socket_handler_instance = NULL;
+
+/**
  * Internal state for socket handling
  */
 struct blocking_socket_handler_state {
@@ -56,10 +62,17 @@ struct blocking_socket_handler_state {
 };
 
 /**
- * Adds a file descriptor to the epoll instance so it can be responded to
- * at a future time
+ * Checks if the instance of the socket handler MSU has been initialized
  */
-static inline int add_to_epoll(int epoll_fd, int new_fd) {
+int is_socket_handler_initialized() {
+    // TODO: More thorough checks
+    return socket_handler_instance != NULL;
+}
+
+/**
+ * Adds a file descriptor to the epoll instance so it can be responded to at a future time
+ */
+int add_to_epoll(int epoll_fd, int new_fd) {
     struct epoll_event event;
     event.data.fd = new_fd;
     event.events = EPOLLIN | EPOLLONESHOT;
@@ -74,6 +87,24 @@ static inline int add_to_epoll(int epoll_fd, int new_fd) {
     log_custom(LOG_SOCKET_HANDLER, "Added fd %d to epoll", new_fd);
     return 0;
 }
+
+/**
+ * Adds the file descriptor to the epoll instance, without necessarily having the reference
+ * to the socket handler MSU itself.
+ * To be used from external MSUs.
+ */
+int handle_accepted_connection(int fd) {
+    if ( ! is_socket_handler_initialized() ) {
+        log_warn("Not accepting new connection! No initialized socket handler!");
+        return -1;
+    }
+
+    struct blocking_socket_handler_state *state =
+            socket_handler_instance->internal_state;
+
+    return add_to_epoll(state->epollfd, fd);
+}
+
 
 /**
  * Accepts a new connection and adds it to the epoll instance
@@ -172,7 +203,7 @@ static int socket_handler_main_loop(struct generic_msu *self) {
     struct epoll_event events[MAX_EPOLL_EVENTS];
     struct blocking_socket_handler_state *state = self->internal_state;
     while (1) {
-        // Waiti indefinitely
+        // Wait indefinitely
         int n = epoll_wait(state->epollfd, events, MAX_EPOLL_EVENTS, -1);
 
         for (int i = 0; i < n; ++i) {
@@ -198,36 +229,59 @@ static int socket_handler_main_loop(struct generic_msu *self) {
  * The main receive function for the socket handler.
  * If the file descriptor received in the data payload is -1, a call to this function
  * kicks off the socket handler's main epoll loop.
- * If the file descriptor received is > 0, a call to this function adds the fd to the 
+ * If the file descriptor received is > 0, a call to this function adds the fd to the
  * socket handler's file descriptor set
  */
 static int socket_handler_receive(struct generic_msu *self, struct generic_msu_queue_item *data) {
-    if (data->buffer_len != sizeof(struct blocking_socket_handler_data_payload)) {
-        log_error("Socket handler received buffer of incorrect size!");
-        return -1;
-    }
-
-    struct blocking_socket_handler_data_payload *payload = data->buffer;
-    if (payload->fd == -1) {
-        log_info("Entering socket handler main loop!");
-        int rtn = socket_handler_main_loop(self);
-        log_info("Exited socket handler main loop!");
-        return rtn;
-    } else if (payload->fd > 0) {
-        struct blocking_socket_handler_state *state = self->internal_state;
-        int rtn = add_to_epoll(state->epollfd, payload->fd);
-        if (rtn < 0) {
-            log_error("Error adding fd %d to epoll!", payload->fd);
-            return -1;
-        }
-        log_custom(LOG_SOCKET_HANDLER, "Added fd %d", payload->fd);
-        return 0;
-    } else {
-        log_error("Improper fd received by socket handler: %d", payload->fd);
-        return -1;
-    }
+    // TODO: Right now this call blocks forever
+    // This should be fixed so it occasionally exits out to the main thread loop
+    // in case of messages or deletion
+    int rtn = socket_handler_main_loop(self);
+    return rtn;
 }
 
+struct blocking_sock_init {
+    int port;
+    int domain; //AF_INET
+    int type; //SOCK_STREAM
+    int protocol; //0 most of the time. refer to `man socket`
+    unsigned long bind_ip; //fill with inet_addr, inet_pton(x.y.z.y) or give IN_ADDRANY
+    int target_msu_type;
+};
+
+struct blocking_sock_init default_init = {
+    .port = 8082,
+    .domain = AF_INET,
+    .type = SOCK_STREAM,
+    .protocol = 0,
+    .bind_ip = INADDR_ANY,
+    .target_msu_type = DEDOS_SSL_REQUEST_ROUTING_MSU_ID
+};
+
+#define INIT_SYNTAX "<port>, <target_msu_type>"
+
+static int parse_init_payload (char *to_parse, struct blocking_sock_init *parsed) {
+
+    memcpy((void*)parsed, (void*)&default_init, sizeof(*parsed));
+    if (to_parse == NULL) {
+        log_warn("Initializing socket handler MSU with default parameters. "
+                 "(FYI: init syntax is [" INIT_SYNTAX "])");
+    } else {
+        char *saveptr, *tok;
+        if ( (tok = strtok_r(to_parse, " ,", saveptr)) == NULL) {
+            parsed->port = default_init.port;
+            return 0;
+        }
+        parsed->port = atoi(tok);
+
+        if ( (tok = strtok_r(to_parse, " ,", saveptr)) == NULL) {
+            parsed->target_msu_type = default_init.target_msu_type;
+            return 0;
+        }
+        parsed->target_msu_type = atoi(tok);
+    }
+    return 0;
+}
 
 #define SOCKET_BACKLOG 512
 /**
@@ -237,14 +291,29 @@ static int socket_handler_receive(struct generic_msu *self, struct generic_msu_q
  * @return 0/-1 success/failure
  */
 static int socket_handler_init(struct generic_msu *self, struct create_msu_thread_data *initial_state) {
-    struct blocking_socket_handler_init_payload *init_data = initial_state->init_data;
+    if (socket_handler_instance != NULL) {
+        log_error("Socket handler already instantiated! There can only be one.");
+        return -1;
+    }
+    struct blocking_socket_handler_init_payload *initialization = initial_state->init_data;
+
+    struct blocking_sock_init init;
+    parse_init_payload(initialization->init_cmd, &init);
+    log_info("Initializing socket handler with port: %d, target_msu: %d",
+             init.port, init.target_msu_type);
+
 
     struct blocking_socket_handler_state *state = malloc(sizeof(*state));
     self->internal_state = state;
 
-    state->target_msu_type = init_data->target_msu_type;
+    state->target_msu_type = init.target_msu_type;
 
-    state->socketfd = socket(init_data->domain, init_data->type, init_data->protocol);
+    state->socketfd = socket(init.domain, init.type, init.protocol);
+    if ( state->socketfd == -1) {
+        log_perror("socket() failed");
+        return -1;
+    }
+
 
     int opt = 1;
     if (setsockopt(state->socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
@@ -252,9 +321,9 @@ static int socket_handler_init(struct generic_msu *self, struct create_msu_threa
     }
 
     struct sockaddr_in addr;
-    addr.sin_family = init_data->domain;
-    addr.sin_addr.s_addr = init_data->bind_ip;
-    addr.sin_port = htons(init_data->port);
+    addr.sin_family = init.domain;
+    addr.sin_addr.s_addr = init.bind_ip;
+    addr.sin_port = htons(init.port);
 
     opt = 1;
     if (setsockopt(state->socketfd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(int)) == -1) {
@@ -287,15 +356,15 @@ static int socket_handler_init(struct generic_msu *self, struct create_msu_threa
         return -1;
     }
 
-    // Finally we have to make sure that the main loop runs, by constructing a payload with a
-    // file descriptor of -1 so that msu_receive is called
-    struct blocking_socket_handler_data_payload *payload = malloc(sizeof(*payload));
-    payload->fd = -1;
-    initial_msu_enqueue((void*)payload, sizeof(*payload), 0, self);
+    // Assign the global instance of the socket handler to be this MSU
+    socket_handler_instance = self;
+
+    // Finally we have to make sure that the main loop runs. We can do this by enqueing
+    // a queue item with a NULL payload to this MSU
+    initial_msu_enqueue(NULL, 0, 0, self);
+
     return 0;
 }
-
-
 
 /**
  * Close sockets handled by this MSU
@@ -320,9 +389,9 @@ static int socket_handler_destroy(struct generic_msu *self) {
  * Keep track of a set of file descriptors and poll them
  */
 struct msu_type BLOCKING_SOCKET_HANDLER_MSU_TYPE = {
-    .name="socket_handler_msu",
+    .name="blocking_socket_handler_msu",
     .layer=DEDOS_LAYER_APPLICATION,
-    .type_id=DEDOS_SOCKET_HANDLER_MSU_ID,
+    .type_id=DEDOS_BLOCKING_SOCKET_HANDLER_MSU_ID,
     .proto_number=0,
     .init=socket_handler_init,
     .destroy=socket_handler_destroy,

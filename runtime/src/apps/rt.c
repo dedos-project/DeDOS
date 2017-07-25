@@ -21,7 +21,7 @@
 
 #define USAGE_ARGS " [-j dfg.json -i runtime_id] | " \
                    "[-g global_ctl_ip -p global_ctl_port -P local_listen_port [--same-machine | -s]] "\
-                   "-w webserver_port [--db-ip db_ip --db-port db_port --db-load db_max_load] "\
+                   "[--db-ip db_ip --db-port db_port --db-load db_max_load] "\
                    "[--prof-tag-probability=prob]"
 
 SSL_CTX* ssl_ctx_global;
@@ -95,7 +95,6 @@ int main(int argc, char **argv){
     char *global_ctl_ip = NULL;
     int global_ctl_port = -1;
     int local_listen_port = -1;
-    int webserver_port = -1;
     // Declared in communication.h, used in webserver_msu
     db_ip = NULL;
     db_port = -1;
@@ -135,9 +134,6 @@ int main(int argc, char **argv){
             case 'P':
                 local_listen_port = atoi(optarg);
                 break;
-            case 'w':
-                webserver_port = atoi(optarg);
-                break;
             case 'd':
                 db_ip = optarg;
                 break;
@@ -176,11 +172,6 @@ int main(int argc, char **argv){
                       local_listen_port > 0 );
     int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 ||
                       local_listen_port > 0 ) ;
-
-    if (webserver_port == -1) {
-        printf("Webserver port not provided. Exiting\n");
-        exit(-1);
-    }
 
     int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
 
@@ -242,10 +233,6 @@ int main(int argc, char **argv){
 
     if (dedos_control_socket_init(control_listen_port) < 0){
        log_error("Could not initialize control socket");
-    }
-
-    if (dedos_webserver_socket_init(webserver_port) < 0) {
-        log_error("Could not initialize webserver socket");
     }
 
 #ifdef DEDOS_SUPPORT_BAREMETAL_MSU

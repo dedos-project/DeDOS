@@ -13,17 +13,17 @@
 extern struct msu_type BLOCKING_SOCKET_HANDLER_MSU_TYPE;
 
 struct blocking_socket_handler_init_payload {
-    int port;
-    int domain; //AF_INET
-    int type; //SOCK_STREAM
-    int protocol; //0 most of the time. refer to `man socket`
-    unsigned long bind_ip; //fill with inet_addr, inet_pton(x.y.z.y) or give IN_ADDRANY
-    int target_msu_type;
-    int blocking;
+    char *init_cmd;
 };
 
-struct blocking_socket_handler_data_payload {
-    int fd;
-};
+
+/**
+ * Adds the file descriptor to the epoll instance, without necessarily having the reference
+ * to the socket handler MSU itself.
+ * To be used from external MSUs.
+ * @param fd The file descriptor to be added to epoll
+ * @return 0 on success, -1 on error
+ */
+int handle_accepted_connection(int fd);
 
 #endif /* SOCKET_HANDLER_MSU_H_ */

@@ -63,7 +63,6 @@ struct generic_msu_queue *queue_ssl;
 struct generic_msu *msu_ssl;
 
 int dedos_control_socket_init(int tcp_port);
-int dedos_webserver_socket_init(int listen_port);
 int dedos_baremetal_listen_socket_init(int baremetal_listen_port);
 //void dedos_control_send(struct dedos_intermsu_message* msg, struct msu_endpoint *endpoint, char *buf, unsigned int bufsize);
 void dedos_control_send(struct dedos_intermsu_message* msg, int dst_runtime_ip, char *buf, unsigned int bufsize);

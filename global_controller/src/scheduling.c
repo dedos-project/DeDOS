@@ -232,6 +232,7 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
     free_thread->num_msus++;
     //update local view
     msu->scheduling.thread_id = free_thread->id;
+    msu->scheduling.thread = free_thread;
     msu->scheduling.runtime = rt;
 
     char *init_data = NULL;
@@ -712,6 +713,7 @@ int greedy_policy(struct to_schedule *ts, struct dfg_config *dfg) {
                 //All the constraints are satisfied, allocate the msu to the node
                 msu->scheduling.runtime = r;
                 msu->scheduling.thread_id = thread->id;
+                msu->scheduling.thread = thread;
 
                 //Update the cut
                 c.dram = new_cut_dram;

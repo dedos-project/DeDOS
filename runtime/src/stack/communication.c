@@ -127,36 +127,6 @@ int dedos_control_socket_init(int tcp_control_port)
     return 0;
 }
 
-int dedos_webserver_socket_init(int webserver_port) {
-    // Setup the webserver socket
-    ws_sock = socket(AF_INET, SOCK_STREAM, 0);
-    int Set = 1;
-    if ( setsockopt(ws_sock, SOL_SOCKET, SO_REUSEADDR, &Set, sizeof(int)) == -1 ) {
-        log_warn("setsockopt() failed with error %s (%d)", strerror(errno), errno );
-    }
-
-    ws.sin_family = AF_INET;
-    ws.sin_addr.s_addr = INADDR_ANY;
-    ws.sin_port = htons(webserver_port);
-
-    int optval = 1;
-    if (setsockopt(ws_sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) < 0) {
-        log_error("%s","Failed to set SO_REUSEPORT");
-    }
-
-    if ( bind(ws_sock, (struct sockaddr*) &ws, sizeof(ws)) == -1 ) {
-        printf("bind() failed\n");
-        return -1;
-    }
-
-    listen(ws_sock, 1024);
-
-    log_info("Started webserver listen port: %d",webserver_port);
-
-    return 0;
-}
-
-
 int dedos_baremetal_listen_socket_init(int baremetal_listen_port){
     // Setup the baremetal msu listen socket
     baremetal_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -290,7 +260,7 @@ int check_comm_sockets() {
                 //parse received cmd
                 parse_cmd_action(&rcv_buf);
             }
-        } else if (fds[2].revents & POLLIN) {
+        /*} else if (fds[2].revents & POLLIN) {
             fds[2].revents = 0;
             // received something on the websocket
             // accept this and then pass it to the queue acceessed by the global variable for now
@@ -347,6 +317,7 @@ int check_comm_sockets() {
                     log_debug("Enqueued ssl forwarding request, q_len: %u",ssl_request_queue_len);
                 }
             }
+            */
 #ifdef DEDOS_SUPPORT_BAREMETAL_MSU
         } else if (fds[3].revents & POLLIN) {
             //BAREMETAL MSU data entry point into dedos

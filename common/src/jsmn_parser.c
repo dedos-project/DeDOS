@@ -215,9 +215,10 @@ static int retry_saved(struct json_state **saved_states, char *j){
     struct json_state *saved = *saved_states;
 
     int success = -1;
+    char *key = NULL;
     while (saved != NULL){
         jsmntok_t *tok = saved->tok;
-        char *key = tok_to_str(tok, j);
+        key = tok_to_str(tok, j);
         log_custom(LOG_JSMN_PARSING, "Retrying key: %s", key);
 
         jsmn_parsing_fn parser = get_parse_fn(key, saved->parent_type);
@@ -242,6 +243,10 @@ static int retry_saved(struct json_state **saved_states, char *j){
             prev = saved;
             saved = saved->next;
         }
+    }
+
+    if (success == -1 && key != NULL) {
+        log_error("Failed while reprocessing key %s for missing dependencies", key);
     }
     return success;
 }

@@ -75,6 +75,11 @@ int create_msu_from_vertex(struct dfg_vertex *vertex){
                                                     vertex->msu_id,
                                                     thread_id, 
                                                     &create_action);
+    if (new_msu == NULL) {
+        log_error("Failed to create new MSU %d", vertex->msu_id);
+        return -1;
+    }
+
 
     int rtn = dedos_msu_pool_add(all_threads[thread_id].msu_pool, new_msu);
     if (rtn < 0) {
@@ -130,14 +135,24 @@ int create_route_from_dfg(struct dfg_route *dfg_route){
 }
 
 int spawn_threads_from_dfg(struct dfg_config *dfg, int runtime_id){
-
     struct dfg_runtime_endpoint *rt = get_local_runtime(dfg, runtime_id);
 
     int n_spawned_threads = 0;
-    for (int i=0; i<rt->num_pinned_threads; i++) {
-        int rtn = on_demand_create_worker_thread(0);
+    int i;
+    for (int i=0; i<rt->num_threads-1; i++) {
+        struct runtime_thread *thread = rt->threads[i];
+        int is_blocking;
+        if (thread->mode == 1) {
+            is_blocking = 0;
+        } else if (thread->mode == 2) {
+            is_blocking = 1;
+        } else {
+            log_warn("Unknown blocking mode: %d. Assuming non-blocking", thread->mode);
+            is_blocking = 0;
+        }
+        int rtn = on_demand_create_worker_thread(is_blocking);
         if (rtn >= 0){
-            log_debug("Created worker thread to accomodate MSU");
+            log_debug("Created worker thread (blocking=%d) to accomodate MSU", is_blocking);
         } else {
             log_error("Could not create necessary worker thread");
             return -1;
