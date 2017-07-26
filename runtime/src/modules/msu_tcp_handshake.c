@@ -47,6 +47,9 @@ static int hs_count_sockets(struct pico_tree *hs_table){
 static void print_packet_stats(struct hs_internal_state* in_state){
     printf("HS items_dequeued: %lu\n",in_state->items_dequeued);
     printf("HS syns_processed: %lu\n",in_state->syns_processed);
+    printf("HS duplicate_syns_processed: %lu\n",in_state->duplicate_syns_processed);
+    printf("HS syn_with_sock: %lu\n",in_state->syn_with_sock);
+    printf("HS syn_established_sock: %lu\n",in_state->syn_established_sock);
     printf("HS syns_dropped: %lu\n",in_state->syns_dropped);
     printf("HS synacks_generated: %lu\n",in_state->synacks_generated);
     int count;
@@ -994,10 +997,12 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
         if (sock_found->state == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
                                   PICO_SOCKET_STATE_CONNECTED))
         {
+            in_state->syn_with_sock++;
             if (tcp_sock_found->rcv_nxt == long_be(hdr->seq) + 1u) {
                 /* take back our own SEQ number to its original value, so the synack retransmitted
                 is identical to the original. */
                 tcp_sock_found->snd_nxt--;
+                in_state->duplicate_syns_processed++;
                 log_debug("Sending original SYN ACK %s", "");
                 dedos_tcp_send_synack(self, &tcp_sock_found->sock, reply_msu_id);
             }
@@ -1018,12 +1023,13 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
                 goto end;
             }
         }
-/*
+
         else if (sock_found->state  == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED | PICO_SOCKET_STATE_CONNECTED)) {
+            in_state->syn_established_sock++;
             log_warn("SYN for established socket..ignoring..%s","");
             goto end;
         }
-*/
+
     }
     else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK ) && sock_found) /* ACK for prev seen SYN */
     {
@@ -1563,7 +1569,10 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     in_state->items_dequeued = 0;
     in_state->syns_dropped = 0;
     in_state->synacks_generated = 0;
+    in_state->syn_established_sock = 0;
     in_state->syns_processed = 0;
+    in_state->syn_with_sock = 0;
+    in_state->duplicate_syns_processed = 0;
     in_state->last_ts = 0;
     handshake_msu->internal_state = in_state;
 

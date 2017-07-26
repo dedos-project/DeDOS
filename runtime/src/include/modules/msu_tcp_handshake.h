@@ -20,6 +20,9 @@ struct hs_internal_state
     long int syn_state_memory_limit;
     long unsigned int items_dequeued;
     long unsigned int syns_processed;
+    long unsigned int syn_with_sock;
+    long unsigned int syn_established_sock;
+    long unsigned int duplicate_syns_processed;
     long unsigned int syns_dropped;
     long unsigned int synacks_generated;
     long unsigned int last_ts; //for storing last ts to measure elapsed time for calling cleanup
