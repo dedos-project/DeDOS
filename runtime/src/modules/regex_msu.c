@@ -13,6 +13,7 @@
 #include "control_protocol.h"
 #include "logging.h"
 #include "modules/ssl_msu.h"
+#include "modules/webserver/regex.h"
 
 #include <pcre.h>
 #define REGEX_KEY "regex="
@@ -28,7 +29,7 @@
 "
 
 /** Maximum length of the HTML to be returned */
-int html_len() {
+static int html_len() {
     return strlen(HTML) + 200;
 }
 

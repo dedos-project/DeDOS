@@ -185,7 +185,7 @@ struct generic_msu{
     struct generic_msu_queue q_control;
 
     /** Protected data field. TODO: Finish implementing*/
-    msu_data_p data_p;
+    struct msu_state *state_p;
 
     /** Any internal state struct which MSU might need to maintain.
      * TODO: Normalize across MSUs, creating key-based state structure.
@@ -246,17 +246,6 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *input_d
 
 /** Dequeues and processes data received from global controller. */
 int msu_receive_ctrl(struct generic_msu *self, struct generic_msu_queue_item *ctrl_msg);
-
-/** Move state within same process and physical machine, like pointers???.*/
-int msu_move_state(void *data, void *optional_data);
-
-
-/** Allocates state data in an MSU and returns the alloc'd data. */
-void* msu_alloc_data(struct generic_msu *msu, size_t bytes);
-/** Frees the state data associated with an MSU. */
-void msu_free_data(struct generic_msu *msu);
-/** Gets the state data associated with an MSU. */
-void *msu_data(struct generic_msu *msu);
 
 /** An MSU registers itself with this so that instances can be created
  * using the type->id */

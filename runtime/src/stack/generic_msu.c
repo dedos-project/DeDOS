@@ -165,66 +165,6 @@ int msu_receive_ctrl(struct generic_msu *self, struct generic_msu_queue_item *qu
 }
 
 /**
- *  Hidden data structure to protect access to MSU specific data.
- *  Data should only ever be allocated to this structure via:
- *      msu_data_alloc()
- *  and only freed via
- *      msu_data_free()
- */
-struct msu_data{
-    size_t n_bytes;
-    void *data;
-};
-
-/** Allocates data in the msu and tracks the amount of allocated data.
- * Returns a pointer to the allocated data.
- * NOTE: MSU can only have a single allocated data structure at any time
- *       Calling this function again will realloc that data, and
- *       may cause unexpected behavior
- * TODO: Provide ID by which allocated data can be retrieved
- * @param msu MSU in which to track the allocated data
- * @param bytes number of bytes to malloc
- * @return pointer to the allocated data, or NULL if memory could not be allocated
- */
-void *msu_data_alloc(struct generic_msu * msu, size_t bytes)
-{
-    void *ptr = realloc(msu->data_p->data, bytes);
-    if (!ptr) {
-        log_error("Failed to allocate %d bytes for MSU id %d, %s",
-            (int)bytes, msu->id, msu->type->name);
-    } else {
-        increment_stat(MEMORY_ALLOCATED, msu->id, (double)bytes);
-        log_debug("Successfully allocated %d bytes for MSU id %d, \
-                  %s memory footprint: %l",
-                  (int)bytes, msu->id, msu->type->name,
-                  get_last_stat(MEMORY_ALLOCATED, msu->id));
-        msu->data_p->data = ptr;
-    }
-    return ptr;
-}
-
-
-/**
- * Frees data stored within an MSU and tracks that the data has been freed.
- * @param msu MSU in which to track the freed data
- */
-void msu_data_free(struct generic_msu *msu) {
-    increment_stat(MEMORY_ALLOCATED, msu->id, -1 * (double)msu->data_p->n_bytes);
-    log_debug("Freeing %u bytes used by MSU id %d, %s, memory footprint: %l bytes",
-              (int)msu->data_p->n_bytes, msu->id, msu->type->name,
-              get_last_stat(MEMORY_ALLOCATED, msu->id));
-    free(msu->data_p->data);
-}
-
-/**
- *  Gets the data allocated within an MSU.
- *  @return pointer to the allocated data
- */
-void *msu_data(struct generic_msu *msu) {
-    return msu->data_p->data;
-}
-
-/**
  * Private function to allocate a new MSU.
  * MSU creation should be handled through init_msu()
  */
@@ -237,9 +177,7 @@ struct generic_msu *msu_alloc(int thread_index) {
 
     struct dedos_thread *dedos_thread = &all_threads[thread_index];
 
-    msu->data_p = malloc(sizeof(struct msu_data));
-    msu->data_p->n_bytes = 0;
-    msu->data_p->data = NULL;
+    msu->state_p = NULL;
 
     msu->q_in.mutex = mutex_init();
     msu->q_in.shared = 1;
@@ -251,13 +189,14 @@ struct generic_msu *msu_alloc(int thread_index) {
     return msu;
 }
 
+
 /**
  * Private function to free an MSU.
  * MSU destruction should be handled through destroy_msu()
  */
 void msu_free(struct generic_msu* msu)
 {
-    free(msu->data_p);
+    msu_free_all_state(msu);
     free(msu);
 }
 
@@ -297,7 +236,6 @@ struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thre
     struct generic_msu *msu = msu_alloc(thread_id);
     msu->id = msu_id;
     msu->type = msu_type_by_id(type_id);
-    msu->data_p->data = create_action->init_data;
     log_debug("init data: %s",create_action->init_data);
     // TODO: queue_ws, msu_ws, what????
 
@@ -758,7 +696,7 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
         }
         if (data){
             if (data->buffer) {
-                free(data->buffer);
+                //free(data->buffer);
             }
             free(data);
         }
@@ -771,7 +709,7 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
     if (type == NULL) {
         log_error("Type ID %d not recognized", type_id);
         if (data) {
-            free(data->buffer);
+            //free(data->buffer);
             free(data);
         }
         return -1;
@@ -783,7 +721,7 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
         log_error("No destination endpoint of type %s (%d) for msu %d",
                   type->name, type_id, self->id);
         if (data) {
-            free(data->buffer);
+            //free(data->buffer);
             free(data);
         }
         return -1;
@@ -795,7 +733,7 @@ int msu_receive(struct generic_msu *self, struct generic_msu_queue_item *data){
     if (rtn < 0){
         log_error("Error sending from msu %d", self->id);
         if (data){
-            free(data->buffer);
+            //free(data->buffer);
             free(data);
         }
     }

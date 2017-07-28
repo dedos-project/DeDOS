@@ -14,6 +14,8 @@
 #include "runtime.h"
 #include "global.h"
 #include "modules/ssl_read_msu.h"
+#include "modules/webserver/dbops.h"
+#include "modules/webserver/sslops.h"
 #include "data_plane_profiling.h"
 #include <pcap.h>
 
@@ -24,8 +26,6 @@
                    "[--db-ip db_ip --db-port db_port --db-load db_max_load] "\
                    "[--prof-tag-probability=prob]"
 
-SSL_CTX* ssl_ctx_global;
-static pthread_mutex_t *lockarray;
 
 void freeSSLRelatedStuff(void) {
     log_debug("Freeing SSL related stuff%s","");
@@ -39,49 +39,6 @@ void freeSSLRelatedStuff(void) {
 }
 
 
-#ifdef USE_OPENSSL
-#include <openssl/crypto.h>
-static void lock_callback(int mode, int type, const char *file, int line) {
-  (void) file;
-  (void) line;
-  if (mode & CRYPTO_LOCK) {
-    pthread_mutex_lock(&(lockarray[type]));
-  }
-  else {
-    pthread_mutex_unlock(&(lockarray[type]));
-  }
-}
-
-static unsigned long thread_id(void) {
-  unsigned long ret;
-
-  ret=(unsigned long)pthread_self();
-  return ret;
-}
-
-static void init_locks(void) {
-  int i;
-
-  lockarray = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() *
-                                            sizeof(pthread_mutex_t));
-  for (i = 0; i < CRYPTO_num_locks(); i++) {
-    pthread_mutex_init(&(lockarray[i]), NULL);
-  }
-
-  CRYPTO_set_id_callback((unsigned long (*)())thread_id);
-  CRYPTO_set_locking_callback(lock_callback);
-}
-
-static void kill_locks(void) {
-  int i;
-
-  CRYPTO_set_locking_callback(NULL);
-  for(i=0; i<CRYPTO_num_locks(); i++)
-    pthread_mutex_destroy(&(lockarray[i]));
-
-  OPENSSL_free(lockarray);
-}
-#endif
 
 int main(int argc, char **argv){
     signal(SIGPIPE, SIG_IGN);
@@ -96,9 +53,9 @@ int main(int argc, char **argv){
     int global_ctl_port = -1;
     int local_listen_port = -1;
     // Declared in communication.h, used in webserver_msu
-    db_ip = NULL;
-    db_port = -1;
-    db_max_load = -1;
+    char *db_ip = NULL;
+    int db_port = -1;
+    int db_max_load = -1;
     char *tag_probability = NULL;
 
     struct option long_options[] = {
@@ -162,6 +119,9 @@ int main(int argc, char **argv){
         printf("%s %s\n", argv[0], USAGE_ARGS);
         exit(0);
     }
+    if (db_ip != NULL) {
+        init_db(db_ip, db_port, db_max_load);
+    }
     char statlog_fname[48];
     sprintf(statlog_fname, "rt%d_stats.log", runtime_id);
     init_statlog(statlog_fname);
@@ -223,11 +183,19 @@ int main(int argc, char **argv){
 
 
 #ifdef USE_OPENSSL
-    init_locks();
-    InitServerSSLCtx(&ssl_ctx_global);
-    if (LoadCertificates(ssl_ctx_global, "mycert.pem", "mycert.pem") < 0){
-        log_error("Error loading SSL certificates");
+
+    init_ssl_locks();
+    if (init_ssl_context() != 0) {
+        log_critical("Error initializing SSL context");
+        exit(1);
     }
+
+    char pem_file[256];
+    sprintf(pem_file, "%s/mycert.pem", dirname(argv[0]));
+    if (load_ssl_certificate(pem_file, pem_file) != 0) {
+        log_error("Error loading SSL certificate");
+    }
+
 #endif
     init_peer_socks();
 
@@ -251,8 +219,7 @@ int main(int argc, char **argv){
     dedos_main_thread_loop(dfg, runtime_id);
 
 #ifdef USE_OPENSSL
-    freeSSLRelatedStuff();
-    kill_locks();
+    kill_ssl_locks();
 #endif
     close_statlog();
     log_info("Runtime exit...");

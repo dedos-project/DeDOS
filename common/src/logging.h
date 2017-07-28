@@ -16,6 +16,10 @@
 
 #define LOG_FD stderr
 
+#ifndef LOG_ALL
+#define LOG_ALL 0
+#endif
+
 #define log_at_level(lvl_label, color, fd, fmt, ...)\
         fprintf(fd, "" color "%lu:%s:%d:%s(): " lvl_label ": " fmt ANSI_COLOR_RESET "\n", \
                 pthread_self(), __FILE__, __LINE__, __func__, ##__VA_ARGS__)
@@ -62,7 +66,7 @@
 #if defined(LOG_CUSTOM) && LOG_CUSTOM
 #define log_custom(level, fmt, ...)\
     do { \
-        if ( level ) { \
+        if ( level || LOG_ALL) { \
             log_at_level(#level, ANSI_COLOR_PURPLE, LOG_FD, fmt, ##__VA_ARGS__); \
         } \
     } while (0)

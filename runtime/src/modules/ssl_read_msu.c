@@ -133,22 +133,8 @@ char* GetSSLStateAndRequest(int SocketFD, SSL **SSL_State, struct generic_msu *s
 {
     // while incoming queue is not empty, process and enqueue the state, fd to afterSSlqueue
 
-    SSL_CTX* ssl_read_msu_ctx = ssl_ctx_global;
-
-    SSL *State = SSL_new(ssl_read_msu_ctx);
-    if (State == NULL) {
-        close(SocketFD);
-        debug("ERROR: ssl msu id %d: SSL State creation failed", self->id);
-        return NULL;
-    }
-
+    SSL *State = init_ssl_connection(SocketFD);
     *SSL_State = State;
-    if (SSL_set_fd(State, SocketFD) == 0) {
-        close(SocketFD);
-        debug("ERROR: ssl msu id %d: SSL connect to socket %d failed",
-              self->id, SocketFD);
-        return NULL;
-    }
 
     int rtn;
 

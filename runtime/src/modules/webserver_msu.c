@@ -10,6 +10,7 @@
 #include "modules/ssl_msu.h"
 #include "modules/regex_msu.h"
 #include "generic_msu.h"
+#include "modules/webserver/dbops.h"
 
 void GetLine(char *Request, int Offset, char EndChar, char *out) {
     if (Request == NULL) {
@@ -26,91 +27,6 @@ void GetLine(char *Request, int Offset, char EndChar, char *out) {
     }
     out[i - Offset] = '\0';
     //return i - Offset;
-}
-
-int query_db(char *ip, int port, const char *query, int param, struct generic_msu *self)
-{
-    int sockfd, optval = 1;
-    struct sockaddr_in db_addr;
-
-    // create socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        log_error("%s", " failure opening socket");
-    }
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) < 0) {
-        log_error("%s", " failed to set SO_REUSEPORT");
-    }
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
-        log_error("%s", " failed to set SO_REUSEADDR");
-    }
-
-    // build db server's internet address
-    bzero((char *)&db_addr, sizeof(db_addr));
-    db_addr.sin_family = AF_INET;
-    inet_pton(AF_INET, ip, &(db_addr.sin_addr));
-    db_addr.sin_port = htons(port);
-
-    // create a connection
-    if (connect(sockfd, (struct sockaddr *)&db_addr, sizeof(db_addr)) < 0) {
-        log_error("%s", "connect failed");
-        close(sockfd);
-        return -1;
-    }
-
-    // send request
-    int req_buf_len= strlen(query) + 1 + how_many_digits(param);
-    char *req_buf = malloc(req_buf_len + 1);
-    snprintf(req_buf, req_buf_len + 1, "%s %d", query, param);
-    if (send(sockfd, req_buf, req_buf_len, 0) == -1) {
-        log_error("%s", "send failed");
-        free(req_buf);
-        return -1;
-    }
-
-    // receive response, expecting OK\n
-    int res_buf_len = 3;
-    int memSize;
-    char res_buf[res_buf_len];
-    memset((char *) &res_buf, 0, sizeof(res_buf));
-    size_t res_len = 0;
-
-    res_len = recvfrom(sockfd, res_buf, res_buf_len, 0,
-        (void*) &db_addr, sizeof(struct sockaddr_in));
-    if (res_len < 0) {
-        log_error("%s", "recv failed");
-        return -1;
-    } else {
-        if (strncmp(res_buf, "00\n", 3) == 0) {
-            memSize = (VIDEO_MEMORY);
-        } else if (strncmp(res_buf, "01\n", 3) == 0) {
-             memSize = (AUDIO_MEMORY);
-        } else if (strncmp(res_buf, "02\n", 3) == 0) {
-            memSize = (IMAGE_MEMORY);
-        } else if (strncmp(res_buf, "03\n", 3) == 0) {
-            memSize = (TEXT_MEMORY);
-        } else {
-            log_error("%s", "incorrect reponse from db server");
-            free(req_buf);
-            close(sockfd);
-            return -1;
-        }
-    }
-
-    char *memory = (char *) self->internal_state;
-    if (memory != NULL) {
-        int increment = (1<<12);
-        int iter_size = memSize / 10;
-        for (int i=0; i < iter_size; i+= increment){
-            memory[i]++;
-        }
-    }
-
-    free(memory);
-    free(req_buf);
-    close(sockfd);
-
-    return 0;
 }
 
 #define MAX_REGEX_VALUE_LENGTH 128
@@ -251,7 +167,7 @@ int webserver_receive(struct generic_msu *self, struct generic_msu_queue_item *i
                 log_debug("A GET Request:\n%s", Request);
 
                 if (strstr(RequestPage, "database") != NULL) {
-                    if (query_db(db_ip, db_port, "REQUEST", rand() % db_max_load, self) < 0) {
+                    if (query_db(self->internal_state) < 0) {
                         log_error("%s", "error querying database");
                     }
                 }

@@ -1,5 +1,5 @@
 /**
- * @file socket_handler_msu.c
+ * @file blocking_socket_handler_msu.c
  * MSU to handle network sockets
  */
 
@@ -16,10 +16,13 @@ extern "C" {
 #include <sys/epoll.h>
 #include <sys/types.h>
 
+#include "modules/webserver/socketops.h"
+#include "modules/webserver/epollops.h"
 #include "modules/blocking_socket_handler_msu.h"
 #include "msu_queue.h"
 #include "dedos_msu_list.h"
 #include "runtime.h"
+#include "modules/webserver_routing_msu.h"
 #include "modules/ssl_request_routing_msu.h"
 #include "modules/ssl_msu.h"
 #include "communication.h"
@@ -68,32 +71,12 @@ int is_socket_handler_initialized() {
     // TODO: More thorough checks
     return socket_handler_instance != NULL;
 }
-
-/**
- * Adds a file descriptor to the epoll instance so it can be responded to at a future time
- */
-int add_to_epoll(int epoll_fd, int new_fd) {
-    struct epoll_event event;
-    event.data.fd = new_fd;
-    event.events = EPOLLIN | EPOLLONESHOT;
-
-    int rtn = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_fd, &event);
-
-    if (rtn == -1) {
-        log_perror("epoll_ctl() failed adding fd %d", new_fd);
-        // TODO: Handle errors...
-        return -1;
-    }
-    log_custom(LOG_SOCKET_HANDLER, "Added fd %d to epoll", new_fd);
-    return 0;
-}
-
 /**
  * Adds the file descriptor to the epoll instance, without necessarily having the reference
  * to the socket handler MSU itself.
  * To be used from external MSUs.
  */
-int handle_accepted_connection(int fd) {
+int monitor_fd(int fd, uint32_t events) {
     if ( ! is_socket_handler_initialized() ) {
         log_warn("Not accepting new connection! No initialized socket handler!");
         return -1;
@@ -102,68 +85,35 @@ int handle_accepted_connection(int fd) {
     struct blocking_socket_handler_state *state =
             socket_handler_instance->internal_state;
 
-    return add_to_epoll(state->epollfd, fd);
-}
+    int rtn = enable_epoll(state->epollfd, fd, events);
 
+    if (rtn < 0) {
+        log_error("Error enabling epoll for fd %d on socket handler MSU", fd);
+        return -1;
+    }
+    log_custom(LOG_SOCKET_HANDLER, "Enabled epoll for fd %d", fd);
+    return 0;
+}
 
 /**
- * Accepts a new connection and adds it to the epoll instance
- */
-static int accept_new_connection(int socketfd, int epoll_fd) {
-    int rtn;
-    log_custom(LOG_SOCKET_HANDLER, "Accepting a new connection");
-
-    struct sockaddr_in client_addr;
-    socklen_t addr_len = sizeof(client_addr);
-
-    int new_fd = accept(socketfd, (struct sockaddr*) &client_addr, &addr_len);
-    if (new_fd == -1) {
-        log_perror("Error accepting new connection from socket handler");
-        return -1;
-    }
-
-#ifdef GET_NAME_INFO
-    char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
-    rtn = getnameinfo((struct sockaddr*)&client_addr, addr_len,
-                      hbuf, sizeof(hbuf),
-                      sbuf, sizeof(sbuf),
-                      NI_NUMERICHOST| NI_NUMERICSERV);
-    if ( rtn == 0) {
-        log_custom(LOG_SOCKET_HANDLER, "Accepted connection on descriptor %d"
-                                       "host=%s, port=%s", 
-                   new_fd, hbuf, sbuf);
-    }
-#endif
-
-    int flags = O_NONBLOCK;
-    rtn = fcntl(new_fd, F_SETFL, flags);
-    if (rtn == -1) {
-        log_perror("Error setting O_NONBLOCK");
-        // TODO: Error handling :?
-        return -1;
-    }
-    return add_to_epoll(epoll_fd, new_fd);
-}
-
-/** 
  * Processes incoming data on an existing connection, passing the ready
  * file descriptor to the appropriate next MSU
  */
-static int process_existing_connection(struct blocking_socket_handler_state *state, int fd) {
+static int process_existing_connection(int fd, void *v_state) {
+    struct blocking_socket_handler_state *state = v_state;
     log_custom(LOG_SOCKET_HANDLER, "Processing existing connection on fd %d", fd);
     switch (state->target_msu_type) {
 
-        case DEDOS_SSL_REQUEST_ROUTING_MSU_ID: 
-            if (ssl_request_routing_msu == NULL) {
+        case DEDOS_WEBSERVER_ROUTING_MSU_ID:;
+            struct generic_msu *ws_routing = webserver_routing_instance();
+            if (ws_routing == NULL) {
                 log_error("ssl_request_routing_msu is NULL! Forgot to create it?");
                 // TODO: Handle errors
                 return -1;
             } else {
-                struct ssl_data_payload *data = malloc(sizeof(*data));
-                memset(data, 0, MAX_REQUEST_LEN);
-                data->socketfd = fd;
-                data->type = READ;
-                data->state = NULL;
+                struct webserver_queue_data *data = malloc(sizeof(*data));
+                data->fd = fd;
+                data->allocated = 1;
 
                 // Get the ID for the request based on the client IP and port
                 struct sockaddr_in sockaddr;
@@ -176,13 +126,13 @@ static int process_existing_connection(struct blocking_socket_handler_state *sta
                 uint32_t id;
                 HASH_VALUE(&sockaddr, addrlen, id);
                 rtn = initial_msu_enqueue((void*)data, sizeof(*data),
-                                              id, ssl_request_routing_msu);
+                                              id, ws_routing);
                 if (rtn != 0) {
                     log_error("Error enqueuing request %d (fd: %d) to ssl_routing",
                               id, fd);
                     return -1;
                 }
-                log_custom(LOG_SOCKET_HANDLER, 
+                log_custom(LOG_SOCKET_HANDLER,
                     "Enqueued request %d (fd: %d) to ssl_request_routing_msu",
                     id, fd);
                 return 0;
@@ -200,29 +150,11 @@ static int process_existing_connection(struct blocking_socket_handler_state *sta
  * file descriptors to the next MSUs once data is available to be read
  */
 static int socket_handler_main_loop(struct generic_msu *self) {
-    struct epoll_event events[MAX_EPOLL_EVENTS];
     struct blocking_socket_handler_state *state = self->internal_state;
-    while (1) {
-        // Wait indefinitely
-        int n = epoll_wait(state->epollfd, events, MAX_EPOLL_EVENTS, -1);
 
-        for (int i = 0; i < n; ++i) {
-            if (state->socketfd == events[i].data.fd) {
-                if (accept_new_connection(state->socketfd, state->epollfd) != 0) {
-                    log_error("Failed accepting new connection");
-                } else {
-                    log_custom(LOG_SOCKET_HANDLER, "Accepted new connection");
-                }
-            } else {
-                if (process_existing_connection(state, events[i].data.fd) != 0) {
-                    log_error("Failed processing existing connection");
-                } else { 
-                    log_custom(LOG_SOCKET_HANDLER, "Processed existing connection");
-                }
-            }
-        }
-    }
-    return 0;
+    int rtn = epoll_loop(state->socketfd, state->epollfd,
+                         process_existing_connection, (void*)state);
+    return rtn;
 }
 
 /**
@@ -237,50 +169,46 @@ static int socket_handler_receive(struct generic_msu *self, struct generic_msu_q
     // This should be fixed so it occasionally exits out to the main thread loop
     // in case of messages or deletion
     int rtn = socket_handler_main_loop(self);
-    return rtn;
+    if (rtn < 0) {
+        log_error("Error exiting socket handler main loop");
+        return -1;
+    }
+    // So that the message will get enqueued to this MSU again
+    return DEDOS_BLOCKING_SOCKET_HANDLER_MSU_ID;
 }
 
 struct blocking_sock_init {
-    int port;
-    int domain; //AF_INET
-    int type; //SOCK_STREAM
-    int protocol; //0 most of the time. refer to `man socket`
-    unsigned long bind_ip; //fill with inet_addr, inet_pton(x.y.z.y) or give IN_ADDRANY
+    struct sock_settings sock_settings;
     int target_msu_type;
 };
 
-struct blocking_sock_init default_init = {
-    .port = 8082,
-    .domain = AF_INET,
-    .type = SOCK_STREAM,
-    .protocol = 0,
-    .bind_ip = INADDR_ANY,
-    .target_msu_type = DEDOS_SSL_REQUEST_ROUTING_MSU_ID
-};
-
+#define DEFAULT_PORT 8080
+#define DEFAULT_TARGET 501
 #define INIT_SYNTAX "<port>, <target_msu_type>"
 
 static int parse_init_payload (char *to_parse, struct blocking_sock_init *parsed) {
 
-    memcpy((void*)parsed, (void*)&default_init, sizeof(*parsed));
+    parsed->sock_settings = *webserver_sock_settings(DEFAULT_PORT);
+    parsed->target_msu_type = DEFAULT_TARGET;
+
     if (to_parse == NULL) {
         log_warn("Initializing socket handler MSU with default parameters. "
                  "(FYI: init syntax is [" INIT_SYNTAX "])");
     } else {
         char *saveptr, *tok;
-        if ( (tok = strtok_r(to_parse, " ,", saveptr)) == NULL) {
-            parsed->port = default_init.port;
+        if ( (tok = strtok_r(to_parse, " ,", &saveptr)) == NULL) {
+            log_warn("Couldn't get port from initialization string");
             return 0;
         }
-        parsed->port = atoi(tok);
+        parsed->sock_settings.port = atoi(tok);
 
-        if ( (tok = strtok_r(NULL, " ,", saveptr)) == NULL) {
-            parsed->target_msu_type = default_init.target_msu_type;
+        if ( (tok = strtok_r(NULL, " ,", &saveptr)) == NULL) {
+            log_warn("Couldn't get target MSU from initialization string");
             return 0;
         }
         parsed->target_msu_type = atoi(tok);
 
-        if ( (tok = strtok_r(NULL, " ,", saveptr)) != NULL) {
+        if ( (tok = strtok_r(NULL, " ,", &saveptr)) != NULL) {
             log_warn("Discarding extra tokens from socket initialzation: %s", tok);
         }
     }
@@ -304,59 +232,22 @@ static int socket_handler_init(struct generic_msu *self, struct create_msu_threa
     struct blocking_sock_init init;
     parse_init_payload(init_cmd, &init);
     log_info("Initializing socket handler with port: %d, target_msu: %d",
-             init.port, init.target_msu_type);
+             init.sock_settings.port, init.target_msu_type);
 
 
     struct blocking_socket_handler_state *state = malloc(sizeof(*state));
     self->internal_state = state;
-
     state->target_msu_type = init.target_msu_type;
 
-    state->socketfd = socket(init.domain, init.type, init.protocol);
+    state->socketfd = init_socket(&init.sock_settings);
     if ( state->socketfd == -1) {
-        log_perror("socket() failed");
+        log_error("Couldn't initialize socket for socket handler MSU %d", self->id);
         return -1;
     }
 
-
-    int opt = 1;
-    if (setsockopt(state->socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-        log_perror("setsockopt() failed");
-    }
-
-    struct sockaddr_in addr;
-    addr.sin_family = init.domain;
-    addr.sin_addr.s_addr = init.bind_ip;
-    addr.sin_port = htons(init.port);
-
-    opt = 1;
-    if (setsockopt(state->socketfd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(int)) == -1) {
-        log_perror("setsockopt() failed");
-        return -1;
-    }
-
-    if (bind(state->socketfd, (struct sockaddr*) &addr, sizeof(addr)) == -1) {
-        log_perror("bind() failed");
-        return -1;
-    }
-
-    if (listen(state->socketfd, SOCKET_BACKLOG) == -1) {
-        log_perror("listen() failed");
-        return -1;
-    }
-
-    state->epollfd = epoll_create1(0);
+    state->epollfd = init_epoll(state->socketfd);
     if (state->epollfd == -1) {
-        log_perror("epoll_create1() failed");
-        return -1;
-    }
-
-    struct epoll_event event;
-    event.data.fd = state->socketfd;
-    event.events = EPOLLIN;
-
-    if (epoll_ctl(state->epollfd, EPOLL_CTL_ADD, state->socketfd, &event) == -1) {
-        log_perror("epoll_ctl() failed");
+        log_error("Couldn't initialize epoll_fd for socket handler MSU %d", self->id);
         return -1;
     }
 
@@ -376,17 +267,14 @@ static int socket_handler_init(struct generic_msu *self, struct create_msu_threa
  * @param create_msu_thread_data initial_state reference to initial data structure
  * @return 0/-1 success/failure
  */
-static int socket_handler_destroy(struct generic_msu *self) {
+static void socket_handler_destroy(struct generic_msu *self) {
     struct blocking_socket_handler_state *state = self->internal_state;
     int ret;
 
     ret = close(state->socketfd);
     if (ret == - 1) {
         log_error("%s", "error closing socket");
-        return ret;
     }
-
-    return ret;
 }
 
 /**

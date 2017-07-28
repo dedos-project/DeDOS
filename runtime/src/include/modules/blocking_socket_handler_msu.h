@@ -17,8 +17,9 @@ extern struct msu_type BLOCKING_SOCKET_HANDLER_MSU_TYPE;
  * to the socket handler MSU itself.
  * To be used from external MSUs.
  * @param fd The file descriptor to be added to epoll
+ * @param events The events to monitor for (EPOLLIN, EPOLLOUT)
  * @return 0 on success, -1 on error
  */
-int handle_accepted_connection(int fd);
+int monitor_fd(int fd, uint32_t events);
 
-#endif /* SOCKET_HANDLER_MSU_H_ */
+#endif /* BLOCKING_SOCKET_HANDLER_MSU_H_ */

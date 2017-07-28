@@ -9,15 +9,21 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
+	   DEBUG \
+	   WEBSERVER_READ \
+	   EPOLL_OPS \
+	   WEBSERVER_ROUTING \
+	   MSU_STATE_MANAGEMENT
 
 DATAPLANE_PROFILING=0
-DEBUG = 0
+DEBUG = 1
 COLLECT_STATS = 1
 DUMP_STATS = 1
 
 PATH_SRC = src/
 PATH_SRC_APP = $(PATH_SRC)apps/
 PATH_SRC_MOD = $(PATH_SRC)modules/
+PATH_SRC_WBS = $(PATH_SRC_MOD)webserver/
 PATH_SRC_STK = $(PATH_SRC)stack/
 PATH_SRC_INC = $(PATH_SRC)include/
 PATH_SRC_LEG = $(PATH_SRC)legacy/
@@ -41,7 +47,8 @@ COMMON_OBJS = $(patsubst $(COMMON_SRC)%.c, $(COMMON_OBJ)%.o, $(COMMON_SRCS))
 #LEGACY_LIBS =
 LEGACY_LIBS = picotcp
 
-COMPILE=gcc -c -O3
+COMPILE=gcc -c
+# -O3
 COMPILE_PP=g++ -c
 FINAL=gcc
 LINK=ld -r
@@ -95,6 +102,7 @@ SRC_TST = $(wildcard $(PATH_TST)*.c)
 
 SRC_MOD = $(wildcard $(PATH_SRC_MOD)*.c)
 SRC_MOD_PP = $(wildcard $(PATH_SRC_MOD)*.cc)
+SRC_WBS = $(wildcard $(PATH_SRC_WBS)*.c)
 SRC_STK = $(wildcard $(PATH_SRC_STK)*.c)
 SRC_ALL = $(SRC_MOD) $(SRC_MOD_PP) $(SRC_STK)
 
@@ -107,10 +115,12 @@ TEST_RESOURCES = $(patsubst $(PATH_TST)resources/%, $(PATH_RSC)%, $(RESOURCE_IN)
 DEP_TST = $(patsubst $(PATH_TST)Test_%.c, $(PATH_DEP)Test_%.d, $(SRC_TST))
 DEP_SRC = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_DEP)%.d, $(SRC_MOD)) \
 		  $(patsubst $(PATH_SRC_MOD)%.cc, $(PATH_DEP)%.d, $(SRC_MOD_PP)) \
+		  $(patsubst $(PATH_SRC_WBS)%.c, $(PATH_DEP)%.d, $(SRC_MOD_PP)) \
 		  $(patsubst $(PATH_SRC_STK)%.c, $(PATH_DEP)%.d, $(SRC_STK))
 
 OBJECTS = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_OBJ)%.o, $(SRC_MOD))
 OBJECTS += $(patsubst $(PATH_SRC_MOD)%.cc, $(PATH_OBJ)%.o, $(SRC_MOD_PP))
+OBJECTS += $(patsubst $(PATH_SRC_WBS)%.c, $(PATH_OBJ)%.o, $(SRC_WBS))
 OBJECTS += $(patsubst $(PATH_SRC_STK)%.c, $(PATH_OBJ)%.o, $(SRC_STK))
 OBJECTS += $(patsubst $(PATH_SRC_UTL)%.c, $(PATH_OBJ)%.o, $(SRC_UTL))
 APPS = $(patsubst $(PATH_SRC_APP)%.c, %, $(SRC_APP))
@@ -174,6 +184,9 @@ $(PATH_OBJ)%.o:: $(PATH_TST)%.c $(SELF)
 
 # Creates object files from the stack source file
 $(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c $(SELF)
+	$(COMPILE) $(CFLAGS) $< -o $@
+
+$(PATH_OBJ)%.o:: $(PATH_SRC_WBS)%.c $(SELF)
 	$(COMPILE) $(CFLAGS) $< -o $@
 
 $(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c $(SELF)

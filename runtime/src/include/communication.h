@@ -44,9 +44,6 @@ int controller_sock;
 int tcp_comm_socket;
 int ws_sock;
 int baremetal_sock;
-char *db_ip;
-int db_port;
-int db_max_load;
 
 struct pending_runtimes{
     uint32_t *ips;
