@@ -344,32 +344,32 @@ int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id){
     struct dfg_runtime_endpoint *rt = dfg->runtimes[runtime_index];
 
     struct dfg_route *route = get_route_from_id(rt, route_id);
-    if (route == NULL){
+    if (route == NULL) {
         log_error("Specified route %d does not reside on runtime %d", route_id, runtime_index);
         return -1;
     }
 
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
-    if (msu == NULL){
+    if (msu == NULL) {
         log_error("Specified MSU %d does not exist", msu_id);
         return -1;
     }
 
     // Remove endpoint, move other endpoints backwards to fill gap
     int i;
-    for (i=0; i<route->num_destinations; i++){
+    for (i = 0; i < route->num_destinations; i++){
         if (route->destinations[i]->msu_id == msu_id){
             break;
         }
     }
 
-    if ( i == route->num_destinations ) {
+    if (i == route->num_destinations) {
         log_error("Specified msu %d not assigned to route %d", msu_id, route_id);
         return -1;
     }
 
     // Move everything else backwards
-    for (; i<route->num_destinations-1; i++){
+    for (; i < route->num_destinations-1; i++) {
         route->destinations[i] = route->destinations[i+1];
         route->destination_keys[i] = route->destination_keys[i+1];
     }
@@ -615,7 +615,7 @@ int remove_msu_from_dfg(int msu_id) {
     }
 
     // Shift next MSUs backwards
-    for (; i<dfg->vertex_cnt; i++) {
+    for (; i < dfg->vertex_cnt; i++) {
         dfg->vertices[i] = dfg->vertices[i+1];
     }
 

@@ -162,16 +162,14 @@ static int parse_add_msu(char *args) {
 
 static int parse_del_msu(char *args) {
     char *arg;
-    NEXT_ARG(arg, args);
-    int runtime_sock = atoi(arg);
 
-    NEXT_ARG(arg, NULL);
+    NEXT_ARG(arg, args);
     int msu_type = atoi(arg);
 
     NEXT_ARG(arg, NULL);
     int msu_id = atoi(arg);
 
-    int rtn = del_msu(msu_id, msu_type, runtime_sock);
+    int rtn = del_msu(msu_id, msu_type);
     if ( rtn < 0 ){
         log_error("Could not deletion of MSU %d", msu_id);
     }
@@ -329,7 +327,7 @@ struct cmd_action cmd_actions[] = {
         " (thread num {1 to Current_pinned_threads} if non-blocking)"},
 
     {"delmsu", parse_del_msu,
-        "[runtime_socket_num] [msu_type] [msu_id_to_delete]"},
+        "[msu_type] [msu_id_to_delete]"},
 
     {"add route", parse_add_route,
         "[runtime_socket_num] [route_num] [origin_msu]"

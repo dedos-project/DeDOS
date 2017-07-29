@@ -97,11 +97,6 @@ static int process_create_msu_request(struct dedos_thread_msg *msg,
 
 static int process_destroy_msu_request(struct dedos_thread_msg *msg,
                                        struct dedos_thread *thread){
-    if (!msg->data) {
-        log_error("DESTROY_MSU requires msg->data to be of type "
-                  "create_msu_thread_data");
-        return -1;
-    }
     int msu_id = (int)msg->action_data;
     struct generic_msu* msu = dedos_msu_pool_find(thread->msu_pool, msu_id);
 
@@ -117,6 +112,7 @@ static int process_destroy_msu_request(struct dedos_thread_msg *msg,
     destroy_msu(msu);
 
     log_info("Successfully destroyed MSU %d", msu_id);
+
     return 0;
 }
 
