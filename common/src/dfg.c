@@ -357,8 +357,8 @@ int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id){
 
     // Remove endpoint, move other endpoints backwards to fill gap
     int i;
-    for (i = 0; i < route->num_destinations; i++){
-        if (route->destinations[i]->msu_id == msu_id){
+    for (i = 0; i < route->num_destinations; i++) {
+        if (route->destinations[i]->msu_id == msu_id) {
             break;
         }
     }

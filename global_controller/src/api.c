@@ -161,24 +161,18 @@ int unwire_msu(int msu_id) {
     for (int rt_i = 0; rt_i < dfg->runtimes_cnt; rt_i++) {
         struct dfg_runtime_endpoint *rt = dfg->runtimes[rt_i];
 
-        for (int route_i = 0 ; route_i < rt->num_routes; route_i++) {
+        for (int route_i = 0; route_i < rt->num_routes; route_i++) {
             struct dfg_route *route = rt->routes[route_i];
+
+            if (! route_has_endpoint(route, msu)) {
+                continue;
+            }
 
             for (int msu_i = 0; msu_i < route->num_destinations; msu_i++) {
                 struct dfg_vertex *msu = route->destinations[msu_i];
 
                 if (msu->msu_id == msu_id) {
-                    int rtn;
-                    int runtime_index = get_sock_endpoint_index(rt->sock);
-
-                    rtn = dfg_del_route_endpoint(runtime_index, route->route_id, msu_id);
-                    if (rtn != 0) {
-                        log_error("Could not remove endpoint %d from route %d in DFG",
-                                   msu_id, route->route_id);
-                        return -1;
-                    }
-
-                    rtn = del_endpoint(msu_id, route->route_id, rt->sock);
+                    int rtn = del_endpoint(msu_id, route->route_id, rt->sock);
                     if (rtn != 0) {
                         log_error("Could not send del_endpoint order to runtime %d");
                         return -1;
