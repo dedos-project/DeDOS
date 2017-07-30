@@ -357,7 +357,10 @@ static int pico_sockets_check(struct hs_internal_state *in_state, int loop_score
 
     sp_msu = index_msu->keyValue;
     start = sp_msu;
+    int count;
 
+    //count = hs_count_sockets(in_state->hs_table);
+    //printf("before remove: Sockets count: %d\n",count);
     while (sp_msu != NULL && loop_score > 0) {
         struct pico_tree_node *index = NULL, *safe_index = NULL;
         pico_tree_foreach_safe(index, &sp_msu->socks, safe_index)
@@ -402,6 +405,8 @@ static int pico_sockets_check(struct hs_internal_state *in_state, int loop_score
 
         loop_score--;
     }
+    //count = hs_count_sockets(in_state->hs_table);
+    //printf("after remove: Sockets count: %d\n",count);
 
     return 0;
 }
@@ -501,7 +506,7 @@ int8_t remove_completed_request(struct hs_internal_state *in_state, struct pico_
     //hs_socket_garbage_collect(10, s, in_state->hs_timers);
     hs_timer_add(in_state->hs_timers, (pico_time) 10, hs_socket_garbage_collect, s);
     log_debug("done calling hs_timer_add from remove_completed_request!");
-    /*
+/*
     struct pico_tree_node *index;
     log_debug("Current sockets for port %u >>>", short_be(s->local_port));
     pico_tree_foreach(index, &sp->socks)
@@ -551,8 +556,7 @@ static int8_t add_pending_request(struct pico_tree *msu_table, struct pico_socke
 
     pico_tree_insert(&sp->socks, s);
     s->state |= PICO_SOCKET_STATE_BOUND;
-
-#if DEBUG != 0
+/*
     log_debug("Current sockets for port %u >>>", short_be(s->local_port));
     struct pico_tree_node *index;
     pico_tree_foreach(index, &sp->socks)
@@ -561,8 +565,7 @@ static int8_t add_pending_request(struct pico_tree *msu_table, struct pico_socke
         log_debug(">>>> List Socket lc=%hu rm=%hu", short_be(s->local_port),
                 short_be(s->remote_port));
     }
-#endif
-
+*/
     return 0;
 }
 
@@ -726,7 +729,7 @@ static int handle_syn(struct generic_msu* self, struct pico_tree *msu_table, str
     if(in_state->syn_state_used_memory > in_state->syn_state_memory_limit){
         log_debug("Drop syn full: %ld ", in_state->syn_state_used_memory);
         in_state->syns_dropped++;
-        return -1;
+        return -10;
     }
 
     struct pico_socket *s = hs_pico_socket_tcp_open(PICO_PROTO_IPV4, in_state->hs_timers);
@@ -989,7 +992,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     if (flags == PICO_TCP_SYN && !tcp_sock_found) /* First SYN */
     {   // first syn
         ret = handle_syn(self, in_state->hs_table, f, reply_msu_id);
-        if (ret != 0) { log_error("%s", "Failed to handle_syn"); }
+        if (ret != 0 && ret != -10) { log_error("%s", "Failed to handle_syn"); }
     }
     else if (flags == PICO_TCP_SYN && tcp_sock_found) /* Duplicate SYN */
     {
@@ -1026,6 +1029,8 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
 
         else if (sock_found->state  == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED | PICO_SOCKET_STATE_CONNECTED)) {
             in_state->syn_established_sock++;
+            struct pico_trans *tr = (struct pico_trans *) f->transport_hdr;
+        //    printf("Established socket SYN for sport: %u\n",short_be(tr->sport));
             log_warn("SYN for established socket..ignoring..%s","");
             goto end;
         }
@@ -1102,6 +1107,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
 
                 //free collected_tcp_sock after sending the buff
                 free(collected_tcp_sock);
+                remove_completed_request(in_state, (struct pico_socket *)tcp_sock_found);
             } //if stat == 0
         }
         //Duplicate first ACK
@@ -1497,7 +1503,7 @@ int msu_tcp_process_queue_item(struct generic_msu *msu, struct generic_msu_queue
 
     long unsigned int cur_ts_usec = get_ts();
     //TODO 2_ play around with loop score and see the numbers (diff in microseconds)
-    if(cur_ts_usec - in_state->last_ts > 5 * 1000){
+    if(cur_ts_usec - in_state->last_ts > 10 * 1000){
         //printf("Tick: %lu - %lu = %lu\n", cur_ts_usec, in_state->last_ts, cur_ts_usec - in_state->last_ts);
         in_state->last_ts = cur_ts_usec;
         pico_sockets_check(in_state, 32); //for sockets pending restore
@@ -1539,7 +1545,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     //handshake_msu->restore = msu_tcp_hs_restore_socket;
     //handshake_msu->same_machine_move_state = msu_tcp_hs_same_thread_transfer;
 
-    handshake_msu->scheduling_weight = 64;
+    handshake_msu->scheduling_weight = 128;
     struct hs_internal_state *in_state = (struct hs_internal_state*)malloc(sizeof(struct hs_internal_state));
     if(!in_state){
         return -1;
