@@ -127,7 +127,7 @@ static struct pico_device *pico_pcap_create(char *if_file_name, char *name, uint
         if (status < 0)
             log_error("error setting pcap timeout");
 
-        status = pcap_set_buffer_size(pcap->conn, 100<<20);
+        status = pcap_set_buffer_size(pcap->conn, 1000<<20);
         if(status < 0)
             log_error("Error setting pcap buffer size");
 
