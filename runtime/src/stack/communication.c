@@ -362,13 +362,7 @@ int check_comm_sockets() {
                 return -1;
             }
             log_debug("Accepted conn for baremetal");
-            struct timeval timeout;
-            timeout.tv_sec = 0;
-            timeout.tv_usec = 10000;
-            if ( setsockopt(new_sock_bm, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(struct timeval)) == -1 ) {
-                log_warn("setsockopt(%d,...) failed with error %s ", new_sock_bm, strerror(errno));
-                return -1;
-            }
+
             if (baremetal_entry_msu == NULL) {
                 log_error("baremetal entry msu is NULL, forgot to create it?%s","");
                 close(new_sock_bm);
