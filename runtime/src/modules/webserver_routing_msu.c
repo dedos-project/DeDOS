@@ -34,6 +34,7 @@ static int route_request(struct generic_msu *self,
         init_connection_state(&state->conn_state, fd);
         state->fd = fd;
         state->allocated = 0;
+        state->ip_address = data->ip_address;
     } else if (size != sizeof(*state)) {
         log_warn("Got size (%d) that didn't match expected (%d)!", (int)size, (int) sizeof(*state));
     }
@@ -115,7 +116,7 @@ struct msu_endpoint *webserver_routing_endpoint() {
 static struct msu_endpoint *webserver_routing_route_fn(
         struct msu_type UNUSED *type,
         struct generic_msu UNUSED *sender,
-        struct generic_msu_queue_item UNUSED *data) {
+        struct generic_msu_queue_item UNUSED *queue_item) {
     return webserver_routing_endpoint();
 }
 

@@ -27,6 +27,7 @@ static int craft_ws_regex_response(struct generic_msu *self,
                 log_error("Error crafting HTTP response");
                 return -1;
             }
+            state->conn_status = CON_WRITING;
             return DEDOS_WEBSERVER_WRITE_MSU_ID;
         default:
             log_error("MSU %d received queue item with improper status: %d",
@@ -44,7 +45,7 @@ const struct msu_type WEBSERVER_REGEX_MSU_TYPE = {
     .destroy = NULL,
     .receive = craft_ws_regex_response,
     .receive_ctrl = NULL,
-    .route = default_routing,
+    .route = shortest_queue_route,
     .deserialize = default_deserialize,
     .send_local = default_send_local,
     .send_remote = default_send_remote,

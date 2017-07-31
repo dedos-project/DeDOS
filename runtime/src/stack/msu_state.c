@@ -112,7 +112,7 @@ void *msu_init_state(struct generic_msu *msu, uint32_t key, unsigned int key2, s
         added_size += size;
         substate->data = realloc(substate->data, size);
         log_custom(LOG_MSU_STATE_MANAGEMENT, "Added allocation: %d", (int)added_size);
-        increment_stat(MEMORY_ALLOCATED, msu->id, added_size);
+        increment_stat(MEMORY_ALLOCATED, msu->id, (double)added_size);
         return substate->data;
     }
 }
@@ -156,7 +156,7 @@ void *msu_realloc_state(struct generic_msu *msu, uint32_t key, unsigned int key2
             substate->size = size;
             state_p->size += size + added_size - orig_subsize;
             substate->data = realloc(substate->data, size);
-            increment_stat(MEMORY_ALLOCATED, msu->id, size - orig_subsize);
+            increment_stat(MEMORY_ALLOCATED, msu->id, (double)(size - orig_subsize));
             return substate->data;
         }
     }
@@ -235,7 +235,7 @@ int msu_free_state(struct generic_msu *msu, uint32_t key, unsigned int key2) {
             state_p->substates[key2].data = NULL;
             int orig_size = state_p->substates[key2].size;
             state_p->substates[key2].size = 0;
-            increment_stat(MEMORY_ALLOCATED, msu->id, -1 * orig_size);
+            increment_stat(MEMORY_ALLOCATED, msu->id, (double)(-1 * orig_size));
             return 0;
         }
     }

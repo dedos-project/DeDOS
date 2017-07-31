@@ -61,7 +61,7 @@ int gather_cloning_info(struct stats_control_payload *stats, struct cloning_info
             }
         }
         if (type_cloning_info == NULL) {
-            log_warn("Could not aggregate cloning info for %d", msu->msu_id);
+            //log_warn("Could not aggregate cloning info for %d", msu->msu_id);
             continue;
         }
         type_cloning_info->msu_sample = msu;

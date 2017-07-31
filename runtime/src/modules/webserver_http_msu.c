@@ -2,10 +2,18 @@
 #include "modules/webserver_routing_msu.h"
 #include "modules/webserver/connection-handler.h"
 #include "dedos_msu_list.h"
+#include "modules/webserver/dbops.h"
 
 #ifndef LOG_HTTP_MSU
 #define LOG_HTTP_MSU 0
 #endif
+
+#ifdef __GNUC__
+#define UNUSED __attribute__ ((unused))
+#else
+#define UNUSED
+#endif
+
 
 static int craft_http_response(struct generic_msu *self,
                                struct generic_msu_queue_item *queue_item) {
@@ -29,6 +37,7 @@ static int craft_http_response(struct generic_msu *self,
                 log_custom(LOG_HTTP_MSU, "HTTP parsing incomplete");
                 return DEDOS_WEBSERVER_ROUTING_MSU_ID;
             }
+            state->data = self->internal_state;
             rtn = get_connection_resource(state);
             if (rtn != 0) {
                 log_error("Error getting requested resource");
@@ -36,7 +45,8 @@ static int craft_http_response(struct generic_msu *self,
             }
             int needs_regex = has_regex(state);
             if (needs_regex) {
-                return DEDOS_WEBSERVER_REGEX_MSU_ID;
+                state->conn_status = CON_PARSING;
+                return DEDOS_WEBSERVER_REGEX_ROUTING_MSU_ID;
             }
             rtn = craft_response(state);
             if (rtn == -1) {
@@ -51,13 +61,23 @@ static int craft_http_response(struct generic_msu *self,
     }
 }
 
+static int http_init(struct generic_msu *self, struct create_msu_thread_data UNUSED *data) {
+    void *db_memory = allocate_db_memory();
+    self->internal_state = db_memory;
+    return 0;
+}
+
+static void http_destroy(struct generic_msu *self) {
+    free(self->internal_state);
+}
+
 const struct msu_type WEBSERVER_HTTP_MSU_TYPE = {
     .name = "webserver_http_msu",
     .layer = DEDOS_LAYER_APPLICATION,
     .type_id = DEDOS_WEBSERVER_HTTP_MSU_ID,
     .proto_number = 999, //?
-    .init = NULL,
-    .destroy = NULL,
+    .init = http_init,
+    .destroy = http_destroy,
     .receive = craft_http_response,
     .receive_ctrl = NULL,
     .route = default_routing,

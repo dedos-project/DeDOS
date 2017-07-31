@@ -114,6 +114,7 @@ static int process_existing_connection(int fd, void *v_state) {
                 struct webserver_queue_data *data = malloc(sizeof(*data));
                 data->fd = fd;
                 data->allocated = 1;
+                data->ip_address = runtimeIpAddress;
 
                 // Get the ID for the request based on the client IP and port
                 struct sockaddr_in sockaddr;

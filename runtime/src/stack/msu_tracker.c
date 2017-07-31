@@ -21,6 +21,7 @@
 #include "modules/webserver_routing_msu.h"
 #include "modules/webserver_regex_msu.h"
 #include "modules/webserver_write_msu.h"
+#include "modules/webserver_regex_routing_msu.h"
 
 
 static const struct msu_type *MSU_TYPES[] = {
@@ -43,7 +44,9 @@ static const struct msu_type *MSU_TYPES[] = {
     &WEBSERVER_READ_MSU_TYPE,
     &WEBSERVER_ROUTING_MSU_TYPE,
     &WEBSERVER_REGEX_MSU_TYPE,
-    &WEBSERVER_WRITE_MSU_TYPE
+    &WEBSERVER_WRITE_MSU_TYPE,
+    &WEBSERVER_REGEX_ROUTING_MSU_TYPE
+
 };
 
 #define N_MSU_TYPES (sizeof(MSU_TYPES) / sizeof(struct msu_type*))

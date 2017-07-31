@@ -9,7 +9,7 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   DEBUG \
+	   #DEBUG \
 	   WEBSERVER_READ \
 	   EPOLL_OPS \
 	   WEBSERVER_ROUTING \
