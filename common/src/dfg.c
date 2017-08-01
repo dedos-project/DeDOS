@@ -344,32 +344,32 @@ int dfg_del_route_endpoint(int runtime_index, int route_id, int msu_id){
     struct dfg_runtime_endpoint *rt = dfg->runtimes[runtime_index];
 
     struct dfg_route *route = get_route_from_id(rt, route_id);
-    if (route == NULL){
+    if (route == NULL) {
         log_error("Specified route %d does not reside on runtime %d", route_id, runtime_index);
         return -1;
     }
 
     struct dfg_vertex *msu = get_msu_from_id(msu_id);
-    if (msu == NULL){
+    if (msu == NULL) {
         log_error("Specified MSU %d does not exist", msu_id);
         return -1;
     }
 
     // Remove endpoint, move other endpoints backwards to fill gap
     int i;
-    for (i=0; i<route->num_destinations; i++){
-        if (route->destinations[i]->msu_id == msu_id){
+    for (i = 0; i < route->num_destinations; i++) {
+        if (route->destinations[i]->msu_id == msu_id) {
             break;
         }
     }
 
-    if ( i == route->num_destinations ) {
+    if (i == route->num_destinations) {
         log_error("Specified msu %d not assigned to route %d", msu_id, route_id);
         return -1;
     }
 
     // Move everything else backwards
-    for (; i<route->num_destinations-1; i++){
+    for (; i < route->num_destinations-1; i++) {
         route->destinations[i] = route->destinations[i+1];
         route->destination_keys[i] = route->destination_keys[i+1];
     }
@@ -561,6 +561,71 @@ int generate_msu_id() {
     return highest_id + 1;
 }
 
+int remove_msu_from_runtime_threads(struct dfg_vertex *msu) {
+    int error = -1;
+    struct dfg_runtime_endpoint *rt = msu->scheduling.runtime;
+
+    for (int i = 0; i < rt->num_pinned_threads; i++) {
+        struct runtime_thread *rt_t = rt->threads[i];
+        //For now only non pinned thread is main thread
+        if (rt_t->mode == 0) {
+            continue;
+        }
+
+        int j;
+        for (j = 0; j < rt_t->num_msus; j++) {
+            if (rt_t->msus[j] == msu) {
+                rt_t->num_msus--;
+                error = 0;
+                break;
+            }
+        }
+
+        // Shift next MSUs backwards
+        for (; j < rt_t->num_msus; j++) {
+            rt_t->msus[j] = rt_t->msus[j+1];
+        }
+    }
+
+    return error;
+}
+
+
+int remove_msu_from_dfg(int msu_id) {
+    struct dfg_config *dfg = get_dfg();
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+
+    if (msu == NULL) {
+        log_error("Could not find MSU %d in dfg", msu_id);
+        return -1;
+    }
+
+    int errored = remove_msu_from_runtime_threads(msu);
+    if (errored < 0) {
+        log_error("Could not find MSU %d in runtime threads", msu_id);
+        return -1;
+    }
+
+    int i;
+    for (i = 0; i < dfg->vertex_cnt; i++) {
+        if (dfg->vertices[i]->msu_id == msu_id) {
+            dfg->vertex_cnt--;
+            break;
+        }
+    }
+
+    // Shift next MSUs backwards
+    for (; i < dfg->vertex_cnt; i++) {
+        dfg->vertices[i] = dfg->vertices[i+1];
+    }
+
+    free(msu);
+    log_info("Removed MSU %d from dfg", msu_id);
+    return 0;
+}
+
+
+
 /* Big mess of create, updates, etc */
 void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
     debug("DEBUG: updating MSU for action: %d", update_msg->msg_code);
@@ -619,3 +684,5 @@ void update_dfg(struct dedos_dfg_manage_msg *update_msg) {
             break;
     }
 }
+
+

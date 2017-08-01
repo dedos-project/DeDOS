@@ -179,6 +179,7 @@ int lookup_type_on_runtime(struct dfg_runtime_endpoint *rt, int msu_type);
 
 /* MSU management functions */
 void set_msu(struct dfg_vertex *msu);
+int remove_msu_from_dfg(int msu_id);
 struct msus_of_type *get_msus_from_type(int type);
 struct dfg_vertex *get_msu_from_id(int msu_id);
 struct dependent_type *get_dependent_type(struct dfg_vertex *msu, int msu_type);

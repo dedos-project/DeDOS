@@ -61,7 +61,7 @@ int gather_cloning_info(struct stats_control_payload *stats, struct cloning_info
             }
         }
         if (type_cloning_info == NULL) {
-            log_warn("Could not aggregate cloning info for %d", msu->msu_id);
+            //log_warn("Could not aggregate cloning info for %d", msu->msu_id);
             continue;
         }
         type_cloning_info->msu_sample = msu;
@@ -164,8 +164,8 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
         struct dfg_vertex *msu = get_msu_from_id(sample->item_id);
 
         if (msu == NULL) {
-            log_error("Could not get MSU with ID %d", sample->item_id);
-            return -1;
+            //log_error("Could not get MSU with ID %d", sample->item_id);
+            continue;
         }
 
         switch (sample->stat_id) {

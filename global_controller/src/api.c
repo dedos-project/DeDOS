@@ -154,7 +154,59 @@ int send_addmsu_msg(struct dfg_vertex *msu, char *init_data) {
     return 0;
 }
 
-int del_msu( int msu_id, int msu_type, int runtime_sock ) {
+int unwire_msu(int msu_id) {
+    struct dfg_config *dfg = get_dfg();
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+
+    for (int rt_i = 0; rt_i < dfg->runtimes_cnt; rt_i++) {
+        struct dfg_runtime_endpoint *rt = dfg->runtimes[rt_i];
+
+        for (int route_i = 0; route_i < rt->num_routes; route_i++) {
+            struct dfg_route *route = rt->routes[route_i];
+
+            if (! route_has_endpoint(route, msu)) {
+                continue;
+            }
+
+            for (int msu_i = 0; msu_i < route->num_destinations; msu_i++) {
+                struct dfg_vertex *msu = route->destinations[msu_i];
+
+                if (msu->msu_id == msu_id) {
+                    int rtn = del_endpoint(msu_id, route->route_id, rt->sock);
+                    if (rtn != 0) {
+                        log_error("Could not send del_endpoint order to runtime %d");
+                        return -1;
+                    }
+
+                    log_debug("Removed msu %d from route %d", msu_id, route->route_id);
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Remove an MSU from the system.
+ * First unwire the MSU, then remove it from the DFG, and forward this order to the host runtime
+ * @param msu_id: ID of the MSU to be removed
+ * @param msu_type: type of the MSU to be removed
+ * @param runtime_sock: target runtime //FIXME: this is useless.
+ * @return: -1/0: failure/success
+ */
+int del_msu(int msu_id, int msu_type) {
+    struct dfg_vertex *msu = get_msu_from_id(msu_id);
+    int runtime_sock = msu->scheduling.runtime->sock;
+
+    if (msu == NULL) {
+        log_error("Cannot delete non-existent MSU %d", msu_id);
+        return -1;
+    }
+
+    unwire_msu(msu_id);
+    remove_msu_from_dfg(msu_id);
+
     struct manage_msu_control_payload delete_msg = {
         .msu_id = msu_id,
         .msu_type = (unsigned int) msu_type,
@@ -352,7 +404,7 @@ int del_endpoint(int msu_id, int route_id, int runtime_sock) {
     int rtn = dfg_del_route_endpoint(rt_index, route_id, msu_id);
 
     if (rtn < 0) {
-        log_error("Error adding route endpoint! Not proceeding!");
+        log_error("Error deleting route endpoint! Not proceeding!");
         return -1;
     }
 

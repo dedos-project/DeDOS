@@ -10,7 +10,7 @@
 #define MAX_DATAPLANE_IN_MEMORY_LOG_ITEMS 1048576 /* for in memory log accross runtime */
 #define MAX_DATAPLANE_ENTRIES_PER_ITEM 32 /* 32 max hops */
 #define MAX_DATAPLANE_LOG_ENTRY_LEN 512
-#define CLOCK_ID CLOCK_MONOTONIC
+#define CLOCK_ID CLOCK_REALTIME
 
 typedef enum {
     ENQUEUE = 0,

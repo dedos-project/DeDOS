@@ -161,8 +161,8 @@ static int add_routing_table_entry(struct routing_table *table,
         table->type_id = destination->type_id;
     }
 
-    if (range_end <= 0) {
-        log_error("Cannot add routing table entry with non-positive key %d", range_end);
+    if (range_end < 0) {
+        log_error("Cannot add routing table entry with negative key %d", range_end);
         return -1;
     }
 
