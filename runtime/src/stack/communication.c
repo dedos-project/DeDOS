@@ -305,15 +305,6 @@ int check_comm_sockets() {
                 return -1;
             }
 
-            struct timeval timeout;
-            timeout.tv_sec = 0;
-            timeout.tv_usec = 10000;
-            if (setsockopt(new_sock_ws, SOL_SOCKET, SO_RCVTIMEO,
-                            (char *) &timeout, sizeof(struct timeval)) == -1) {
-                log_warn("setsockopt(%d,...) failed with error %s ", new_sock_ws, strerror(errno));
-                return -1;
-            }
-
             // printf("Accepted a new conn : %d \n", new_sock_ws);
             // if (queue_ssl == NULL || queue_ws == NULL) {
             //     log_error("%s","************** WS: Not all msu's wanted initialized ********************");
