@@ -8,6 +8,7 @@
 /* definition of struct that is an item of generic msu queue */
 struct generic_msu_queue_item{
     uint32_t id;
+    int msu_owner;
     struct generic_msu_queue_item *next;
     /*len of actual item data and pointer to the buffer
      This helps in hiding the structure of data for different MSU's from runtime

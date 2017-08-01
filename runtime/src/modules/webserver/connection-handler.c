@@ -24,6 +24,7 @@ void init_connection_state(struct connection_state *state, int fd) {
     state->conn_status = CON_ACCEPTED;
     state->ssl = NULL;
     state->response[0] = '\0';
+    state->db_fd = -1;
 }
 
 int accept_connection(struct connection_state *state, int use_ssl) {
@@ -134,8 +135,11 @@ static int get_regex_value(char *url, char *regex) {
 int get_connection_resource(struct connection_state *state) {
     char *url = state->req_state.url;
     if (strstr(url, "database") != NULL) {
-        if (query_db(state->data) != 0) {
+        int rtn = query_db(state);
+        if (rtn < 0) {
             log_error("Error querying database");
+        } else if (rtn == 1) {
+            return 1;
         }
     }
     return 0;

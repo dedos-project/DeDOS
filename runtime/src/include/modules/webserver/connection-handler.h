@@ -8,12 +8,16 @@
 #define MAX_RECV_LEN 4096
 
 enum connection_status {
+    NIL,
     CON_ERROR,
     NO_CONNECTION,
     CON_ACCEPTED,
     CON_SSL_CONNECTING,
     CON_READING,
     CON_PARSING,
+    CON_DB_CONNECTING,
+    CON_DB_SEND,
+    CON_DB_RECV,
     CON_WRITING,
     CON_COMPLETE,
     CON_CLOSED,
@@ -22,6 +26,8 @@ enum connection_status {
 struct connection_state {
     int fd;
     SSL *ssl;
+    int db_fd;
+    char db_req[16];
     void *data;
     char response[MAX_RESPONSE_LEN];
     int resp_size;

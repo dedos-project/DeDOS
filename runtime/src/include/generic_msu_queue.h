@@ -86,7 +86,6 @@ static inline int32_t generic_msu_queue_enqueue(struct generic_msu_queue *q, str
     if (rtn < 0){
         log_error("error incrementing thread queue semaphore");
     }
-
     if (q->shared)
         mutex_unlock(q->mutex);
 

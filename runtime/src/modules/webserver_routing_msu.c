@@ -27,14 +27,13 @@ static int route_request(struct generic_msu *self,
     log_custom(LOG_WEBSERVER_ROUTING, "got routing request for fd %d", data->fd);
 
     size_t size = -1;
+
     struct webserver_state *state = msu_get_state(self, queue_item->id, 0, &size);
     if (state == NULL) {
         log_custom(LOG_WEBSERVER_ROUTING, "Initializing new state for id %d", queue_item->id);
         state = msu_init_state(self, queue_item->id, 0, sizeof(*state));
-        init_connection_state(&state->conn_state, fd);
         state->fd = fd;
-        state->allocated = 0;
-        state->ip_address = data->ip_address;
+        init_connection_state(&state->conn_state, fd);
     } else if (size != sizeof(*state)) {
         log_warn("Got size (%d) that didn't match expected (%d)!", (int)size, (int) sizeof(*state));
     }
@@ -44,12 +43,15 @@ static int route_request(struct generic_msu *self,
         return -1;
     }
 
-    if (data->allocated) {
+    if (queue_item->msu_owner != self->id) {
+        memcpy(state, queue_item->buffer, queue_item->buffer_len);
         log_custom(LOG_WEBSERVER_ROUTING, "Freeing queue item buffer");
         free(queue_item->buffer);
     }
 
     queue_item->buffer = (void*)state;
+    queue_item->buffer_len = sizeof(*state);
+    queue_item->msu_owner = self->id;
 
     switch (state->conn_state.conn_status) {
         case NO_CONNECTION:
@@ -58,6 +60,9 @@ static int route_request(struct generic_msu *self,
         case CON_READING:
             return DEDOS_WEBSERVER_READ_MSU_ID;
         case CON_PARSING:
+        case CON_DB_CONNECTING:
+        case CON_DB_SEND:
+        case CON_DB_RECV:
             return DEDOS_WEBSERVER_HTTP_MSU_ID;
         case CON_WRITING:
             return DEDOS_WEBSERVER_WRITE_MSU_ID;
@@ -70,8 +75,8 @@ static int route_request(struct generic_msu *self,
             msu_free_state(self, queue_item->id, 0);
             return -1;
         default:
-            log_error("Webserver routing MSU got unknown status: %d",
-                      state->conn_state.conn_status);
+            log_error("Webserver routing MSU got unknown status (%d) for fd %d, id %l",
+                      state->conn_state.conn_status, state->fd, queue_item->id);
             return -1;
     }
 }

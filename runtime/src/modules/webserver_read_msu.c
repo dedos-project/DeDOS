@@ -38,6 +38,7 @@ static int read_request(struct generic_msu *self,
                 rtn = accept_connection(state, use_ssl);
                 if (rtn < 0) {
                     // So state can be cleared
+                    log_custom(LOG_WEBSERVER_READ, "accept failed for fd %d", ws_state->fd);
                     return DEDOS_WEBSERVER_ROUTING_MSU_ID;
                 }
                 if (state->conn_status != CON_READING) {
@@ -49,6 +50,7 @@ static int read_request(struct generic_msu *self,
             log_custom(LOG_WEBSERVER_READ, "Got CON_READING");
             rtn = read_connection(state);
             if (rtn < 0) {
+                log_custom(LOG_WEBSERVER_READ, "read failed for fd %d", ws_state->fd);
                 // So state can be cleared
                 return DEDOS_WEBSERVER_ROUTING_MSU_ID;
             }

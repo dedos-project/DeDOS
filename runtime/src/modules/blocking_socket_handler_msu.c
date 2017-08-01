@@ -49,6 +49,7 @@ extern "C" {
  */
 #define MAX_EPOLL_EVENTS 64
 
+#define MAX_FDS 2048
 /**
  * A reference to the instance of the socket handler MSU, so epoll can be accessed
  * from outside of the thread
@@ -62,6 +63,7 @@ struct blocking_socket_handler_state {
     int socketfd;
     int epollfd; //descriptor for events
     int target_msu_type;
+    int proxy_fd[MAX_FDS];
 };
 
 /**
@@ -86,12 +88,34 @@ int monitor_fd(int fd, uint32_t events) {
             socket_handler_instance->internal_state;
 
     int rtn = enable_epoll(state->epollfd, fd, events);
-
+    state->proxy_fd[fd] = -1;
     if (rtn < 0) {
         log_error("Error enabling epoll for fd %d on socket handler MSU", fd);
         return -1;
     }
     log_custom(LOG_SOCKET_HANDLER, "Enabled epoll for fd %d", fd);
+    return 0;
+}
+
+int add_proxy_fd(int fd, uint32_t events, int proxy) {
+    struct blocking_socket_handler_state *state =
+            socket_handler_instance->internal_state;
+    int rtn = add_to_epoll(state->epollfd, fd, events);
+    if (rtn < 0) {
+        rtn = enable_epoll(state->epollfd, fd, events);
+    }
+    if (rtn < 0) {
+        log_error("Error adding to epoll");
+        return -1;
+    }
+    state->proxy_fd[fd] = proxy;
+    return 0;
+}
+
+
+static int set_no_proxy(int fd, void *v_state) {
+    struct blocking_socket_handler_state *state = v_state;
+    state->proxy_fd[fd] = -1;
     return 0;
 }
 
@@ -102,6 +126,9 @@ int monitor_fd(int fd, uint32_t events) {
 static int process_existing_connection(int fd, void *v_state) {
     struct blocking_socket_handler_state *state = v_state;
     log_custom(LOG_SOCKET_HANDLER, "Processing existing connection on fd %d", fd);
+    if (state->proxy_fd[fd] > 0) {
+        fd = state->proxy_fd[fd];
+    }
     switch (state->target_msu_type) {
 
         case DEDOS_WEBSERVER_ROUTING_MSU_ID:;
@@ -113,7 +140,6 @@ static int process_existing_connection(int fd, void *v_state) {
             } else {
                 struct webserver_queue_data *data = malloc(sizeof(*data));
                 data->fd = fd;
-                data->allocated = 1;
                 data->ip_address = runtimeIpAddress;
 
                 // Get the ID for the request based on the client IP and port
@@ -154,7 +180,8 @@ static int socket_handler_main_loop(struct generic_msu *self) {
     struct blocking_socket_handler_state *state = self->internal_state;
 
     int rtn = epoll_loop(state->socketfd, state->epollfd,
-                         process_existing_connection, (void*)state);
+                         process_existing_connection,
+                         set_no_proxy, (void*)state);
     return rtn;
 }
 

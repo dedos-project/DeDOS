@@ -36,7 +36,7 @@ int enable_epoll(int epoll_fd, int new_fd, uint32_t events) {
 /**
  * Adds a file descriptor to the epoll instance so it can be responded to at a future time
  */
-static int add_to_epoll(int epoll_fd, int new_fd, uint32_t events) {
+int add_to_epoll(int epoll_fd, int new_fd, uint32_t events) {
     if (epoll_fd == 0) {
         epoll_fd = last_epoll_fd;
     }
@@ -48,7 +48,7 @@ static int add_to_epoll(int epoll_fd, int new_fd, uint32_t events) {
     int rtn = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_fd, &event);
 
     if (rtn == -1) {
-        log_perror("epoll_ctl() failed adding fd %d", new_fd);
+        //log_perror("epoll_ctl() failed adding fd %d", new_fd);
         // TODO: Handle errors...
         return -1;
     }
@@ -92,7 +92,12 @@ static int accept_new_connection(int socketfd, int epoll_fd) {
         // TODO: Error handling :?
         return -1;
     }
-    return add_to_epoll(epoll_fd, new_fd, EPOLLIN);
+    rtn = add_to_epoll(epoll_fd, new_fd, EPOLLIN);
+    if (rtn < 0) {
+        return -1;
+    } else {
+        return new_fd;
+    }
 }
 
 /**
@@ -101,7 +106,9 @@ static int accept_new_connection(int socketfd, int epoll_fd) {
  * file descriptors to the next MSUs once data is available to be read
  */
 int epoll_loop(int socket_fd, int epoll_fd, 
-       int (*connection_handler)(int, void*), void *data) {
+       int (*connection_handler)(int, void*), 
+       int (*accept_handler)(int, void*),
+       void *data) {
     struct epoll_event events[MAX_EPOLL_EVENTS];
 
     while (1) {
@@ -111,9 +118,13 @@ int epoll_loop(int socket_fd, int epoll_fd,
         for (int i=0; i < n; ++i) {
             if (socket_fd == events[i].data.fd) {
                 log_custom(LOG_EPOLL_OPS, "Accepting connection on %d", socket_fd);
-                if (accept_new_connection(socket_fd, epoll_fd) != 0) {
+                int new_fd = accept_new_connection(socket_fd, epoll_fd);
+                if ( new_fd < 0) {
                     log_error("Failed accepting new connection");
                 } else {
+                    if (accept_handler) {
+                        accept_handler(new_fd, data);
+                    }
                     log_custom(LOG_EPOLL_OPS, "Accepted new connection");
                 }
             } else {

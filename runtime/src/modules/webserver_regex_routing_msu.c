@@ -6,7 +6,7 @@ static int routing_receive(struct generic_msu *self, struct generic_msu_queue_it
 }
 
 const struct msu_type WEBSERVER_REGEX_ROUTING_MSU_TYPE = {
-    .name="routing_msu",
+    .name="regex_routing_msu",
     .layer=DEDOS_LAYER_APPLICATION,
     .type_id=DEDOS_WEBSERVER_REGEX_ROUTING_MSU_ID,
     .proto_number=999, //?
@@ -15,6 +15,7 @@ const struct msu_type WEBSERVER_REGEX_ROUTING_MSU_TYPE = {
     .receive=routing_receive,
     .receive_ctrl=NULL,
     .route=default_routing,
+    .deserialize=default_deserialize,
     .send_local=default_send_local,
     .send_remote=default_send_remote
 };

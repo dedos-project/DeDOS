@@ -315,6 +315,7 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
         struct generic_msu_queue_item *recvd = create_generic_msu_queue_item();
         if (recvd == NULL)
             return -1;
+        recvd->msu_owner = 0;
         recvd->buffer_len = bufsize;
         recvd->buffer = malloc(bufsize);
         recvd->id = msg->data_id;
@@ -611,8 +612,10 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generi
             log_error("Failed to send to remote runtime%s", "");
         }
         if (data){
-            log_debug("Freeing data buffer and data because of remote send");
-            free(data->buffer);
+            if (data->msu_owner == 0) {
+                log_debug("Freeing data buffer and data because of remote send");
+                free(data->buffer);
+            }
             free(data);
         }
         return rtn;

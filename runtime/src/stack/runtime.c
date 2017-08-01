@@ -104,6 +104,7 @@ static int print_thread_affinity() {
 static int pin_thread(pthread_t ptid, int cpu_id) {
     int s;
     cpu_set_t cpuset;
+    return 0;
 
     /* Set affinity mask to include CPUs i*/
     CPU_ZERO(&cpuset);
@@ -146,11 +147,11 @@ static void* blocking_per_thread_loop() {
     log_info("Starting blocking thread loop: %lu", self->tid);
 
     while (1) {
-        int rtn = sem_wait(self->q_sem);
+        //int rtn = sem_wait(self->q_sem);
+        int rtn = 0;
         if (rtn < 0) {
             log_error("Error waiting on thread queue semaphore");
         }
-
         struct msu_pool *pool = self->msu_pool;
         struct generic_msu *cur = pool->head;
         struct generic_msu *end = pool->tail;

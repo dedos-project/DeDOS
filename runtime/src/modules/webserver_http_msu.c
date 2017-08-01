@@ -3,6 +3,8 @@
 #include "modules/webserver/connection-handler.h"
 #include "dedos_msu_list.h"
 #include "modules/webserver/dbops.h"
+#include "modules/webserver/epollops.h"
+#include "modules/blocking_socket_handler_msu.h"
 
 #ifndef LOG_HTTP_MSU
 #define LOG_HTTP_MSU 0
@@ -13,7 +15,6 @@
 #else
 #define UNUSED
 #endif
-
 
 static int craft_http_response(struct generic_msu *self,
                                struct generic_msu_queue_item *queue_item) {
@@ -37,8 +38,20 @@ static int craft_http_response(struct generic_msu *self,
                 log_custom(LOG_HTTP_MSU, "HTTP parsing incomplete");
                 return DEDOS_WEBSERVER_ROUTING_MSU_ID;
             }
+        case CON_DB_CONNECTING:
+        case CON_DB_SEND:
+        case CON_DB_RECV:
             state->data = self->internal_state;
             rtn = get_connection_resource(state);
+            if (rtn == 1) {
+                log_custom(LOG_HTTP_MSU, "Database connection incomplete");
+                if (state->conn_status == CON_DB_SEND || state->conn_status == CON_DB_CONNECTING) {
+                    add_proxy_fd(state->db_fd, EPOLLOUT, state->fd);
+                } else if (state->conn_status == CON_DB_RECV) {
+                    add_proxy_fd(state->db_fd, EPOLLIN, state->fd);
+                }
+                return 0;
+            }
             if (rtn != 0) {
                 log_error("Error getting requested resource");
                 return -1;
@@ -48,6 +61,7 @@ static int craft_http_response(struct generic_msu *self,
                 state->conn_status = CON_PARSING;
                 return DEDOS_WEBSERVER_REGEX_ROUTING_MSU_ID;
             }
+            state->conn_status = CON_WRITING;
             rtn = craft_response(state);
             if (rtn == -1) {
                 log_error("Error crafting HTTP response");
