@@ -17,6 +17,7 @@ int enable_epoll(int epoll_fd, int new_fd, uint32_t events) {
     if (epoll_fd == 0) {
         epoll_fd = last_epoll_fd;
     }
+
     struct epoll_event event;
     memset(&event, 0, sizeof(event));
     event.data.fd = new_fd;
@@ -29,6 +30,7 @@ int enable_epoll(int epoll_fd, int new_fd, uint32_t events) {
         // TODO: Handle errors...
         return -1;
     }
+
     log_custom(LOG_EPOLL_OPS, "enabled fd %d on epoll", new_fd);
     return 0;
 }
@@ -40,6 +42,7 @@ int add_to_epoll(int epoll_fd, int new_fd, uint32_t events) {
     if (epoll_fd == 0) {
         epoll_fd = last_epoll_fd;
     }
+
     struct epoll_event event;
     memset(&event, 0, sizeof(event));
     event.data.fd = new_fd;
@@ -52,6 +55,7 @@ int add_to_epoll(int epoll_fd, int new_fd, uint32_t events) {
         // TODO: Handle errors...
         return -1;
     }
+
     log_custom(LOG_EPOLL_OPS, "Added fd %d to epoll", new_fd);
     return 0;
 }
@@ -78,9 +82,9 @@ static int accept_new_connection(int socketfd, int epoll_fd) {
                       hbuf, sizeof(hbuf),
                       sbuf, sizeof(sbuf),
                       NI_NUMERICHOST| NI_NUMERICSERV);
-    if ( rtn == 0) {
+    if (rtn == 0) {
         log_custom(LOG_EPOLL_OPS, "Accepted connection on descriptor %d"
-                                       "host=%s, port=%s", 
+                                       "host=%s, port=%s",
                    new_fd, hbuf, sbuf);
     }
 #endif
@@ -92,6 +96,7 @@ static int accept_new_connection(int socketfd, int epoll_fd) {
         // TODO: Error handling :?
         return -1;
     }
+
     rtn = add_to_epoll(epoll_fd, new_fd, EPOLLIN);
     if (rtn < 0) {
         return -1;
@@ -105,21 +110,21 @@ static int accept_new_connection(int socketfd, int epoll_fd) {
  * Loops (epolling) indefinitely, accepting new connections and passing new
  * file descriptors to the next MSUs once data is available to be read
  */
-int epoll_loop(int socket_fd, int epoll_fd, 
-       int (*connection_handler)(int, void*), 
-       int (*accept_handler)(int, void*),
-       void *data) {
+int epoll_loop(int socket_fd, int epoll_fd,
+               int (*connection_handler)(int, void*),
+               int (*accept_handler)(int, void*),
+               void *data) {
     struct epoll_event events[MAX_EPOLL_EVENTS];
 
     while (1) {
         // Wait indefinitely
         int n = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, -1);
 
-        for (int i=0; i < n; ++i) {
+        for (int i=0; i<n; ++i) {
             if (socket_fd == events[i].data.fd) {
                 log_custom(LOG_EPOLL_OPS, "Accepting connection on %d", socket_fd);
                 int new_fd = accept_new_connection(socket_fd, epoll_fd);
-                if ( new_fd < 0) {
+                if (new_fd < 0) {
                     log_error("Failed accepting new connection");
                 } else {
                     if (accept_handler) {
@@ -128,7 +133,7 @@ int epoll_loop(int socket_fd, int epoll_fd,
                     log_custom(LOG_EPOLL_OPS, "Accepted new connection");
                 }
             } else {
-                log_custom(LOG_EPOLL_OPS, "Processing connection (fd: %d)", 
+                log_custom(LOG_EPOLL_OPS, "Processing connection (fd: %d)",
                            events[i].data.fd);
                 if (connection_handler(events[i].data.fd, data) != 0) {
                     log_error("Failed processing existing connection (fd: %d)",
@@ -140,6 +145,7 @@ int epoll_loop(int socket_fd, int epoll_fd,
             }
         }
     }
+
     return 0;
 }
 
@@ -149,6 +155,7 @@ int init_epoll(int socket_fd) {
         log_perror("epoll_create1() failed");
         return -1;
     }
+
     last_epoll_fd = epoll_fd;
 
     struct epoll_event event;
@@ -161,5 +168,6 @@ int init_epoll(int socket_fd) {
         close(epoll_fd);
         return -1;
     }
+
     return epoll_fd;
 }

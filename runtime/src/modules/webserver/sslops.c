@@ -5,7 +5,7 @@
 
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
-#else 
+#else
 #define UNUSED
 #endif
 
@@ -121,8 +121,8 @@ int init_ssl_context(void) {
     const SSL_METHOD *method = TLSv1_2_server_method();
     ssl_ctx = SSL_CTX_new(method);
     SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF);
-    SSL_CTX_set_options(ssl_ctx, 
-            SSL_OP_NO_SSLv3 | SSL_OP_NO_TICKET | SSL_OP_SINGLE_DH_USE);
+    SSL_CTX_set_options(ssl_ctx,
+                        SSL_OP_NO_SSLv3 | SSL_OP_NO_TICKET | SSL_OP_SINGLE_DH_USE);
 
     int rtn = SSL_CTX_set_cipher_list(ssl_ctx, "HIGH:!aNULL:!MD5:!RC4");
     if ( rtn <= 0 ) {
@@ -188,7 +188,7 @@ int read_ssl(SSL *ssl, char *buf, int buf_size) {
     } else {
         int err = SSL_get_error(ssl, num_bytes);
         if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE) {
-            print_ssl_error(ssl, num_bytes);
+            //print_ssl_error(ssl, num_bytes);
             return -1;
         } else {
             return 0;

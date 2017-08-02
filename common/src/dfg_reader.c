@@ -280,7 +280,7 @@ static int set_rt_num_pinned_threads(jsmntok_t **tok, char *j, struct json_state
         return -1;
     }
 
-    for (int i=0; i<runtime->num_pinned_threads; ++i) {
+    for (int i = 0; i < runtime->num_pinned_threads; ++i) {
         runtime->threads[i]->mode = 1;
     }
 
@@ -438,16 +438,18 @@ static int set_thread_id(jsmntok_t **tok, char *j, struct json_state *in, struct
     // Go through the vertices and find the msu with the scheduling pointer
     // that is equal to this MSUs
     struct dfg_vertex *this_msu = NULL;
-    for (int i=0; i<cfg->vertex_cnt; i++) {
+    for (int i = 0; i < cfg->vertex_cnt; i++) {
         if (&cfg->vertices[i]->scheduling == sched) {
             this_msu = cfg->vertices[i];
+            break;
         }
     }
+
     if (this_msu == NULL)
         return 1;
 
     struct dfg_runtime_endpoint *rt = sched->runtime;
-    for (int i=0; i<rt->num_threads; i++) {
+    for (int i = 0; i < rt->num_threads; i++) {
         struct runtime_thread *thread = rt->threads[i];
         if (thread != NULL && thread->id == thread_id) {
             thread->msus[thread->num_msus] = this_msu;

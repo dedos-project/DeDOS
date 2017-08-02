@@ -68,7 +68,7 @@ int read_connection(struct connection_state *state) {
         return 0;
     } else if (bytes_read < 0) {
         state->conn_status = CON_ERROR;
-        log_error("Error reading");
+        //log_error("Error reading");
         return -1;
     }
 

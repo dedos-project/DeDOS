@@ -2,14 +2,14 @@
  * msu_queue.h
  *
  * Will contain declarations for functions relevant to enqueuing and dequeuing of data to MSUs
- * For the moment, some functionality may be in `generic_msu_queue.h` instead while porting 
+ * For the moment, some functionality may be in `generic_msu_queue.h` instead while porting
  * is underway
  */
 #ifndef MSU_QUEUE_H_
 #define MSU_QUEUE_H_
 
 // NOTE: Created this file to achieve some sort of privacy on the functions.
-// Prior to now there was no .c file for msu queues. 
+// Prior to now there was no .c file for msu queues.
 // -IMP
 
 /**

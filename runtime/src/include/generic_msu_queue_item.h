@@ -6,7 +6,7 @@
 #include "logging.h"
 
 /* definition of struct that is an item of generic msu queue */
-struct generic_msu_queue_item{
+struct generic_msu_queue_item {
     uint32_t id;
     int msu_owner;
     struct generic_msu_queue_item *next;

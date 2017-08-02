@@ -22,11 +22,11 @@ struct sock_settings *webserver_sock_settings(int port) {
 int init_socket(struct sock_settings *settings) {
 
     int socket_fd = socket(
-            settings->domain,
-            settings->type,
-            settings->protocol);
+        settings->domain,
+        settings->type,
+        settings->protocol);
 
-    if ( socket_fd == -1 ) {
+    if (socket_fd == -1) {
         log_perror("socket() failed");
         return -1;
     }
@@ -35,6 +35,7 @@ int init_socket(struct sock_settings *settings) {
     if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
         log_perror("setsockopt() failed for reuseaddr");
     }
+
     opt = settings->reuse_port;
     if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(&opt)) == -1) {
         log_perror("setsockopt() failed for reuseport");
@@ -44,7 +45,7 @@ int init_socket(struct sock_settings *settings) {
     addr.sin_family = settings->domain;
     addr.sin_addr.s_addr = settings->bind_ip;
     addr.sin_port = htons(settings->port);
- 
+
     if (bind(socket_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         log_perror("bind() failed");
         close(socket_fd);
@@ -85,7 +86,7 @@ int write_socket(int fd, char *buf, int buf_size) {
         if (errno == EAGAIN) {
             return 0;
         } else {
-            log_perror("Error writing to socket %d (rtn: %d, requested: %d)", 
+            log_perror("Error writing to socket %d (rtn: %d, requested: %d)",
                     fd, num_bytes, buf_size);
             return -1;
         }

@@ -79,7 +79,7 @@ int is_socket_handler_initialized() {
  * To be used from external MSUs.
  */
 int monitor_fd(int fd, uint32_t events) {
-    if ( ! is_socket_handler_initialized() ) {
+    if (! is_socket_handler_initialized()) {
         log_warn("Not accepting new connection! No initialized socket handler!");
         return -1;
     }
@@ -93,6 +93,7 @@ int monitor_fd(int fd, uint32_t events) {
         log_error("Error enabling epoll for fd %d on socket handler MSU", fd);
         return -1;
     }
+
     log_custom(LOG_SOCKET_HANDLER, "Enabled epoll for fd %d", fd);
     return 0;
 }
