@@ -56,11 +56,13 @@ static int craft_http_response(struct generic_msu *self,
                 log_error("Error getting requested resource");
                 return -1;
             }
+
             int needs_regex = has_regex(state);
             if (needs_regex) {
                 state->conn_status = CON_PARSING;
                 return DEDOS_WEBSERVER_REGEX_ROUTING_MSU_ID;
             }
+
             state->conn_status = CON_WRITING;
             rtn = craft_response(state);
             if (rtn == -1) {

@@ -153,16 +153,13 @@ static int process_existing_connection(int fd, void *v_state) {
                 }
                 uint32_t id;
                 HASH_VALUE(&sockaddr, addrlen, id);
-                rtn = initial_msu_enqueue((void*)data, sizeof(*data),
-                                              id, ws_routing);
+                rtn = initial_msu_enqueue((void*)data, sizeof(*data), id, ws_routing);
                 if (rtn != 0) {
-                    log_error("Error enqueuing request %d (fd: %d) to ssl_routing",
-                              id, fd);
+                    log_error("Error enqueuing request %d (fd: %d) to ssl_routing", id, fd);
                     return -1;
                 }
                 log_custom(LOG_SOCKET_HANDLER,
-                    "Enqueued request %d (fd: %d) to ssl_request_routing_msu",
-                    id, fd);
+                    "Enqueued request %d (fd: %d) to ssl_request_routing_msu", id, fd);
                 return 0;
             }
         default:

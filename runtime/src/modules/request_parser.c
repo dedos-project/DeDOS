@@ -3,7 +3,7 @@
 
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
-#else 
+#else
 #define UNUSED
 #endif
 
@@ -27,7 +27,7 @@ static int headers_complete_callback(http_parser *parser) {
     return 0;
 }
 
-static int header_field_or_value_callback(http_parser UNUSED *parser, 
+static int header_field_or_value_callback(http_parser UNUSED *parser,
         const char UNUSED *at, size_t UNUSED length) {
 #if LOG_HTTP_PARSING
     char cpy[length+1];
@@ -59,7 +59,7 @@ enum request_status parse_request(struct request_state *state, char *buf, ssize_
         log_warn("Parsing even though header is already complete");
     }
 
-    size_t nparsed = http_parser_execute(&state->parser, &state->settings, 
+    size_t nparsed = http_parser_execute(&state->parser, &state->settings,
                                          buf, bytes);
 
     if (nparsed != bytes) {

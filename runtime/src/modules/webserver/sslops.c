@@ -125,7 +125,7 @@ int init_ssl_context(void) {
                         SSL_OP_NO_SSLv3 | SSL_OP_NO_TICKET | SSL_OP_SINGLE_DH_USE);
 
     int rtn = SSL_CTX_set_cipher_list(ssl_ctx, "HIGH:!aNULL:!MD5:!RC4");
-    if ( rtn <= 0 ) {
+    if (rtn <= 0) {
         log_error("Could not set cipger list for SSL context");
         return -1;
     }
@@ -135,23 +135,27 @@ int init_ssl_context(void) {
 
 int load_ssl_certificate(char *cert_file, char *key_file) {
     /* set the local certificate from CertFile */
-    if ( SSL_CTX_use_certificate_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0 ) {
+    if (SSL_CTX_use_certificate_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0) {
         return -1;
     }
+
     /* set the private key from KeyFile (may be the same as CertFile) */
-    if ( SSL_CTX_use_PrivateKey_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0 ) {
+    if (SSL_CTX_use_PrivateKey_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0) {
         return -1;
     }
+
     /* verify private key */
-    if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
+    if (!SSL_CTX_check_private_key(ssl_ctx)) {
         return -1;
     }
+
     return 0;
 }
- 
+
 SSL *init_ssl_connection(int fd) {
     SSL *ssl = SSL_new(ssl_ctx);
     SSL_set_fd(ssl, fd);
+
     return ssl;
 }
 
@@ -216,9 +220,11 @@ int close_ssl(SSL *ssl) {
         SSL_free(ssl);
         return -1;
     }
+
     if (rtn != 1) {
         //log_warn("TODO: Deal with incomplete shutdown");
     }
     SSL_free(ssl);
+
     return 0;
 }

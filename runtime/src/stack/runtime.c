@@ -129,7 +129,7 @@ static int pin_thread(pthread_t ptid, int cpu_id) {
     return 0;
 }
 
-/** 
+/**
  * This is the main thread loop for blocking threads.
  * I believe that it does the same thing as the non-block loop though...
  */

@@ -13,7 +13,7 @@
 </html>\
 "
 
-int html_len(){
+int html_len() {
     return strlen(HTML) + 200;
 }
 
@@ -21,17 +21,17 @@ int craft_regex_response(char *to_match, char *htmlDoc){
     const char *pcreErrorStr;
     int errOffset;
     pcre *reCompiled = pcre_compile(EVIL_REGEX, 0, &pcreErrorStr, &errOffset, NULL);
-    
+
     pcre_extra pcreExtra;
     pcreExtra.match_limit = -1;
     pcreExtra.match_limit_recursion = -1;
     pcreExtra.flags = PCRE_EXTRA_MATCH_LIMIT | PCRE_EXTRA_MATCH_LIMIT_RECURSION;
-    
+
     int len = strlen(to_match);
     int x[1];
 
     int ret = pcre_exec(reCompiled, &pcreExtra, to_match, len, 0, 0, x, 1);
-    
+
     char resp[5];
     if (ret < 0){
         sprintf(resp, "%s", "NO");

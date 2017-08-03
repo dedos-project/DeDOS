@@ -29,12 +29,11 @@ static int write_http_response(struct generic_msu *self,
                 return 0;
             }
         default:
-            log_error("MSU %d received queue item with improper status: %d", 
+            log_error("MSU %d received queue item with improper status: %d",
                       self->id, state->conn_status);
             return -1;
     }
 }
-
 
 const struct msu_type WEBSERVER_WRITE_MSU_TYPE = {
     .name = "webserver_http_msu",
@@ -51,4 +50,3 @@ const struct msu_type WEBSERVER_WRITE_MSU_TYPE = {
     .send_remote = default_send_remote,
     .generate_id = NULL
 };
-

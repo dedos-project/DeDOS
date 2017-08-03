@@ -28,7 +28,7 @@ void init_connection_state(struct connection_state *state, int fd) {
 }
 
 int accept_connection(struct connection_state *state, int use_ssl) {
-    if ( !use_ssl ) {
+    if (!use_ssl) {
        log_error("Not implemented, assuming connection is already accepted");
        return -1;
     }
@@ -75,12 +75,13 @@ int read_connection(struct connection_state *state) {
     log_custom(LOG_CONNECTION_INFO, "Completed reading (fd: %d)", state->fd);
     state->buf_len = bytes_read;
     state->conn_status = CON_PARSING;
+
     return 0;
 }
 
 int parse_connection(struct connection_state *state) {
-    enum request_status req_status = parse_request(
-            &state->req_state, state->buf, state->buf_len);
+    enum request_status req_status =
+        parse_request(&state->req_state, state->buf, state->buf_len);
 
     switch (req_status) {
         case REQ_COMPLETE:
@@ -128,6 +129,7 @@ static int get_regex_value(char *url, char *regex) {
                 continue;
         }
     }
+
     log_error("Requested regex value (%s) too long", regex_start);
     return -1;
 }
@@ -142,6 +144,7 @@ int get_connection_resource(struct connection_state *state) {
             return 1;
         }
     }
+
     return 0;
 }
 
@@ -173,7 +176,7 @@ int craft_response(struct connection_state *state) {
         log_custom(LOG_CONNECTION_INFO, "crafted regex response");
         return 0;
     } else {
-        sprintf(state->response, DEFAULT_HTTP_HEADER DEFAULT_HTTP_BODY, 
+        sprintf(state->response, DEFAULT_HTTP_HEADER DEFAULT_HTTP_BODY,
                 (int)strlen(DEFAULT_HTTP_BODY));
         state->resp_size = strlen(state->response);
         log_custom(LOG_CONNECTION_INFO, "Crafted normal response");
@@ -219,7 +222,9 @@ int close_connection(struct connection_state *conn) {
         log_perror("Error closing connection fd=%d", conn->fd);
         return -1;
     }
+
     log_custom(LOG_CONNECTION_INFO, "Closed fd %d", conn->fd);
     conn->conn_status = CON_CLOSED;
+
     return 0;
 }

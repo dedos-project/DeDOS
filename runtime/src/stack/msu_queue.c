@@ -2,7 +2,7 @@
  * msu_queue.c
  *
  * Will contain functions relevant to the enqueing and dequeing of data
- * from an MSU queue. 
+ * from an MSU queue.
  * For the moment, some functionality may be in `generic_msu_queue.h` instead.
  */
 
@@ -47,5 +47,6 @@ int initial_msu_enqueue(void *buffer, size_t buffer_len, uint32_t id, struct gen
         log_custom(LOG_INITIAL_ENQUEUES, "Introduced queue item %d at MSU %s (%d)",
                    id, dest->type->name, dest->id);
     }
+
     return 0;
 }

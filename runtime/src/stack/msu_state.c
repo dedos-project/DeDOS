@@ -38,7 +38,7 @@ static inline int alloc_substates(struct msu_state *parent, unsigned int n) {
             return -1;
         }
         memset(&parent->substates[orig], 0, sizeof(parent->substates) * (n - orig));
-        // Apparently 0 != (size_t)0, so this has to be set separately? 
+        // Apparently 0 != (size_t)0, so this has to be set separately?
         // Or else I'm doing something wrong...
         for (int i=orig; i<n; i++) {
             parent->substates[i].size = 0;
@@ -129,7 +129,7 @@ void *msu_realloc_state(struct generic_msu *msu, uint32_t key, unsigned int key2
     struct msu_state *state_p;
     HASH_FIND(hh, msu->state_p, &key, sizeof(key), state_p);
     if (state_p == NULL) {
-        log_custom(LOG_MSU_STATE_MANAGEMENT, 
+        log_custom(LOG_MSU_STATE_MANAGEMENT,
                 "Reallocation of msu %d, key%d-%u actually initialization",
                 msu->id, key, key2);
         return msu_init_state(msu, key, key2, size);

@@ -60,7 +60,7 @@ static int read_request(struct generic_msu *self,
             }
             return DEDOS_WEBSERVER_HTTP_MSU_ID;
         default:
-            log_error("MSU %d received queue item with improper status: %d", 
+            log_error("MSU %d received queue item with improper status: %d",
                       self->id, state->conn_status);
             return -1;
     }
@@ -68,7 +68,7 @@ static int read_request(struct generic_msu *self,
 
 #define SSL_INIT_CMD "SSL"
 
-static int ws_read_init(struct generic_msu *self, 
+static int ws_read_init(struct generic_msu *self,
                         struct create_msu_thread_data *initial_state) {
 
     struct ws_read_state *ws_state = malloc(sizeof(*ws_state));
@@ -79,7 +79,7 @@ static int ws_read_init(struct generic_msu *self,
         log_info("Initializing NON-SSL webserver-reading MSU");
         ws_state->use_ssl = 0;
     }
-    if ( strncasecmp(init_cmd, SSL_INIT_CMD, sizeof(SSL_INIT_CMD)) == 0) {
+    if (strncasecmp(init_cmd, SSL_INIT_CMD, sizeof(SSL_INIT_CMD)) == 0) {
         log_info("Initializing SSL webserver-reading MSU");
         ws_state->use_ssl = 1;
     } else {

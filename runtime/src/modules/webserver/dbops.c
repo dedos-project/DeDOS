@@ -30,7 +30,6 @@ void init_db(char *ip, int port, int max_load) {
     db_addr.sin_family = AF_INET;
     inet_pton(AF_INET, db_ip, &(db_addr.sin_addr));
     db_addr.sin_port = htons(db_port);
-
 }
 
 
@@ -40,6 +39,7 @@ void *allocate_db_memory() {
     if (memory == NULL) {
         log_perror("Mallocing memory for database");
     }
+
     return memory;
 }
 
@@ -48,13 +48,16 @@ int init_db_socket() {
     if (db_fd < 0) {
         printf("%s", "failure opening socket");
     }
+
     int optval = 1;
     if (setsockopt(db_fd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) < 0) {
         printf("%s", " failed to set SO_REUSEPORT");
     }
+
     if (setsockopt(db_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
         printf("%s", " failed to set SO_REUSEADDR");
     }
+
     //add_to_epoll(0, db_fd, 0);
     return db_fd;
 }
@@ -76,6 +79,7 @@ int connect_to_db(struct connection_state *state) {
     }
     int db_param = rand() % db_max_load;
     sprintf(state->db_req, "%s %d", DB_QUERY, db_param);
+
     return 0;
 }
 
@@ -88,6 +92,7 @@ int send_to_db(struct connection_state *state) {
             return -1;
         }
     }
+
     return 0;
 }
 
@@ -100,9 +105,9 @@ int recv_from_db(struct connection_state *state) {
     socklen_t addrlen = sizeof(db_addr);
 
     int rtn = recvfrom(state->db_fd, res_buf, res_buf_len, 0,
-        (void*) &db_addr, &addrlen);
+                       (void*) &db_addr, &addrlen);
 
-    if (rtn< 0) {
+    if (rtn < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             return 1;
         } else {
@@ -133,8 +138,10 @@ int recv_from_db(struct connection_state *state) {
     for (int i=0; i<size; i+=increment){
         memory[i]++;
     }
+
     close(state->db_fd);
     state->db_fd = 0;
+
     return 0;
 }
 
@@ -142,7 +149,6 @@ int query_db(struct connection_state *state) {
     if (db_ip == NULL) {
         log_error("Database is not initialized");
         return -1;
-
     }
 
     int rtn = connect_to_db(state);
@@ -153,6 +159,7 @@ int query_db(struct connection_state *state) {
     } else {
         state->conn_status = CON_DB_SEND;
     }
+
     rtn = send_to_db(state);
     if (rtn == -1) {
         return -1;
@@ -161,6 +168,7 @@ int query_db(struct connection_state *state) {
     } else {
         state->conn_status = CON_DB_RECV;
     }
+
     rtn = recv_from_db(state);
     if (rtn == -1) {
         return -1;
@@ -169,5 +177,6 @@ int query_db(struct connection_state *state) {
     } else {
         state->conn_status = CON_WRITING;
     }
+
     return 0;
 }

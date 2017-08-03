@@ -19,6 +19,11 @@ struct sock_settings *webserver_sock_settings(int port) {
 
 #define SOCKET_BACKLOG 512
 
+/**
+ * Init listening socket
+ * @param struct sock_settings: configuration for the socket
+ * @return -1/socketfd: failure/file descriptor number
+ */
 int init_socket(struct sock_settings *settings) {
 
     int socket_fd = socket(

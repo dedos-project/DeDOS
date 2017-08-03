@@ -260,64 +260,6 @@ int check_comm_sockets() {
                 //parse received cmd
                 parse_cmd_action(&rcv_buf);
             }
-        /*} else if (fds[2].revents & POLLIN) {
-            fds[2].revents = 0;
-            // received something on the websocket
-            // accept this and then pass it to the queue acceessed by the global variable for now
-            // if the queue is NULL close the connection right away
-            // printf("Trying to get a new conn \n");
-            struct sockaddr_in ClientAddr;
-            socklen_t AddrLen = sizeof(ClientAddr);
-            int new_sock_ws = accept(ws_sock,(struct sockaddr*) &ClientAddr, &AddrLen);
-
-            if (new_sock_ws < 0) {
-                log_warn("accept(%d,...) failed with error %s ", ws_sock, strerror(errno));
-                return -1;
-            }
-
-            struct timeval timeout;
-            timeout.tv_sec = 0;
-            timeout.tv_usec = 10000;
-            if (setsockopt(new_sock_ws, SOL_SOCKET, SO_RCVTIMEO,
-                            (char *) &timeout, sizeof(struct timeval)) == -1) {
-                log_warn("setsockopt(%d,...) failed with error %s ", new_sock_ws, strerror(errno));
-                return -1;
-            }
-
-            // printf("Accepted a new conn : %d \n", new_sock_ws);
-            // if (queue_ssl == NULL || queue_ws == NULL) {
-            //     log_error("%s","************** WS: Not all msu's wanted initialized ********************");
-            //     close(new_sock_ws);
-            if (ssl_request_routing_msu == NULL) {
-                log_error("*ssl_request_routing_msu is NULL, forgot to create it?%s","");
-                close(new_sock_ws);
-            } else {
-                // enqueue this item into this queue so that the MSU can process it
-                struct ssl_data_payload *data = (struct ssl_data_payload*) malloc(sizeof(struct ssl_data_payload));
-                memset(data, '\0', MAX_REQUEST_LEN);
-                data->socketfd = new_sock_ws;
-                // set the initial type to READ
-                data->type = READ;
-                data->state = NULL;
-                // get a new queue item and enqueue it into this queue
-                struct generic_msu_queue_item *new_item_ws = create_generic_msu_queue_item();
-                new_item_ws->buffer = data;
-                new_item_ws->buffer_len = sizeof(struct ssl_data_payload);
-#ifdef DATAPLANE_PROFILING
-                new_item_ws->dp_profile_info.dp_id = get_request_id();
-                log_dp_event(-1, DEDOS_ENTRY, &new_item_ws->dp_profile_info);
-#endif
-    //            generic_msu_queue_enqueue(queue_ssl, new_item_ws);
-                int ssl_request_queue_len = generic_msu_queue_enqueue(&ssl_request_routing_msu->q_in, new_item_ws); //enqueuing to routing MSU
-                if (ssl_request_queue_len < 0) {
-                    log_error("Failed to enqueue ssl_request to %s",ssl_request_routing_msu->type->name);
-                    free(new_item_ws);
-                    free(data);
-                } else {
-                    log_debug("Enqueued ssl forwarding request, q_len: %u",ssl_request_queue_len);
-                }
-            }
-            */
 #ifdef DEDOS_SUPPORT_BAREMETAL_MSU
         } else if (fds[3].revents & POLLIN) {
             //BAREMETAL MSU data entry point into dedos
