@@ -219,16 +219,23 @@ int write_ssl(SSL *ssl, char *buf, int buf_size) {
 int close_ssl(SSL *ssl) {
     ERR_clear_error();
     int rtn = SSL_shutdown(ssl);
-    if (rtn < 0) {
+    if (rtn == -1) {
         log_error("Error shutting down SSL connection");
         SSL_free(ssl);
         return -1;
     }
-
-    if (rtn != 1) {
-        //log_warn("TODO: Deal with incomplete shutdown");
+    if (rtn == 0) {
+        //See the man page to understand this way of handling error on SSL_shutdown()
+        //TODO: need too handle WANT_READ and WANT_WRITE on BOTH calls
+        //see https://stackoverflow.com/questions/28056056/handling-ssl-shutdown-correctly
+        rtn = SSL_shutdown(ssl);
+        if (rtn == -1) {
+            log_error("Error shutting down SSL connection");
+            SSL_free(ssl);
+            return -1;
+        }
     }
-    SSL_free(ssl);
 
+    SSL_free(ssl);
     return 0;
 }
