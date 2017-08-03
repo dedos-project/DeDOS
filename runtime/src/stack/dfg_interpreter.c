@@ -73,7 +73,7 @@ int create_msu_from_vertex(struct dfg_vertex *vertex){
 
     struct generic_msu *new_msu = init_msu_external(vertex->msu_type,
                                                     vertex->msu_id,
-                                                    thread_id, 
+                                                    thread_id,
                                                     &create_action);
     if (new_msu == NULL) {
         log_error("Failed to create new MSU %d", vertex->msu_id);
@@ -134,7 +134,7 @@ int create_route_from_dfg(struct dfg_route *dfg_route){
     return 0;
 }
 
-int spawn_threads_from_dfg(struct dfg_config *dfg, int runtime_id){
+int spawn_threads_from_dfg(struct dfg_config *dfg, int runtime_id) {
     struct dfg_runtime_endpoint *rt = get_local_runtime(dfg, runtime_id);
 
     int n_spawned_threads = 0;
@@ -186,12 +186,11 @@ int implement_dfg(struct dfg_config *dfg, int runtime_id) {
         }
     }
 
-
     // Loop through once to create the MSUs
     for (int i=0; i<dfg->vertex_cnt; i++) {
         struct dfg_vertex *vertex = dfg->vertices[i];
         if (vertex_locality(vertex, runtime_id) == 0) {
-            if ( create_msu_from_vertex(vertex) < 0){
+            if (create_msu_from_vertex(vertex) < 0) {
                 log_debug("Failed to create msu %d", vertex->msu_id);
                 continue;
             }

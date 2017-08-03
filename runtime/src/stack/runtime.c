@@ -104,7 +104,6 @@ static int print_thread_affinity() {
 static int pin_thread(pthread_t ptid, int cpu_id) {
     int s;
     cpu_set_t cpuset;
-    return 0;
 
     /* Set affinity mask to include CPUs i*/
     CPU_ZERO(&cpuset);
@@ -380,20 +379,14 @@ int on_demand_create_worker_thread(int is_blocking) {
         free(all_threads[index].msu_pool);
         return -1;
     }
+
     ret = sem_init(all_threads[index].q_sem, 0, 0);
     if (ret < 0){
-        log_error("Unable to initialize queue semaphore");
+        log_perror("Unable to initialize queue semaphore");
         free(all_threads[index].msu_pool);
         free(all_threads[index].q_sem);
         return -1;
     }
-
-
-    // cur_thread->msu_pool = msu_pool;
-    // cur_thread->msu_pool->num_msus = 0;
-    // cur_thread->msu_pool->mutex = NULL;
-    // cur_thread->msu_pool->head = NULL;
-    // cur_thread->msu_pool->tail = NULL;
 
     all_threads[index].msu_pool->num_msus = 0;
     all_threads[index].msu_pool->mutex = NULL;
@@ -510,10 +503,11 @@ int init_main_thread(void) {
     main_thread->thread_behavior = BLOCKING_THREAD;
     main_thread->thread_q = (struct dedos_thread_queue*) malloc(
             sizeof(struct dedos_thread_queue));
-    if(!main_thread->thread_q){
+    if (!main_thread->thread_q)  {
         log_error("Failed to malloc thread queue for main thread %s","");
         return -1;
     }
+
     main_thread->msu_pool = NULL; //Only sockets with select so no MSUs
     main_thread->thread_q->shared = 1;
     main_thread->thread_q->mutex = mutex_init();

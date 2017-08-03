@@ -236,12 +236,12 @@ struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thre
     struct generic_msu *msu = msu_alloc(thread_id);
     msu->id = msu_id;
     msu->type = msu_type_by_id(type_id);
-    log_debug("init data: %s",create_action->init_data);
+    log_debug("init data: %s", create_action->init_data);
     // TODO: queue_ws, msu_ws, what????
 
     // TODO: What's all that stuff about global pointers in the old code ???
 
-    if (msu->type == NULL){
+    if (msu->type == NULL) {
         /* for enqueing failure messages*/
         log_error("Unknown MSU type %d", type_id);
         msu_failure(msu_id);
@@ -252,7 +252,7 @@ struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thre
     // Call the type-specific initialization function
     // TODO: What is this "creation_init_data"
     msu->scheduling_weight = 1;
-    if (msu->type->init){
+    if (msu->type->init) {
         int rtn = msu->type->init(msu, create_action);
         if (rtn){
             log_error("MSU creation failed for %s MSU: id %d",
@@ -262,9 +262,11 @@ struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thre
             return NULL;
         }
     }
+
     log_info("Created %s MSU: id %d, sched_weight: %d", msu->type->name, msu_id, msu->scheduling_weight);
     msu->routes = NULL;
     msu->routing_state = NULL;
+
     return msu;
 }
 
