@@ -166,6 +166,7 @@ static int process_existing_connection(int fd, void *v_state) {
             delete_generic_msu_queue_item(queue_item);
             return -1;
         }
+        add_to_msu_path(queue_item, type_id, dst->id, runtimeIpAddress);
         int rtn = msu_route(type, socket_handler_instance, queue_item);
 
         if (rtn < 0) {

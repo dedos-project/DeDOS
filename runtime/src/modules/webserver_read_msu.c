@@ -1,6 +1,7 @@
 #include "modules/webserver_read_msu.h"
 #include "modules/blocking_socket_handler_msu.h"
 #include "modules/webserver/connection-handler.h"
+#include "communication.h" // for runtimeIpAddress
 #include "logging.h"
 #include "dedos_msu_list.h"
 #include "msu_state.h"
@@ -126,6 +127,22 @@ static void ws_read_destroy(struct generic_msu *self) {
     free(self->internal_state);
 }
 
+static struct msu_endpoint *default_within_ip_routing(struct msu_type *type,
+                                     struct generic_msu *sender,
+                                     struct generic_msu_queue_item *queue_item) {
+    uint32_t origin_ip = queue_item->path[0].ip_address;
+    struct msu_endpoint *dest = default_routing(type, sender, queue_item);
+    if (dest->ipv4 == origin_ip ||
+            (origin_ip == runtimeIpAddress && dest->locality == MSU_IS_LOCAL)) {
+        return dest;
+    }
+    dest = round_robin_within_ip(type, sender, origin_ip);
+    if (dest == NULL) {
+        log_error("can't find appropriate webserver read MSU");
+    }
+    return dest;
+}
+
 const struct msu_type WEBSERVER_READ_MSU_TYPE = {
     .name = "webserver_routing_msu",
     .layer = DEDOS_LAYER_APPLICATION,
@@ -135,7 +152,7 @@ const struct msu_type WEBSERVER_READ_MSU_TYPE = {
     .destroy = ws_read_destroy,
     .receive = read_http_request,
     .receive_ctrl = NULL,
-    .route = default_routing,
+    .route = default_within_ip_routing,
     .deserialize = default_deserialize,
     .send_local = default_send_local,
     .send_remote = default_send_remote,
