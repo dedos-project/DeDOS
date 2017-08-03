@@ -171,6 +171,7 @@ SSL *init_ssl_connection(int fd) {
     } while (0);
 
 int accept_ssl(SSL *ssl) {
+    ERR_clear_error();
     int rtn = SSL_accept(ssl);
     if (rtn == 0) {
         log_warn("The TLS/SSL handshake was not successful "
@@ -186,6 +187,7 @@ int accept_ssl(SSL *ssl) {
 }
 
 int read_ssl(SSL *ssl, char *buf, int buf_size) {
+    ERR_clear_error();
     int num_bytes = SSL_read(ssl, buf, buf_size);
     if (num_bytes > 0) {
         return num_bytes;
@@ -201,6 +203,7 @@ int read_ssl(SSL *ssl, char *buf, int buf_size) {
 }
 
 int write_ssl(SSL *ssl, char *buf, int buf_size) {
+    ERR_clear_error();
     int num_bytes = SSL_write(ssl, buf, buf_size);
     if (num_bytes > 0) {
         if (num_bytes != buf_size) {
@@ -214,6 +217,7 @@ int write_ssl(SSL *ssl, char *buf, int buf_size) {
 }
 
 int close_ssl(SSL *ssl) {
+    ERR_clear_error();
     int rtn = SSL_shutdown(ssl);
     if (rtn < 0) {
         log_error("Error shutting down SSL connection");
