@@ -26,7 +26,7 @@ void add_to_msu_path(struct generic_msu_queue_item *queue_item,
 
 struct msu_path_element *get_path_history(struct generic_msu_queue_item *queue_item, 
                                           int reverse_index){
-    int index = queue_item->path_index - reverse_index;
+    int index = queue_item->path_index - reverse_index - 1;
     if (index < 0) {
         index = MAX_PATH_LEN + index;
     }

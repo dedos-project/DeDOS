@@ -72,8 +72,10 @@ static int handle_parsing(struct read_state *read_state,
         msu_free_state(self, queue_item->id, 0);
         return -1;
     } else {
-        struct msu_path_element *last_msu = get_path_history(queue_item, 1);
+        return DEDOS_WEBSERVER_READ_MSU_ID;
 
+        struct msu_path_element *last_msu = get_path_history(queue_item, 1);
+        log_custom(LOG_HTTP_MSU, "Routing to last msu: %d", last_msu->msu_id);
         struct socket_registry_data *data =
                 init_socket_registry_data(http_state->conn.fd,
                                           last_msu->msu_id,

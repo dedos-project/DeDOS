@@ -73,6 +73,9 @@ static int read_http_request(struct generic_msu *self,
     if (read_state == NULL) {
         read_state = msu_init_state(self, queue_item->id, 0, sizeof(*read_state));
         init_read_state(read_state, conn_in);
+        if (conn_in->ssl != NULL) {
+            read_state->conn.status = CON_READING;
+        }
     } else {
         log_custom(LOG_WEBSERVER_READ, "Retrieved read ptr %p", read_state);
     }
