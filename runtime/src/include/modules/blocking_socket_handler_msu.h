@@ -18,8 +18,10 @@ extern struct msu_type BLOCKING_SOCKET_HANDLER_MSU_TYPE;
  * To be used from external MSUs.
  * @param fd The file descriptor to be added to epoll
  * @param events The events to monitor for (EPOLLIN, EPOLLOUT)
+ * @param target_msu The MSU to which the fd should be enqueued on next activity
  * @return 0 on success, -1 on error
  */
-int monitor_fd(int fd, uint32_t events);
+int monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu);
+int mask_monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu, uint32_t mask);
 
 #endif /* BLOCKING_SOCKET_HANDLER_MSU_H_ */

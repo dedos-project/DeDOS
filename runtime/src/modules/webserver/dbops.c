@@ -30,6 +30,7 @@ void init_db(char *ip, int port, int max_load) {
     db_addr.sin_family = AF_INET;
     inet_pton(AF_INET, db_ip, &(db_addr.sin_addr));
     db_addr.sin_port = htons(db_port);
+
 }
 
 
@@ -39,7 +40,6 @@ void *allocate_db_memory() {
     if (memory == NULL) {
         log_perror("Mallocing memory for database");
     }
-
     return memory;
 }
 
@@ -48,21 +48,18 @@ int init_db_socket() {
     if (db_fd < 0) {
         printf("%s", "failure opening socket");
     }
-
     int optval = 1;
     if (setsockopt(db_fd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) < 0) {
         printf("%s", " failed to set SO_REUSEPORT");
     }
-
     if (setsockopt(db_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
         printf("%s", " failed to set SO_REUSEADDR");
     }
-
     //add_to_epoll(0, db_fd, 0);
     return db_fd;
 }
 
-int connect_to_db(struct connection_state *state) {
+int connect_to_db(struct db_state *state) {
     if (state->db_fd <= 0) {
         state->db_fd = init_db_socket();
     }
@@ -79,11 +76,10 @@ int connect_to_db(struct connection_state *state) {
     }
     int db_param = rand() % db_max_load;
     sprintf(state->db_req, "%s %d", DB_QUERY, db_param);
-
     return 0;
 }
 
-int send_to_db(struct connection_state *state) {
+int send_to_db(struct db_state *state) {
     if (send(state->db_fd, state->db_req, strlen(state->db_req), 0) == -1) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             return 1;
@@ -92,22 +88,20 @@ int send_to_db(struct connection_state *state) {
             return -1;
         }
     }
-
     return 0;
 }
 
-int recv_from_db(struct connection_state *state) {
+int recv_from_db(struct db_state  *state) {
     // receive response, expecting OK\n
     int res_buf_len = 3;
     char res_buf[res_buf_len];
     memset(res_buf, 0, sizeof(res_buf));
-    size_t res_len = 0;
     socklen_t addrlen = sizeof(db_addr);
 
     int rtn = recvfrom(state->db_fd, res_buf, res_buf_len, 0,
-                       (void*) &db_addr, &addrlen);
+        (void*) &db_addr, &addrlen);
 
-    if (rtn < 0) {
+    if (rtn< 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             return 1;
         } else {
@@ -138,45 +132,70 @@ int recv_from_db(struct connection_state *state) {
     for (int i=0; i<size; i+=increment){
         memory[i]++;
     }
-
     close(state->db_fd);
     state->db_fd = 0;
-
     return 0;
 }
 
-int query_db(struct connection_state *state) {
+int query_db(struct db_state *state) {
     if (db_ip == NULL) {
         log_error("Database is not initialized");
-        return -1;
+        return WS_ERROR;
+
     }
 
-    int rtn = connect_to_db(state);
-    if (rtn == -1) {
-        return -1;
-    } else if (rtn == 1) {
-        return 1;
-    } else {
-        state->conn_status = CON_DB_SEND;
+    int rtn;
+    switch (state->status) {
+        case DB_NO_CONNECTION:
+        case DB_CONNECTING:
+            rtn = connect_to_db(state);
+            if (rtn == -1) {
+                state->status = DB_ERR;
+                return WS_ERROR;
+            } else if (rtn == 1) {
+                state->status = DB_CONNECTING;
+                return WS_INCOMPLETE_WRITE;
+            } else if (rtn == 0) {
+                state->status = DB_SEND;
+                // Continue on...
+            } else {
+                log_error("Unknown status %d", rtn);
+                state->status = DB_ERR;
+                return WS_ERROR;
+            }
+        case DB_SEND:
+            rtn = send_to_db(state);
+            if (rtn == -1) {
+                state->status = DB_ERR;
+                return WS_ERROR;
+            } else if (rtn == 1) {
+                return WS_INCOMPLETE_WRITE;
+            } else if (rtn == 0) {
+                state->status = DB_RECV;
+                // Continue on...
+            } else {
+                log_error("Unknown status %d", rtn);
+                state->status = DB_ERR;
+                return WS_ERROR;
+            }
+        case DB_RECV:
+            rtn = recv_from_db(state);
+            if (rtn == -1) {
+                state->status = DB_ERR;
+                return WS_ERROR;
+            } else if (rtn == 1) {
+                return WS_INCOMPLETE_READ;
+            } else if (rtn == 0) {
+                state->status = DB_DONE;
+                return WS_COMPLETE;
+            } else {
+                state->status = DB_ERR;
+                log_error("Unknown status %d", rtn);
+                return WS_ERROR;
+            }
+        default:
+            log_error("Unhandled state: %d", state->status);
+            return WS_ERROR;
     }
 
-    rtn = send_to_db(state);
-    if (rtn == -1) {
-        return -1;
-    } else if (rtn == 1) {
-        return 1;
-    } else {
-        state->conn_status = CON_DB_RECV;
-    }
-
-    rtn = recv_from_db(state);
-    if (rtn == -1) {
-        return -1;
-    } else if (rtn == 1) {
-        return 1;
-    } else {
-        state->conn_status = CON_WRITING;
-    }
-
-    return 0;
 }

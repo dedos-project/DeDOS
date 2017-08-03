@@ -14,6 +14,6 @@ struct sock_settings {
 struct sock_settings *webserver_sock_settings(int port);
 
 int init_socket(struct sock_settings *settings);
-int read_socket(int fd, char *buf, int buf_size);
-int write_socket(int fd, char *buf, int buf_size);
+int read_socket(int fd, char *buf, int *buf_size);
+int write_socket(int fd, char *buf, int *buf_size);
 #endif

@@ -1,8 +1,9 @@
 #include "modules/webserver_read_msu.h"
-#include "modules/webserver_routing_msu.h"
 #include "modules/blocking_socket_handler_msu.h"
+#include "modules/webserver/connection-handler.h"
 #include "logging.h"
 #include "dedos_msu_list.h"
+#include "msu_state.h"
 #include "generic_msu.h"
 #include "generic_msu_queue_item.h"
 #include "routing.h"
@@ -15,53 +16,81 @@ struct ws_read_state {
 #define LOG_WEBSERVER_READ 0
 #endif
 
-static int read_request(struct generic_msu *self,
-                        struct generic_msu_queue_item *queue_item) {
-    struct ws_read_state *read_state = self->internal_state;
+static int handle_read(struct read_state *read_state,
+                       struct ws_read_state *msu_state,
+                       struct generic_msu *self,
+                       struct generic_msu_queue_item *queue_item) {
+    log_custom(LOG_WEBSERVER_READ, "Attempting read from %p", read_state);
+    int rtn = read_request(read_state);
+    if (rtn & (WS_INCOMPLETE_WRITE | WS_INCOMPLETE_READ)) {
+        read_state->conn.status = CON_READING;
+        log_custom(LOG_WEBSERVER_READ, "Read incomplete. Re-enabling (fd: %d)", read_state->conn.fd);
+        monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self);
+        return 0;
+    } else if (rtn & WS_ERROR) {
+        close_connection(&read_state->conn);
+        read_state->req_len = -1;
+    } else {
+        log_custom(LOG_WEBSERVER_READ, "Read %s", read_state->req);
+    }
+    struct read_state *out = malloc(sizeof(*out));
+    memcpy(out, read_state, sizeof(*read_state));
+    free(queue_item->buffer);
+    queue_item->buffer = out;
+    msu_free_state(self, queue_item->id, 0);
+    return DEDOS_WEBSERVER_HTTP_MSU_ID;
+}
 
-    struct webserver_state *ws_state = queue_item->buffer;
-    log_custom(LOG_WEBSERVER_READ, "got read request for fd %d", ws_state->fd);
-    int use_ssl = read_state->use_ssl;
-    if (ws_state == NULL) {
-        log_error("Cannot read request with NULL state! How did this happen?");
+static int handle_accept(struct read_state *read_state,
+                         struct ws_read_state *msu_state,
+                         struct generic_msu *self,
+                         struct generic_msu_queue_item *queue_item) {
+    int rtn = accept_connection(&read_state->conn, msu_state->use_ssl);
+    if (rtn & WS_COMPLETE) {
+        rtn = handle_read(read_state, msu_state, self, queue_item);
+        return rtn;
+    } else if (rtn & WS_ERROR) {
+        close_connection(&read_state->conn);
+        msu_free_state(self, queue_item->id, 0);
+        return -1;
+    } else {
+        read_state->conn.status = CON_SSL_CONNECTING;
+        monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self);
+        return 0;
+    }
+}
+
+
+static int read_http_request(struct generic_msu *self,
+                        struct generic_msu_queue_item *queue_item) {
+    struct ws_read_state *msu_state = self->internal_state;
+
+    struct connection *conn_in = queue_item->buffer;
+    int fd = conn_in->fd;
+
+    size_t size = -1;
+    struct read_state *read_state = msu_get_state(self, queue_item->id, 0, &size);
+    if (read_state == NULL) {
+        read_state = msu_init_state(self, queue_item->id, 0, sizeof(*read_state));
+        init_read_state(read_state, conn_in);
+    } else {
+        log_custom(LOG_WEBSERVER_READ, "Retrieved read ptr %p", read_state);
+    }
+    if (read_state->conn.fd != fd) {
+        log_error("Got non-matching FDs! %d vs %d", read_state->conn.fd, fd);
         return -1;
     }
-    struct connection_state *state = &ws_state->conn_state;
 
-    int rtn;
-    switch (state->conn_status) {
+    switch (read_state->conn.status) {
+        case NIL:
         case NO_CONNECTION:
         case CON_ACCEPTED:
         case CON_SSL_CONNECTING:
-            log_custom(LOG_WEBSERVER_READ, "Got CON_SSL_CONNECTING");
-            if (use_ssl) {
-                rtn = accept_connection(state, use_ssl);
-                if (rtn < 0) {
-                    // So state can be cleared
-                    log_custom(LOG_WEBSERVER_READ, "accept failed for fd %d", ws_state->fd);
-                    return DEDOS_WEBSERVER_ROUTING_MSU_ID;
-                }
-                if (state->conn_status != CON_READING) {
-                    monitor_fd(state->fd, EPOLLIN);
-                    return 0;
-                } // else: continue to next case (CON_READING)
-            }
+            return handle_accept(read_state, msu_state, self, queue_item);
         case CON_READING:
-            log_custom(LOG_WEBSERVER_READ, "Got CON_READING");
-            rtn = read_connection(state);
-            if (rtn < 0) {
-                log_custom(LOG_WEBSERVER_READ, "read failed for fd %d", ws_state->fd);
-                // So state can be cleared
-                return DEDOS_WEBSERVER_ROUTING_MSU_ID;
-            }
-            if (state->conn_status != CON_PARSING) {
-                monitor_fd(state->fd, EPOLLIN);
-                return 0;
-            }
-            return DEDOS_WEBSERVER_HTTP_MSU_ID;
+            return handle_read(read_state, msu_state, self, queue_item);
         default:
-            log_error("MSU %d received queue item with improper status: %d",
-                      self->id, state->conn_status);
+            log_error("Received unknown packet status: %d", read_state->conn.status);
             return -1;
     }
 }
@@ -101,7 +130,7 @@ const struct msu_type WEBSERVER_READ_MSU_TYPE = {
     .proto_number = 999, //?
     .init = ws_read_init,
     .destroy = ws_read_destroy,
-    .receive = read_request,
+    .receive = read_http_request,
     .receive_ctrl = NULL,
     .route = default_routing,
     .deserialize = default_deserialize,

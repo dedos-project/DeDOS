@@ -1,37 +1,38 @@
 #include "modules/webserver_write_msu.h"
 #include "modules/blocking_socket_handler_msu.h"
 #include "modules/webserver/connection-handler.h"
-#include "modules/webserver_routing_msu.h"
 #include "dedos_msu_list.h"
+#include "msu_state.h"
+
+#ifndef LOG_WEBSERVER_WRITE
+#define LOG_WEBSERVER_WRITE 0
+#endif
 
 static int write_http_response(struct generic_msu *self,
                                struct generic_msu_queue_item *queue_item) {
-    if (queue_item->buffer == NULL) {
-        log_error("Cannot write HTTP response from NULL queue item");
-        return -1;
+    struct response_state *resp_in = queue_item->buffer;
+
+    size_t size = 0;
+    struct response_state *resp = msu_get_state(self, queue_item->id, 0, &size);
+    if (resp == NULL) {
+        resp = msu_init_state(self, queue_item->id, 0, sizeof(*resp));
+        memcpy(resp, resp_in, sizeof(*resp_in));
     }
 
-    struct webserver_state *ws_state = queue_item->buffer;
-    struct connection_state *state = &ws_state->conn_state;
-
-    int rtn;
-    switch (state->conn_status) {
-        case CON_WRITING:
-            rtn = write_connection(state);
-            if (rtn == -1) {
-                return -1;
-            }
-            if (state->conn_status == CON_COMPLETE) {
-                close_connection(state);
-                return DEDOS_WEBSERVER_ROUTING_MSU_ID;
-            } else {
-                monitor_fd(ws_state->fd, EPOLLOUT);
-                return 0;
-            }
-        default:
-            log_error("MSU %d received queue item with improper status: %d",
-                      self->id, state->conn_status);
-            return -1;
+    int rtn = write_response(resp);
+    if (rtn & WS_ERROR) {
+        close_connection(&resp->conn);
+        msu_free_state(self, queue_item->id, 0);
+        return -1;
+    } else if (rtn & (WS_INCOMPLETE_READ | WS_INCOMPLETE_WRITE)) {
+        monitor_fd(resp->conn.fd, RTN_TO_EVT(rtn), self);
+        return 0;
+    } else {
+        close_connection(&resp->conn);
+        log_custom(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
+                   resp->conn.fd);
+        msu_free_state(self, queue_item->id, 0);
+        return 0;
     }
 }
 

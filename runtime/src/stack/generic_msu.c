@@ -8,6 +8,7 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include "communication.h"
 #include "stats.h"
 #include "generic_msu.h"
 #include "runtime.h"
@@ -317,7 +318,6 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
         struct generic_msu_queue_item *recvd = create_generic_msu_queue_item();
         if (recvd == NULL)
             return -1;
-        recvd->msu_owner = 0;
         recvd->buffer_len = bufsize;
         recvd->buffer = malloc(bufsize);
         recvd->id = msg->data_id;
@@ -366,9 +366,10 @@ int default_send_remote(struct generic_msu *src, struct generic_msu_queue_item *
         log_error("Unable to allocate memory for intermsu msg%s", "");
         return -1;
     }
-
     msg->dst_msu_id = dst->id;
     msg->src_msu_id = src->id;
+    msg->src_type_id = src->type->type_id;
+    msg->src_ip_address = runtimeIpAddress;
     msg->data_id = data->id;
 
     // TODO: Is this next line right? src->proto_number?
@@ -587,7 +588,9 @@ struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *
  * @return -1 on error, 0 on success
  */
 int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generic_msu_queue_item *data){
+
     if (dst->locality == MSU_IS_LOCAL){
+        add_to_msu_path(data, dst->type_id, dst->id, runtimeIpAddress);
         if (!(dst->msu_queue)){
             log_error("Queue pointer not found%s", "");
             return -1;
@@ -599,6 +602,7 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generi
         }
         return 0;
     } else if (dst->locality == MSU_IS_REMOTE){
+        add_to_msu_path(data, dst->type_id, dst->id, dst->ipv4);
         int rtn = src->type->send_remote(src, data, dst);
 #ifdef DATAPLANE_PROFILING
         //copy queue item profile log to in memory log before its freed
@@ -614,10 +618,8 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generi
             log_error("Failed to send to remote runtime%s", "");
         }
         if (data){
-            if (data->msu_owner == 0) {
-                log_debug("Freeing data buffer and data because of remote send");
-                free(data->buffer);
-            }
+            log_debug("Freeing data buffer and data because of remote send");
+            free(data->buffer);
             free(data);
         }
         return rtn;

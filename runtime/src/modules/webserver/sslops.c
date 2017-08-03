@@ -1,11 +1,12 @@
 #include "modules/webserver/sslops.h"
+#include "modules/webserver/webserver.h"
 #include "logging.h"
 #include <pthread.h>
 #include <openssl/err.h>
 
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
-#else
+#else 
 #define UNUSED
 #endif
 
@@ -121,11 +122,11 @@ int init_ssl_context(void) {
     const SSL_METHOD *method = TLSv1_2_server_method();
     ssl_ctx = SSL_CTX_new(method);
     SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF);
-    SSL_CTX_set_options(ssl_ctx,
-                        SSL_OP_NO_SSLv3 | SSL_OP_NO_TICKET | SSL_OP_SINGLE_DH_USE);
+    SSL_CTX_set_options(ssl_ctx, 
+            SSL_OP_NO_SSLv3 | SSL_OP_NO_TICKET | SSL_OP_SINGLE_DH_USE);
 
     int rtn = SSL_CTX_set_cipher_list(ssl_ctx, "HIGH:!aNULL:!MD5:!RC4");
-    if (rtn <= 0) {
+    if ( rtn <= 0 ) {
         log_error("Could not set cipger list for SSL context");
         return -1;
     }
@@ -135,27 +136,23 @@ int init_ssl_context(void) {
 
 int load_ssl_certificate(char *cert_file, char *key_file) {
     /* set the local certificate from CertFile */
-    if (SSL_CTX_use_certificate_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0) {
+    if ( SSL_CTX_use_certificate_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0 ) {
         return -1;
     }
-
     /* set the private key from KeyFile (may be the same as CertFile) */
-    if (SSL_CTX_use_PrivateKey_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0) {
+    if ( SSL_CTX_use_PrivateKey_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0 ) {
         return -1;
     }
-
     /* verify private key */
-    if (!SSL_CTX_check_private_key(ssl_ctx)) {
+    if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
         return -1;
     }
-
     return 0;
 }
-
+ 
 SSL *init_ssl_connection(int fd) {
     SSL *ssl = SSL_new(ssl_ctx);
     SSL_set_fd(ssl, fd);
-
     return ssl;
 }
 
@@ -164,9 +161,11 @@ SSL *init_ssl_connection(int fd) {
         int err = SSL_get_error(ssl, rtn); \
         if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE) { \
             print_ssl_error(ssl, rtn); \
-            return -1; \
-        } else { \
-            return 1; \
+            return WS_ERROR; \
+        } else if ( err == SSL_ERROR_WANT_READ) { \
+            return WS_INCOMPLETE_READ; \
+        } else if ( err == SSL_ERROR_WANT_WRITE) { \
+            return WS_INCOMPLETE_WRITE; \
         } \
     } while (0);
 
@@ -183,59 +182,62 @@ int accept_ssl(SSL *ssl) {
     if (rtn < 0) {
         CHECK_SSL_WANTS(ssl, rtn);
     }
-    return 0;
+    return WS_COMPLETE;
 }
 
-int read_ssl(SSL *ssl, char *buf, int buf_size) {
+int read_ssl(SSL *ssl, char *buf, int *buf_size) {
+    int num_bytes = SSL_read(ssl, buf, *buf_size);
     ERR_clear_error();
-    int num_bytes = SSL_read(ssl, buf, buf_size);
     if (num_bytes > 0) {
-        return num_bytes;
-    } else {
-        int err = SSL_get_error(ssl, num_bytes);
-        if (err != SSL_ERROR_WANT_READ && err != SSL_ERROR_WANT_WRITE) {
-            //print_ssl_error(ssl, num_bytes);
-            return -1;
-        } else {
-            return 0;
-        }
-    }
-}
-
-int write_ssl(SSL *ssl, char *buf, int buf_size) {
-    ERR_clear_error();
-    int num_bytes = SSL_write(ssl, buf, buf_size);
-    if (num_bytes > 0) {
-        if (num_bytes != buf_size) {
-            log_warn("Didn't write the requested amount (written: %d, requested: %d)...",
-                     num_bytes, buf_size);
-        }
-        return num_bytes;
+        *buf_size = num_bytes;
+        return WS_COMPLETE;
     } else {
         CHECK_SSL_WANTS(ssl, num_bytes);
     }
+    log_warn("Shouldn't ever get here...");
+    return WS_ERROR;
+}
+
+int write_ssl(SSL *ssl, char *buf, int *buf_size) {
+    int num_bytes = SSL_write(ssl, buf, *buf_size);
+    ERR_clear_error();
+    if (num_bytes > 0) {
+        if (num_bytes != *buf_size) {
+            log_warn("Didn't write the requested amount (written: %d, requested: %d)...",
+                     num_bytes, *buf_size);
+        }
+        *buf_size = num_bytes;
+        return WS_COMPLETE;
+    } else {
+        CHECK_SSL_WANTS(ssl, num_bytes);
+    }
+    log_warn("Shouldn't ever get here...");
+    return WS_ERROR;
 }
 
 int close_ssl(SSL *ssl) {
     ERR_clear_error();
-    int rtn = SSL_shutdown(ssl);
-    if (rtn == -1) {
-        log_error("Error shutting down SSL connection");
-        SSL_free(ssl);
-        return -1;
-    }
-    if (rtn == 0) {
-        //See the man page to understand this way of handling error on SSL_shutdown()
-        //TODO: need too handle WANT_READ and WANT_WRITE on BOTH calls
-        //see https://stackoverflow.com/questions/28056056/handling-ssl-shutdown-correctly
+    int rtn = SSL_get_shutdown(ssl);
+    if (rtn >= 0) {
         rtn = SSL_shutdown(ssl);
         if (rtn == -1) {
             log_error("Error shutting down SSL connection");
             SSL_free(ssl);
-            return -1;
+            return WS_ERROR;
+        }
+        if (rtn == 0) {
+            //See the man page to understand this way of handling error on SSL_shutdown()
+            //TODO: need too handle WANT_READ and WANT_WRITE on BOTH calls
+            //see https://stackoverflow.com/questions/28056056/handling-ssl-shutdown-correctly
+            rtn = SSL_shutdown(ssl);
+            if (rtn == -1) {
+        //        log_error("Error shutting down SSL connection");
+                SSL_free(ssl);
+                return WS_ERROR;
+            }
         }
     }
 
     SSL_free(ssl);
-    return 0;
+    return WS_COMPLETE;
 }

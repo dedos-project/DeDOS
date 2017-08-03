@@ -4,6 +4,7 @@
 #include "modules/webserver/socketops.h"
 #include "modules/webserver/dbops.h"
 #include "modules/webserver/regex.h"
+#include "modules/webserver/request_parser.h"
 #include <unistd.h>
 
 #ifdef __GNUC__
@@ -16,98 +17,115 @@
 #define LOG_CONNECTION_INFO 0
 #endif
 
-void init_connection_state(struct connection_state *state, int fd) {
-    state->fd = fd;
-    init_request_state(&state->req_state);
-    // This will have to be changed if accepting connections is done
-    // outside of epollops
-    state->conn_status = CON_ACCEPTED;
-    state->ssl = NULL;
-    state->response[0] = '\0';
-    state->db_fd = -1;
+void init_connection(struct connection *conn, int fd) {
+    conn->fd = fd;
+    conn->ssl = NULL;
+    conn->status = CON_ACCEPTED;
 }
 
-int accept_connection(struct connection_state *state, int use_ssl) {
+void init_read_state(struct read_state *state, struct connection *conn) {
+    state->conn = *conn;
+    state->req[0] = '\0';
+    state->req_len = 0;
+}
+
+void init_http_state(struct http_state *state, struct connection *conn) {
+    state->conn = *conn;
+    init_parser_state(&state->parser);
+    bzero(&state->db, sizeof(state->db));
+}
+
+void init_response_state(struct response_state *state, struct connection *conn) {
+    state->conn = *conn;
+    state->url[0] = '\0';
+    state->resp[0] = '\0';
+    state->resp_len = 0;
+}
+
+int accept_connection(struct connection *conn, int use_ssl) {
     if (!use_ssl) {
-       log_error("Not implemented, assuming connection is already accepted");
-       return -1;
+       log_custom(LOG_CONNECTION_INFO,"Not implemented, assuming connection is already accepted");
+       return WS_COMPLETE;
     }
 
-    if (state->ssl == NULL) {
-        state->ssl = init_ssl_connection(state->fd);
+    if (conn->ssl == NULL) {
+        conn->ssl = init_ssl_connection(conn->fd);
     }
 
-    int rtn = accept_ssl(state->ssl);
-    if (rtn == 0) {
-        state->conn_status = CON_READING;
-        log_custom(LOG_CONNECTION_INFO, "Accepted SSL connection on fd %d",
-               state->fd);
+    int rtn = accept_ssl(conn->ssl);
+    if (rtn == WS_COMPLETE) {
+        log_custom(LOG_CONNECTION_INFO, "Accepted SSL connection on fd %d", conn->fd);
+        return WS_COMPLETE;
     } else if (rtn == -1) {
-        state->conn_status = CON_ERROR;
-        log_error("Error accepting SSL");
-        return -1;
+        log_error("Error accepting SSL (fd: %d)", conn->fd);
+        return WS_ERROR;
     } else {
-        state->conn_status = CON_SSL_CONNECTING;
-        log_custom(LOG_CONNECTION_INFO, "SSL accept incomplete (fd: %d)", state->fd);
+        log_custom(LOG_CONNECTION_INFO, "SSL accept incomplete (fd: %d)", conn->fd);
+        return rtn;
     }
-    return 0;
 }
 
-int read_connection(struct connection_state *state) {
-    int use_ssl = (state->ssl != NULL);
+int read_request(struct read_state *state) {
+    int use_ssl = (state->conn.ssl != NULL);
 
-    int bytes_read;
+    int rtn;
+    int bytes = MAX_RECV_LEN;
     if (use_ssl) {
-        bytes_read = read_ssl(state->ssl, state->buf, MAX_RECV_LEN);
+        rtn = read_ssl(state->conn.ssl, state->req, &bytes);
     } else {
-        bytes_read = read_socket(state->fd, state->buf, MAX_RECV_LEN);
+        rtn = read_socket(state->conn.fd, state->req, &bytes);
     }
 
-    if (bytes_read == 0) {
-        log_custom(LOG_CONNECTION_INFO, "Read incomplete (fd: %d)", state->fd);
-        return 0;
-    } else if (bytes_read < 0) {
-        state->conn_status = CON_ERROR;
-        //log_error("Error reading");
-        return -1;
-    }
-
-    log_custom(LOG_CONNECTION_INFO, "Completed reading (fd: %d)", state->fd);
-    state->buf_len = bytes_read;
-    state->conn_status = CON_PARSING;
-
-    return 0;
-}
-
-int parse_connection(struct connection_state *state) {
-    enum request_status req_status =
-        parse_request(&state->req_state, state->buf, state->buf_len);
-
-    switch (req_status) {
-        case REQ_COMPLETE:
-            log_custom(LOG_CONNECTION_INFO, "Request complete (fd: %d)", state->fd);
-            state->conn_status = CON_WRITING;
-            return 0;
-        case REQ_INCOMPLETE:
-            log_custom(LOG_CONNECTION_INFO, "Partial request received (fd: %d)", state->fd);
-            state->conn_status = CON_READING;
-            return 1;
-        case REQ_ERROR:
-            log_error("Error parsing request");
-            return -1;
+    switch (rtn) {
+        case WS_INCOMPLETE_READ:
+        case WS_INCOMPLETE_WRITE:
+            log_custom(LOG_CONNECTION_INFO, "Read incomplete (fd: %d)", state->conn.fd);
+            return rtn;
+        case WS_COMPLETE:
+            state->req_len = bytes;
+            log_custom(LOG_CONNECTION_INFO, "Completed reading %d bytes (fd: %d)",
+                       bytes, state->conn.fd);
+            return WS_COMPLETE;
+        case WS_ERROR:
+            log_error("Error reading (fd: %d)", state->conn.fd);
+            return WS_ERROR;
         default:
-            log_error("Unknown request status: %d", req_status);
-            return -1;
+            log_error("Unknown return code: %d (fd: %d)", rtn, state->conn.fd);
+            return WS_ERROR;
     }
 }
 
-#define DEFAULT_HTTP_HEADER\
-    "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n" \
+int parse_request(char *req, int req_len, struct http_state *state) {
+    int status = parse_http(&state->parser, req, req_len);
 
-#define DEFAULT_HTTP_BODY\
-    "<!DOCTYPE html>\n<html>\n<body>\n<h1>Dedos New Runtime</h1>\n</body>\n</html>"
+    switch (status) {
+        case WS_COMPLETE:
+            log_custom(LOG_CONNECTION_INFO, "Request complete (fd: %d)", state->conn.fd);
+            return WS_COMPLETE;
+        case WS_INCOMPLETE_READ:
+            log_custom(LOG_CONNECTION_INFO, "Partial request received (fd: %d)", state->conn.fd);
+            return WS_INCOMPLETE_READ;
+        case WS_ERROR:
+            log_error("Error parsing request (fd: %d)", state->conn.fd);
+            return WS_ERROR;
+        default:
+            log_error("Unknown status %d returned from parrser (fd: %d)", status, state->conn.fd);
+            return WS_ERROR;
+    }
+}
 
 #define REGEX_KEY "regex="
+
+int has_regex(char *url) {
+    char *regex_loc = strstr(url, REGEX_KEY);
+    if (regex_loc == NULL) {
+        log_custom(LOG_CONNECTION_INFO, "Found no %s in %s", REGEX_KEY, url);
+        return 0;
+    } else {
+        log_custom(LOG_CONNECTION_INFO, "Found regex");
+        return 1;
+    }
+}
 #define MAX_REGEX_VALUE_LEN 64
 
 static int get_regex_value(char *url, char *regex) {
@@ -129,102 +147,108 @@ static int get_regex_value(char *url, char *regex) {
                 continue;
         }
     }
-
     log_error("Requested regex value (%s) too long", regex_start);
     return -1;
 }
 
-int get_connection_resource(struct connection_state *state) {
-    char *url = state->req_state.url;
-    if (strstr(url, "database") != NULL) {
-        int rtn = query_db(state);
-        if (rtn < 0) {
+int access_database(char *url, struct db_state *state) {
+    if ( strstr(url, "database") == NULL ) {
+        return WS_COMPLETE;
+    }
+    int rtn = query_db(state);
+    switch (rtn) {
+        case WS_COMPLETE:
+            log_custom(LOG_CONNECTION_INFO, "Successfully queried db");
+            return WS_COMPLETE;
+        case WS_INCOMPLETE_READ:
+        case WS_INCOMPLETE_WRITE:
+            log_custom(LOG_CONNECTION_INFO, "Partial DB query");
+            return rtn;
+        case WS_ERROR:
             log_error("Error querying database");
-        } else if (rtn == 1) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-int has_regex(struct connection_state *state) {
-    char *url = state->req_state.url;
-    char *regex_loc = strstr(url, REGEX_KEY);
-    if (regex_loc == NULL) {
-        return 0;
-    } else {
-        return 1;
+            return WS_ERROR;
+        default:
+            log_error("Unknown return %d from database query", rtn);
+            return WS_ERROR;
     }
 }
 
-int craft_response(struct connection_state *state) {
-    char *url = state->req_state.url;
+#define DEFAULT_HTTP_HEADER\
+    "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n" \
+
+#define DEFAULT_HTTP_BODY\
+    "<!DOCTYPE html>\n<html>\n<body>\n<h1>Dedos New Runtime</h1>\n</body>\n</html>"
+
+
+int craft_nonregex_response(char UNUSED *url, char *response) {
+    sprintf(response, DEFAULT_HTTP_HEADER DEFAULT_HTTP_BODY,
+            (int)strlen(DEFAULT_HTTP_BODY));
+    log_custom(LOG_CONNECTION_INFO, "Crafted non-regex response");
+    return strlen(response);
+}
+
+int craft_regex_response(char *url, char *response) {
     char regex_value[MAX_REGEX_VALUE_LEN];
     int rtn = get_regex_value(url, regex_value);
-
-    if (rtn == 0) {
+    if (rtn != 0) {
+        log_error("Non-regex URL passed to craft_regex_response!");
+        return -1;
+    } else {
         char html[4096];
-        rtn = craft_regex_response(regex_value, html);
+        rtn = regex_html(regex_value, html);
         if (rtn < 0) {
             log_error("Error crafting regex response");
-            state->conn_status = CON_ERROR;
             return -1;
         }
-        sprintf(state->response, DEFAULT_HTTP_HEADER "%s", (int)strlen(html), html);
-        state->resp_size = strlen(state->response);
-        log_custom(LOG_CONNECTION_INFO, "crafted regex response");
-        return 0;
-    } else {
-        sprintf(state->response, DEFAULT_HTTP_HEADER DEFAULT_HTTP_BODY,
-                (int)strlen(DEFAULT_HTTP_BODY));
-        state->resp_size = strlen(state->response);
-        log_custom(LOG_CONNECTION_INFO, "Crafted normal response");
-        return 0;
+        sprintf(response, DEFAULT_HTTP_HEADER "%s", (int)strlen(html), html);
+        log_custom(LOG_CONNECTION_INFO, "Crafted regex response");
+        return strlen(response);
     }
 }
 
-int write_connection(struct connection_state *state) {
-    if (state->response[0] == '\0') {
-        log_error("Attempted to write connection without a generated response");
+int write_response(struct response_state *state) {
+    if (state->resp[0] == '\0') {
+        log_error("Attempted to write empty respnose");
+        return WS_ERROR;
     }
 
-    int use_ssl = (state->ssl != NULL);
-
-    int bytes_written;
+    int use_ssl = (state->conn.ssl != NULL);
+    int bytes = state->resp_len;
+    int rtn;
     if (use_ssl) {
-        bytes_written = write_ssl(state->ssl, state->response, state->resp_size);
+        rtn = write_ssl(state->conn.ssl, state->resp, &bytes);
     } else {
-        bytes_written = write_socket(state->fd, state->response, state->resp_size);
+        rtn = write_socket(state->conn.fd, state->resp, &bytes);
     }
 
-    if (bytes_written > 0) {
-        log_custom(LOG_CONNECTION_INFO, "wrote response to %d: %s", state->fd, state->response);
-        state->conn_status = CON_COMPLETE;
-        return 0;
-    } else if (bytes_written == 0) {
-        log_custom(LOG_CONNECTION_INFO, "wrote partial response (fd=%d)", state->fd);
-        return 0;
-    } else {
-        log_error("Error writing response");
-        return -1;
+    switch (rtn) {
+        case WS_INCOMPLETE_READ:
+        case WS_INCOMPLETE_WRITE:
+            log_custom(LOG_CONNECTION_INFO, "Write incomplete (fd: %d)", state->conn.fd);
+            return rtn;
+        case WS_COMPLETE:
+            log_custom(LOG_CONNECTION_INFO, "Completed writing response (fd: %d)", state->conn.fd);
+            return WS_COMPLETE;
+        case WS_ERROR:
+            log_error("Error writing response (fd: %d)", state->conn.fd);
+            return WS_ERROR;
+        default:
+            log_error("Unknown return %d from call to write (fd: %d)", rtn, state->conn.fd);
+            return WS_ERROR;
     }
 }
 
-int close_connection(struct connection_state *conn) {
-
+int close_connection(struct connection *conn) {
+    log_custom(LOG_CONNECTION_INFO, "Closing connection (fd: %d)", conn->fd);
     if (conn->ssl != NULL) {
         close_ssl(conn->ssl);
     }
 
     int rtn = close(conn->fd);
     if (rtn != 0) {
-        log_perror("Error closing connection fd=%d", conn->fd);
-        return -1;
+        log_perror("Error closing connection (fd: %d)", conn->fd);
+        return WS_ERROR;
     }
-
-    log_custom(LOG_CONNECTION_INFO, "Closed fd %d", conn->fd);
-    conn->conn_status = CON_CLOSED;
-
-    return 0;
+    log_custom(LOG_CONNECTION_INFO, "Closed connection (fd: %d)", conn->fd);
+    return WS_COMPLETE;
 }

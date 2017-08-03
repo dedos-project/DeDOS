@@ -8,13 +8,12 @@ LOGS = \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   #CUSTOM \
-	   HTTP_MSU 
-	   #DEBUG \
+	   CUSTOM \
+	   HTTP_MSU \
+	   DEBUG \
 	   WEBSERVER_READ \
 	   EPOLL_OPS \
 	   WEBSERVER_ROUTING \
-	   MSU_STATE_MANAGEMENT \
 	   CONNECTION_INFO \
 	   DB_OPS
 

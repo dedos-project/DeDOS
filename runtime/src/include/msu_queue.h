@@ -7,10 +7,36 @@
  */
 #ifndef MSU_QUEUE_H_
 #define MSU_QUEUE_H_
+#include <inttypes.h>
+
+// Forward declarations for circular dependency
+struct generic_msu;
+struct generic_msu_queue_item;
 
 // NOTE: Created this file to achieve some sort of privacy on the functions.
 // Prior to now there was no .c file for msu queues.
 // -IMP
+
+#define MAX_PATH_LEN 8
+
+/** For holding the path that a queue item has traversed */
+struct msu_path_element {
+    int type_id;
+    int msu_id;
+    uint32_t ip_address;
+};
+
+
+/**
+ * Adds an item to the path recorded inside an queue_item
+ */
+void add_to_msu_path(struct generic_msu_queue_item *queue_item, 
+                     int type_id, int id, uint32_t ip_address);
+
+
+struct msu_path_element *get_path_history(struct generic_msu_queue_item *queue_item, 
+                                          int reverse_index);
+
 
 /**
  * Creates a new MSU queue item and enqueues it on the appropriate MSU.
@@ -19,5 +45,4 @@
  * (which should just use the return of the msu_receive function)
  */
 int initial_msu_enqueue(void *buffer, size_t buffer_len, uint32_t id, struct generic_msu *dest);
-
 #endif

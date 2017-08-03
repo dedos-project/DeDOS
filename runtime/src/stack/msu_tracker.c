@@ -18,10 +18,10 @@
 #include "modules/regex_routing_msu.h"
 #include "modules/webserver_http_msu.h"
 #include "modules/webserver_read_msu.h"
-#include "modules/webserver_routing_msu.h"
 #include "modules/webserver_regex_msu.h"
 #include "modules/webserver_write_msu.h"
 #include "modules/webserver_regex_routing_msu.h"
+#include "modules/socket_registry_msu.h"
 
 
 static const struct msu_type *MSU_TYPES[] = {
@@ -38,11 +38,12 @@ static const struct msu_type *MSU_TYPES[] = {
     &TCP_HANDSHAKE_MSU_TYPE,
     &BAREMETAL_MSU_TYPE,
     &SOCKET_HANDLER_MSU_TYPE,
+
     &BLOCKING_SOCKET_HANDLER_MSU_TYPE,
+    &SOCKET_REGISTRY_MSU_TYPE,
 
     &WEBSERVER_HTTP_MSU_TYPE,
     &WEBSERVER_READ_MSU_TYPE,
-    &WEBSERVER_ROUTING_MSU_TYPE,
     &WEBSERVER_REGEX_MSU_TYPE,
     &WEBSERVER_WRITE_MSU_TYPE,
     &WEBSERVER_REGEX_ROUTING_MSU_TYPE

@@ -18,11 +18,11 @@ extern "C" {
 
 #include "modules/webserver/socketops.h"
 #include "modules/webserver/epollops.h"
+#include "modules/webserver/connection-handler.h"
 #include "modules/blocking_socket_handler_msu.h"
 #include "msu_queue.h"
 #include "dedos_msu_list.h"
 #include "runtime.h"
-#include "modules/webserver_routing_msu.h"
 #include "modules/ssl_request_routing_msu.h"
 #include "modules/ssl_msu.h"
 #include "communication.h"
@@ -62,8 +62,9 @@ struct generic_msu *socket_handler_instance = NULL;
 struct blocking_socket_handler_state {
     int socketfd;
     int epollfd; //descriptor for events
-    int target_msu_type;
-    int proxy_fd[MAX_FDS];
+    int default_target_type;
+    uint32_t fd_mask[MAX_FDS];
+    struct generic_msu* fd_targets[MAX_FDS];
 };
 
 /**
@@ -78,7 +79,7 @@ int is_socket_handler_initialized() {
  * to the socket handler MSU itself.
  * To be used from external MSUs.
  */
-int monitor_fd(int fd, uint32_t events) {
+int monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu) {
     if (! is_socket_handler_initialized()) {
         log_warn("Not accepting new connection! No initialized socket handler!");
         return -1;
@@ -87,8 +88,9 @@ int monitor_fd(int fd, uint32_t events) {
     struct blocking_socket_handler_state *state =
             socket_handler_instance->internal_state;
 
+    state->fd_mask[fd] = 0;
+    state->fd_targets[fd] = target_msu;
     int rtn = enable_epoll(state->epollfd, fd, events);
-    state->proxy_fd[fd] = -1;
     if (rtn < 0) {
         log_error("Error enabling epoll for fd %d on socket handler MSU", fd);
         return -1;
@@ -98,9 +100,11 @@ int monitor_fd(int fd, uint32_t events) {
     return 0;
 }
 
-int add_proxy_fd(int fd, uint32_t events, int proxy) {
+int mask_monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu, uint32_t mask) {
     struct blocking_socket_handler_state *state =
             socket_handler_instance->internal_state;
+    state->fd_mask[fd] = mask;
+    state->fd_targets[fd] = target_msu;
     int rtn = add_to_epoll(state->epollfd, fd, events);
     if (rtn < 0) {
         rtn = enable_epoll(state->epollfd, fd, events);
@@ -109,14 +113,14 @@ int add_proxy_fd(int fd, uint32_t events, int proxy) {
         log_error("Error adding to epoll");
         return -1;
     }
-    state->proxy_fd[fd] = proxy;
     return 0;
 }
 
 
-static int set_no_proxy(int fd, void *v_state) {
+static int set_default_target(int fd, void *v_state) {
     struct blocking_socket_handler_state *state = v_state;
-    state->proxy_fd[fd] = -1;
+    state->fd_mask[fd] = 0;
+    state->fd_targets[fd] = NULL;
     return 0;
 }
 
@@ -127,46 +131,61 @@ static int set_no_proxy(int fd, void *v_state) {
 static int process_existing_connection(int fd, void *v_state) {
     struct blocking_socket_handler_state *state = v_state;
     log_custom(LOG_SOCKET_HANDLER, "Processing existing connection on fd %d", fd);
-    if (state->proxy_fd[fd] > 0) {
-        fd = state->proxy_fd[fd];
-    }
-    switch (state->target_msu_type) {
 
-        case DEDOS_WEBSERVER_ROUTING_MSU_ID:;
-            struct generic_msu *ws_routing = webserver_routing_instance();
-            if (ws_routing == NULL) {
-                log_error("ssl_request_routing_msu is NULL! Forgot to create it?");
-                // TODO: Handle errors
-                return -1;
-            } else {
-                struct webserver_queue_data *data = malloc(sizeof(*data));
-                data->fd = fd;
-                data->ip_address = runtimeIpAddress;
-
-                // Get the ID for the request based on the client IP and port
-                struct sockaddr_in sockaddr;
-                socklen_t addrlen = sizeof(sockaddr);
-                int rtn = getpeername(fd, (struct sockaddr*)&sockaddr, &addrlen);
-                if (rtn < 0) {
-                    log_perror("Could not getpeername() for packet ID");
-                    return -1;
-                }
-                uint32_t id;
-                HASH_VALUE(&sockaddr, addrlen, id);
-                rtn = initial_msu_enqueue((void*)data, sizeof(*data), id, ws_routing);
-                if (rtn != 0) {
-                    log_error("Error enqueuing request %d (fd: %d) to ssl_routing", id, fd);
-                    return -1;
-                }
-                log_custom(LOG_SOCKET_HANDLER,
-                    "Enqueued request %d (fd: %d) to ssl_request_routing_msu", id, fd);
-                return 0;
-            }
-        default:
-            log_error("Unknown target MSU type (%d) for socket handler MSU",
-                      state->target_msu_type);
+    uint32_t id = state->fd_mask[fd];
+    if (id == 0) {
+        struct sockaddr_in sockaddr;
+        socklen_t addrlen = sizeof(sockaddr);
+        int rtn = getpeername(fd, (struct sockaddr*)&sockaddr, &addrlen);
+        if (rtn < 0) {
+            log_perror("Could not getpeername() for packet ID");
             return -1;
+        }
+        HASH_VALUE(&sockaddr, addrlen, id);
     }
+    struct connection *conn = calloc(1, sizeof(*conn));
+    conn->fd = fd;
+    struct generic_msu_queue_item *queue_item = create_generic_msu_queue_item();
+    queue_item->buffer = conn;
+    queue_item->id = id;
+
+    if (state->fd_targets[fd] == NULL) {
+        unsigned int type_id = state->default_target_type;
+        struct msu_type *type = msu_type_by_id(type_id);
+        if (type == NULL) {
+            log_error("Type ID %d not recognized", type_id);
+            return -1;
+        }
+        struct msu_endpoint *dst = default_routing(type,
+                                                   socket_handler_instance,
+                                                   queue_item);
+        if (dst == NULL) {
+            log_error("No destinations of type %s (%d) from socket handler",
+                      type->name, type_id);
+            free(conn);
+            delete_generic_msu_queue_item(queue_item);
+            return -1;
+        }
+        int rtn = msu_route(type, socket_handler_instance, queue_item);
+
+        if (rtn < 0) {
+            log_error("Error routing to destination");
+            return -1;
+        }
+        return 0;
+    } else {
+        struct generic_msu *target = state->fd_targets[fd];
+        add_to_msu_path(queue_item, target->type->type_id, target->id, runtimeIpAddress);
+        int rtn = generic_msu_queue_enqueue(&target->q_in, queue_item);
+        if (rtn < 0) {
+            log_error("Error enqueueing to next MSU");
+            return -1;
+        } else {
+            log_custom(LOG_SOCKET_HANDLER, "Enqueued to msu %d", target->id);
+        }
+        return 0;
+    }
+
 }
 
 /**
@@ -179,7 +198,7 @@ static int socket_handler_main_loop(struct generic_msu *self) {
 
     int rtn = epoll_loop(state->socketfd, state->epollfd,
                          process_existing_connection,
-                         set_no_proxy, (void*)state);
+                         set_default_target, (void*)state);
     return rtn;
 }
 
@@ -263,7 +282,7 @@ static int socket_handler_init(struct generic_msu *self, struct create_msu_threa
 
     struct blocking_socket_handler_state *state = malloc(sizeof(*state));
     self->internal_state = state;
-    state->target_msu_type = init.target_msu_type;
+    state->default_target_type = init.target_msu_type;
 
     state->socketfd = init_socket(&init.sock_settings);
     if ( state->socketfd == -1) {
