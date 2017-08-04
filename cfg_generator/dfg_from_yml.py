@@ -104,11 +104,9 @@ def runtime_routes(rt_id, msus, routes):
 
 def count_downstream(msu, dfg, found_already=None):
 
-    these_found = [msu['id']]
-    found_already = [] if found_already is None else found_already
+    found_already = {msu['id']} if found_already is None else found_already
 
     if 'routing' not in msu['scheduling']:
-        found_already.extend(these_found)
         return 1
 
     for route in msu['scheduling']['routing']:
@@ -121,10 +119,10 @@ def count_downstream(msu, dfg, found_already=None):
                 if len(dst_msus) == 0:
                     print "MSU %s can't find" % dst
                 dst_msu = dst_msus[0]
-                count_downstream(dst_msu, dfg, these_found)
+                found_already.add(dst_msu['id'])
+                count_downstream(dst_msu, dfg, found_already)
 
-    found_already.extend(these_found)
-    return len(these_found)
+    return len(found_already)
 
 def fix_route_keys(dfg):
 
