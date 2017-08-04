@@ -99,10 +99,10 @@ struct stat_type stat_types[10] = {
    {MSU_INTERNAL_TIME,   LOG_MSU_INTERNAL_TIME,   MAX_MSU, MAX_STAT, "%0.9f",   "MSU_INTERNAL_TIME"},
    {MSU_INTERIM_TIME,    LOG_MSU_INTERIM_TIME,    MAX_MSU, MAX_STAT, "%0.9f",   "MSU_INTERIM_TIME"},
    {MEMORY_ALLOCATED,    LOG_MEMORY_ALLOCATED,    MAX_MSU, MAX_STAT, "%09.0f",  "MEMORY_ALLOCATED"},
-   {N_CONTEXT_SWITCH,    LOG_N_CONTEXT_SWITCH,    10,  MAX_STAT, "%3.0f",   "N_CONTEXT_SWITCHES"},
+   {N_CONTEXT_SWITCH,    LOG_N_CONTEXT_SWITCH,    11,  MAX_STAT, "%3.0f",   "N_CONTEXT_SWITCHES"},
    {BYTES_SENT,          LOG_BYTES_SENT,          1,  MAX_STAT, "%06.0f",  "BYTES_SENT"},
    {BYTES_RECEIVED,      LOG_BYTES_RECEIVED,      1,  MAX_STAT, "%06.0f",  "BYTES_RECEIVED"},
-   {GATHER_THREAD_STATS, LOG_GATHER_THREAD_STATS, 10,  MAX_STAT, "%0.9f",   "GATHER_THREAD_STATS"}
+   {GATHER_THREAD_STATS, LOG_GATHER_THREAD_STATS, 11,  MAX_STAT, "%0.9f",   "GATHER_THREAD_STATS"}
 };
 
 #define N_STAT_TYPES sizeof(stat_types) / sizeof(struct stat_type)
@@ -323,7 +323,11 @@ void increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
 
     lock_item(item);
 
-    double last_stat = item->n_stats == 0 ? 0 : item->stats[item->n_stats-1].stat;
+    int last_index = item->n_stats - 1;
+    if ( item->n_stats == 0 && item->rolled_over) {
+        last_index = stat_type->max_stats - 1;
+    }
+    double last_stat = last_index >= 0 ? item->stats[last_index].stat : 0;
 
     get_elapsed_time(&item->stats[item->n_stats].time);
     item->stats[item->n_stats].stat = last_stat + value;
