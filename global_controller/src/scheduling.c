@@ -3,10 +3,12 @@
 #include "dfg.h"
 #include "scheduling.h"
 
-static uint64_t get_absent_msus(struct dfg_vertex *msu) {
+static uint64_t get_absent_msus(struct dfg_vertex *msu, uint64_t absent_msus) {
     // NOTE: This will not work if there are more than 64 MSUs
 
-    uint64_t absent_msus = 0xFFFFFFFFFFFFFFFF;
+    if (absent_msus == 0) {
+        absent_msus = 0xFFFFFFFFFFFFFFFF;
+    }
 
     absent_msus &= ~((uint64_t)1<<msu->msu_id);
 
@@ -17,7 +19,7 @@ static uint64_t get_absent_msus(struct dfg_vertex *msu) {
         for (int v_i=0; v_i< r->num_destinations; ++v_i) {
             struct dfg_vertex *v = r->destinations[v_i];
             if (absent_msus&((uint64_t)1<<v->msu_id)) {
-                uint64_t v_downstream = get_absent_msus(v);
+                uint64_t v_downstream = get_absent_msus(v, absent_msus);
                 absent_msus &= v_downstream;
             }
         }
@@ -28,7 +30,7 @@ static uint64_t get_absent_msus(struct dfg_vertex *msu) {
 
 static int n_downstream_msus(struct dfg_vertex * msu) {
 
-    uint64_t absent_msus = get_absent_msus(msu);
+    uint64_t absent_msus = get_absent_msus(msu, 0);
 
     int n_downstream = 64;
     for (int i = 0; i < 64; i++) {
