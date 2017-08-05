@@ -23,7 +23,7 @@
 
 #define USAGE_ARGS " [-j dfg.json -i runtime_id] | " \
                    "[-g global_ctl_ip -p global_ctl_port -P local_listen_port [--same-machine | -s]] "\
-                   "[--db-ip db_ip --db-port db_port --db-load db_max_load] "\
+                   "[--db-ip db_ip --db-port db_port --db-num-files db_num_files] "\
                    "[--prof-tag-probability=prob]"
 
 
@@ -55,13 +55,13 @@ int main(int argc, char **argv){
     // Declared in communication.h, used in webserver_msu
     char *db_ip = NULL;
     int db_port = -1;
-    int db_max_load = -1;
+    int db_num_files = -1;
     char *tag_probability = NULL;
 
     struct option long_options[] = {
         {"db-ip", required_argument, 0, 'd'},
         {"db-port", required_argument, 0, 'b'},
-        {"db-load", required_argument, 0, 'l'},
+        {"db-num-files", required_argument, 0, 'f'},
         {"prof-tag-probability", optional_argument, 0, 'z'},
         {0, 0, 0, 0}
     };
@@ -69,7 +69,7 @@ int main(int argc, char **argv){
     int arguments_provided = 0;
     while (1){
         int option_index = 0;
-        int c = getopt_long(argc, argv, "j:i:g:p:P:sw:d:b:l:z:",
+        int c = getopt_long(argc, argv, "j:i:g:p:P:sw:d:b:f:z:",
                             long_options, &option_index);
         if (c == -1)
             break;
@@ -97,8 +97,8 @@ int main(int argc, char **argv){
             case 'b':
                 db_port = atoi(optarg);
                 break;
-            case 'l':
-                db_max_load = atoi(optarg);
+            case 'f':
+                db_num_files = atoi(optarg);
                 break;
             case 'z':
                 tag_probability = optarg;
@@ -120,7 +120,7 @@ int main(int argc, char **argv){
         exit(0);
     }
     if (db_ip != NULL) {
-        init_db(db_ip, db_port, db_max_load);
+        init_db(db_ip, db_port, db_num_files);
     }
     char statlog_fname[48];
     sprintf(statlog_fname, "rt%d_stats.log", runtime_id);
@@ -133,7 +133,7 @@ int main(int argc, char **argv){
     int manual_any = (global_ctl_ip != NULL || global_ctl_port > 0 ||
                       local_listen_port > 0 ) ;
 
-    int db_all = (db_ip != NULL && db_port > 0 && db_max_load > 0);
+    int db_all = (db_ip != NULL && db_port > 0 && db_num_files > 0);
 
     if (!json_all && !manual_all) {
         printf("One of JSON file and runtime ID or global control IP and port required. Exiting.\n");

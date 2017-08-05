@@ -104,7 +104,6 @@ static int print_thread_affinity() {
 static int pin_thread(pthread_t ptid, int cpu_id) {
     int s;
     cpu_set_t cpuset;
-
     /* Set affinity mask to include CPUs i*/
     CPU_ZERO(&cpuset);
     CPU_SET(cpu_id, &cpuset);
@@ -584,7 +583,9 @@ static void check_queue_for_data() {
                 }
                 end: dedos_thread_msg_free(thread_msg); //frees its payload as well
             }
-        } //if main_thread->thread_q
+        } else {
+            log_warn("No thread queue on main thread");
+        }//if main_thread->thread_q
         rounds--;
     }
 }

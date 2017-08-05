@@ -2,8 +2,12 @@
 #include "ip_utils.h"
 #include "msu_tracker.h"
 
-#ifndef LOG_PRINT_ROUTING
-#define LOG_PRINT_ROUTING 0
+#ifndef LOG_ROUTING_CHANGES
+#define LOG_ROUTING_CHANGES 0
+#endif
+
+#ifndef LOG_ROUTING_DECISIONS
+#define LOG_ROUTING_DECISIONS 0
 #endif
 
 /** The number of destinations a route can have before it is reallocated */
@@ -25,6 +29,19 @@ struct routing_table{
     struct msu_endpoint *destinations; /**< The destinations themselves */
 };
 
+#ifdef LOG_ROUTING_CHANGES
+static void print_routing_table(struct routing_table *table) {
+    char output[1024];
+    int offset = sprintf(output,"\n********** ROUTE TYPE: %d **********\n", table->type_id);
+    for (int i=0; i<table->n_destinations; i++) {
+        struct msu_endpoint *destination = &table->destinations[i];
+        offset += sprintf(output+offset, "- %4d: %3d\n", destination->id, (int)table->ranges[i]);
+    }
+    log_custom(LOG_ROUTING_CHANGES, "%s", output);
+}
+#else
+#define print_routing_table(t)
+#endif
 
 /**
  * This file keeps track of all of the created routes
@@ -195,6 +212,7 @@ static int add_routing_table_entry(struct routing_table *table,
     table->n_destinations++;
     unlock(table);
     log_info("Added destination %d to table of type %d", destination->id, table->type_id);
+    print_routing_table(table);
     return 0;
 }
 
@@ -410,7 +428,7 @@ struct msu_endpoint *get_route_endpoint(struct route_set *routes, uint32_t key) 
         return NULL;
     }
     struct msu_endpoint *endpoint = &table->destinations[index];
-    log_debug("Endpoint for key %u is %d", key, endpoint->id);
+    log_custom(LOG_ROUTING_DECISIONS, "Endpoint for key %u is %d", key, endpoint->id);
     unlock(table);
     return endpoint;
 }

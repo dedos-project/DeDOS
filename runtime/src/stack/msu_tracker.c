@@ -80,8 +80,8 @@ void msu_tracker_add(int msu_id, struct dedos_thread *dedos_thread) {
 }
 
 struct msu_placement_tracker *msu_tracker_find(int msu_id) {
-    struct msu_placement_tracker *s;
     mutex_lock(msu_tracker->mutex);
+    struct msu_placement_tracker *s;
     HASH_FIND_INT( msu_tracker->msu_placements, &msu_id, s );  /* s: output pointer */
     mutex_unlock(msu_tracker->mutex);
     return s;

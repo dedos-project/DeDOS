@@ -157,12 +157,13 @@ int msu_receive_ctrl(struct generic_msu *self, struct generic_msu_queue_item *qu
             log_error("Error handling update type %u in MSU %d",
                     update->action, self->id);
         }
+        rtn = error;
     }
 
     free(update);
     free(queue_item);
     log_debug("Freed update_msg and control_q_item %s","");
-    return error;
+    return rtn;
 }
 
 /**
@@ -321,6 +322,7 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
         recvd->buffer_len = bufsize;
         recvd->buffer = malloc(bufsize);
         recvd->id = msg->data_id;
+        add_to_msu_path(recvd, msg->src_type_id, msg->src_msu_id, msg->src_ip_address);
         if (!(recvd->buffer)){
             free(recvd);
             return -1;
@@ -520,16 +522,21 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
                 was_null = 1;
                 new_index = 0;
             }
-        } else if ( dst->ipv4 == ip_address || (dst->locality == MSU_IS_LOCAL && ip_address == 0)) {
+        } else if ( dst->ipv4 == ip_address ||
+                (dst->locality == MSU_IS_LOCAL && (ip_address == 0 || ip_address == runtimeIpAddress))) {
             break;
         } else {
+            char ipstr[32];
+            ipv4_to_string(ipstr, dst->ipv4);
             new_index++;
         }
     }
 
     if ( dst == NULL ){
-        log_error("Could not find destination of type %d with correct ip (%d) from sender %d",
-                type->type_id, ip_address, sender->id);
+        char ipstr[32];
+        ipv4_to_string(ipstr, ip_address);
+        log_error("Could not find destination of type %d with correct ip (%s) from sender %d",
+                type->type_id, ipstr, sender->id);
         return NULL;
     }
 

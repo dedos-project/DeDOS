@@ -36,9 +36,9 @@ struct cloning_info {
 };
 
 struct cloning_info CLONING_INFO[] = {
-    { DEDOS_SSL_READ_MSU_ID },
+// { DEDOS_SSL_READ_MSU_ID },
 //    { DEDOS_WEBSERVER_MSU_ID },
-//     { DEDOS_REGEX_MSU_ID },
+     { DEDOS_WEBSERVER_REGEX_MSU_ID },
 };
 
 int CLONING_INFO_LEN = sizeof(CLONING_INFO) / sizeof(struct cloning_info);
@@ -75,7 +75,7 @@ int gather_cloning_info(struct stats_control_payload *stats, struct cloning_info
             type_cloning_info->n_msu++;
         } else {
             log_custom(LOG_CLONE_DECISIONS, "Could not get %d stats for msu %d (%d)",
-                       STAT_SAMPLE_SIZE, i, type_cloning_info->type_id);
+                       STAT_SAMPLE_SIZE, msu->msu_id, type_cloning_info->type_id);
         }
 
     }
@@ -150,7 +150,7 @@ void set_haproxy_weights() {
     }
 }
 
-#define MIN_CLONE_DURATION 4
+#define MIN_CLONE_DURATION 2
 struct timespec last_clone_time;
 
 //TODO: update this function for new scheduling & DFG structure

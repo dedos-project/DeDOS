@@ -30,6 +30,14 @@ static uint64_t get_absent_msus(struct dfg_vertex *msu, uint64_t absent_msus) {
 
 static int n_downstream_msus(struct dfg_vertex * msu) {
 
+    int n = 0;
+    struct dfg_route **routes = msu->scheduling.routes;
+    for (int r_i = 0; r_i < msu->scheduling.num_routes; ++r_i) {
+        struct dfg_route *r = routes[r_i];
+        n+= r->num_destinations;
+    }
+    return n;
+/*
     uint64_t absent_msus = get_absent_msus(msu, 0);
 
     int n_downstream = 64;
@@ -40,6 +48,7 @@ static int n_downstream_msus(struct dfg_vertex * msu) {
     }
 
     return n_downstream;
+    */
 }
 
 int fix_route_ranges(struct dfg_route *route, int runtime_sock) {

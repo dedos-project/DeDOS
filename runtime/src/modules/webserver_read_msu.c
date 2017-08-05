@@ -144,7 +144,7 @@ static struct msu_endpoint *default_within_ip_routing(struct msu_type *type,
 }
 
 const struct msu_type WEBSERVER_READ_MSU_TYPE = {
-    .name = "webserver_routing_msu",
+    .name = "webserver_read_msu",
     .layer = DEDOS_LAYER_APPLICATION,
     .type_id = DEDOS_WEBSERVER_READ_MSU_ID,
     .proto_number = 999, //?

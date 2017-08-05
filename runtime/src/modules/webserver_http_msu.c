@@ -43,6 +43,7 @@ static int handle_db(struct http_state *http_state,
         strcpy(resp->url, http_state->parser.url);
         msu_free_state(self, queue_item->id, 0);
         queue_item->buffer = resp;
+        queue_item->buffer_len = sizeof(*resp);
         if (!has_regex(resp->url)) {
             log_custom(LOG_HTTP_MSU, "Crafting response for url %s", resp->url);
             resp->resp_len = craft_nonregex_response(resp->url, resp->resp);
@@ -122,6 +123,7 @@ static int craft_http_response(struct generic_msu *self,
 static int http_init(struct generic_msu *self, struct create_msu_thread_data UNUSED *data) {
     void *db_memory = allocate_db_memory();
     self->internal_state = db_memory;
+    //self->internal_state = malloc(100);
     return 0;
 }
 

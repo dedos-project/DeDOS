@@ -18,7 +18,7 @@ static int craft_ws_regex_response(struct generic_msu *self,
 }
 
 const struct msu_type WEBSERVER_REGEX_MSU_TYPE = {
-    .name = "webserver_http_msu",
+    .name = "webserver_regex_msu",
     .layer = DEDOS_LAYER_APPLICATION,
     .type_id = DEDOS_WEBSERVER_REGEX_MSU_ID,
     .proto_number = 999, //?

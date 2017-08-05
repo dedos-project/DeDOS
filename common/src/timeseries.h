@@ -10,7 +10,7 @@
 #include <time.h>
 
 /** The maximum length of the round-robin database */
-#define RRDB_ENTRIES 120
+#define RRDB_ENTRIES 240
 
 /** Round-robin database (circular buffer) for storing timeseries data.
  * Meant for reporting statistics to the global controller */

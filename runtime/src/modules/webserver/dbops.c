@@ -7,40 +7,70 @@
 #include <unistd.h>
 #include "modules/webserver/connection-handler.h"
 
-#define VIDEO_MEMORY 999 * 1000 * 1000 * 2
-#define AUDIO_MEMORY 1000 * 1000 * 1000 * 1
-#define IMAGE_MEMORY 1000 * 1000 * 100
-#define TEXT_MEMORY 1000 * 1000 * 10
+#define MAX_FILE_SIZE (long)(1 * (1 << 29))
+#define JUMP_SIZE (1 << 14)
 
 #ifndef LOG_DB_OPS
 #define LOG_DB_OPS 0
 #endif
 
-char *db_ip = NULL;
-int db_port = -1;
-int db_max_load = -1;
-const char *DB_QUERY = "REQUEST";
+int db_num_files = -1;
 struct sockaddr_in db_addr;
 
-void init_db(char *ip, int port, int max_load) {
-    db_ip = ip;
-    db_port = port;
-    db_max_load = max_load;
-    bzero((char*)&db_addr, sizeof(db_addr));
-    db_addr.sin_family = AF_INET;
-    inet_pton(AF_INET, db_ip, &(db_addr.sin_addr));
-    db_addr.sin_port = htons(db_port);
+struct mock_file {
+    int n_chunks;
+    int *chunk_size;
+    char **data;
+};
 
+long allocate_file(struct mock_file *file, long file_size) {
+    int n_chunks = file_size / INT_MAX + 1;
+    file->n_chunks = n_chunks;
+    file->chunk_size = malloc(sizeof(int) * n_chunks);
+    long amount_allocated = 0;
+    int chunk_size = INT_MAX;
+    file->data = malloc(sizeof(char*) * n_chunks);
+    for (int i=0; amount_allocated < file_size; i++) {
+        if (amount_allocated + chunk_size > file_size) {
+            long chunk_tmp = (file_size - amount_allocated);
+            if (chunk_tmp > (long)(INT_MAX)) {
+                printf("Warning: Chunk size too big!\n");
+            }
+            chunk_size = (int)chunk_tmp;
+        }
+        file->chunk_size[i] = chunk_size;
+        file->data[i] = malloc(chunk_size);
+        amount_allocated += chunk_size;
+        memset(file->data[i], 0, chunk_size);
+    }
+    return amount_allocated;
 }
 
+long access_file(struct mock_file *file, long total_size) {
+    long accessed = 0;
+    for (int chunk = 0; accessed < total_size; chunk++) {
+        int chunk_size = file->chunk_size[chunk];
+        char *data = file->data[chunk];
+        for (int i = 0; i < chunk_size; i += JUMP_SIZE) {
+            data[i]++;
+        }
+        accessed += (long)chunk_size;
+    }
+    return accessed;
+}
+
+void init_db(char *ip, int port, int n_files) {
+    db_num_files = n_files;
+    bzero((char*)&db_addr, sizeof(db_addr));
+    db_addr.sin_family = AF_INET;
+    inet_pton(AF_INET, ip, &(db_addr.sin_addr));
+    db_addr.sin_port = htons(port);
+}
 
 void *allocate_db_memory() {
-    int malloc_size = VIDEO_MEMORY / 10;
-    void *memory = malloc(malloc_size);
-    if (memory == NULL) {
-        log_perror("Mallocing memory for database");
-    }
-    return memory;
+    struct mock_file *file = malloc(sizeof(*file));
+    allocate_file(file, MAX_FILE_SIZE);
+    return (void*)file;
 }
 
 int init_db_socket() {
@@ -74,8 +104,8 @@ int connect_to_db(struct db_state *state) {
             return -1;
         }
     }
-    int db_param = rand() % db_max_load;
-    sprintf(state->db_req, "%s %d", DB_QUERY, db_param);
+    int db_param = rand() % db_num_files;
+    sprintf(state->db_req, "%d", db_param);
     return 0;
 }
 
@@ -91,17 +121,15 @@ int send_to_db(struct db_state *state) {
     return 0;
 }
 
-int recv_from_db(struct db_state  *state) {
-    // receive response, expecting OK\n
-    int res_buf_len = 3;
-    char res_buf[res_buf_len];
-    memset(res_buf, 0, sizeof(res_buf));
+#define MAX_DB_RCV_LEN 64
+
+int recv_from_db(struct db_state *state) {
+    char rcv[MAX_DB_RCV_LEN];
     socklen_t addrlen = sizeof(db_addr);
+    int rtn = recvfrom(state->db_fd, rcv, MAX_DB_RCV_LEN, 0, 
+                       (struct sockaddr*)&db_addr, &addrlen);
 
-    int rtn = recvfrom(state->db_fd, res_buf, res_buf_len, 0,
-        (void*) &db_addr, &addrlen);
-
-    if (rtn< 0) {
+    if (rtn < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             return 1;
         } else {
@@ -110,35 +138,17 @@ int recv_from_db(struct db_state  *state) {
         }
     }
 
-    int memSize;
-    if (strncmp(res_buf, "00\n", 3) == 0) {
-        memSize = (VIDEO_MEMORY);
-    } else if (strncmp(res_buf, "01\n", 3) == 0) {
-         memSize = (AUDIO_MEMORY);
-    } else if (strncmp(res_buf, "02\n", 3) == 0) {
-        memSize = (IMAGE_MEMORY);
-    } else if (strncmp(res_buf, "03\n", 3) == 0) {
-        memSize = (TEXT_MEMORY);
-    } else {
-        close(state->db_fd);
-        log_perror("Received unknown number from database");
-        return -1;
-    }
+    long file_size = atol(rcv);
+    struct mock_file *local_file = state->data;
 
-    int size = memSize/10;
-
-    char *memory = (char *)state->data;
-    int increment = (1<<12);
-    for (int i=0; i<size; i+=increment){
-        memory[i]++;
-    }
+    access_file(local_file, file_size);
     close(state->db_fd);
     state->db_fd = 0;
     return 0;
 }
 
 int query_db(struct db_state *state) {
-    if (db_ip == NULL) {
+    if (db_num_files == -1) {
         log_error("Database is not initialized");
         return WS_ERROR;
 

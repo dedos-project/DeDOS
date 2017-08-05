@@ -49,7 +49,7 @@ extern "C" {
  */
 #define MAX_EPOLL_EVENTS 64
 
-#define MAX_FDS 2048
+#define MAX_FDS 65536
 /**
  * A reference to the instance of the socket handler MSU, so epoll can be accessed
  * from outside of the thread

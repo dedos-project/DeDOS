@@ -75,6 +75,7 @@ double average_n(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
     struct timed_rrdb *timeseries;
     switch (stat_id) {
         case QUEUE_LEN:
+            log_debug("Getting queue len for msu %d", msu->msu_id);
             timeseries = &msu->statistics.queue_length;
             break;
         case ITEMS_PROCESSED:
@@ -97,7 +98,7 @@ double average_n(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
         if ( index < 0 )
             index = RRDB_ENTRIES + index;
         if ( timeseries->time[index].tv_sec == 0 ){
-            log_debug("Break on %d" index);
+            log_debug("Break on %d", index);
             break;
         }
         if ( sum == -1 ) {
@@ -169,14 +170,16 @@ int average(struct dfg_vertex *msu, enum stat_id stat_id) {
 int append_to_timeseries(struct timed_stat *input, int input_size,
                          struct timed_rrdb *timeseries) {
     int write_index = timeseries->write_index;
+    log_debug("Starting index for append: %d", write_index);
     int tmp = RRDB_ENTRIES + 1;
     for (int i=0; i<input_size; i++) {
+        write_index %= RRDB_ENTRIES;
         timeseries->data[write_index] = input[i].stat;
         timeseries->time[write_index] = input[i].time;
         write_index++;
-        write_index %= RRDB_ENTRIES;
     }
-    timeseries->write_index = write_index;
+    timeseries->write_index = write_index % RRDB_ENTRIES;
+    log_debug("End index for append: %d", timeseries->write_index);
     return 0;
 }
 
