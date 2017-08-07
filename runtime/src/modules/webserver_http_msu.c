@@ -35,7 +35,7 @@ static int handle_db(struct http_state *http_state,
         mask_monitor_fd(http_state->db.db_fd,
                         RTN_TO_EVT(rtn),
                         self,
-                        queue_item->id);
+                        queue_item);
         return 0;
     } else {
         struct response_state *resp = malloc(sizeof(*resp));

@@ -18,6 +18,10 @@
 #include "data_plane_profiling.h"
 #include "dedos_thread_queue.h"
 
+#ifndef LOG_REMOTE_SENDS
+#define LOG_REMOTE_SENDS 0
+#endif
+
 // TODO: This type-registration should probably be handled elsewhere
 //       probably in msu_tracker?
 
@@ -322,6 +326,7 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
         recvd->buffer_len = bufsize;
         recvd->buffer = malloc(bufsize);
         recvd->id = msg->data_id;
+        log_custom(LOG_REMOTE_SENDS, "Receiving from remote msu from ip %d", (int)msg->src_ip_address);
         add_to_msu_path(recvd, msg->src_type_id, msg->src_msu_id, msg->src_ip_address);
         if (!(recvd->buffer)){
             free(recvd);
@@ -363,6 +368,7 @@ uint32_t default_generate_id(struct generic_msu *self,
  */
 int default_send_remote(struct generic_msu *src, struct generic_msu_queue_item *data,
                         struct msu_endpoint *dst){
+
     struct dedos_intermsu_message *msg = malloc(sizeof(*msg));
     if (!msg){
         log_error("Unable to allocate memory for intermsu msg%s", "");
@@ -373,6 +379,15 @@ int default_send_remote(struct generic_msu *src, struct generic_msu_queue_item *
     msg->src_type_id = src->type->type_id;
     msg->src_ip_address = runtimeIpAddress;
     msg->data_id = data->id;
+
+    struct in_addr from, to;
+    from.s_addr = runtimeIpAddress;
+    to.s_addr = dst->ipv4;
+
+    log_custom(LOG_REMOTE_SENDS, "Sending to remote msu to ip %s",
+                inet_ntoa(to));
+    log_custom(LOG_REMOTE_SENDS, "Sending to remote msu to from %s",
+                inet_ntoa(from));
 
     // TODO: Is this next line right? src->proto_number?
     msg->proto_msg_type = src->type->proto_number;
@@ -597,7 +612,6 @@ struct msu_endpoint *route_by_msu_id(struct msu_type *type, struct generic_msu *
 int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generic_msu_queue_item *data){
 
     if (dst->locality == MSU_IS_LOCAL){
-        add_to_msu_path(data, dst->type_id, dst->id, runtimeIpAddress);
         if (!(dst->msu_queue)){
             log_error("Queue pointer not found%s", "");
             return -1;
@@ -609,7 +623,6 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generi
         }
         return 0;
     } else if (dst->locality == MSU_IS_REMOTE){
-        add_to_msu_path(data, dst->type_id, dst->id, dst->ipv4);
         int rtn = src->type->send_remote(src, data, dst);
 #ifdef DATAPLANE_PROFILING
         //copy queue item profile log to in memory log before its freed

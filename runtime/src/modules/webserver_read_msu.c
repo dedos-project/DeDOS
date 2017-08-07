@@ -38,6 +38,7 @@ static int handle_read(struct read_state *read_state,
     memcpy(out, read_state, sizeof(*read_state));
     free(queue_item->buffer);
     queue_item->buffer = out;
+    queue_item->buffer_len = sizeof(*out);
     msu_free_state(self, queue_item->id, 0);
     return DEDOS_WEBSERVER_HTTP_MSU_ID;
 }

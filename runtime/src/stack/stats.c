@@ -39,7 +39,7 @@
 #endif
 
 #ifndef LOG_MSU_FULL_TIME
-#define LOG_MSU_FULL_TIME 1
+#define LOG_MSU_FULL_TIME 0
 #endif
 
 #ifndef LOG_MSU_INTERNAL_TIME
@@ -47,23 +47,23 @@
 #endif
 
 #ifndef LOG_MSU_INTERIM_TIME
-#define LOG_MSU_INTERIM_TIME 1
+#define LOG_MSU_INTERIM_TIME 0
 #endif
 
 #ifndef LOG_N_CONTEXT_SWITCH
-#define LOG_N_CONTEXT_SWITCH 1
+#define LOG_N_CONTEXT_SWITCH 0
 #endif
 
 #ifndef LOG_BYTES_RECEIVED
-#define LOG_BYTES_RECEIVED 1
+#define LOG_BYTES_RECEIVED 0
 #endif
 
 #ifndef LOG_BYTES_SENT
-#define LOG_BYTES_SENT 1
+#define LOG_BYTES_SENT 0
 #endif
 
 #ifndef LOG_GATHER_THREAD_STATS
-#define LOG_GATHER_THREAD_STATS 1
+#define LOG_GATHER_THREAD_STATS 0
 #endif
 
 #ifndef LOG_MEMORY_ALLOCATED
@@ -81,12 +81,12 @@ struct stat_type {
 };
 
 #if DUMP_STATS
-#define MAX_STAT 100000
+#define MAX_STAT 524288
 #else
 #define MAX_STAT 8192
 #endif
 
-#define MAX_MSU 36
+#define MAX_MSU 20
 
 /**
  * This structure defines the format and size of the statistics being logged

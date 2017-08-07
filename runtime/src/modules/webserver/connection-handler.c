@@ -181,10 +181,10 @@ int access_database(char *url, struct db_state *state) {
 
 
 int craft_nonregex_response(char UNUSED *url, char *response) {
-    sprintf(response, DEFAULT_HTTP_HEADER DEFAULT_HTTP_BODY,
+    int n = sprintf(response, DEFAULT_HTTP_HEADER DEFAULT_HTTP_BODY,
             (int)strlen(DEFAULT_HTTP_BODY));
     log_custom(LOG_CONNECTION_INFO, "Crafted non-regex response");
-    return strlen(response);
+    return n;
 }
 
 int craft_regex_response(char *url, char *response) {

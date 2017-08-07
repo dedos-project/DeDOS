@@ -32,6 +32,7 @@ static int write_http_response(struct generic_msu *self,
         close_connection(&resp->conn);
         log_custom(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
                    resp->conn.fd);
+        log_custom(LOG_WEBSERVER_WRITE, "Wrote request: %s", resp->resp);
         msu_free_state(self, queue_item->id, 0);
         return 0;
     }
@@ -41,15 +42,13 @@ static struct msu_endpoint *default_within_ip_routing(struct msu_type *type,
                                      struct generic_msu *sender,
                                      struct generic_msu_queue_item *queue_item) {
     uint32_t origin_ip = queue_item->path[0].ip_address;
-    struct msu_endpoint *dest = default_routing(type, sender, queue_item);
-    if (dest->ipv4 == origin_ip ||
-            (origin_ip == runtimeIpAddress  && dest->locality == MSU_IS_LOCAL)) {
-        return dest;
-    }
-    dest = round_robin_within_ip(type, sender, origin_ip);
+    struct msu_endpoint *dest = round_robin_within_ip(type, sender, origin_ip);
     if (dest == NULL) {
         log_error("can't find appropriate webserver write MSU");
     }
+    char ipstr[32];
+    ipv4_to_string(ipstr, origin_ip);
+    log_custom(LOG_WEBSERVER_WRITE, "Routing write to endpoint %d (ip %s)", dest->id, ipstr);;
     return dest;
 }
 

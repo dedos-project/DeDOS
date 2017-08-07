@@ -56,6 +56,11 @@ extern "C" {
  */
 struct generic_msu *socket_handler_instance = NULL;
 
+struct msu_fd_mask {
+    uint32_t id;
+    struct msu_path_element path;
+};
+
 /**
  * Internal state for socket handling
  */
@@ -63,7 +68,7 @@ struct blocking_socket_handler_state {
     int socketfd;
     int epollfd; //descriptor for events
     int default_target_type;
-    uint32_t fd_mask[MAX_FDS];
+    struct msu_fd_mask fd_mask[MAX_FDS];
     struct generic_msu* fd_targets[MAX_FDS];
 };
 
@@ -88,7 +93,7 @@ int monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu) {
     struct blocking_socket_handler_state *state =
             socket_handler_instance->internal_state;
 
-    state->fd_mask[fd] = 0;
+    memset(&state->fd_mask[fd], 0, sizeof(struct msu_fd_mask));
     state->fd_targets[fd] = target_msu;
     int rtn = enable_epoll(state->epollfd, fd, events);
     if (rtn < 0) {
@@ -100,10 +105,12 @@ int monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu) {
     return 0;
 }
 
-int mask_monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu, uint32_t mask) {
+int mask_monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu, 
+                    struct generic_msu_queue_item *queue_item) {
     struct blocking_socket_handler_state *state =
             socket_handler_instance->internal_state;
-    state->fd_mask[fd] = mask;
+    state->fd_mask[fd].id = queue_item->id;
+    state->fd_mask[fd].path = queue_item->path[0];
     state->fd_targets[fd] = target_msu;
     int rtn = add_to_epoll(state->epollfd, fd, events);
     if (rtn < 0) {
@@ -119,7 +126,7 @@ int mask_monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu, uin
 
 static int set_default_target(int fd, void *v_state) {
     struct blocking_socket_handler_state *state = v_state;
-    state->fd_mask[fd] = 0;
+    memset(&state->fd_mask[fd], 0, sizeof(struct msu_fd_mask));
     state->fd_targets[fd] = NULL;
     return 0;
 }
@@ -132,7 +139,8 @@ static int process_existing_connection(int fd, void *v_state) {
     struct blocking_socket_handler_state *state = v_state;
     log_custom(LOG_SOCKET_HANDLER, "Processing existing connection on fd %d", fd);
 
-    uint32_t id = state->fd_mask[fd];
+    struct msu_fd_mask *mask = &state->fd_mask[fd];
+    uint32_t id = mask->id;
     if (id == 0) {
         struct sockaddr_in sockaddr;
         socklen_t addrlen = sizeof(sockaddr);
@@ -148,6 +156,7 @@ static int process_existing_connection(int fd, void *v_state) {
     struct generic_msu_queue_item *queue_item = create_generic_msu_queue_item();
     queue_item->buffer = conn;
     queue_item->id = id;
+    add_to_msu_path(queue_item, mask->path.type_id, mask->path.msu_id, mask->path.ip_address);
 
     if (state->fd_targets[fd] == NULL) {
         unsigned int type_id = state->default_target_type;

@@ -566,7 +566,7 @@ struct route_set *get_type_from_route_set(struct route_set **routes, int type_id
     for (struct route_set *route = *routes; route != NULL; route=route->hh.next)
         if (route->table->type_id == type_id)
             return route;
-    log_error("No routes available of type %d", type_id);
+    log_error("No routes available of type %d");
     return NULL;
 }
 

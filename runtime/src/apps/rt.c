@@ -163,6 +163,9 @@ int main(int argc, char **argv){
         global_ctl_port = dfg->global_ctl_port;
         local_listen_port = rt->port;
         runtimeIpAddress = rt->ip;
+        struct in_addr ip_addr;
+        ip_addr.s_addr = rt->ip;
+        printf("Local IP addresss: %s", inet_ntoa(ip_addr));
 
         uint32_t global_ctl_ip_int;
         string_to_ipv4(global_ctl_ip, &global_ctl_ip_int);

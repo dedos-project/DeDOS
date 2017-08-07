@@ -561,6 +561,9 @@ static void check_queue_for_data() {
                         dedos_control_send(intermsu_msg, dst_runtime_ip,
                                 intermsu_payload, intermsu_msg->payload_len);
                         free(intermsu_payload);
+                    } else {
+                        log_warn("Not sending payload %p length %d",
+                                 intermsu_msg->payload, (int)intermsu_msg->payload_len);
                     }
                 }
 

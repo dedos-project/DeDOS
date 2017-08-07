@@ -318,11 +318,10 @@ int check_comm_sockets() {
        } else {
             // check for the other runtime sockets
             for (j = 0; j < MAX_RUNTIME_PEERS; j++) {
-                if(fds[j + totalSockets].revents & POLLIN && peer_tcp_sockets[j] > 0) {
+                if(fds[j + totalSockets].revents & POLLIN &&& fds[j + totalSockets].fd > 0) {
                     fds[j + totalSockets].revents = 0;
-                    if(peer_tcp_sockets[j] > 0){
-                        dedos_control_rcv(peer_tcp_sockets[j]);
-                    }
+                    dedos_control_rcv(fds[j + totalSockets].fd);
+                } else {
                 }
             }
         }
@@ -589,6 +588,7 @@ void print_dedos_intermsu_message(struct dedos_intermsu_message* msg)
     log_debug("%s", "InterMSU Message header->");
     log_debug("SRC MSU_ID: %d", msg->src_msu_id);
     log_debug("DST MSU_ID: %d", msg->dst_msu_id);
+    log_debug("SRC IP: %d", (int)msg->src_ip_address);
     log_debug("PROTO_MSG_TYPE: %u", msg->proto_msg_type);
     log_debug("PAYLOAD_LEN: %u", msg->payload_len);
 }

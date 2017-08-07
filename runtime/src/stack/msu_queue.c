@@ -17,6 +17,7 @@
 void add_to_msu_path(struct generic_msu_queue_item *queue_item,
                      int type_id, int id, uint32_t ip_address) {
     struct msu_path_element *path = &queue_item->path[queue_item->path_index];
+    log_info("Setting path %d to %d", queue_item->path_index, (int)ip_address);
     path->type_id = type_id;
     path->msu_id = id;
     path->ip_address = ip_address;
@@ -24,7 +25,7 @@ void add_to_msu_path(struct generic_msu_queue_item *queue_item,
     queue_item->path_index %= MAX_PATH_LEN;
 }
 
-struct msu_path_element *get_path_history(struct generic_msu_queue_item *queue_item, 
+struct msu_path_element *get_path_history(struct generic_msu_queue_item *queue_item,
                                           int reverse_index){
     int index = queue_item->path_index - reverse_index - 1;
     if (index < 0) {

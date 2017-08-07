@@ -22,6 +22,7 @@ extern struct msu_type BLOCKING_SOCKET_HANDLER_MSU_TYPE;
  * @return 0 on success, -1 on error
  */
 int monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu);
-int mask_monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu, uint32_t mask);
+int mask_monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu, 
+                    struct generic_msu_queue_item *queue_item);
 
 #endif /* BLOCKING_SOCKET_HANDLER_MSU_H_ */

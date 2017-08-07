@@ -186,8 +186,8 @@ int accept_ssl(SSL *ssl) {
 }
 
 int read_ssl(SSL *ssl, char *buf, int *buf_size) {
-    int num_bytes = SSL_read(ssl, buf, *buf_size);
     ERR_clear_error();
+    int num_bytes = SSL_read(ssl, buf, *buf_size);
     if (num_bytes > 0) {
         *buf_size = num_bytes;
         return WS_COMPLETE;
@@ -199,8 +199,8 @@ int read_ssl(SSL *ssl, char *buf, int *buf_size) {
 }
 
 int write_ssl(SSL *ssl, char *buf, int *buf_size) {
-    int num_bytes = SSL_write(ssl, buf, *buf_size);
     ERR_clear_error();
+    int num_bytes = SSL_write(ssl, buf, *buf_size);
     if (num_bytes > 0) {
         if (num_bytes != *buf_size) {
             log_warn("Didn't write the requested amount (written: %d, requested: %d)...",
