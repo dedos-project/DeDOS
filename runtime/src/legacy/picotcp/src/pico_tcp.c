@@ -2684,8 +2684,9 @@ static inline int route_to_handshake_msu(struct pico_socket *s, struct pico_fram
     }
 #endif
 
-    queue_item->id = pico_tcp_generate_id(self, f);
-    log_debug("Assigned id to item: %u", queue_item->id);
+    uint32_t id = pico_tcp_generate_id(self, f);
+    set_queue_key(id, sizeof(id), &queue_item->key);
+    log_debug("Assigned id to item: %d": keytoi(queue_item->key.key));
     queue_item->buffer_len = sizeof(struct tcp_intermsu_queue_item) + f->buffer_len;
 
     queue_item->buffer = (char*)malloc(sizeof(char) * queue_item->buffer_len);

@@ -18,9 +18,11 @@ struct timed_rrdb *get_timeseries(struct dfg_vertex *msu, enum stat_id stat_id) 
             break;
         case MEMORY_ALLOCATED:
             return &msu->statistics.memory_allocated;
-           break;
+            break;
+        case N_STATES:
+            return &msu->statistics.n_states;
         default:
-            debug("%s", "Unknown statistic");
+            log_warn("Unknown statistic");
     }
     return NULL;
 }
@@ -72,22 +74,7 @@ double stat_increase(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples
 }
 
 double average_n(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
-    struct timed_rrdb *timeseries;
-    switch (stat_id) {
-        case QUEUE_LEN:
-            log_debug("Getting queue len for msu %d", msu->msu_id);
-            timeseries = &msu->statistics.queue_length;
-            break;
-        case ITEMS_PROCESSED:
-            timeseries = &msu->statistics.queue_items_processed;
-            break;
-        case MEMORY_ALLOCATED:
-            timeseries = &msu->statistics.memory_allocated;
-           break;
-        default:
-            debug("%s", "Unknown statistic");
-            return -1;
-    }
+    struct timed_rrdb *timeseries = get_timeseries(msu, stat_id);
 
     double sum = -1;
     int i;
@@ -99,7 +86,7 @@ double average_n(struct dfg_vertex *msu, enum stat_id stat_id, int n_samples) {
             index = RRDB_ENTRIES + index;
         if ( timeseries->time[index].tv_sec == 0 ){
             log_debug("Break on %d", index);
-            break;
+            continue;
         }
         if ( sum == -1 ) {
             sum = timeseries->data[index];

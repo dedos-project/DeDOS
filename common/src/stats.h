@@ -34,6 +34,7 @@ enum stat_id{
     BYTES_SENT,
     BYTES_RECEIVED,
     GATHER_THREAD_STATS,
+    N_STATES,
 };
 
 

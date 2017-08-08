@@ -396,6 +396,16 @@ struct dfg_route *get_route_from_type(struct dfg_runtime_endpoint *rt, int msu_t
     return NULL;
 }
 
+struct dfg_route *get_msu_route_from_type(struct dfg_vertex *msu, int msu_type) {
+    for (int i=0;  i<msu->scheduling.num_routes; ++i) {
+        struct dfg_route *r = msu->scheduling.routes[i];
+        if (r->msu_type == msu_type) {
+            return r;
+        }
+    }
+    return NULL;
+}
+
 /**
  * Check whether a route has a specific MSU as endpoint
  * @param struct dfg_route: the target route
@@ -491,6 +501,7 @@ void clone_type_static_data(struct dfg_vertex *msu) {
             msu->scheduling.colocation_group = peer_msu->scheduling.colocation_group;
 
             memcpy(&msu->msu_mode, &peer_msu->msu_mode, strlen(&peer_msu->msu_mode));
+            memcpy(&msu->init_data, &peer_msu->init_data, strlen(&peer_msu->init_data));
 
             switch (msu->msu_type) {
                 case DEDOS_SSL_REQUEST_ROUTING_MSU_ID:

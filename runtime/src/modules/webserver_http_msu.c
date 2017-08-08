@@ -12,6 +12,10 @@
 #define LOG_HTTP_MSU 0
 #endif
 
+#ifndef LOG_PARTIAL_READS
+#define LOG_PARTIAL_READS 0
+#endif
+
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
 #else
@@ -25,7 +29,7 @@ static int handle_db(struct http_state *http_state,
     int rtn = access_database(http_state->parser.url, &http_state->db);
 
     if (rtn & WS_ERROR) {
-        msu_free_state(self, queue_item->id, 0);
+        msu_free_state(self, &queue_item->key, 0);
         // TODO: Send to write?
         log_warn("HALP!");
         return -1;
@@ -41,7 +45,7 @@ static int handle_db(struct http_state *http_state,
         struct response_state *resp = malloc(sizeof(*resp));
         init_response_state(resp, &http_state->conn);
         strcpy(resp->url, http_state->parser.url);
-        msu_free_state(self, queue_item->id, 0);
+        msu_free_state(self, &queue_item->key, 0);
         queue_item->buffer = resp;
         queue_item->buffer_len = sizeof(*resp);
         if (!has_regex(resp->url)) {
@@ -61,7 +65,7 @@ static int handle_parsing(struct read_state *read_state,
                           struct generic_msu_queue_item *queue_item){
     if (read_state->req_len == -1) {
         log_custom(LOG_HTTP_MSU, "Clearing state (fd: %d)", read_state->conn.fd);
-        msu_free_state(self, queue_item->id, 0);
+        msu_free_state(self, &queue_item->key, 0);
         return 0;
     }
     log_custom(LOG_HTTP_MSU, "Parsing request: %s (fd: %d)", read_state->req, read_state->conn.fd);
@@ -70,21 +74,13 @@ static int handle_parsing(struct read_state *read_state,
     if (rtn & WS_COMPLETE) {
         return handle_db(http_state, self, queue_item);
     } else if (rtn & WS_ERROR) {
-        msu_free_state(self, queue_item->id, 0);
+        msu_free_state(self, &queue_item->key, 0);
         return -1;
     } else {
+        http_state->conn.status = CON_READING;
+        log_custom(LOG_PARTIAL_READS, "got partial request %s (fd: %d) ",
+                   read_state->req, read_state->conn.fd);
         return DEDOS_WEBSERVER_READ_MSU_ID;
-
-        struct msu_path_element *last_msu = get_path_history(queue_item, 1);
-        log_custom(LOG_HTTP_MSU, "Routing to last msu: %d", last_msu->msu_id);
-        struct socket_registry_data *data =
-                init_socket_registry_data(http_state->conn.fd,
-                                          last_msu->msu_id,
-                                          EPOLLIN,
-                                          last_msu->ip_address);
-        free(queue_item->buffer);
-        queue_item->buffer = data;
-        return DEDOS_SOCKET_REGISTRY_MSU_ID;
     }
 
 }
@@ -95,22 +91,34 @@ static int craft_http_response(struct generic_msu *self,
     struct read_state *read_state = queue_item->buffer;
 
     size_t size = 0;
-    struct http_state *http_state = msu_get_state(self, queue_item->id, 0, &size);
+    struct http_state *http_state = msu_get_state(self, &queue_item->key, 0, &size);
     if (http_state == NULL) {
-        http_state = msu_init_state(self, queue_item->id, 0, sizeof(*read_state));
+        http_state = msu_init_state(self, &queue_item->key, 0, sizeof(*read_state));
         read_state->conn.status = CON_READING;
         init_http_state(http_state, &read_state->conn);
         memcpy(&http_state->conn, &read_state->conn, sizeof(read_state->conn));
     } else {
         log_custom(LOG_HTTP_MSU, "Retrieved state: %p (status: %d)",
                    http_state, http_state->conn.status);
+        if (http_state->conn.status != CON_DB_REQUEST) {
+            log_custom(LOG_PARTIAL_READS, "Recovering partial read state ID: %u", 
+                       queue_item->key.id);
+        }
     }
-
+    int rtn;
     switch (http_state->conn.status) {
         case NIL:
         case CON_READING:
             log_custom(LOG_HTTP_MSU, "got CON_READING");
-            return handle_parsing(read_state, http_state, self, queue_item);
+            rtn = handle_parsing(read_state, http_state, self, queue_item);
+            if (rtn < 0) {
+                log_error("Error processing fd %d, ID %u", read_state->conn.fd, 
+                          (queue_item->key.id));
+            } else if (rtn == DEDOS_WEBSERVER_READ_MSU_ID) {
+                log_custom(LOG_PARTIAL_READS, "Partial request ID: %u",
+                           (queue_item->key.id));
+            }
+            return rtn;
         case CON_DB_REQUEST:
             log_custom(LOG_HTTP_MSU, "got CON_DB_REQUEST");
             return handle_db(http_state, self, queue_item);

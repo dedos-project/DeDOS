@@ -8,6 +8,8 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include "msu_state.h"
+#include "msu_queue.h"
 #include "communication.h"
 #include "stats.h"
 #include "generic_msu.h"
@@ -325,7 +327,7 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
             return -1;
         recvd->buffer_len = bufsize;
         recvd->buffer = malloc(bufsize);
-        recvd->id = msg->data_id;
+        memcpy(&recvd->key, &msg->data_key, sizeof(recvd->key));
         log_custom(LOG_REMOTE_SENDS, "Receiving from remote msu from ip %d", (int)msg->src_ip_address);
         add_to_msu_path(recvd, msg->src_type_id, msg->src_msu_id, msg->src_ip_address);
         if (!(recvd->buffer)){
@@ -342,14 +344,6 @@ int default_deserialize(struct generic_msu *self, intermsu_msg *msg,
         return 0;
     }
     return -1;
-}
-
-uint32_t default_generate_id(struct generic_msu *self,
-                             struct generic_msu_queue_item *queue_item){
-    int len = queue_item->buffer_len < 96 ? queue_item->buffer_len : 96;
-    uint32_t id;
-    HASH_VALUE(queue_item->buffer, len, id);
-    return id;
 }
 
 /** Serializes the data of an msu_queue_item and sends it
@@ -378,7 +372,7 @@ int default_send_remote(struct generic_msu *src, struct generic_msu_queue_item *
     msg->src_msu_id = src->id;
     msg->src_type_id = src->type->type_id;
     msg->src_ip_address = runtimeIpAddress;
-    msg->data_id = data->id;
+    memcpy(&msg->data_key, &data->key, sizeof(data->key));
 
     struct in_addr from, to;
     from.s_addr = runtimeIpAddress;
@@ -469,7 +463,7 @@ struct msu_endpoint *shortest_queue_route(struct msu_type *type, struct generic_
         log_error("No endpoints of type %d to route to from msu %d", type->type_id, sender->id);
         return NULL;
     }
-    struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(type_set, data->id);
+    struct msu_endpoint *best_endpoint = get_shortest_queue_endpoint(type_set, data->key.id);
     if ( best_endpoint == NULL ){
         log_error("Cannot enqueue to shortest-length queue when all destinations are remote");
     }
@@ -485,7 +479,7 @@ struct msu_endpoint *default_routing(struct msu_type *type, struct generic_msu *
                   sender->id, type->type_id);
         return NULL;
     }
-    struct msu_endpoint *destination = get_route_endpoint(type_set, data->id);
+    struct msu_endpoint *destination = get_route_endpoint(type_set, data->key.id);
     return destination;
 }
 
@@ -555,7 +549,7 @@ struct msu_endpoint *round_robin_within_ip(struct msu_type *type, struct generic
         return NULL;
     }
 
-    sender->routing_state = (intptr_t)new_index;
+    sender->routing_state = (void*)(intptr_t)new_index;
     return dst;
 }
 
@@ -652,15 +646,16 @@ int send_to_dst(struct msu_endpoint *dst, struct generic_msu *src, struct generi
 int msu_route(struct msu_type *type, struct generic_msu *sender,
                 struct generic_msu_queue_item *data){
     if (sender->type->generate_id == NULL){
-        if (data->id == 0){
+        if (data->key.id == 0) {
             log_warn("Data ID not assigned, and sender %d (%s) cannot assign ID",
                      sender->id, sender->type->name);
         }
     } else {
-        uint32_t orig_id = data->id;
-        data->id = sender->type->generate_id(sender, data);
-        if (orig_id != 0){
-            log_warn("Data ID reassigned from %u to %u by msu %d",orig_id, data->id, sender->id);
+        uint32_t orig_id = data->key.id;
+        sender->type->generate_id(sender, data);
+        if (orig_id != data->key.id){
+            log_warn("Data ID reassigned from %u to %u by msu %d",orig_id,
+                     data->key.id, sender->id);
         }
         log_debug("Assigned queue item %p id %u", data, data->id);
     }

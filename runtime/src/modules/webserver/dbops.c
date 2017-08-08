@@ -76,14 +76,15 @@ void *allocate_db_memory() {
 int init_db_socket() {
     int db_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if (db_fd < 0) {
-        printf("%s", "failure opening socket");
+        log_error("failure opening socket");
+        return -1;
     }
     int optval = 1;
     if (setsockopt(db_fd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)) < 0) {
-        printf("%s", " failed to set SO_REUSEPORT");
+        log_error("failed to set SO_REUSEPORT");
     }
     if (setsockopt(db_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
-        printf("%s", " failed to set SO_REUSEADDR");
+        log_error("failed to set SO_REUSEADDR");
     }
     //add_to_epoll(0, db_fd, 0);
     return db_fd;
@@ -92,6 +93,9 @@ int init_db_socket() {
 int connect_to_db(struct db_state *state) {
     if (state->db_fd <= 0) {
         state->db_fd = init_db_socket();
+        if (state->db_fd == -1) {
+            return -1;
+        }
     }
     int rtn = connect(state->db_fd, (struct sockaddr*)&db_addr, sizeof(db_addr)) < 0;
     if (rtn < 0) {

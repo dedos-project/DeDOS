@@ -57,7 +57,7 @@ extern "C" {
 struct generic_msu *socket_handler_instance = NULL;
 
 struct msu_fd_mask {
-    uint32_t id;
+    struct queue_key key;
     struct msu_path_element path;
 };
 
@@ -109,7 +109,7 @@ int mask_monitor_fd(int fd, uint32_t events, struct generic_msu *target_msu,
                     struct generic_msu_queue_item *queue_item) {
     struct blocking_socket_handler_state *state =
             socket_handler_instance->internal_state;
-    state->fd_mask[fd].id = queue_item->id;
+    state->fd_mask[fd].key = queue_item->key;
     state->fd_mask[fd].path = queue_item->path[0];
     state->fd_targets[fd] = target_msu;
     int rtn = add_to_epoll(state->epollfd, fd, events);
@@ -131,6 +131,11 @@ static int set_default_target(int fd, void *v_state) {
     return 0;
 }
 
+struct local_queue_key {
+    struct sockaddr_in sockaddr;
+    uint32_t local_ip;
+};
+
 /**
  * Processes incoming data on an existing connection, passing the ready
  * file descriptor to the appropriate next MSU
@@ -140,22 +145,23 @@ static int process_existing_connection(int fd, void *v_state) {
     log_custom(LOG_SOCKET_HANDLER, "Processing existing connection on fd %d", fd);
 
     struct msu_fd_mask *mask = &state->fd_mask[fd];
-    uint32_t id = mask->id;
-    if (id == 0) {
-        struct sockaddr_in sockaddr;
-        socklen_t addrlen = sizeof(sockaddr);
-        int rtn = getpeername(fd, (struct sockaddr*)&sockaddr, &addrlen);
+    struct queue_key key = mask->key;
+    if (key.id == 0) {
+        struct local_queue_key new_key;
+        socklen_t addrlen = sizeof(new_key.sockaddr);
+        int rtn = getpeername(fd, (struct sockaddr*)&new_key.sockaddr, &addrlen);
         if (rtn < 0) {
             log_perror("Could not getpeername() for packet ID");
             return -1;
         }
-        HASH_VALUE(&sockaddr, addrlen, id);
+        new_key.local_ip = runtimeIpAddress;
+        set_queue_key(&new_key, sizeof(new_key), &key);
     }
     struct connection *conn = calloc(1, sizeof(*conn));
     conn->fd = fd;
     struct generic_msu_queue_item *queue_item = create_generic_msu_queue_item();
     queue_item->buffer = conn;
-    queue_item->id = id;
+    queue_item->key = key;
     add_to_msu_path(queue_item, mask->path.type_id, mask->path.msu_id, mask->path.ip_address);
 
     if (state->fd_targets[fd] == NULL) {
@@ -229,7 +235,7 @@ static int socket_handler_receive(struct generic_msu *self, struct generic_msu_q
         return -1;
     }
     // So that the message will get enqueued to this MSU again
-    return DEDOS_BLOCKING_SOCKET_HANDLER_MSU_ID;
+    initial_msu_enqueue(NULL, 0, 0, self);
 }
 
 struct blocking_sock_init {

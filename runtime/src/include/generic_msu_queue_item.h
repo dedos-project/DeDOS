@@ -6,10 +6,9 @@
 #include <stdint.h>
 #include "logging.h"
 
-
 /* definition of struct that is an item of generic msu queue */
 struct generic_msu_queue_item {
-    uint32_t id;
+    struct queue_key key;
     struct generic_msu_queue_item *next;
     struct msu_path_element path[MAX_PATH_LEN];
     int path_index;
@@ -33,7 +32,7 @@ static inline struct generic_msu_queue_item * create_generic_msu_queue_item(){
         return NULL;
     }
     item->path_index = 0;
-    item->id = 0;
+    memset(&item->key, 0, sizeof(item->key));
     item->buffer_len = 0;
     item->buffer = NULL;
 #ifdef DATAPLANE_PROFILING

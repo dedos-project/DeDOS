@@ -64,6 +64,7 @@ int parse_http(struct parser_state *state, char *buf, ssize_t bytes) {
                                          buf, bytes);
 
     if (nparsed != bytes) {
+        buf[bytes] = '\0';
         log_error("Error parsing HTTP request %s (rcvd: %d, parsed: %d)",
                 buf, (int)bytes, (int)nparsed);
         return WS_ERROR;

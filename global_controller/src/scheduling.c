@@ -246,7 +246,7 @@ int place_on_runtime(struct dfg_runtime_endpoint *rt, struct dfg_vertex *msu) {
     msu->scheduling.thread = free_thread;
     msu->scheduling.runtime = rt;
 
-    char *init_data = NULL;
+    char *init_data = msu->init_data;
     ret = send_addmsu_msg(msu, init_data);
     if (ret == -1) {
         debug("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);
@@ -450,7 +450,7 @@ int wire_msu(struct dfg_vertex *msu) {
                 }
 
                 //Does the new MSU's runtime has a route toward destination MSU's type?
-                struct dfg_route *route = get_route_from_type(rt, dst->msu_type);
+                struct dfg_route *route = get_msu_route_from_type(msu, dst->msu_type);
                 if (route == NULL) {
                     int route_id = generate_route_id(rt);
                     ret = dfg_add_route(rt, route_id, dst->msu_type);
@@ -459,7 +459,7 @@ int wire_msu(struct dfg_vertex *msu) {
                               rt->id, dst->msu_type);
                         return -1;
                     }
-                    route = get_route_from_type(rt, dst->msu_type);
+                    route = get_route_from_id(rt, route_id);
                 }
 
                 //Is the route already attached to the new MSU?
@@ -534,7 +534,7 @@ int wire_msu(struct dfg_vertex *msu) {
                 }
 
                 //Does the source's runtime has a route toward new MSU's type?
-                struct dfg_route *route = get_route_from_type(src_rt, msu->msu_type);
+                struct dfg_route *route = get_msu_route_from_type(source, msu->msu_type);
                 if (route == NULL) {
                     int route_id = generate_route_id(src_rt);
                     ret = dfg_add_route(rt, route_id, msu->msu_type);
@@ -543,7 +543,7 @@ int wire_msu(struct dfg_vertex *msu) {
                               src_rt->id, msu->msu_type);
                         return -1;
                     }
-                    route = get_route_from_type(src_rt, msu->msu_type);
+                    route = get_route_from_id(src_rt, route_id);
                 }
 
                 //Is the route attached to that source msu?

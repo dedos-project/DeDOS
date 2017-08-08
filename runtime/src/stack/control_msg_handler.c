@@ -152,6 +152,11 @@ static int action_create_msu(struct dedos_control_msg *control_msg){
             log_info("Placement in thread %d", placement_index);
         } else if (strncasecmp(create_action->init_data, "blocking", 8) == 0) {
             log_debug("Request for creation of blocking MSU");
+            // FIXME: VERY DIRTY HACK BELOW VVV 
+            memcpy(create_action->init_data, 
+                  create_msu_msg->init_data + strlen("blocking  "),
+                  create_msu_msg->init_data_size - strlen("blocking  "));
+            create_action->init_data_len -= strlen("blocking  ");
 
             mutex_lock(all_threads_mutex);
             placement_index = on_demand_create_worker_thread(1);

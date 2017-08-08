@@ -92,7 +92,7 @@ struct stat_type {
  * This structure defines the format and size of the statistics being logged
  * NOTE: Entries *MUST* be in the same order as the enumerator in stats.h!
  */
-struct stat_type stat_types[10] = {
+struct stat_type stat_types[] = {
    {QUEUE_LEN,           LOG_QUEUE_LEN,           MAX_MSU, MAX_STAT, "%02.0f",  "MSU_QUEUE_LENGTH"},
    {ITEMS_PROCESSED,     LOG_ITEMS_PROCESSED,     MAX_MSU, MAX_STAT, "%03.0f",  "ITEMS_PROCESSED"},
    {MSU_FULL_TIME,       LOG_MSU_FULL_TIME,       MAX_MSU, MAX_STAT, "%0.9f",   "MSU_FULL_TIME"},
@@ -102,7 +102,8 @@ struct stat_type stat_types[10] = {
    {N_CONTEXT_SWITCH,    LOG_N_CONTEXT_SWITCH,    11,  MAX_STAT, "%3.0f",   "N_CONTEXT_SWITCHES"},
    {BYTES_SENT,          LOG_BYTES_SENT,          1,  MAX_STAT, "%06.0f",  "BYTES_SENT"},
    {BYTES_RECEIVED,      LOG_BYTES_RECEIVED,      1,  MAX_STAT, "%06.0f",  "BYTES_RECEIVED"},
-   {GATHER_THREAD_STATS, LOG_GATHER_THREAD_STATS, 11,  MAX_STAT, "%0.9f",   "GATHER_THREAD_STATS"}
+   {GATHER_THREAD_STATS, LOG_GATHER_THREAD_STATS, 11,  MAX_STAT, "%0.9f",   "GATHER_THREAD_STATS"},
+   {N_STATES,            1,                      MAX_MSU, MAX_STAT, "%09.0f", "NUM_STATES"}
 };
 
 #define N_STAT_TYPES sizeof(stat_types) / sizeof(struct stat_type)
@@ -300,6 +301,10 @@ void periodic_aggregate_end_time(enum stat_id stat_id, unsigned int item_id, int
  * @param item_id ID for the item to which the stat refers ( < MAX_ITEM_ID )
  */
 double get_last_stat(enum stat_id stat_id, unsigned int item_id ) {
+    struct stat_type *stat_type = &stat_types[stat_id];
+    if ( !stat_type->enabled) {
+        return -1;
+    }
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
 
     lock_item(item);
@@ -316,7 +321,7 @@ double get_last_stat(enum stat_id stat_id, unsigned int item_id ) {
  */
 void increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
     struct stat_type *stat_type = &stat_types[stat_id];
-    if ( !stat_types->enabled ) {
+    if ( !stat_type->enabled ) {
         return;
     }
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];
@@ -351,7 +356,7 @@ void increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
  */
 void aggregate_stat(enum stat_id stat_id, unsigned int item_id, double stat, int relog) {
     struct stat_type *stat_type = &stat_types[stat_id];
-    if ( !stat_types->enabled ) {
+    if ( !stat_type->enabled ) {
         return;
     }
     struct item_stats *item = &saved_stats[stat_id].item_stats[item_id];

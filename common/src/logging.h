@@ -40,6 +40,7 @@
 #define log_info(...) do {} while (0)
 #endif
 
+
 #if defined(LOG_ERROR) && LOG_ERROR
 #define log_error(fmt, ...)\
     log_at_level("ERROR", ANSI_COLOR_RED, LOG_FD, fmt, ##__VA_ARGS__)
@@ -47,6 +48,7 @@
     log_at_level("ERROR", ANSI_COLOR_RED, LOG_FD, fmt ": %s", ##__VA_ARGS__, strerror(errno))
 #else
 #define log_error(...) do {} while (0)
+#define log_perror(...) do {} while (0)
 #endif
 
 #if defined(LOG_WARN) && LOG_WARN

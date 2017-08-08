@@ -14,16 +14,16 @@ static int write_http_response(struct generic_msu *self,
     struct response_state *resp_in = queue_item->buffer;
 
     size_t size = 0;
-    struct response_state *resp = msu_get_state(self, queue_item->id, 0, &size);
+    struct response_state *resp = msu_get_state(self, &queue_item->key, 0, &size);
     if (resp == NULL) {
-        resp = msu_init_state(self, queue_item->id, 0, sizeof(*resp));
+        resp = msu_init_state(self, &queue_item->key, 0, sizeof(*resp));
         memcpy(resp, resp_in, sizeof(*resp_in));
     }
 
     int rtn = write_response(resp);
     if (rtn & WS_ERROR) {
         close_connection(&resp->conn);
-        msu_free_state(self, queue_item->id, 0);
+        msu_free_state(self, &queue_item->key, 0);
         return -1;
     } else if (rtn & (WS_INCOMPLETE_READ | WS_INCOMPLETE_WRITE)) {
         monitor_fd(resp->conn.fd, RTN_TO_EVT(rtn), self);
@@ -33,7 +33,7 @@ static int write_http_response(struct generic_msu *self,
         log_custom(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
                    resp->conn.fd);
         log_custom(LOG_WEBSERVER_WRITE, "Wrote request: %s", resp->resp);
-        msu_free_state(self, queue_item->id, 0);
+        msu_free_state(self, &queue_item->key, 0);
         return 0;
     }
 }

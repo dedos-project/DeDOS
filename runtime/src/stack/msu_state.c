@@ -1,6 +1,7 @@
 #include "msu_state.h"
 #include "stats.h"
 #include "generic_msu.h"
+#include "msu_queue.h"
 #include <stdlib.h>
 
 #ifndef LOG_MSU_STATE_MANAGEMENT
@@ -17,7 +18,7 @@
  *      msu_free_state()
  */
 struct msu_state{
-    uint32_t id;
+    struct composite_key id;
     size_t size;
     void *data;
     struct msu_state *substates;
@@ -25,7 +26,7 @@ struct msu_state{
     UT_hash_handle hh;
 };
 
-#define CHECK_STATE_REPLACEMENT 0
+#define CHECK_STATE_REPLACEMENT 1
 static inline int alloc_substates(struct msu_state *parent, unsigned int n) {
     if (parent->n_substates < n ) {
         int orig = parent->n_substates;
@@ -58,44 +59,45 @@ static inline int alloc_substates(struct msu_state *parent, unsigned int n) {
  * @param size size of the data to allocate
  * @return void* pointer to the newly allocated data
  */
-void *msu_init_state(struct generic_msu *msu, uint32_t key, unsigned int key2, size_t size) {
+void *msu_init_state(struct generic_msu *msu, struct queue_key *key, unsigned int key2, size_t size) {
     struct msu_state *state_p = malloc(sizeof(*state_p));
-    state_p->id = key;
+    memcpy(&state_p->id, &(key->key), key->key_len);
     state_p->data = malloc(size);
     state_p->size = size;
     if (key2 == 0) {
         log_custom(LOG_MSU_STATE_MANAGEMENT,
                 "Allocating new state of size %d for msu %d, key %d-%d",
-                (int)size, msu->id, key, key2);
+                (int)size, msu->id, (int)key->id, key2);
         state_p->n_substates = 0;
 #if CHECK_STATE_REPLACEMENT
         struct msu_state *old_data = NULL;
-        HASH_REPLACE(hh, msu->state_p, id, sizeof(key), state_p, old_data);
+        HASH_REPLACE(hh, msu->state_p, id, key->key_len, state_p, old_data);
         if (old_data != NULL) {
             log_warn("Replacing old state! Not freeing! This could be very bad!");
         }
 #else
-        HASH_ADD(hh, msu->state_p, id, sizeof(key), state_p);
+        HASH_ADD(hh, msu->state_p, id, key->key_len, state_p);
 #endif
         increment_stat(MEMORY_ALLOCATED, msu->id, (double)(sizeof(*state_p) + size));
+        increment_stat(N_STATES, msu->id, 1);
         log_custom(LOG_MSU_STATE_MANAGEMENT,
-                   "returning state %p for key %d", state_p->data, (int)key);
+                   "returning state %p for key %d", state_p->data, (int)key->id);
         return state_p->data;
     } else {
         log_custom(LOG_MSU_STATE_MANAGEMENT,
                 "Allocating new substate of size %d for msu %d, key %d-%u",
-                (int)size, msu->id, key, key2);
+                (int)size, msu->id, (int)key->id, key2);
         size_t added_size = 0;
         struct msu_state *parent;
-        HASH_FIND(hh, msu->state_p, &key, sizeof(key), parent);
+        HASH_FIND(hh, msu->state_p, &(key->key), key->key_len, parent);
         if (parent == NULL) {
             parent = malloc(sizeof(*parent));
-            parent->id = key;
+            memcpy(&parent->id, &(key->key), key->key_len);
             parent->size = 0;
             added_size += sizeof(*parent);
             parent->substates = NULL;
             parent->n_substates = 0;
-            HASH_ADD(hh, msu->state_p, id, sizeof(key), parent);
+            HASH_ADD(hh, msu->state_p, id, key->key_len, parent);
         }
         int new_size = alloc_substates(parent, key2);
         if (new_size < 0) {
@@ -113,6 +115,7 @@ void *msu_init_state(struct generic_msu *msu, uint32_t key, unsigned int key2, s
         substate->data = realloc(substate->data, size);
         log_custom(LOG_MSU_STATE_MANAGEMENT, "Added allocation: %d", (int)added_size);
         increment_stat(MEMORY_ALLOCATED, msu->id, (double)added_size);
+        increment_stat(N_STATES, msu->id, 1);
         return substate->data;
     }
 }
@@ -124,18 +127,21 @@ void *msu_init_state(struct generic_msu *msu, uint32_t key, unsigned int key2, s
  * @param key key for the state to be changed
  * @param size size fo the data to realloc
  * @return void* pointer to the newly realloc'd data
+ * FIXME: BROKEN!
  */
-void *msu_realloc_state(struct generic_msu *msu, uint32_t key, unsigned int key2, size_t size) {
+void *msu_realloc_state(struct generic_msu *msu, struct queue_key *key,
+                        unsigned int key2, size_t size) {
     struct msu_state *state_p;
-    HASH_FIND(hh, msu->state_p, &key, sizeof(key), state_p);
+    HASH_FIND(hh, msu->state_p, &(key->key), key->key_len, state_p);
     if (state_p == NULL) {
         log_custom(LOG_MSU_STATE_MANAGEMENT,
                 "Reallocation of msu %d, key%d-%u actually initialization",
-                msu->id, key, key2);
+                msu->id, (int)key->id, key2);
         return msu_init_state(msu, key, key2, size);
     } else {
         log_custom(LOG_MSU_STATE_MANAGEMENT,
-                "Reallocating msu %d, key%d-%u, to size %d", msu->id, key, key2, (int)size);
+                "Reallocating msu %d, key%d-%u, to size %d",
+                msu->id, (int)key->id, key2, (int)size);
         if (key2 == 0) {
             state_p->data = realloc(state_p->data, size);
             if (state_p->data == NULL) {
@@ -170,11 +176,12 @@ void *msu_realloc_state(struct generic_msu *msu, uint32_t key, unsigned int key2
  *              Pass NULL if size is not of interest
  * @return void* pointer to the allocated state or NULL if key doesn't exist
  */
-void *msu_get_state(struct generic_msu *msu, uint32_t key, unsigned int key2, size_t *size) {
+void *msu_get_state(struct generic_msu *msu, struct queue_key *key,
+                    unsigned int key2, size_t *size) {
     struct msu_state *state_p;
-    HASH_FIND(hh, msu->state_p, &key, sizeof(key), state_p);
+    HASH_FIND(hh, msu->state_p, &(key->key), key->key_len, state_p);
     log_custom(LOG_MSU_STATE_MANAGEMENT,
-            "Accessing state for MSU %d, key %d-%u", msu->id, key, key2);
+            "Accessing state for MSU %d, key %d-%u", msu->id, (int)key->id, key2);
     if (state_p == NULL) {
         log_custom(LOG_MSU_STATE_MANAGEMENT, "State does not exist!");
         return NULL;
@@ -183,7 +190,7 @@ void *msu_get_state(struct generic_msu *msu, uint32_t key, unsigned int key2, si
             if (size != NULL)
                 *size = state_p->size;
             log_custom(LOG_MSU_STATE_MANAGEMENT, 
-                       "returning state %p for key %d", state_p->data, (int)key);
+                       "returning state %p for key %d", state_p->data, (int)key->id);
             return state_p->data;
         } else {
             if (state_p->n_substates < key2) {
@@ -202,14 +209,13 @@ void *msu_get_state(struct generic_msu *msu, uint32_t key, unsigned int key2, si
  * @param key The key used to retrieve the state
  * @return 0 on success, -1 on error
  */
-int msu_free_state(struct generic_msu *msu, uint32_t key, unsigned int key2) {
+int msu_free_state(struct generic_msu *msu, struct queue_key *key, unsigned int key2) {
     struct msu_state *state_p;
-    HASH_FIND(hh, msu->state_p, &key, sizeof(key), state_p);;
+    HASH_FIND(hh, msu->state_p, &(key->key), key->key_len, state_p);;
     log_custom(LOG_MSU_STATE_MANAGEMENT,
-               "Freeing state for MSU %d, key %d-%u", msu->id, key, key2);
+               "Freeing state for MSU %d, key %d-%u", msu->id, (int)(key->id), key2);
     if (state_p == NULL) {
-        log_custom(LOG_MSU_STATE_MANAGEMENT,
-                   "State does not exist!");
+        log_warn("State does not exist!");
         return -1;
     } else {
         if (key2 == 0) {
@@ -224,6 +230,7 @@ int msu_free_state(struct generic_msu *msu, uint32_t key, unsigned int key2) {
                     (int)state_p->size, (int)(sizeof(*state_p) + state_p->size));
             increment_stat(MEMORY_ALLOCATED, msu->id,
                            (double)(-1 * (int)(sizeof(*state_p) + state_p->size)));
+            increment_stat(N_STATES, msu->id, -1);
             free(state_p->data);
             free(state_p);
             return 0;
@@ -245,7 +252,11 @@ void msu_free_all_state(struct generic_msu *msu) {
     // Iterate over and free all of the states
     struct msu_state *state, *tmp;
     HASH_ITER(hh, msu->state_p, state, tmp) {
-        log_info("Freeing MSU %d state %d due to deletion", msu->id, state->id);
-        msu_free_state(msu, state->id, 0);
+        log_info("Freeing MSU %d state due to deletion", msu->id);
+        // FIXME -- THIS MAY BREAK ON LOGGING.
+        // It only "actually" uses the first entry in the queue_key, which is the
+        // composite ID. This needs to be changed so that it manually frees
+        // each item rather than relying on the free_state function
+        msu_free_state(msu, (struct queue_key*)&state->id, 0);
     }
 }

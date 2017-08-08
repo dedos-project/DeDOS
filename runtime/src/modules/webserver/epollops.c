@@ -111,9 +111,11 @@ int epoll_loop(int socket_fd, int epoll_fd,
        void *data) {
     struct epoll_event events[MAX_EPOLL_EVENTS];
 
-    while (1) {
-        // Wait indefinitely
-        int n = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+    for (int j=0; j<100;  j++) {    
+        int n = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, 100);
+        if (n == 0) {
+            break;
+        }
 
         for (int i=0; i < n; ++i) {
             if (socket_fd == events[i].data.fd) {

@@ -39,7 +39,7 @@ static int handle_read(struct read_state *read_state,
     free(queue_item->buffer);
     queue_item->buffer = out;
     queue_item->buffer_len = sizeof(*out);
-    msu_free_state(self, queue_item->id, 0);
+    msu_free_state(self, &queue_item->key, 0);
     return DEDOS_WEBSERVER_HTTP_MSU_ID;
 }
 
@@ -53,7 +53,7 @@ static int handle_accept(struct read_state *read_state,
         return rtn;
     } else if (rtn & WS_ERROR) {
         close_connection(&read_state->conn);
-        msu_free_state(self, queue_item->id, 0);
+        msu_free_state(self, &queue_item->key, 0);
         return -1;
     } else {
         read_state->conn.status = CON_SSL_CONNECTING;
@@ -71,9 +71,9 @@ static int read_http_request(struct generic_msu *self,
     int fd = conn_in->fd;
 
     size_t size = -1;
-    struct read_state *read_state = msu_get_state(self, queue_item->id, 0, &size);
+    struct read_state *read_state = msu_get_state(self, &queue_item->key, 0, &size);
     if (read_state == NULL) {
-        read_state = msu_init_state(self, queue_item->id, 0, sizeof(*read_state));
+        read_state = msu_init_state(self, &queue_item->key, 0, sizeof(*read_state));
         init_read_state(read_state, conn_in);
         if (conn_in->ssl != NULL) {
             read_state->conn.status = CON_READING;
@@ -117,7 +117,8 @@ static int ws_read_init(struct generic_msu *self,
         log_info("Initializing SSL webserver-reading MSU");
         ws_state->use_ssl = 1;
     } else {
-        ws_state->use_ssl = 0;
+        log_info("Initializing NON-SSL webserver-reading MSU due to init cmd %s", init_cmd);
+        ws_state->use_ssl = 1;
     }
 
     self->internal_state = (void*)ws_state;

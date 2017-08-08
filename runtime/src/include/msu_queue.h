@@ -8,6 +8,7 @@
 #ifndef MSU_QUEUE_H_
 #define MSU_QUEUE_H_
 #include <inttypes.h>
+#include <unistd.h>
 
 // Forward declarations for circular dependency
 struct generic_msu;
@@ -19,6 +20,18 @@ struct generic_msu_queue_item;
 
 #define MAX_PATH_LEN 8
 
+struct composite_key {
+    uint64_t a;
+    uint64_t b;
+    uint64_t c;
+};
+
+struct queue_key {
+    struct composite_key key;
+    size_t key_len;
+    int32_t id;
+};
+
 /** For holding the path that a queue item has traversed */
 struct msu_path_element {
     int type_id;
@@ -26,6 +39,7 @@ struct msu_path_element {
     uint32_t ip_address;
 };
 
+void set_queue_key(void *src, ssize_t src_len, struct queue_key *dst);
 
 /**
  * Adds an item to the path recorded inside an queue_item

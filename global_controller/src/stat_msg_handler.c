@@ -7,6 +7,7 @@
 #include "tmp_msu_headers.h"
 #include "timeseries.h"
 #include "controller_tools.h"
+#include "scheduling.h"
 #include "stat_msg_handler.h"
 #include "communication.h"
 #include "control_protocol.h"
@@ -36,9 +37,9 @@ struct cloning_info {
 };
 
 struct cloning_info CLONING_INFO[] = {
-//    { DEDOS_SSL_READ_MSU_ID },
-    { DEDOS_WEBSERVER_READ_MSU_ID },
-//     { DEDOS_WEBSERVER_REGEX_MSU_ID },
+// { DEDOS_SSL_READ_MSU_ID },
+//    { DEDOS_WEBSERVER_MSU_ID },
+     { DEDOS_WEBSERVER_HTTP_MSU_ID },
 };
 
 int CLONING_INFO_LEN = sizeof(CLONING_INFO) / sizeof(struct cloning_info);
@@ -65,7 +66,7 @@ int gather_cloning_info(struct stats_control_payload *stats, struct cloning_info
             continue;
         }
         type_cloning_info->msu_sample = msu;
-        double stat = average_n(msu, QUEUE_LEN, STAT_SAMPLE_SIZE * 2);
+        double stat = average_n(msu, N_STATES, STAT_SAMPLE_SIZE * 2);
         if (stat != -1) {
             type_cloning_info->stat[type_cloning_info->n_msu] = stat;
             log_custom(LOG_CLONE_DECISIONS, "Stat of msu %d (%d) is %.2f",
@@ -110,8 +111,9 @@ int make_cloning_decision(struct cloning_info *cloning_info, int info_len, struc
     for (int i = 0; i < info_len; i++) {
         log_custom(LOG_CLONE_DECISIONS, "Ratio stat %d (%d): %.3f", i, cloning_info[i].type_id, ratio_stats[i]);
 
-        if (ratio_stats[i] > 1) {
-            if (cloning_info[i].msu_sample->scheduling.cloneable > 0) {
+        if (ratio_stats[i] > 2048) {
+            // FIXME: THIS MSU IS NOT CLONABLE
+            if (cloning_info[i].msu_sample->scheduling.cloneable >= 0) {
                 int j;
                 for (j=n_to_clone-1; j>=0; j--) {
                     if (to_clone_stats[j] < ratio_stats[i]) {
@@ -177,6 +179,9 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
             case MSU_INTERNAL_TIME:
                 to_modify = &msu->statistics.execution_time;
                 break;
+            case N_STATES:
+                to_modify = &msu->statistics.n_states;
+                break;
             default:
                 log_error("No stat handler for stat_id %d", sample->stat_id);
                 errored = -1;
@@ -209,6 +214,13 @@ int process_stats_msg(struct stats_control_payload *stats, int runtime_sock) {
         int n_to_clone = make_cloning_decision(CLONING_INFO, info_len, to_clone);
         log_custom(LOG_CLONE_DECISIONS, "Cloning %d MSUs", n_to_clone);
         for (int i = 0; i < n_to_clone; i++) {
+            if (to_clone[i]->msu_type == DEDOS_WEBSERVER_HTTP_MSU_ID) {
+                struct msus_of_type *read_msus = get_msus_from_type(DEDOS_WEBSERVER_READ_MSU_ID);
+                if (read_msus != NULL) {
+                    to_clone[i] = get_msu_from_id(read_msus->msu_ids[0]);
+                    free(read_msus);
+                }
+            }
             struct dfg_vertex *msu = clone_msu(to_clone[i]->msu_id);
             if (msu == NULL) {
                 log_error("Clone msu failed for msu %d", to_clone[i]->msu_id);

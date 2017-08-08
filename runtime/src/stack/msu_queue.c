@@ -14,10 +14,26 @@
 #define LOG_INITIAL_ENQUEUES 0
 #endif
 
+void set_queue_key(void *src, ssize_t src_len, struct queue_key *dst) {
+    HASH_VALUE(src, src_len, dst->id);
+    if (src_len > sizeof(dst->key)) {
+        log_warn("Key length too large for composite key!");
+        src_len = sizeof(dst->key);
+    }
+#if LOG_INITIAL_ENQUEUES
+    struct sockaddr_in *addr = src;
+    log_custom(LOG_INITIAL_ENQUEUES, "\nip: %u\nport: %d\nid:%u",
+            addr->sin_addr.s_addr, ntohs(addr->sin_port), dst->id);
+#endif
+    memcpy(&dst->key, src, src_len);
+    dst->key_len = src_len;
+}
+
+
 void add_to_msu_path(struct generic_msu_queue_item *queue_item,
                      int type_id, int id, uint32_t ip_address) {
     struct msu_path_element *path = &queue_item->path[queue_item->path_index];
-    log_info("Setting path %d to %d", queue_item->path_index, (int)ip_address);
+    //log_info("Setting path %d to %d", queue_item->path_index, (int)ip_address);
     path->type_id = type_id;
     path->msu_id = id;
     path->ip_address = ip_address;

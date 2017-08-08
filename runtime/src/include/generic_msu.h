@@ -135,11 +135,9 @@ struct msu_type{
      * IDs could be reassigned as the queue item traverses the stack.
      * @param self MSU receiving data
      * @param queue_item item to be passed to subsequent MSUs
-     * @return the ID to be assigned to the queue item, used for
-     *         subsequent routing decisions
      */
-    uint32_t (*generate_id)(struct generic_msu *self,
-                            struct generic_msu_queue_item *queue_item);
+    void (*generate_id)(struct generic_msu *self,
+                        struct generic_msu_queue_item *queue_item);
 };
 
 /**
@@ -227,7 +225,7 @@ struct generic_msu *init_msu_external(unsigned int type_id, int msu_id, int thre
 void destroy_msu(struct generic_msu *self);
 
 /** Default function for ID generation. Hashes the beginning of the buffer. */
-uint32_t default_generate_id(struct generic_msu *self,
+struct msu_id default_generate_id(struct generic_msu *self,
                              struct generic_msu_queue_item *queue_item);
 
 /** Default function to enqueue data onto a local msu. */
