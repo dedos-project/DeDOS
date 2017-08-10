@@ -52,6 +52,7 @@ static void print_packet_stats(struct hs_internal_state* in_state){
     printf("HS syn_established_sock: %lu\n",in_state->syn_established_sock);
     printf("HS syns_dropped: %lu\n",in_state->syns_dropped);
     printf("HS synacks_generated: %lu\n",in_state->synacks_generated);
+    printf("HS restore sock req count: %lu\n",in_state->socket_restore_gen_request_count);
     int count;
     count = hs_count_sockets(in_state->hs_table);
     printf("HS Sockets count: %d\n",count);
@@ -159,6 +160,8 @@ static void send_to_next_msu(struct generic_msu *self, unsigned int message_type
         next_msu_type = DEDOS_TCP_DATA_MSU_ID;
     }
     if (message_type == MSU_PROTO_TCP_CONN_RESTORE) {
+        struct hs_internal_state *in_state = self->internal_state;
+        in_state->socket_restore_gen_request_count++;
         next_msu_type = DEDOS_TCP_DATA_MSU_ID;
     }
 
@@ -1579,6 +1582,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     in_state->syns_processed = 0;
     in_state->syn_with_sock = 0;
     in_state->duplicate_syns_processed = 0;
+    in_state->socket_restore_gen_request_count = 0;
     in_state->last_ts = 0;
     handshake_msu->internal_state = in_state;
 
