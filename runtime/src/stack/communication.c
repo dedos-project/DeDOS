@@ -621,7 +621,13 @@ void dedos_control_rcv(int peer_sk)
                 (char*) (rcv_buf + sizeof(struct dedos_intermsu_message));
         log_debug("%s", "Received following inter dedos message");
         print_dedos_intermsu_message(msg);
-
+#if 0
+        //TODO CRITICAL
+        //check if recvd data has more than 1 dedos_intermsu_message
+        printf("Recvd data len: %d\n", data_len);
+        printf("Parsed msg payload len: %d\n",msg->payload_len);
+        printf("Full msg len should be: %d\n",msg->payload_len + sizeof(struct dedos_intermsu_message));
+#endif
         //Find destination msu pointer based on dst_msu_id to call restore of that
         //msu which should either enqueue or do whatever needs to be done with the data
         if (!msg->dst_msu_id) {
