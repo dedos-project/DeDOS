@@ -833,7 +833,7 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         return -1;
     }
     else {
-        in_state->acks_ignored++;
+        in_state->acks_ignored += 1000;
     }
     return 0;
 }
@@ -997,6 +997,9 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     struct pico_socket *sock_found = find_tcp_socket(sp, f);
 
     tcp_sock_found = (struct pico_socket_tcp *) sock_found;
+    if(flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK){
+        in_state->acks_received++;
+    }
 
     // take care socket found or not based of flags and current state of socket
     if (flags == PICO_TCP_SYN && !tcp_sock_found) /* First SYN */
@@ -1049,7 +1052,6 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK ) && sock_found) /* ACK for prev seen SYN */
     {
         log_debug("Recieved an ACK, with a known socket %s", "");
-        in_state->acks_received++;
         if (sock_found->state == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
                                   PICO_SOCKET_STATE_CONNECTED)) /* First ACK */
         {
