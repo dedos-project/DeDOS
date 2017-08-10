@@ -52,6 +52,7 @@ static void print_packet_stats(struct hs_internal_state* in_state){
     printf("HS syn_established_sock: %lu\n",in_state->syn_established_sock);
     printf("HS syns_dropped: %lu\n",in_state->syns_dropped);
     printf("HS synacks_generated: %lu\n",in_state->synacks_generated);
+    printf("HS handshakes completed: %lu\n", in_state->completed_handshakes);
     printf("HS restore sock req count: %lu\n",in_state->socket_restore_gen_request_count);
     int count;
     count = hs_count_sockets(in_state->hs_table);
@@ -816,6 +817,7 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         //printf("rcv_nxt is now %08x", t->rcv_nxt);
         s->state &= 0x00FFU;
         s->state |= PICO_SOCKET_STATE_TCP_ESTABLISHED;
+        in_state->completed_handshakes++;
 #if DEBUG != 0
         log_info("TCP Connection established. State: %04x", s->state);
         log_debug("snd_nxt is now %08x", t->snd_nxt);
@@ -1582,6 +1584,7 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     in_state->syns_processed = 0;
     in_state->syn_with_sock = 0;
     in_state->duplicate_syns_processed = 0;
+    in_state->completed_handshakes = 0;
     in_state->socket_restore_gen_request_count = 0;
     in_state->last_ts = 0;
     handshake_msu->internal_state = in_state;
