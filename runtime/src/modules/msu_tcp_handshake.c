@@ -52,6 +52,9 @@ static void print_packet_stats(struct hs_internal_state* in_state){
     printf("HS syn_established_sock: %lu\n",in_state->syn_established_sock);
     printf("HS syns_dropped: %lu\n",in_state->syns_dropped);
     printf("HS synacks_generated: %lu\n",in_state->synacks_generated);
+    printf("HS acks received: %lu\n",in_state->acks_received);
+    printf("HS acks ignored: %lu\n",in_state->acks_ignored);
+
     printf("HS handshakes completed: %lu\n", in_state->completed_handshakes);
     printf("HS restore sock req count: %lu\n",in_state->socket_restore_gen_request_count);
     int count;
@@ -829,7 +832,9 @@ static int handle_ack(struct generic_msu *self, struct pico_frame *f, struct pic
         remove_completed_request(in_state,  (struct pico_socket *)t);
         return -1;
     }
-
+    else {
+        in_state->acks_ignored++;
+    }
     return 0;
 }
 
@@ -1044,6 +1049,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
     else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK ) && sock_found) /* ACK for prev seen SYN */
     {
         log_debug("Recieved an ACK, with a known socket %s", "");
+        in_state->acks_received++;
         if (sock_found->state == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_SYN_RECV |
                                   PICO_SOCKET_STATE_CONNECTED)) /* First ACK */
         {
@@ -1134,6 +1140,7 @@ static int msu_process_hs_request_in(struct generic_msu *self, int reply_msu_id,
         }
     }
     else if ((flags == PICO_TCP_ACK || flags == PICO_TCP_PSHACK) && !sock_found) {
+        in_state->acks_ignored++;
     	log_warn("ACK with no associated socket %s","");
     }
     else if ((flags == PICO_TCP_RST || flags == PICO_TCP_PSHACK) && sock_found) {
@@ -1584,6 +1591,8 @@ struct generic_msu* msu_tcp_handshake_init(struct generic_msu *handshake_msu,
     in_state->syns_processed = 0;
     in_state->syn_with_sock = 0;
     in_state->duplicate_syns_processed = 0;
+    in_state->acks_received = 0;
+    in_state->acks_ignored = 0;
     in_state->completed_handshakes = 0;
     in_state->socket_restore_gen_request_count = 0;
     in_state->last_ts = 0;
