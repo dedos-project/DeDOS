@@ -311,6 +311,9 @@ static int check_socket_sanity(struct pico_socket *s)
     /* checking for pending connections */
     if (TCP_STATE(s) == PICO_SOCKET_STATE_TCP_SYN_RECV) {
         if ((PICO_TIME_MS() - s->timestamp) >= PICO_SOCKET_BOUND_TIMEOUT){
+            if(s->remote_addr.ip4.addr == 0x1e00000a){
+                printf("removing good client expired sock\n");
+            }
             return -1;
         }
     }
