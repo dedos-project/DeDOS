@@ -3,7 +3,7 @@ LD=ld -r
 DEPENDS=gcc -MM -MF
 FINAL=gcc
 
-PRINT_COMPILATION=0
+PRINT_COMPILATION=1
 DEBUG = 0
 
 LOGS = \
@@ -12,12 +12,14 @@ LOGS = \
 	  	WARN \
 	   	CRITICAL \
 	   	CUSTOM \
+		#PRINT_TIMESERIES \
+		DEBUG \
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 
 SELF=./Makefile
 
-CFLAGS=-Wall -g --std=gnu99 $(LOG_DEFINES)
+CFLAGS=-Wall -g --std=gnu99  $(LOG_DEFINES)
 
 ifeq ($(DEBUG), 1)
 	CFLAGS+=-ggdb

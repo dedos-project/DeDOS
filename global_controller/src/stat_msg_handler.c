@@ -37,9 +37,9 @@ struct cloning_info {
 };
 
 struct cloning_info CLONING_INFO[] = {
-// { DEDOS_SSL_READ_MSU_ID },
-//    { DEDOS_WEBSERVER_MSU_ID },
-     { DEDOS_WEBSERVER_HTTP_MSU_ID },
+     { DEDOS_WEBSERVER_READ_MSU_ID },
+     { DEDOS_WEBSERVER_REGEX_MSU_ID },
+     { DEDOS_WEBSERVER_HTTP_MSU_ID }
 };
 
 int CLONING_INFO_LEN = sizeof(CLONING_INFO) / sizeof(struct cloning_info);

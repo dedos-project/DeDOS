@@ -1,7 +1,7 @@
 TARGETS = global_controller
 CC:=$(CROSS_COMPILE)gcc
 ADDRESS_SANITIZER?=0
-DEBUG=0
+DEBUG=1
 
 LOGS = \
 	   DEBUG \
@@ -10,7 +10,8 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   #CLONE_DECISIONS \
+	   CLONE_DECISIONS \
+	   PRINT_TIMESERIES
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 

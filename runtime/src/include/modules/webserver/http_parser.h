@@ -49,7 +49,7 @@ typedef unsigned __int64 uint64_t;
  * faster
  */
 #ifndef HTTP_PARSER_STRICT
-# define HTTP_PARSER_STRICT 1
+# define HTTP_PARSER_STRICT 0
 #endif
 
 /* Maximium header size allowed. If the macro is not defined

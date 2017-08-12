@@ -8,14 +8,29 @@ LOGS = \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   CUSTOM \
+	   #CUSTOM \
+	   ROUTING_CHANGES \
+	   #PARTIAL_READS \
+	   INITIAL_ENQUEUES
+	   #PARTIAL_READS \
+	   #HTTP_MSU
+	   #WEBSERVER_WRITE \
+	   #CONNECTION_INFO \
+	   #ROUTING_DECISIONS \
+	   #REMOTE_SENDS \
+	   DEBUG \
+	   INITIAL_ENQUEUES
+	   #DEBUG \
 	   HTTP_MSU \
 	   DEBUG \
 	   WEBSERVER_READ \
 	   EPOLL_OPS \
 	   WEBSERVER_ROUTING \
 	   CONNECTION_INFO \
-	   DB_OPS
+	   DB_OPS \
+	   ROUTING_CHANGES \
+	   ROUTING_DECISIONS
+	   #STAT_INTERNALS \
 
 DATAPLANE_PROFILING=0
 DEBUG = 1
@@ -65,7 +80,7 @@ CFLAGS_dummy_msu= -lpcre
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
 LOG_DEFINES+=$(foreach logname, $(DISABLED_LOGS), -DLOG_$(logname)=0)
 
-CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 $(LOG_DEFINES)
+CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 -DHASH_FUNCTION=HASH_SAX $(LOG_DEFINES)
 
 ifeq ($(DEBUG), 1)
 	CFLAGS+=-ggdb
