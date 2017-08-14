@@ -61,9 +61,11 @@ extern void pico_mem_page0_free(void*ptr);
 
 struct pico_tree_node *pico_tree_firstNode(struct pico_tree_node *node)
 {
-    while(IS_NOT_LEAF(node->leftChild))
-        node = node->leftChild;
-    return node;
+    struct pico_tree_node *tmp = node;
+    while(tmp->leftChild != &LEAF){
+        tmp = tmp->leftChild;
+    }
+    return tmp;
 }
 
 struct pico_tree_node *pico_tree_lastNode(struct pico_tree_node *node)

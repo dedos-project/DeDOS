@@ -41,6 +41,7 @@ static long unsigned int acks_forwarded;
 long unsigned int frames_received;
 long unsigned int duplicates;
 long unsigned int synacks_to_client;
+long unsigned int sockets_restore_count;
 long unsigned int forwarding_items_dequeued;
 
 void print_forwarding_stats(void){
@@ -48,8 +49,9 @@ void print_forwarding_stats(void){
     printf("Picotcp Syns forwarded: %lu\n",syns_forwarded);
     printf("picotcp Acks forwarded: %lu\n",acks_forwarded);
     printf("picotcp data acks dropped: %lu\n",duplicates);
-    printf("picotcp items dequeued: %lu\n",forwarding_items_dequeued);
-    printf("picotcp SynAcks to client: %lu\n",synacks_to_client);
+    printf("picotcp msu items dequeued: %lu\n",forwarding_items_dequeued);
+    printf("picotcp msu SynAcks to client: %lu\n",synacks_to_client);
+    printf("picotcp msu sockets restored: %lu\n",sockets_restore_count);
 }
 
 long int syn_state_used_memory = 0;

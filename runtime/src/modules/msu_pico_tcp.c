@@ -52,6 +52,7 @@
 #include "data_plane_profiling.h"
 
 extern long unsigned int synacks_to_client;
+extern long unsigned int sockets_restore_count;
 extern long unsigned int forwarding_items_dequeued;
 
 static struct pico_socket *match_tcp_sockets(struct pico_socket *s1,
@@ -141,6 +142,7 @@ int msu_pico_tcp_recv_state(struct generic_msu *self, struct dedos_intermsu_mess
 int msu_pico_tcp_restore(struct generic_msu *self,
         struct dedos_intermsu_message* msg, void *buf, uint16_t bufsize)
 {
+    forwarding_items_dequeued++;
     if (msg->proto_msg_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE) {
         log_debug("%s", "Received a valid TCP frame as queue item");
         struct pico_frame *f = pico_frame_alloc(bufsize);
@@ -163,7 +165,6 @@ int msu_pico_tcp_restore(struct generic_msu *self,
         int ret = 0;
         uint8_t flags = hdr->flags;
         struct pico_ipv4_hdr *iphdr = (struct pico_ipv4_hdr *)f->net_hdr;
-        forwarding_items_dequeued++;
 
         if (flags == (PICO_TCP_SYN | PICO_TCP_ACK) || PICO_TCP_RST){
             log_debug("%s","Stuff from HS, pushing out to client");
@@ -261,7 +262,7 @@ int msu_pico_tcp_restore(struct generic_msu *self,
         log_debug("After assigning listen sock to t->sock.parent %s","");
         log_debug("Listen sock: %d",short_be(listen_sock->local_port));
         t->sock.wakeup = listen_sock->wakeup;
-
+        sockets_restore_count++;
         // debug("DEBUG : Before pico_socket_add %s","");
         pico_socket_add(&t->sock);
         log_debug("Added restored sock to sock_tree %s","");
@@ -279,6 +280,9 @@ int msu_pico_tcp_restore(struct generic_msu *self,
             s->parent->wakeup(PICO_SOCK_EV_CONN, s->parent);
         }
         s->ev_pending |= PICO_SOCK_EV_WR;
+    }
+    else{
+        printf("Unknown msg type to restore......\n");
     }
 end:
     free(buf);
