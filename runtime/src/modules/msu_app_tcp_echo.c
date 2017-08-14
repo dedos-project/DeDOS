@@ -274,17 +274,18 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
         0
     };
     struct pico_ip4 bcastAddr = ZERO_IP4;
+    char *if_file_name = "em4";
+    int mode = 0;
 
-    char *nxt, *name = NULL, *addr = NULL, *nm = NULL, *gw = NULL, *lport;
+//    char *nxt, *name = NULL, *addr = NULL, *nm = NULL, *gw = NULL, *lport;
+    char *nxt, *name = "em4", *addr = "10.0.0.10", *nm = "255.255.255.0", *gw = NULL, *lport="6667";
     struct pico_ip4 ipaddr, netmask, gateway, zero = ZERO_IP4;
     int listen_port;
     char *optarg = (char*)malloc(sizeof(char) * create_action->init_data_len + 1);
     strncpy(optarg, create_action->init_data,create_action->init_data_len);
     optarg[create_action->init_data_len] = '\0';
-    int mode = 0;
 
-    char *if_file_name = "em4";
-
+/*
     do {
         nxt = msu_cpy_arg(&name, optarg);
         if (!nxt)
@@ -301,6 +302,7 @@ int msu_app_tcp_echo_init(struct generic_msu *self,
         msu_cpy_arg(&lport, nxt);
 
     } while (0);
+*/
     if(strcmp(name, "myTAP") == 0){
         mode = TAP;
     }
