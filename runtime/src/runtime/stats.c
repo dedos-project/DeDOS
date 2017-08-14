@@ -66,7 +66,7 @@ struct stat_type stat_types[] = {
     {MSU_IDLE_TIME,       GATHER_MSU_IDLE_TIME,   MAX_STATS, "%0.9f",  "MSU_IDLE_TIME"},
     {MSU_MEM_ALLOC,       GATHER_MSU_MEM_ALLOC,   MAX_STATS, "%09.0f", "MSU_MEM_ALLOC"},
     {MSU_NUM_STATES,      GATHER_MSU_NUM_STATES,  MAX_STATS, "%09.0f", "MSU_NUM_STATES"},
-    {CTX_SWITCHES,        GATHER_CTX_SWITCHES,    MAX_STATS, "%03.0f", "CTX_SWITCHES"}
+    {THREAD_CTX_SWITCHES,        GATHER_CTX_SWITCHES,    MAX_STATS, "%03.0f", "CTX_SWITCHES"}
 } 
 
 #define N_STAT_TYPES (sizeof(stat_types) / sizeof(struct stat_type))
@@ -111,6 +111,10 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
     if (wrlock_type(type) != 0) {
         return -1;
     }
+    if (type->id_indices[item_id] != -1) {
+        log_error("Item ID %u already assigned index %d", item_id, id_indices[item_id]);
+        return -1;
+    }
     int index = type->num_items;
     type->num_items++;
     type->items = realloc(type->items, sizeof(*type->items) * type->num_items);
@@ -135,6 +139,8 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
         log_error("Error calloc'ing item statistics");
         return -1;
     }
+
+    type->id_indices[item_id] = index;
 
     if (unlock_type(type) != 0) {
         return -1;

@@ -15,7 +15,7 @@ static int controller_sock = -1;
  * @param msg Message to send. Must define payload_len.
  * @return -1 on error, 0 on success
  */
-int send_to_controller(struct dedos_control_msg *msg) {
+int send_to_controller(struct control_msg *msg) {
     // TODO: Defaine dedos_control_msg
     size_t buf_len = sizeof(*msg) + msg->payload_len;
     char buf[buf_len];
@@ -33,7 +33,7 @@ int send_to_controller(struct dedos_control_msg *msg) {
  * Initializes a connection to the global controller
  * @returns 0 on success, -1 on error
  */
-int connect_to_global_controller() {
+int connect_to_global_controller(struct sockaddr_in *addr) {
    
     if (controller_socket != -1) {
         log_error("Controller socket already initialized");
@@ -58,12 +58,6 @@ int connect_to_global_controller() {
         log_perror("Error setting SO_REUSEADDR");
     }
 
-    struct sockaddr_in addr;
-    if (get_controller_address(&addr) != 0) {
-        log_error("Error getting controller address");
-        return -1;
-    }
-
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &addr.sin_addr, ip, INET_ADDRSTRLEN);
     int port = noths(addr.sin_port);
@@ -74,6 +68,19 @@ int connect_to_global_controller() {
     }
 
     log_info("Connected to global controller at %s:%d", ip, port);
-    return 0;
+    return controller_sock;
 }
              
+int init_controller_socket(struct sockaddr_in *addr) {
+    int sock = connect_to_global_controller(addr);
+    if (sock < 0) {
+        log_error("Error connecting to global controller");
+        return -1;
+    }
+    if (add_to_runtime_epoll(sock) != 0) {
+        log_error("Attempted to initialize controller socket" 
+                  " before initializing runtime epoll");
+        return -1;
+    }
+    return 0;
+}

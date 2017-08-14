@@ -43,7 +43,7 @@ int init_runtime_dfg(char *filename, int runtime_id) {
  * @param addr Output parameter to be filled with controller's ip and port
  * @return 0 on success, -1 on error
  */
-int get_controller_address(struct sockaddr_in *addr) {
+int controller_address(struct sockaddr_in *addr) {
     if (DFG == NULL) {
         log_error("Runtime DFG not instantiated");
         return -1;
@@ -55,6 +55,16 @@ int get_controller_address(struct sockaddr_in *addr) {
     addr.sin_port = htons(DFG->controller_port);
 
     return 0;
+}
+
+//TODO: local_runtime_id()
+
+int local_runtime_port() {
+    if (DFG == NULL) {
+        log_error("Runtime DFG not instantiated");
+        return -1;
+    }
+    return LOCAL_RUNTIME->port;
 }
 
 /**
