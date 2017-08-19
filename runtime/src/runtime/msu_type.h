@@ -40,10 +40,10 @@ struct msu_type{
      * If this is non-NULL it provides *additional* initialization,
      * such as construction of msu state.
      * @param self MSU to be initialized (structure is already allocated)
-     * @param initial_state initial information passed to the runtime by the global controller
+     * @param initial_data initial information passed to the runtime by the global controller
      * @return 0 on success, -1 on error
      */
-    int (*init)(struct local_msu *self, struct msu_init_data *initial_state);
+    int (*init)(struct local_msu *self, struct msu_init_data *initial_data);
 
     /**
      * Type-specific destructor that frees any internal data or state.
@@ -139,5 +139,5 @@ struct msu_type{
                         struct msu_queue_item *queue_item);
 };
 
-
+struct msu_type *get_msu_type(int id);
 #endif // MSS_TYPE_H

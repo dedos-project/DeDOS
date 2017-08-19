@@ -6,12 +6,10 @@
 
 #include "msu_type.h"
 
-#define MAX_MSU_ID 1000
+#define MAX_TYPE_ID 1000
 #define MAX_MSU_TYPES 32
 
-static struct msu_types[MAX_MSU_TYPES];
-static int n_msu_types = 0;
-static unsigned int msu_indices[MAX_MSU_ID];
+static struct msu_types[MAX_TYPE_ID];
 
 static const struct msu_type *MSU_TYPES[] = {
     &PICO_TCP_MSU_TYPE,
@@ -44,16 +42,26 @@ static int register_msu_type(struct msu_type *type) {
                   type->name, type->id, MAX_MSU_ID);
         return -1;
     }
-    msu_indices[type->id] = n_msu_types;
-    msu_types[n_msu_types] = type;
-    n_msu_types++;
+    msu_types[type->id] = type;
     return 0;
+}
+
+struct msu_type *get_msu_type(int id) {
+    if (type->id > MAX_MSU_TYPES) {
+        log_error("MSU type %d cannot be found Type ID too high. Max: %d",
+                  id, MAX_MSU_ID);
+        return -1;
+    }
+    return msu_types[id];
 }
 
 /**
  * Initializes all MSU types, registering and optionally calling init function
  */
 int init_msu_types() {
+    for (int i=0; i<MAX_TYPE_ID; i++) {
+        msu_types[i] = NULL;
+    }
     for (int i=0; i<N_MSU_TYPES; i++) {
         struct msu_type *type = msu_types[i];
         if (type->init_type != NULL) {
