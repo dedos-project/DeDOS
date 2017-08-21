@@ -1,6 +1,9 @@
 # Functionality changes
 
-* Separating the main thread into two threads: 1) blocking epoll thread, handling reading from sockets. 2) Main thread handling thread queue, waits on semaphore
+* Separating the main thread into two threads: 
+
+1. blocking epoll thread, handling reading from sockets. 
+2. Main thread handling thread queue, waits on semaphore
  * This will stop the main thread from exhausting 100% of a cpu
  * Other runtimes can send directly to a worker thread, avoiding main thread involvement
 
