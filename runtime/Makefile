@@ -92,23 +92,23 @@ DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS))
 
 OBJ_DIRS = $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS))
+OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS)))
+
+TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
+RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
 
 INCS=$(LEG_INC) $(RNT_DIR) $(COM_DIR) $(MSU_DIR)
 
 CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
 
-TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc -lpcap
+TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc -lpcap -lm
 
 
 all: dirs includes legacy ${TARGET}
 
 includes: $(INC_DIRS) $(INC_HDRS)
-	echo $(INC_HDRS)
 
-tell:
-	echo $(SRC_DIRS)
-
-dirs: $(BUILD_DIRS) $(OBJ_DIRS) $(DEP_DIRS)
+dirs: $(BUILD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_DIRS) $(RES_DIRS)
 
 $(INC_DIR)%.h: $(SRC_DIR)%.h
 	cp $^ $@
@@ -122,7 +122,7 @@ $(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
 	@echo ___________ $< ___________
 	$(LINK) -o $@ $</build/*.o
 
-$(TARGET): ${OBJECTS} ${LEG_OBJ} ${MAIN}
+$(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
 test: $(RESULTS)
@@ -144,8 +144,9 @@ $(RES_DIR)%.txt: $(TST_BLD_DIR)%
 
 # creates the test executables by linking the test objects with the build objects excluding 
 # the specific source under test
-$(TST_BLD_DIR)%: $(TST_DIR)%.c $(OBJECTS) $(LEG_OBJ) 
-	$(FINAL) -o $@ $(filter-out $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o $@), $^) $(TEST_CFLAGS)
+$(TST_BLD_DIR)%: $(TST_DIR)%.c $(OBJECTS_NOMAIN) $(LEG_OBJ)
+	echo $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@))
+	$(FINAL) -o $@ $(filter-out $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@)), $^) $(TEST_CFLAGS)
 
 # Creates object files from the source file
 $(OBJ_DIR)%.o:: $(SRC_DIR)%.c $(SELF)
@@ -154,10 +155,10 @@ $(OBJ_DIR)%.o:: $(SRC_DIR)%.c $(SELF)
 $(DEP_SRC): $(DEP_DIRS)
 
 $(DEP_DIR)%.d:: $(SRC_DIR)%.c $(LEG_OBJ)
-	$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(TEST_CFLAGS) $<
+	@$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(TEST_CFLAGS) $<
 
-$(BLD_DIRS) $(DEP_DIRS) $(INC_DIRS) $(OBJ_DIRS):
-	$(MKDIR) $@
+$(BLD_DIRS) $(DEP_DIRS) $(INC_DIRS) $(OBJ_DIRS) $(TST_DIRS) $(RES_DIRS):
+	@$(MKDIR) $@
 
 clean:
 	$(CLEAN_DIR) $(BLD_DIR)
@@ -174,8 +175,4 @@ endif
 .PHONY: test
 .PHONY: legacy
 .PHONY: depends
-.PRECIOUS: $(PATH_BLD)Test_%
-.PRECIOUS: $(PATH_OBJ)%.o
-.PRECIOUS: $(PATH_BLD_LEG)%.o
-.PRECIOUS: $(PATH_DEP)%.d
-.PRECIOUS: $(PATH_RES)%.txt
+.PRECIOUS: $(DEP_DIR)%.d $(RES_DIR)%.txt $(OBJ_DIR)%.o $(TST_BLD_DIR)%

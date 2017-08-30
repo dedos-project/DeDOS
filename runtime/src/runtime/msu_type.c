@@ -30,8 +30,10 @@ static const struct msu_type *MSU_TYPES[] = {
     */
 };
 
-// TODO: describe in comment
-static struct msu_type *msu_types[MAX_TYPE_ID] = {};
+/**
+ * Pointers to MSU Types, indexed by ID
+ */
+static struct msu_type *msu_types[MAX_TYPE_ID];
 
 #define N_MSU_TYPES (sizeof(MSU_TYPES) / sizeof(struct msu_type*))
 /**
@@ -47,9 +49,15 @@ static int register_msu_type(struct msu_type *type) {
         return -1;
     }
     msu_types[type->id] = type;
+    log_custom(LOG_MSU_TYPE_INIT, "Registered MSU type %s", type->name);
     return 0;
 }
 
+/**
+ * Gets the MSU type with the provided ID
+ * @param id The type ID of the MSU type to retrieve
+ * @return The MSU Type with the given ID, NULL in N/A
+ */
 struct msu_type *get_msu_type(int id) {
     if (id > MAX_MSU_TYPES) {
         log_error("MSU type %d cannot be found Type ID too high. Max: %d",
@@ -59,19 +67,32 @@ struct msu_type *get_msu_type(int id) {
     return msu_types[id];
 }
 
+static bool has_required_fields(struct msu_type *type) {
+    if (type->receive == NULL) {
+        log_error("MSU type %s does not register a recieve function",
+                  type->name);
+        return false;
+    }
+    return true;
+}
+
 /**
  * Initializes all MSU types, registering and optionally calling init function
+ * @return 0 on success, -1 on error
  */
 int init_msu_types() {
-    for (int i=0; i<MAX_TYPE_ID; i++) {
-        msu_types[i] = NULL;
-    }
     for (int i=0; i<N_MSU_TYPES; i++) {
         struct msu_type *type = msu_types[i];
+        if (!has_required_fields(type)) {
+            log_error("Not registering MSU Type %s due to missing fields", type->name);
+            continue;
+        }
         if (type->init_type != NULL) {
             if (type->init_type(type) != 0) {
                 log_warn("MSU Type %s not initialized", type->name);
                 continue;
+            } else {
+                log_custom(LOG_MSU_TYPE_INIT, "Initialized msu type %s", type->name);
             }
         }
         if (register_msu_type(type) != 0) {

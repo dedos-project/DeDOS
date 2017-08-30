@@ -5,6 +5,8 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
+#include "defines.h"
+
 // Putting these up here helps deal with circular dependency warnings
 #define MAX_MSU 128
 struct dfg_config;
@@ -78,8 +80,8 @@ struct dfg_route {
 };
 
 // IMP: Replacing char *vertex_type
-uint8_t ENTRY_VERTEX_TYPE = 0x01;
-uint8_t EXIT_VERTEX_TYPE  = 0x02;
+static uint8_t UNUSED ENTRY_VERTEX_TYPE = 0x01;
+static uint8_t UNUSED EXIT_VERTEX_TYPE  = 0x02;
 
 
 enum blocking_mode {

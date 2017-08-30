@@ -2,7 +2,9 @@
 #include "main_thread.h"
 #include "worker_thread.h"
 #include "dedos_threads.h"
+#include "thread_message.h"
 #include "msu_type.h"
+#include "ctrl_runtime_messages.h"
 
 #include <stdlib.h>
 #include <netinet/ip.h>
@@ -37,7 +39,7 @@ static int init_main_thread(struct dedos_thread *main_thread) {
     return 0;
 }
 
-static int add_worker_thread(struct create_thread_msg *msg, struct dedos_thread *main_thread) {
+static int add_worker_thread(struct ctrl_create_thread_msg *msg, struct dedos_thread *main_thread) {
     int id = msg->thread_id;
     for (int i=0; i<n_worker_threads; i++) {
         struct worker_thread *worker = worker_threads[i];
@@ -46,7 +48,7 @@ static int add_worker_thread(struct create_thread_msg *msg, struct dedos_thread 
             return -1;
         }
     }
-    worker_threads[n_worker_threads] = create_worker_thread(id, msg->blocking, main_thread);
+    worker_threads[n_worker_threads] = create_worker_thread(id, msg->mode, main_thread);
     if (worker_threads[n_worker_threads] == NULL) {
         log_error("Error creating worker thread %d", id);
         return -1;
@@ -57,16 +59,13 @@ static int add_worker_thread(struct create_thread_msg *msg, struct dedos_thread 
 }
 
 // TODO: ADD RUNTIME MSG
-struct add_runtime_msg {};
-int add_runtime_peer(struct add_runtime_msg *);
+int main_thread_add_runtime_peer(struct ctrl_add_runtime_msg *x){return 0;}
 
-// TODO: SEND_TO_RUNTIME_MSG
-struct send_to_runtime_msg {};
-int send_to_peer(struct send_to_runtime_msg *);
+// TODO: main_thread_send_to_peer()
+int main_thread_send_to_peer(struct send_to_runtime_msg *x){return 0;}
 
-// TODO: route_modification_msg
-struct route_modification_msg {};
-int modify_route(struct route_modification_msg *);
+// TODO: modify_route()
+int modify_route(struct ctrl_route_mod_msg *x){return 0;}
 
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->data_size != sizeof(target)) { \
@@ -81,9 +80,9 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
     int rtn;
     switch (msg->type) {
         case ADD_RUNTIME:
-            CHECK_MSG_SIZE(msg, struct add_runtime_msg);
-            struct add_runtime_msg *runtime_msg = msg->data;
-            rtn = add_runtime_peer(runtime_msg);
+            CHECK_MSG_SIZE(msg, struct ctrl_add_runtime_msg);
+            struct ctrl_add_runtime_msg *runtime_msg = msg->data;
+            rtn = main_thread_add_runtime_peer(runtime_msg);
 
             if (rtn < 0) {
                 log_warn("Error adding runtime peer");
@@ -91,8 +90,8 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
             break;
         // TODO: case CONNECT_TO_RUNTIME
         case CREATE_THREAD:
-            CHECK_MSG_SIZE(msg, struct create_thread_msg);
-            struct create_thread_msg *create_msg = msg->data;
+            CHECK_MSG_SIZE(msg, struct ctrl_create_thread_msg);
+            struct ctrl_create_thread_msg *create_msg = msg->data;
             rtn = add_worker_thread(create_msg, main_thread);
 
             if (rtn < 0) {
@@ -102,15 +101,15 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
         case SEND_TO_RUNTIME:
             CHECK_MSG_SIZE(msg, struct send_to_runtime_msg);
             struct send_to_runtime_msg *forward_msg = msg->data;
-            rtn = send_to_peer(forward_msg);
+            rtn = main_thread_send_to_peer(forward_msg);
 
             if (rtn < 0) {
                 log_warn("Error forwarding message to peer");
             }
             break;
         case MODIFY_ROUTE:
-            CHECK_MSG_SIZE(msg, struct route_modification_msg);
-            struct route_modification_msg *route_msg = msg->data;
+            CHECK_MSG_SIZE(msg, struct ctrl_route_mod_msg);
+            struct ctrl_route_mod_msg *route_msg = msg->data;
             rtn = modify_route(route_msg);
 
             if (rtn < 0) {
@@ -119,8 +118,7 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
             break;
         case CREATE_MSU:
         case DELETE_MSU:
-        case ADD_ROUTE:
-        case DEL_ROUTE:
+        case MSU_ROUTE:
             log_error("Message (type: %d) meant for worker thread sent to main thread",
                        msg->type);
             break;
@@ -190,7 +188,7 @@ struct dedos_thread *start_main_thread(void) {
         return NULL;
     }
     init_main_thread(main_thread);
-    int rtn = start_dedos_thread(main_thread_loop, BLOCKING_THREAD,
+    int rtn = start_dedos_thread(main_thread_loop, UNPINNED_THREAD,
                                  MAIN_THREAD_ID, main_thread, main_thread);
     if (rtn < 0) {
         log_error("Error starting dedos main thread loop");

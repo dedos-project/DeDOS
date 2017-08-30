@@ -32,7 +32,7 @@ struct local_msu {
     /** Queue for control updates (e.g. routing changes?)
      * ???: What other control updates can an MSU receive? Could they be handled generically
      */
-    struct msg_queue ctrl_queue;
+   //struct msg_queue ctrl_queue;
 
     /** Keyed state structure, accessible through queue item IDs */
     struct msu_state *item_state;
@@ -45,10 +45,11 @@ struct local_msu {
     // MOVED: routing_state can be moved to msu_state
 };
 
+/** Allocates and creates a new MSU of the specified type and ID on the given thread */
 struct local_msu *init_msu(unsigned int id, struct msu_type *type, 
                            struct worker_thread *thread, struct msu_init_data *data);
-
+/** Calls type-specific destroy function and frees associated memory */
 void destroy_msu(struct local_msu *msu);
-void msu_receive(struct local_msu *msu, struct msu_msg *msg);
+int msu_receive(struct local_msu *msu, struct msu_msg *msg);
 
 #endif

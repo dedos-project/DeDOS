@@ -25,7 +25,7 @@
                 pthread_self(), __FILE__, __LINE__, __func__, ##__VA_ARGS__)
 
 
-#if defined(LOG_DEBUG) && LOG_DEBUG
+#ifdef LOG_DEBUG
 #define log_debug(fmt, ...)\
     log_at_level("DEBUG", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
 #else
@@ -33,7 +33,7 @@
 #endif
 #define debug(...) log_debug(__VA_ARGS__)
 
-#if defined(LOG_INFO) && LOG_INFO
+#ifdef LOG_INFO
 #define log_info(fmt, ...)\
     log_at_level("INFO", ANSI_COLOR_GREEN, LOG_FD, fmt, ##__VA_ARGS__)
 #else
@@ -41,7 +41,7 @@
 #endif
 
 
-#if defined(LOG_ERROR) && LOG_ERROR
+#ifdef LOG_ERROR
 #define log_error(fmt, ...)\
     log_at_level("ERROR", ANSI_COLOR_RED, LOG_FD, fmt, ##__VA_ARGS__)
 #define log_perror(fmt, ...)\
@@ -51,7 +51,7 @@
 #define log_perror(...) do {} while (0)
 #endif
 
-#if defined(LOG_WARN) && LOG_WARN
+#ifdef LOG_WARN
 #define log_warn(fmt, ...)\
     log_at_level("WARN", ANSI_COLOR_YELLOW, LOG_FD, fmt, ##__VA_ARGS__)
 #else
@@ -65,7 +65,7 @@
 #define log_critical(...) do {} while (0)
 #endif
 
-#if defined(LOG_CUSTOM) && LOG_CUSTOM
+#ifdef LOG_CUSTOM
 #define LOG_CUSTOM_STRINGIFY(val) "" #val
 #define log_custom(level, fmt, ...)\
     do { \

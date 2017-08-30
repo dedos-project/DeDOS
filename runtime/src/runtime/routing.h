@@ -8,7 +8,7 @@ struct msu_endpoint {
     int id;
     enum msu_locality locality;
     union {
-        uint32_t ipv4;
+        unsigned int runtime_id;
         struct msg_queue *queue;
     };
 };

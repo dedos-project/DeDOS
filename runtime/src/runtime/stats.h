@@ -19,5 +19,12 @@ int init_statistics();
 
 // TODO: docstring
 void finalize_statistics(char *statlog);
+
+/** Starts a measurement of elapsed time.  */
+int record_start_time(enum stat_id stat_id, unsigned int item_id);
+
+/** Records elapsed time since previous call to record_start_time */
+int record_end_time(enum stat_id stat_id, unsigned int item_id);
+
 #endif
 

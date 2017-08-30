@@ -33,7 +33,7 @@ int init_socket_monitor(int port) {
     log_info("Initialized runtime socket on port %d", port);
 
     epoll_fd = init_epoll(runtime_socket);
-    
+
     if (epoll_fd < 0) {
         log_error("Error initializing runtime epoll. Closing runtime socket.");
         close(runtime_socket);
@@ -50,16 +50,16 @@ static void remove_runtime_connection_handler(int fd) {
 }
 */
 static int handle_connection(int fd, void *data) {
-    int rtn;
+    int rtn = 0;
     switch (fd_handlers[fd]) {
         case RUNTIME_HANDLER:
-            rtn = handle_runtime_communication(fd);
+            //TODO: rtn = handle_runtime_communication(fd);
             if (rtn != 0) {
                 return rtn;
             }
             break;
         case CONTROLLER_HANDLER:
-            rtn = handle_controller_communication(fd);
+            //TODO: rtn = handle_controller_communication(fd);
             if (rtn != 0) {
                 return rtn;
             }
@@ -78,9 +78,9 @@ static int accept_connection(int fd, void *data) {
         // NOTE: returning 0, not -1, because -1 will make epoll loop exit
         return 0;
     }
-    if (is_runtime_fd(fd)) {
+    if (0) { //TODO: is_runtime_fd(fd)) {
         fd_handlers[fd] = RUNTIME_HANDLER;
-    } else if (is_controller_fd(fd)) {
+    } else if (0) {//TODO: is_controller_fd(fd)) {
         fd_handlers[fd] = CONTROLLER_HANDLER;
     } else {
         fd_handlers[fd] = NO_HANDLER;

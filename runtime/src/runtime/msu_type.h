@@ -5,15 +5,11 @@
  */
 #ifndef MSU_TYPE_H
 #define MSU_TYPE_H
+#include "msu_message.h"
+#include "routing.h"
+#include "ctrl_runtime_messages.h"
 
 #include <stdint.h>
-#include "msu_queue_item.h"
-#include "routing.h"
-
-#define MAX_INIT_DATA_LEN 32
-struct msu_init_data {
-    char init_data[MAX_INIT_DATA_LEN];
-};
 
 // Need forward declaration due to circular dependency
 struct local_msu;
@@ -62,7 +58,7 @@ struct msu_type{
      * @param input_data data to receive from previous MSU
      * @return MSU type-id of next MSU to receive data, 0 if no rcpt, -1 on err
      */
-    int (*receive)(struct local_msu *self, struct msu_queue_item *input_data);
+    int (*receive)(struct local_msu *self, struct msu_msg *data);
 
     /** Handles receiving of data sent specifically from the Global Controller.
      * Generic receipt of control messages (adding/removing routes)
@@ -72,6 +68,7 @@ struct msu_type{
      * @param ctrl_msg message to receieve from global controller
      * @return 0 on success, -1 on error
      */
+    // TODO: Remove receive_ctrl()?
     //int (*receive_ctrl)(struct local_msu *self, struct msu_action_data *ctrl_msg);
 
     /* Move state within same process and physical machine, like pointers.
@@ -91,7 +88,7 @@ struct msu_type{
      * @return msu_endpoint destination
      */
     struct msu_endpoint *(*route)(struct msu_type *type, struct local_msu *sender,
-                                  struct msu_queue_item *data);
+                                  struct msu_msg *data);
 
     /** Enqueues data to a local MSU.
      * Can **not** be NULL. Set to default_send_local for default behavior.
@@ -101,8 +98,8 @@ struct msu_type{
      * @param dst MSU receiving data
      * @return 0 on success, -1 on error
      */
-    int (*send_local)(struct local_msu *self, struct msu_queue_item *queue_item,
-                      struct msu_endpoint *dst);
+     // int (*send_local)(struct local_msu *self, struct msu_msg *queue_item,
+     //                 struct msu_endpoint *dst);
 
     /** Enqueues data to a remote MSU (handles data serialization).
      * Can **not** be NULL. Set to default_send_remote for default behavior.
@@ -112,12 +109,12 @@ struct msu_type{
      * @param dst MSU receiving data
      * @return 0 on success, -1 on error
      */
-    int (*send_remote)(struct local_msu *self, struct msu_queue_item *queue_item,
-                       struct msu_endpoint *dst);
+     //int (*send_remote)(struct local_msu *self, struct msu_msg *queue_item,
+     //                   struct msu_endpoint *dst);
 
     /** TODO: Serialization function */
-    int (*serialize)(struct msu_type *type, struct msu_queue_item *input,
-                     void **output);
+    size_t (*serialize)(struct msu_type *type, struct msu_msg *input,
+                        void **output);
 
     /** Deserializes data received from remote MSU and enqueues the
      * message payload onto the msu queue.
@@ -130,7 +127,7 @@ struct msu_type{
      * @return 0 on success, -1 on error
      */
     int (*deserialize)(struct local_msu *self, void *data, int data_len,
-                       struct msu_queue_item *output);
+                       struct msu_msg *output);
 
     /** Generates an ID for the incoming queue item.
      * Only necessary for input MSUs, though technically
@@ -139,9 +136,12 @@ struct msu_type{
      * @param queue_item item to be passed to subsequent MSUs
      */
     void (*generate_id)(struct local_msu *self,
-                        struct msu_queue_item *queue_item);
+                        struct msu_msg *queue_item);
 };
 
+/** Initializes all MSU types, registering and optionally calling init function */
 int init_msu_types();
+/** Gets the MSU type with the provided ID */
 struct msu_type *get_msu_type(int id);
+
 #endif // MSS_TYPE_H

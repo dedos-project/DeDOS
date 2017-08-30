@@ -13,6 +13,7 @@
 static struct timespec stats_start_time;
 static bool stats_initialized = false;
 
+
 #define MAX_ID 64
 
 struct timed_stat {
@@ -30,8 +31,8 @@ struct stat_item
     int write_index;          /**< The write index in the circular buffer */
     bool rolled_over;         /**< Whether the stats structure has rolled over at least once */
     struct timed_stat *stats; /**< Timestamp and data for each gathered statistic */
-    pthread_rwlock_t lock;    /**< Lock for changing stat item */
-    // TODO: Do I need `sample`? 
+    pthread_mutex_t mutex;    /**< Lock for changing stat item */
+    // TODO: Do I need `sample`?
     //int last_sample_index;    /**< Index at which the stat was sampled last */
     //struct timed_stat sample[MAX_STAT_SAMPLES]; /**< Filled with stat samples on call to
     //                                                 sample_stats() */
@@ -39,7 +40,7 @@ struct stat_item
 
 struct stat_type {
     enum stat_id id;          /**< Stat ID as defined in stats.h */
-    int enabled;              /**< If 1, logging for this item is enabled */
+    bool enabled;             /**< If true, logging for this item is enabled */
     int max_stats;            /**< Maximum number of statistics that can be held in memory */
     char *format;             /**< Format for printf */
     char *label;              /**< Name to output for this statistic */
@@ -79,8 +80,23 @@ struct stat_type stat_types[] = {
 
 #define N_STAT_TYPES (sizeof(stat_types) / sizeof(struct stat_type))
 
+#define CHECK_INITIALIZATION \
+    if (!stats_initialized) { \
+        log_error("Statistics not initialized!"); \
+        return -1; \
+    }
+
+/**
+ * Gets the amount of time that has elapsed since logging started.
+ * @param *t the elapsed time is output into this variable
+*/
+void get_elapsed_time(struct timespec *t) {
+   clock_gettime(CLOCK_ID, t);
+   t->tv_sec -= stats_start_time.tv_sec;
+}
+
 /** Locks a stat type for writing */
-static int wrlock_type(struct stat_type *type) {
+static inline int wrlock_type(struct stat_type *type) {
     if (pthread_rwlock_wrlock(&type->lock) != 0) {
         log_error("Error locking stat type %s", type->label);
         return -1;
@@ -89,9 +105,42 @@ static int wrlock_type(struct stat_type *type) {
 }
 
 /** Unlocks a stat type */
-static int unlock_type(struct stat_type *type) {
+static inline int unlock_type(struct stat_type *type) {
     if (pthread_rwlock_unlock(&type->lock) != 0) {
         log_error("Error unlocking stat type %s", type->label);
+        return -1;
+    }
+    return 0;
+}
+
+/** Locks a stat type for reading */
+static inline int rlock_type(struct stat_type *type) {
+    if (pthread_rwlock_rdlock(&type->lock) != 0) {
+        log_error("Error locking stat type %s", type->label);
+        return -1;
+    }
+    return 0;
+}
+
+/** Locks an item_stats structure, printing an error message on failure
+ * @param *item the item_stats structure to lock
+ * @return 0 on success, -1 on error
+ */
+static inline int lock_item(struct stat_item *item) {
+    if ( pthread_mutex_lock(&item->mutex) != 0) {
+        log_error("Error locking mutex for an item with ID %u", item->id);
+        return -1;
+    }
+    return 0;
+}
+
+/** Unlocks an item_stats structure, printing an error message on failure
+ * @param *item the item_stats structure to unlock
+ * @return 0 on success, -1 on error
+ */
+static inline int unlock_item(struct stat_item *item) {
+    if ( pthread_mutex_unlock(&item->mutex) != 0) {
+        log_error("Error locking mutex for an item with ID %u", item->id);
         return -1;
     }
     return 0;
@@ -100,16 +149,102 @@ static int unlock_type(struct stat_type *type) {
 /** Frees the memory associated with an individual stat item */
 static void destroy_stat_item(struct stat_item *item) {
     free(item->stats);
-    pthread_rwlock_destroy(&item->lock);
+    pthread_mutex_destroy(&item->mutex);
+}
+
+static struct stat_item *get_item_stat(struct stat_type *type, unsigned int item_id) {
+    if (item_id > MAX_ID) {
+        log_error("Item ID %u too high. Max: %d", item_id, MAX_ID);
+        return NULL;
+    }
+    int id_index = type->id_indices[item_id];
+    if (id_index == -1) {
+        log_error("Item ID %u not initialized for stat %s",
+                  item_id, type->label);
+        return NULL;
+    }
+    return &type->items[id_index];
 }
 
 /** 
+ * Starts a measurement of elapsed time. 
+ * Not added to the log until a call to record_end_time
+ * @param stat_id ID for stat type being logged
+ * @param item_id ID for the item to which the stat refers
+ * @return 0 on success, -1 on error
+ */
+int record_start_time(enum stat_id stat_id, unsigned int item_id) {
+    CHECK_INITIALIZATION;
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    rlock_type(type);
+    struct stat_item *item = get_item_stat(type, item_id);
+    if (item == NULL) {
+        return -1;
+    }
+    unlock_type(type);
+
+    lock_item(item);
+    get_elapsed_time(&item->stats[item->write_index].time);
+    unlock_item(item);
+
+    return 0;
+}
+
+/**
+ * Records the elapsed time since the previous call to record_start_time
+ * @param stat_id ID for stat being logged
+ * @param item_id ID for item within the statistic
+ */
+int record_end_time(enum stat_id stat_id, unsigned int item_id) {
+    CHECK_INITIALIZATION;
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    rlock_type(type);
+    struct stat_item *item = get_item_stat(type, item_id);
+    if (item == NULL) {
+        return -1;
+    }
+    unlock_type(type);
+
+    struct timespec new_time;
+    get_elapsed_time(&new_time);
+
+    lock_item(item);
+    time_t timediff_s = new_time.tv_sec - item->stats[item->write_index].time.tv_sec;
+    long timediff_ns = new_time.tv_nsec - item->stats[item->write_index].time.tv_nsec;
+    item->stats[item->write_index].value  = 
+            (double)timediff_s + ((double)timediff_ns/(1e9));
+    item->write_index++;
+
+    if (item->write_index == type->max_stats) {
+#if DUMP_STATS
+        log_warn("Stats for type %s.%u rolling over. Log file will be missing data",
+                 type->label, item_id);
+#endif
+        item->write_index = 0;
+        item->rolled_over = 1;
+    }
+
+    unlock_item(item);
+    return 0;
+}
+
+/**
  * Initializes a stat item so that statistics can be logged to it.
  * (e.g. initializing MSU_QUEUE_LEN for item N, corresponding to msu # N)
  * @param stat_id ID of the statistic type to be logged
  * @param item_id ID of the item to be logged
  */
 int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
+    CHECK_INITIALIZATION; 
+
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {
         log_custom(LOG_STATS, "Skipping initialization of type %s item %d",
@@ -120,7 +255,7 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
     if (type->id_indices[item_id] != -1) {
-        log_error("Item ID %u already assigned index %d", 
+        log_error("Item ID %u already assigned index %d",
                 item_id, type->id_indices[item_id]);
         return -1;
     }
@@ -133,7 +268,7 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
     }
     struct stat_item *item = &type->items[index];
 
-    if (pthread_rwlock_init(&item->lock,NULL)) {
+    if (pthread_mutex_init(&item->mutex,NULL)) {
         log_error("Error initializing item %u lock", item_id);
         type->num_items--;
         return -1;
@@ -160,7 +295,7 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
 
 
 /**
- * Initializes the statistics data structures 
+ * Initializes the statistics data structures
  */
 int init_statistics() {
     if ( stats_initialized ) {
@@ -193,9 +328,10 @@ int init_statistics() {
 
 #if DUMP_STATS
     log_info("Statistics initialized for eventual dump to log file");
-#else 
+#else
     log_info("Statistics initialized. Will **NOT** be dumped to log file");
 #endif
+    stats_initialized = true;
     return 0;
 }
 

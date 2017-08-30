@@ -3,8 +3,13 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-struct send_to_peer_msg {
-    unsigned int runtime_id;
+enum peer_msg_type {
+    NIL = 0,
+    PEER_MSU_MSG
+};
+
+struct runtime_peer_msg_hdr {
+    enum peer_msg_type type;
     size_t data_size;
 };
 

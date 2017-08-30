@@ -21,7 +21,7 @@ static struct dfg_runtime *LOCAL_RUNTIME = NULL;
  * @return 0 on success, -1 on error
  */
 int init_runtime_dfg(char *filename, int runtime_id) {
-    
+
     if (DFG != NULL) {
         log_error("Runtime DFG already instantiated!");
         return -1;

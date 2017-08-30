@@ -12,7 +12,7 @@ struct worker_thread {
 };
 
 struct worker_thread *create_worker_thread(int thread_id,
-                                           enum thread_behavior blocking,
+                                           enum blocking_mode mode,
                                            struct dedos_thread *main_thread);
 
 #endif
