@@ -1,93 +1,64 @@
-CLEANUP=rm -f
-CLEAN_DIR=rm -rf
-MKDIR=mkdir -p
-TARGET_EXT=out
+ADDRESS_SANITIZER?=0
+DATAPLANE_PROFILING=0
+DEBUG = 1
+COLLECT_STATS = 1
+DUMP_STATS = 1
 
 LOGS = \
 	   INFO \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   #CUSTOM \
-	   ROUTING_CHANGES \
-	   #PARTIAL_READS \
-	   INITIAL_ENQUEUES
-	   #PARTIAL_READS \
-	   #HTTP_MSU
-	   #WEBSERVER_WRITE \
-	   #CONNECTION_INFO \
-	   #ROUTING_DECISIONS \
-	   #REMOTE_SENDS \
-	   DEBUG \
-	   INITIAL_ENQUEUES
-	   #DEBUG \
-	   HTTP_MSU \
-	   DEBUG \
-	   WEBSERVER_READ \
-	   EPOLL_OPS \
-	   WEBSERVER_ROUTING \
-	   CONNECTION_INFO \
-	   DB_OPS \
-	   ROUTING_CHANGES \
-	   ROUTING_DECISIONS
-	   #STAT_INTERNALS \
 
-DATAPLANE_PROFILING=0
-DEBUG = 1
-COLLECT_STATS = 1
-DUMP_STATS = 1
+SRC_DIR = src/
+RNT_DIR = $(SRC_DIR)runtime/
+MSU_DIR = $(SRC_DIR)msu/
+COM_DIR = $(SRC_DIR)common/
+LEG_DIR = $(SRC_DIR)legacy/
+TST_DIR = $(SRC_DIR)test/
 
-PATH_SRC = src/
-PATH_SRC_APP = $(PATH_SRC)apps/
-PATH_SRC_MOD = $(PATH_SRC)modules/
-PATH_SRC_WBS = $(PATH_SRC_MOD)webserver/
-PATH_SRC_STK = $(PATH_SRC)stack/
-PATH_SRC_INC = $(PATH_SRC)include/
-PATH_SRC_LEG = $(PATH_SRC)legacy/
-PATH_TST = test/
-PATH_BLD = build/
-PATH_RSC = build/resources/
-PATH_DEP = build/depends/
-PATH_OBJ = build/objs/
-PATH_BLD_LEG = build/legacy/
-PATH_RES = build/results/
-ADDRESS_SANITIZER?=0
+SRC_DIRS = $(RNT_DIR) $(COM_DIR) $(MSU_DIR) $(wildcard $(MSU_DIR)*/)
 
-COMMON = ../common/
-COMMON_SRC = $(COMMON)src/
-COMMON_BLD = $(COMMON)build/
-COMMON_OBJ = $(COMMON_BLD)objs/
+TARGET=rt
+MAIN=$(RNT_DIR)main.c
 
-COMMON_SRCS = $(wildcard $(COMMON_SRC)*.c)
-COMMON_OBJS = $(patsubst $(COMMON_SRC)%.c, $(COMMON_OBJ)%.o, $(COMMON_SRCS))
+BLD_DIR = build/
+DEP_DIR = $(BLD_DIR)depends/
+OBJ_DIR = $(BLD_DIR)objs/
+INC_DIR = $(BLD_DIR)include/
+RES_DIR = $(BLD_DIR)reults/
+TST_BLD_DIR = $(BLD_DIR)test/
+LEG_BLD_DIR = $(BLD_DIR)legacy/
 
-#LEGACY_LIBS =
-LEGACY_LIBS = picotcp
+BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(INC_DIR) $(RES_DIR) $(LEG_BLD_DIR)
+
+#LEGACY_LIBS = picotcp
+
+CLEANUP=rm -f
+CLEAN_DIR=rm -rf
+MKDIR=mkdir -p
+
+CC:=gcc -c
+CXX:=g++ -c
 
 COMPILE=gcc -c
-# -O3
 COMPILE_PP=g++ -c
+LD=ld -r
 FINAL=gcc
-LINK=ld -r
 DEPEND=gcc -MM -MF
 
 SELF=./Makefile
 
-# If specific MSUs need special compilation instructions,
-# they can be specified here, as such:
-CFLAGS_dummy_msu= -lpcre
+LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname))
 
-LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)=1)
-LOG_DEFINES+=$(foreach logname, $(DISABLED_LOGS), -DLOG_$(logname)=0)
-
-CFLAGS= -Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99 -DHASH_FUNCTION=HASH_SAX $(LOG_DEFINES)
+CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99  $(LOG_DEFINES)
 
 ifeq ($(DEBUG), 1)
-	CFLAGS+=-ggdb
+  CFLAGS+=-ggdb
 endif
 
 ifeq ($(DATAPLANE_PROFILING),1)
-        CFLAGS+=-DDATAPLANE_PROFILING
+  CFLAGS+=-DDATAPLANE_PROFILING
 endif
 
 ifeq ($(ADDRESS_SANITIZER),1)
@@ -95,83 +66,70 @@ ifeq ($(ADDRESS_SANITIZER),1)
 endif
 
 ifeq ($(COLLECT_STATS), 1)
-	CFLAGS+=-DCOLLECT_STATS=1
+  CFLAGS+=-DCOLLECT_STATS=1
 endif
 
 ifeq ($(DUMP_STATS), 1)
-	CFLAGS+=-DDUMP_STATS=1
+  CFLAGS+=-DDUMP_STATS=1
 endif
 
-LEGACY_MAKE=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/Makefile)
-LEGACY_INC=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_SRC_LEG)$(leg_lib)/build/include)
-LEGACY_SRC=$(foreach leg_lib, $(LEGACY_LIBS, $(wildcard $(PATH_SRC_LEG)$(leg_lib)/src/*)))
-LEGACY_OBJ=$(foreach leg_lib, $(LEGACY_LIBS), $(PATH_BLD_LEG)$(leg_lib).o)
-
-INCLUDES= $(PATH_SRC_INC) $(LEGACY_INC) $(COMMON_SRC)
-
-CFLAGS+= $(foreach inc, $(INCLUDES), -I$(inc))
-
-TEST_CFLAGS= $(CFLAGS) -I$(PATH_SRC_STK) -lcheck_pic -lrt -lc -lpcap
-
-BUILD_PATHS = $(PATH_BLD) $(PATH_OBJ) $(PATH_RES) $(PATH_DEP) $(PATH_BLD_LEG)
-
-SRC_TST = $(wildcard $(PATH_TST)*.c)
-
-SRC_MOD = $(wildcard $(PATH_SRC_MOD)*.c)
-SRC_MOD_PP = $(wildcard $(PATH_SRC_MOD)*.cc)
-SRC_WBS = $(wildcard $(PATH_SRC_WBS)*.c)
-SRC_STK = $(wildcard $(PATH_SRC_STK)*.c)
-SRC_ALL = $(SRC_MOD) $(SRC_MOD_PP) $(SRC_STK)
-
-SRC_APP = $(wildcard $(PATH_SRC_APP)*.c)
-
-RESULTS = $(patsubst $(PATH_TST)Test_%.c, $(PATH_RES)Test_%.txt, $(SRC_TST))
-RESOURCE_IN = $(wildcard $(PATH_TST)resources/*)
-TEST_RESOURCES = $(patsubst $(PATH_TST)resources/%, $(PATH_RSC)%, $(RESOURCE_IN))
-
-DEP_TST = $(patsubst $(PATH_TST)Test_%.c, $(PATH_DEP)Test_%.d, $(SRC_TST))
-DEP_SRC = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_DEP)%.d, $(SRC_MOD)) \
-		  $(patsubst $(PATH_SRC_MOD)%.cc, $(PATH_DEP)%.d, $(SRC_MOD_PP)) \
-		  $(patsubst $(PATH_SRC_WBS)%.c, $(PATH_DEP)%.d, $(SRC_MOD_PP)) \
-		  $(patsubst $(PATH_SRC_STK)%.c, $(PATH_DEP)%.d, $(SRC_STK))
-
-OBJECTS = $(patsubst $(PATH_SRC_MOD)%.c, $(PATH_OBJ)%.o, $(SRC_MOD))
-OBJECTS += $(patsubst $(PATH_SRC_MOD)%.cc, $(PATH_OBJ)%.o, $(SRC_MOD_PP))
-OBJECTS += $(patsubst $(PATH_SRC_WBS)%.c, $(PATH_OBJ)%.o, $(SRC_WBS))
-OBJECTS += $(patsubst $(PATH_SRC_STK)%.c, $(PATH_OBJ)%.o, $(SRC_STK))
-OBJECTS += $(patsubst $(PATH_SRC_UTL)%.c, $(PATH_OBJ)%.o, $(SRC_UTL))
-APPS = $(patsubst $(PATH_SRC_APP)%.c, %, $(SRC_APP))
-
-define cflags
-	$(CFLAGS) $(value CFLAGS_$(notdir $(patsubst %.o, %, $(1))))
-endef
+LEG_MAKE=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_DIR)$(LEG_LIB)/Makefile)
+LEG_INC=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_DIR)$(LEG_LIB)/build/include)
+LEG_SRC=$(foreach LEG_LIB, $(LEGACY_LIBS), $(wildcard $(LEG_DIR)$(LEG_LIB)/src/*))
+LEG_OBJ=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_BLD_DIR)$(LEG_LIB).o)
 
 
-all: $(BUILD_PATHS) legacy $(APPS)
+TSTS = $(wildcard $(TST_DIR)*/*.c)
 
-legacy: $(LEGACY_OBJ)
+SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
+HDRS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.h))
 
-depends: $(DEP_SRC)
+RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
+
+DEP_DIRS = $(patsubst $(SRC_DIR)%/, $(DEP_DIR)%/, $(SRC_DIRS))
+DEP_TST = $(patsubst $(TST_DIR)%.c, $(DEP_DIR)%.d, $(TSTS))
+DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS))
+
+OBJ_DIRS = $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
+OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS))
+
+INCS=$(LEG_INC) $(RNT_DIR) $(COM_DIR) $(MSU_DIR)
+
+CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
+
+TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc -lpcap
 
 
-$(PATH_BLD_LEG)%.o:: $(PATH_SRC_LEG)%
-	@filename=$$(basename "$@"); filename="$${filename%.*}"; echo $$filename; cd $(PATH_SRC_LEG)/$$filename && make;
+all: dirs includes legacy ${TARGET}
+
+includes: $(INC_DIRS) $(INC_HDRS)
+	echo $(INC_HDRS)
+
+tell:
+	echo $(SRC_DIRS)
+
+dirs: $(BUILD_DIRS) $(OBJ_DIRS) $(DEP_DIRS)
+
+$(INC_DIR)%.h: $(SRC_DIR)%.h
+	cp $^ $@
+
+legacy: ${LEG_OBJ}
+
+depends: $(DEP_DIRS) ${DEP_SRC}
+
+$(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
+	@filename=$$(basename "$@"); filename="$${filename%.*}"; echo $$filename; cd $(LEG_DIR)/$$filename && make;
 	@echo ___________ $< ___________
 	$(LINK) -o $@ $</build/*.o
 
-%: $(OBJECTS) $(LEGACY_OBJ) $(COMMON_OBJS) $(PATH_SRC_APP)%.c
+$(TARGET): ${OBJECTS} ${LEG_OBJ} ${MAIN}
 	$(FINAL) -o $@ $^ $(CFLAGS)
-
-$(COMMON_OBJ)%.o: $(COMMON_SRC)%.c
-	cd .. && make common
 
 test: $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
 	@for FILE in $^; do \
-		if [ "$$FILE" != test_resources ]; then \
-   			echo ___ $$FILE ___ ; \
-			cat $$FILE; \
-		fi;\
+		echo ___ $$FILE ___ ; \
+		cat $$FILE; \
 	done
 	@echo "-----------------------\nFAILURES:\n-----------------------"
 	@-grep -s "F:" $^; echo "";
@@ -179,72 +137,32 @@ test: $(RESULTS)
 	@-grep -s "E:" $^; echo "";
 	@echo "\nDONE"
 
-$(TEST_RESOURCES): $(RESOURCE_IN)
-	mkdir -p $(PATH_BLD)/resources
-	cp -r $^ $(PATH_BLD)/resources
-
 # Output the results of the tests by executing each of the builds
 # of the tests. Output STDOUT and STDERR to the name of the rule
-$(PATH_RES)%.txt: $(PATH_BLD)%.$(TARGET_EXT) $(TEST_RESOURCES)
+$(RES_DIR)%.txt: $(TST_BLD_DIR)%
 	-./$< > $@ 2>&1
 
+# creates the test executables by linking the test objects with the build objects excluding 
+# the specific source under test
+$(TST_BLD_DIR)%: $(TST_DIR)%.c $(OBJECTS) $(LEG_OBJ) 
+	$(FINAL) -o $@ $(filter-out $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o $@), $^) $(TEST_CFLAGS)
 
-# creates the test executables by linking the test objects with
-# the build objects, unity, and the test dependencies
-$(PATH_BLD)Test_%.$(TARGET_EXT): $(PATH_OBJ)Test_%.o $(OBJECTS) $(LEGACY_OBJ) $(COMMON_OBJS)
-	$(FINAL) -o $@ $(filter-out $(patsubst $(PATH_BLD)Test_%.$(TARGET_EXT), $(PATH_OBJ)%.o, $@), $^) $(TEST_CFLAGS)
-
-
-# Creates object files from the test sources
-$(PATH_OBJ)%.o:: $(PATH_TST)%.c $(SELF)
-	$(COMPILE) $(TEST_CFLAGS) $< -o $@
-
-# Creates object files from the stack source file
-$(PATH_OBJ)%.o:: $(PATH_SRC_STK)%.c $(SELF)
+# Creates object files from the source file
+$(OBJ_DIR)%.o:: $(SRC_DIR)%.c $(SELF)
 	$(COMPILE) $(CFLAGS) $< -o $@
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_WBS)%.c $(SELF)
-	$(COMPILE) $(CFLAGS) $< -o $@
+$(DEP_SRC): $(DEP_DIRS)
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.c $(SELF)
-	$(COMPILE) $(call cflags, $@) $< -o $@
+$(DEP_DIR)%.d:: $(SRC_DIR)%.c $(LEG_OBJ)
+	$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(TEST_CFLAGS) $<
 
-$(PATH_OBJ)%.o:: $(PATH_SRC_MOD)%.cc $(SELF)
-	$(COMPILE_PP) $(call cflags, $@) $< -o $@
-
-$(PATH_DEP)%.d: $(PATH_TST)%.c
-	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(TEST_CFLAGS) $<
-
-$(PATH_DEP)%.d: $(PATH_SRC_STK)%.c $(LEGACY_OBJ)
-	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
-
-$(PATH_DEP)%.d: $(PATH_SRC_MOD)%.c $(LEGACY_OBJ)
-	@$(DEPEND) $@ -MT $(patsubst $(PATH_DEP)%.d, $(PATH_OBJ)%.o, $@)  $(CFLAGS) $<
-
-
-$(PATH_BLD):
-	$(MKDIR) $(PATH_BLD)
-
-$(PATH_OBJ):
-	$(MKDIR) $(PATH_OBJ)
-
-$(PATH_RES):
-	$(MKDIR) $(PATH_RES)
-
-$(PATH_BLD_LEG):
-	$(MKDIR) $(PATH_BLD_LEG)
-
-$(PATH_DEP):
-	$(MKDIR) $(PATH_DEP)
+$(BLD_DIRS) $(DEP_DIRS) $(INC_DIRS) $(OBJ_DIRS):
+	$(MKDIR) $@
 
 clean:
-	$(CLEANUP) $(PATH_OBJ)*.o
-	$(CLEANUP) $(PATH_BLD)*.$(TARGET_EXT)
-	$(CLEANUP) $(PATH_BLD_LEG)*.o
-	$(foreach leg_lib, $(LEGACY_LIBS), $(CLEAN_DIR) $(PATH_SRC_LEG)$(leg_lib)/build)
-	$(CLEANUP) $(PATH_RES)*.txt
-	$(CLEANUP) $(PATH_DEP)*.d
-	$(CLEANUP) $(APPS)
+	$(CLEAN_DIR) $(BLD_DIR)
+	$(foreach leg_lib, $(LEG_LIBS), $(CLEAN_DIR) $(PATH_SRC_LEG)$(leg_lib)/build)
+	$(CLEANUP) $(TARGET)
 
 ifneq ($(MAKECMDGOALS), clean)
 -include $(DEP_TST)
@@ -256,7 +174,7 @@ endif
 .PHONY: test
 .PHONY: legacy
 .PHONY: depends
-.PRECIOUS: $(PATH_BLD)Test_%.$(TARGET_EXT)
+.PRECIOUS: $(PATH_BLD)Test_%
 .PRECIOUS: $(PATH_OBJ)%.o
 .PRECIOUS: $(PATH_BLD_LEG)%.o
 .PRECIOUS: $(PATH_DEP)%.d

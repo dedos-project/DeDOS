@@ -4,14 +4,14 @@
  * Registration and location of msu types
  */
 
+#include "dfg.h"
 #include "msu_type.h"
+#include "logging.h"
 
 #define MAX_TYPE_ID 1000
-#define MAX_MSU_TYPES 32
-
-static struct msu_types[MAX_TYPE_ID];
 
 static const struct msu_type *MSU_TYPES[] = {
+    /*
     &PICO_TCP_MSU_TYPE,
     &HS_REQUEST_ROUTING_MSU_TYPE,
     &MSU_APP_TCP_ECHO_TYPE,
@@ -27,7 +27,11 @@ static const struct msu_type *MSU_TYPES[] = {
     &WEBSERVER_REGEX_MSU_TYPE,
     &WEBSERVER_WRITE_MSU_TYPE,
     &WEBSERVER_REGEX_ROUTING_MSU_TYPE
+    */
 };
+
+// TODO: describe in comment
+static struct msu_type *msu_types[MAX_TYPE_ID] = {};
 
 #define N_MSU_TYPES (sizeof(MSU_TYPES) / sizeof(struct msu_type*))
 /**
@@ -39,7 +43,7 @@ static const struct msu_type *MSU_TYPES[] = {
 static int register_msu_type(struct msu_type *type) {
     if (type->id > MAX_MSU_TYPES) {
         log_error("MSU type %s not registered. Type ID %d too high. Max: %d", 
-                  type->name, type->id, MAX_MSU_ID);
+                  type->name, type->id, MAX_TYPE_ID);
         return -1;
     }
     msu_types[type->id] = type;
@@ -47,10 +51,10 @@ static int register_msu_type(struct msu_type *type) {
 }
 
 struct msu_type *get_msu_type(int id) {
-    if (type->id > MAX_MSU_TYPES) {
+    if (id > MAX_MSU_TYPES) {
         log_error("MSU type %d cannot be found Type ID too high. Max: %d",
-                  id, MAX_MSU_ID);
-        return -1;
+                  id, MAX_TYPE_ID);
+        return NULL;
     }
     return msu_types[id];
 }

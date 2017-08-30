@@ -4,6 +4,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdbool.h>
 
 #define MAX_EPOLL_EVENTS 512
 
@@ -32,11 +33,15 @@ int enable_epoll(int epoll_fd, int new_fd, uint32_t events) {
  * Adds a file descriptor to the epoll instance.
  * Or's EPOLLONESHOT with events.
  */
-int add_to_epoll(int epoll_fd, int new_fd, uint32_t events) {
+int add_to_epoll(int epoll_fd, int new_fd, uint32_t events, bool oneshot) { 
     struct epoll_event event;
     memset(&event, 0, sizeof(event));
     event.data.fd = new_fd;
-    event.events = events | EPOLLONESHOT;
+    if (oneshot) {
+        event.events = events | EPOLLONESHOT;
+    } else {
+        event.events = events;
+    }
 
     int rtn = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_fd, &event);
 
@@ -52,7 +57,7 @@ int add_to_epoll(int epoll_fd, int new_fd, uint32_t events) {
 /**
  * Accepts a new connection and adds it to the epoll instance
  */
-static int accept_new_connection(int socketfd, int epoll_fd) {
+static int accept_new_connection(int socketfd, int epoll_fd, int oneshot) {
     int rtn;
     log_custom(LOG_EPOLL_OPS, "Accepting a new connection");
 
@@ -85,7 +90,7 @@ static int accept_new_connection(int socketfd, int epoll_fd) {
         // TODO: Error handling :?
         return -1;
     }
-    rtn = add_to_epoll(epoll_fd, new_fd, EPOLLIN);
+    rtn = add_to_epoll(epoll_fd, new_fd, EPOLLIN, oneshot);
     if (rtn < 0) {
         return -1;
     } else {
@@ -107,13 +112,12 @@ static int accept_new_connection(int socketfd, int epoll_fd) {
  * @param data Data to be passed through to handler functions
  * @return 0 on success, -1 on error
  */
-int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout,
+int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int oneshot,
        int (*connection_handler)(int, void*),
        int (*accept_handler)(int, void*),
        void *data) {
     struct epoll_event events[MAX_EPOLL_EVENTS];
 
-    int rtn;
     for (int j=0; j<batch_size || batch_size == -1;  j++) {
         int n = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, 100);
         if (n == 0) {
@@ -123,7 +127,7 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout,
         for (int i=0; i < n; ++i) {
             if (socket_fd == events[i].data.fd) {
                 log_custom(LOG_EPOLL_OPS, "Accepting connection on %d", socket_fd);
-                int new_fd = accept_new_connection(socket_fd, epoll_fd);
+                int new_fd = accept_new_connection(socket_fd, epoll_fd, oneshot);
                 if ( new_fd < 0) {
                     log_error("Failed accepting new connection on epoll %d", epoll_fd);
                     return -1;

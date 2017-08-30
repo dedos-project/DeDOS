@@ -17,7 +17,7 @@
 #define LOG_FD stderr
 
 #ifndef LOG_ALL
-#define LOG_ALL 0
+#define LOG_ALL 1
 #endif
 
 #define log_at_level(lvl_label, color, fd, fmt, ...)\
@@ -69,7 +69,7 @@
 #define LOG_CUSTOM_STRINGIFY(val) "" #val
 #define log_custom(level, fmt, ...)\
     do { \
-        if (strcmp( "" #level, LOG_CUSTOM_STRINGIFY(level))) { \
+        if (LOG_ALL || strcmp( "" #level, LOG_CUSTOM_STRINGIFY(level))) { \
             log_at_level(#level, ANSI_COLOR_PURPLE, LOG_FD, fmt, ##__VA_ARGS__); \
         } \
     } while (0)

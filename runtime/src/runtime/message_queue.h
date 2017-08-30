@@ -1,11 +1,14 @@
 #ifndef DEDOS_THREADS_H_
 #define DEDOS_THREADS_H_
 #include <stdbool.h>
+#include <inttypes.h>
+#include <unistd.h>
+#include <pthread.h>
 
 enum dedos_msg_type {
-    RUNTIME_MSG;
-    THREAD_MSG;
-    MSU_MSG;
+    RUNTIME_MSG,
+    THREAD_MSG,
+    MSU_MSG
 };
 
 struct dedos_msg {
@@ -29,4 +32,5 @@ struct msg_queue {
 
 struct dedos_msg *dequeue_msg(struct msg_queue *q);
 int enqueue_msg(struct msg_queue *q, struct dedos_msg *msg);
+int init_msg_queue(struct msg_queue *q);
 #endif //DEDOS_THREADS_H_

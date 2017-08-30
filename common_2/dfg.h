@@ -10,11 +10,12 @@
 struct dfg_config;
 struct dfg_vertex;
 
+#define MAX_RUNTIMES 4
 #define MAX_THREADS 32
 #define MAX_ROUTES 32
 #define MAX_INIT_DATA_LEN 32
 #define MAX_MSU_NAME_LEN 32
-#define MAX_MSU_TYPES 16
+#define MAX_MSU_TYPES 32
 
 struct dfg_runtime {
     int id;
@@ -34,8 +35,8 @@ struct dfg_runtime {
 
 enum thread_mode {
     PINNED_THREAD  = 1,
-    NONPINNED_THREAD = 2
-}
+    UNPINNED_THREAD = 2
+};
 
 #define MAX_MSU_PER_THREAD 8
 
@@ -50,24 +51,24 @@ struct dfg_thread {
 struct dfg_scheduling {
     struct dfg_runtime *runtime;
     struct dfg_thread *thread;
-    struct dfg_route *routes[NUM_MSU_TYPES];
+    struct dfg_route *routes[MAX_MSU_TYPES];
     int n_routes;
     int cloneable;
     int colocation_group;
     // IMP: float dedline;
-}
+};
 
 struct dfg_meta_routing {
     struct dfg_msu_type *src_types[MAX_MSU];
     int n_src_types;
     struct dfg_msu_type *dst_types[MAX_MSU];
     int n_dst_types;
-}
+};
 
 struct dfg_route_destination {
     int key;
     struct dfg_msu *msu;
-}
+};
 
 struct dfg_route {
     int id;
@@ -98,14 +99,14 @@ struct dfg_msu_type {
 };
 
 enum msu_locality {
-    LOCAL_MSU,
-    REMOTE_MSU
+    MSU_IS_LOCAL,
+    MSU_IS_REMOTE
 };
 
 struct dfg_dependency {
-    struct dfg_msu_type;
+    struct dfg_msu_type type;
     enum msu_locality locality;
-}
+};
 
 struct dfg_msu {
     uint8_t vertex_type;
@@ -117,10 +118,11 @@ struct dfg_msu {
     char name[MAX_MSU_NAME_LEN];
     enum blocking_mode blocking_mode;
 
-    struct dfg_profiling profiling;
+    // TODO: Profiling in DFG?
+    //struct dfg_profiling profiling;
     struct dfg_scheduling scheduling;
     // IMP: removing msu_statistics_data in favor of storing in global controller
-}
+};
 
 // Wrapper structure for the DFG
 struct dedos_dfg {
@@ -138,5 +140,7 @@ struct dedos_dfg {
 
     // IMP: dfg_mutex
 };
+
+struct dfg_runtime *get_dfg_runtime(struct dedos_dfg *dfg, int runtime_id);
 
 #endif //DFG_H_

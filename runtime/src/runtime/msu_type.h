@@ -13,7 +13,10 @@
 #define MAX_INIT_DATA_LEN 32
 struct msu_init_data {
     char init_data[MAX_INIT_DATA_LEN];
-}
+};
+
+// Need forward declaration due to circular dependency
+struct local_msu;
 
 /**
  * Defines a type of MSU. This information (mostly callbacks)
@@ -69,7 +72,7 @@ struct msu_type{
      * @param ctrl_msg message to receieve from global controller
      * @return 0 on success, -1 on error
      */
-    int (*receive_ctrl)(struct local_msu *self, struct msu_action_data *ctrl_msg);
+    //int (*receive_ctrl)(struct local_msu *self, struct msu_action_data *ctrl_msg);
 
     /* Move state within same process and physical machine, like pointers.
      * Runtime should call this.
@@ -139,5 +142,6 @@ struct msu_type{
                         struct msu_queue_item *queue_item);
 };
 
+int init_msu_types();
 struct msu_type *get_msu_type(int id);
 #endif // MSS_TYPE_H

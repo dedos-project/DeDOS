@@ -1,3 +1,6 @@
+#include "communication.h"
+#include "runtime_dfg.h"
+#include "logging.h"
 
 int send_to_endpoint(int fd, void *data, size_t data_len) {
     int rt_id = local_runtime_id();
@@ -9,10 +12,10 @@ int send_to_endpoint(int fd, void *data, size_t data_len) {
     size_t buflen = sizeof(*msg) + data_len;
     char buf[buflen];
     msg = (struct dedos_tcp_msg*) buf;
-    mdg->src_id = rt_id;
+    msg->src_id = rt_id;
     msg->data_len = data_len;
     memcpy(&buf[sizeof(*msg)], data, data_len);
-    int rtn = send(fd, buf, buflen);
+    int rtn = write(fd, buf, buflen);
     if (rtn <= 0) {
         log_error("Error sending buffer to endpoint with socket %d", fd);
     } else if (rtn < data_len) {
@@ -47,5 +50,6 @@ int init_bound_socket(int port) {
         log_perror("Failed to bind to port %d", port);
         return -1;
     }
+    return sock;
 }
 

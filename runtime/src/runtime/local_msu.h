@@ -1,6 +1,8 @@
 #ifndef LOCAL_MSU_H_
 #define LOCAL_MSU_H_
 #include "msu_type.h"
+#include "message_queue.h"
+#include "worker_thread.h"
 
 #define MAX_INIT_DATA_LEN 32
 
@@ -13,10 +15,8 @@ struct local_msu {
      */
     struct msu_type *type;
 
-    /** Routing table pointer, containing all destination MSUs
-     * TODO: Update route set to be more intelligent
-     */
-    struct route_set *routes;
+    /** Routing table set, containing all destination MSUs */
+    struct route_set routes;
 
     // ???: struct generic_msu *next (Linked list for MSU pool)
     
@@ -43,8 +43,12 @@ struct local_msu {
     void *msu_state;
 
     // MOVED: routing_state can be moved to msu_state
-}
+};
 
 struct local_msu *init_msu(unsigned int id, struct msu_type *type, 
                            struct worker_thread *thread, struct msu_init_data *data);
 
+void destroy_msu(struct local_msu *msu);
+void msu_receive(struct local_msu *msu, struct msu_msg *msg);
+
+#endif

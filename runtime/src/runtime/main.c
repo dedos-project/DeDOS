@@ -2,7 +2,17 @@
  * @file runtime/main.c
  * Main executable file to start the runtime
  */
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdbool.h>
+#include <getopt.h>
+#include <stdio.h>
+
+#include "logging.h"
+#include "runtime_dfg.h"
+#include "stats.h"
+#include "controller_communication.h"
+#include "main_thread.h"
 
 #define USE_OPENSSL
 
@@ -22,13 +32,14 @@ int main(int argc, char **argv) {
     char *dfg_json = NULL;
     char *statlog = NULL;
     int runtime_id = -1;
+    // TODO: tag_probability
+    //char *tag_probability = NULL;
 
     struct option long_options[] = {
-        {"prof-tag-probability", optional_argument, 0, 'z'}
+        {"prof-tag-probability", optional_argument, 0, 'z'},
         {NULL, 0, 0, 0}
     };
 
-    bool arguments_provided = false;
     while (1) {
         int option_index = 0;
         int c = getopt_long(argc, argv, "j:i:z:", long_options, &option_index);
@@ -36,18 +47,18 @@ int main(int argc, char **argv) {
         if (c == -1) {
             break;
         }
-        arguments_provided = true;
         switch (c) {
             case 'j':
                 dfg_json = optarg;
                 break;
             case 'i':
-                runtime_id = optarg;
+                runtime_id = atoi(optarg);
                 break;
             case 'l':
                 statlog = optarg;
                 break;
             case 'z':
+                /*
                 // TODO: Fix global dprof_tag_probability
                 tag_probability = optarg;
                 if(tag_probability != NULL){
@@ -57,6 +68,7 @@ int main(int argc, char **argv) {
                         dprof_tag_probability > 1){
                     dprof_tag_probability = 1.0;
                 }
+                */
             default:
                 printf("Unknown option provided: %c. Exiting\n", c);
                 exit(-1);
@@ -80,13 +92,25 @@ int main(int argc, char **argv) {
 
     // TODO: Initialize openssl in msu_type constructor for webserver
 
-    while (connect_to_global_controller() != 0) {
+    struct sockaddr_in ctrl_addr;
+    int rtn = controller_address(&ctrl_addr);
+    if (rtn < 0) {
+        log_critical("Could not get controller address from DFG");
+        exit(-1);
+    }
+    while (init_controller_socket(&ctrl_addr) != 0) {
+        log_info("Retrying controller connection");
         sleep(2);
     }
 
     log_info("Connected to global controller");
 
-    runtime_main_thread_loop();
+    struct dedos_thread *main_thread = start_main_thread();
+    if (main_thread == NULL) {
+        log_critical("Error starting main thread!");
+        exit(-1);
+    }
+
 
     finalize_statistics(statlog);
     log_info("Exiting runtime...");

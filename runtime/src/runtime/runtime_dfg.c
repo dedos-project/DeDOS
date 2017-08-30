@@ -3,6 +3,10 @@
  * Interactions with the global dfg from an individual runtime's perspective
  */
 #include "runtime_dfg.h"
+#include "dfg_reader.h"
+#include "logging.h"
+
+#include <stdlib.h>
 
 /** Static (global) variable for accessing a lodaed Dfg */
 static struct dedos_dfg *DFG = NULL;
@@ -50,14 +54,20 @@ int controller_address(struct sockaddr_in *addr) {
     }
 
     bzero(addr, sizeof(*addr));
-    addr.sin_family = AF_INET;
-    inet_pton(AF_INET, DFG->controller_ip, &addr->sin_addr);
-    addr.sin_port = htons(DFG->controller_port);
+    addr->sin_family = AF_INET;
+    addr->sin_addr.s_addr = htonl(DFG->controller_ip);
+    addr->sin_port = htons(DFG->controller_port);
 
     return 0;
 }
 
-//TODO: local_runtime_id()
+int local_runtime_id() {
+    if (DFG == NULL) {
+        log_error("Runtime DFG not instantiated");
+        return -1;
+    }
+    return LOCAL_RUNTIME->id;
+}
 
 int local_runtime_port() {
     if (DFG == NULL) {
