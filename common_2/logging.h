@@ -17,6 +17,9 @@
 #define LOG_FD stderr
 
 #ifndef LOG_ALL
+#define LOG_ALL 0
+#else
+#undef LOG_ALL
 #define LOG_ALL 1
 #endif
 
