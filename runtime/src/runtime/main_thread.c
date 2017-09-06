@@ -10,6 +10,7 @@
 #include <netinet/ip.h>
 
 #define MAX_WORKER_THREADS 16
+static struct dedos_thread *static_main_thread;
 static struct worker_thread *worker_threads[MAX_WORKER_THREADS];
 static int n_worker_threads = 0;
 
@@ -17,25 +18,7 @@ static int init_main_thread(struct dedos_thread *main_thread) {
     if (init_msu_types() != 0) {
         log_warn("Error initializing MSU types");
     }
-
-    // TODO: Move out of initialization of main thread
-    /*
-    if (init_runtime_epoll() != 0) {
-        log_error("Error initializing runtime epoll");
-        return -1;
-    }
-
-    int local_port = local_runtime_port();
-    if (local_port < 0) {
-        log_error("Error getting local runtime port");
-        return -1;
-    }
-
-    if (init_runtime_sockets(local_port) != 0) {
-        log_error("Error initializing runtime sockets");
-        return -1;
-    }
-*/
+    static_main_thread = main_thread;
     return 0;
 }
 
@@ -48,7 +31,7 @@ static int add_worker_thread(struct ctrl_create_thread_msg *msg, struct dedos_th
             return -1;
         }
     }
-    worker_threads[n_worker_threads] = create_worker_thread(id, msg->mode, main_thread);
+    worker_threads[n_worker_threads] = create_worker_thread(id, msg->mode);
     if (worker_threads[n_worker_threads] == NULL) {
         log_error("Error creating worker thread %d", id);
         return -1;
@@ -58,14 +41,93 @@ static int add_worker_thread(struct ctrl_create_thread_msg *msg, struct dedos_th
     return 0;
 }
 
-// TODO: ADD RUNTIME MSG
-int main_thread_add_runtime_peer(struct ctrl_add_runtime_msg *x){return 0;}
+static int main_thread_add_runtime_peer(struct ctrl_add_runtime_msg *msg){
+    struct sockaddr_in addr;
+    bzero(&addr, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(msg->ip);
+    addr.sin_port = htons(msg->port);
 
-// TODO: main_thread_send_to_peer()
-int main_thread_send_to_peer(struct send_to_runtime_msg *x){return 0;}
+    int rtn = connect_to_runtime_peer(msg->runtime_id, &addr);
+    if (rtn < 0) {
+        log_error("Could not add runtime peer");
+        return -1;
+    }
+    return 0;
+}
 
-// TODO: modify_route()
-int modify_route(struct ctrl_route_mod_msg *x){return 0;}
+static int main_thread_add_connected_runtime(struct runtime_connected_msg *msg) {
+    int rtn = add_runtime_peer(msg->runtime_id, msg->fd);
+    if (rtn < 0) {
+        log_error("Could not add runtime peer %d (fd: %d)", msg->runtime_id, msg->fd);
+        return -1;
+    }
+    log_custom(LOG_MAIN_THREAD_MESSAGES, "runtime peer %d (fd: %d) added",
+               msg->runtime_id, msg->fd);
+    return 0;
+}
+
+static int main_thread_send_to_peer(struct send_to_peer_msg *msg) {
+    int rtn = send_to_peer(msg->runtime_id, sizeof(msg->hdr), &msg->hdr);
+    if (rtn < 0) {
+        log_error("Error sending message header to runtime %d", msg->runtime_id);
+        return -1;
+    }
+    rtn = send_to_peer(msg->runtime_id, msg->hdr.payload_size, msg->data);
+    if (rtn < 0) {
+        log_error("Error sending message contents to runtime %d", msg->runtime_id);
+        return -1;
+    }
+    return 0;
+}
+
+static int main_thread_control_route(struct ctrl_route_msg *msg) {
+    int rtn;
+    switch (msg->type) {
+        case CREATE_ROUTE:
+            rtn = init_route(msg->route_id, msg->type_id);
+            if (rtn < 0) {
+                log_error("Error creating new route of id %d, type %d",
+                          msg->route_id, msg->type_id);
+                return -1;
+            }
+            return 0;
+        case ADD_ENDPOINT:;
+            struct msu_endpoint endpoint;
+            int rtn = init_runtime_endpoint(msg->msu_id, msg->runtime_id, &endpoint);
+            if (rtn < 0) {
+                log_error("Cannot initilize runtime endpoint for adding "
+                          "endpoint %d to route %d", msg->msu_id, msg->route_id);
+                return -1;
+            }
+            rtn = add_route_endpoint(msg->route_id, endpoint, msg->key);
+            if (rtn < 0) {
+                log_error("Error adding endpoint %d to route %d with key %d",
+                          msg->msu_id, msg->route_id, msg->key);
+                return -1;
+            }
+            return 0;
+        case DEL_ENDPOINT:
+            rtn = remove_route_endpoint(msg->route_id, msg->msu_id);
+            if (rtn < 0) {
+                log_error("Error removing endpoint %d from route %d",
+                          msg->msu_id, msg->route_id);
+                return -1;
+            }
+            return 0;
+        case MOD_ENDPOINT:
+            rtn = modify_route_endpoint(msg->route_id, msg->msu_id, msg->key);
+            if (rtn < 0) {
+                log_error("Error modifying endpoint %d on route %d to have key %d",
+                          msg->msu_id, msg->route_id, msg->key);
+                return -1;
+            }
+            return 0;
+        default:
+            log_error("Unknown route control message type received: %d", msg->type);
+            return -1;
+    }
+}
 
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->data_size != sizeof(target)) { \
@@ -79,7 +141,7 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
 
     int rtn;
     switch (msg->type) {
-        case ADD_RUNTIME:
+        case CONNECT_TO_RUNTIME:
             CHECK_MSG_SIZE(msg, struct ctrl_add_runtime_msg);
             struct ctrl_add_runtime_msg *runtime_msg = msg->data;
             rtn = main_thread_add_runtime_peer(runtime_msg);
@@ -88,7 +150,15 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
                 log_warn("Error adding runtime peer");
             }
             break;
-        // TODO: case CONNECT_TO_RUNTIME
+        case RUNTIME_CONNECTED:
+            CHECK_MSG_SIZE(msg, struct runtime_connected_msg);
+            struct runtime_connected_msg *connect_msg = msg->data;
+            rtn = main_thread_add_connected_runtime(connect_msg);
+
+            if (rtn < 0) {
+                log_warn("Error adding connected runtime");
+            }
+            break;
         case CREATE_THREAD:
             CHECK_MSG_SIZE(msg, struct ctrl_create_thread_msg);
             struct ctrl_create_thread_msg *create_msg = msg->data;
@@ -98,9 +168,9 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
                 log_warn("Error adding worker thread");
             }
         // TODO: case DELETE_THREAD:
-        case SEND_TO_RUNTIME:
-            CHECK_MSG_SIZE(msg, struct send_to_runtime_msg);
-            struct send_to_runtime_msg *forward_msg = msg->data;
+        case SEND_TO_PEER:
+            CHECK_MSG_SIZE(msg, struct send_to_peer_msg);
+            struct send_to_peer_msg *forward_msg = msg->data;
             rtn = main_thread_send_to_peer(forward_msg);
 
             if (rtn < 0) {
@@ -108,9 +178,9 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
             }
             break;
         case MODIFY_ROUTE:
-            CHECK_MSG_SIZE(msg, struct ctrl_route_mod_msg);
-            struct ctrl_route_mod_msg *route_msg = msg->data;
-            rtn = modify_route(route_msg);
+            CHECK_MSG_SIZE(msg, struct ctrl_route_msg);
+            struct ctrl_route_msg *route_msg = msg->data;
+            rtn = main_thread_control_route(route_msg);
 
             if (rtn < 0) {
                 log_warn("Error modifying route");
@@ -147,23 +217,19 @@ static int check_main_thread_queue(struct dedos_thread *main_thread) {
 
 #define STAT_REPORTING_DURATION_S 1
 
-static int main_thread_loop(struct dedos_thread *self, struct dedos_thread *main_thread) {
-    if (self != main_thread) {
-        log_warn("Main thread loop entered with self != main_thread");
-    }
-
+static int main_thread_loop(struct dedos_thread *self) {
     struct timespec begin;
     clock_gettime(CLOCK_MONOTONIC, &begin);
 
     struct timespec elapsed;
     while (1) {
-        int rtn = thread_wait(main_thread);
+        int rtn = thread_wait(self);
         if (rtn < 0) {
             log_error("Error waiting on main thread semaphore");
             return -1;
         }
 
-        rtn = check_main_thread_queue(main_thread);
+        rtn = check_main_thread_queue(self);
         if (rtn != 0) {
             log_info("Breaking from main runtime thread loop "
                      "due to thread queue");
@@ -181,6 +247,15 @@ static int main_thread_loop(struct dedos_thread *self, struct dedos_thread *main
     return 0;
 }
 
+int enqueue_to_main_thread(struct thread_msg *msg) {
+    int rtn = enqueue_thread_msg(msg, &static_main_thread->queue);
+    if (rtn < 0) {
+        log_error("Error enqueuing message %p to main thread", msg);
+        return -1;
+    }
+    return 0;
+}
+
 struct dedos_thread *start_main_thread(void) {
     struct dedos_thread *main_thread = malloc(sizeof(*main_thread));
     if (main_thread == NULL) {
@@ -189,7 +264,7 @@ struct dedos_thread *start_main_thread(void) {
     }
     init_main_thread(main_thread);
     int rtn = start_dedos_thread(main_thread_loop, UNPINNED_THREAD,
-                                 MAIN_THREAD_ID, main_thread, main_thread);
+                                 MAIN_THREAD_ID, main_thread);
     if (rtn < 0) {
         log_error("Error starting dedos main thread loop");
         return NULL;

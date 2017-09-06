@@ -27,7 +27,7 @@ int init_runtime_dfg(char *filename, int runtime_id) {
         return -1;
     }
 
-    DFG = load_dfg(filename);
+    DFG = parse_dfg_json_file(filename);
     if (DFG == NULL) {
         log_error("Error initializing DFG");
         return -1;
@@ -55,8 +55,8 @@ int controller_address(struct sockaddr_in *addr) {
 
     bzero(addr, sizeof(*addr));
     addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = htonl(DFG->controller_ip);
-    addr->sin_port = htons(DFG->controller_port);
+    addr->sin_addr.s_addr = htonl(DFG->global_ctl_ip);
+    addr->sin_port = htons(DFG->global_ctl_port);
 
     return 0;
 }

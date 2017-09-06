@@ -3,6 +3,7 @@
 #include "local_msu.h"
 #include "logging.h"
 #include "thread_message.h"
+#include "msu_message.h"
 
 #include <stdlib.h>
 
@@ -120,9 +121,9 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
                 log_error("Error modifiying MSU route");
             }
             break;
-        case ADD_RUNTIME:
+        case CONNECT_TO_RUNTIME:
         case CREATE_THREAD:
-        case SEND_TO_RUNTIME:
+        case SEND_TO_PEER:
         case MODIFY_ROUTE:
             log_error("Message (type %d) meant for main thread send to worker thread",
                       msg->type);
@@ -135,7 +136,7 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
     return rtn;
 }
 
-static int worker_thread_loop(struct dedos_thread *thread, struct dedos_thread *main_thread) {
+static int worker_thread_loop(struct dedos_thread *thread) {
     log_info("Starting worker thread loop %d", thread->id);
 
     struct worker_thread self;
@@ -143,20 +144,23 @@ static int worker_thread_loop(struct dedos_thread *thread, struct dedos_thread *
     // TODO: Get context switches
 
     while (1) {
-        // TODO: check return
-        thread_wait(thread);
+        if (thread_wait(thread) != 0) {
+            log_error("Error waiting on thread semaphore");
+            continue;
+        }
         for (int i=0; i<self.n_msus; i++) {
-            struct msu_msg *msg = NULL; //TODO dequeue_msu_msg(&self.msus[i]->msu_queue);
+            struct msu_msg *msg = dequeue_msu_msg(&self.msus[i]->queue);
             if (msg){
-                //TODO: msu_receive(self.msus[i], msg);
+                msu_receive(self.msus[i], msg);
                 free(msg);
             }
         }
         struct thread_msg *msg = dequeue_thread_msg(&thread->queue);
-        // TODO: Should loop till no more messages?
+        // ???: Should i be looping till no more messages?
         while (msg != NULL) {
-            // TODO: Check return
-            process_worker_thread_msg(&self, msg);
+            if (process_worker_thread_msg(&self, msg) != 0) {
+                log_error("Error processing worker thread message");
+            }
             free(msg);
             msg = dequeue_thread_msg(&thread->queue);
         }
@@ -167,11 +171,10 @@ static int worker_thread_loop(struct dedos_thread *thread, struct dedos_thread *
 
 
 struct worker_thread *create_worker_thread(int thread_id,
-                                           enum blocking_mode mode,
-                                           struct dedos_thread *main_thread) {
+                                           enum blocking_mode mode) {
     struct worker_thread *worker_thread = malloc(sizeof(*worker_thread));
     int rtn = start_dedos_thread(worker_thread_loop, mode,
-                                 thread_id, worker_thread->thread, main_thread);
+                                 thread_id, worker_thread->thread);
     if (rtn < 0) {
         log_error("Error starting dedos thread %d", thread_id);
         return NULL;

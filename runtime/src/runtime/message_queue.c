@@ -20,12 +20,15 @@ int enqueue_msg(struct msg_queue *q, struct dedos_msg *msg) {
         q->num_msgs++;
     }
 
-    // TODO: Post to thread semaphore somewhere
     if (q->shared) {
         if (pthread_mutex_unlock(&q->mutex) != 0) {
             log_error("Error unlocking msg queue mutex");
             return -1;
         }
+    }
+
+    if (q->sem) {
+        sem_post(q->sem);
     }
 
     return 0;
@@ -42,6 +45,8 @@ struct dedos_msg *dequeue_msg(struct msg_queue *q) {
         if (q->shared) {
             pthread_mutex_unlock(&q->mutex);
         }
+        log_custom(LOG_FAILED_DEQUEUE_ATTEMPTS, 
+                   "Attempted to dequeue NULL message");
         return NULL;
     }
 
@@ -60,11 +65,11 @@ struct dedos_msg *dequeue_msg(struct msg_queue *q) {
     return msg;
 }
 
-int init_msg_queue(struct msg_queue *q) {
+int init_msg_queue(struct msg_queue *q, sem_t *sem) {
     q->num_msgs = 0;
     q->head = NULL;
     q->tail = NULL;
     pthread_mutex_init(&q->mutex, NULL);
-    q->shared = false;
+    q->sem = sem;    
     return 0;
 }

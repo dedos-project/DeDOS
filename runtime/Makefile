@@ -101,7 +101,7 @@ INCS=$(LEG_INC) $(RNT_DIR) $(COM_DIR) $(MSU_DIR)
 
 CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
 
-TEST_CFLAGS= $(CFLAGS) -lcheck_pic -lrt -lc -lpcap -lm
+TEST_CFLAGS= $(CFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm
 
 
 all: dirs includes legacy ${TARGET}
@@ -125,16 +125,16 @@ $(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
-test: $(RESULTS)
+test: all $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
-	@for FILE in $^; do \
+	@for FILE in $(filter-out all, $^); do \
 		echo ___ $$FILE ___ ; \
 		cat $$FILE; \
 	done
 	@echo "-----------------------\nFAILURES:\n-----------------------"
-	@-grep -s "F:" $^; echo "";
+	@-grep -s ":F:" $^; echo "";
 	@echo "-----------------------\nERRORS:\n-----------------------"
-	@-grep -s "E:" $^; echo "";
+	@-grep -s ":E:" $^; echo "";
 	@echo "\nDONE"
 
 # Output the results of the tests by executing each of the builds

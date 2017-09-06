@@ -13,6 +13,7 @@
 #include "stats.h"
 #include "controller_communication.h"
 #include "main_thread.h"
+#include "socket_monitor.h"
 
 #define USE_OPENSSL
 
@@ -90,27 +91,26 @@ int main(int argc, char **argv) {
         log_warn("Error initializing runtime statistics");
     }
 
-    // TODO: Initialize openssl in msu_type constructor for webserver
-
     struct sockaddr_in ctrl_addr;
     int rtn = controller_address(&ctrl_addr);
     if (rtn < 0) {
         log_critical("Could not get controller address from DFG");
         exit(-1);
     }
-    while (init_controller_socket(&ctrl_addr) != 0) {
-        log_info("Retrying controller connection");
-        sleep(2);
-    }
 
-    log_info("Connected to global controller");
-
+    // TODO: Initialize openssl in msu_type constructor for webserver
     struct dedos_thread *main_thread = start_main_thread();
     if (main_thread == NULL) {
         log_critical("Error starting main thread!");
         exit(-1);
     }
 
+    // This will block until the socket monitor exits
+    // TODO: Shut down main thread when socket monitor exits
+    rtn = run_socket_monitor(local_runtime_port(), &ctrl_addr);
+    if (rtn < 0) {
+        log_critical("Error running socket monitor. Runtime will exit");
+    }
 
     finalize_statistics(statlog);
     log_info("Exiting runtime...");

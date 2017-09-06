@@ -32,7 +32,7 @@ struct ctrl_runtime_msg_hdr {
 
 /** Type: CTRL_ADD_RUNTIME */
 struct ctrl_add_runtime_msg {
-    int id;
+    int runtime_id;
     uint32_t ip;
     int port;
 };
@@ -49,7 +49,7 @@ struct ctrl_delete_thread_msg {
 };
 
 /** Type: CTRL_MODIFY_ROUTE */
-enum ctrl_route_mod_type {
+enum ctrl_route_msg_type {
     CREATE_ROUTE,
     // TODO: DELETE_ROUTE,
     ADD_ENDPOINT,
@@ -58,11 +58,14 @@ enum ctrl_route_mod_type {
 };
 
 /** For creating routes or adding endpoints _to_ routes */
-struct ctrl_route_mod_msg {
-    enum ctrl_route_mod_type type;
-    int route_id;
-    int msu_id; /*<< Only filled if adding or changing an endpoint */
-    int key;    /*<< Only filled if adding or changing an endpoint */
+struct ctrl_route_msg {
+    enum ctrl_route_msg_type type;
+    int route_id;  
+    int type_id;    /*<< Only needed if creating a new route */
+    int msu_id;     /*<< Only needed if dealing with an endpoint*/
+    int key;        /*<< Only filled if adding or modifying an endpoint */
+    
+    unsigned int runtime_id; /*<< Only needed if adding an endpoint */
 };
 
 ///////////////////////

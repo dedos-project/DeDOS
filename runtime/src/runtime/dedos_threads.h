@@ -15,17 +15,14 @@ struct dedos_thread {
     // TODO: Exit signal
 };
 
-
 struct dedos_thread *get_dedos_thread(unsigned int id);
 
-typedef int (*dedos_thread_fn)(struct dedos_thread *thread, 
-                               struct dedos_thread *main);
+typedef int (*dedos_thread_fn)(struct dedos_thread *thread);
 
 int start_dedos_thread(dedos_thread_fn start_routine,
                        enum blocking_mode mode,
                        int id,
-                       struct dedos_thread *thread,
-                       struct dedos_thread *main_thread);
+                       struct dedos_thread *thread);
 
 int thread_wait(struct dedos_thread *thread);
 

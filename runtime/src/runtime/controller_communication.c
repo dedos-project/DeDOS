@@ -3,6 +3,7 @@
  * All communiction with the global controller
  */
 #include "controller_communication.h"
+#include "communication.h"
 #include "logging.h"
 #include "socket_monitor.h"
 #include "dedos_threads.h"
@@ -23,7 +24,6 @@ static int controller_sock = -1;
  * @return -1 on error, 0 on success
  */
 int send_to_controller(struct rt_controller_msg *msg, void *data) {
-    // TODO: Defaine dedos_control_msg
     size_t buf_len = sizeof(*msg) + msg->payload_size;
     char buf[buf_len];
     memcpy(buf, msg, sizeof(*msg));
@@ -47,32 +47,16 @@ static int connect_to_controller(struct sockaddr_in *addr) {
         return -1;
     }
 
-    controller_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (controller_sock < 0) {
-        log_perror("Failed to create controller socket");
-        return -1;
-    }
+    controller_sock = init_connected_socket(addr);
 
-    // ???: Why set REUSEPORT and REUSEADDR on a socket that's not binding?
-    int val = 1;
-    if (setsockopt(controller_sock, SOL_SOCKET, SO_REUSEPORT,
-                   &val, sizeof(val)) < 0 ) {
-        log_perror("Error setting SO_REUSEPORT");
-    }
-    val = 1;
-    if (setsockopt(controller_sock, SOL_SOCKET, SO_REUSEADDR,
-                   &val, sizeof(val)) < 0) {
-        log_perror("Error setting SO_REUSEADDR");
+    if (controller_sock < 0) {
+        log_error("Error connecting to global controller!");
+        return -1;
     }
 
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &addr->sin_addr, ip, INET_ADDRSTRLEN);
     int port = ntohs(addr->sin_port);
-    if (connect(controller_sock, (struct sockaddr*) addr, sizeof(*addr)) < 0) {
-        log_perror("Failed to connect to master at %s:%d", ip, port);
-        close(controller_sock);
-        return -1;
-    }
 
     log_info("Connected to global controller at %s:%d", ip, port);
     return controller_sock;
@@ -89,10 +73,10 @@ int init_controller_socket(struct sockaddr_in *addr) {
                   "before initializing runtime epoll");
         return -1;
     }
-    return 0;
+    return sock;
 }
 
-static ssize_t read_ctrl_message(int fd, struct ctrl_runtime_msg_hdr *msg) {
+static ssize_t read_ctrl_message_hdr(int fd, struct ctrl_runtime_msg_hdr *msg) {
     ssize_t rtn = read(fd, (void*)msg, sizeof(*msg));
     if (rtn != sizeof(*msg)) {
         log_error("Could not read full control runtime message from socket %d", fd);
@@ -118,7 +102,7 @@ static int verify_msg_size(struct ctrl_runtime_msg_hdr *msg) {
         case CTRL_DELETE_THREAD:
             CHECK_MSG_SIZE(msg, struct ctrl_create_thread_msg);
         case CTRL_MODIFY_ROUTE:
-            CHECK_MSG_SIZE(msg, struct ctrl_route_mod_msg);
+            CHECK_MSG_SIZE(msg, struct ctrl_route_msg);
         case CTRL_CREATE_MSU:
             CHECK_MSG_SIZE(msg, struct ctrl_create_msu_msg);
         case CTRL_DELETE_MSU:
@@ -143,7 +127,7 @@ static int read_ctrl_payload(int fd, size_t size, void *buff) {
 static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type) {
     switch (type) {
         case CTRL_ADD_RUNTIME:
-            return ADD_RUNTIME;
+            return CONNECT_TO_RUNTIME;
         case CTRL_CREATE_THREAD:
             return CREATE_THREAD;
         case CTRL_DELETE_THREAD:
@@ -158,11 +142,11 @@ static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type)
             return MSU_ROUTE;
         default:
             log_error("Unknown thread message type %d", type);
-            return NIL;
+            return UNKNOWN_THREAD_MSG;
     }
 }
 
-static int process_ctrl_message(struct ctrl_runtime_msg_hdr *msg, int fd) {
+static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *msg, int fd) {
     if (verify_msg_size(msg) != 0) {
         log_error("Cannot process message. Incorrect payload size for type.");
         return -1;
@@ -196,16 +180,17 @@ static int process_ctrl_message(struct ctrl_runtime_msg_hdr *msg, int fd) {
 }
 
 int handle_controller_communication(int fd) {
-    struct ctrl_runtime_msg_hdr  msg;
-    ssize_t msg_size = read_ctrl_message(fd, &msg);
+    struct ctrl_runtime_msg_hdr hdr;
+    ssize_t msg_size = read_ctrl_message_hdr(fd, &hdr);
     if (msg_size < 0) {
         log_error("Error reading control message");
+        return -1;
     } else {
-        log_custom(LOG_CONTROLLER_COMMUNICATION, 
+        log_custom(LOG_CONTROLLER_COMMUNICATION,
                    "Read message from controller of size %d", msg_size);
     }
 
-    int rtn = process_ctrl_message(&msg, fd);
+    int rtn = process_ctrl_message_hdr(&hdr, fd);
     if (rtn < 0) {
         log_error("Error processing control message");
         return -1;

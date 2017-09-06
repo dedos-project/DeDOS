@@ -5,7 +5,6 @@
  */
 #ifndef MSU_TYPE_H
 #define MSU_TYPE_H
-#include "msu_message.h"
 #include "routing.h"
 #include "ctrl_runtime_messages.h"
 
@@ -13,6 +12,7 @@
 
 // Need forward declaration due to circular dependency
 struct local_msu;
+struct msu_msg;
 
 /**
  * Defines a type of MSU. This information (mostly callbacks)
@@ -21,15 +21,18 @@ struct local_msu;
 struct msu_type{
     /** Name for the msu type */
     char *name;
-    /** ???: layer? */
-    //enum layer layer;
+
+    /* removed: int layer? */
+    /* removed: unsigned int proto_number*/
+
     /** Numerical identifier for the MSU. */
     unsigned int id;
-    /** ???: proto_number? */
-    //unsigned int proto_number;
 
-    /**
-     * TODO: init_type for static type-specific initialization stuff
+    /** Constructor for an MSU_type itself, should initialize whatever context
+     * all MSUs of this type might need to rely upon.
+     * Can be set to NULL if no additional init must occur.
+     * @param type MSU type under construction
+     * @return 0 on success, -1 on error
      */
     int (*init_type)(struct msu_type *type);
 
@@ -60,17 +63,6 @@ struct msu_type{
      */
     int (*receive)(struct local_msu *self, struct msu_msg *data);
 
-    /** Handles receiving of data sent specifically from the Global Controller.
-     * Generic receipt of control messages (adding/removing routes)
-     * is handled by the local_msu.
-     * Can be NULL if no other messages need be handled.
-     * @param self MSU receieving data
-     * @param ctrl_msg message to receieve from global controller
-     * @return 0 on success, -1 on error
-     */
-    // TODO: Remove receive_ctrl()?
-    //int (*receive_ctrl)(struct local_msu *self, struct msu_action_data *ctrl_msg);
-
     /* Move state within same process and physical machine, like pointers.
      * Runtime should call this.
      * @param data ???
@@ -78,7 +70,7 @@ struct msu_type{
      * This never appeared to be used in the current codebase, so I am removing it
      * till we know the exact requirements
      */
-    //int (*same_machine_move_state)(void *data, void *optional_data);
+     // removed: int (*same_machine_move_state)(void *data, void *optional_data);
 
     /** Choose which MSU of **this** type the **previous** MSU will route to.
      * Can **not** be NULL.
@@ -90,35 +82,13 @@ struct msu_type{
     struct msu_endpoint *(*route)(struct msu_type *type, struct local_msu *sender,
                                   struct msu_msg *data);
 
-    /** Enqueues data to a local MSU.
-     * Can **not** be NULL. Set to default_send_local for default behavior.
-     * TODO: remove send_local entirely? It's just queueing
-     * @param self MSU sending data
-     * @param queue_item data to send
-     * @param dst MSU receiving data
-     * @return 0 on success, -1 on error
-     */
-     // int (*send_local)(struct local_msu *self, struct msu_msg *queue_item,
-     //                 struct msu_endpoint *dst);
-
-    /** Enqueues data to a remote MSU (handles data serialization).
-     * Can **not** be NULL. Set to default_send_remote for default behavior.
-     * TODO: Replace send_remote with serialize function
-     * @param self MSU sending data
-     * @param queue_item data to send
-     * @param dst MSU receiving data
-     * @return 0 on success, -1 on error
-     */
-     //int (*send_remote)(struct local_msu *self, struct msu_msg *queue_item,
-     //                   struct msu_endpoint *dst);
-
     /** TODO: Serialization function */
     size_t (*serialize)(struct msu_type *type, struct msu_msg *input,
                         void **output);
 
     /** Deserializes data received from remote MSU and enqueues the
      * message payload onto the msu queue.
-     * TODO: Remove enqueing from function duty. 
+     * TODO: Remove enqueing from function duty.
      * Can **not** be NULL. Set to default_deserialize for default behavior.
      * @param self MSU receiving data
      * @param msg message being received
