@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 enum inter_runtime_msg_type {
-    RT_INIT,
+    INTER_RT_INIT,
     RT_FWD_TO_MSU,
 };
 
@@ -13,7 +13,7 @@ enum inter_runtime_msg_type {
  */
 struct inter_runtime_msg_hdr {
     enum inter_runtime_msg_type type;
-    unsigned int target; /**< Could be thread ID, could be MSU ID */
+    unsigned int target; /**< MSU ID or thread ID depending on message type*/
     size_t payload_size;
 };
 

@@ -54,14 +54,9 @@ static int main_thread_add_connected_runtime(struct runtime_connected_msg *msg) 
 }
 
 static int main_thread_send_to_peer(struct send_to_peer_msg *msg) {
-    int rtn = send_to_peer(msg->runtime_id, sizeof(msg->hdr), &msg->hdr);
+    int rtn = send_to_peer(msg->runtime_id, &msg->hdr, msg->data);
     if (rtn < 0) {
-        log_error("Error sending message header to runtime %d", msg->runtime_id);
-        return -1;
-    }
-    rtn = send_to_peer(msg->runtime_id, msg->hdr.payload_size, msg->data);
-    if (rtn < 0) {
-        log_error("Error sending message contents to runtime %d", msg->runtime_id);
+        log_error("Error sending message to runtime %d", msg->runtime_id);
         return -1;
     }
     return 0;

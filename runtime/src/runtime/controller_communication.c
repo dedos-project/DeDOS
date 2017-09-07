@@ -8,6 +8,8 @@
 #include "socket_monitor.h"
 #include "dedos_threads.h"
 #include "thread_message.h"
+#include "runtime_dfg.h"
+
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <string.h>
@@ -23,18 +25,48 @@ static int controller_sock = -1;
  * @param msg Message to send. Must define payload_len.
  * @return -1 on error, 0 on success
  */
-int send_to_controller(struct rt_controller_msg *msg, void *data) {
-    size_t buf_len = sizeof(*msg) + msg->payload_size;
-    char buf[buf_len];
-    memcpy(buf, msg, sizeof(*msg));
-    memcpy(buf + sizeof(*msg), data, msg->payload_size);
-    if (send(controller_sock, buf, buf_len, 0) == -1) {
-        log_error("Failed to send message to global controller");
+int send_to_controller(struct rt_controller_msg_hdr *hdr, void *payload) {
+
+    if (controller_sock < 0) {
+        log_error("Controller socket not initialized");
+        return -1;
+    }
+
+    int rtn = send_to_endpoint(controller_sock, hdr, sizeof(*hdr));
+    if (rtn <= 0) {
+        log_error("Error sending header to controller");
+        return -1;
+    }
+    if (hdr->payload_size <= 0) {
+        return 0;
+    }
+
+    rtn = send_to_endpoint(controller_sock, payload, hdr->payload_size);
+    if (rtn <= 0) {
+        log_error("Error sending payload to controller");
         return -1;
     }
     return 0;
 }
 
+static int send_ctl_init_msg() {
+    int local_id = local_runtime_id();
+    if (local_id < 0) {
+        log_error("Could not get local runtime ID to send to controller");
+        return -1;
+    }
+
+    struct rt_controller_init_msg msg = {
+        .runtime_id = local_id
+    };
+
+    struct rt_controller_msg_hdr hdr = {
+        .type = RT_CTL_INIT,
+        .payload_size = sizeof(msg)
+    };
+
+    return send_to_controller(&hdr, &msg);
+}
 
 /**
  * Initializes a connection to the global controller
@@ -59,6 +91,12 @@ static int connect_to_controller(struct sockaddr_in *addr) {
     int port = ntohs(addr->sin_port);
 
     log_info("Connected to global controller at %s:%d", ip, port);
+
+    int rtn = send_ctl_init_msg();
+    if (rtn < 0) {
+        log_error("Error sending initialization message to controller");
+        return -1;
+    }
     return controller_sock;
 }
 

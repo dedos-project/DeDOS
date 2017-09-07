@@ -13,21 +13,8 @@ int read_payload(int fd, size_t size, void *buff) {
     return 0;
 }
 
-
-int send_to_endpoint(int fd, void *data, size_t data_len) {
-    int rt_id = local_runtime_id();
-    if (rt_id == -1) {
-        log_error("Error getting source runtime ID");
-        return -1;
-    }
-    struct dedos_tcp_msg *msg;
-    size_t buflen = sizeof(*msg) + data_len;
-    char buf[buflen];
-    msg = (struct dedos_tcp_msg*) buf;
-    msg->src_id = rt_id;
-    msg->data_len = data_len;
-    memcpy(&buf[sizeof(*msg)], data, data_len);
-    int rtn = write(fd, buf, buflen);
+ssize_t send_to_endpoint(int fd, void *data, size_t data_len) {
+    ssize_t rtn = write(fd, data, data_len);
     if (rtn <= 0) {
         log_error("Error sending buffer to endpoint with socket %d", fd);
     } else if (rtn < data_len) {
