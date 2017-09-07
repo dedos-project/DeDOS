@@ -497,7 +497,7 @@ int rm_route_from_set(struct route_set *set, int route_id) {
     return 0;
 }
 
-int init_runtime_endpoint(int msu_id, int runtime_id, struct msu_endpoint *endpoint) {
+int init_msu_endpoint(int msu_id, int runtime_id, struct msu_endpoint *endpoint) {
     endpoint->id = msu_id;
     if (runtime_id == local_runtime_id()) {
         endpoint->locality = MSU_IS_LOCAL;

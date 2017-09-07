@@ -208,7 +208,7 @@ PARSE_FN(set_msu_init_data) {
         log_error("Init data '%s' too long", init_data);
         return -1;
     }
-    strcpy(vertex->init_data, init_data);
+    strcpy(vertex->init_data.init_data, init_data);
     return 0;
 }
 
@@ -518,7 +518,7 @@ PARSE_FN(set_msu_routes) {
 
 
 static int not_implemented(jsmntok_t *tok, char *j, struct json_state *in, struct json_state **saved) {
-    log_warn("JSON key %s is not implemented in DFG", tok_to_str((tok)-1, j));
+    log_warn("JSON key %s is not implemented in DFG reader", tok_to_str((tok)-1, j));
     return 0;
 }
 

@@ -10,6 +10,7 @@
 static void init_worker_thread(struct worker_thread *worker, struct dedos_thread *thread) {
     worker->thread = thread;
     worker->n_msus = 0;
+    // TODO: Pin thread!
 }
 
 static int get_msu_index(struct worker_thread *thread, int msu_id) {

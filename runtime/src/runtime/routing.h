@@ -58,5 +58,5 @@ int add_route_to_set(struct route_set *set, int route_id);
 int rm_route_from_set(struct route_set *set, int route_id);
 
 /** Initializes an endpoint structure to point to the relevant msu. */
-int init_runtime_endpoint(int msu_id, int runtime_id, struct msu_endpoint *endpoint);
+int init_msu_endpoint(int msu_id, int runtime_id, struct msu_endpoint *endpoint);
 #endif

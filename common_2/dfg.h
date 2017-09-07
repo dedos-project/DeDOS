@@ -21,6 +21,10 @@ struct dfg_vertex;
 #define MAX_MSU_TYPES 32
 #define MAX_APP_NAME_LENGTH 64
 
+struct msu_init_data {
+    char init_data[MAX_INIT_DATA_LEN];
+};
+
 struct dfg_runtime {
     int id;
     // removed: `int sock`, keeping in runtime or global controller
@@ -121,7 +125,7 @@ struct dfg_dependency {
 
 struct dfg_msu {
     int id;
-    char init_data[MAX_INIT_DATA_LEN];
+    struct msu_init_data init_data;
 
     struct dfg_msu_type *type;
 

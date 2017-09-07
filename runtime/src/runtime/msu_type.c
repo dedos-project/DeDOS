@@ -76,28 +76,40 @@ static bool has_required_fields(struct msu_type *type) {
     return true;
 }
 
-/**
- * Initializes all MSU types, registering and optionally calling init function
- * @return 0 on success, -1 on error
- */
-int init_msu_types() {
-    for (int i=0; i<N_MSU_TYPES; i++) {
-        struct msu_type *type = msu_types[i];
-        if (!has_required_fields(type)) {
-            log_error("Not registering MSU Type %s due to missing fields", type->name);
-            continue;
-        }
-        if (type->init_type != NULL) {
-            if (type->init_type(type) != 0) {
-                log_warn("MSU Type %s not initialized", type->name);
-                continue;
-            } else {
-                log_custom(LOG_MSU_TYPE_INIT, "Initialized msu type %s", type->name);
-            }
-        }
-        if (register_msu_type(type) != 0) {
-            log_warn("MSU Type %s not registered", type->name);
+static int init_msu_type(struct msu_type *type) {
+    if (!has_required_fields(type)) {
+        log_error("Not registering MSU type %s due to missing fields", 
+                  type->name);
+        return -1;
+    }
+    if (type->init_type) {
+        if (type->init_type(type) != 0) {
+            log_error("MSU Type %s not initialized: failed custom constructor",
+                      type->name);
+            return -1;
+        } else {
+            log_custom(LOG_MSU_TYPE_INIT, "Initialized msu type %s", type->name);
         }
     }
+    if (register_msu_type(type) != 0) {
+        log_error("MSU type %s not registered", type->name);
+        return -1;
+    }
     return 0;
+}
+
+/**
+ * Initializes the MSU type with the given ID, 
+ * calling the custom constructor if appropriate. 
+ * @return 0 on success, -1 on error
+ */
+int init_msu_type_id(unsigned int type_id) {
+    for (int i=0; i<N_MSU_TYPES; i++) {
+        struct msu_type *type = msu_types[i];
+        if (type->id == type_id) {
+            return init_msu_type(type);
+        }
+    }
+    log_error("MSU Type ID %u not found!", type_id);
+    return -1;
 }

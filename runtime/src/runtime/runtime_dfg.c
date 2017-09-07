@@ -5,6 +5,7 @@
 #include "runtime_dfg.h"
 #include "dfg_reader.h"
 #include "logging.h"
+#include "dfg_instantiation.h"
 
 #include <stdlib.h>
 
@@ -35,10 +36,23 @@ int init_runtime_dfg(char *filename, int runtime_id) {
 
     LOCAL_RUNTIME = get_dfg_runtime(DFG, runtime_id);
     if (LOCAL_RUNTIME == NULL) {
-        log_error("Error finding runtime %d in DFG %s", 
+        log_error("Error finding runtime %d in DFG %s",
                   runtime_id, filename);
         return -1;
     }
+
+    if (init_dfg_msu_types(DFG->msu_types, DFG->n_msu_types) != 0) {
+        log_error("Error instantiating MSU types found in %s",
+                  filename);
+        return -1;
+    }
+
+    if (instantiate_dfg_runtime(LOCAL_RUNTIME) != 0) {
+        log_error("Error instantiating runtime %d from %s",
+                  runtime_id, filename);
+        return -1;
+    }
+
     return 0;
 }
 

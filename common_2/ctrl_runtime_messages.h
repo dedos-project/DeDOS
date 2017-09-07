@@ -74,10 +74,6 @@ struct ctrl_route_msg {
 
 #define MAX_INIT_DATA_LEN 32
 
-struct msu_init_data {
-    char init_data[MAX_INIT_DATA_LEN];
-};
-
 /** Type: CTRL_CREATE_MSU */
 struct ctrl_create_msu_msg {
     // Note: Thread ID is specified in runtime_msg, not here

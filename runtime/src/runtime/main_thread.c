@@ -11,32 +11,18 @@
 
 #define MAX_WORKER_THREADS 16
 static struct dedos_thread *static_main_thread;
-static struct worker_thread *worker_threads[MAX_WORKER_THREADS];
-static int n_worker_threads = 0;
 
 static int init_main_thread(struct dedos_thread *main_thread) {
-    if (init_msu_types() != 0) {
-        log_warn("Error initializing MSU types");
-    }
     static_main_thread = main_thread;
     return 0;
 }
 
 static int add_worker_thread(struct ctrl_create_thread_msg *msg, struct dedos_thread *main_thread) {
     int id = msg->thread_id;
-    for (int i=0; i<n_worker_threads; i++) {
-        struct worker_thread *worker = worker_threads[i];
-        if (worker->thread->id == id) {
-            log_error("Cannot add worker thread with ID %d. Already exists!", id);
-            return -1;
-        }
-    }
-    worker_threads[n_worker_threads] = create_worker_thread(id, msg->mode);
-    if (worker_threads[n_worker_threads] == NULL) {
+    struct worker_thread *thread = create_worker_thread(id, msg->mode);
+    if (thread == NULL) {
         log_error("Error creating worker thread %d", id);
         return -1;
-    } else {
-        n_worker_threads++;
     }
     return 0;
 }
@@ -94,7 +80,7 @@ static int main_thread_control_route(struct ctrl_route_msg *msg) {
             return 0;
         case ADD_ENDPOINT:;
             struct msu_endpoint endpoint;
-            int rtn = init_runtime_endpoint(msg->msu_id, msg->runtime_id, &endpoint);
+            int rtn = init_msu_endpoint(msg->msu_id, msg->runtime_id, &endpoint);
             if (rtn < 0) {
                 log_error("Cannot initilize runtime endpoint for adding "
                           "endpoint %d to route %d", msg->msu_id, msg->route_id);

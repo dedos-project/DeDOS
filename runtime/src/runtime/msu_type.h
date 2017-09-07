@@ -109,8 +109,8 @@ struct msu_type{
                         struct msu_msg *queue_item);
 };
 
-/** Initializes all MSU types, registering and optionally calling init function */
-int init_msu_types();
+/** Initializes an MSU type, optionally calling init function */
+int init_msu_type_id(unsigned int type_id);
 /** Gets the MSU type with the provided ID */
 struct msu_type *get_msu_type(int id);
 
