@@ -46,5 +46,7 @@ struct local_msu *init_msu(unsigned int id, struct msu_type *type,
 void destroy_msu(struct local_msu *msu);
 int msu_receive(struct local_msu *msu, struct msu_msg *msg);
 
+void msu_dequeue(struct local_msu *msu);
+
 struct local_msu *get_local_msu(unsigned int id);
 #endif

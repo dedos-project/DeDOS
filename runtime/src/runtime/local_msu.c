@@ -88,6 +88,29 @@ struct local_msu *get_local_msu(unsigned int id) {
     return msu;
 }
 
+static enum stat_id MSU_STAT_IDS[] = {
+    MSU_QUEUE_LEN,
+    MSU_ITEMS_PROCESSED,
+    MSU_EXEC_TIME,
+    MSU_IDLE_TIME,
+    MSU_MEM_ALLOC,
+    MSU_NUM_STATES
+};
+
+static int NUM_MSU_STAT_IDS = sizeof(MSU_STAT_IDS) / sizeof(enum stat_id);
+
+/**
+ * Initializes the stat IDS that are relevant to MSUs
+ */
+static void init_msu_stats(int msu_id) {
+    for (int i=0; i<NUM_MSU_STAT_IDS; i++) {
+        if (init_stat_item(MSU_STAT_IDS[i], msu_id) != 0) {
+            log_warn("Could not initialize stat item %d for msu %d", MSU_STAT_IDS[i], msu_id);
+        }
+    }
+}
+
+
 /**
  * Allocates and creates a new MSU of the specified type and ID on the given thread
  */
@@ -96,6 +119,7 @@ struct local_msu *init_msu(unsigned int id,
                            struct worker_thread *thread,
                            struct msu_init_data *data) {
     struct local_msu *msu = msu_alloc();
+    init_msu_stats(id);
     msu->id = id;
     msu->type = type;
     msu->scheduling_weight = 0;
@@ -144,9 +168,11 @@ void destroy_msu(struct local_msu *msu) {
  */
 int msu_receive(struct local_msu *msu, struct msu_msg *data) {
 
+    record_end_time(MSU_IDLE_TIME, msu->id);
     record_start_time(MSU_EXEC_TIME, msu->id);
     int rtn = msu->type->receive(msu, data);
     record_end_time(MSU_EXEC_TIME, msu->id);
+    record_start_time(MSU_IDLE_TIME, msu->id);
 
     if (rtn != 0) {
         log_error("Error executing MSU %d (%s) receive function",
@@ -154,6 +180,16 @@ int msu_receive(struct local_msu *msu, struct msu_msg *data) {
         return -1;
     }
     return 0;
+}
+
+void msu_dequeue(struct local_msu *msu) {
+    struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
+    if (msg) {
+        record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
+        msu_receive(msu, msg);
+        increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
+        free(msg);
+    }
 }
 
 /**

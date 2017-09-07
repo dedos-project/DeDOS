@@ -166,8 +166,8 @@ static struct stat_item *get_item_stat(struct stat_type *type, unsigned int item
     return &type->items[id_index];
 }
 
-/** 
- * Starts a measurement of elapsed time. 
+/**
+ * Starts a measurement of elapsed time.
  * Not added to the log until a call to record_end_time
  * @param stat_id ID for stat type being logged
  * @param item_id ID for the item to which the stat refers
@@ -182,10 +182,10 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
     }
     rlock_type(type);
     struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
     if (item == NULL) {
         return -1;
     }
-    unlock_type(type);
 
     lock_item(item);
     get_elapsed_time(&item->stats[item->write_index].time);
@@ -193,6 +193,15 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
 
     return 0;
 }
+
+#if DUMP_STATS
+#define WARN_ROLLOVER(label, item_id) \
+        log_warn("Stats for type %s.%u rolling over. Log file will be missing data", \
+                 label, item_id);
+#else
+#define WARN_ROLLOVER(label, item_id)
+#endif
+
 
 /**
  * Records the elapsed time since the previous call to record_start_time
@@ -208,10 +217,10 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     }
     rlock_type(type);
     struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
     if (item == NULL) {
         return -1;
     }
-    unlock_type(type);
 
     struct timespec new_time;
     get_elapsed_time(&new_time);
@@ -219,22 +228,104 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     lock_item(item);
     time_t timediff_s = new_time.tv_sec - item->stats[item->write_index].time.tv_sec;
     long timediff_ns = new_time.tv_nsec - item->stats[item->write_index].time.tv_nsec;
-    item->stats[item->write_index].value  = 
+    item->stats[item->write_index].value  =
             (double)timediff_s + ((double)timediff_ns/(1e9));
     item->write_index++;
 
     if (item->write_index == type->max_stats) {
-#if DUMP_STATS
-        log_warn("Stats for type %s.%u rolling over. Log file will be missing data",
-                 type->label, item_id);
-#endif
+        WARN_ROLLOVER(type->label, item_id);
         item->write_index = 0;
-        item->rolled_over = 1;
+        item->rolled_over = true;
     }
 
     unlock_item(item);
     return 0;
 }
+
+/**
+ * Increments the given statistic by the provided value
+ * @param stat_id ID for the stat being logged
+ * @param item_id ID for the item to which the stat refers (must be registered!)
+ * @param value The amount to add to the given stat
+ * @return 0 on success, -1 on error
+ */
+int increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
+    CHECK_INITIALIZATION;
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    rlock_type(type);
+    struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
+    if (item == NULL) {
+        return -1;
+    }
+
+    lock_item(item);
+
+    get_elapsed_time(&item->stats[item->write_index].time);
+    int last_index = item->write_index - 1;
+    if ( last_index < 0 ) {
+        last_index = type->max_stats - 1;
+    }
+    item->stats[item->write_index].value = item->stats[last_index].value + value;
+    item->write_index++;
+    if (item->write_index == type->max_stats) {
+        WARN_ROLLOVER(type->label, item_id);
+        item->write_index = 0;
+        item->rolled_over = true;
+    }
+
+    unlock_item(item);
+    return 0;
+}
+
+/**
+ * Records a statistic in the statlog
+ * @param stat_id ID for stat being logged
+ * @param item_id ID for item to which stat refers (must be registered!)
+ * @param stat Statistic to record
+ * @param relog Whether to log statistic if it matches the previously logged stat
+ * @return 0 on success, -1 on error
+ */
+int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool relog) {
+    CHECK_INITIALIZATION;
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    rlock_type(type);
+    struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
+    if (item == NULL) {
+        return -1;
+    }
+
+    lock_item(item);
+
+    int last_index = item->write_index - 1;
+    bool do_log = true;
+    if (last_index >= 0) {
+        do_log = item->stats[last_index].value != stat;
+    }
+
+    if (relog || do_log) {
+        get_elapsed_time(&item->stats[item->write_index].time);
+        item->stats[item->write_index].value = stat;
+        item->write_index++;
+        if (item->write_index == type->max_stats) {
+            WARN_ROLLOVER(type->label, item_id);
+            item->write_index = 0;
+            item->rolled_over = true;
+        }
+    }
+    unlock_item(item);
+    return 0;
+}
+
 
 /**
  * Initializes a stat item so that statistics can be logged to it.
@@ -243,7 +334,7 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
  * @param item_id ID of the item to be logged
  */
 int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
-    CHECK_INITIALIZATION; 
+    CHECK_INITIALIZATION;
 
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {

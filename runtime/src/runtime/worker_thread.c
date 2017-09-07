@@ -150,11 +150,7 @@ static int worker_thread_loop(struct dedos_thread *thread) {
             continue;
         }
         for (int i=0; i<self.n_msus; i++) {
-            struct msu_msg *msg = dequeue_msu_msg(&self.msus[i]->queue);
-            if (msg){
-                msu_receive(self.msus[i], msg);
-                free(msg);
-            }
+            msu_dequeue(self.msus[i]);
         }
         struct thread_msg *msg = dequeue_thread_msg(&thread->queue);
         // ???: Should i be looping till no more messages?
