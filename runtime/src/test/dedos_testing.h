@@ -2,8 +2,15 @@
 #define DEDOS_TESTING_H_
 
 #include <check.h>
-//#undef LOG_ERROR
-//#undef LOG_WARN
+
+#define START_DEDOS_TEST(name) \
+    START_TEST(name) { \
+        fprintf(LOG_FD, ANSI_COLOR_BLUE "******** " #name " ******** \n" ANSI_COLOR_RESET);
+
+#define END_DEDOS_TEST \
+    } END_TEST
+
+
 #define LOG_ALL
 #define LOG_CUSTOM
 #include "logging.h"

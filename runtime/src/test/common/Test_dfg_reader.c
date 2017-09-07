@@ -27,7 +27,7 @@ struct dedos_dfg *setup_dfg(int total_threads, int pinned_threads, int marked_pi
 
 }
 
-START_TEST(test_fix_num_threads_correct) {
+START_DEDOS_TEST(test_fix_num_threads_correct) {
     int total_threads= 10;
     int pinned_threads = 4;
     int unpinned_threads = total_threads- pinned_threads;
@@ -54,15 +54,15 @@ START_TEST(test_fix_num_threads_correct) {
     ck_assert_int_eq(set_pinned, pinned_threads);
     ck_assert_int_eq(set_unpinned,unpinned_threads);
 
-} END_TEST
+} END_DEDOS_TEST
 
-START_TEST(test_fix_num_threads_incorrect) {
+START_DEDOS_TEST(test_fix_num_threads_incorrect) {
     struct dedos_dfg *dfg = setup_dfg(5, 2, 3, 1);
 
     int rtn = fix_num_threads(dfg);
 
     ck_assert(rtn != 0);
-} END_TEST
+} END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("dfg_test")
 

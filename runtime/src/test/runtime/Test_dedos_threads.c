@@ -4,17 +4,17 @@
 // (Need static methods...)
 #include "dedos_threads.c"
 
-START_TEST(test_get_dedos_thread_fail) {
+START_DEDOS_TEST(test_get_dedos_thread_fail) {
    struct dedos_thread *thread = get_dedos_thread(3);
    ck_assert(thread == NULL);
-} END_TEST
+} END_DEDOS_TEST
 
-START_TEST(test_get_dedos_thread_success) {
+START_DEDOS_TEST(test_get_dedos_thread_success) {
     struct dedos_thread *thread = malloc(sizeof(*thread));
     init_dedos_thread(thread, PINNED_THREAD, 3);
     struct dedos_thread *thread_out = get_dedos_thread(3);
     ck_assert(thread == thread_out);
-} END_TEST
+} END_DEDOS_TEST
 
 int STARTED_THREAD_ID = -1;
 enum thread_mode STARTED_THREAD_MODE;
@@ -55,7 +55,7 @@ void destroy_fn(struct dedos_thread *thread, void *data) {
     start_dedos_thread(exec_fn, init_fn, destroy_fn, PINNED_THREAD, id, &th); \
     ck_assert_int_eq(STARTED_THREAD_ID, id); \
 
-START_TEST(test_start_dedos_thread) {
+START_DEDOS_TEST(test_start_dedos_thread) {
 
     struct dedos_thread thread1;
     struct dedos_thread thread2;
@@ -75,7 +75,7 @@ START_TEST(test_start_dedos_thread) {
     ck_assert_int_eq(DESTROYED_THREADS[1], 1);
     ck_assert_int_eq(DESTROYED_THREADS[2], 1);
 
-} END_TEST
+} END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("dedos_threads")
 

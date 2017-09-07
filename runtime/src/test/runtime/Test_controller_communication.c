@@ -28,7 +28,7 @@ int init_controller_sock_for_reading() {
     return pipe_fd[1];
 }
 
-START_TEST(test_send_init_to_controller) {
+START_DEDOS_TEST(test_send_init_to_controller) {
     int fd = init_controller_sock_for_writing();
 
     struct rt_controller_init_msg msg = {
@@ -53,10 +53,10 @@ START_TEST(test_send_init_to_controller) {
     rtn = read(fd, &msg_out, sizeof(msg_out));
     ck_assert_int_eq(rtn, sizeof(msg_out));
     ck_assert_int_eq(msg_out.runtime_id, msg.runtime_id);
-} END_TEST
+} END_DEDOS_TEST
 
 // Just spot-checking a single message type for now
-START_TEST(test_thread_msg_from_ctrl_hdr__add_runtime) {
+START_DEDOS_TEST(test_thread_msg_from_ctrl_hdr__add_runtime) {
     int pipe_fd[2];
     pipe(pipe_fd);
 
@@ -84,7 +84,7 @@ START_TEST(test_thread_msg_from_ctrl_hdr__add_runtime) {
     ck_assert_int_eq(msg_out->runtime_id, msg.runtime_id);
     ck_assert_int_eq(msg_out->ip, msg.ip);
     ck_assert_int_eq(msg_out->port, msg.port);
-} END_TEST
+} END_DEDOS_TEST
 
 
 DEDOS_START_TEST_LIST("controller_communication")

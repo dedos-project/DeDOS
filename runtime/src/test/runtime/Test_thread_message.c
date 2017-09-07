@@ -5,7 +5,7 @@
 #include "thread_message.c"
 
 // Spot-checking a single thread message type
-START_TEST(test_enqueue_and_dequeue_thread_msg) {
+START_DEDOS_TEST(test_enqueue_and_dequeue_thread_msg) {
 
     struct runtime_connected_msg msg = {
         .runtime_id = 123,
@@ -26,7 +26,7 @@ START_TEST(test_enqueue_and_dequeue_thread_msg) {
     struct thread_msg *out = dequeue_thread_msg(&q);
     
     ck_assert_ptr_eq(out, &tmsg);
-} END_TEST
+} END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("thread_message")
 

@@ -56,7 +56,7 @@ struct dfg_route *routes[] = {
     &route1, &route2
 };
 
-START_TEST(test_add_dfg_route_endpoints_success) {
+START_DEDOS_TEST(test_add_dfg_route_endpoints_success) {
     LOCAL_RUNTIME = &local_runtime;
     int route_id = 6;
 
@@ -76,9 +76,9 @@ START_TEST(test_add_dfg_route_endpoints_success) {
     ck_assert_int_eq(table->endpoints[1].id, dest2.msu->id);
     ck_assert_int_eq(table->endpoints[2].id, dest3.msu->id);
 
-} END_TEST
+} END_DEDOS_TEST
 
-START_TEST(test_spawn_dfg_routes) {
+START_DEDOS_TEST(test_spawn_dfg_routes) {
     LOCAL_RUNTIME = &local_runtime;
 
     ck_assert_int_eq(spawn_dfg_routes(routes, 2), 0);
@@ -89,9 +89,9 @@ START_TEST(test_spawn_dfg_routes) {
     ck_assert(table2 != NULL);
     struct routing_table *table_NA = get_routing_table(33);
     ck_assert(table_NA == NULL);
-} END_TEST
+} END_DEDOS_TEST
 
-START_TEST(test_add_dfg_routes_to_msu) {
+START_DEDOS_TEST(test_add_dfg_routes_to_msu) {
     LOCAL_RUNTIME = &local_runtime;
 
     spawn_dfg_routes(routes, 2);
@@ -101,7 +101,7 @@ START_TEST(test_add_dfg_routes_to_msu) {
     ck_assert_int_eq(add_dfg_routes_to_msu(&msu, routes, 2), 0);
 
     ck_assert_int_eq(msu.routes.n_routes, 2);
-} END_TEST
+} END_DEDOS_TEST
 
 // TODO: test_spawn_dfg_msus
 // TODO: test_spawn_dfg_threads

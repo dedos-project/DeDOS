@@ -227,8 +227,8 @@ static int enqueue_for_remote_send(struct msu_msg *msg,
         return -1;
     }
 
-    log_custom(LOG_MSU_ENQUEUES, "Enqueued data %p for remote send to dst %d on runtime %d",
-               data, dst->id, dst->runtime_id);
+    log_custom(LOG_MSU_ENQUEUES, "Enqueued message for remote send to dst %d on runtime %d",
+               dst->id, dst->runtime_id);
     return 0;
 }
 
@@ -242,7 +242,7 @@ int send_to_msu(struct local_msu *sender, struct msu_type *dst_type, struct msu_
     struct msu_msg *data = *data_p;
 
     log_custom(LOG_MSU_ENQUEUES, "Sending data %p to destination type %s",
-               data, type->name);
+               data, dst_type->name);
 
     struct msu_endpoint *dst = dst_type->route(dst_type, sender, data);
     if (dst == NULL) {

@@ -11,7 +11,7 @@ unsigned int sample_item_id = 5;
 #define ASSERT_ENABLED(type) \
     ck_assert_msg(type->enabled, "Type not enabled, test invalid")
 
-START_TEST(test_init_stat_item) {
+START_DEDOS_TEST(test_init_stat_item) {
     int rtn = init_statistics();
     ck_assert(rtn == 0);
 
@@ -31,9 +31,9 @@ START_TEST(test_init_stat_item) {
     ck_assert_msg(item->id == sample_item_id, "Item assigned wrong ID");
     ck_assert_msg(item->stats[0].time.tv_sec == 0 && item->stats[0].time.tv_nsec == 0,
                   "Stat times not initialized to 0");
-} END_TEST
+} END_DEDOS_TEST
 
-START_TEST(test_record_uninitialized_stat) {
+START_DEDOS_TEST(test_record_uninitialized_stat) {
     int rtn = init_statistics();
     ck_assert(rtn ==0);
 
@@ -42,9 +42,9 @@ START_TEST(test_record_uninitialized_stat) {
 
     rtn = record_start_time(sample_stat_id, sample_item_id);
     ck_assert(rtn == -1);
-} END_TEST
+} END_DEDOS_TEST
 
-START_TEST(test_record_start_time) {
+START_DEDOS_TEST(test_record_start_time) {
     int rtn = init_statistics();
     ck_assert(rtn == 0);
 
@@ -63,9 +63,9 @@ START_TEST(test_record_start_time) {
     ck_assert_msg(item->stats[0].time.tv_sec != 0 || item->stats[0].time.tv_nsec != 0,
                   "Recording start time did not modify recorded time values");
     ck_assert_msg(item->write_index == 0, "Recording start time advanced write index");
-} END_TEST
+} END_DEDOS_TEST
 
-START_TEST(test_record_end_time) {
+START_DEDOS_TEST(test_record_end_time) {
     int rtn = init_statistics();
     ck_assert(rtn == 0);
 
@@ -87,7 +87,7 @@ START_TEST(test_record_end_time) {
     ck_assert_msg(item->write_index == 1, "Recording end time did not advance write index");
     ck_assert_msg(item->stats[0].value != 0, "Recording end time did not change stat value");
 
-} END_TEST
+} END_DEDOS_TEST
 
 
 DEDOS_START_TEST_LIST("Statistics")
