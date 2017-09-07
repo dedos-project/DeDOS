@@ -76,7 +76,7 @@ int controller_address(struct sockaddr_in *addr) {
 }
 
 int local_runtime_id() {
-    if (DFG == NULL) {
+    if (LOCAL_RUNTIME == NULL) {
         log_error("Runtime DFG not instantiated");
         return -1;
     }

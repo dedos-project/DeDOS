@@ -220,39 +220,25 @@ START_TEST(test_rm_route_from_set_fail) {
     ck_assert_int_eq(rm_route_from_set(&set, 10), -1);
 } END_TEST
 
-int main(int argc, char **argv) {
-    Suite *s  = suite_create("routing");
+DEDOS_START_TEST_LIST("routing")
 
-    TCase *tc = tcase_create("routing");
-    //tcase_add_test(tc_stats, test_sample_item_stats);
-    tcase_add_test(tc, test_find_value_index);
-    tcase_add_test(tc, test_find_id_index);
-    tcase_add_test(tc, test_rm_routing_table_entry);
-    tcase_add_test(tc, test_add_routing_table_entry);
-    tcase_add_test(tc, test_alter_routing_table_entry);
-    tcase_add_test(tc, test_init_route_success);
-    tcase_add_test(tc, test_init_route_fail_duplicate);
-    tcase_add_test(tc, test_get_endpoint_by_index_success);
-    tcase_add_test(tc, test_get_endpoint_by_index_fail);
-    tcase_add_test(tc, test_get_endpoint_by_id_success);
-    tcase_add_test(tc, test_get_endpoint_by_id_fail);
-    tcase_add_test(tc, test_get_route_endpoint_success);
-    tcase_add_test(tc, test_get_type_from_route_set_fail);
-    tcase_add_test(tc, test_get_type_from_route_set_success);
-    tcase_add_test(tc, test_add_route_to_set_success);
-    tcase_add_test(tc, test_add_route_to_set_fail);
-    tcase_add_test(tc, test_rm_route_from_set_success);
-    tcase_add_test(tc, test_rm_route_from_set_fail);
+DEDOS_ADD_TEST_FN(test_find_value_index);
+DEDOS_ADD_TEST_FN(test_find_id_index);
+DEDOS_ADD_TEST_FN(test_rm_routing_table_entry);
+DEDOS_ADD_TEST_FN(test_add_routing_table_entry);
+DEDOS_ADD_TEST_FN(test_alter_routing_table_entry);
+DEDOS_ADD_TEST_FN(test_init_route_success);
+DEDOS_ADD_TEST_FN(test_init_route_fail_duplicate);
+DEDOS_ADD_TEST_FN(test_get_endpoint_by_index_success);
+DEDOS_ADD_TEST_FN(test_get_endpoint_by_index_fail);
+DEDOS_ADD_TEST_FN(test_get_endpoint_by_id_success);
+DEDOS_ADD_TEST_FN(test_get_endpoint_by_id_fail);
+DEDOS_ADD_TEST_FN(test_get_route_endpoint_success);
+DEDOS_ADD_TEST_FN(test_get_type_from_route_set_fail);
+DEDOS_ADD_TEST_FN(test_get_type_from_route_set_success);
+DEDOS_ADD_TEST_FN(test_add_route_to_set_success);
+DEDOS_ADD_TEST_FN(test_add_route_to_set_fail);
+DEDOS_ADD_TEST_FN(test_rm_route_from_set_success);
+DEDOS_ADD_TEST_FN(test_rm_route_from_set_fail);
     
-    suite_add_tcase(s, tc);
-
-    SRunner *sr;
-
-    sr = srunner_create(s);
-
-    srunner_run_all(sr, CK_NORMAL);
-    int number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? 0 : -1;
-}
-
+DEDOS_END_TEST_LIST()

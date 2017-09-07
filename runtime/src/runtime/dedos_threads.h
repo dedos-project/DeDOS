@@ -17,9 +17,13 @@ struct dedos_thread {
 
 struct dedos_thread *get_dedos_thread(unsigned int id);
 
-typedef int (*dedos_thread_fn)(struct dedos_thread *thread);
+typedef void* (*dedos_thread_init_fn)(struct dedos_thread *thread);
+typedef int (*dedos_thread_fn)(struct dedos_thread *thread, void *init_output);
+typedef void (*dedos_thread_destroy_fn)(struct dedos_thread *thread, void *init_output);
 
-int start_dedos_thread(dedos_thread_fn start_routine,
+int start_dedos_thread(dedos_thread_fn thread_fn,
+                       dedos_thread_init_fn init_fn,
+                       dedos_thread_destroy_fn destroy_fn,
                        enum blocking_mode mode,
                        int id,
                        struct dedos_thread *thread);

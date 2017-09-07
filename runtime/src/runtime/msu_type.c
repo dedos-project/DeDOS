@@ -36,6 +36,7 @@ static const struct msu_type *MSU_TYPES[] = {
 static struct msu_type *msu_types[MAX_TYPE_ID];
 
 #define N_MSU_TYPES (sizeof(MSU_TYPES) / sizeof(struct msu_type*))
+
 /**
  * Regsiters an MSU type so that it can be later
  * referenced by its ID

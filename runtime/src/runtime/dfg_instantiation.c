@@ -9,6 +9,7 @@ static int add_dfg_route_destinations(int route_id,
     for (int i=0; i<n_destinations; i++) {
         struct msu_endpoint endpoint;
         struct dfg_route_destination *dest = destinations[i];
+
         int rtn = init_msu_endpoint(dest->msu->id,
                                     dest->msu->scheduling.runtime->id,
                                     &endpoint);

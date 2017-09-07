@@ -12,9 +12,9 @@
 #define MAX_WORKER_THREADS 16
 static struct dedos_thread *static_main_thread;
 
-static int init_main_thread(struct dedos_thread *main_thread) {
+static void *init_main_thread(struct dedos_thread *main_thread) {
     static_main_thread = main_thread;
-    return 0;
+    return NULL;
 }
 
 static int add_worker_thread(struct ctrl_create_thread_msg *msg, struct dedos_thread *main_thread) {
@@ -198,7 +198,7 @@ static int check_main_thread_queue(struct dedos_thread *main_thread) {
 
 #define STAT_REPORTING_DURATION_S 1
 
-static int main_thread_loop(struct dedos_thread *self) {
+static int main_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {
     struct timespec begin;
     clock_gettime(CLOCK_MONOTONIC, &begin);
 
@@ -243,9 +243,12 @@ struct dedos_thread *start_main_thread(void) {
         log_perror("Error allocating main thread");
         return NULL;
     }
-    init_main_thread(main_thread);
-    int rtn = start_dedos_thread(main_thread_loop, UNPINNED_THREAD,
-                                 MAIN_THREAD_ID, main_thread);
+    int rtn = start_dedos_thread(main_thread_loop,
+                                 init_main_thread,
+                                 NULL,
+                                 UNPINNED_THREAD,
+                                 MAIN_THREAD_ID,
+                                 main_thread);
     if (rtn < 0) {
         log_error("Error starting dedos main thread loop");
         return NULL;

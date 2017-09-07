@@ -5,7 +5,7 @@
 
 enum ctrl_runtime_msg_type {
     // Main thread messages
-    CTRL_ADD_RUNTIME,
+    CTRL_CONNECT_TO_RUNTIME,
     CTRL_CREATE_THREAD,
     CTRL_DELETE_THREAD,
     CTRL_MODIFY_ROUTE,

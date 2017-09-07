@@ -64,22 +64,9 @@ START_TEST(test_fix_num_threads_incorrect) {
     ck_assert(rtn != 0);
 } END_TEST
 
-int main(int argc, char **argv) {
-    Suite *s  = suite_create("dfg_test");
+DEDOS_START_TEST_LIST("dfg_test")
 
-    TCase *tc = tcase_create("num_threads");
-    //tcase_add_test(tc_stats, test_sample_item_stats);
-    tcase_add_test(tc, test_fix_num_threads_correct);
-    tcase_add_test(tc, test_fix_num_threads_incorrect);
-    suite_add_tcase(s, tc);
+DEDOS_ADD_TEST_FN(test_fix_num_threads_incorrect)
+DEDOS_ADD_TEST_FN(test_fix_num_threads_correct)
 
-    SRunner *sr;
-
-    sr = srunner_create(s);
-
-    srunner_run_all(sr, CK_NORMAL);
-    int number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? 0 : -1;
-}
-
+DEDOS_END_TEST_LIST()

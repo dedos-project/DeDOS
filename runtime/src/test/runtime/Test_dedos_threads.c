@@ -4,35 +4,84 @@
 // (Need static methods...)
 #include "dedos_threads.c"
 
-START_TEST(test_get_uninitialized_dedos_thread) {
+START_TEST(test_get_dedos_thread_fail) {
    struct dedos_thread *thread = get_dedos_thread(3);
    ck_assert(thread == NULL);
 } END_TEST
 
-START_TEST(test_get_initialized_dedos_thread) {
+START_TEST(test_get_dedos_thread_success) {
     struct dedos_thread *thread = malloc(sizeof(*thread));
     init_dedos_thread(thread, PINNED_THREAD, 3);
     struct dedos_thread *thread_out = get_dedos_thread(3);
     ck_assert(thread == thread_out);
 } END_TEST
 
-int main(int argc, char **argv) {
-    Suite *s  = suite_create("dedos_threads");
+int STARTED_THREAD_ID = -1;
+enum thread_mode STARTED_THREAD_MODE;
 
-    TCase *tc = tcase_create("dedos_threads");
-    log_error("TEST!");
-    //tcase_add_test(tc_stats, test_sample_item_stats);
-    tcase_add_test(tc, test_get_uninitialized_dedos_thread);
-    tcase_add_test(tc, test_get_initialized_dedos_thread);
-    suite_add_tcase(s, tc);
+sem_t DESTROYED_THREAD_SEM;
 
-    SRunner *sr;
+struct test_struct{
+    int t;
+};
 
-    sr = srunner_create(s);
+int DESTROYED_THREADS[] = {0, 0, 0};
 
-    srunner_run_all(sr, CK_NORMAL);
-    int number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? 0 : -1;
+void *init_fn(struct dedos_thread *thread) {
+    STARTED_THREAD_ID = thread->id;
+    STARTED_THREAD_MODE = thread->mode;
+
+    struct test_struct *t = malloc(sizeof(*t));
+    t->t = thread->id * 10;
+
+    return t;
 }
+
+int exec_fn(struct dedos_thread *thread, void *data) {
+    struct test_struct *t = data;
+    ck_assert_int_eq(t->t, thread->id * 10);
+    t->t = thread->id * 15;
+    return 0;
+}
+
+void destroy_fn(struct dedos_thread *thread, void *data) {
+    struct test_struct *t = data;
+    ck_assert_int_eq(t->t, thread->id * 15);
+    DESTROYED_THREADS[thread->id] = 1;
+    sem_post(&DESTROYED_THREAD_SEM);
+}
+
+#define TEST_THREAD(th, id) \
+    start_dedos_thread(exec_fn, init_fn, destroy_fn, PINNED_THREAD, id, &th); \
+    ck_assert_int_eq(STARTED_THREAD_ID, id); \
+
+START_TEST(test_start_dedos_thread) {
+
+    struct dedos_thread thread1;
+    struct dedos_thread thread2;
+    struct dedos_thread thread3;
+
+    sem_init(&DESTROYED_THREAD_SEM, 0, 0);
+
+    TEST_THREAD(thread1, 0);
+    TEST_THREAD(thread2, 1);
+    TEST_THREAD(thread3, 2);
+
+    sem_wait(&DESTROYED_THREAD_SEM);
+    sem_wait(&DESTROYED_THREAD_SEM);
+    sem_wait(&DESTROYED_THREAD_SEM);
+
+    ck_assert_int_eq(DESTROYED_THREADS[0], 1);
+    ck_assert_int_eq(DESTROYED_THREADS[1], 1);
+    ck_assert_int_eq(DESTROYED_THREADS[2], 1);
+
+} END_TEST
+
+DEDOS_START_TEST_LIST("dedos_threads")
+
+DEDOS_ADD_TEST_FN(test_get_dedos_thread_fail)
+DEDOS_ADD_TEST_FN(test_get_dedos_thread_success)
+DEDOS_ADD_TEST_FN(test_start_dedos_thread)
+
+DEDOS_END_TEST_LIST()
 

@@ -7,10 +7,20 @@
 
 #include <stdlib.h>
 
-static void init_worker_thread(struct worker_thread *worker, struct dedos_thread *thread) {
+static void *init_worker_thread(struct dedos_thread *thread) {
+    struct worker_thread *worker = malloc(sizeof(*worker));
+    if (worker == NULL) {
+        log_error("Error allocating worker thread");
+        return NULL;
+    }
     worker->thread = thread;
     worker->n_msus = 0;
     // TODO: Pin thread!
+    return worker;
+}
+
+static void destroy_worker_thread(struct dedos_thread *thread, void *v_worker_thread) {
+    free(v_worker_thread);
 }
 
 static int get_msu_index(struct worker_thread *thread, int msu_id) {
@@ -137,11 +147,10 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
     return rtn;
 }
 
-static int worker_thread_loop(struct dedos_thread *thread) {
+static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread) {
     log_info("Starting worker thread loop %d", thread->id);
 
-    struct worker_thread self;
-    init_worker_thread(&self, thread);
+    struct worker_thread *self = v_worker_thread;
     // TODO: Get context switches
 
     while (1) {
@@ -149,13 +158,13 @@ static int worker_thread_loop(struct dedos_thread *thread) {
             log_error("Error waiting on thread semaphore");
             continue;
         }
-        for (int i=0; i<self.n_msus; i++) {
-            msu_dequeue(self.msus[i]);
+        for (int i=0; i<self->n_msus; i++) {
+            msu_dequeue(self->msus[i]);
         }
         struct thread_msg *msg = dequeue_thread_msg(&thread->queue);
         // ???: Should i be looping till no more messages?
         while (msg != NULL) {
-            if (process_worker_thread_msg(&self, msg) != 0) {
+            if (process_worker_thread_msg(self, msg) != 0) {
                 log_error("Error processing worker thread message");
             }
             free(msg);
@@ -170,8 +179,12 @@ static int worker_thread_loop(struct dedos_thread *thread) {
 struct worker_thread *create_worker_thread(int thread_id,
                                            enum blocking_mode mode) {
     struct worker_thread *worker_thread = malloc(sizeof(*worker_thread));
-    int rtn = start_dedos_thread(worker_thread_loop, mode,
-                                 thread_id, worker_thread->thread);
+    int rtn = start_dedos_thread(worker_thread_loop,
+                                 init_worker_thread,
+                                 destroy_worker_thread,
+                                 mode,
+                                 thread_id,
+                                 worker_thread->thread);
     if (rtn < 0) {
         log_error("Error starting dedos thread %d", thread_id);
         return NULL;

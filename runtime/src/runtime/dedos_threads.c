@@ -8,24 +8,6 @@
 #define MAX_DEDOS_THREAD_ID 16
 static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID];
 
-int enqueue_thread_msg(struct thread_msg *thread_msg, struct msg_queue *queue) {
-    struct dedos_msg *msg = malloc(sizeof(*msg));
-    if (msg == NULL) {
-        log_error("Error allocating dedos_msg for thread_msg");
-        return -1;
-    }
-    msg->data_size = sizeof(*thread_msg);
-    msg->data = thread_msg;
-    int rtn = enqueue_msg(queue, msg);
-    if (rtn < 0) {
-        log_error("Error enqueueing message on thread message queue");
-        return -1;
-    }
-    log_custom(LOG_THREAD_MESSAGES, "Enqueued thread message %p on queue %p", 
-               thread_msg, queue);
-    return 0;
-}
-
 struct dedos_thread *get_dedos_thread(unsigned int id) {
     if (id > MAX_DEDOS_THREAD_ID) {
         log_error("Requested thread ID too high. Maximum is %d", MAX_DEDOS_THREAD_ID);
@@ -73,6 +55,8 @@ static int init_dedos_thread(struct dedos_thread *thread,
 
 struct thread_init {
     dedos_thread_fn thread_fn;
+    dedos_thread_init_fn init_fn;
+    dedos_thread_destroy_fn destroy_fn;
     struct dedos_thread *self;
     sem_t sem;
 };
@@ -84,10 +68,25 @@ static void *dedos_thread_starter(void *thread_init_v) {
     // it will be destroyed externally once sem_post() is complete
     struct dedos_thread *thread = init->self;
     dedos_thread_fn thread_fn = init->thread_fn;
+    dedos_thread_destroy_fn destroy_fn = init->destroy_fn;
+
+    void *init_rtn = NULL;
+    if (init->init_fn) {
+        init_rtn = init->init_fn(thread);
+    }
+
     sem_post(&init->sem);
     log_custom(LOG_DEDOS_THREADS, "Started thread %d (mode: %s, addr: %p)",
                thread->id, thread-> mode == PINNED_THREAD ? "pinned" : "unpinned", thread);
-    return (void*)(intptr_t)thread_fn(thread);
+
+    int rtn = thread_fn(thread, init_rtn);
+    log_custom(LOG_DEDOS_THREADS, "Thread %d ended.", thread->id);
+
+    if (destroy_fn) {
+        destroy_fn(thread, init_rtn);
+    }
+
+    return (void*)(intptr_t)rtn;
 }
 
 int thread_wait(struct dedos_thread *thread) {
@@ -99,14 +98,18 @@ int thread_wait(struct dedos_thread *thread) {
     return 0;
 }
 
-int start_dedos_thread(dedos_thread_fn start_routine,
-                              enum blocking_mode mode,
-                              int id,
-                              struct dedos_thread *thread) {
-    int rtn = init_dedos_thread(thread, id, mode);
+int start_dedos_thread(dedos_thread_fn thread_fn,
+                       dedos_thread_init_fn init_fn,
+                       dedos_thread_destroy_fn destroy_fn,
+                       enum blocking_mode mode,
+                       int id,
+                       struct dedos_thread *thread) {
+    int rtn = init_dedos_thread(thread, mode, id);
     struct thread_init init = {
-        .thread_fn = start_routine,
-        .self = thread,
+        .thread_fn = thread_fn,
+        .init_fn = init_fn,
+        .destroy_fn = destroy_fn,
+        .self = thread
     };
     if (sem_init(&init.sem, 0, 0)) {
         log_perror("Error initializing semaphore for dedos thread");

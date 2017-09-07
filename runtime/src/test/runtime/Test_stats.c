@@ -90,26 +90,11 @@ START_TEST(test_record_end_time) {
 } END_TEST
 
 
+DEDOS_START_TEST_LIST("Statistics")
 
+DEDOS_ADD_TEST_FN(test_init_stat_item);
+DEDOS_ADD_TEST_FN(test_record_uninitialized_stat);
+DEDOS_ADD_TEST_FN(test_record_start_time);
+DEDOS_ADD_TEST_FN(test_record_end_time);
 
-int main(int argc, char **argv) {
-    Suite *s  = suite_create("stats_test");
-
-    TCase *tc_stats = tcase_create("stats_sample");
-    //tcase_add_test(tc_stats, test_sample_item_stats);
-    tcase_add_test(tc_stats, test_init_stat_item);
-    tcase_add_test(tc_stats, test_record_uninitialized_stat);
-    tcase_add_test(tc_stats, test_record_start_time);
-    tcase_add_test(tc_stats, test_record_end_time);
-    suite_add_tcase(s, tc_stats);
-
-    SRunner *sr;
-
-    sr = srunner_create(s);
-
-    srunner_run_all(sr, CK_NORMAL);
-    int number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? 0 : -1;
-}
-
+DEDOS_END_TEST_LIST()

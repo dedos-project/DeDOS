@@ -46,6 +46,9 @@ int send_to_controller(struct rt_controller_msg_hdr *hdr, void *payload) {
         log_error("Error sending payload to controller");
         return -1;
     }
+
+    log_custom(LOG_CONTROLLER_COMMUNICATION, "Sent payload of size %d to controller",
+               (int)hdr->payload_size);
     return 0;
 }
 
@@ -133,7 +136,7 @@ static ssize_t read_ctrl_message_hdr(int fd, struct ctrl_runtime_msg_hdr *msg) {
 
 static int verify_msg_size(struct ctrl_runtime_msg_hdr *msg) {
     switch (msg->type) {
-        case CTRL_ADD_RUNTIME:
+        case CTRL_CONNECT_TO_RUNTIME:
             CHECK_MSG_SIZE(msg, struct ctrl_add_runtime_msg);
         case CTRL_CREATE_THREAD:
             CHECK_MSG_SIZE(msg, struct ctrl_create_thread_msg);
@@ -153,18 +156,9 @@ static int verify_msg_size(struct ctrl_runtime_msg_hdr *msg) {
     }
 }
 
-static int read_ctrl_payload(int fd, size_t size, void *buff) {
-    ssize_t rtn = read(fd, buff, size);
-    if (rtn != size) {
-        log_error("Could not read full control payload from socket %d", fd);
-        return -1;
-    }
-    return 0;
-}
-
 static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type) {
     switch (type) {
-        case CTRL_ADD_RUNTIME:
+        case CTRL_CONNECT_TO_RUNTIME:
             return CONNECT_TO_RUNTIME;
         case CTRL_CREATE_THREAD:
             return CREATE_THREAD;
@@ -184,34 +178,44 @@ static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type)
     }
 }
 
-static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *msg, int fd) {
-    if (verify_msg_size(msg) != 0) {
+static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
+    if (verify_msg_size(hdr) != 0) {
         log_error("Cannot process message. Incorrect payload size for type.");
-        return -1;
+        return NULL;
     }
 
-    void *msg_data = malloc(msg->payload_size);
-    int rtn = read_ctrl_payload(fd, msg->payload_size, msg_data);
+    void *msg_data = malloc(hdr->payload_size);
+    int rtn = read_payload(fd, hdr->payload_size, msg_data);
     if (rtn < 0) {
         log_error("Error reading control payload. Cannot process message");
+        free(msg_data);
+        return NULL;
+    }
+    log_custom(LOG_CONTROLLER_COMMUNICATION, "Read control payload %p of size %d", 
+               msg_data, (int)hdr->payload_size);
+    enum thread_msg_type type = get_thread_msg_type(hdr->type);
+    return construct_thread_msg(type, hdr->payload_size, msg_data);
+}
+
+
+static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
+    struct thread_msg *thread_msg = thread_msg_from_ctrl_hdr(hdr, fd);
+    if (thread_msg == NULL) {
+        log_error("Error constructing thread msg from control header");
         return -1;
     }
 
-    enum thread_msg_type type = get_thread_msg_type(msg->type);
-    struct thread_msg *thread_msg = construct_thread_msg(
-            type, msg->payload_size, msg_data
-    );
-
-    struct dedos_thread *thread = get_dedos_thread(msg->thread_id);
+    struct dedos_thread *thread = get_dedos_thread(hdr->thread_id);
     if (thread == NULL) {
         log_error("Error getting dedos thread %d to deliver control message",
-                  msg->thread_id);
+                  hdr->thread_id);
+        //FIXME: Free thread message and payload
         return -1;
     }
 
-    rtn = enqueue_thread_msg(thread_msg, &thread->queue);
+    int rtn = enqueue_thread_msg(thread_msg, &thread->queue);
     if (rtn < 0) {
-        log_error("Error enqueuing control message on thread %d", msg->thread_id);
+        log_error("Error enqueuing control message on thread %d", hdr->thread_id);
         return -1;
     }
     return 0;
@@ -225,7 +229,7 @@ int handle_controller_communication(int fd) {
         return -1;
     } else {
         log_custom(LOG_CONTROLLER_COMMUNICATION,
-                   "Read message from controller of size %d", msg_size);
+                   "Read message from controller of size %d", (int)msg_size);
     }
 
     int rtn = process_ctrl_message_hdr(&hdr, fd);

@@ -1,7 +1,23 @@
 #include "thread_message.h"
 #include "logging.h"
 
-
+int enqueue_thread_msg(struct thread_msg *thread_msg, struct msg_queue *queue) {
+    struct dedos_msg *msg = malloc(sizeof(*msg));
+    if (msg == NULL) {
+        log_error("Error allocating dedos_msg for thread_msg");
+        return -1;
+    }
+    msg->data_size = sizeof(*thread_msg);
+    msg->data = thread_msg;
+    int rtn = enqueue_msg(queue, msg);
+    if (rtn < 0) {
+        log_error("Error enqueueing message on thread message queue");
+        return -1;
+    }
+    log_custom(LOG_THREAD_MESSAGES, "Enqueued thread message %p on queue %p", 
+               thread_msg, queue);
+    return 0;
+}
 
 struct thread_msg *dequeue_thread_msg(struct msg_queue *queue) {
     struct dedos_msg *msg = dequeue_msg(queue);
@@ -37,8 +53,8 @@ struct thread_msg *construct_thread_msg(enum thread_msg_type type,
 }
 
 void destroy_thread_msg(struct thread_msg *msg) {
-    log_custom(LOG_THREAD_MESSAGES, "Freeing thread message %p of size $d",
-               msg, (int)data_size);
+    log_custom(LOG_THREAD_MESSAGES, "Freeing thread message %p",
+               msg);
     free(msg);
 }
 

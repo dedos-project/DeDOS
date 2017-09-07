@@ -45,6 +45,7 @@ COMPILE=gcc -c
 COMPILE_PP=g++ -c
 LD=ld -r
 FINAL=gcc
+FINAL_TEST=gcc
 DEPEND=gcc -MM -MF
 
 SELF=./Makefile
@@ -80,6 +81,7 @@ LEG_OBJ=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_BLD_DIR)$(LEG_LIB).o)
 
 
 TSTS = $(wildcard $(TST_DIR)*/*.c)
+TST_MKS = $(wildcard $(TST_DIR)*/*.mk)
 
 SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
 HDRS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.h))
@@ -103,6 +105,15 @@ CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
 
 TEST_CFLAGS= $(CFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm
 
+define test_dep_name
+$(notdir $(subst Test_,,$1))_DEPS
+endef
+
+
+define test_filters
+$(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $1)) \
+	$(foreach dep, $($(call test_dep_name, $1)), $(OBJ_DIR)$(dep:.c=.o))
+endef
 
 all: dirs includes legacy ${TARGET}
 
@@ -145,8 +156,9 @@ $(RES_DIR)%.txt: $(TST_BLD_DIR)%
 # creates the test executables by linking the test objects with the build objects excluding 
 # the specific source under test
 $(TST_BLD_DIR)%: $(TST_DIR)%.c $(OBJECTS_NOMAIN) $(LEG_OBJ)
-	echo $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@))
-	$(FINAL) -o $@ $(filter-out $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@)), $^) $(TEST_CFLAGS)
+	echo $(call test_filters, $@)
+	$(FINAL_TEST) -o $@ $(filter-out $(call test_filters, $@), $^) $(TEST_CFLAGS)
+#	$(FINAL) -o $@ $(filter-out $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@)), $^) $(TEST_CFLAGS)
 
 # Creates object files from the source file
 $(OBJ_DIR)%.o:: $(SRC_DIR)%.c $(SELF)
@@ -168,6 +180,7 @@ clean:
 ifneq ($(MAKECMDGOALS), clean)
 -include $(DEP_TST)
 -include $(DEP_SRC)
+-include $(TST_MKS)
 endif
 
 .PHONY: all
