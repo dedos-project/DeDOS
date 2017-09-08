@@ -9,6 +9,8 @@ LOGS = \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
+	   CONNECTIONS \
+	   CUSTOM
 
 SRC_DIR = src/
 RNT_DIR = $(SRC_DIR)runtime/
@@ -25,12 +27,11 @@ MAIN=$(RNT_DIR)main.c
 BLD_DIR = build/
 DEP_DIR = $(BLD_DIR)depends/
 OBJ_DIR = $(BLD_DIR)objs/
-INC_DIR = $(BLD_DIR)include/
 RES_DIR = $(BLD_DIR)reults/
 TST_BLD_DIR = $(BLD_DIR)test/
 LEG_BLD_DIR = $(BLD_DIR)legacy/
 
-BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(INC_DIR) $(RES_DIR) $(LEG_BLD_DIR)
+BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 
 #LEGACY_LIBS = picotcp
 
@@ -38,21 +39,22 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-CC:=gcc -c
-CXX:=g++ -c
+CC:=gcc
+CXX:=g++
 
-COMPILE=gcc -c
-COMPILE_PP=g++ -c
-LD=ld -r
-FINAL=gcc
-FINAL_TEST=gcc
-DEPEND=gcc -MM -MF
+COMPILE=$(CC) -c
+COMPILE_PP=$(CXX) -c
+DEPEND=$(CC) -MM -MF
+DEPEND_PP=$(CXX) -MM -MF
+FINAL=$(CXX)
+FINAL_TEST=$(CC)
 
 SELF=./Makefile
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname))
 
-CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap --std=gnu99  $(LOG_DEFINES)
+CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap $(LOG_DEFINES)
+CC_EXTRAFLAGS = --std=gnu99
 
 ifeq ($(DEBUG), 1)
   CFLAGS+=-ggdb
@@ -84,7 +86,7 @@ TSTS = $(wildcard $(TST_DIR)*/*.c)
 TST_MKS = $(wildcard $(TST_DIR)*/*.mk)
 
 SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
-HDRS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.h))
+SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
 
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
 
@@ -93,7 +95,9 @@ DEP_TST = $(patsubst $(TST_DIR)%.c, $(DEP_DIR)%.d, $(TSTS))
 DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS))
 
 OBJ_DIRS = $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
-OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS))
+OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS)) \
+		  $(patsubst $(SRC_DIR)%.cc, $(OBJ_DIR)%.o, $(SRCS_PP))
+
 OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS)))
 
 TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
@@ -115,14 +119,14 @@ $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $1)) \
 	$(foreach dep, $($(call test_dep_name, $1)), $(OBJ_DIR)$(dep:.c=.o))
 endef
 
+CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
+CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
+
 all: dirs includes legacy ${TARGET}
 
 includes: $(INC_DIRS) $(INC_HDRS)
 
 dirs: $(BUILD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_DIRS) $(RES_DIRS)
-
-$(INC_DIR)%.h: $(SRC_DIR)%.h
-	cp $^ $@
 
 legacy: ${LEG_OBJ}
 
@@ -156,13 +160,15 @@ $(RES_DIR)%.txt: $(TST_BLD_DIR)%
 # creates the test executables by linking the test objects with the build objects excluding 
 # the specific source under test
 $(TST_BLD_DIR)%: $(TST_DIR)%.c $(OBJECTS_NOMAIN) $(LEG_OBJ)
-	echo $(call test_filters, $@)
 	$(FINAL_TEST) -o $@ $(filter-out $(call test_filters, $@), $^) $(TEST_CFLAGS)
 #	$(FINAL) -o $@ $(filter-out $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@)), $^) $(TEST_CFLAGS)
 
 # Creates object files from the source file
 $(OBJ_DIR)%.o:: $(SRC_DIR)%.c $(SELF)
-	$(COMPILE) $(CFLAGS) $< -o $@
+	$(COMPILE) $(CCFLAGS) $< -o $@
+
+$(OBJ_DIR)%.o:: $(SRC_DIR)%.cc $(SELF)
+	$(COMPILE_PP) $(CPPFLAGS) $< -o $@
 
 $(DEP_SRC): $(DEP_DIRS)
 
