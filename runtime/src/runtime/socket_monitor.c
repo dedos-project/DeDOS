@@ -46,19 +46,19 @@ static int init_socket_monitor(int port) {
 
 static int handle_connection(int fd, void *data) {
     if (runtime_fds[fd]) {
-            int rtn = handle_runtime_communication(fd);
-            if (rtn != 0) {
-                return rtn;
-            }
-            return 0;
+        int rtn = handle_runtime_communication(fd);
+        if (rtn != 0) {
+            return rtn;
+        }
+        return 0;
     } else {
-            // It's a controller file descriptor. Can add check if necessary,
-            // but this epoll should only handle runtimes or controller
-            int rtn = handle_controller_communication(fd);
-            if (rtn != 0) {
-                return rtn;
-            }
-            return 0;
+        // It's a controller file descriptor. Can add check if necessary,
+        // but this epoll should only handle runtimes or controller
+        int rtn = handle_controller_communication(fd);
+        if (rtn != 0) {
+            return rtn;
+        }
+        return 0;
     }
     return 0;
 }

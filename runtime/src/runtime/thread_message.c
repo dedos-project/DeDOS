@@ -8,6 +8,7 @@ int enqueue_thread_msg(struct thread_msg *thread_msg, struct msg_queue *queue) {
         return -1;
     }
     msg->data_size = sizeof(*thread_msg);
+    msg->type = THREAD_MSG;
     msg->data = thread_msg;
     int rtn = enqueue_msg(queue, msg);
     if (rtn < 0) {

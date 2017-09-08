@@ -1,0 +1,212 @@
+#include "dedos_testing.h"
+
+// Include the file under test
+#include "runtime_communication.c"
+
+// And other dependencies as stated in Test_runtime_communication.mk
+#include "runtime_dfg.c"
+#include "local_msu.c"
+#include "main_thread.c"
+
+#define local_id 1
+struct dfg_runtime local_runtime = {
+    .id = local_id
+};
+
+#include <signal.h>
+
+int init_peer_for_writing(int runtime_id) {
+    int pipe_fd[2];
+    int rtn = pipe(pipe_fd);
+    if (rtn < 0) {
+        log_critical("Could not open pipe");
+        return -1;
+    }
+    runtime_peers[runtime_id].fd = pipe_fd[1];
+    return pipe_fd[0];
+}
+
+int peer_port = 1234;
+
+int fake_listening_runtime() {
+    int sock = init_listening_socket(peer_port);
+    log_custom(TEST, "Initialized listening socket %d on port %d", sock, peer_port);
+    ck_assert_int_gt(sock, 0);
+    return sock;
+}
+
+#define peer_id 2
+
+struct inter_runtime_init_msg msg = {
+    .origin_id = local_id
+};
+
+struct inter_runtime_msg_hdr hdr = {
+    .type = INTER_RT_INIT,
+    .target = 0,
+    .payload_size = sizeof(msg)
+};
+START_DEDOS_TEST(test_send_to_peer__success) {
+    int read_fd = init_peer_for_writing(peer_id);
+
+    ck_assert_int_eq(send_to_peer(peer_id, &hdr, &msg), 0);
+
+    char read_buf[128];
+    ck_assert_int_gt(read(read_fd, read_buf, 128), 0);
+}  END_DEDOS_TEST
+
+START_DEDOS_TEST(test_send_to_peer__fail_uninitialized_peer) {
+    ck_assert_int_eq(send_to_peer(peer_id, &hdr, &msg), -1);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_send_to_peer__fail_peer_closed) {
+    int read_fd = init_peer_for_writing(peer_id);
+    close(read_fd);
+
+    signal(SIGPIPE, SIG_IGN);
+    ck_assert_int_eq(send_to_peer(peer_id, &hdr, &msg), -1);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_add_runtime_peer__success) {
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    ck_assert_int_eq(add_runtime_peer(peer_id, fd), 0);
+    ck_assert_int_eq(runtime_peers[peer_id].fd, fd);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_add_runtime_peer__fail_invalid_fd) {
+    int fd = 12;
+
+    ck_assert_int_eq(add_runtime_peer(peer_id, fd), -1);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_send_init_msg) {
+    int fd = init_peer_for_writing(peer_id);
+
+    ck_assert_int_eq(send_init_msg(peer_id), 0);
+
+    struct inter_runtime_init_msg msg;
+    struct inter_runtime_msg_hdr hdr;
+
+    read(fd, &hdr, sizeof(hdr));
+    read(fd, &msg, sizeof(msg));
+
+    ck_assert_int_eq(hdr.type, INTER_RT_INIT);
+    ck_assert_int_eq(hdr.target, 0);
+    ck_assert_int_eq(hdr.payload_size, sizeof(msg));
+    ck_assert_int_eq(msg.origin_id, local_id);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_connect_to_runtime_peer__success) {
+
+    int sock = fake_listening_runtime();
+    struct sockaddr_in addr;
+    inet_pton(AF_INET, "0.0.0.0", &addr.sin_addr.s_addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(peer_port);
+
+    ck_assert_int_eq(connect_to_runtime_peer(peer_id, &addr), 0);
+
+    ck_assert_int_gt(accept(sock, NULL, NULL), 0);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_connect_to_runtime_peer__fail_not_listening) {
+    struct sockaddr_in addr;
+    inet_pton(AF_INET, "0.0.0.0", &addr.sin_addr.s_addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(peer_port);
+
+    ck_assert_int_eq(connect_to_runtime_peer(peer_id, &addr), -1);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_process_fwd_to_msu_message) {
+    struct msu_type msu_type = {};
+    int msu_id = 42;
+    struct local_msu msu = {
+        .id = msu_id,
+        .type = &msu_type
+    };
+    init_msg_queue(&msu.queue, NULL);
+
+    local_msu_registry[msu_id] = &msu;
+
+    int fds[2];
+    pipe(fds);
+
+    struct msu_msg_hdr hdr = {};
+    struct msu_msg msg = {.hdr = &hdr};
+
+    size_t written_size;
+    void *serialized = serialize_msu_msg(&msg, &msu_type, &written_size);
+    write(fds[1], serialized, written_size);
+
+    int rtn = process_fwd_to_msu_message(written_size, msu_id, fds[0]);
+
+    ck_assert_int_eq(rtn, 0);
+    ck_assert_int_eq(msu.queue.num_msgs, 1);
+    ck_assert_int_eq(msu.queue.head->type, MSU_MSG);
+    ck_assert_int_eq(msu.queue.head->data_size, sizeof(msg));
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_process_init_rt_message) {
+    struct inter_runtime_init_msg msg = { .origin_id = peer_id };
+    int fds[2];
+    pipe(fds);
+
+    write(fds[1], &msg, sizeof(msg));
+
+    struct dedos_thread main_thread = {};
+    static_main_thread = &main_thread;
+    init_msg_queue(&main_thread.queue, NULL);
+
+    int rtn = process_init_rt_message(sizeof(msg), fds[0]);
+
+    ck_assert_int_eq(rtn, 0);
+    ck_assert_int_eq(main_thread.queue.num_msgs, 1);
+    ck_assert_int_eq(main_thread.queue.head->type, THREAD_MSG);
+    ck_assert_int_eq(main_thread.queue.head->data_size, sizeof(struct thread_msg));
+    struct thread_msg *msg_out = main_thread.queue.head->data;
+
+    ck_assert_int_eq(msg_out->type, RUNTIME_CONNECTED);
+    struct runtime_connected_msg * conn_msg = msg_out->data;
+
+    ck_assert_int_eq(conn_msg->runtime_id, peer_id);
+    ck_assert_int_eq(conn_msg->fd, fds[0]);
+
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_handle_runtime_communication) {
+
+    struct dedos_thread main_thread = {};
+    static_main_thread = &main_thread;
+    init_msg_queue(&main_thread.queue, NULL);
+
+    int fd = init_peer_for_writing(peer_id);
+    send_to_peer(peer_id, &hdr, &msg);
+
+    int rtn = handle_runtime_communication(fd);
+
+    ck_assert_int_eq(rtn, 0);
+    // Should have covered all cases, this is just checking that the
+    // reading and parsing of the header goes okay
+} END_DEDOS_TEST
+
+
+DEDOS_START_TEST_LIST("Runtime_communication")
+
+LOCAL_RUNTIME = &local_runtime;
+
+DEDOS_ADD_TEST_FN(test_send_to_peer__success)
+DEDOS_ADD_TEST_FN(test_send_to_peer__fail_uninitialized_peer)
+DEDOS_ADD_TEST_FN(test_send_to_peer__fail_peer_closed)
+DEDOS_ADD_TEST_FN(test_add_runtime_peer__success)
+DEDOS_ADD_TEST_FN(test_add_runtime_peer__fail_invalid_fd)
+DEDOS_ADD_TEST_FN(test_send_init_msg)
+DEDOS_ADD_TEST_FN(test_connect_to_runtime_peer__success)
+DEDOS_ADD_TEST_FN(test_connect_to_runtime_peer__fail_not_listening)
+DEDOS_ADD_TEST_FN(test_process_fwd_to_msu_message)
+DEDOS_ADD_TEST_FN(test_process_init_rt_message)
+DEDOS_ADD_TEST_FN(test_handle_runtime_communication)
+
+DEDOS_END_TEST_LIST()

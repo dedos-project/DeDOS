@@ -44,8 +44,10 @@ int init_connected_socket(struct sockaddr_in *addr) {
         log_perror("Error setting SO_REUSEADDR");
     }
     char ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &addr->sin_port, ip, INET_ADDRSTRLEN);
+    uint32_t ip_h = ntohl(addr->sin_addr.s_addr);
+    inet_ntop(AF_INET, &ip_h, ip, INET_ADDRSTRLEN);
     int port = ntohs(addr->sin_port);
+    log_custom(LOG_CONNECTIONS, "Attepting to connect to socket at %s:%d", ip, port);
     if (connect(sock, (struct sockaddr*)addr, sizeof(*addr)) < 0) {
         log_perror("Failed to connect to socket at %s:%d", ip, port);
         close(sock);
@@ -84,3 +86,19 @@ int init_bound_socket(int port) {
     return sock;
 }
 
+#define BACKLOG 1024
+
+int init_listening_socket(int port) {
+    int sock = init_bound_socket(port);
+    if (sock < 0) {
+        log_error("Could not start listening socket due to failed bind");
+        return -1;
+    }
+
+    int rtn = listen(sock, BACKLOG);
+    if (rtn < 0) {
+        log_perror("Error starting listening socket");
+        return -1;
+    }
+    return sock;
+}

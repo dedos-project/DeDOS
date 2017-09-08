@@ -89,13 +89,14 @@ static int spawn_dfg_msus(struct worker_thread *thread, struct dfg_msu **msus, i
 static int spawn_dfg_threads(struct dfg_thread **threads, int n_threads) {
     for (int i=0; i<n_threads; i++) {
         struct dfg_thread *dfg_thread = threads[i];
-        struct worker_thread *thread = create_worker_thread(dfg_thread->id, dfg_thread->mode);
-        if (thread == NULL) {
+        int rtn = create_worker_thread(dfg_thread->id, dfg_thread->mode);
+        if (rtn < 0) {
             log_error("Error instantiating thread %d! Can not continue!", dfg_thread->id);
             return -1;
         }
         log_custom(LOG_DFG_INSTANTIATION, "Created worker thread %d, mode = %s",
                    dfg_thread->id, dfg_thread->mode == PINNED_THREAD ? "Pinned" : "Unpinned");
+        struct worker_thread *thread = get_worker_thread(dfg_thread->id);
         if (spawn_dfg_msus(thread, dfg_thread->msus, dfg_thread->n_msus) != 0) {
             log_error("Error instantiating thread %d MSUs", dfg_thread->id);
             return -1;

@@ -7,35 +7,18 @@
 #include "dfg.h"
 #include "msu_type.h"
 #include "logging.h"
+#include "msu_type_list.h"
 
 #define MAX_TYPE_ID 1000
 
-static const struct msu_type *MSU_TYPES[] = {
-    /*
-    &PICO_TCP_MSU_TYPE,
-    &HS_REQUEST_ROUTING_MSU_TYPE,
-    &MSU_APP_TCP_ECHO_TYPE,
-    &TCP_HANDSHAKE_MSU_TYPE,
+static struct msu_type *DEFINED_MSU_TYPES[] = MSU_TYPE_LIST;
 
-    &BAREMETAL_MSU_TYPE,
-
-    &BLOCKING_SOCKET_HANDLER_MSU_TYPE,
-    &SOCKET_REGISTRY_MSU_TYPE,
-
-    &WEBSERVER_HTTP_MSU_TYPE,
-    &WEBSERVER_READ_MSU_TYPE,
-    &WEBSERVER_REGEX_MSU_TYPE,
-    &WEBSERVER_WRITE_MSU_TYPE,
-    &WEBSERVER_REGEX_ROUTING_MSU_TYPE
-    */
-};
-
+#define N_MSU_TYPES (sizeof(DEFINED_MSU_TYPES) / sizeof(struct msu_type*))
 /**
  * Pointers to MSU Types, indexed by ID
  */
 static struct msu_type *msu_types[MAX_TYPE_ID];
 
-#define N_MSU_TYPES (sizeof(MSU_TYPES) / sizeof(struct msu_type*))
 
 /**
  * Regsiters an MSU type so that it can be later
@@ -44,7 +27,7 @@ static struct msu_type *msu_types[MAX_TYPE_ID];
  * @return 0 on success, -1 on error
  */
 static int register_msu_type(struct msu_type *type) {
-    if (type->id > MAX_MSU_TYPES) {
+    if (type->id > MAX_TYPE_ID) {
         log_error("MSU type %s not registered. Type ID %d too high. Max: %d", 
                   type->name, type->id, MAX_TYPE_ID);
         return -1;
@@ -60,7 +43,7 @@ static int register_msu_type(struct msu_type *type) {
  * @return The MSU Type with the given ID, NULL in N/A
  */
 struct msu_type *get_msu_type(int id) {
-    if (id > MAX_MSU_TYPES) {
+    if (id > MAX_TYPE_ID) {
         log_error("MSU type %d cannot be found Type ID too high. Max: %d",
                   id, MAX_TYPE_ID);
         return NULL;
@@ -105,8 +88,9 @@ static int init_msu_type(struct msu_type *type) {
  * @return 0 on success, -1 on error
  */
 int init_msu_type_id(unsigned int type_id) {
+    log_custom(TEST, "Number of MSU types: %d", (int)N_MSU_TYPES); 
     for (int i=0; i<N_MSU_TYPES; i++) {
-        struct msu_type *type = msu_types[i];
+        struct msu_type *type = DEFINED_MSU_TYPES[i];
         if (type->id == type_id) {
             return init_msu_type(type);
         }

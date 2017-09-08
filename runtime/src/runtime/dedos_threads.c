@@ -43,6 +43,7 @@ static int init_dedos_thread(struct dedos_thread *thread,
         log_warn("Error initializing thread statistics");
     }
 
+
     if (init_msg_queue(&thread->queue, &thread->sem) != 0) {
         log_error("Error initializing message queue for main thread");
         return -1;
@@ -69,6 +70,8 @@ static void *dedos_thread_starter(void *thread_init_v) {
     struct dedos_thread *thread = init->self;
     dedos_thread_fn thread_fn = init->thread_fn;
     dedos_thread_destroy_fn destroy_fn = init->destroy_fn;
+
+    // TODO: Pin thread!
 
     void *init_rtn = NULL;
     if (init->init_fn) {

@@ -70,6 +70,7 @@ int init_msg_queue(struct msg_queue *q, sem_t *sem) {
     q->head = NULL;
     q->tail = NULL;
     pthread_mutex_init(&q->mutex, NULL);
-    q->sem = sem;    
+    q->sem = sem;
+    q->shared = true;
     return 0;
 }

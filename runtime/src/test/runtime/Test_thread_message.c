@@ -28,8 +28,46 @@ START_DEDOS_TEST(test_enqueue_and_dequeue_thread_msg) {
     ck_assert_ptr_eq(out, &tmsg);
 } END_DEDOS_TEST
 
+START_DEDOS_TEST(test_init_runtime_connected_thread_msg) {
+
+    int runtime_id = 123;
+    int fd = 456;
+
+    struct thread_msg *msg = init_runtime_connected_thread_msg(runtime_id, fd);
+
+    ck_assert_int_eq(msg->type, RUNTIME_CONNECTED);
+    ck_assert_int_eq(msg->data_size, sizeof(struct runtime_connected_msg));
+    
+    struct runtime_connected_msg *rc_msg = msg->data;
+
+    ck_assert_int_eq(rc_msg->runtime_id, runtime_id);
+    ck_assert_int_eq(rc_msg->fd, fd);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_init_send_thread_msg) {
+    int runtime_id = 123;
+    int target_id = 12;
+    int data = 42;
+
+    struct thread_msg *msg = init_send_thread_msg(runtime_id, target_id, sizeof(data), &data);
+
+    ck_assert_int_eq(msg->type, SEND_TO_PEER);
+    ck_assert_int_eq(msg->data_size, sizeof(struct send_to_peer_msg));
+    struct send_to_peer_msg *pmsg = msg->data;
+
+    ck_assert_int_eq(pmsg->runtime_id, runtime_id);
+    ck_assert_int_eq(pmsg->hdr.type, RT_FWD_TO_MSU);
+    ck_assert_int_eq(pmsg->hdr.target, target_id);
+    ck_assert_int_eq(pmsg->hdr.payload_size, sizeof(data));
+    ck_assert_ptr_eq(pmsg->data, &data);
+} END_DEDOS_TEST
+
+
+
 DEDOS_START_TEST_LIST("thread_message")
 
 DEDOS_ADD_TEST_FN(test_enqueue_and_dequeue_thread_msg)
+DEDOS_ADD_TEST_FN(test_init_runtime_connected_thread_msg)
+DEDOS_ADD_TEST_FN(test_init_send_thread_msg)
 
 DEDOS_END_TEST_LIST()

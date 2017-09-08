@@ -6,6 +6,8 @@
 
 #define MAX_INIT_DATA_LEN 32
 
+// Forward declaration due to circular dependency
+struct msu_msg_hdr;
 
 struct local_msu {
 
@@ -44,9 +46,11 @@ struct local_msu *init_msu(unsigned int id, struct msu_type *type,
                            struct worker_thread *thread, struct msu_init_data *data);
 /** Calls type-specific destroy function and frees associated memory */
 void destroy_msu(struct local_msu *msu);
-int msu_receive(struct local_msu *msu, struct msu_msg *msg);
 
 void msu_dequeue(struct local_msu *msu);
 
 struct local_msu *get_local_msu(unsigned int id);
+
+int msu_enqueue(struct local_msu *sender, struct msu_type *dst_type,
+                struct msu_msg_hdr *hdr, size_t data_size, void *data);
 #endif

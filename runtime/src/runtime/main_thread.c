@@ -17,17 +17,18 @@ static void *init_main_thread(struct dedos_thread *main_thread) {
     return NULL;
 }
 
-static int add_worker_thread(struct ctrl_create_thread_msg *msg, struct dedos_thread *main_thread) {
+static int add_worker_thread(struct ctrl_create_thread_msg *msg) {
     int id = msg->thread_id;
-    struct worker_thread *thread = create_worker_thread(id, msg->mode);
-    if (thread == NULL) {
+    int rtn = create_worker_thread(id, msg->mode);
+    if (rtn < 0) {
         log_error("Error creating worker thread %d", id);
         return -1;
     }
+    log_custom(LOG_MAIN_THREAD, "Created worker thread %d", id);
     return 0;
 }
 
-static int main_thread_add_runtime_peer(struct ctrl_add_runtime_msg *msg){
+static int main_thread_connect_to_runtime(struct ctrl_add_runtime_msg *msg){
     struct sockaddr_in addr;
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -125,7 +126,7 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
         case CONNECT_TO_RUNTIME:
             CHECK_MSG_SIZE(msg, struct ctrl_add_runtime_msg);
             struct ctrl_add_runtime_msg *runtime_msg = msg->data;
-            rtn = main_thread_add_runtime_peer(runtime_msg);
+            rtn = main_thread_connect_to_runtime(runtime_msg);
 
             if (rtn < 0) {
                 log_warn("Error adding runtime peer");
@@ -143,7 +144,7 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
         case CREATE_THREAD:
             CHECK_MSG_SIZE(msg, struct ctrl_create_thread_msg);
             struct ctrl_create_thread_msg *create_msg = msg->data;
-            rtn = add_worker_thread(create_msg, main_thread);
+            rtn = add_worker_thread(create_msg);
 
             if (rtn < 0) {
                 log_warn("Error adding worker thread");
@@ -234,6 +235,7 @@ int enqueue_to_main_thread(struct thread_msg *msg) {
         log_error("Error enqueuing message %p to main thread", msg);
         return -1;
     }
+    log_custom(MAIN_THREAD, "Enqueued message %p to main thread queue", msg);
     return 0;
 }
 

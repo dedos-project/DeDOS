@@ -7,20 +7,32 @@
 
 #include <stdlib.h>
 
+#define MAX_DEDOS_THREAD_ID 16
+static struct worker_thread *worker_threads[MAX_DEDOS_THREAD_ID];
+
 static void *init_worker_thread(struct dedos_thread *thread) {
-    struct worker_thread *worker = malloc(sizeof(*worker));
+    struct worker_thread *worker = calloc(1, sizeof(*worker));
     if (worker == NULL) {
         log_error("Error allocating worker thread");
         return NULL;
     }
     worker->thread = thread;
-    worker->n_msus = 0;
-    // TODO: Pin thread!
+
+    worker_threads[thread->id] = worker;
     return worker;
 }
 
 static void destroy_worker_thread(struct dedos_thread *thread, void *v_worker_thread) {
+    worker_threads[thread->id] = NULL;
     free(v_worker_thread);
+}
+
+struct worker_thread *get_worker_thread(int id) {
+    if (id > MAX_DEDOS_THREAD_ID) {
+        log_error("Error: ID higher than maximum thread ID: %d > %d", id, MAX_DEDOS_THREAD_ID);
+        return NULL;
+    }
+    return worker_threads[id];
 }
 
 static int get_msu_index(struct worker_thread *thread, int msu_id) {
@@ -32,11 +44,16 @@ static int get_msu_index(struct worker_thread *thread, int msu_id) {
     return -1;
 }
 
-static void remove_idx_from_msu_list(struct worker_thread *thread, int idx) {
+static int remove_idx_from_msu_list(struct worker_thread *thread, int idx) {
+    if (idx >= thread->n_msus) {
+        return -1;
+    }
     for (int i=idx; i<thread->n_msus - 1; i++) {
         thread->msus[i] = thread->msus[i+1];
     }
+    thread->msus[thread->n_msus-1] = NULL;
     thread->n_msus--;
+    return 0;
 }
 
 static int create_msu_on_thread(struct worker_thread *thread, struct ctrl_create_msu_msg *msg) {
@@ -151,9 +168,10 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
     log_info("Starting worker thread loop %d", thread->id);
 
     struct worker_thread *self = v_worker_thread;
-    // TODO: Get context switches
 
+    // TODO: Exit condition!
     while (1) {
+        // TODO: Get context switches
         if (thread_wait(thread) != 0) {
             log_error("Error waiting on thread semaphore");
             continue;
@@ -175,21 +193,24 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
     return 0;
 }
 
-
-struct worker_thread *create_worker_thread(int thread_id,
-                                           enum blocking_mode mode) {
-    struct worker_thread *worker_thread = malloc(sizeof(*worker_thread));
+int create_worker_thread(unsigned int thread_id,
+                         enum blocking_mode mode) {
+    struct dedos_thread *thread = malloc(sizeof(*thread));
+    if (thread == NULL) {
+        log_error("Error allocating worker thread");
+        return -1;
+    }
     int rtn = start_dedos_thread(worker_thread_loop,
                                  init_worker_thread,
                                  destroy_worker_thread,
                                  mode,
                                  thread_id,
-                                 worker_thread->thread);
+                                 thread);
     if (rtn < 0) {
         log_error("Error starting dedos thread %d", thread_id);
-        return NULL;
+        return -1;
     }
     log_info("Created worker thread %d", thread_id);
-    return worker_thread;
+    return 0;
 }
 

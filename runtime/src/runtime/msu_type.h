@@ -54,6 +54,7 @@ struct msu_type{
      */
     void (*destroy)(struct local_msu *self);
 
+    // TODO: rewrite docstring
     /** Handles the receiving of data sent from other MSUs.
      * This field can **not** be set to NULL, and must be defined
      * for each msu_type.
@@ -61,7 +62,9 @@ struct msu_type{
      * @param input_data data to receive from previous MSU
      * @return MSU type-id of next MSU to receive data, 0 if no rcpt, -1 on err
      */
-    int (*receive)(struct local_msu *self, struct msu_msg *data);
+    int (*receive)(struct local_msu *self, struct msu_msg *msg);
+
+
 
     /* Move state within same process and physical machine, like pointers.
      * Runtime should call this.
@@ -79,16 +82,15 @@ struct msu_type{
      * @param data data to be sent, in case destination depends on specifics of data
      * @return msu_endpoint destination
      */
-    struct msu_endpoint *(*route)(struct msu_type *type, struct local_msu *sender,
-                                  struct msu_msg *data);
+    int (*route)(struct msu_type *type, struct local_msu *sender,
+                 struct msu_msg *msg, struct msu_endpoint *output);
 
     /** TODO: Serialization function */
-    size_t (*serialize)(struct msu_type *type, struct msu_msg *input,
-                        void **output);
+    ssize_t (*serialize)(struct msu_type *type, struct msu_msg *input, void **output);
 
+    // TODO: rewrite docstring
     /** Deserializes data received from remote MSU and enqueues the
      * message payload onto the msu queue.
-     * TODO: Remove enqueing from function duty.
      * Can **not** be NULL. Set to default_deserialize for default behavior.
      * @param self MSU receiving data
      * @param msg message being received
@@ -96,8 +98,7 @@ struct msu_type{
      * @param bufsize Size of the buffer being received
      * @return 0 on success, -1 on error
      */
-    int (*deserialize)(struct local_msu *self, void *data, int data_len,
-                       struct msu_msg *output);
+    void *(*deserialize)(struct local_msu *self, size_t input_size, void *input, size_t *out_size);
 
     /** Generates an ID for the incoming queue item.
      * Only necessary for input MSUs, though technically
@@ -105,8 +106,7 @@ struct msu_type{
      * @param self MSU receiving data
      * @param queue_item item to be passed to subsequent MSUs
      */
-    void (*generate_id)(struct local_msu *self,
-                        struct msu_msg *queue_item);
+    int (*set_id)(struct local_msu *self, struct msu_msg *input);
 };
 
 /** Initializes an MSU type, optionally calling init function */

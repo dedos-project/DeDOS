@@ -166,11 +166,11 @@ void destroy_msu(struct local_msu *msu) {
  * @param data Data to be sent to MSU
  * @return 0 on success, -1 on error
  */
-int msu_receive(struct local_msu *msu, struct msu_msg *data) {
+static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
 
     record_end_time(MSU_IDLE_TIME, msu->id);
     record_start_time(MSU_EXEC_TIME, msu->id);
-    int rtn = msu->type->receive(msu, data);
+    int rtn = msu->type->receive(msu, msg);
     record_end_time(MSU_EXEC_TIME, msu->id);
     record_start_time(MSU_IDLE_TIME, msu->id);
 
@@ -234,49 +234,49 @@ static int enqueue_for_remote_send(struct msu_msg *msg,
 
 /**
  * Sends an MSU message to a destination of the given type,
- * utilizing the sending MSU's routing table.
- * Note: data_p is a double-pointer because in the case of a successful remote send,
- * *data_p is freed and set to NULL
+ * utilizing the sending MSU's routing function.
  */
-int send_to_msu(struct local_msu *sender, struct msu_type *dst_type, struct msu_msg **data_p) {
-    struct msu_msg *data = *data_p;
+int msu_enqueue(struct local_msu *sender, struct msu_type *dst_type,
+                struct msu_msg_hdr *hdr, size_t data_size, void *data) {
+
+    struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
 
     log_custom(LOG_MSU_ENQUEUES, "Sending data %p to destination type %s",
-               data, dst_type->name);
+               msg->data, dst_type->name);
 
-    struct msu_endpoint *dst = dst_type->route(dst_type, sender, data);
-    if (dst == NULL) {
+    struct msu_endpoint dst;
+    int rtn  = dst_type->route(dst_type, sender, msg, &dst);
+    if (rtn < 0) {
         log_error("Could not find destination endpoint of type %s from msu %d (%s). "
                   "Dropping message %p",
-                  dst_type->name, sender->id, sender->type->name, data);
+                  dst_type->name, sender->id, sender->type->name, msg);
+        destroy_msu_msg_contents(msg);
         return -1;
     }
 
-    int rtn;
-    switch (dst->locality) {
+    switch (dst.locality) {
         case MSU_IS_LOCAL:
-            rtn = enqueue_msu_msg(dst->queue, data);
+            rtn = enqueue_msu_msg(dst.queue, msg);
             if (rtn < 0) {
-                log_error("Error enqueuing data %p to local MSU %d", data, dst->id);
+                log_error("Error enqueuing data %p to local MSU %d", msg->data, dst.id);
                 return -1;
             }
-            log_custom(LOG_MSU_ENQUEUES, "Enqueued data %p to local msu %d", data, dst->id);
+            log_custom(LOG_MSU_ENQUEUES, "Enqueued data %p to local msu %d", msg->data, dst.id);
             return 0;
         case MSU_IS_REMOTE:
-            rtn = enqueue_for_remote_send(data, dst_type, dst);
+            rtn = enqueue_for_remote_send(msg, dst_type, &dst);
             if (rtn < 0) {
-                log_error("Error sending data %p to remote MSU %d", data, dst->id);
-                return -1;
+                log_error("Error sending data %p to remote MSU %d", msg->data, dst.id);
+                return -1.i;
             }
-            log_custom(LOG_MSU_ENQUEUES, "Sending data %p to remote msu %d", data, dst->id);
+            log_custom(LOG_MSU_ENQUEUES, "Sending data %p to remote msu %d", msg->data, dst.id);
 
             // Since the data has been sent to a remote MSU, we can now
             // free the msu message from this runtime's memory
-            destroy_msu_msg(data);
-            *data_p = NULL;
+            destroy_msu_msg_contents(msg);
             return 0;
         default:
-            log_error("Unknown MSU locality: %d", dst->locality);
+            log_error("Unknown MSU locality: %d", dst.locality);
             return -1;
     }
 }

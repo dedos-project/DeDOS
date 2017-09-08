@@ -12,7 +12,9 @@
 
 
 #define LOG_ALL
+#ifndef LOG_CUSTOM
 #define LOG_CUSTOM
+#endif 
 #include "logging.h"
 
 #define DEDOS_START_TEST_LIST(name) \

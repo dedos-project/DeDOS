@@ -4,7 +4,7 @@
 // (Need static methods...)
 #include "dfg_instantiation.c"
 
-// See Test_df_instantiation.mk (and Makefile) for how I can do this
+// See Test_dfg_instantiation.mk (and Makefile) for how I can do this
 #include "runtime_dfg.c"
 #include "routing.c"
 

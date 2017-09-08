@@ -21,13 +21,17 @@ struct msu_msg {
     void *data;
 };
 
-void destroy_msu_msg(struct msu_msg *msg);
+void destroy_msu_msg_contents(struct msu_msg *msg);
 
-struct msu_msg *read_msu_msg(int fd, size_t size);
+struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size);
 
 int enqueue_msu_msg(struct msg_queue *q, struct msu_msg *data);
 struct msu_msg *dequeue_msu_msg(struct msg_queue *q);
 
 void *serialize_msu_msg(struct msu_msg *msg,
                         struct msu_type *dst_type, size_t *size_out);
+
+struct msu_msg *create_msu_msg(struct msu_msg_hdr *hdr,
+                               size_t data_size,
+                               void *data);
 #endif

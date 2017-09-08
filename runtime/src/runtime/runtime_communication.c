@@ -9,8 +9,10 @@
 #include "inter_runtime_messages.h"
 #include "local_msu.h"
 #include "runtime_dfg.h"
+#include "main_thread.h"
 #include "thread_message.h"
 
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -61,11 +63,18 @@ int send_to_peer(unsigned int runtime_id, struct inter_runtime_msg_hdr *hdr, voi
         log_error("Error sending payload to runtime %d", runtime_id);
         return -1;
     }
+    log_custom(LOG_RUNTIME_COMMUNICATION, "Send a payload of size %d to runtime %d (fd: %d)",
+               (int)hdr->payload_size, runtime_id, peer->fd);
     return 0;
 }
 
 
 int add_runtime_peer(unsigned int runtime_id, int fd) {
+    struct stat buf;
+    if (fstat(fd, &buf) != 0) {
+        log_error("Cannot register non-descriptor %d for runtime ID %d", fd, runtime_id);
+        return -1;
+    }
     if (runtime_peers[runtime_id].fd != 0) {
         log_warn("Replacing runtime peer with id %d", runtime_id);
     }
@@ -73,17 +82,7 @@ int add_runtime_peer(unsigned int runtime_id, int fd) {
     return 0;
 }
 
-int connect_to_runtime_peer(unsigned int id, struct sockaddr_in *addr){
-    if (runtime_peers[id].fd != 0) {
-        log_warn("Attempting to replace runtime peer with id %d", id);
-    }
-    int fd = init_connected_socket(addr);
-    if (fd < 0) {
-        log_error("Could not connect to runtime %u", id);
-        return -1;
-    }
-    runtime_peers[id].fd = fd;
-
+static int send_init_msg(int id) {
     int local_id = local_runtime_id();
     if (local_id < 0) {
         log_error("Could not send local runtime ID to remote runtime %d", id);
@@ -105,27 +104,36 @@ int connect_to_runtime_peer(unsigned int id, struct sockaddr_in *addr){
         log_error("Could not send initial connection message to peer runtime %d", id);
         return -1;
     }
-
     return 0;
 }
 
 
-static int init_listen_socket(int port) {
+int connect_to_runtime_peer(unsigned int id, struct sockaddr_in *addr){
+    if (runtime_peers[id].fd != 0) {
+        log_warn("Attempting to replace runtime peer with id %d", id);
+    }
+    int fd = init_connected_socket(addr);
+    if (fd < 0) {
+        log_error("Could not connect to runtime %u", id);
+        return -1;
+    }
+    runtime_peers[id].fd = fd;
+    
+    if (send_init_msg(id) != 0) {
+        log_error("Failed to send initialization message to runtime %d (fd: %d)", id, fd);
+        close(fd);
+        return -1;
+    }
+    log_custom(LOG_RUNTIME_CONNECTION, "Connected to runtime peer %d (fd: %d)", id, fd);
+    return 0;
+}
+
+int init_runtime_socket(int listen_port) {
     if (runtime_sock > 0) {
         log_error("Runtime socket already initialized");
         return -1;
     }
-
-    runtime_sock = init_bound_socket(port);
-    if (runtime_sock < 0) {
-        log_error("Error initializing runtime socket");
-        return -1;
-    }
-    return runtime_sock;
-}
-
-int init_runtime_socket(int listen_port) {
-    int sock = init_listen_socket(listen_port);
+    int sock = init_listening_socket(listen_port);
     if (sock < 0) {
         log_error("Error initializing runtime socket");
         return -1;
@@ -143,17 +151,16 @@ static int read_runtime_message_hdr(int fd, struct inter_runtime_msg_hdr *msg) {
 
 static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
 
-    struct msu_msg *msu_msg = read_msu_msg(fd, payload_size);
-    if (msu_msg == NULL) {
-        log_error("Error reading MSU msg off of fd %d", fd);
-        return -1;
-    }
-
     struct local_msu *msu = get_local_msu(msu_id);
     if (msu == NULL) {
         log_error("Error getting MSU with ID %d, requested from runtime fd %d",
                   msu_id, fd);
-        destroy_msu_msg(msu_msg);
+        return -1;
+    }
+
+    struct msu_msg *msu_msg = read_msu_msg(msu, fd, payload_size);
+    if (msu_msg == NULL) {
+        log_error("Error reading MSU msg off of fd %d", fd);
         return -1;
     }
 
@@ -161,7 +168,7 @@ static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
     if (rtn < 0) {
         log_error("Error enqueuing inter-msu message to MSU %d from runtime fd %d",
                   msu_id, fd);
-        destroy_msu_msg(msu_msg);
+        destroy_msu_msg_contents(msu_msg);
         return -1;
     }
     return 0;
@@ -184,6 +191,13 @@ static int process_init_rt_message(size_t payload_size, int fd) {
                   msg.origin_id, fd);
         return -1;
     }
+
+    int rtn = enqueue_to_main_thread(thread_msg);
+    if (rtn < 0) {
+        log_error("Error enqueing runtime-connected-msg (id: %d) to main thread", msg.origin_id);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -220,7 +234,7 @@ int handle_runtime_communication(int fd) {
         return -1;
     } else {
         log_custom(LOG_INTER_RUNTIME_COMMUNICATION,
-                   "Read message from runtime with fd %d" fd);
+                   "Read message from runtime with fd %d", fd);
     }
 
     rtn = process_runtime_message_hdr(&hdr, fd);
