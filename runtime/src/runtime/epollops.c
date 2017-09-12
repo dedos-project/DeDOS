@@ -119,7 +119,7 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
     struct epoll_event events[MAX_EPOLL_EVENTS];
 
     for (int j=0; j<batch_size || batch_size == -1;  j++) {
-        int n = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, 100);
+        int n = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, timeout);
         if (n == 0) {
             break;
         }

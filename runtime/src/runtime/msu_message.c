@@ -2,8 +2,48 @@
 #include "logging.h"
 #include "communication.h"
 #include "local_msu.h"
+#include "uthash.h"
+#include "runtime_dfg.h"
 
 #include <stdlib.h>
+
+struct msu_msg_hdr *init_msu_msg_hdr(struct msu_msg_key *key) {
+    struct msu_msg_hdr *hdr = calloc(1, sizeof(*hdr));
+    if (hdr == NULL) {
+        log_error("Error allocating msu message header");
+        return NULL;
+    }
+    hdr->key = *key;
+    return hdr;
+}
+
+unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
+    return prov->path[prov->path_len-1].type_id;
+}
+
+int set_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
+    HASH_VALUE(seed, seed_size, key->id);
+    if (seed_size > sizeof(key->key)) {
+        log_warn("Key length too large for composite key!");
+        seed_size = sizeof(key->key);
+    }
+    memcpy(&key->key, seed, seed_size);
+    key->key_len = seed_size;
+    return 0;
+}
+
+int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
+    int idx = prov->path_len % MAX_PATH_LEN;
+    prov->path[idx].type_id = sender->type->id;
+    prov->path[idx].msu_id = sender->id;
+    prov->path[idx].ip_address = local_runtime_ip();
+    if (prov->path[idx].ip_address == -1) {
+        log_error("Error getting local runtime ip address");
+        return -1;
+    }
+    prov->path_len++;
+    return 0;
+}
 
 int enqueue_msu_msg(struct msg_queue *q, struct msu_msg *data) {
     struct dedos_msg *msg = malloc(sizeof(*msg));

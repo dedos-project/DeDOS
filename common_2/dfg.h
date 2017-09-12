@@ -85,10 +85,6 @@ struct dfg_route {
     int n_destinations;
 };
 
-// CHANGE: Replacing char *vertex_type with uint8 so we can 'or' ENTRY and EXIT
-static uint8_t UNUSED ENTRY_VERTEX_TYPE = 0x01;
-static uint8_t UNUSED EXIT_VERTEX_TYPE  = 0x02;
-
 
 enum blocking_mode {
     BLOCKING_MSU = 1,
@@ -99,7 +95,6 @@ struct dfg_dependency;
 
 struct dfg_msu_type {
     int id;
-    uint8_t vertex_type;
     char name[MAX_MSU_NAME_LEN];
     struct dfg_meta_routing meta_routing;
 
@@ -123,8 +118,13 @@ struct dfg_dependency {
     enum msu_locality locality;
 };
 
+// CHANGE: Replacing char *vertex_type with uint8 so we can 'or' ENTRY and EXIT
+static uint8_t UNUSED ENTRY_VERTEX_TYPE = 0x01;
+static uint8_t UNUSED EXIT_VERTEX_TYPE  = 0x02;
+
 struct dfg_msu {
     int id;
+    uint8_t vertex_type;
     struct msu_init_data init_data;
 
     struct dfg_msu_type *type;

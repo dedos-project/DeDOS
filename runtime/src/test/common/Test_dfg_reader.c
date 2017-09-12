@@ -4,6 +4,8 @@
 // (Need static methods...)
 #include "dfg_reader.c"
 
+char test_dfg_path[64];
+
 struct dedos_dfg *setup_dfg(int total_threads, int pinned_threads, int marked_pinned, int marked_unpinned) {
     struct dedos_dfg *dfg = calloc(1, sizeof(*dfg));
     struct dfg_runtime *rt = calloc(1, sizeof(*rt));
@@ -64,9 +66,17 @@ START_DEDOS_TEST(test_fix_num_threads_incorrect) {
     ck_assert(rtn != 0);
 } END_DEDOS_TEST
 
+START_DEDOS_TEST(test_parse_dfg_json_file) {
+    struct dedos_dfg *dfg = parse_dfg_json_file(test_dfg_path);
+    ck_assert_ptr_ne(dfg, NULL);
+} END_DEDOS_TEST
+
+
 DEDOS_START_TEST_LIST("dfg_test")
 
+DEDOS_ADD_TEST_RESOURCE(test_dfg_path, "test_dfg.json")
 DEDOS_ADD_TEST_FN(test_fix_num_threads_incorrect)
 DEDOS_ADD_TEST_FN(test_fix_num_threads_correct)
+DEDOS_ADD_TEST_FN(test_parse_dfg_json_file)
 
 DEDOS_END_TEST_LIST()

@@ -51,12 +51,6 @@ static void * test_deserialize(struct local_msu *self, size_t intput_size, void 
     return NULL;
 }
 
-static int generated_id = 0;
-static int test_set_id(struct local_msu *self, struct msu_msg *input) {
-    generated_id = 1;
-    return 0;
-}
-
 struct msu_type test_type_custom = {
     .name = "TEST",
     .id = 101,
@@ -66,7 +60,6 @@ struct msu_type test_type_custom = {
     .route = test_route,
     .serialize = test_serialize,
     .deserialize = test_deserialize,
-    .set_id = test_set_id
 };
 
 struct msu_type test_type_default = {
@@ -166,7 +159,9 @@ START_DEDOS_TEST(test_msu_dequeue__message) {
     struct local_msu *msu = init_msu(msu_id_custom, &test_type_custom, &wthread, NULL);
 
     struct msu_msg_hdr hdr = {
-        .key = {123},
+        .key = {
+            .key = {123},
+        }
     };
 
     int data = 123;
@@ -193,12 +188,14 @@ START_DEDOS_TEST(test_msu_enqueue__local) {
     struct local_msu *msu2 = init_msu(msu_id_custom, &test_type_custom, &wthread, NULL);
 
     struct msu_msg_hdr hdr = {
-        .key = {123},
+        .key = {
+            .key = {123},
+        }
     };
 
     int data = 123;
 
-    msu_enqueue(msu, &test_type_custom, &hdr, sizeof(data), &data);
+    call_msu(msu, &test_type_custom, &hdr, sizeof(data), &data);
 
     ck_assert_int_eq(msu2->queue.num_msgs, 1);
 } END_DEDOS_TEST

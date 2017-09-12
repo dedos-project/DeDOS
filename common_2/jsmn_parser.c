@@ -51,7 +51,7 @@ char *tok_to_str(jsmntok_t *tok, char *j){
 /**
  * Global key mapping, giving which function should be called for each JSMN key
  */
-static struct key_mapping *key_map;
+static struct key_mapping *jsmn_key_map;
 
 /**
  * Retries tokens which have been deferred
@@ -70,22 +70,22 @@ void *get_root_jsmn_obj(){
     return global_obj;
 }
 
-int jsmn_ignore_list(jsmntok_t *tok, char *j, struct json_state *in, struct json_state **saved){
-    int size = (tok)->size;
+int jsmn_ignore_list(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    int size = (*tok)->size;
     log_custom(LOG_JSMN_PARSING, "Ignoring list of size %d", size);
     for (int i=0; i<size; i++){
-        ++(tok); // Move to the next value
+        ++(*tok); // Move to the next value
         jsmn_ignore(tok, j, in, saved);
     }
     return 0;
 }
 
-int jsmn_ignore_obj(jsmntok_t *tok, char *j, struct json_state *in, struct json_state **saved){
-    int size = (tok)->size;
+int jsmn_ignore_obj(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    int size = (*tok)->size;
     log_custom(LOG_JSMN_PARSING, "Ignoring object of size %d", size);
     for (int i=0; i<size; i++) {
-        ++(tok); // Ignore the key
-        ++(tok); // Move to the next value
+        ++(*tok); // Ignore the key
+        ++(*tok); // Move to the next value
         jsmn_ignore(tok, j, in, saved);
     }
     return 0;
@@ -94,8 +94,8 @@ int jsmn_ignore_obj(jsmntok_t *tok, char *j, struct json_state *in, struct json_
 /**
  * Ignores a JSMN value
  */
-int jsmn_ignore(jsmntok_t *tok, char *j, struct json_state *in, struct json_state **saved){
-    switch ( (tok)->type ) {
+int jsmn_ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved){
+    switch ( (*tok)->type ) {
         case JSMN_OBJECT:
             jsmn_ignore_obj(tok, j, in, saved);
             break;
@@ -120,7 +120,7 @@ int jsmn_ignore(jsmntok_t *tok, char *j, struct json_state *in, struct json_stat
  */
 int parse_file_into_obj(const char *filename, void *obj, struct key_mapping *km){
     // Set the global key map
-    key_map = km;
+    jsmn_key_map = km;
 
     FILE *file = fopen(filename, "r");
 
@@ -137,6 +137,8 @@ int parse_file_into_obj(const char *filename, void *obj, struct key_mapping *km)
 
     return parse_str_into_obj(contents, obj, km);
 }
+
+#define MAX_RETRIES 100
 
 /**
  * Using the provided functions, parses the JSON present in
@@ -174,7 +176,7 @@ int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km) {
     struct json_state *saved_state = NULL;
 
     // Parse the jsmn tokens (assumes top-level item is an object)
-    int rtn = parse_jsmn_obj(tokens, contents, &init_state, &saved_state);
+    int rtn = parse_jsmn_obj(&tokens, contents, &init_state, &saved_state);
 
     if (rtn < 0){
         log_error("Error parsing JSMN");
@@ -183,6 +185,7 @@ int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km) {
 
     log_custom(LOG_JSMN_PARSING, "Parsed %d top-level objects", rtn);
 
+    int n_retries = 0;
     // Go back through and retry each of the tokens that couldn't be parsed
     // the first time around
     while (saved_state != NULL){
@@ -190,6 +193,11 @@ int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km) {
         rtn = retry_saved(&saved_state, contents);
         if (rtn < 0){
             log_error("Failed to re-interpret saved JSMN tokens");
+            return -1;
+        }
+        n_retries++;
+        if (n_retries > 100) {
+            log_error("Something is wrong. Retried too many times");
             return -1;
         }
     }
@@ -205,7 +213,7 @@ int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km) {
  */
 static jsmn_parsing_fn get_parse_fn(char *key, int parent_type){
 
-    for (struct key_mapping *km = key_map;
+    for (struct key_mapping *km = jsmn_key_map;
             km->parse != 0; km++){
         if (strncasecmp(key, km->key, strlen(km->key)) == 0 &&
                 km->parent_type == parent_type){
@@ -230,6 +238,7 @@ static int retry_saved(struct json_state **saved_states, char *j){
 
     int success = -1;
     char *key = NULL;
+    int n_retries = 0;
     while (saved != NULL){
         jsmntok_t *tok = saved->tok;
         key = tok_to_str(tok, j);
@@ -237,12 +246,13 @@ static int retry_saved(struct json_state **saved_states, char *j){
 
         jsmn_parsing_fn parser = get_parse_fn(key, saved->parent_type);
         tok += 1;
-        int rtn = parser(tok, j, saved, saved_states);
+        int rtn = parser(&tok, j, saved, saved_states);
 
         if (rtn < 0){
             log_error("Error retrying key %s", key);
             return -1;
         } else if (rtn == 0){
+            log_custom(LOG_JSMN_PARSING, "Successfully parsed retried key '%s'", key);
             success = 0;
             if (*saved_states == saved)
                 *saved_states = saved->next;
@@ -256,11 +266,18 @@ static int retry_saved(struct json_state **saved_states, char *j){
             log_custom(LOG_JSMN_PARSING, "Will try again on the next pass...");
             prev = saved;
             saved = saved->next;
+        } else {
+            log_error("Unknown return code: %d", rtn);
+            return -1;
+        }
+        if (n_retries++ > MAX_RETRIES) {
+            log_error("Retried too many times. Something is wrong");
+            return -1;
         }
     }
 
     if (success == -1 && key != NULL) {
-        log_error("Failed while reprocessing key %s for missing dependencies", key);
+        log_error("Failed while reprocessing key '%s' for missing dependencies", key);
     }
     return success;
 }
@@ -276,35 +293,35 @@ static int retry_saved(struct json_state **saved_states, char *j){
  * @param init  - initialization function, returning a `struct json_state`
  * @return 0 on success, -1 on failure
  */
-int parse_jsmn_obj_list(jsmntok_t *tok, char *j, struct json_state *state,
+int parse_jsmn_obj_list(jsmntok_t **tok, char *j, struct json_state *state,
                                struct json_state **saved, jsmn_initializer init){
-    ASSERT_JSMN_TYPE(tok, JSMN_ARRAY, j);
-    int size = (tok)->size;
+    ASSERT_JSMN_TYPE(*tok, JSMN_ARRAY, j);
+    int size = (*tok)->size;
 
     // Advance to the object inside the list
-    ++(tok);
+    ++(*tok);
     for (int i=0; i<size; i++){
         log_custom(LOG_JSMN_PARSING, "Parsing list item %d", i);
         // This is only for lists of OBJECTS.
-        ASSERT_JSMN_TYPE(tok, JSMN_OBJECT, j);
+        ASSERT_JSMN_TYPE(*tok, JSMN_OBJECT, j);
 
         // Construct the new state to be passed to the next object
         struct json_state new_state =  init(state, i);
-        new_state.tok = tok;
+        new_state.tok = *tok;
         new_state.next = NULL;
 
         // Parse the next object in the list
         int n_tokens = parse_jsmn_obj(tok, j, &new_state, saved);
 
         // Advance to the subsequent object
-        ++(tok);
+        ++(*tok);
         if (n_tokens < 0){
             return -1;
         }
     }
     // parse_jsmn_obj handles advancing to the next object, so we
     // want to rewind here so as not to advance twice
-    --(tok);
+    --(*tok);
     return 0;
 }
 
@@ -316,31 +333,31 @@ int parse_jsmn_obj_list(jsmntok_t *tok, char *j, struct json_state *state,
  * @param saved - JSON entries on which parsing has been deferred for later
  *
  */
-int parse_jsmn_obj(jsmntok_t *tok, char *j, struct json_state *state,
+int parse_jsmn_obj(jsmntok_t **tok, char *j, struct json_state *state,
                           struct json_state **saved){
-    ASSERT_JSMN_TYPE(tok, JSMN_OBJECT, j);
+    ASSERT_JSMN_TYPE(*tok, JSMN_OBJECT, j);
 
-    int size = (tok)->size;
+    int size = (*tok)->size;
 
-    ++(tok);
+    ++(*tok);
     //tpok+=1;
     int parent_type = state->parent_type;
 
     for (int i=0; i<size; i++){
-        ASSERT_JSMN_TYPE(tok, JSMN_STRING, j);
+        ASSERT_JSMN_TYPE(*tok, JSMN_STRING, j);
 
-        char *key = tok_to_str(tok, j);
+        char *key = tok_to_str(*tok, j);
 
         jsmn_parsing_fn parse = get_parse_fn(key, parent_type);
         if (parse == NULL){
             log_error("No matching key %s for type %d",
-                      tok_to_str(tok, j), parent_type);
+                      tok_to_str(*tok, j), parent_type);
             return -1;
         }
 
-        jsmntok_t *pre_tok = tok;
+        jsmntok_t *pre_tok = *tok;
         void *pre_data = state->data;
-        state->tok = ++(tok);
+        state->tok = ++(*tok);
         int rtn = parse(tok, j, state, saved);
 
         if (rtn < 0){
@@ -357,8 +374,8 @@ int parse_jsmn_obj(jsmntok_t *tok, char *j, struct json_state *state,
         } else {
             log_custom(LOG_JSMN_PARSING, "Successfully parsed %s", key);
         }
-        ++(tok);
+        ++(*tok);
     }
-    --(tok);
+    --(*tok);
     return size;
 }

@@ -66,6 +66,7 @@ struct stat_type {
 #define GATHER_MSU_MEM_ALLOC 1
 #define GATHER_MSU_ITEMS_PROC 1
 #define GATHER_MSU_NUM_STATES 1
+#define GATHER_CUSTOM_STATS 1
 
 
 struct stat_type stat_types[] = {
@@ -75,7 +76,10 @@ struct stat_type stat_types[] = {
     {MSU_IDLE_TIME,       GATHER_MSU_IDLE_TIME,   MAX_STATS, "%0.9f",  "MSU_IDLE_TIME"},
     {MSU_MEM_ALLOC,       GATHER_MSU_MEM_ALLOC,   MAX_STATS, "%09.0f", "MSU_MEM_ALLOC"},
     {MSU_NUM_STATES,      GATHER_MSU_NUM_STATES,  MAX_STATS, "%09.0f", "MSU_NUM_STATES"},
-    {THREAD_CTX_SWITCHES, GATHER_CTX_SWITCHES,    MAX_STATS, "%03.0f", "CTX_SWITCHES"}
+    {THREAD_CTX_SWITCHES, GATHER_CTX_SWITCHES,    MAX_STATS, "%03.0f", "CTX_SWITCHES"},
+    {MSU_STAT1,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT1"},
+    {MSU_STAT2,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT2"},
+    {MSU_STAT3,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT3"}
 };
 
 #define N_STAT_TYPES (sizeof(stat_types) / sizeof(struct stat_type))

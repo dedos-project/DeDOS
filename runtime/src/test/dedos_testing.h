@@ -1,7 +1,9 @@
 #ifndef DEDOS_TESTING_H_
 #define DEDOS_TESTING_H_
 
+#include <unistd.h>
 #include <check.h>
+#include <libgen.h>
 
 #define START_DEDOS_TEST(name) \
     START_TEST(name) { \
@@ -14,13 +16,19 @@
 #define LOG_ALL
 #ifndef LOG_CUSTOM
 #define LOG_CUSTOM
-#endif 
+#endif
 #include "logging.h"
 
 #define DEDOS_START_TEST_LIST(name) \
     int main(int argc, char **argv) { \
         Suite *s = suite_create(name); \
         TCase *tc = tcase_create(name); \
+
+#define DEDOS_ADD_TEST_RESOURCE(var, file) \
+        sprintf(var, "%s/%s", dirname(argv[0]), file); \
+        if (access( var, F_OK ) == -1) { \
+            log_warn("File %s does not exist!", var); \
+        } \
 
 #define DEDOS_ADD_TEST_FN(fn) \
         tcase_add_test(tc, fn);

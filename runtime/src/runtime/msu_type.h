@@ -99,14 +99,6 @@ struct msu_type{
      * @return 0 on success, -1 on error
      */
     void *(*deserialize)(struct local_msu *self, size_t input_size, void *input, size_t *out_size);
-
-    /** Generates an ID for the incoming queue item.
-     * Only necessary for input MSUs, though technically
-     * IDs could be reassigned as the queue item traverses the stack.
-     * @param self MSU receiving data
-     * @param queue_item item to be passed to subsequent MSUs
-     */
-    int (*set_id)(struct local_msu *self, struct msu_msg *input);
 };
 
 /** Initializes an MSU type, optionally calling init function */

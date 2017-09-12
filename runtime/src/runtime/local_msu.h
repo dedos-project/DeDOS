@@ -8,6 +8,7 @@
 
 // Forward declaration due to circular dependency
 struct msu_msg_hdr;
+struct msu_msg_key;
 
 struct local_msu {
 
@@ -51,6 +52,16 @@ void msu_dequeue(struct local_msu *msu);
 
 struct local_msu *get_local_msu(unsigned int id);
 
-int msu_enqueue(struct local_msu *sender, struct msu_type *dst_type,
-                struct msu_msg_hdr *hdr, size_t data_size, void *data);
+int init_call_local_msu(struct local_msu *sender, struct local_msu *dest,
+                        struct msu_msg_key *key, size_t data_size, void *data);
+
+int call_local_msu(struct local_msu *sender, struct local_msu *dest,
+                   struct msu_msg_hdr *hdr, size_t data_size, void *data);
+
+int call_msu(struct local_msu *sender, struct msu_type *dst_type,
+             struct msu_msg_hdr *hdr, size_t data_size, void *data);
+
+int init_call_msu(struct local_msu *sender, struct msu_type *dst_type,
+                  struct msu_msg_key *key, size_t data_size, void *data);
+
 #endif

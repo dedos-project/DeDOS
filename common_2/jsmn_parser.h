@@ -36,28 +36,28 @@ struct json_state {
  * @param saved - items that have been deferred to parse until later are stored here
  * @return 0 on success, -1 on error, 1 to defer parsing until a future pass
  */
-typedef int (*jsmn_parsing_fn)(jsmntok_t *tok, char *j, struct json_state *state,
+typedef int (*jsmn_parsing_fn)(jsmntok_t **tok, char *j, struct json_state *state,
                                struct json_state **saved);
 
 
 #define PARSE_FN(fn_name) \
-    static int fn_name(jsmntok_t *tok__, char *j__, \
+    static int fn_name(jsmntok_t **tok__, char *j__, \
                      struct json_state *in__, struct json_state **saved__)
 
 #define GET_PARSE_OBJ() \
     (in__->data)
 
 #define GET_STR_TOK() \
-    tok_to_str(tok__, j__)
+    tok_to_str(*tok__, j__)
 
 #define GET_INT_TOK() \
-    tok_to_int(tok__, j__)
+    tok_to_int(*tok__, j__)
 
 #define GET_LONG_TOK() \
-    tok_to_long(tok__, j__)
+    tok_to_long(*tok__, j__)
 
 #define PARSE_OBJ_LIST_FN(fn_name, init_fn) \
-    static int fn_name(jsmntok_t *tok__, char *j__, \
+    static int fn_name(jsmntok_t **tok__, char *j__, \
                        struct json_state *in__, struct json_state **saved__) { \
         return parse_jsmn_obj_list(tok__, j__, in__, saved__, init_fn); \
     }
@@ -75,20 +75,26 @@ typedef int (*jsmn_parsing_fn)(jsmntok_t *tok, char *j, struct json_state *state
     return out_obj__;
 
 #define PARSE_OBJ_FN(fn_name, parent_obj_type, parent_obj_field, new_type) \
-    static int fn_name(jsmntok_t *tok__, char *j__, \
+    static int fn_name(jsmntok_t **tok__, char *j__, \
                        struct json_state *in__, struct json_state **saved__) { \
         parent_obj_type *type_out__ = in__->data; \
         struct json_state state_out__ = { \
             .data = &type_out__->parent_obj_field, \
             .parent_type = new_type, \
-            .tok = tok__ \
+            .tok = *tok__ \
         }; \
-        return parse_jsmn_obj(tok__, j__, &state_out__, saved__); \
+        if (parse_jsmn_obj(tok__, j__, &state_out__, saved__) < 0) { \
+            return -1; \
+        } \
+        return 0;  \
     }
 
-#define ITER_TOK_LIST(i)  \
-    int tok_size__ = tok__->size; \
-    for (i = 0; i< tok_size__; i++, tok__++)
+#define START_ITER_TOK_LIST(i)  \
+    int tok_size__ = (*tok__)->size; \
+    for (i = 0, ++(*tok__); i< tok_size__;  ++(*tok__), i++)
+
+#define END_ITER_TOK_LIST(i) \
+    *tok__ = (*tok__) - (tok_size__ - i + 1);
 
 #define ADVANCE_TOK() \
     tok__ += tok__->size;
@@ -115,7 +121,7 @@ int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km);
 /**
  * Can be used as a jsmn_parsing_fn that ignores any value passed into it
  */
-int jsmn_ignore(jsmntok_t *tok, char *j, struct json_state *in, struct json_state **saved);
+int jsmn_ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved);
 
 /**
  * Typedef for a json_state initializer, used when iterating over lists of objects.
@@ -128,11 +134,11 @@ typedef struct json_state (*jsmn_initializer)(struct json_state *state, int inde
 
 
 /** Parses a single JSMN object utilizing the key mapping provided in parse_into_obj() */
-int parse_jsmn_obj(jsmntok_t *tok, char *j, struct json_state *in,
+int parse_jsmn_obj(jsmntok_t **tok, char *j, struct json_state *in,
                           struct json_state **saved);
 
 /** Parses an array of JSMN objects. */
-int parse_jsmn_obj_list(jsmntok_t *tok, char *j, struct json_state *in,
+int parse_jsmn_obj_list(jsmntok_t **tok, char *j, struct json_state *in,
                                struct json_state **saved, jsmn_initializer init);
 
 /** Returns the initial object passed into the JSON parser */

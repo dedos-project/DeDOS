@@ -3,11 +3,29 @@
 #include "message_queue.h"
 #include "msu_type.h"
 
-struct msu_msg_key {
-    uint32_t key;
+struct composite_key {
+    uint64_t k1;
+    uint64_t k2;
+    uint64_t k3;
 };
 
+struct msu_msg_key {
+    struct composite_key key;
+    size_t key_len;
+    int32_t id;
+};
+
+struct msu_provinance_item {
+    unsigned int type_id;
+    unsigned int msu_id;
+    uint32_t ip_address;
+};
+
+#define MAX_PATH_LEN 16
+
 struct msg_provinance {
+    struct msu_provinance_item path[MAX_PATH_LEN];
+    int path_len;
 };
 
 struct msu_msg_hdr {
@@ -20,6 +38,15 @@ struct msu_msg {
     size_t data_size;
     void *data;
 };
+
+unsigned int msu_msg_sender_type(struct msg_provinance *prov);
+
+int add_provinance(struct msg_provinance *prov,
+                   struct local_msu *sender);
+
+struct msu_msg_hdr *init_msu_msg_hdr(struct msu_msg_key *key);
+
+int set_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key);
 
 void destroy_msu_msg_contents(struct msu_msg *msg);
 

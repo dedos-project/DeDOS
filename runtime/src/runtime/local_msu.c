@@ -1,4 +1,5 @@
 #include "local_msu.h"
+#include "routing_strategies.h"
 #include "logging.h"
 #include "stats.h"
 #include "msu_message.h"
@@ -232,12 +233,46 @@ static int enqueue_for_remote_send(struct msu_msg *msg,
     return 0;
 }
 
+// TESTME: call_local_msu()
+int call_local_msu(struct local_msu *sender, struct local_msu *dest,
+                struct msu_msg_hdr *hdr, size_t data_size, void *data) {
+    struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
+    log_custom(LOG_MSU_ENQUEUES, "Enqueing data %p directly to destination %d",
+               msg->data, dest->id);
+
+    int rtn = add_provinance(&msg->hdr->provinance, sender);
+    if (rtn < 0) {
+        log_warn("Could not add provinance to message %p", msg);
+    }
+
+    rtn = enqueue_msu_msg(&dest->queue, msg);
+    if (rtn < 0) {
+        log_error("Error enqueing data %p to local MSU %d", msg->data, dest->id);
+        free(msg);
+        return -1;
+    }
+    log_custom(LOG_MSU_ENQUEUES, "Enqueued data %p to local msu %d", msg->data, dest->id);
+    return 0;
+}
+
+int init_call_local_msu(struct local_msu *sender, struct local_msu *dest,
+                        struct msu_msg_key *key, size_t data_size, void *data) {
+    struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
+    if (hdr == NULL) {
+        log_error("Error initializing msu message header");
+        return -1;
+    }
+    return call_local_msu(sender, dest, hdr, data_size, data);
+}
+
+
+
 /**
  * Sends an MSU message to a destination of the given type,
  * utilizing the sending MSU's routing function.
  */
-int msu_enqueue(struct local_msu *sender, struct msu_type *dst_type,
-                struct msu_msg_hdr *hdr, size_t data_size, void *data) {
+int call_msu(struct local_msu *sender, struct msu_type *dst_type,
+             struct msu_msg_hdr *hdr, size_t data_size, void *data) {
 
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
 
@@ -245,13 +280,24 @@ int msu_enqueue(struct local_msu *sender, struct msu_type *dst_type,
                msg->data, dst_type->name);
 
     struct msu_endpoint dst;
-    int rtn  = dst_type->route(dst_type, sender, msg, &dst);
+    int rtn;
+    if (dst_type->route) {
+        rtn = dst_type->route(dst_type, sender, msg, &dst);
+    } else {
+        rtn = default_routing(dst_type, sender, msg, &dst);
+    }
+
     if (rtn < 0) {
         log_error("Could not find destination endpoint of type %s from msu %d (%s). "
                   "Dropping message %p",
                   dst_type->name, sender->id, sender->type->name, msg);
-        destroy_msu_msg_contents(msg);
+        free(msg);
         return -1;
+    }
+
+    rtn = add_provinance(&msg->hdr->provinance, sender);
+    if (rtn < 0) {
+        log_warn("Could not add provinance to message %p", msg);
     }
 
     switch (dst.locality) {
@@ -259,6 +305,7 @@ int msu_enqueue(struct local_msu *sender, struct msu_type *dst_type,
             rtn = enqueue_msu_msg(dst.queue, msg);
             if (rtn < 0) {
                 log_error("Error enqueuing data %p to local MSU %d", msg->data, dst.id);
+                free(msg);
                 return -1;
             }
             log_custom(LOG_MSU_ENQUEUES, "Enqueued data %p to local msu %d", msg->data, dst.id);
@@ -280,3 +327,15 @@ int msu_enqueue(struct local_msu *sender, struct msu_type *dst_type,
             return -1;
     }
 }
+
+// TESTME: init_call_msu()
+int init_call_msu(struct local_msu *sender, struct msu_type *dst_type,
+                  struct msu_msg_key *key, size_t data_size, void *data) {
+    struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
+    if (hdr == NULL) {
+        log_error("Error initializing msu messgae header");
+        return -1;
+    }
+    return call_msu(sender, dst_type, hdr, data_size, data);
+}
+

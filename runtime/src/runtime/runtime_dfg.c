@@ -91,6 +91,14 @@ int local_runtime_port() {
     return LOCAL_RUNTIME->port;
 }
 
+uint32_t local_runtime_ip() {
+    if (LOCAL_RUNTIME == NULL) {
+        log_error("Runtime DFG not implemented");
+        return -1;
+    }
+    return LOCAL_RUNTIME->ip;
+}
+
 /**
  * Gets the loaded DFG
  * @return loaded DFG or NULL if not initialized

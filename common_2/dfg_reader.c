@@ -142,26 +142,6 @@ PARSE_FN(set_msu_type_id) {
     return 0;
 }
 
-PARSE_FN(set_vertex_type) {
-    struct dfg_msu_type *type = GET_PARSE_OBJ();
-    uint8_t vertex_type = 0;
-
-    char *str_type = GET_STR_TOK();
-    if (strstr(str_type, "entry") != NULL) {
-        vertex_type |= ENTRY_VERTEX_TYPE;
-    }
-    if (strstr(str_type, "exit") != NULL) {
-        vertex_type |= EXIT_VERTEX_TYPE;
-    }
-    if (vertex_type == 0 && strstr(str_type, "nop") != NULL) {
-        log_error("Unknown vertex type %s specified (neither exit nor entry found)", str_type);
-        return -1;
-    }
-
-    type->vertex_type = vertex_type;
-    return 0;
-}
-
 PARSE_FN(set_msu_type_name) {
     struct dfg_msu_type *type = GET_PARSE_OBJ();
     char *name = GET_STR_TOK();
@@ -217,6 +197,27 @@ PARSE_FN(set_msu_id) {
     msu->id = GET_INT_TOK();
     return 0;
 }
+
+PARSE_FN(set_msu_vertex_type) {
+    struct dfg_msu *msu = GET_PARSE_OBJ();
+    uint8_t vertex_type = 0;
+
+    char *str_type = GET_STR_TOK();
+    if (strstr(str_type, "entry") != NULL) {
+        vertex_type |= ENTRY_VERTEX_TYPE;
+    }
+    if (strstr(str_type, "exit") != NULL) {
+        vertex_type |= EXIT_VERTEX_TYPE;
+    }
+    if (vertex_type == 0 && strstr(str_type, "nop") != NULL) {
+        log_error("Unknown vertex type %s specified (neither exit nor entry found)", str_type);
+        return -1;
+    }
+
+    msu->vertex_type = vertex_type;
+    return 0;
+}
+
 
 PARSE_FN(set_msu_type) {
     struct dfg_msu *vertex = GET_PARSE_OBJ();
@@ -314,6 +315,7 @@ PARSE_FN(set_num_pinned_threads) {
 
     for (int i=n_existing; i<n_existing+n_new; i++) {
         rt->threads[i] = calloc(1, sizeof(**rt->threads));
+        rt->threads[i]->id = i+1;
     }
     rt->n_pinned_threads = n_new;
     return 0;
@@ -327,6 +329,7 @@ PARSE_FN(set_num_unpinned_threads) {
 
     for (int i=n_existing; i < n_existing + n_new; i++) {
         rt->threads[i] = calloc(1, sizeof(**rt->threads));
+        rt->threads[i]->id = i+1;
     }
     rt->n_unpinned_threads = n_new;
     return 0;
@@ -352,6 +355,7 @@ PARSE_FN(set_route_id) {
         return -1;
     }
     route->id = id;
+    log_custom(LOG_DFG_PARSING, "Created route with id: %d", id);
     return 0;
 }
 
@@ -392,7 +396,8 @@ PARSE_FN(set_dest_msu) {
     struct dfg_msu *msu = get_dfg_msu(get_root_jsmn_obj(), msu_id);
     if (msu == NULL) {
         // Wait for MSU to be instantiated
-        return -1;
+        log_custom(LOG_DFG_PARSING, "MSU %d is not yet instantiated", msu_id);
+        return 1;
     }
     dest->msu = msu;
     return 0;
@@ -402,18 +407,19 @@ PARSE_FN(set_source_types) {
     struct dfg_meta_routing *meta = GET_PARSE_OBJ();
     int i;
     bool found_types = true;
-    ITER_TOK_LIST(i) {
+    START_ITER_TOK_LIST(i) {
         int str_type = GET_INT_TOK();
         struct dfg_msu_type *type = get_dfg_msu_type(get_root_jsmn_obj(), str_type);
         if (type == NULL) {
             // Wait for type to be instantiated
+            log_custom(LOG_DFG_PARSING, "Type %d is not yet instantiated", str_type);
             found_types = false;
         } else {
             meta->src_types[i] = type;
         }
-    }
+    } END_ITER_TOK_LIST(i)
     meta->n_src_types = i;
-    if (found_types == false) 
+    if (found_types == false)  
         return 1;
     return 0;
 }
@@ -422,15 +428,17 @@ PARSE_FN(set_dst_types) {
     struct dfg_meta_routing *meta = GET_PARSE_OBJ();
     bool found_types = true;
     int i;
-    ITER_TOK_LIST(i) {
+    START_ITER_TOK_LIST(i) {
         int str_type = GET_INT_TOK();
         struct dfg_msu_type *type = get_dfg_msu_type(get_root_jsmn_obj(), str_type);
         if (type == NULL) {
+            log_custom(LOG_DFG_PARSING, "Type %d is not yet instantiated", str_type);
             found_types = false;
         } else {
             meta->dst_types[i] = type;
         }
-    }
+    } END_ITER_TOK_LIST(i)
+
     meta->n_dst_types = i;
     if (found_types == false) {
         return 1;
@@ -442,10 +450,12 @@ PARSE_FN(set_dep_type) {
     struct dfg_dependency *dep = GET_PARSE_OBJ();
 
     struct dedos_dfg *dfg = get_root_jsmn_obj();
-    struct dfg_msu_type *type = get_dfg_msu_type(dfg, GET_INT_TOK());
+    int type_id = GET_INT_TOK();
+    struct dfg_msu_type *type = get_dfg_msu_type(dfg, type_id);
 
     if (type == NULL) {
         // Return once type has been instantiated
+        log_custom(LOG_DFG_PARSING, "Type %d is not yet instantiated", type_id);
         return 1;
     }
     dep->type = type;
@@ -472,6 +482,7 @@ PARSE_FN(set_msu_runtime) {
     int id = GET_INT_TOK();
     struct dfg_runtime *rt = get_dfg_runtime(get_root_jsmn_obj(),id);
     if (rt == NULL) {
+        log_custom(LOG_DFG_PARSING, "Runtime %d is not yet instantiated", id);
         return 1;
     }
     sched->runtime = rt;
@@ -483,12 +494,14 @@ PARSE_FN(set_msu_thread) {
 
     if (sched->runtime == NULL) {
         // Runtime must be instantiated before thread
+        log_custom(LOG_DFG_PARSING, "MSU runtime not yet instantiated");
         return 1;
     }
     int id = GET_INT_TOK();
     struct dfg_thread *thread = get_dfg_thread(sched->runtime, id);
     if (thread == NULL) {
         // Thread must be instantiated too
+        log_custom(LOG_DFG_PARSING, "Thread %d not yet instantiated", id);
         return 1;
     }
     sched->thread = thread;
@@ -500,15 +513,19 @@ PARSE_FN(set_msu_routes) {
 
     bool set_routes = true;
     int i;
-    ITER_TOK_LIST(i) {
+    log_custom(LOG_DFG_PARSING, "MSU_ROUTE pre TOK: %s", GET_STR_TOK());
+    START_ITER_TOK_LIST(i) {
+        log_custom(LOG_DFG_PARSING, "MSU_ROUTE TOK: %s", GET_STR_TOK());
         int route_id = GET_INT_TOK();
         struct dfg_route *route = get_dfg_route(get_root_jsmn_obj(), route_id);
         if (route == NULL) {
+            log_custom(LOG_DFG_PARSING, "Route %d not yet instantiated for msu", route_id);
             set_routes = false;
         } else {
             sched->routes[i] = route;
         }
-    }
+    } END_ITER_TOK_LIST(i)
+
     sched->n_routes = i;
     if (!set_routes) {
         return 1;
@@ -517,8 +534,8 @@ PARSE_FN(set_msu_routes) {
 }
 
 
-static int not_implemented(jsmntok_t *tok, char *j, struct json_state *in, struct json_state **saved) {
-    log_warn("JSON key %s is not implemented in DFG reader", tok_to_str((tok)-1, j));
+static int not_implemented(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
+    log_warn("JSON key %s is not implemented in DFG reader", tok_to_str(*((tok)-1), j));
     return 0;
 }
 
@@ -532,7 +549,6 @@ static struct key_mapping key_map[] = {
     { "runtimes", ROOT, set_runtimes },
 
     { "id", MSU_TYPES, set_msu_type_id},
-    { "vertex_type", MSU_TYPES, set_vertex_type },
     { "name", MSU_TYPES, set_msu_type_name },
     { "meta_routing", MSU_TYPES, set_meta_routing },
     { "dependencies", MSU_TYPES, set_dependencies },
@@ -540,6 +556,7 @@ static struct key_mapping key_map[] = {
     { "colocation_group", MSU_TYPES, set_colocation_group },
 
     { "id", MSUS, set_msu_id },
+    { "vertex_type", MSUS, set_msu_vertex_type },
     { "init_data", MSUS, set_msu_init_data },
     { "type", MSUS, set_msu_type },
     { "blocking_mode", MSUS,  set_blocking_mode },

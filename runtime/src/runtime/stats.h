@@ -9,7 +9,10 @@ enum stat_id {
     MSU_IDLE_TIME,
     MSU_MEM_ALLOC,
     MSU_NUM_STATES,
-    THREAD_CTX_SWITCHES
+    THREAD_CTX_SWITCHES,
+    MSU_STAT1,
+    MSU_STAT2,
+    MSU_STAT3
 };
 
 //TODO: docstring
