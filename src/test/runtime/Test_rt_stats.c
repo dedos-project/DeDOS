@@ -242,10 +242,11 @@ START_DEDOS_TEST(test_sample_stat) {
 
     int max_sample_size = 30;
     struct stat_sample *samples = init_stat_samples(max_sample_size, n_items);
+    ck_assert_ptr_ne(samples, NULL);
 
     int sample_size = 10;
-    int rtn = sample_stat(sample_stat_id, end, &interval, sample_size, samples, n_items);
 
+    int rtn = sample_stat(sample_stat_id, end, &interval, sample_size, samples, n_items);
     ck_assert_int_eq(rtn, n_items);
 
     for (int i=0; i<n_items; i++) {

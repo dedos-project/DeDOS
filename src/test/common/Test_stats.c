@@ -37,20 +37,20 @@ START_DEDOS_TEST(test_serialize_and_deserialize_stat_sample) {
         init_random_sample(&samples[i], i);
     }
 
-    size_t buffer_size = total_sample_size(samples, n_samples);
+    size_t buffer_size = serialized_stat_sample_size(samples, n_samples);
     log_custom(TEST, "Buffer size is %d", (int)buffer_size);
     void *buffer = malloc(buffer_size);
 
     ssize_t used_size = serialize_stat_samples(samples, n_samples, buffer, buffer_size);
-    
-    ck_assert_int_gt(used_size, 0);
+
+    ck_assert_int_eq(used_size, buffer_size);
 
     struct stat_sample *samples_out = calloc(n_samples, sizeof(*samples));
     for (int i=0; i<n_samples; i++) {
         init_stat_sample(max_stats, &samples_out[i]);
     }
-    int n_samples_out = deserialize_stat_samples(buffer, buffer_size, samples_out, n_samples);
-    ck_assert_int_eq(n_samples_out, n_samples);
+    ssize_t deser_size  = deserialize_stat_samples(buffer, buffer_size, samples_out, n_samples);
+    ck_assert_int_eq(deser_size, buffer_size);
     for (int i=0; i<n_samples; i++) {
         assert_samples_match(&samples_out[i], &samples[i]);
     }
