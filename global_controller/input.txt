@@ -1,9 +1,0 @@
-create_pinned_thread 4
-addmsu 4 500 1 non-blocking 1
-addmsu 4 501 2 non-blocking 1
-addmsu 4 502 3 non-blocking 1
-addmsu 4 503 4 non-blocking 1
-add route 4 3 502 1 500 1
-add route 4 1 500 2 501 1
-add route 4 2 501 4 503 1
-
