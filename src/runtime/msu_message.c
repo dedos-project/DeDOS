@@ -36,8 +36,8 @@ int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
     int idx = prov->path_len % MAX_PATH_LEN;
     prov->path[idx].type_id = sender->type->id;
     prov->path[idx].msu_id = sender->id;
-    prov->path[idx].ip_address = local_runtime_ip();
-    if (prov->path[idx].ip_address == -1) {
+    prov->path[idx].runtime_id = local_runtime_id();
+    if (prov->path[idx].runtime_id == -1) {
         log_error("Error getting local runtime ip address");
         return -1;
     }

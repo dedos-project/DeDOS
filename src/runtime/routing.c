@@ -3,7 +3,7 @@
 #include "logging.h"
 #include "runtime_dfg.h"
 #include "local_msu.h"
-#include "defines.h"
+#include "unused_def.h"
 #include <stdlib.h>
 #include <pthread.h>
 
@@ -352,6 +352,31 @@ int get_endpoint_by_id(struct routing_table *table, int msu_id,
     return rtn;
 }
 
+int get_endpoints_by_runtime_id(struct routing_table *table, int runtime_id,
+                                struct msu_endpoint *endpoints, int n_endpoints) {
+    int found_endpoints = 0;
+    read_lock(table);
+    for (int i=0; i < table->n_endpoints; i++) {
+        if (table->endpoints[i].runtime_id == runtime_id) {
+            if (n_endpoints <= found_endpoints) {
+                log_error("Not enough endpoints passed in to hold results");
+                return -1;
+            }
+            endpoints[found_endpoints] = table->endpoints[i];
+            found_endpoints++;
+        }
+    }
+    unlock(table);
+    return found_endpoints;
+}
+
+int get_n_endpoints(struct routing_table *table) {
+    read_lock(table);
+    int n_endpoints = table->n_endpoints;
+    unlock(table);
+    return n_endpoints;
+}
+
 /**
  * Gets the endpoint associated with the given key in the provided route
  * @param route Route to search for key
@@ -508,6 +533,7 @@ int init_msu_endpoint(int msu_id, int runtime_id, struct msu_endpoint *endpoint)
             return -1;
         }
         endpoint->queue = &msu->queue;
+        endpoint->runtime_id = runtime_id;
     } else {
         endpoint->locality = MSU_IS_REMOTE;
         endpoint->runtime_id = runtime_id;

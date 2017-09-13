@@ -5,7 +5,7 @@
 
 int default_routing(struct msu_type *type, struct local_msu *sender,
                     struct msu_msg *msg, struct msu_endpoint *output) {
-    
+
     struct routing_table *table = get_type_from_route_set(&sender->routes, type->id);
     if (table == NULL) {
         log_error("No routes available from msu %d to type %d",
@@ -36,7 +36,7 @@ int shortest_queue_route(struct msu_type *type, struct local_msu *sender,
     return 0;
 }
 
-int route_to_id(struct msu_type *type, struct local_msu *sender, int msu_id, 
+int route_to_id(struct msu_type *type, struct local_msu *sender, int msu_id,
                 struct msu_endpoint *output) {
     struct routing_table *table = get_type_from_route_set(&sender->routes, type->id);
     if (table == NULL) {
@@ -51,3 +51,30 @@ int route_to_id(struct msu_type *type, struct local_msu *sender, int msu_id,
     }
     return 0;
 }
+
+int route_to_origin_runtime(struct msu_type *type, struct local_msu *sender, struct msu_msg *msg,
+                            struct msu_endpoint *output) {
+
+    uint32_t runtime_id = msg->hdr->provinance.path[0].runtime_id;
+
+    struct routing_table *table = get_type_from_route_set(&sender->routes, type->id);
+    if (table == NULL) {
+         log_error("No routes available from msu %d to type %d",
+                  sender->id, type->id);
+        return -1;
+    }
+
+    int n_endpoints = get_n_endpoints(table);
+    struct msu_endpoint eps[n_endpoints];
+
+    int n_rt_endpoints = get_endpoints_by_runtime_id(table, runtime_id, eps, n_endpoints);
+    if (n_rt_endpoints <= 0) {
+        log_error("Could not get endpoint with runtime id %d", runtime_id);
+        return -1;
+    }
+
+    *output = eps[msg->hdr->key.id % n_rt_endpoints];
+
+    return 0;
+}
+

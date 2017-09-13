@@ -1,0 +1,8 @@
+#ifndef WEBSERVER_REGEX_MSU_H_
+#define WEBSERVER_REGEX_MSU_H_
+
+#define WEBSERVER_REGEX_MSU_TYPE_ID 553
+struct msu_type WEBSERVER_REGEX_MSU_TYPE;
+
+#endif
+

@@ -165,12 +165,12 @@ START_DEDOS_TEST(test_add_provinance) {
     ck_assert_int_eq(hdr.provinance.path_len, 1);
     ck_assert_int_eq(hdr.provinance.path[0].type_id, custom_type.id);
     ck_assert_int_eq(hdr.provinance.path[0].msu_id, custom_msu.id);
-    ck_assert_int_eq(hdr.provinance.path[0].ip_address, rt.ip);
+    ck_assert_int_eq(hdr.provinance.path[0].runtime_id, rt.id);
 
     ck_assert_int_eq(add_provinance(&hdr.provinance, &custom_msu),0);
     ck_assert_int_eq(hdr.provinance.path_len, 2);
     ck_assert_int_eq(hdr.provinance.path[1].type_id, custom_type.id);
-    ck_assert_int_eq(hdr.provinance.path[1].ip_address, rt.ip);
+    ck_assert_int_eq(hdr.provinance.path[1].runtime_id, rt.id);
 } END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("MSU_message")

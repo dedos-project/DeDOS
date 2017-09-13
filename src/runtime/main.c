@@ -6,8 +6,10 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <getopt.h>
+#include <libgen.h>
 #include <stdio.h>
 
+#include "local_files.h"
 #include "rt_stats.h"
 #include "logging.h"
 #include "runtime_dfg.h"
@@ -75,6 +77,8 @@ int main(int argc, char **argv) {
                 exit(-1);
         }
     }
+
+    set_local_directory(dirname(argv[0]));
 
     if (dfg_json == NULL || runtime_id == -1) {
         printf("%s " USAGE_ARGS "\n", argv[0]);

@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
-#include "defines.h"
+#include "unused_def.h"
 
 // Putting these up here helps deal with circular dependency warnings
 #define MAX_MSU 128

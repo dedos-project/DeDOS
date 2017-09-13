@@ -18,7 +18,7 @@ struct msu_msg_key {
 struct msu_provinance_item {
     unsigned int type_id;
     unsigned int msu_id;
-    uint32_t ip_address;
+    unsigned int runtime_id;
 };
 
 #define MAX_PATH_LEN 16

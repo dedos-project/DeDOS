@@ -19,7 +19,7 @@ COM_DIR = $(SRC_DIR)common/
 LEG_DIR = $(SRC_DIR)legacy/
 TST_DIR = $(SRC_DIR)test/
 
-MSU_DIRS = $(MSU_DIR) $(filter %/, $(wildcard $(MSU_DIR)*))
+MSU_DIRS = $(MSU_DIR) $(filter %/, $(wildcard $(MSU_DIR)*/))
 
 SRC_DIRS = $(RNT_DIR) $(COM_DIR) $(MSU_DIRS)
 
@@ -108,7 +108,7 @@ OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), 
 TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
 RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
 
-INCS=$(LEG_INC) $(RNT_DIR) $(COM_DIR) $(MSU_DIRS)
+INCS=$(LEG_INC) $(RNT_DIR) $(COM_DIR) $(MSU_DIR)
 
 CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
 

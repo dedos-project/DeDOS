@@ -7,10 +7,8 @@
 struct msu_endpoint {
     int id;
     enum msu_locality locality;
-    union {
-        unsigned int runtime_id;
-        struct msg_queue *queue;
-    };
+    unsigned int runtime_id;
+    struct msg_queue *queue; // Only filled if MSU_IS_LOCAL
 };
 
 /**
@@ -40,8 +38,14 @@ int get_endpoint_by_index(struct routing_table *table, int index,
 int get_endpoint_by_id(struct routing_table *table, int msu_id,
                        struct msu_endpoint *endpoint);
 
+int get_endpoints_by_runtime_id(struct routing_table *table, int runtime_id,
+                                struct msu_endpoint *endpoints, int n_endpoints);
+
 /** Gets the route from the provided array of routes which has the correct type ID */
 struct routing_table *get_type_from_route_set(struct route_set *routes, int type_id);
+
+int get_n_endpoints(struct routing_table *table);
+
 
 /** Adds an endpoint to the route with the given ID. 
  * Note that endpoints are added by value, not by reference
