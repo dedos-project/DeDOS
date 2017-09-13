@@ -1,7 +1,7 @@
 #include "local_msu.h"
 #include "routing_strategies.h"
 #include "logging.h"
-#include "stats.h"
+#include "rt_stats.h"
 #include "msu_message.h"
 #include "inter_runtime_messages.h"
 #include "main_thread.h"

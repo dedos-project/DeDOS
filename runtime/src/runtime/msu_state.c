@@ -1,5 +1,5 @@
 #include "msu_message.h"
-#include "stats.h"
+#include "rt_stats.h"
 #include "logging.h"
 #include "uthash.h"
 #include "local_msu.h"

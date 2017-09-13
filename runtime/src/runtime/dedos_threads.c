@@ -3,7 +3,7 @@
 #include "dedos_threads.h"
 #include "thread_message.h"
 #include "logging.h"
-#include "stats.h"
+#include "rt_stats.h"
 
 #define MAX_DEDOS_THREAD_ID 16
 static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID];

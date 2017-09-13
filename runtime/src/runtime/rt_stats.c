@@ -1,3 +1,4 @@
+#include "rt_stats.h"
 #include "stats.h"
 #include "logging.h"
 
@@ -13,13 +14,7 @@
 static struct timespec stats_start_time;
 static bool stats_initialized = false;
 
-
 #define MAX_ID 64
-
-struct timed_stat {
-    struct timespec time;
-    double value;
-};
 
 /**
  * The internal statistics structure where stats are aggregated
@@ -330,6 +325,103 @@ int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool re
     return 0;
 }
 
+static inline int time_cmp(struct timespec *t1, struct timespec *t2) {
+    return t1->tv_sec > t2->tv_sec ? 1 :
+            ( t1->tv_sec < t2->tv_sec ? -1 :
+             ( t1->tv_nsec > t2->tv_nsec ? 1 :
+               ( t1->tv_nsec < t2->tv_nsec ? -1 : 0 ) ) );
+}
+
+static int find_time_index(struct timed_stat *stats, struct timespec *time,
+                    int start_index, int stat_size) {
+    if (time_cmp(&stats[start_index].time, time) <= 0) {
+        return start_index;
+    }
+    int search_index = start_index - 1;
+    while (search_index != start_index) {
+        if (time_cmp(&stats[search_index].time, time) <= 0) {
+            return search_index;
+        }
+        search_index--;
+        if (search_index < 0) {
+            search_index = stat_size - 1;
+        }
+    }
+    return -1;
+}
+
+static int sample_stat_item(struct stat_item *item, int stat_size,
+                     struct timespec *sample_end, struct timespec *interval, int sample_size,
+                     struct timed_stat *sample) {
+    struct timespec sample_time = *sample_end;
+    lock_item(item);
+    int sample_index = item->write_index - 1;
+    int i;
+    for (i=0; i<sample_size; i++) {
+        sample_index = find_time_index(item->stats, &sample_time, sample_index, stat_size);
+        if (sample_index < 0) {
+            log_error("Couldn't find time index for item %d", item->id);
+            unlock_item(item);
+            return -1;
+        }
+        sample[i] = item->stats[sample_index];
+        sample_time.tv_nsec -= interval->tv_nsec;
+        if (sample_time.tv_nsec < 0) {
+            sample_time.tv_sec -= 1;
+            sample_time.tv_nsec = 1e9 + sample_time.tv_nsec;
+        }
+        sample_time.tv_sec -= interval->tv_sec;
+    }
+    unlock_item(item);
+    return 0;
+}
+
+static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timespec *interval,
+                int sample_size, struct stat_sample *sample, int n_samples) {
+    CHECK_INITIALIZATION;
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        log_error("Attempted to sample disabled statistic %d", stat_id);
+        return -1;
+    }
+
+    rlock_type(type);
+    if (n_samples < type->num_items) {
+        log_error("Not enough samples (%d) to fit all stat items (%d)", n_samples, type->num_items);
+        unlock_type(type);
+        return -1;
+    }
+
+    for (int i=0; i<type->num_items; i++) {
+        sample[i].hdr.stat_id = stat_id;
+        sample[i].hdr.item_id = type->items[i].id;
+        sample[i].hdr.n_stats = sample_size;
+        int rtn = sample_stat_item(&type->items[i], sample_size, end, interval, sample_size,
+                                    sample[i].stats);
+
+        if ( rtn < 0) {
+            log_error("Error sampling item %d (idx %d)", type->items[i].id, i);
+            unlock_type(type);
+            return -1;
+        }
+    }
+    unlock_type(type);
+    return type->num_items;
+}
+
+int n_stat_items(enum stat_id stat_id) {
+    CHECK_INITIALIZATION;
+    return stat_types[stat_id].num_items;
+}
+
+
+int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
+                        int sample_size, struct stat_sample *sample, int n_samples) {
+    struct timespec now;
+    get_elapsed_time(&now);
+    return sample_stat(stat_id, &now, interval, sample_size, sample, n_samples);
+}
 
 /**
  * Initializes a stat item so that statistics can be logged to it.
@@ -386,8 +478,6 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
     }
     return 0;
 }
-
-
 
 /**
  * Initializes the statistics data structures

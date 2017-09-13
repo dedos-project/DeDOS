@@ -3,7 +3,9 @@
 
 // Wheeee!
 // (Need static methods...)
-#include "stats.c"
+#include "rt_stats.c"
+
+#include <time.h>
 
 #define sample_stat_id stat_types[0].id
 unsigned int sample_item_id = 5;
@@ -44,7 +46,7 @@ START_DEDOS_TEST(test_record_uninitialized_stat) {
     ck_assert(rtn == -1);
 } END_DEDOS_TEST
 
-struct stat_item *test_init_item_stat(int stat_id, int item_id) {
+struct stat_item *init_test_stat_item(int stat_id, int item_id) {
     int rtn = init_statistics();
     ck_assert(rtn == 0);
 
@@ -56,13 +58,14 @@ struct stat_item *test_init_item_stat(int stat_id, int item_id) {
 
     struct stat_item *item = get_item_stat(type, item_id);
     ck_assert(item != NULL);
- 
+
     return item;
 }
 
+
 START_DEDOS_TEST(test_record_start_time) {
-    
-    struct stat_item *item = test_init_item_stat(sample_stat_id, sample_item_id);
+
+    struct stat_item *item = init_test_stat_item(sample_stat_id, sample_item_id);
 
     int rtn = record_start_time(sample_stat_id, sample_item_id);
     ck_assert(rtn == 0);
@@ -73,7 +76,7 @@ START_DEDOS_TEST(test_record_start_time) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_record_end_time) {
-    struct stat_item *item = test_init_item_stat(sample_stat_id, sample_item_id);
+    struct stat_item *item = init_test_stat_item(sample_stat_id, sample_item_id);
 
     int rtn = record_start_time(sample_stat_id, sample_item_id);
     ck_assert(rtn == 0);
@@ -87,8 +90,8 @@ START_DEDOS_TEST(test_record_end_time) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_increment_stat__normal) {
-    struct stat_item *item = test_init_item_stat(sample_stat_id, sample_item_id);
-    
+    struct stat_item *item = init_test_stat_item(sample_stat_id, sample_item_id);
+
     increment_stat(sample_stat_id, sample_item_id, 10);
     ck_assert_int_eq(item->write_index, 1);
     ck_assert_int_eq(item->stats[item->write_index-1].value, 10);
@@ -100,7 +103,7 @@ START_DEDOS_TEST(test_increment_stat__normal) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_increment_stat__rollover) {
-    struct stat_item *item = test_init_item_stat(sample_stat_id, sample_item_id);
+    struct stat_item *item = init_test_stat_item(sample_stat_id, sample_item_id);
 
     int stat1 = 15;
     int stat2 = 32;
@@ -124,7 +127,7 @@ START_DEDOS_TEST(test_increment_stat__rollover) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_record_stat__normal) {
-    struct stat_item *item = test_init_item_stat(sample_stat_id, sample_item_id);
+    struct stat_item *item = init_test_stat_item(sample_stat_id, sample_item_id);
 
     record_stat(sample_stat_id, sample_item_id, 10, 1);
     ck_assert_int_eq(item->write_index, 1);
@@ -136,7 +139,7 @@ START_DEDOS_TEST(test_record_stat__normal) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_record_stat__rollover) {
-    struct stat_item *item = test_init_item_stat(sample_stat_id, sample_item_id);
+    struct stat_item *item = init_test_stat_item(sample_stat_id, sample_item_id);
 
     int stat1 = 15;
     int stat2 = 32;
@@ -160,7 +163,7 @@ START_DEDOS_TEST(test_record_stat__rollover) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_record_stat__relogging) {
-    struct stat_item *item = test_init_item_stat(sample_stat_id, sample_item_id);
+    struct stat_item *item = init_test_stat_item(sample_stat_id, sample_item_id);
 
     record_stat(sample_stat_id, sample_item_id, 10, 0);
     ck_assert_int_eq(item->write_index, 1);
@@ -180,10 +183,83 @@ START_DEDOS_TEST(test_record_stat__relogging) {
 
 } END_DEDOS_TEST
 
+void init_filled_stat_items(int stat_id, unsigned int *item_ids, int n_item_ids, int max_time) {
+    int rtn = init_statistics();
+    ck_assert(rtn == 0);
+
+    struct stat_type *type = &stat_types[stat_id];
+    ASSERT_ENABLED(type);
+
+    for (int i=0; i<n_item_ids; i++) {
+
+        rtn = init_stat_item(stat_id, item_ids[i]);
+        ck_assert(rtn == 0);
+
+        struct stat_item *item = get_item_stat(type, item_ids[i]);
+        ck_assert(item != NULL);
+
+        for (int j=0; j<max_time; j++) {
+            item->stats[j].time.tv_sec = j;
+            item->stats[j].value = j;
+        }
+        item->write_index = max_time;
+    }
+}
+
+START_DEDOS_TEST(test_sample_stat_item) {
+
+    int max_time = 500;
+    init_filled_stat_items(sample_stat_id, &sample_item_id, 1, max_time);
+    struct stat_item *item = get_item_stat(&stat_types[sample_stat_id], sample_item_id);
+
+    struct timespec *end = &item->stats[max_time-1].time;
+    int interval_s = 10;
+    long interval_ns = 4e8;
+    struct timespec interval = {.tv_sec = interval_s, .tv_nsec = interval_ns};
+    int sample_size = 20;
+
+    struct timed_stat *stats = malloc(sample_size * sizeof(*stats));
+    int rtn = sample_stat_item(item, max_time, end, &interval, sample_size, stats);
+
+    ck_assert_int_eq(rtn, 0);
+
+    for (int i=0; i<sample_size; i++) {
+        ck_assert_int_eq(stats[i].time.tv_sec,
+                         max_time - (i) * interval_s - ((i *interval_ns * 1e-9))- 1);
+    }
+
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_sample_stat) {
+    unsigned int items[] = {0,1,2,3};
+    int n_items = sizeof(items) / sizeof(*items);
+    int max_time = 500;
+    init_filled_stat_items(sample_stat_id, items, n_items, max_time);
+    struct stat_item *item = get_item_stat(&stat_types[sample_stat_id], 0);
+    struct timespec *end = &item->stats[max_time - 1].time;
+    int interval_s = 1;
+    struct timespec interval = {.tv_sec = interval_s};
+
+    int max_sample_size = 30;
+    struct stat_sample *samples = init_stat_samples(max_sample_size, n_items);
+
+    int sample_size = 10;
+    int rtn = sample_stat(sample_stat_id, end, &interval, sample_size, samples, n_items);
+
+    ck_assert_int_eq(rtn, n_items);
+
+    for (int i=0; i<n_items; i++) {
+        ck_assert_int_eq(samples[i].hdr.stat_id, sample_stat_id);
+        ck_assert_int_eq(samples[i].hdr.item_id, items[i]);
+        ck_assert_int_eq(samples[i].hdr.n_stats, sample_size);
+    }
+
+} END_DEDOS_TEST
+
 
 DEDOS_START_TEST_LIST("Statistics")
 
-DEDOS_ADD_TEST_FN(test_init_stat_item);
+DEDOS_ADD_TEST_FN(test_init_stat_item);;
 DEDOS_ADD_TEST_FN(test_record_uninitialized_stat);
 DEDOS_ADD_TEST_FN(test_record_start_time);
 DEDOS_ADD_TEST_FN(test_record_end_time)
@@ -192,5 +268,8 @@ DEDOS_ADD_TEST_FN(test_increment_stat__rollover)
 DEDOS_ADD_TEST_FN(test_record_stat__normal)
 DEDOS_ADD_TEST_FN(test_record_stat__rollover)
 DEDOS_ADD_TEST_FN(test_record_stat__relogging)
+DEDOS_ADD_TEST_FN(test_sample_stat_item)
+DEDOS_ADD_TEST_FN(test_sample_stat)
+
 
 DEDOS_END_TEST_LIST()

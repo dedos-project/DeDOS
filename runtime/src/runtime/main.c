@@ -8,9 +8,9 @@
 #include <getopt.h>
 #include <stdio.h>
 
+#include "rt_stats.h"
 #include "logging.h"
 #include "runtime_dfg.h"
-#include "stats.h"
 #include "controller_communication.h"
 #include "main_thread.h"
 #include "socket_monitor.h"
