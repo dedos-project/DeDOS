@@ -1,17 +1,21 @@
-TARGETS=runtime global_controller
+TARGETS=global_controller runtime
 
-
+TESTS=$(foreach TARG, $(TARGETS), $(TARG)-test)
+CLEANS=$(foreach TARG, $(TARGETS), $(TARG)-clean)
 
 all: $(TARGETS)
 
+test: $(TESTS)
+
+clean: $(CLEANS)
+
+runtime-%::
+	@make -f $(patsubst %-$*, %.mk, $@) $*
+
+global_controller-%::
+	@make -f $(patsubst %-$*, %.mk, $@) $*
+
 $(TARGETS): FORCE
 	@make -f $@.mk
-
-test: FORCE
-	$(foreach T, $(TARGETS), make -f $(T).mk test;)
-
-clean: FORCE
-	$(foreach T, $(TARGETS), make -f $(T).mk clean;)
-
 
 FORCE:;
