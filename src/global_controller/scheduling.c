@@ -1,33 +1,9 @@
-#include <stdlib.h>
-#include <string.h>
 #include "dfg.h"
 #include "scheduling.h"
 
-static uint64_t get_absent_msus(struct dfg_vertex *msu, uint64_t absent_msus) {
-    // NOTE: This will not work if there are more than 64 MSUs
-
-    if (absent_msus == 0) {
-        absent_msus = 0xFFFFFFFFFFFFFFFF;
-    }
-
-    absent_msus &= ~((uint64_t)1<<msu->msu_id);
-
-    struct dfg_route **routes = msu->scheduling.routes;
-
-    for (int r_i = 0; r_i < msu->scheduling.num_routes; ++r_i) {
-        struct dfg_route *r = routes[r_i];
-        for (int v_i=0; v_i< r->num_destinations; ++v_i) {
-            struct dfg_vertex *v = r->destinations[v_i];
-            if (absent_msus&((uint64_t)1<<v->msu_id)) {
-                uint64_t v_downstream = get_absent_msus(v, absent_msus);
-                absent_msus &= v_downstream;
-            }
-        }
-    }
-    return absent_msus;
-}
-
-
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 static int n_downstream_msus(struct dfg_vertex * msu) {
 
     int n = 0;
@@ -37,78 +13,50 @@ static int n_downstream_msus(struct dfg_vertex * msu) {
         n+= r->num_destinations;
     }
     return n;
-/*
-    uint64_t absent_msus = get_absent_msus(msu, 0);
-
-    int n_downstream = 64;
-    for (int i = 0; i < 64; i++) {
-        if (absent_msus&(uint64_t)1<<i) {
-            n_downstream--;
-        }
-    }
-
-    return n_downstream;
-    */
 }
 
-int fix_route_ranges(struct dfg_route *route, int runtime_sock) {
-    int max_key = 0;
+int fix_route_ranges(struct dfg_route *route) {
 
-    int new_keys[route->num_destinations];
-    int old_keys[route->num_destinations];
-    struct dfg_vertex *destinations[route->num_destinations];
-    int found_downstream = -1;
-    int changes = 0;
-    for (int i = 0; i < route->num_destinations; ++i) {
-        old_keys[i] = route->destination_keys[i];
-        struct dfg_vertex *v = route->destinations[i];
-        int downstream = n_downstream_msus(v);
-        if (found_downstream != downstream) {
-            if (found_downstream == -1) {
-                found_downstream = downstream;
+    struct dfg_route_endpoint *endpoints[route->n_endpoints];
+
+    // Calculate what the new keys will be based on the number of downstream MSUs
+    int new_keys[route->n_endpoints];
+    int last = 0;
+    for (int i=0; i<route->n_endpoints; i++) {
+        int downstream = n_downstream_msus(route->endpoints[i]->msu);
+        new_keys[i] = last + downstream;
+        last = new_keys[i];
+    }
+
+    for (int i=0; i<route->n_endpoints; i++) {
+        int old_key = route->endpoints[i]->key
+        if (old_key != new_keys[i]) {
+            int rtn = mod_endpoint(route->endpoints[i]->msu->id, new_keys[i], route->id);
+            if (rtn < 0) {
+                log_error("Error modifying endpoint");
+                return -1;
             } else {
-                changes = 1;
-            }
-        }
-
-        new_keys[i] = max_key += downstream;
-        destinations[i] = v;
-    }
-
-    if (changes) {
-        for (int i = 0; i < route->num_destinations; ++i) {
-            int orig_key = old_keys[i];
-            struct dfg_vertex *v = destinations[i];
-            int new_key = new_keys[i];
-
-            if (orig_key != new_key) {
-                int rtn = mod_endpoint(v->msu_id, route->route_id, new_key, runtime_sock);
-                if (rtn < 0) {
-                    log_error("Error modifying endpoint");
-                    return -1;
-                }
-                log_debug("Modified endpoint %d in route %d to have key %d (old: %d)",
-                          v->msu_id, route->route_id, new_key, orig_key);
+                log_custom(LOG_ROUTING_CHANGES,
+                          "Modified endpoint %d in route %d to have key %d (old: %d)",
+                          route->endpoints[i]->msu->id, route->id, new_keys[i], old_key);
             }
         }
     }
+
     return 0;
 }
 
-int fix_all_route_ranges(struct dfg_config *dfg) {
-    int i;
-    for (i = 0; i < dfg->runtimes_cnt; ++i) {
-        struct dfg_runtime_endpoint *rt = dfg->runtimes[i];
-        for (int route_i = 0; route_i < rt->num_routes; ++route_i) {
-            struct dfg_route *route = rt->routes[route_i];
-            int rtn = fix_route_ranges(route, rt->sock);
-            if (rtn < 0){
-                log_error("Error fixing route ranges!");
+int fix_all_route_ranges(struct dedos_dfg *dfg) {
+    for (int i=0; i<dfg->n_runtimes; i++) {
+        struct dfg_runtime *rt = dfg->runtimes[i];
+        for (int j=0; j<rt->n_routes; j++) {
+            int rtn = fix_route_ranges(rt->routes[j]);
+            if (rtn < 0) {
+                log_error("Error fixing route ranges");
                 return -1;
             }
         }
     }
-
     return 0;
 }
 
@@ -117,17 +65,18 @@ int fix_all_route_ranges(struct dfg_config *dfg) {
  * @param struct dfg_vertex *msus: decayed pointer to a list of MSU pointers
  * @return -1/0: failure/success
  */
-int msu_hierarchical_sort(struct dfg_vertex **msus) {
-    int n = 0;
-    while (msus[n] != NULL) {
-        n++;
-    }
-
-    if (n == 1) {
+int msu_hierarchical_sort(struct dfg_msu **msus, int n_msus) {
+    if (n_msus == 1) {
         return 0;
     }
 
-    int i, j;
+    int n_sorted = 0;
+    for (int i=0; i<n_msus; ++i) {
+        struct dfg_msu *msu = msus[i];
+
+        if (msu->vertex_type & EXIT_VERTEX_TYPE) 
+
+
     //First find any "exit" vertex and swap them with the first entry
     //FIXME: atm assumes there is only 1 new exit node
     for (i = 0; i < n; ++i) {

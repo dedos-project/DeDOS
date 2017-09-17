@@ -32,7 +32,7 @@ struct ctrl_runtime_msg_hdr {
 
 /** Type: CTRL_ADD_RUNTIME */
 struct ctrl_add_runtime_msg {
-    int runtime_id;
+    unsigned int runtime_id;
     uint32_t ip;
     int port;
 };
@@ -51,7 +51,7 @@ struct ctrl_delete_thread_msg {
 /** Type: CTRL_MODIFY_ROUTE */
 enum ctrl_route_msg_type {
     CREATE_ROUTE,
-    // TODO: DELETE_ROUTE,
+    DELETE_ROUTE,
     ADD_ENDPOINT,
     DEL_ENDPOINT,
     MOD_ENDPOINT

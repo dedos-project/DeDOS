@@ -3,12 +3,12 @@
 #include "dfg.h"
 #include "routing.h"
 
-static int add_dfg_route_destinations(int route_id,
-                                      struct dfg_route_destination **destinations,
-                                      int n_destinations) {
-    for (int i=0; i<n_destinations; i++) {
+static int add_dfg_route_endpoints(int route_id,
+                                      struct dfg_route_endpoint **endpoints,
+                                      int n_endpoints) {
+    for (int i=0; i<n_endpoints; i++) {
         struct msu_endpoint endpoint;
-        struct dfg_route_destination *dest = destinations[i];
+        struct dfg_route_endpoint *dest = endpoints[i];
 
         int rtn = init_msu_endpoint(dest->msu->id,
                                     dest->msu->scheduling.runtime->id,
@@ -25,8 +25,8 @@ static int add_dfg_route_destinations(int route_id,
             return -1;
         }
     }
-    log_custom(LOG_DFG_INSTANTIATION, "Added %d destinations to route %d",
-               n_destinations, route_id);
+    log_custom(LOG_DFG_INSTANTIATION, "Added %d endpoints to route %d",
+               n_endpoints, route_id);
     return 0;
 }
 
@@ -38,10 +38,10 @@ static int spawn_dfg_routes(struct dfg_route **routes, int n_routes) {
                       dfg_route->id, dfg_route->msu_type->id);
             return -1;
         }
-        if (add_dfg_route_destinations(dfg_route->id,
-                                       dfg_route->destinations,
-                                       dfg_route->n_destinations) != 0) {
-            log_error("Error adding destinations to route %d", dfg_route->id);
+        if (add_dfg_route_endpoints(dfg_route->id,
+                                       dfg_route->endpoints,
+                                       dfg_route->n_endpoints) != 0) {
+            log_error("Error adding endpoints to route %d", dfg_route->id);
             return -1;
         }
     }

@@ -35,8 +35,8 @@ struct stat_sample {
     
 struct stat_sample *init_stat_samples(int max_stats, int n_samples);
 
-ssize_t deserialize_stat_samples(void *buffer, size_t buff_len, struct stat_sample *samples,
-                                 int n_samples);
+int deserialize_stat_samples(void *buffer, size_t buff_len, struct stat_sample *samples,
+                             int n_samples);
 
 ssize_t serialize_stat_samples(struct stat_sample *samples, int n_samples,
                                void *buffer, size_t buff_len);

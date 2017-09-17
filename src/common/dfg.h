@@ -15,7 +15,7 @@ struct dfg_vertex;
 #define MAX_RUNTIMES 4
 #define MAX_THREADS 32
 #define MAX_ROUTES 32
-#define MAX_ROUTE_DESTINATIONS 32
+#define MAX_ROUTE_ENDPOINTS 32
 #define MAX_INIT_DATA_LEN 32
 #define MAX_MSU_NAME_LEN 32
 #define MAX_MSU_TYPES 32
@@ -47,6 +47,7 @@ enum thread_mode {
     PINNED_THREAD  = 1,
     UNPINNED_THREAD = 2
 };
+enum thread_mode str_to_thead_mode(char *mode);
 
 #define MAX_MSU_PER_THREAD 8
 
@@ -73,16 +74,17 @@ struct dfg_meta_routing {
     int n_dst_types;
 };
 
-struct dfg_route_destination {
-    int key;
+struct dfg_route_endpoint {
+    uint32_t key;
     struct dfg_msu *msu;
 };
 
 struct dfg_route {
     int id;
+    struct dfg_runtime *runtime;
     struct dfg_msu_type *msu_type;
-    struct dfg_route_destination *destinations[MAX_ROUTE_DESTINATIONS];
-    int n_destinations;
+    struct dfg_route_endpoint *endpoints[MAX_ROUTE_ENDPOINTS];
+    int n_endpoints;
 };
 
 
@@ -90,7 +92,9 @@ enum blocking_mode {
     BLOCKING_MSU = 1,
     NONBLOCK_MSU = 2
 };
+enum blocking_mode str_to_msu_mode(char *mode);
 
+// Forward declaration; defined below
 struct dfg_dependency;
 
 struct dfg_msu_type {
@@ -155,10 +159,38 @@ struct dedos_dfg {
     int n_runtimes;
 };
 
-struct dfg_runtime *get_dfg_runtime(struct dedos_dfg *dfg, int id);
-struct dfg_msu_type *get_dfg_msu_type(struct dedos_dfg *dfg, int id);
-struct dfg_route *get_dfg_route(struct dedos_dfg *dfg, int id);
-struct dfg_msu *get_dfg_msu(struct dedos_dfg *dfg, int id);
-struct dfg_thread *get_dfg_thread(struct dfg_runtime *rt, int id);
+void set_dfg(struct dedos_dfg *dfg);
+
+struct dfg_runtime *get_dfg_runtime(unsigned int id);
+struct dfg_msu_type *get_dfg_msu_type(unsigned int id);
+struct dfg_route *get_dfg_route(unsigned int id);
+struct dfg_msu *get_dfg_msu(unsigned int id);
+struct dfg_thread *get_dfg_thread(struct dfg_runtime *rt, unsigned int id);
+struct dfg_route_endpoint *get_dfg_route_endpoint(struct dfg_route *route, unsigned int msu_id);
+
+enum blocking_mode str_to_blockin_mode(char *mode_str);
+uint8_t str_to_vertex_type(char *type_str);
+
+struct dfg_msu *copy_dfg_msu(struct dfg_msu *input);
+struct dfg_msu *init_dfg_msu(unsigned int id, struct dfg_msu_type *type, uint8_t vertex_type,
+                             enum blocking_mode mode, struct msu_init_data *init_data);
+int free_dfg_msu(struct dfg_msu *input);
+
+int schedule_dfg_msu(struct dfg_msu *msu, unsigned int runtime_id, unsigned int thread_id);
+int unschedule_dfg_msu(struct dfg_msu *msu);
+
+struct dfg_route *create_dfg_route(unsigned int id, struct dfg_msu_type *type,
+                                   unsigned int runtime_id);
+int delete_dfg_route(struct dfg_route *route);
+
+int add_dfg_route_to_msu(struct dfg_route *route, struct dfg_msu *msu);
+// TODO: del_dfg_route_from_msu
+
+struct dfg_route_endpoint *add_dfg_route_endpoint(struct dfg_msu *msu, uint32_t key,
+                                                  struct dfg_route *route);
+int del_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *ep);
+int mod_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *ep,
+                           uint32_t new_key);
+
 
 #endif //DFG_H_

@@ -30,18 +30,18 @@ struct dfg_msu msu_1 = REMOTE_MSU(1);
 struct dfg_msu msu_2 = REMOTE_MSU(2);
 struct dfg_msu msu_3 = REMOTE_MSU(3);
 
-struct dfg_route_destination dest1 = {10, &msu_1};
-struct dfg_route_destination dest2 = {20, &msu_2};
-struct dfg_route_destination dest3 = {30, &msu_3};
+struct dfg_route_endpoint dest1 = {10, &msu_1};
+struct dfg_route_endpoint dest2 = {20, &msu_2};
+struct dfg_route_endpoint dest3 = {30, &msu_3};
 
-struct dfg_route_destination *dests[] = {
+struct dfg_route_endpoint *dests[] = {
     &dest1, &dest2, &dest3
 };
 
-struct dfg_route_destination dest4 = {5, &msu_3};
-struct dfg_route_destination dest5 = {15, &msu_2};
+struct dfg_route_endpoint dest4 = {5, &msu_3};
+struct dfg_route_endpoint dest5 = {15, &msu_2};
 
-struct dfg_route_destination *dests_2[] = {
+struct dfg_route_endpoint *dests_2[] = {
     &dest4, &dest5
 };
 
@@ -49,8 +49,20 @@ struct dfg_msu_type type = {
     .id = 1
 };
 
-struct dfg_route route1 = {11, &type, {&dest1, &dest2, &dest3}, 3};
-struct dfg_route route2 = {22, &type, {&dest4, &dest5}, 2};
+struct dfg_route route1 = {
+    .id = 11,
+    .runtime = &local_runtime,
+    .msu_type = &type,
+    .endpoints = {&dest1, &dest2, &dest3},
+    .n_endpoints = 3
+};
+struct dfg_route route2 = {
+    .id = 22,
+    .runtime = &local_runtime,
+    .msu_type = &type,
+    .endpoints = {&dest4, &dest5},
+    .n_endpoints = 2
+};
 
 struct dfg_route *routes[] = {
     &route1, &route2
@@ -65,7 +77,7 @@ START_DEDOS_TEST(test_add_dfg_route_endpoints_success) {
     struct routing_table *table = get_routing_table(route_id);
     ck_assert(table != NULL);
 
-    ck_assert_int_eq(add_dfg_route_destinations(route_id, dests, 3), 0);
+    ck_assert_int_eq(add_dfg_route_endpoints(route_id, dests, 3), 0);
 
     ck_assert_int_eq(table->n_endpoints, 3);
     ck_assert_int_eq(table->keys[0], dest1.key);

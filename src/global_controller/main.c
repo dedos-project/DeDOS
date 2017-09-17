@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <string.h>
 #include "logging.h"
-#include "communication.h"
+#include "runtime_communication.h"
 #include "cli_interface.h"
 #include "scheduling.h"
 #include "dfg.h"

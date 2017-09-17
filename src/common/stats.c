@@ -108,8 +108,7 @@ static ssize_t deserialize_stat_sample(void *buffer, size_t buff_len, struct sta
     return sizeof(sample->hdr) + stat_size;
 }
 
-
-ssize_t deserialize_stat_samples(void *buffer, size_t buff_len, struct stat_sample *samples,
+int deserialize_stat_samples(void *buffer, size_t buff_len, struct stat_sample *samples,
                                  int n_samples) {
     struct stat_msg_hdr *hdr = buffer;
     if (buff_len < sizeof(*hdr)) {
@@ -123,7 +122,7 @@ ssize_t deserialize_stat_samples(void *buffer, size_t buff_len, struct stat_samp
 
     char *curr_buff = ((char *)buffer) + sizeof(*hdr);
     char *end_buff = curr_buff + buff_len;
-    for (int i=0; i < n_samples; i++) {
+    for (int i=0; i < hdr->n_samples; i++) {
         ssize_t consumed = deserialize_stat_sample(curr_buff, end_buff - curr_buff, &samples[i]);
         if (consumed < 0) {
             log_error("Error deserializing stat sample %d", i);
@@ -133,10 +132,10 @@ ssize_t deserialize_stat_samples(void *buffer, size_t buff_len, struct stat_samp
     }
 
     log_custom(LOG_STAT_SERIALIZATION, "Deserialized buffer of size %d into %d samples",
-               ((int)(curr_buff - (char*) buffer)), n_samples);
+               ((int)(curr_buff - (char*) buffer)), hdr->n_samples);
 
     if (curr_buff - (char*)buffer < buff_len) {
         log_warn("Entire buffer not used when deserializing stats");
     }
-    return curr_buff - (char*)buffer;
+    return hdr->n_samples;
 }

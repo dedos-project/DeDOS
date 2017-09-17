@@ -1,5 +1,4 @@
 #include "communication.h"
-#include "runtime_dfg.h"
 #include "logging.h"
 
 #include <arpa/inet.h>

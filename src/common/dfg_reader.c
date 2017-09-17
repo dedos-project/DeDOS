@@ -55,6 +55,8 @@ struct dedos_dfg *parse_dfg_json_file(const char *filename){
 
     struct dedos_dfg *dfg = calloc(1, sizeof(*dfg));
 
+    set_dfg(dfg);
+
     int rtn = parse_file_into_obj(filename, dfg, key_map);
 
     if (rtn >= 0){
@@ -111,7 +113,7 @@ INIT_OBJ_FN(init_runtime) {
 
 PARSE_OBJ_LIST_FN(set_runtimes, init_runtime);
 
-INIT_OBJ_FN(init_dfg_msu) {
+INIT_OBJ_FN(init_dfg_msu_from_json) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     int index = GET_OBJ_INDEX();
 
@@ -121,7 +123,7 @@ INIT_OBJ_FN(init_dfg_msu) {
     RETURN_OBJ(dfg->msus[index], MSUS);
 }
 
-PARSE_OBJ_LIST_FN(set_msus, init_dfg_msu);
+PARSE_OBJ_LIST_FN(set_msus, init_dfg_msu_from_json);
 
 INIT_OBJ_FN(init_dfg_msu_type) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
@@ -221,9 +223,8 @@ PARSE_FN(set_msu_vertex_type) {
 
 PARSE_FN(set_msu_type) {
     struct dfg_msu *vertex = GET_PARSE_OBJ();
-    struct dedos_dfg *dfg = get_root_jsmn_obj();
 
-    struct dfg_msu_type *type = get_dfg_msu_type(dfg, GET_INT_TOK());
+    struct dfg_msu_type *type = get_dfg_msu_type(GET_INT_TOK());
     if (type == NULL) {
         // Return once type has been instantiated
         return 1;
@@ -349,7 +350,7 @@ PARSE_OBJ_LIST_FN(set_rt_routes, init_route);
 PARSE_FN(set_route_id) {
     struct dfg_route *route = GET_PARSE_OBJ();
     int id = GET_INT_TOK();
-    struct dfg_route *existing = get_dfg_route(get_root_jsmn_obj(), id);
+    struct dfg_route *existing = get_dfg_route(id);
     if (existing != NULL) {
         log_error("Route with ID %d exists twice in DFG", id);
         return -1;
@@ -362,7 +363,7 @@ PARSE_FN(set_route_id) {
 PARSE_FN(set_route_type) {
     struct dfg_route *route = GET_PARSE_OBJ();
     int type_id = GET_INT_TOK();
-    struct dfg_msu_type *type = get_dfg_msu_type(get_root_jsmn_obj(), type_id);
+    struct dfg_msu_type *type = get_dfg_msu_type(type_id);
     if (type == NULL) {
         // Return once type is instantiated
         return -1;
@@ -371,29 +372,29 @@ PARSE_FN(set_route_type) {
     return 0;
 }
 
-INIT_OBJ_FN(init_destination) {
+INIT_OBJ_FN(init_endpoint) {
     struct dfg_route *route = GET_PARSE_OBJ();
 
     int index = GET_OBJ_INDEX();
-    route->n_destinations++;
-    route->destinations[index] = calloc(1, sizeof(**route->destinations));
+    route->n_endpoints++;
+    route->endpoints[index] = calloc(1, sizeof(**route->endpoints));
 
-    RETURN_OBJ(route->destinations[index], DESTINATIONS);
+    RETURN_OBJ(route->endpoints[index], DESTINATIONS);
 }
 
-PARSE_OBJ_LIST_FN(set_route_destinations, init_destination);
+PARSE_OBJ_LIST_FN(set_route_endpoints, init_endpoint);
 
 PARSE_FN(set_dest_key) {
-    struct dfg_route_destination *dest = GET_PARSE_OBJ();
+    struct dfg_route_endpoint *dest = GET_PARSE_OBJ();
     dest->key = GET_INT_TOK();
     return 0;
 }
 
 PARSE_FN(set_dest_msu) {
-    struct dfg_route_destination *dest = GET_PARSE_OBJ();
+    struct dfg_route_endpoint *dest = GET_PARSE_OBJ();
     int msu_id = GET_INT_TOK();
 
-    struct dfg_msu *msu = get_dfg_msu(get_root_jsmn_obj(), msu_id);
+    struct dfg_msu *msu = get_dfg_msu(msu_id);
     if (msu == NULL) {
         // Wait for MSU to be instantiated
         log_custom(LOG_DFG_PARSING, "MSU %d is not yet instantiated", msu_id);
@@ -409,7 +410,7 @@ PARSE_FN(set_source_types) {
     bool found_types = true;
     START_ITER_TOK_LIST(i) {
         int str_type = GET_INT_TOK();
-        struct dfg_msu_type *type = get_dfg_msu_type(get_root_jsmn_obj(), str_type);
+        struct dfg_msu_type *type = get_dfg_msu_type(str_type);
         if (type == NULL) {
             // Wait for type to be instantiated
             log_custom(LOG_DFG_PARSING, "Type %d is not yet instantiated", str_type);
@@ -430,7 +431,7 @@ PARSE_FN(set_dst_types) {
     int i;
     START_ITER_TOK_LIST(i) {
         int str_type = GET_INT_TOK();
-        struct dfg_msu_type *type = get_dfg_msu_type(get_root_jsmn_obj(), str_type);
+        struct dfg_msu_type *type = get_dfg_msu_type(str_type);
         if (type == NULL) {
             log_custom(LOG_DFG_PARSING, "Type %d is not yet instantiated", str_type);
             found_types = false;
@@ -449,9 +450,8 @@ PARSE_FN(set_dst_types) {
 PARSE_FN(set_dep_type) {
     struct dfg_dependency *dep = GET_PARSE_OBJ();
 
-    struct dedos_dfg *dfg = get_root_jsmn_obj();
     int type_id = GET_INT_TOK();
-    struct dfg_msu_type *type = get_dfg_msu_type(dfg, type_id);
+    struct dfg_msu_type *type = get_dfg_msu_type(type_id);
 
     if (type == NULL) {
         // Return once type has been instantiated
@@ -480,7 +480,7 @@ PARSE_FN(set_msu_runtime) {
     struct dfg_scheduling *sched = GET_PARSE_OBJ();
 
     int id = GET_INT_TOK();
-    struct dfg_runtime *rt = get_dfg_runtime(get_root_jsmn_obj(),id);
+    struct dfg_runtime *rt = get_dfg_runtime(id);
     if (rt == NULL) {
         log_custom(LOG_DFG_PARSING, "Runtime %d is not yet instantiated", id);
         return 1;
@@ -517,7 +517,7 @@ PARSE_FN(set_msu_routes) {
     START_ITER_TOK_LIST(i) {
         log_custom(LOG_DFG_PARSING, "MSU_ROUTE TOK: %s", GET_STR_TOK());
         int route_id = GET_INT_TOK();
-        struct dfg_route *route = get_dfg_route(get_root_jsmn_obj(), route_id);
+        struct dfg_route *route = get_dfg_route(route_id);
         if (route == NULL) {
             log_custom(LOG_DFG_PARSING, "Route %d not yet instantiated for msu", route_id);
             set_routes = false;
@@ -572,7 +572,7 @@ static struct key_mapping key_map[] = {
 
     { "id", ROUTES, set_route_id },
     { "type", ROUTES, set_route_type },
-    { "destinations", ROUTES, set_route_destinations },
+    { "endpoints", ROUTES, set_route_endpoints },
 
     { "key", DESTINATIONS, set_dest_key },
     { "msu", DESTINATIONS, set_dest_msu },

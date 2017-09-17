@@ -9,11 +9,9 @@
 
 #include "scheduling.h"
 #include "logging.h"
-#include "controller_tools.h"
-#include "cli_interface.h"
 #include "communication.h"
+#include "cli_interface.h"
 #include "dedos_msu_msg_type.h"
-#include "control_protocol.h"
 #include "dfg.h"
 #include "api.h"
 

@@ -5,553 +5,258 @@
 #include "logging.h"
 #include "api.h"
 #include "dfg.h"
-#include "dfg_writer.h"
-#include "control_protocol.h"
 #include "communication.h"
-#include "ip_utils.h"
-#include "tmp_msu_headers.h"
+#include "msu_ids.h"
+#include "controller_dfg.h"
 
-#define SLEEP_AMOUNT_US 100000
+int add_msu(unsigned int msu_id, unsigned int type_id,
+            char *init_data_c, char *msu_mode, char *vertex_type_c,
+            unsigned int thread_id, unsigned int runtime_id) {
 
-/**
- * Add a new MSU to the DFG
- * @param msu_data: data to be used by the new MSU's init function
- * @param msu_id: ID for the new MSU
- * @param msu_type: type of the new MSU
- * @param msu_mode: blocking/non-blocking
- * @param thread_id: thread on which to place the new MSU
- * @param runtime_sock: target runtime
- */
-int add_msu(char *msu_data, int msu_id, int msu_type,
-            char *msu_mode, int thread_id, int runtime_sock) {
-
-    struct dfg_config *dfg = NULL;
-    struct dfg_vertex *new_msu = NULL;
-
-    dfg = get_dfg();
-
-    if (get_msu_from_id(msu_id) != NULL) {
-        debug("An MSU with ID %d is already registered", msu_id);
+    struct dfg_msu_type *type = get_dfg_msu_type(type_id);
+    if (type == NULL) {
+        log_error("Could not get MSU type %d", type_id);
         return -1;
     }
 
-    int endpoint_index = -1;
-    uint32_t num_pinned_threads;
-    endpoint_index = get_sock_endpoint_index(runtime_sock);
-    if (endpoint_index > -1) {
-        pthread_mutex_lock(&dfg->dfg_mutex);
-
-        new_msu = malloc(sizeof(struct dfg_vertex));
-        if (new_msu == NULL) {
-            debug("ERROR: %s", "could not allocate memory for new msu");
-        }
-
-        memcpy(new_msu->msu_mode, msu_mode, strlen(msu_mode));
-        new_msu->msu_type = msu_type;
-        new_msu->msu_id = msu_id;
-
-        new_msu->scheduling.runtime = dfg->runtimes[endpoint_index];
-        new_msu->scheduling.thread_id = (uint32_t)thread_id;
-        // TODO: Assign actual scheduling.thread pointer
-
-        num_pinned_threads = dfg->runtimes[endpoint_index]->num_pinned_threads;
-
-        pthread_mutex_unlock(&dfg->dfg_mutex);
-
-        if (num_pinned_threads == 0 || num_pinned_threads < thread_id) {
-            debug("Destination runtime has %d worker threads. Can't fit new msu on thread %d",
-                  num_pinned_threads, thread_id);
-            free(new_msu);
-            return -1;
-        }
-    } else {
-        debug("ERROR: Couldn't find endpoint index for sock: %d", runtime_sock);
+    enum blocking_mode mode = str_to_msu_mode(msu_mode);
+    if (mode == 0) {
+        log_error("Could not get blocking mode from %s", msu_mode);
         return -1;
     }
 
-    set_msu(new_msu);
+    uint8_t vertex_type = str_to_vertex_type(vertex_type_c);
 
-    print_dfg();
+    struct msu_init_data init_data;
+    strcpy(init_data.init_data, init_data_c);
 
-    if (send_addmsu_msg(new_msu, msu_data) == -1) {
-        debug("Could not send addmsu command to runtime");
-        free(new_msu);
+    struct dfg_msu *msu = init_dfg_msu(msu_id, type, vertex_type, mode, &init_data);
+
+    if (msu == NULL) {
+        log_error("Error innitializing dfg MSU %d", msu_id);
+        return -1;
+    }
+
+    int rtn = schedule_dfg_msu(msu, runtime_id, thread_id);
+    if (rtn < 0) {
+        log_error("Error scheduling MSU on DFG");
+        return -1;
+    }
+
+    if (send_create_msu_msg(msu) == -1) {
+        log_error("Could not send create-msu-msg to runtime %u", runtime_id);
+        unschedule_dfg_msu(msu);
         return -1;
     } else {
         return 0;
     }
 }
 
+int remove_msu(unsigned int id) {
+    struct dfg_msu *msu = get_dfg_msu(id);
 
-/**
- * Order the runtime to spawn a new MSU on a given thread
- * @param struct dfg_vertex: the new MSU object
- * @param char *data: initial data used by the MSU's init function
- * @return -1/0: failure/success
- */
-//FIXME: assume msu creation goes well. We need some kind of acknowledgement from the runtime
-int send_addmsu_msg(struct dfg_vertex *msu, char *init_data) {
-    struct dedos_control_msg control_msg;
-    size_t data_len;
-    char data[MAX_INIT_DATA_LEN];
-    memset(data, '\0', MAX_INIT_DATA_LEN);
-
-    data_len = sprintf(data,"%s %d ", msu->msu_mode, msu->scheduling.thread_id);
-
-    //TODO: create a template system for MSU such that we can query initial data.
-    if (msu->msu_type == DEDOS_SOCKET_HANDLER_MSU_ID) {
-        struct socket_handler_init_payload *ssl_init_data =
-            malloc(sizeof(struct socket_handler_init_payload));
-
-        ssl_init_data->port = 8080;
-        ssl_init_data->domain = AF_INET;
-        ssl_init_data->type = SOCK_STREAM;
-        ssl_init_data->protocol = 0;
-        ssl_init_data->bind_ip = INADDR_ANY;
-        /*unsigned char buf[sizeof(struct in_addr)];
-        ssl_inet_pton(AF_INET, "192.168.0.1", buf);
-        ssl_init_data->bind_ip = buf;*/
-        ssl_init_data->target_msu_type = 502; //DEDOS_SSL_REQUEST_ROUTING_MSU_ID;
-
-        size_t len = sizeof(struct socket_handler_init_payload);
-        memcpy(data + data_len, ssl_init_data, len);
-        free(ssl_init_data);
-        data_len += len;
-    } else {
-        if (init_data != NULL) {
-            memcpy(data + data_len, init_data, strlen(init_data));
-            data_len += strlen(init_data);
-        }
+    if (msu == NULL) {
+        log_error("MSU %d not scheduled!");
+        return -1;
     }
 
-    char create_msu_msg_buffer[sizeof(struct manage_msu_control_payload) + data_len];
+    int rtn = send_delete_msu_msg(msu);
 
-    struct manage_msu_control_payload *create_msu_msg =
-        (struct manage_msu_control_payload*) create_msu_msg_buffer;
-    create_msu_msg->msu_id         = msu->msu_id;
-    create_msu_msg->msu_type       = msu->msu_type;
-    create_msu_msg->init_data_size = data_len;
-    create_msu_msg->init_data      = data;
-    memcpy(create_msu_msg_buffer + sizeof(*create_msu_msg), data, data_len);
+    if (rtn < 0) {
+        log_error("Error sending delete MSU msg for MSU %d", id);
+        return -1;
+    }
 
-    debug("sock:%d, msu_type: %d, msu id: %d, init_data: %s, init_data_size: %d\n",
-           msu->scheduling.runtime->sock,
-           create_msu_msg->msu_type,
-           create_msu_msg->msu_id,
-           create_msu_msg->init_data,
-           create_msu_msg->init_data_size);
-
-    control_msg.msg_type = ACTION_MESSAGE;
-    control_msg.msg_code = CREATE_MSU;
-    control_msg.header_len = sizeof(struct dedos_control_msg); //might be redundant
-    control_msg.payload_len =
-        sizeof(struct manage_msu_control_payload) + create_msu_msg->init_data_size;
-    control_msg.payload = create_msu_msg_buffer;
-    send_control_msg(msu->scheduling.runtime->sock, &control_msg);
-
-    usleep(SLEEP_AMOUNT_US);
+    rtn = unschedule_dfg_msu(msu);
+    if (rtn < 0) {
+        log_error("Error unscheduling DFG msu");
+        return -1;
+    }
 
     return 0;
 }
 
-int del_msu( int msu_id, int msu_type, int runtime_sock ) {
-    struct manage_msu_control_payload delete_msg = {
-        .msu_id = msu_id,
-        .msu_type = (unsigned int) msu_type,
-        .init_data_size = 0,
-        .init_data = NULL
-    };
+int create_route(unsigned int route_id, unsigned int type_id, unsigned int runtime_id) {
+    struct dfg_route *route = create_dfg_route(route_id, type_id, runtime_id);
+    if (route == NULL) {
+        log_error("Could not create route %u in dfg", route_id);
+        return -1;
+    }
 
-    log_debug("\nDelete MSU msg:\n Sock: %d\n msu_type: %d\n msu_id: %d",
-              runtime_sock, msu_type, msu_id);
-
-    struct dedos_control_msg control_msg = {
-        .msg_type = ACTION_MESSAGE,
-        .msg_code = DESTROY_MSU,
-        .header_len = sizeof(control_msg),
-        .payload_len = sizeof(delete_msg),
-        .payload = &delete_msg
-    };
-
-    return send_control_msg(runtime_sock, &control_msg);
-}
-
-/**
- * Attach a route to an MSU and instruct a runtime to do so
- * @param msu_id: ID of target MSU
- * @param route_id: ID of target route
- * @param runtime_sock: listening socket for target runtime
- * @return -1/0: failure/success
- */
-int add_route(int msu_id, int route_id, int runtime_sock){
-    // First, update the DFG
-    // (this shows that the operation should be valid, and is a stop-gap measure until
-    // acknowledgement from the runtime is implemented)
-
-    int rt_index = get_sock_endpoint_index(runtime_sock);
-    int rtn = add_route_to_msu_vertex(rt_index, msu_id, route_id);
-
+    int rtn = send_create_route_msg(route, runtime_id);
     if (rtn < 0) {
-        log_error("Error adding route to vertex! Not proceeding!");
+        log_error("Error sending create route message");
+        // TODO: Delete route
         return -1;
     }
-
-    rtn = send_addroute_msg(route_id, msu_id, runtime_sock);
-    return rtn;
+    return 0;
 }
 
-/**
- * Instruct a runtime to do attach a route to an MSU
- * @param msu_id: ID of target MSU
- * @param route_id: ID of target route
- * @param runtime_sock: listening socket for target runtime
- * @return -1/0: failure/success
- */
-int send_addroute_msg(int route_id, int msu_id, int runtime_sock) {
-    struct dfg_vertex *msu = get_msu_from_id(msu_id);
-    int rtn;
-
-    struct manage_msu_control_payload add_route_msg = {
-        .msu_id = msu_id,
-        .msu_type = (unsigned int) msu->msu_type,
-        .route_id = route_id,
-        .init_data_size = 0,
-        .init_data = NULL
-    };
-
-    debug("sock:%d, msu_type: %d, msu id: %d, route_id: %d, init_data: %s, init_data_size: %d\n",
-           msu->scheduling.runtime->sock,
-           add_route_msg.msu_type,
-           add_route_msg.msu_id,
-           add_route_msg.route_id,
-           add_route_msg.init_data,
-           add_route_msg.init_data_size);
-
-    struct dedos_control_msg control_msg = {
-        .msg_type = ACTION_MESSAGE,
-        .msg_code = ADD_ROUTE_TO_MSU,
-        .header_len = sizeof(control_msg),
-        .payload_len = sizeof(add_route_msg),
-        .payload = &add_route_msg
-    };
-
-    rtn = send_control_msg(runtime_sock, &control_msg);
-    usleep(SLEEP_AMOUNT_US);
-    return rtn;
-}
-
-int del_route(int msu_id, int route_id, int runtime_sock){
-    // First, update the DFG
-    // (this shows that the operation should be valid, and is a stop-gap measure until
-    // acknowledgement from the runtime is implemented)
-
-    int rt_index = get_sock_endpoint_index(runtime_sock);
-    int rtn = del_route_from_msu_vertex(rt_index, msu_id, route_id);
-
-    if ( rtn < 0 ) {
-        log_error("Error deleting route from vertex! Not proceeding!");
+int delete_route(unsigned int route_id) {
+    struct dfg_route *route = get_dfg_route(route_id);
+    if (route == NULL) {
+        log_error("Route %u does not exist", route_id);
         return -1;
     }
-
-    struct dfg_vertex *msu = get_msu_from_id(msu_id);
-
-    struct manage_msu_control_payload del_route_msg = {
-        .msu_id = msu_id,
-        .msu_type = (unsigned int) msu->msu_type,
-        .route_id = route_id,
-        .init_data_size = 0,
-        .init_data = NULL
-    };
-
-    struct dedos_control_msg control_msg = {
-        .msg_type = ACTION_MESSAGE,
-        .msg_code = ADD_ROUTE_TO_MSU,
-        .header_len = sizeof(control_msg),
-        .payload_len = sizeof(del_route_msg),
-        .payload = &del_route_msg
-    };
-
-    rtn =send_control_msg(runtime_sock, &control_msg);
-    usleep(SLEEP_AMOUNT_US);
-    return rtn;
-}
-
-/**
- * Attach an endpoint to a route and instruct a runtime to do so
- * @param msu_id: ID of target MSU
- * @param route_id: ID of target route
- * @param runtime_sock: listening socket for target runtime
- * @return -1/0: failure/success
- */
-int add_endpoint(int msu_id, int route_num, unsigned int range_end, int runtime_sock){
-    int rt_index = get_sock_endpoint_index(runtime_sock);
-    int rtn = dfg_add_route_endpoint(rt_index, route_num, msu_id, range_end);
-
-    if (rtn < 0 ){
-        log_error("Error adding route endpoint! Not proceeding!");
-        return -1;
-    }
-
-    return send_addendpoint_msg(msu_id, rt_index, route_num, range_end, runtime_sock);
-}
-
-/**
- * Instruct a runtime to add an endpoint to a route
- * @param msu_id: ID of target MSU
- * @param route_id: ID of target route
- * @param runtime_sock: listening socket for target runtime
- * @return -1/0: failure/success
- */
-int send_addendpoint_msg(int msu_id, int rt_index, int route_num,
-                         unsigned int range_end, int runtime_sock) {
-    struct dfg_vertex *msu = get_msu_from_id(msu_id);
-    int rtn;
-
-    enum locality locality;
-    uint32_t ip = 0;
-    if (get_sock_endpoint_index(msu->scheduling.runtime->sock) != rt_index) {
-        locality = MSU_IS_REMOTE;
-        ip = msu->scheduling.runtime->ip;
-    } else {
-        locality = MSU_IS_LOCAL;
-    }
-
-    struct manage_route_control_payload route_msg = {
-        .msu_id = msu_id,
-        .msu_type_id = msu->msu_type,
-        .route_id = route_num,
-        .key_range = range_end,
-        .locality = locality,
-        .ipv4 = ip
-    };
-
-    debug("sock:%d, msu_type: %d, msu id: %d, route_id: %d, key_range: %d, loc: %d, ipv4: %d\n",
-           runtime_sock,
-           route_msg.msu_type_id,
-           route_msg.msu_id,
-           route_msg.route_id,
-           route_msg.key_range,
-           route_msg.locality,
-           route_msg.ipv4);
-
-    struct dedos_control_msg control_msg = {
-        .msg_type = ACTION_MESSAGE,
-        .msg_code = ROUTE_ADD_ENDPOINT,
-        .header_len = sizeof(control_msg),
-        .payload_len = sizeof(route_msg),
-        .payload = &route_msg
-    };
-
-    rtn = send_control_msg(runtime_sock, &control_msg);
-    usleep(SLEEP_AMOUNT_US);
-    return rtn;
-}
-
-int del_endpoint(int msu_id, int route_id, int runtime_sock) {
-    int rt_index = get_sock_endpoint_index(runtime_sock);
-    int rtn = dfg_del_route_endpoint(rt_index, route_id, msu_id);
-
+    int rtn = send_delete_route_msg(route);
     if (rtn < 0) {
-        log_error("Error adding route endpoint! Not proceeding!");
+        log_error("Error sending delete route message");
         return -1;
     }
 
-    struct dfg_vertex *msu = get_msu_from_id(msu_id);
-
-    struct manage_route_control_payload route_msg = {
-        .msu_id = msu_id,
-        .msu_type_id = msu->msu_type,
-        .route_id = route_id,
-    };
-
-    struct dedos_control_msg control_msg = {
-        .msg_type = ACTION_MESSAGE,
-        .msg_code = ROUTE_DEL_ENDPOINT,
-        .header_len = sizeof(control_msg),
-        .payload_len = sizeof(route_msg),
-        .payload = &route_msg
-    };
-
-    rtn = send_control_msg(runtime_sock, &control_msg);
-    usleep(SLEEP_AMOUNT_US);
-    return rtn;
-}
-
-int mod_endpoint(int msu_id, int route_id, unsigned int range_end, int runtime_sock) {
-    // TODO: This is inefficient! It will do for now...
-    int rt_index = get_sock_endpoint_index(runtime_sock);
-    int rtn = dfg_del_route_endpoint(rt_index, route_id, msu_id);
-    if (rtn < 0){
-        log_error("Error removing route endpoint for modification! Not proceeding!");
+    rtn = delete_dfg_route(route);
+    if (rtn < 0) {
+        log_error("Error deleting DFG route");
         return -1;
     }
-    rtn = dfg_add_route_endpoint(rt_index, route_id, msu_id, range_end);
-    if (rtn < 0){
-        log_error("Error re-adding route endpoint for modification! Not proceeding!");
-        return -1;
-    }
-
-    struct dfg_vertex *msu = get_msu_from_id(msu_id);
-
-    struct manage_route_control_payload route_msg = {
-        .msu_id = msu_id,
-        .msu_type_id = msu->msu_type,
-        .route_id = route_id,
-        .key_range = range_end
-    };
-
-    struct dedos_control_msg control_msg = {
-        .msg_type = ACTION_MESSAGE,
-        .msg_code = ROUTE_MOD_ENDPOINT,
-        .header_len = sizeof(control_msg),
-        .payload_len = sizeof(route_msg),
-        .payload = &route_msg
-    };
-
-    rtn = send_control_msg(runtime_sock, &control_msg);
-    usleep(SLEEP_AMOUNT_US);
-    return rtn;
-}
-
-int create_worker_thread(int runtime_sock) {
-    struct dedos_control_msg control_msg;
-    uint32_t num_pinned_threads, num_cores;
-    int ret;
-    struct dfg_config *dfg;
-    struct dfg_runtime_endpoint *rt;
-
-    dfg = get_dfg();
-
-    int endpoint_index = -1;
-    endpoint_index = get_sock_endpoint_index(runtime_sock);
-    if (endpoint_index > -1) {
-        pthread_mutex_lock(&dfg->dfg_mutex);
-
-        rt = dfg->runtimes[endpoint_index];
-        num_pinned_threads = rt->num_pinned_threads;
-        num_cores = rt->num_cores;
-
-        pthread_mutex_unlock(&dfg->dfg_mutex);
-
-        if (num_cores == (num_pinned_threads + 1)) {
-            debug("Destination runtime is maxed out. Cores: %u, Pinned threads: %u",
-                    num_cores, num_pinned_threads);
-            return -1;
-        }
-    } else {
-        debug("Couldn't find endpoint index for sock: %d", runtime_sock);
-        return -1;
-    }
-
-    control_msg.msg_type = ACTION_MESSAGE;
-    control_msg.msg_code = CREATE_PINNED_THREAD;
-    control_msg.payload_len = 0;
-    control_msg.header_len = sizeof(struct dedos_control_msg);
-
-    ret = send_control_msg(runtime_sock, &control_msg);
-
-    if (ret == 0) {
-        pthread_mutex_lock(&dfg->dfg_mutex);
-
-        struct runtime_thread *new_thread = NULL;
-        new_thread = malloc(sizeof(struct runtime_thread));
-        if (new_thread == NULL) {
-            debug("Could not allocate memory for runtime thread structure");
-            return -1;
-        }
-
-        new_thread->id = rt->num_threads;
-        new_thread->mode = 1;
-        new_thread->utilization = 0;
-        new_thread->num_msus = 0;
-
-        int new_thread_index = rt->num_threads;
-        rt->threads[new_thread_index] = new_thread;
-        rt->num_pinned_threads++;
-        rt->num_threads++;
-
-        pthread_mutex_unlock(&dfg->dfg_mutex);
-    } else {
-        debug("Failed to send create worker thread command to runtime");
-        return ret;
-    }
-
-    return ret;
-
-}
-
-int add_runtime(char *runtime_ip, int runtime_sock) {
-    // prepare data to update dfg
-    struct dedos_dfg_manage_msg *dfg_manage_msg = malloc(sizeof(struct dedos_dfg_manage_msg));
-    dfg_manage_msg->msg_type = ACTION_MESSAGE;
-    dfg_manage_msg->msg_code = RUNTIME_ENDPOINT_ADD;
-    dfg_manage_msg->header_len = sizeof(struct dedos_dfg_manage_msg);
-    dfg_manage_msg->payload_len = sizeof(struct dedos_dfg_add_endpoint_msg *);
-
-    struct dedos_dfg_add_endpoint_msg *endpoint_msg =
-        malloc(sizeof(struct dedos_dfg_add_endpoint_msg));
-
-    endpoint_msg->runtime_sock = runtime_sock;
-
-
-    struct dfg_config *dfg = NULL;
-    dfg = get_dfg();
-
-    if (strcmp(runtime_ip, "127.0.0.1") == 0) {
-        //maybe that lock is useless as ctl's ip is not expected to change
-        pthread_mutex_lock(&dfg->dfg_mutex);
-        strncpy(endpoint_msg->runtime_ip, dfg->global_ctl_ip, INET_ADDRSTRLEN);
-        pthread_mutex_unlock(&dfg->dfg_mutex);
-
-    } else {
-        strncpy(endpoint_msg->runtime_ip, runtime_ip, INET_ADDRSTRLEN);
-    }
-
-    dfg_manage_msg->payload = endpoint_msg;
-
-    update_dfg(dfg_manage_msg);
-    print_dfg();
 
     return 0;
 }
 
-/**
- * Display an MSU stats on stdout. This is a temporary solution before returning a data structure
- * exploitatable by anyone calling this API function
- * @param msu_id
- * @return none
- */
-void show_stats(int msu_id) {
-    struct dfg_vertex *msu = get_msu_from_id(msu_id);
-    int i;
-
-    printf("queue_item_processed\n");
-    printf("value, timestamp\n");
-    for (i = 0; i < RRDB_ENTRIES; ++i) {
-        if (msu->statistics.queue_items_processed.time[i].tv_sec > 0) {
-            printf("%d, %d\n",
-                    msu->statistics.queue_items_processed.data[i],
-                    msu->statistics.queue_items_processed.time[i]);
-        }
+int add_route_to_msu(unsigned int msu_id, unsigned int route_id) {
+    struct dfg_route *route = get_dfg_route(route_id);
+    if (route == NULL) {
+        log_error("Could not retrieve route %u from dfg", route_id);
+        return -1;
+    }
+    struct dfg_msu *msu = get_dfg_msu(msu_id);
+    if (msu == NULL) {
+        log_error("Could not retrieve MSU %u from DFG", msu_id);
+        return -1;
     }
 
-    printf("data_queue_size\n");
-    printf("value, timestamp\n");
-    for (i = 0; i < RRDB_ENTRIES; ++i) {
-        if (msu->statistics.queue_length.time[i].tv_sec > 0) {
-            printf("%d, %d\n",
-                    msu->statistics.queue_length.data[i],
-                    msu->statistics.queue_length.time[i]);
-        }
+    int rtn = add_route_to_msu(route, msu);
+
+    if (rtn < 0) {
+        log_error("Error adding route to MSU");
+        return -1;
     }
 
-    printf("memory_allocated\n");
-    printf("value, timestamp\n");
-    for (i = 0; i < RRDB_ENTRIES; ++i) {
-        if (msu->statistics.memory_allocated.time[i].tv_sec > 0) {
-            printf("%d, %d\n",
-                    msu->statistics.memory_allocated.data[i],
-                    msu->statistics.memory_allocated.time[i]);
-        }
+    rtn = send_add_route_to_msu_msg(route, msu);
+    if (rtn < 0) {
+        log_error("Error sending add route to MSU msg");
+        // TODO: Remove route from MSU
+        return -1;
     }
 }
+
+int add_endpoint(unsigned int msu_id, uint32_t key, unsigned int route_id) {
+    struct dfg_route *route = get_dfg_route(route_id);
+    if (route == NULL) {
+        log_error("Could not retrieve route %u from dfg", route_id);
+        return -1;
+    }
+    struct dfg_msu *msu = get_dfg_msu(msu_id);
+    if (msu == NULL) {
+        log_error("Could not retrieve MSU %u from DFG", msu_id);
+        return -1;
+    }
+
+    struct dfg_route_endpoint *endpoint = add_dfg_route_endpoint(msu, key, route);
+    if (endpoint == NULL) {
+        log_error("Error adding MSU to route");
+        return -1;
+    }
+
+    int rtn = send_add_endpoint_msg(route, endpoint);
+    if (rtn < 0) {
+        log_error("Error sending add endpoint message");
+        // TODO: Remove endpoint
+        return -1;
+    }
+    return 0;
+}
+
+int del_endpoint(unsigned int msu_id, unsigned int route_id) {
+    struct dfg_route *route = get_dfg_route(route_id);
+    if (route == NULL) {
+        log_error("Could not retrieve route %u from dfg", route_id);
+        return -1;
+    }
+
+    struct dfg_route_endpoint *ep = get_dfg_route_endpoint(route, msu_id);
+    if (ep == NULL) {
+        log_error("Could not get endpoint %u from dfg route", msu_id);
+        return -1;
+    }
+
+    int rtn = send_del_endpoint_msg(route, ep);
+    if (rtn < 0) {
+        log_error("Error sending delete endpoint message");
+        return -1;
+    }
+
+    rtn = del_dfg_route_endpoint(route, ep);
+    if (rtn < 0) {
+        log_error("Error deleting endpoint from DFG route");
+        return -1;
+    }
+
+    return 0;
+}
+
+int mod_endpoint(unsigned int msu_id, uint32_t key, unsigned int route_id) {
+    struct dfg_route *route = get_dfg_route(route_id);
+    if (route == NULL) {
+        log_error("Could not retrieve route %u from dfg", route_id);
+        return -1;
+    }
+
+    struct dfg_route_endpoint *ep = get_dfg_route_endpoint(route, msu_id);
+    if (ep == NULL) {
+        log_error("Could not get endpoint %u from dfg route", msu_id);
+        return -1;
+    }
+
+    int rtn = mod_dfg_route_endpoint(route, ep, key);
+    if (rtn < 0) {
+        log_error("Could not modify DFG route endpoint");
+        return -1;
+    }
+
+    rtn = send_mod_endpoint_msg(route, ep);
+    if (rtn < 0) {
+        log_error("Error sending message to modify route endpoint");
+        return -1;
+    }
+    return 0;
+}
+
+int create_thread(unsigned int thread_id, unsigned int runtime_id, char *mode) {
+    struct dfg_runtime *rt = get_dfg_runtime(runtime_id);
+    if (rt == NULL) {
+        log_error("could not retrieve runtime %u from dfg", runtime_id);
+        return -1;
+    }
+
+    struct dfg_thread *thread = get_dfg_thread(rt, thread_id);
+    if (thread != NULL) {
+        log_error("Thread %u already exists on runtime %u", thread_id, runtime_id);
+        return -1;
+    }
+
+    enum thread_mode mode_e = str_to_mode(mode);
+    if (mode_e == 0) {
+        log_error("Could not get mode from %s", mode);
+        return -1;
+    }
+
+    thread = create_dfg_thread(rt, thread_id, mode_e);
+    if (thread == NULL) {
+        log_error("Error creating dfg thread");
+        return -1;
+    };
+
+    int rtn = send_create_thread_msg(thread, rt);
+    if (rtn < 0) {
+        log_error("Error sending create_thread_msg");
+        return -1;
+    }
+    return 0;
+}
+
+int show_stats(unsigned int msu_id) {
+    // TODO
+    return 0;
+}
+

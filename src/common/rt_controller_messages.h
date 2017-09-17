@@ -13,6 +13,8 @@ struct rt_controller_msg_hdr {
 
 struct rt_controller_init_msg {
     unsigned int runtime_id;
+    uint32_t ip;
+    int port;
 };
 
 #endif

@@ -33,8 +33,9 @@ int init_runtime_dfg(char *filename, int runtime_id) {
         log_error("Error initializing DFG");
         return -1;
     }
+    set_dfg(DFG);
 
-    LOCAL_RUNTIME = get_dfg_runtime(DFG, runtime_id);
+    LOCAL_RUNTIME = get_dfg_runtime(runtime_id);
     if (LOCAL_RUNTIME == NULL) {
         log_error("Error finding runtime %d in DFG %s",
                   runtime_id, filename);
