@@ -49,8 +49,8 @@ START_DEDOS_TEST(test_serialize_and_deserialize_stat_sample) {
     for (int i=0; i<n_samples; i++) {
         init_stat_sample(max_stats, &samples_out[i]);
     }
-    ssize_t deser_size  = deserialize_stat_samples(buffer, buffer_size, samples_out, n_samples);
-    ck_assert_int_eq(deser_size, buffer_size);
+    int n_samples_out  = deserialize_stat_samples(buffer, buffer_size, samples_out, n_samples);
+    ck_assert_int_eq(n_samples_out, n_samples);
     for (int i=0; i<n_samples; i++) {
         assert_samples_match(&samples_out[i], &samples[i]);
     }

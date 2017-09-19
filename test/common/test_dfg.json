@@ -24,7 +24,7 @@
             {
                 "id": 2,
                 "type": 100,
-                "destinations": [
+                "endpoints": [
                 {
                     "key": 1,
                     "msu": 2
@@ -33,14 +33,14 @@
             {
                 "id": 3,
                 "type": 100,
-                "destinations": [
+                "endpoints": [
                 {
                     "key": 1,
                     "msu": 3
                 }]
             }]
         }
-    ]
+    ],
     "MSUs": [
             {
                 "id": 1,
