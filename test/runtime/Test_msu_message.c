@@ -52,7 +52,7 @@ START_DEDOS_TEST(test_serialize_and_read_msu_msg__default) {
 
 
     int fds[2];
-    pipe(fds);
+    fds[0] = init_sock_pair(&fds[1]);
 
     size_t output_size;
     void *output = serialize_msu_msg(&msg, &default_type, &output_size);
@@ -135,7 +135,7 @@ START_DEDOS_TEST(test_serialize_and_read_msu_msg__custom) {
     void *serialized = serialize_msu_msg(&msg, &custom_type, &sz);
 
     int fds[2];
-    pipe(fds);
+    fds[0] = init_sock_pair(&fds[1]);
 
     write(fds[1], serialized, sz);
 

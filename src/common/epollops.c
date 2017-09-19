@@ -83,12 +83,14 @@ static int accept_new_connection(int socketfd, int epoll_fd, int oneshot) {
     }
 #endif
 
-    int flags = O_NONBLOCK;
-    rtn = fcntl(new_fd, F_SETFL, flags);
-    if (rtn == -1) {
-        log_perror("Error setting O_NONBLOCK");
-        // TODO: Error handling :?
-        return -1;
+    if (oneshot) {
+        int flags = O_NONBLOCK;;
+        rtn = fcntl(new_fd, F_SETFL, flags);
+        if (rtn == -1) {
+            log_perror("Error setting O_NONBLOCK");
+            // TODO: Error handling :?
+            return -1;
+        }
     }
     rtn = add_to_epoll(epoll_fd, new_fd, EPOLLIN, oneshot);
     if (rtn < 0) {
@@ -145,6 +147,9 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
                     if (rtn < 0) {
                         log_error("Failed processing existing connection (fd: %d)",
                                   events[i].data.fd);
+                    } else {
+                        log_custom(LOG_EPOLL_OPS, "Got exit code %d from fd %d",
+                                   rtn, events[i].data.fd);
                     }
                     return rtn;
                 } else {

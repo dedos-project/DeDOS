@@ -7,25 +7,11 @@
 #include <unistd.h>
 
 int init_controller_sock_for_writing() {
-    int pipe_fd[2];
-    int rtn = pipe(pipe_fd);
-    if (rtn < 0) {
-        log_critical("Could not open pipe");
-        return -1;
-    }
-    controller_sock = pipe_fd[1];
-    return pipe_fd[0];
+    return init_sock_pair(&controller_sock);
 }
 
 int init_controller_sock_for_reading() {
-    int pipe_fd[2];
-    int rtn = pipe(pipe_fd);
-    if (rtn < 0) {
-        log_critical("Could not open pipe");
-        return -1;
-    }
-    controller_sock = pipe_fd[0];
-    return pipe_fd[1];
+    return init_sock_pair(&controller_sock);
 }
 
 START_DEDOS_TEST(test_send_init_to_controller) {
@@ -57,8 +43,9 @@ START_DEDOS_TEST(test_send_init_to_controller) {
 
 // Just spot-checking a single message type for now
 START_DEDOS_TEST(test_thread_msg_from_ctrl_hdr__add_runtime) {
-    int pipe_fd[2];
-    pipe(pipe_fd);
+
+    int fds[2];
+    fds[0] = init_sock_pair(&fds[1]);
 
     struct ctrl_add_runtime_msg msg = {
         .runtime_id = 123,
@@ -72,9 +59,9 @@ START_DEDOS_TEST(test_thread_msg_from_ctrl_hdr__add_runtime) {
         .payload_size = sizeof(msg)
     };
 
-    write(pipe_fd[1], &msg, sizeof(msg));
+    write(fds[1], &msg, sizeof(msg));
 
-    struct thread_msg *thread_msg = thread_msg_from_ctrl_hdr(&hdr, pipe_fd[0]);
+    struct thread_msg *thread_msg = thread_msg_from_ctrl_hdr(&hdr, fds[0]);
 
     ck_assert_int_eq(thread_msg->type, CONNECT_TO_RUNTIME);
     ck_assert_int_eq(thread_msg->data_size, sizeof(msg));

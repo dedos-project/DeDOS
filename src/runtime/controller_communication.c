@@ -117,15 +117,6 @@ int init_controller_socket(struct sockaddr_in *addr) {
     return sock;
 }
 
-static ssize_t read_ctrl_message_hdr(int fd, struct ctrl_runtime_msg_hdr *msg) {
-    ssize_t rtn = read(fd, (void*)msg, sizeof(*msg));
-    if (rtn != sizeof(*msg)) {
-        log_error("Could not read full control runtime message from socket %d", fd);
-        return -1;
-    }
-    return rtn;
-}
-
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->payload_size != sizeof(target)) { \
         log_error("Message data size (%d) does not match size" \
@@ -223,16 +214,20 @@ static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
 
 int handle_controller_communication(int fd) {
     struct ctrl_runtime_msg_hdr hdr;
-    ssize_t msg_size = read_ctrl_message_hdr(fd, &hdr);
-    if (msg_size < 0) {
+    int rtn = read_payload(fd, sizeof(hdr), &hdr);
+    if (rtn< 0) {
         log_error("Error reading control message");
         return -1;
+    } else if (rtn == 1) {
+        log_critical("Disconnected from global controller");
+        close(fd);
+        return 1;
     } else {
         log_custom(LOG_CONTROLLER_COMMUNICATION,
-                   "Read message from controller of size %d", (int)msg_size);
+                   "Read header from controller");
     }
 
-    int rtn = process_ctrl_message_hdr(&hdr, fd);
+    rtn = process_ctrl_message_hdr(&hdr, fd);
     if (rtn < 0) {
         log_error("Error processing control message");
         return -1;

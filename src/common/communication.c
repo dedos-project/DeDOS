@@ -3,8 +3,28 @@
 
 #include <arpa/inet.h>
 
+#define MAX_READ_ATTEMPTS 16
+
 int read_payload(int fd, size_t size, void *buff) {
-    ssize_t rtn = read(fd, buff, size);
+    ssize_t rtn = 0;
+    int attempts = 0;
+    do {
+        log_custom(LOG_READS, "Attempting to read payload of size %d", (int)size);
+        int new_rtn = recv(fd, buff, size, 0);
+        if (new_rtn < 0 && errno != EAGAIN) {
+            log_perror("Error reading from fd: %d", fd);
+            return -1;
+        }
+        if (attempts++ > MAX_READ_ATTEMPTS) {
+            log_error("Attempted to read %d times", MAX_READ_ATTEMPTS);
+            return -1;
+        }
+        rtn += new_rtn;
+    } while (errno == EAGAIN || (rtn > 0 && rtn < size));
+    if (rtn == 0) {
+        log_custom(LOG_CONNECTIONS, "fd %d has been closed by peer", fd);
+        return 1;
+    }
     if (rtn != size) {
         log_error("Could not read full runtime payload from socket %d. "
                   "Requested: %d, received: %d", fd, (int)size, (int)rtn);
@@ -100,5 +120,6 @@ int init_listening_socket(int port) {
         log_perror("Error starting listening socket");
         return -1;
     }
+    log_custom(LOG_COMMUNICATION, "Started listening socket on fd %d", sock);
     return sock;
 }

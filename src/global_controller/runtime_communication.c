@@ -75,6 +75,17 @@ static int send_add_runtime_msg(unsigned int target_id, int new_rt_id,
     return 0;
 }
 
+static int remove_runtime_endpoint(int fd) {
+    for (int i=0; i<MAX_RUNTIME_ID; i++) {
+        if (runtime_endpoints[i].fd == fd) {
+            close(runtime_endpoints[i].fd);
+            runtime_endpoints[i].fd = 0;
+            return i;
+        }
+    }
+    return -1;
+}
+
 static int add_runtime_endpoint(unsigned int runtime_id, int fd, uint32_t ip, int port) {
     struct stat buf;
     if (fstat(fd, &buf) != 0) {
@@ -98,15 +109,6 @@ static int add_runtime_endpoint(unsigned int runtime_id, int fd, uint32_t ip, in
     return 0;
 }
 
-static int read_rt_msg_hdr(int fd, struct rt_controller_msg_hdr *hdr) {
-    ssize_t rtn = read(fd, (void*)hdr, sizeof(*hdr));
-    if (rtn != sizeof(*hdr)) {
-        log_error("Could not read full runtiem message from socket %d", fd);
-        return -1;
-    }
-    return rtn;
-}
-
 static int process_rt_init_message(ssize_t payload_size, int fd) {
     struct rt_controller_init_msg msg;
     if (payload_size != sizeof(msg)) {
@@ -124,6 +126,7 @@ static int process_rt_init_message(ssize_t payload_size, int fd) {
         log_error("Error adding runtime endpoint");
         return -1;
     }
+    log_info("Added runtime endpoint %d (fd: %d)", msg.runtime_id, fd);
     return 0;
 }
 
@@ -163,16 +166,24 @@ static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {
 
 static int handle_runtime_communication(int fd, void UNUSED *data) {
     struct rt_controller_msg_hdr hdr;
-    ssize_t msg_size = read_rt_msg_hdr(fd, &hdr);
-    if (msg_size < 0) {
+    int rtn = read_payload(fd, sizeof(hdr), &hdr);
+    if (rtn < 0) {
         log_error("Error reading runtime message header");
         return -1;
+    } else if (rtn == 1) {
+        int id = remove_runtime_endpoint(fd);
+        if (id < 0) {
+            log_error("Error shutting down socket %d", fd);
+        } else {
+            log_info("Runtime %d has been shut down by peer. Removing", id);
+        }
+        return 0;
     } else {
         log_custom(LOG_RT_COMMUNICATION,
-                   "read message from runtime of size %d", (int)msg_size);
+                   "received header from runtime");
     }
 
-    int rtn = process_rt_message_hdr(&hdr, fd);
+    rtn = process_rt_message_hdr(&hdr, fd);
     if (rtn < 0) {
         log_error("Error processing rt message");
         return -1;

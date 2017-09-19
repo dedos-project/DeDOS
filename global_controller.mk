@@ -5,7 +5,8 @@ LOGS = \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   CUSTOM
+	   CUSTOM \
+	   EPOLL_OPS
 
 SRC_DIR = src/
 GLC_DIR = $(SRC_DIR)global_controller/

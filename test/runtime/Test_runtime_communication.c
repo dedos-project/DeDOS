@@ -15,25 +15,7 @@ struct dfg_runtime local_runtime = {
 
 #include <signal.h>
 
-int init_peer_for_writing(int runtime_id) {
-    int pipe_fd[2];
-    int rtn = pipe(pipe_fd);
-    if (rtn < 0) {
-        log_critical("Could not open pipe");
-        return -1;
-    }
-    runtime_peers[runtime_id].fd = pipe_fd[1];
-    return pipe_fd[0];
-}
-
 int peer_port = 1234;
-
-int fake_listening_runtime() {
-    int sock = init_listening_socket(peer_port);
-    log_custom(TEST, "Initialized listening socket %d on port %d", sock, peer_port);
-    ck_assert_int_gt(sock, 0);
-    return sock;
-}
 
 #define peer_id 2
 
@@ -47,7 +29,7 @@ struct inter_runtime_msg_hdr hdr = {
     .payload_size = sizeof(msg)
 };
 START_DEDOS_TEST(test_send_to_peer__success) {
-    int read_fd = init_peer_for_writing(peer_id);
+    int read_fd = init_sock_pair(&runtime_peers[peer_id].fd);
 
     ck_assert_int_eq(send_to_peer(peer_id, &hdr, &msg), 0);
 
@@ -60,7 +42,7 @@ START_DEDOS_TEST(test_send_to_peer__fail_uninitialized_peer) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_send_to_peer__fail_peer_closed) {
-    int read_fd = init_peer_for_writing(peer_id);
+    int read_fd = init_sock_pair(&runtime_peers[peer_id].fd);
     close(read_fd);
 
     signal(SIGPIPE, SIG_IGN);
@@ -82,15 +64,16 @@ START_DEDOS_TEST(test_add_runtime_peer__fail_invalid_fd) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_send_init_msg) {
-    int fd = init_peer_for_writing(peer_id);
-
+    log_info("initting");
+    int read_fd = init_sock_pair(&runtime_peers[peer_id].fd);
+    log_info("Initted");
     ck_assert_int_eq(send_init_msg(peer_id), 0);
 
     struct inter_runtime_init_msg msg;
     struct inter_runtime_msg_hdr hdr;
 
-    read(fd, &hdr, sizeof(hdr));
-    read(fd, &msg, sizeof(msg));
+    read(read_fd, &hdr, sizeof(hdr));
+    read(read_fd, &msg, sizeof(msg));
 
     ck_assert_int_eq(hdr.type, INTER_RT_INIT);
     ck_assert_int_eq(hdr.target, 0);
@@ -100,7 +83,7 @@ START_DEDOS_TEST(test_send_init_msg) {
 
 START_DEDOS_TEST(test_connect_to_runtime_peer__success) {
 
-    int sock = fake_listening_runtime();
+    int sock = init_test_listening_socket(peer_port);
     struct sockaddr_in addr;
     inet_pton(AF_INET, "0.0.0.0", &addr.sin_addr.s_addr);
     addr.sin_family = AF_INET;
@@ -132,7 +115,7 @@ START_DEDOS_TEST(test_process_fwd_to_msu_message) {
     local_msu_registry[msu_id] = &msu;
 
     int fds[2];
-    pipe(fds);
+    fds[0] = init_sock_pair(&fds[1]);
 
     struct msu_msg_hdr hdr = {};
     struct msu_msg msg = {.hdr = &hdr};
@@ -141,6 +124,7 @@ START_DEDOS_TEST(test_process_fwd_to_msu_message) {
     void *serialized = serialize_msu_msg(&msg, &msu_type, &written_size);
     write(fds[1], serialized, written_size);
 
+    log_custom(LOG_TEST, "Wrote %d bytes to fd %d", (int)written_size, fds[1]);
     int rtn = process_fwd_to_msu_message(written_size, msu_id, fds[0]);
 
     ck_assert_int_eq(rtn, 0);
@@ -152,7 +136,7 @@ START_DEDOS_TEST(test_process_fwd_to_msu_message) {
 START_DEDOS_TEST(test_process_init_rt_message) {
     struct inter_runtime_init_msg msg = { .origin_id = peer_id };
     int fds[2];
-    pipe(fds);
+    fds[0] = init_sock_pair(&fds[1]);
 
     write(fds[1], &msg, sizeof(msg));
 
@@ -182,7 +166,7 @@ START_DEDOS_TEST(test_handle_runtime_communication) {
     static_main_thread = &main_thread;
     init_msg_queue(&main_thread.queue, NULL);
 
-    int fd = init_peer_for_writing(peer_id);
+    int fd = init_sock_pair(&runtime_peers[peer_id].fd);
     send_to_peer(peer_id, &hdr, &msg);
 
     int rtn = handle_runtime_communication(fd);

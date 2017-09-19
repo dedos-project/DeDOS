@@ -110,12 +110,15 @@ int run_socket_monitor(int local_port, struct sockaddr_in *ctrl_addr) {
         return -1;
     }
 
-    if (init_controller_socket(ctrl_addr) != 0) {
-        log_info("Retrying connection to controller");
-        sleep(1);
-    }
+    int sock;
+    do {
+        log_info("Attempting to connect to controller");
+        sock = init_controller_socket(ctrl_addr);
+        if (sock < 0)
+            sleep(1);
+    } while (sock <= 0);
 
-    log_info("Connected to global controller. Entering socket monitor loop.");
+    log_info("Connected to global controller on socket %d. Entering socket monitor loop.", sock);
 
     return socket_monitor_epoll_loop();
 }

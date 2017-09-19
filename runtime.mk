@@ -127,6 +127,10 @@ TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm
 
 DIRS = $(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS)
 
+define kill_proc
+if pgrep -x "$1" > /dev/null; then killall "$1"; fi
+endef
+
 all: dirs legacy ${TARGET}
 
 dirs: $(DIRS)
@@ -143,11 +147,13 @@ $(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
-test: all $(TST_BLDS) $(TST_BLD_RSCS) test-results
+test: all test-blds test-results
 
-test-results: all $(RESULTS)
+test-blds: $(TST_BLDS) $(TST_BLD_RSCS)
+
+test-results: all test-blds $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
-	@for FILE in $(filter-out all, $^); do \
+	@for FILE in $(filter-out all test-blds, $^); do \
 		if grep -q ":[FE]:" "$$FILE"; then \
 			echo ___ $$FILE ___ ; \
 			cat $$FILE; \
@@ -165,6 +171,7 @@ test-results: all $(RESULTS)
 # Output the results of the tests by executing each of the builds
 # of the tests. Output STDOUT and STDERR to the name of the rule
 $(RES_DIR)%.txt: $(TST_BLD_DIR)%.out
+	$(call kill_proc $(notdir $^))
 	-./$< > $@ 2>&1
 
 # creates the test executables by linking the test objects with the build objects excluding 

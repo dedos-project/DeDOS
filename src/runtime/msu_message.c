@@ -124,25 +124,30 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
         log_error("Size of incoming message is not big enough to fit header");
         return NULL;
     }
+    log_custom(LOG_MSU_MSG_READ, "Reading header from %d", fd);
     struct msu_msg_hdr *hdr = read_msu_msg_hdr(fd);
     if (hdr == NULL) {
         log_perror("Error reading msu msg header");
         return NULL;
     }
     size_t data_size = size - sizeof(*hdr);
-    void *data = malloc(data_size);
-    if (data == NULL) {
-        log_perror("Error allocating msu msg of size %d", (int)data_size);
-        destroy_msu_msg_hdr(hdr);
-        return NULL;
+    void *data = NULL;
+    if (data_size > 0) {
+        data = malloc(data_size);
+        if (data == NULL) {
+            log_perror("Error allocating msu msg of size %d", (int)data_size);
+            destroy_msu_msg_hdr(hdr);
+            return NULL;
+        }
+        log_custom(LOG_MSU_MSG_READ, "Reading payload of size %d from %d", (int)data_size, fd);
+        if (read_payload(fd, data_size, data) != 0) {
+            log_perror("Error reading msu msg payload of size %d", (int)data_size);
+            destroy_msu_msg_hdr(hdr);
+            free(data);
+            return NULL;
+        }
+        log_custom(LOG_MSU_MSG_DESERIALIZE, "Deserialized MSU message of size %d", (int)data_size);
     }
-    if (read_payload(fd, data_size, data) != 0) {
-        log_perror("Error reading msu msg payload of size %d", (int)data_size);
-        destroy_msu_msg_hdr(hdr);
-        free(data);
-        return NULL;
-    }
-    log_custom(LOG_MSU_MSG_DESERIALIZE, "Deserialized MSU message of size %d", (int)data_size);
     struct msu_msg *msg = malloc(sizeof(*msg));
     if (msg == NULL) {
         log_perror("Error allocating msu msg");

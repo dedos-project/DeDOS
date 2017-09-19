@@ -158,6 +158,7 @@ static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
         return -1;
     }
 
+    log_custom(LOG_RUNTIME_CONNECTION, "Attempting to read MSU message");
     struct msu_msg *msu_msg = read_msu_msg(msu, fd, payload_size);
     if (msu_msg == NULL) {
         log_error("Error reading MSU msg off of fd %d", fd);

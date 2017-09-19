@@ -20,13 +20,15 @@
 #define NEXT_MSU_LOCAL 1
 #define NEXT_MSU_REMOTE 2
 
+#define BLD "\e[1m"
 #define UL "\e[4m"
 #define NOSTYLE "\e[0m"
 
 #define HELP_PREAMBLE \
     "\nList of available commands : \n" \
     "\n" \
-    "\t******* NOTE: " UL "UNDERLINED" NOSTYLE " fields are required, [BRACKETED] are not *****\n" \
+    "\t******* NOTE: " UL "ARGUMENTS" NOSTYLE " fields are required, excluding " \
+        UL "[BRACKETED]" NOSTYLE "  ****\n" \
     "\n"
 
 
@@ -319,44 +321,44 @@ struct cmd_action cmd_actions[] = {
     {"show runtimes", parse_show_runtimes, {},
         "List connected runtimes and socket num"},
 
-    {"*show msus", parse_show_msus, {"RUNTIME_ID"},
+    {"*show msus", parse_show_msus, {"RUNTIME-ID"},
         "Get MSUs running on the runtime" },
 
     {"addmsu", parse_add_msu,
-        {"RUNTIME_ID", "MSU_TYPE", "MSU_ID", "MSU_MODE", "THREAD_ID", "[VERTEX_TYPE]",
+        {"RUNTIME-ID", "MSU_TYPE", "MSU-ID", "MSU_MODE", "THREAD-ID", "[VERTEX_TYPE]",
             "[ | INIT_DATA]"},
         "(MSU_MODE: blocking/non-blocking; VERTEX_TYPE: entry/exit/entry,exit)"},
 
-    {"delmsu", parse_del_msu, {"MSU_ID"}, "Delete MSU"},
+    {"delmsu", parse_del_msu, {"MSU-ID"}, "Delete MSU"},
 
     {"add route", parse_add_route,
-        {"ROUTE_ID", "MSU_ID"},
+        {"ROUTE-ID", "MSU-ID"},
         "Adds an outgoing route to an MSU"},
 
     {"del route", parse_del_route,
-        {"ROUTE_ID", "MSU_ID"},
+        {"ROUTE-ID", "MSU-ID"},
         "Deletes an outgoing route from an MSU"},
 
     {"add endpoint", parse_add_endpoint,
-        {"ROUTE_ID", "MSU_ID", "KEY"},
+        {"ROUTE-ID", "MSU-ID", "KEY"},
         "Adds an MSU as an endpoint to a given route"},
 
     {"del endpoint", parse_del_endpoint,
-        {"ROUTE_ID", "MSU_ID"},
+        {"ROUTE-ID", "MSU-ID"},
         "Deletes an MSU as an endpoint from a given route"},
 
     {"mod endpoint", parse_mod_endpoint,
-        {"ROUTE_ID", "MSU_ID", "KEY"},
+        {"ROUTE-ID", "MSU-ID", "KEY"},
         "Modifies the key range associated with an MSU endpoint on the given route"},
 
     {"create_pinned_thread", parse_create_thread,
-        {"RUNTIME_ID", "THREAD_ID", "MODE"},
+        {"RUNTIME-ID", "THREAD-ID", "MODE"},
         "(MODE=pinned/unpinned) Creates a worker thread on an unused core"},
 
     {"*allocate", parse_allocate, {},
         "gather all msu not possessing a 'scheduling' object, and compute a placement"},
 
-    {"*show stats", parse_show_stats, {"MSU_ID"},
+    {"*show stats", parse_show_stats, {"MSU-ID"},
         "display stored time serie for a given msu"},
 
     {"loadcfg", parse_load_cfg, {"FILENAME"},
@@ -401,7 +403,7 @@ static void parse_cmd_action(char *cmd) {
 static int parse_help(char *args) {
     printf(HELP_PREAMBLE);
     for (int i=0; cmd_actions[i].cmd[0] != '\0'; i++){
-        printf("\t%s", cmd_actions[i].cmd);
+        printf("\t" BLD "%s" NOSTYLE, cmd_actions[i].cmd);
         for (int j=0; cmd_actions[i].args[j][0]!='\0'; j++) {
             printf(" " UL "%s" NOSTYLE, cmd_actions[i].args[j]);
         }
