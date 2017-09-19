@@ -58,9 +58,13 @@ static int send_ctl_init_msg() {
         log_error("Could not get local runtime ID to send to controller");
         return -1;
     }
+    uint32_t ip = local_runtime_ip();
+    int port = local_runtime_port();
 
     struct rt_controller_init_msg msg = {
-        .runtime_id = local_id
+        .runtime_id = local_id,
+        .ip = ip,
+        .port = port
     };
 
     struct rt_controller_msg_hdr hdr = {

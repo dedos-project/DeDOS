@@ -164,7 +164,8 @@ int free_dfg_msu(struct dfg_msu *input) {
     return 0;
 }
 
-static int schedule_msu_on_thread(struct dfg_msu *msu, struct dfg_thread *thread) {
+static int schedule_msu_on_thread(struct dfg_msu *msu, struct dfg_thread *thread,
+                                  struct dfg_runtime *rt) {
     if (thread->n_msus == MAX_MSU_PER_THREAD) {
         log_error("Too many MSUs on thread %d", thread->id);
         return -1;
@@ -181,6 +182,9 @@ static int schedule_msu_on_thread(struct dfg_msu *msu, struct dfg_thread *thread
 
     msu->type->instances[msu->type->n_instances] = msu;
     msu->type->n_instances++;
+
+    msu->scheduling.thread = thread;
+    msu->scheduling.runtime = rt;
 
     return 0;
 }
@@ -207,7 +211,7 @@ int schedule_dfg_msu(struct dfg_msu *msu, unsigned int runtime_id, unsigned int 
         return -1;
     }
 
-    int rtn = schedule_msu_on_thread(msu, thread);
+    int rtn = schedule_msu_on_thread(msu, thread, rt);
     if (rtn < 0) {
         log_error("Error scheduling MSU on thread");
         return -1;

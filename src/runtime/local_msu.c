@@ -145,6 +145,8 @@ struct local_msu *init_msu(unsigned int id,
         msu_free(msu);
         return NULL;
     }
+    log_info("Initialized msu (ID: %d, type: %s, data: %s)", id, type->name,
+             data->init_data);
     return msu;
 }
 

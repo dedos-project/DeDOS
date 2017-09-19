@@ -58,7 +58,7 @@ SELF=./runtime.mk
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname))
 
-CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lcrypto -lm -lpcap $(LOG_DEFINES)
+CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
 ifeq ($(DEBUG), 1)
