@@ -27,7 +27,7 @@
 #define HELP_PREAMBLE \
     "\nList of available commands : \n" \
     "\n" \
-    "\t******* NOTE: " UL "ARGUMENTS" NOSTYLE " fields are required, excluding " \
+    "\t******* Note: " UL "ARGUMENTS" NOSTYLE " fields are required, excluding " \
         UL "[BRACKETED]" NOSTYLE "  ****\n" \
     "\n"
 
@@ -324,12 +324,12 @@ struct cmd_action cmd_actions[] = {
     {"*show msus", parse_show_msus, {"RUNTIME-ID"},
         "Get MSUs running on the runtime" },
 
-    {"addmsu", parse_add_msu,
+    {"add msu", parse_add_msu,
         {"RUNTIME-ID", "MSU_TYPE", "MSU-ID", "MSU_MODE", "THREAD-ID", "[VERTEX_TYPE]",
             "[ | INIT_DATA]"},
         "(MSU_MODE: blocking/non-blocking; VERTEX_TYPE: entry/exit/entry,exit)"},
 
-    {"delmsu", parse_del_msu, {"MSU-ID"}, "Delete MSU"},
+    {"del msu", parse_del_msu, {"MSU-ID"}, "Delete MSU"},
 
     {"add route", parse_add_route,
         {"ROUTE-ID", "MSU-ID"},
@@ -351,7 +351,7 @@ struct cmd_action cmd_actions[] = {
         {"ROUTE-ID", "MSU-ID", "KEY"},
         "Modifies the key range associated with an MSU endpoint on the given route"},
 
-    {"create_pinned_thread", parse_create_thread,
+    {"add thread", parse_create_thread,
         {"RUNTIME-ID", "THREAD-ID", "MODE"},
         "(MODE=pinned/unpinned) Creates a worker thread on an unused core"},
 

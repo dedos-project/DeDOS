@@ -245,7 +245,7 @@ int create_worker_thread(unsigned int thread_id, unsigned int runtime_id, char *
         return -1;
     }
 
-    enum thread_mode mode_e = str_to_blocking_mode(mode);
+    enum thread_mode mode_e = str_to_thread_mode(mode);
     if (mode_e == 0) {
         log_error("Could not get mode from %s", mode);
         return -1;
