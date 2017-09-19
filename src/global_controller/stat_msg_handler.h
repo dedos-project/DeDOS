@@ -1,5 +1,6 @@
 #ifndef STAT_MSG_HANDLER_H
 #define STAT_MSG_HANDLER_H
+#include <stdlib.h>
 
 int init_stats_msg_handler();
 

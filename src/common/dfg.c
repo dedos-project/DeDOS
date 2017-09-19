@@ -45,6 +45,15 @@ struct dfg_msu *get_dfg_msu(unsigned int id){
     SEARCH_FOR_ID(dfg, dfg->n_msus, dfg->msus, id)
 }
 
+struct dfg_route *get_dfg_msu_route_by_type(struct dfg_msu *msu, struct dfg_msu_type *route_type) {
+    for (int i=0; i<msu->scheduling.n_routes; i++) {
+        if (msu->scheduling.routes[i]->msu_type == route_type) {
+            return msu->scheduling.routes[i];
+        }
+    }
+    return NULL;
+}
+
 struct dfg_thread *get_dfg_thread(struct dfg_runtime *rt, unsigned int id){
     SEARCH_FOR_ID(rt, rt->n_pinned_threads + rt->n_unpinned_threads, rt->threads, id)
 }
@@ -56,6 +65,51 @@ struct dfg_route_endpoint *get_dfg_route_endpoint(struct dfg_route *route, unsig
         }
     }
     return NULL;
+}
+
+int msu_has_route(struct dfg_msu *msu, struct dfg_route *route) {
+    for (int i=0; i<msu->scheduling.n_routes; i++) {
+        if (msu->scheduling.routes[i] == route) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+struct dfg_msu *msu_type_on_runtime(struct dfg_runtime *rt, struct dfg_msu_type *type) {
+    for (int i=0; i<type->n_instances; i++) {
+        if (type->instances[i]->scheduling.runtime == rt) {
+            return type->instances[i];
+        }
+    }
+    return NULL;
+}
+
+enum blocking_mode str_to_blocking_mode(char *mode_str) {
+    if (strcasecmp(mode_str, "blocking") == 0) {
+        return BLOCKING_MSU;
+    } else if (strcasecmp(mode_str, "nonblocking") == 0 ||
+               strcasecmp(mode_str, "non-blocking") == 0) {
+        return NONBLOCK_MSU;
+    } else {
+        log_warn("Unknown blocking mode: %s", mode_str);
+        return UNKNOWN_BLOCKING_MODE;
+    }
+}
+
+uint8_t str_to_vertex_type(char *str_type) {
+    uint8_t vertex_type = 0;
+    if (strstr(str_type, "entry") != NULL) {
+        vertex_type |= ENTRY_VERTEX_TYPE;
+    }
+    if (strstr(str_type, "exit") != NULL) {
+        vertex_type |= EXIT_VERTEX_TYPE;
+    }
+    if (vertex_type == 0 && strstr(str_type, "nop") != NULL) {
+        log_warn("Unknown vertex type %s specified (neither exit, entry, nop found)", str_type);
+        return 0;
+    }
+    return vertex_type;
 }
 
 static void set_msu_properties(struct dfg_msu *template, struct dfg_msu *target) {

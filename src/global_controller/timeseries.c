@@ -7,6 +7,7 @@
 #include "timeseries.h"
 #include "stats.h"
 #include "dfg.h"
+#include "logging.h"
 
 double average_n(struct timed_rrdb *timeseries, int n_samples) {
     double sum = -1;
@@ -41,10 +42,9 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
                          struct timed_rrdb *timeseries) {
     int write_index = timeseries->write_index;
     log_debug("Starting index for append: %d", write_index);
-    int tmp = RRDB_ENTRIES + 1;
     for (int i=0; i<input_size; i++) {
         write_index %= RRDB_ENTRIES;
-        timeseries->data[write_index] = input[i].stat;
+        timeseries->data[write_index] = input[i].value;
         timeseries->time[write_index] = input[i].time;
         write_index++;
     }

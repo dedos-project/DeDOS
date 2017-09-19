@@ -1,18 +1,26 @@
 #include "controller_dfg.h"
+#include "stats.h"
+#include "msu_stats.h"
+#include "msu_ids.h"
+#include "logging.h"
+#include "haproxy.h"
+#include "scheduling.h"
+
+#include <stdbool.h>
 
 struct cloning_info {
     int msu_type_id;
     enum stat_id stat_id;
     double threshold;
-    struct dfg_vertex *sample_msu;
-    double stats[MAX_MSU]
+    struct dfg_msu *sample_msu;
+    double stats[MAX_MSU];
     int num_msus;
 };
 
 static struct cloning_info CLONING_INFO[] = {
-    { DEDOS_WEBSERVER_READ_MSU_ID, MSU_QUEUE_LENGTH, 100 },
-    { DEDOS_WEBSERVER_REGEX_MSU_ID, MSU_QUEUE_LENGTH, 100 },
-    { DEDOS_WEBSERVER_HTTP_MSU_ID, MSU_NUM_STATES, 2048 }
+    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 100 },
+    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 100 },
+    { WEBSERVER_HTTP_MSU_TYPE_ID, MSU_NUM_STATES, 2048 }
 };
 
 #define SAMPLES_FOR_CLONING_DECISION 20
@@ -22,8 +30,6 @@ static struct cloning_info CLONING_INFO[] = {
 static int gather_cloning_info(struct cloning_info *info) {
 
     info->num_msus = 0;
-
-    struct dedos_dfg *dfg = get_dfg();
 
     struct dfg_msu_type *type = get_dfg_msu_type(info->msu_type_id);
     if (!type->cloneable) {
@@ -48,6 +54,7 @@ static int gather_cloning_info(struct cloning_info *info) {
         info->num_msus++;
         info->sample_msu = instance;
     }
+    return -1;
 }
 
 static bool should_clone(struct cloning_info *info) {
@@ -63,22 +70,24 @@ static bool should_clone(struct cloning_info *info) {
 static void set_haproxy_weights() {
     int n_reads[MAX_RUNTIMES+1];
     memset(n_reads, 0, sizeof(n_reads));
-    struct dfg_msu_type *type = get_dfg_msu_type(DEDOS_WEBSERVER_READ_MSU_ID);
+    struct dfg_msu_type *type = get_dfg_msu_type(WEBSERVER_READ_MSU_TYPE_ID);
     if (type == NULL) {
         log_error("Error getting read type");
         return;
     }
     for (int i=0; i<type->n_instances; i++) {
-        int rt_id = type->instances[i].scheduling.runtime->id;
+        int rt_id = type->instances[i]->scheduling.runtime->id;
         n_reads[rt_id]++;
     }
 
     for (int i=0; i <= MAX_RUNTIMES; i++) {
         if (n_reads[i] > 0) {
-            reweight_haproxy(i, n_reads[rt_id]);
+            reweight_haproxy(i, n_reads[i]);
         }
     }
 }
+
+#define MIN_CLONE_DURATION 2
 
 static struct timespec last_clone_time;
 
@@ -93,7 +102,7 @@ int perform_cloning() {
                 continue;
             }
             if (should_clone(&CLONING_INFO[i])) {
-                struct dfg_vertex *msu = clone_msu(&CLONING_INFO[i].sample_msu->id);
+                struct dfg_msu *msu = clone_msu(CLONING_INFO[i].sample_msu->id);
                 if (msu == NULL) {
                     log_error("Cloning MSU failed for MSU type %d", CLONING_INFO[i].msu_type_id);
                     continue;

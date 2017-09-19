@@ -12,10 +12,10 @@ int remove_msu(unsigned int id);
 int create_route(unsigned int route_id, unsigned int type_id, unsigned int runtime_id);
 int delete_route(unsigned int route_id);
 int add_route_to_msu(unsigned int msu_id, unsigned int route_id);
+int del_route_from_msu(unsigned int msu_id, unsigned int route_id);
 int add_endpoint(unsigned int msu_id, uint32_t key, unsigned int route_id);
 int del_endpoint(unsigned int msu_id, unsigned int route_id);
 int mod_endpoint(unsigned int msu_id, uint32_t key, unsigned int route_id);
-int create_thread(unsigned int thread_id, unsigned int runtime_id, char *mode);
-int show_stats(unsigned int msu_id);
+int create_worker_thread(unsigned int thread_id, unsigned int runtime_id, char *mode);
 
 #endif

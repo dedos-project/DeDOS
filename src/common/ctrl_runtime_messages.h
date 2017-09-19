@@ -9,6 +9,7 @@ enum ctrl_runtime_msg_type {
     CTRL_CREATE_THREAD,
     CTRL_DELETE_THREAD,
     CTRL_MODIFY_ROUTE,
+    // TODO: CTRL_REPORT,
 
     // Worker thread messages
     CTRL_CREATE_MSU,

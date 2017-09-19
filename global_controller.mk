@@ -39,7 +39,7 @@ DEPEND_PP=$(CXX) -MM -MF
 FINAL=$(CXX)
 FINAL_TEST=$(CC)
 
-#SELF=./global_controller.mk
+SELF=./global_controller.mk
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname))
 
@@ -148,7 +148,7 @@ $(OBJ_DIR)%.o:: $(SRC_DIR)%.cc $(SELF)
 $(DEP_SRC): $(DEP_DIRS)
 
 $(DEP_DIR)%.d:: $(SRC_DIR)%.c $(LEG_OBJ)
-	$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(TEST_CFLAGS) $<
+	@$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(TEST_CFLAGS) $<
 
 $(DIRS):
 	@$(MKDIR) $@

@@ -1,3 +1,12 @@
+#include "runtime_communication.h"
+#include "communication.h"
+#include "logging.h"
+#include "rt_controller_messages.h"
+#include "stat_msg_handler.h"
+#include "epollops.h"
+#include "unused_def.h"
+
+#include <sys/stat.h>
 
 struct runtime_endpoint {
     int fd;
@@ -17,7 +26,7 @@ int send_to_runtime(unsigned int runtime_id, struct ctrl_runtime_msg_hdr *hdr, v
     }
     struct runtime_endpoint *endpoint = &runtime_endpoints[runtime_id];
     if (endpoint->fd <= 0) {
-        log_error("Requested runtime %d not instantiated", runtime_id);
+        log_error("Requested runtime %d not instantiated (fd: %d)", runtime_id, endpoint->fd);
         return -1;
     }
 
@@ -78,10 +87,10 @@ static int add_runtime_endpoint(unsigned int runtime_id, int fd, uint32_t ip, in
     runtime_endpoints[runtime_id].fd = fd;
 
     for (int i=0; i<MAX_RUNTIME_ID; i++) {
-        if (i != runtime_id && runtime_endpoints[runtime_id].fd != 0) {
+        if (i != runtime_id && runtime_endpoints[i].fd != 0) {
             if (send_add_runtime_msg(i, runtime_id, ip, port) != 0) {
-                log_error("Failed to add runtime %d to runtime %d",
-                          runtime_id, i);
+                log_error("Failed to add runtime %d to runtime %d (fd: %d)",
+                          runtime_id, i, runtime_endpoints[runtime_id].fd);
             }
         }
     }
@@ -110,7 +119,7 @@ static int process_rt_init_message(ssize_t payload_size, int fd) {
         return -1;
     }
 
-    rtn = add_runtime_endpoint(msg.runtime_id, fd);
+    rtn = add_runtime_endpoint(msg.runtime_id, fd, msg.ip, msg.port);
     if (rtn < 0) {
         log_error("Error adding runtime endpoint");
         return -1;
@@ -148,10 +157,11 @@ static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {
             return 0;
         default:
             log_error("Received unknown message type from fd %d: %d", fd, hdr->type);
+            return -1;
     }
 }
 
-int handle_runtime_communication(int fd) {
+static int handle_runtime_communication(int fd, void UNUSED *data) {
     struct rt_controller_msg_hdr hdr;
     ssize_t msg_size = read_rt_msg_hdr(fd, &hdr);
     if (msg_size < 0) {
@@ -167,5 +177,40 @@ int handle_runtime_communication(int fd) {
         log_error("Error processing rt message");
         return -1;
     }
+    return 0;
+}
+
+static int listen_sock = -1;
+
+int runtime_communication_loop(int listen_port) {
+    if (listen_sock > 0) {
+        log_error("Communication loop already started");
+        return -1;
+    }
+    listen_sock = init_listening_socket(listen_port);
+    if (listen_sock < 0) {
+        log_error("Error initializing listening socket on port %d", listen_port);
+        return -1;
+    }
+    log_info("Starting listening for runtimes on port %d", listen_port);
+
+    int epoll_fd = init_epoll(listen_sock);
+
+    if (epoll_fd < 0) {
+        log_error("Error initializing controller epoll. Closing socket");
+        close(listen_sock);
+        return -1;
+    }
+
+    int rtn = 0;
+    while (rtn == 0) {
+        rtn = epoll_loop(listen_sock, epoll_fd, 1, 1000, 0,
+                         handle_runtime_communication, NULL, NULL);
+        if (rtn < 0) {
+            log_error("Epoll loop exited with error");
+            return -1;
+        }
+    }
+    log_info("Epoll loop exited");
     return 0;
 }

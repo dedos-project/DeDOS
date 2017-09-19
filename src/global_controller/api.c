@@ -8,6 +8,7 @@
 #include "communication.h"
 #include "msu_ids.h"
 #include "controller_dfg.h"
+#include "runtime_messages.h"
 
 int add_msu(unsigned int msu_id, unsigned int type_id,
             char *init_data_c, char *msu_mode, char *vertex_type_c,
@@ -19,8 +20,8 @@ int add_msu(unsigned int msu_id, unsigned int type_id,
         return -1;
     }
 
-    enum blocking_mode mode = str_to_msu_mode(msu_mode);
-    if (mode == 0) {
+    enum blocking_mode mode = str_to_blocking_mode(msu_mode);
+    if (mode == UNKNOWN_BLOCKING_MODE) {
         log_error("Could not get blocking mode from %s", msu_mode);
         return -1;
     }
@@ -56,7 +57,7 @@ int remove_msu(unsigned int id) {
     struct dfg_msu *msu = get_dfg_msu(id);
 
     if (msu == NULL) {
-        log_error("MSU %d not scheduled!");
+        log_error("MSU %u not scheduled!", id);
         return -1;
     }
 
@@ -77,13 +78,19 @@ int remove_msu(unsigned int id) {
 }
 
 int create_route(unsigned int route_id, unsigned int type_id, unsigned int runtime_id) {
-    struct dfg_route *route = create_dfg_route(route_id, type_id, runtime_id);
+    struct dfg_msu_type *type = get_dfg_msu_type(type_id);
+    if (type == NULL) {
+        log_error("Could not find MSU type %u in dfg", type_id);
+        return -1;
+    }
+
+    struct dfg_route *route = create_dfg_route(route_id, type, runtime_id);
     if (route == NULL) {
         log_error("Could not create route %u in dfg", route_id);
         return -1;
     }
 
-    int rtn = send_create_route_msg(route, runtime_id);
+    int rtn = send_create_route_msg(route);
     if (rtn < 0) {
         log_error("Error sending create route message");
         // TODO: Delete route
@@ -125,7 +132,7 @@ int add_route_to_msu(unsigned int msu_id, unsigned int route_id) {
         return -1;
     }
 
-    int rtn = add_route_to_msu(route, msu);
+    int rtn = add_dfg_route_to_msu(route, msu);
 
     if (rtn < 0) {
         log_error("Error adding route to MSU");
@@ -138,7 +145,10 @@ int add_route_to_msu(unsigned int msu_id, unsigned int route_id) {
         // TODO: Remove route from MSU
         return -1;
     }
+    return 0;
 }
+
+// TODO: del_route_from_msu()
 
 int add_endpoint(unsigned int msu_id, uint32_t key, unsigned int route_id) {
     struct dfg_route *route = get_dfg_route(route_id);
@@ -222,7 +232,7 @@ int mod_endpoint(unsigned int msu_id, uint32_t key, unsigned int route_id) {
     return 0;
 }
 
-int create_thread(unsigned int thread_id, unsigned int runtime_id, char *mode) {
+int create_worker_thread(unsigned int thread_id, unsigned int runtime_id, char *mode) {
     struct dfg_runtime *rt = get_dfg_runtime(runtime_id);
     if (rt == NULL) {
         log_error("could not retrieve runtime %u from dfg", runtime_id);
@@ -235,7 +245,7 @@ int create_thread(unsigned int thread_id, unsigned int runtime_id, char *mode) {
         return -1;
     }
 
-    enum thread_mode mode_e = str_to_mode(mode);
+    enum thread_mode mode_e = str_to_blocking_mode(mode);
     if (mode_e == 0) {
         log_error("Could not get mode from %s", mode);
         return -1;

@@ -1,5 +1,7 @@
 #include "stat_msg_handler.h"
 #include "timeseries.h"
+#include "msu_stats.h"
+#include "logging.h"
 
 #define MAX_STAT_SAMPLES 128
 #define MAX_SAMPLE_SIZE 64
@@ -29,7 +31,7 @@ int handle_serialized_stats_buffer(void *buffer, size_t buffer_len) {
 
     int n_samples = deserialize_stat_samples(buffer, buffer_len, 
                                              incoming_samples, MAX_STAT_SAMPLES);
-    if (rtn < 0) {
+    if (n_samples < 0) {
         log_error("Error deserializing stat samples");
         return -1;
     }

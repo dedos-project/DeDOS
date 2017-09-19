@@ -42,7 +42,8 @@ static int fix_num_threads(struct dedos_dfg *dfg) {
             }
         }
         if (n_pinned < 0 || n_unpinned < 0) {
-            log_error("More pinned/unpinned threads specified by MSUs than by DFG");
+            log_error("More pinned/unpinned threads specified by MSUs than by DFG: "
+                      "%d more pinned, %d more unpinned", -1 * n_pinned, -1 * n_unpinned);
             return -1;
         }
     }
@@ -202,21 +203,8 @@ PARSE_FN(set_msu_id) {
 
 PARSE_FN(set_msu_vertex_type) {
     struct dfg_msu *msu = GET_PARSE_OBJ();
-    uint8_t vertex_type = 0;
-
     char *str_type = GET_STR_TOK();
-    if (strstr(str_type, "entry") != NULL) {
-        vertex_type |= ENTRY_VERTEX_TYPE;
-    }
-    if (strstr(str_type, "exit") != NULL) {
-        vertex_type |= EXIT_VERTEX_TYPE;
-    }
-    if (vertex_type == 0 && strstr(str_type, "nop") != NULL) {
-        log_error("Unknown vertex type %s specified (neither exit nor entry found)", str_type);
-        return -1;
-    }
-
-    msu->vertex_type = vertex_type;
+    msu->vertex_type = str_to_vertex_type(str_type);
     return 0;
 }
 
@@ -242,12 +230,8 @@ PARSE_FN(set_blocking_mode) {
 
     char *str_mode = GET_STR_TOK();
 
-    enum blocking_mode mode;
-    if (strcasecmp(str_mode, "non-blocking") == 0) {
-        mode = BLOCKING_MSU;
-    } else if (strcasecmp(str_mode, "blocking") == 0) {
-        mode = NONBLOCK_MSU;
-    } else {
+    enum blocking_mode mode = str_to_blocking_mode(str_mode);
+    if (mode == UNKNOWN_BLOCKING_MODE) {
         log_error("Unknown blocking mode specified: %s", str_mode);
         return -1;
     }
@@ -258,17 +242,16 @@ PARSE_FN(set_blocking_mode) {
     }
 
     struct dfg_thread *thread = vertex->scheduling.thread;
-
     if (thread == NULL) {
-        // Must wait for thread instantiation
+        log_custom(LOG_DFG_READER, "Waiting for thread instantiation");
         return 1;
     }
 
     if (thread->mode == UNSPECIFIED_THREAD_MODE) {
-        thread->mode = (mode == BLOCKING_MSU) ? PINNED_THREAD : UNPINNED_THREAD;
+        thread->mode = (mode == NONBLOCK_MSU) ? PINNED_THREAD : UNPINNED_THREAD;
     }
 
-    if ((thread->mode == PINNED_THREAD) ^ (mode == BLOCKING_MSU)) {
+    if ((thread->mode == PINNED_THREAD) ^ (mode == NONBLOCK_MSU)) {
         log_error("Can only put blocking MSUs on pinned threads, and nonblock MSUs on unpinned");
         return -1;
     }
@@ -420,7 +403,7 @@ PARSE_FN(set_source_types) {
         }
     } END_ITER_TOK_LIST(i)
     meta->n_src_types = i;
-    if (found_types == false)  
+    if (found_types == false)
         return 1;
     return 0;
 }
@@ -505,6 +488,26 @@ PARSE_FN(set_msu_thread) {
         return 1;
     }
     sched->thread = thread;
+
+    // This is frustrating...
+    // Have to iterate through all MSUs to find the one this scheduling object refers to
+    // Should perhaps provide parse object as a linked list so you can traverse upwards?
+    struct dedos_dfg *dfg = get_root_jsmn_obj();
+    struct dfg_msu *msu = NULL;
+    for (int i=0; i<dfg->n_msus; i++) {
+        if (&dfg->msus[i]->scheduling == sched) {
+            msu = dfg->msus[i];
+            break;
+        }
+    }
+    // Shouldn't happen, really...
+    if (msu == NULL) {
+        log_custom(LOG_DFG_PARSING, "Msu for thead %d not yet instantiated", id);
+        return 1;
+    }
+    thread->msus[thread->n_msus] = msu;
+    thread->n_msus++;
+
     return 0;
 }
 
@@ -535,7 +538,7 @@ PARSE_FN(set_msu_routes) {
 
 
 static int not_implemented(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
-    log_warn("JSON key %s is not implemented in DFG reader", tok_to_str(*((tok)-1), j));
+    log_warn("JSON key %s is not implemented in DFG reader", tok_to_str((*tok)-1, j));
     return 0;
 }
 

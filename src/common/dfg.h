@@ -12,6 +12,8 @@
 struct dfg_config;
 struct dfg_vertex;
 
+#define MAIN_THREAD_ID 0
+
 #define MAX_RUNTIMES 4
 #define MAX_THREADS 32
 #define MAX_ROUTES 32
@@ -47,7 +49,7 @@ enum thread_mode {
     PINNED_THREAD  = 1,
     UNPINNED_THREAD = 2
 };
-enum thread_mode str_to_thead_mode(char *mode);
+enum thread_mode str_to_thread_mode(char *mode);
 
 #define MAX_MSU_PER_THREAD 8
 
@@ -89,10 +91,10 @@ struct dfg_route {
 
 
 enum blocking_mode {
+    UNKNOWN_BLOCKING_MODE = 0,
     BLOCKING_MSU = 1,
     NONBLOCK_MSU = 2
 };
-enum blocking_mode str_to_msu_mode(char *mode);
 
 // Forward declaration; defined below
 struct dfg_dependency;
@@ -113,6 +115,7 @@ struct dfg_msu_type {
 };
 
 enum msu_locality {
+    UNDEFINED_LOCALITY = 0,
     MSU_IS_LOCAL = 1,
     MSU_IS_REMOTE = 2
 };
@@ -164,11 +167,15 @@ void set_dfg(struct dedos_dfg *dfg);
 struct dfg_runtime *get_dfg_runtime(unsigned int id);
 struct dfg_msu_type *get_dfg_msu_type(unsigned int id);
 struct dfg_route *get_dfg_route(unsigned int id);
+struct dfg_route *get_dfg_msu_route_by_type(struct dfg_msu *msu, struct dfg_msu_type *route_type);
 struct dfg_msu *get_dfg_msu(unsigned int id);
 struct dfg_thread *get_dfg_thread(struct dfg_runtime *rt, unsigned int id);
 struct dfg_route_endpoint *get_dfg_route_endpoint(struct dfg_route *route, unsigned int msu_id);
 
-enum blocking_mode str_to_blockin_mode(char *mode_str);
+int msu_has_route(struct dfg_msu *msu, struct dfg_route *route);
+struct dfg_msu *msu_type_on_runtime(struct dfg_runtime *rt, struct dfg_msu_type *type);
+
+enum blocking_mode str_to_blocking_mode(char *mode_str);
 uint8_t str_to_vertex_type(char *type_str);
 
 struct dfg_msu *copy_dfg_msu(struct dfg_msu *input);
@@ -191,6 +198,10 @@ struct dfg_route_endpoint *add_dfg_route_endpoint(struct dfg_msu *msu, uint32_t 
 int del_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *ep);
 int mod_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *ep,
                            uint32_t new_key);
+struct dfg_thread * create_dfg_thread(struct dfg_runtime *rt, int thread_id,
+                                      enum thread_mode mode);
 
+
+int show_connected_peers(void);
 
 #endif //DFG_H_

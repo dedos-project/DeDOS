@@ -4,10 +4,6 @@
 #include <string.h>
 #include <strings.h>
 
-#ifndef LOG_JSMN_PARSING
-#define LOG_JSMN_PARSING 0
-#endif
-
 /** Destructively extracts an int from a jsmn token.
  * Sets the "end" char to \0, and converts converts the resulting
  * string to an integer

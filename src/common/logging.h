@@ -74,7 +74,7 @@
 #define log_custom(level, fmt, ...)\
     do { \
         if (LOG_ALL || strcmp( "" #level, LOG_CUSTOM_STRINGIFY(level))) { \
-            log_at_level(#level, ANSI_COLOR_PURPLE, LOG_FD, fmt, ##__VA_ARGS__); \
+            log_at_level(#level, ANSI_COLOR_BLUE, LOG_FD, fmt, ##__VA_ARGS__); \
         } \
     } while (0)
 #else

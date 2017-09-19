@@ -1,3 +1,9 @@
+#include "runtime_messages.h"
+#include "dfg.h"
+#include "logging.h"
+#include "ctrl_runtime_messages.h"
+#include "runtime_communication.h"
+
 int send_create_msu_msg(struct dfg_msu *msu) {
 
     if (msu->scheduling.runtime == NULL || msu->scheduling.thread == NULL) {
@@ -14,7 +20,7 @@ int send_create_msu_msg(struct dfg_msu *msu) {
     struct ctrl_runtime_msg_hdr hdr = {
         .type = CTRL_CREATE_MSU,
         .thread_id = msu->scheduling.thread->id,
-        .payload_size = sizeof(msg);
+        .payload_size = sizeof(msg)
     };
 
     int rtn = send_to_runtime(msu->scheduling.runtime->id, &hdr, &msg);
@@ -41,7 +47,7 @@ int send_delete_msu_msg(struct dfg_msu *msu) {
     struct ctrl_runtime_msg_hdr hdr = {
         .type = CTRL_DELETE_MSU,
         .thread_id = msu->scheduling.thread->id,
-        .payload_size = sizeof(msg);
+        .payload_size = sizeof(msg)
     };
 
     int rtn = send_to_runtime(msu->scheduling.runtime->id, &hdr, &msg);
@@ -82,7 +88,7 @@ int send_delete_route_msg(struct dfg_route *route) {
 
     struct ctrl_runtime_msg_hdr hdr = {
         .type = CTRL_MODIFY_ROUTE,
-        .thread_id = MAIN_THERAD_ID,
+        .thread_id = MAIN_THREAD_ID,
         .payload_size = sizeof(msg)
     };
 
@@ -103,13 +109,14 @@ int send_add_route_to_msu_msg(struct dfg_route *route, struct dfg_msu *msu) {
 
     struct ctrl_runtime_msg_hdr hdr = {
         .type = CTRL_MSU_ROUTES,
-        .thread_id = msu->thread->id,
+        .thread_id = msu->scheduling.thread->id,
         .payload_size = sizeof(msg)
     };
 
-    int rtn = send_to_runtime(msu->runtime->id, &hdr, &msg);
+    int rtn = send_to_runtime(msu->scheduling.runtime->id, &hdr, &msg);
     if (rtn < 0) {
-        log_error("Error sending add-route-to-msu msg to runtime %d", msu->runtime->id);
+        log_error("Error sending add-route-to-msu msg to runtime %d",
+                   msu->scheduling.runtime->id);
         return -1;
     }
     return 0;
@@ -162,7 +169,7 @@ int send_del_endpoint_msg(struct dfg_route *route, struct dfg_route_endpoint *en
 
 int send_mod_endpoint_msg(struct dfg_route *route, struct dfg_route_endpoint *endpoint) {
     struct ctrl_route_msg msg = {
-        .type = MOD_ENDPOINTS,
+        .type = MOD_ENDPOINT,
         .route_id = route->id,
         .msu_id = endpoint->msu->id,
         .key = endpoint->key

@@ -6,7 +6,8 @@
 int read_payload(int fd, size_t size, void *buff) {
     ssize_t rtn = read(fd, buff, size);
     if (rtn != size) {
-        log_error("Could not read full runtime payload from socket %d", fd);
+        log_error("Could not read full runtime payload from socket %d. "
+                  "Requested: %d, received: %d", fd, (int)size, (int)rtn);
         return -1;
     }
     return 0;

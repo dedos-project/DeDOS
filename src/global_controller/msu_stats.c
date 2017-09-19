@@ -1,18 +1,16 @@
 #include "msu_stats.h"
 #include "timeseries.h"
 #include "stats.h"
+#include "logging.h"
 
 #include <stdbool.h>
 
 bool stats_initialized = false;
 
-
-
-
 static struct stat_type *get_stat_type(enum stat_id id) {
     for (int i=0; i < N_STAT_TYPES; i++) {
-        if (stat_types[i].id == id) { 
-            return stat_types[i];
+        if (stat_types[i].id == id) {
+            return &stat_types[i];
         }
     }
     return NULL;
@@ -48,6 +46,7 @@ int register_stat_item(unsigned int item_id) {
                       item_id, type->id_indices[item_id]);
             return 1;
         }
+        int index = type->id_indices[item_id];
         type->num_items++;
         type->items = realloc(type->items, sizeof(*type->items) * type->num_items);
         if (type->items == NULL) {
@@ -57,7 +56,7 @@ int register_stat_item(unsigned int item_id) {
 
         struct stat_item *item = &type->items[index];
         item->id = item_id;
-        memset(item->stat, 0, sizeof(item->stat));
+        memset(&item->stats, 0, sizeof(item->stats));
     }
     return 0;
 }
@@ -70,7 +69,7 @@ int init_statistics() {
 
     for (int i=0; i < N_STAT_TYPES; i++) {
         for (int j=0; j<MAX_STAT_ID; i++) {
-            stat_tyes[i].id_indices[j] = -1;
+            stat_types[i].id_indices[j] = -1;
         }
     }
     stats_initialized = true;
