@@ -80,7 +80,7 @@ static int socket_monitor_epoll_loop() {
         return -1;
     }
 
-    int rtn = epoll_loop(runtime_socket, epoll_fd, -1, 0, 0,
+    int rtn = epoll_loop(runtime_socket, epoll_fd, -1, -1, 0,
                          handle_connection, accept_connection, NULL);
     if (rtn < 0) {
         log_error("Epoll loop exited with error");

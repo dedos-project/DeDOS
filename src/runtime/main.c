@@ -78,21 +78,20 @@ int main(int argc, char **argv) {
         }
     }
 
-    set_local_directory(dirname(argv[0]));
-
     if (dfg_json == NULL || runtime_id == -1) {
         printf("%s " USAGE_ARGS "\n", argv[0]);
         exit(-1);
+    }
+    set_local_directory(dirname(argv[0]));
+
+    if (init_statistics() != 0) {
+        log_warn("Error initializing runtime statistics");
     }
 
     if (init_runtime_dfg(dfg_json, runtime_id) != 0) {
         log_critical("Error initializing runtime %d  from json file %s. Exiting",
                   runtime_id, dfg_json);
         exit(-1);
-    }
-
-    if (init_statistics() != 0) {
-        log_warn("Error initializing runtime statistics");
     }
 
     struct sockaddr_in ctrl_addr;

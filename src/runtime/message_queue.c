@@ -45,8 +45,6 @@ struct dedos_msg *dequeue_msg(struct msg_queue *q) {
         if (q->shared) {
             pthread_mutex_unlock(&q->mutex);
         }
-        log_custom(LOG_FAILED_DEQUEUE_ATTEMPTS, 
-                   "Attempted to dequeue NULL message");
         return NULL;
     }
 

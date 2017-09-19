@@ -38,14 +38,21 @@ static int spawn_dfg_routes(struct dfg_route **routes, int n_routes) {
                       dfg_route->id, dfg_route->msu_type->id);
             return -1;
         }
+    }
+    log_custom(LOG_DFG_INSTANTIATION, "Spawned %d routes", n_routes);
+    return 0;
+}
+
+static int add_all_dfg_route_endpoints(struct dfg_route **routes, int n_routes) {
+    for (int i=0; i<n_routes; i++) {
+        struct dfg_route *dfg_route = routes[i];
         if (add_dfg_route_endpoints(dfg_route->id,
-                                       dfg_route->endpoints,
-                                       dfg_route->n_endpoints) != 0) {
-            log_error("Error adding endpoints to route %d", dfg_route->id);
+                                    dfg_route->endpoints,
+                                    dfg_route->n_endpoints) != 0) {
+            log_error("Error adding endpoints");
             return -1;
         }
     }
-    log_custom(LOG_DFG_INSTANTIATION, "Spawned %d routes", n_routes);
     return 0;
 }
 
@@ -101,6 +108,8 @@ static int spawn_dfg_threads(struct dfg_thread **threads, int n_threads) {
             log_error("Error instantiating thread %d MSUs", dfg_thread->id);
             return -1;
         }
+        log_custom(LOG_DFG_INSTANTIATION, "Spawned %d MSUs on thread %d",
+                   dfg_thread->n_msus, dfg_thread->id);
     }
     log_custom(LOG_DFG_INSTANTIATION, "Initialized %d threads", n_threads);
     return 0;
@@ -127,6 +136,10 @@ int instantiate_dfg_runtime(struct dfg_runtime *rt) {
     }
     if (spawn_dfg_threads(rt->threads, rt->n_pinned_threads + rt->n_unpinned_threads) != 0) {
         log_error("Error spawning threads for runtime DFG instantiation");
+        return -1;
+    }
+    if (add_all_dfg_route_endpoints(rt->routes, rt->n_routes) != 0) {
+        log_error("Error adding endpoints to routes");
         return -1;
     }
     return 0;

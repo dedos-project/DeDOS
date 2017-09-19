@@ -10,7 +10,9 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CONNECTIONS \
-	   CUSTOM
+	   CUSTOM \
+	   DFG_PARSING \
+	   ALL
 
 SRC_DIR = src/
 RNT_DIR = $(SRC_DIR)runtime/
@@ -95,6 +97,7 @@ TST_RSCS = $(foreach TST_D, $(TST_DIRS), $(foreach EXT, $(RESOURCE_EXTS), $(wild
 SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
 SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
 
+TST_BLDS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.out, $(TSTS))
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
@@ -140,7 +143,7 @@ $(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
-test: all $(TST_BLD_RSCS) test-results
+test: all $(TST_BLDS) $(TST_BLD_RSCS) test-results
 
 test-results: all $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
@@ -166,7 +169,7 @@ $(RES_DIR)%.txt: $(TST_BLD_DIR)%.out
 
 # creates the test executables by linking the test objects with the build objects excluding 
 # the specific source under test
-$(TST_BLD_DIR)%.out: $(TST_DIR)%.c $(OBJECTS_NOMAIN) $(LEG_OBJ)
+$(TST_BLD_DIR)%.out:: $(TST_DIR)%.c $(OBJECTS_NOMAIN) $(LEG_OBJ)
 	$(FINAL_TEST) -o $@ $(filter-out $(call test_filters, $(@:.out=)), $^) $(TEST_CFLAGS)
 #	$(FINAL) -o $@ $(filter-out $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@)), $^) $(TEST_CFLAGS)
 

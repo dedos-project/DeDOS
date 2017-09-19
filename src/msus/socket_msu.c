@@ -226,7 +226,7 @@ static int socket_msu_init(struct local_msu *self, struct msu_init_data *init_da
 
 struct msu_type SOCKET_MSU_TYPE = {
     .name = "socket_msu",
-    .id = 100,
+    .id = SOCKET_MSU_TYPE_ID,
     .init = socket_msu_init,
     .destroy = socket_msu_destroy,
     .receive = socket_msu_receive
