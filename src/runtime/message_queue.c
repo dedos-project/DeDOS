@@ -28,6 +28,7 @@ int enqueue_msg(struct msg_queue *q, struct dedos_msg *msg) {
     }
 
     if (q->sem) {
+        log_custom(LOG_POSTS, "Posting to semaphore");
         sem_post(q->sem);
     }
 

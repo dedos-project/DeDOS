@@ -149,6 +149,7 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
             if (rtn < 0) {
                 log_warn("Error adding worker thread");
             }
+            break;
         // TODO: case DELETE_THREAD:
         case SEND_TO_PEER:
             CHECK_MSG_SIZE(msg, struct send_to_peer_msg);

@@ -85,6 +85,17 @@ struct dfg_msu *msu_type_on_runtime(struct dfg_runtime *rt, struct dfg_msu_type 
     return NULL;
 }
 
+enum thread_mode str_to_thread_mode(char *mode_str) {
+    if (strcasecmp(mode_str, "pinned") == 0) {
+        return PINNED_THREAD;
+    } else if (strcasecmp(mode_str, "unpinned") == 0) {
+        return UNPINNED_THREAD;
+    } else {
+        log_warn("Unknown thread mode: %s", mode_str);
+        return UNSPECIFIED_THREAD_MODE;
+    }
+}
+
 enum blocking_mode str_to_blocking_mode(char *mode_str) {
     if (strcasecmp(mode_str, "blocking") == 0) {
         return BLOCKING_MSU;

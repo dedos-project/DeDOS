@@ -38,6 +38,7 @@ static int init_dedos_thread(struct dedos_thread *thread,
                       int id) {
     thread->id = id;
     thread->mode = mode;
+    sem_init(&thread->sem, 0, 0);
 
     if (init_thread_stat_items(thread->id) != 0) {
         log_warn("Error initializing thread statistics");
@@ -93,9 +94,11 @@ static void *dedos_thread_starter(void *thread_init_v) {
 }
 
 int thread_wait(struct dedos_thread *thread) {
+    log_custom(LOG_SEM_WAIT, "Waiting (id: %d)", thread->id);
     int rtn = sem_wait(&thread->sem);
     if (rtn < 0) {
         log_perror("Error waiting on thread semaphore");
+        exit(-1);
         return -1;
     }
     return 0;
