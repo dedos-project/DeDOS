@@ -17,16 +17,13 @@ test: $(TESTS) test-results
 clean: $(CLEANS)
 
 runtime-%::
-	@echo "Making: $@"
-	@make -f $(patsubst %-$*, %.mk, $@) $*
+	make -f $(patsubst %-$*, %.mk, $@) $*
 
 global_controller-%::
-	@echo "Making: $@"
-	@make -f $(patsubst %-$*, %.mk, $@) $*
+	make -f $(patsubst %-$*, %.mk, $@) $*
 
 $(TARGETS): FORCE
-	@echo "Making: $@"
-	@make -f $@.mk
+	make -f $@.mk
 
 test-results: $(TESTS) 
 	@echo "-----------------------\nALL TEST OUTPUTS:\n-----------------------"
