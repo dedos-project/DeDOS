@@ -13,5 +13,7 @@ struct worker_thread {
 
 struct worker_thread *get_worker_thread(int id);
 int create_worker_thread(unsigned int thread_id, enum blocking_mode mode);
+int unregister_msu_with_thread(struct local_msu *msu);
+int register_msu_with_thread(struct local_msu *msu);
 
 #endif

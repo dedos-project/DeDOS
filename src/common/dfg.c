@@ -241,7 +241,7 @@ int unschedule_dfg_msu(struct dfg_msu *msu) {
         log_error("MSU not scheduled");
         return -1;
     }
-    
+
     // FIXME: NEED TO ACTUALLY REMOVE
     log_critical("UNSCHEDULING NOT YET IMPLEMENTED");
     return -1;

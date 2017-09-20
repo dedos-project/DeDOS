@@ -44,6 +44,7 @@ static int get_msu_index(struct worker_thread *thread, int msu_id) {
     return -1;
 }
 
+
 static int remove_idx_from_msu_list(struct worker_thread *thread, int idx) {
     if (idx >= thread->n_msus) {
         return -1;
@@ -53,6 +54,28 @@ static int remove_idx_from_msu_list(struct worker_thread *thread, int idx) {
     }
     thread->msus[thread->n_msus-1] = NULL;
     thread->n_msus--;
+    return 0;
+}
+
+int unregister_msu_with_thread(struct local_msu *msu) {
+    int idx = get_msu_index(msu->thread, msu->id);
+    if (idx == -1) {
+        log_error("MSU %d does not exist on thread %d", msu->id, msu->thread->thread->id);
+        return -1;
+    }
+    return remove_idx_from_msu_list(msu->thread, idx);
+}
+
+int register_msu_with_thread(struct local_msu *msu) {
+    log_warn("%p", msu);
+    log_warn("%p", msu->thread);
+    log_warn("%d", msu->thread->n_msus);
+    if (msu->thread->n_msus >= MAX_MSU_PER_THREAD) {
+        log_error("Too many MSUs on thread %d", msu->thread->thread->id);
+        return -1;
+    }
+    msu->thread->msus[msu->thread->n_msus] = msu;
+    msu->thread->n_msus++;
     return 0;
 }
 
@@ -68,8 +91,6 @@ static int create_msu_on_thread(struct worker_thread *thread, struct ctrl_create
                   msg->msu_id, thread->thread->id);
         return -1;
     }
-    thread->msus[thread->n_msus] = msu;
-    thread->n_msus++;
     return 0;
 }
 
@@ -165,7 +186,8 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
 }
 
 static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread) {
-    log_info("Starting worker thread loop %d", thread->id);
+    log_info("Starting worker thread loop %d (%s)",
+             thread->id, thread->mode == PINNED_THREAD ? "pinned" : "unpinned");
 
     struct worker_thread *self = v_worker_thread;
 
@@ -177,11 +199,15 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
             continue;
         }
         for (int i=0; i<self->n_msus; i++) {
+            log_custom(LOG_MSU_DEQUEUES, "Attempting to dequeue from msu %d (thread %d)",
+                       self->msus[i]->id, thread->id);
             msu_dequeue(self->msus[i]);
         }
         struct thread_msg *msg = dequeue_thread_msg(&thread->queue);
         // ???: Should i be looping till no more messages?
         while (msg != NULL) {
+            log_custom(LOG_THREAD_MESSAGES,"Dequeued thread message on thread %d",
+                       thread->id);
             if (process_worker_thread_msg(self, msg) != 0) {
                 log_error("Error processing worker thread message");
             }
@@ -210,7 +236,7 @@ int create_worker_thread(unsigned int thread_id,
         log_error("Error starting dedos thread %d", thread_id);
         return -1;
     }
-    log_info("Created worker thread %d", thread_id);
+    log_custom(LOG_THREAD_INITS, "Created worker thread %d", thread_id);
     return 0;
 }
 

@@ -71,9 +71,11 @@
 
 #ifdef LOG_CUSTOM
 #define LOG_CUSTOM_STRINGIFY(val) "" #val
+#define LOG_CUSTOM_STRINGIFY2(val) LOG_CUSTOM_STRINGIFY(val)
 #define log_custom(level, fmt, ...)\
     do { \
-        if (LOG_ALL || strcmp( "" #level, LOG_CUSTOM_STRINGIFY(level))) { \
+        if ((LOG_ALL || strcmp( "" #level, LOG_CUSTOM_STRINGIFY(level))) \
+                        && !strcmp( "NO_" #level, LOG_CUSTOM_STRINGIFY2(NO_##level))) { \
             log_at_level(#level, ANSI_COLOR_BLUE, LOG_FD, fmt, ##__VA_ARGS__); \
         } \
     } while (0)

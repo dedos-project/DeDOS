@@ -14,6 +14,10 @@ LOGS = \
 	   DFG_PARSING \
 	   ALL
 
+NO_LOGS = \
+		  MSU_ENQUEUES \
+		  MSU_DEQUEUES
+
 SRC_DIR = src/
 RNT_DIR = $(SRC_DIR)runtime/
 MSU_DIR = $(SRC_DIR)msus/
@@ -56,7 +60,8 @@ FINAL_TEST=$(CC)
 
 SELF=./runtime.mk
 
-LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname))
+LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
+			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 
 CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99

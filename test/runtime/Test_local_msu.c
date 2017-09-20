@@ -68,19 +68,22 @@ struct msu_type test_type_default = {
     .receive = test_receive
 };
 
+struct dedos_thread dthread = {};
+struct worker_thread wthread = { .thread = &dthread} ;
+
 struct local_msu msu_custom = {
     .id = msu_id_custom,
-    .type = &test_type_custom
+    .type = &test_type_custom,
+    .thread = &wthread
 };
 
 struct local_msu msu_default = {
     .id = msu_id_default,
-    .type = &test_type_default
+    .type = &test_type_default,
+    .thread = &wthread
 };
 
 
-struct dedos_thread dthread = {};
-struct worker_thread wthread = { .thread = &dthread} ;
 
 START_DEDOS_TEST(test_rm_from_local_registry__success) {
     local_msu_registry[msu_id_default] = &msu_default;

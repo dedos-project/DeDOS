@@ -1,12 +1,19 @@
-#include <stdbool.h>
-#include <stdlib.h>
+#define _GNU_SOURCE  // Needed for CPU_SET etc.
+
 #include "dedos_threads.h"
 #include "thread_message.h"
 #include "logging.h"
 #include "rt_stats.h"
 
+#include <stdbool.h>
+#include <stdlib.h>
+#include <sched.h>
+
 #define MAX_DEDOS_THREAD_ID 16
+#define MAX_CORES 16
+
 static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID];
+static int pinned_cores[MAX_CORES];
 
 struct dedos_thread *get_dedos_thread(unsigned int id) {
     if (id > MAX_DEDOS_THREAD_ID) {
@@ -63,6 +70,29 @@ struct thread_init {
     sem_t sem;
 };
 
+static int pin_thread(pthread_t ptid) {
+    int cpu_id;
+    int num_cpu = sysconf(_SC_NPROCESSORS_ONLN);
+    for (cpu_id = 0; cpu_id < num_cpu && pinned_cores[cpu_id] == 1; cpu_id++);
+    if (cpu_id == num_cpu) {
+        log_warn("No cores available to pin thread");
+        return -1;
+    }
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(cpu_id, &cpuset);
+    int s = pthread_setaffinity_np(ptid, sizeof(cpuset), &cpuset);
+    if (s != 0) {
+        log_warn("pthread_setaffinity_np returned error %d", s);
+        return -1;
+    }
+    pinned_cores[cpu_id] = 1;
+    log_custom(LOG_DEDOS_THREADS, "Successfully pinned pthread %d", (int)ptid);
+    return 0;
+}
+
+
 static void *dedos_thread_starter(void *thread_init_v) {
     struct thread_init *init = thread_init_v;
 
@@ -77,6 +107,11 @@ static void *dedos_thread_starter(void *thread_init_v) {
     void *init_rtn = NULL;
     if (init->init_fn) {
         init_rtn = init->init_fn(thread);
+    }
+
+    if (thread->mode == PINNED_THREAD) {
+        pin_thread(thread->pthread);
+        log_warn("Could not pin thread %d", thread->id);
     }
 
     sem_post(&init->sem);
@@ -94,7 +129,6 @@ static void *dedos_thread_starter(void *thread_init_v) {
 }
 
 int thread_wait(struct dedos_thread *thread) {
-    log_custom(LOG_SEM_WAIT, "Waiting (id: %d)", thread->id);
     int rtn = sem_wait(&thread->sem);
     if (rtn < 0) {
         log_perror("Error waiting on thread semaphore");

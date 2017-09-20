@@ -31,6 +31,7 @@ static int handle_read(struct read_state *read_state,
         free(msg->data);
         close_connection(&read_state->conn);
         read_state->req_len = -1;
+        return -1;
     } else {
         log_custom(LOG_WEBSERVER_READ, "Read %s", read_state->req);
     }
@@ -65,17 +66,16 @@ static int read_http_request(struct local_msu *self,
                              struct msu_msg *msg) {
     struct ws_read_state *msu_state = self->msu_state;
 
-    struct connection *conn_in = msg->data;
-    int fd = conn_in->fd;
+    struct socket_msg *msg_in = msg->data;
+    int fd = msg_in->fd;
 
     size_t size = -1;
     struct read_state *read_state = msu_get_state(self, &msg->hdr->key, &size);
     if (read_state == NULL) {
         read_state = msu_init_state(self, &msg->hdr->key, sizeof(*read_state));
-        init_read_state(read_state, conn_in);
-        if (conn_in->ssl != NULL) {
-            read_state->conn.status = CON_READING;
-        }
+        struct connection conn_in;
+        init_connection(&conn_in, fd);
+        init_read_state(read_state, &conn_in);
     } else {
         log_custom(LOG_WEBSERVER_READ, "Retrieved read ptr %p", read_state);
     }
@@ -91,6 +91,7 @@ static int read_http_request(struct local_msu *self,
         case CON_SSL_CONNECTING:
             return handle_accept(read_state, msu_state, self, msg);
         case CON_READING:
+            // TODO: I think it may never get here...
             return handle_read(read_state, msu_state, self, msg);
         default:
             log_error("Received unknown packet status: %d", read_state->conn.status);
@@ -151,5 +152,4 @@ struct msu_type WEBSERVER_READ_MSU_TYPE = {
     .destroy = ws_read_destroy,
     .route = route_to_origin_runtime,
     .receive = read_http_request
-    // TODO: init_type for SSL context
 };

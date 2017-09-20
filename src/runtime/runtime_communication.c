@@ -222,7 +222,8 @@ static int process_runtime_message_hdr(struct inter_runtime_msg_hdr *hdr, int fd
             return 0;
         default:
             log_error("Received unknown message type from fd %d: %d", fd, hdr->type);
-            return -1;
+            // Returning 1 because a return of -1 will make the epoll loop exit
+            return 1;
     }
 }
 
@@ -232,7 +233,8 @@ int handle_runtime_communication(int fd) {
 
     if (rtn < 0) {
         log_error("Error reading runtime message");
-        return -1;
+        // Return of -1 will make epoll loop exit
+        return 1;
     } else {
         log_custom(LOG_INTER_RUNTIME_COMMUNICATION,
                    "Read message from runtime with fd %d", fd);

@@ -121,6 +121,7 @@ struct local_msu *init_msu(unsigned int id,
                            struct msu_init_data *data) {
     struct local_msu *msu = msu_alloc();
     init_msu_stats(id);
+    msu->thread = thread;
     msu->id = id;
     msu->type = type;
     msu->scheduling_weight = 0;
@@ -131,6 +132,8 @@ struct local_msu *init_msu(unsigned int id,
         return NULL;
     }
 
+    log_info("Initializing msu (ID: %d, type: %s, data: '%s')", id, type->name,
+             data->init_data);
     if (type->init) {
         if (type->init(msu, data) != 0) {
             log_error("Error running MSU %d (type: %s) type-specific initialization function",
@@ -145,8 +148,14 @@ struct local_msu *init_msu(unsigned int id,
         msu_free(msu);
         return NULL;
     }
-    log_info("Initialized msu (ID: %d, type: %s, data: %s)", id, type->name,
-             data->init_data);
+    rtn = register_msu_with_thread(msu);
+    if (rtn < 0) {
+        log_error("Error registering MSU With thread");
+        msu_free(msu);
+        rm_from_local_registry(msu->id);
+        return NULL;
+    }
+
     return msu;
 }
 
@@ -253,7 +262,6 @@ int call_local_msu(struct local_msu *sender, struct local_msu *dest,
         free(msg);
         return -1;
     }
-    log_custom(LOG_MSU_ENQUEUES, "Enqueued data %p to local msu %d", msg->data, dest->id);
     return 0;
 }
 
@@ -278,11 +286,15 @@ int call_msu(struct local_msu *sender, struct msu_type *dst_type,
 
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
 
+    int rtn = add_provinance(&msg->hdr->provinance, sender);
+    if (rtn < 0) {
+        log_warn("Could not add provinance to message %p", msg);
+    }
+
     log_custom(LOG_MSU_ENQUEUES, "Sending data %p to destination type %s",
                msg->data, dst_type->name);
 
     struct msu_endpoint dst;
-    int rtn;
     if (dst_type->route) {
         rtn = dst_type->route(dst_type, sender, msg, &dst);
     } else {
@@ -297,10 +309,6 @@ int call_msu(struct local_msu *sender, struct msu_type *dst_type,
         return -1;
     }
 
-    rtn = add_provinance(&msg->hdr->provinance, sender);
-    if (rtn < 0) {
-        log_warn("Could not add provinance to message %p", msg);
-    }
 
     switch (dst.locality) {
         case MSU_IS_LOCAL:

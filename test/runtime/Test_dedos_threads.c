@@ -1,3 +1,5 @@
+#define _GNU_SOURCE  // Needed for CPU_SET etc.
+
 #include "dedos_testing.h"
 
 // Wheeee!

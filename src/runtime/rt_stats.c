@@ -27,10 +27,6 @@ struct stat_item
     bool rolled_over;         /**< Whether the stats structure has rolled over at least once */
     struct timed_stat *stats; /**< Timestamp and data for each gathered statistic */
     pthread_mutex_t mutex;    /**< Lock for changing stat item */
-    // TODO: Do I need `sample`?
-    //int last_sample_index;    /**< Index at which the stat was sampled last */
-    //struct timed_stat sample[MAX_STAT_SAMPLES]; /**< Filled with stat samples on call to
-    //                                                 sample_stats() */
 };
 
 struct stat_type {
@@ -84,6 +80,80 @@ struct stat_type stat_types[] = {
         log_error("Statistics not initialized!"); \
         return -1; \
     }
+
+/* TODO: Incremental flushes of raw items, followed by eventual conversion 
+static inline int flush_raw_item_to_log(FILE *file, struct stat_type *type,
+                                        int item_idx) {
+    struct stat_item *item = &type->items[item_idx];
+    int max_stats = type->max_stats;
+
+    fwrite(&type->id, sizeof(type->id), 1, file);
+    int label_len = strlen(type->label) + 1;
+    fwrite(&label_len, sizeof(label_len), 1, file);
+    fwrite(type->label, sizeof(char), label_len, file);
+    int fmt_len = strlen(type->format) + 1;
+    fwrite(&fmt_len, sizeof(fmt_len), 1, file);
+    fwrite(type->format, sizeof(char), fmt_len, file);
+
+    fwrite(&item->id, sizeof(item->id), 1, file);
+    fwrite(&item->write_index, sizeof(item->write_index), 1, file);
+    fwrite(&item->rolled_over, sizeof(item->rolled_over), 1, file);
+    int n_stats = item->rolled_over ? max_stats : item->write_index;
+    fwrite(&n_stats, sizeof(n_stats), 1, file);
+    fwrite(item->stats, sizeof(*item->stats), n_stats, file);
+
+    return 0;
+}
+
+static int convert_raw_item_from_log(FILE *in_file, FILE *out_file) {
+    struct stat_type type;
+    struct stat_item item;
+
+    fread(&type.id, sizeof(type.id), 1, in_file);
+    int label_len;
+    fread(&label_len, sizeof(label_len), 1, in_file);
+    fread(type.label, sizeof(char), label_len, in_file);
+
+    int fmt_len;
+    fread(&fmt_len, sizeof(fmt_len), 1, in_file);
+    fread(type.format, sizeof(char), fmt_len, in_file);
+
+    fread(&item.id, sizeof(item.id), 1, in_file);
+    fread(&item.write_index, sizeof(item.write_index), 1, in_file);
+    fread(&item.rolled_over, sizeof(item.rolled_over), 1, in_file);
+    int n_stats;
+    fread(&n_stats, sizeof(n_stats), 1, in_file);
+    item.stats = malloc(sizeof(*item.stats) * n_stats);
+    fread(item.stats, sizeof(*item.stats), n_stats, in_file);
+
+    return write_item_to_log(out_file, &type, &item);
+}
+*/
+static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat_item *item) {
+
+    char label[64];
+    sprintf(label, "%s:%02d:", type->label, item->id);
+    size_t label_size = strlen(label);
+
+    int n_stats = item->rolled_over ? type->max_stats : item->write_index;
+    for (int i=0; i<n_stats; i++) {
+        fwrite(label, 1, label_size, out_file);
+        fprintf(out_file, "%05ld.%09ld", item->stats[i].time.tv_sec, item->stats[i].time.tv_nsec);
+        fprintf(out_file, type->format, item->stats[i].value);
+        fwrite("\n", 1, 1, out_file);
+    }
+    return 0;
+}
+void flush_all_stats_to_log(FILE *file) {
+    for (int i=0; i<N_STAT_TYPES; i++) {
+        if (!stat_types[i].enabled) {
+            continue;
+        }
+        for (int j=0; j<stat_types[i].num_items; j++) {
+            write_item_to_log(file, &stat_types[i], &stat_types[i].items[j]);
+        }
+    }
+}
 
 /**
  * Gets the amount of time that has elapsed since logging started.
@@ -531,8 +601,8 @@ void finalize_statistics(char *statlog) {
     if (statlog != NULL) {
 #if DUMP_STATS
         log_info("Outputting stats to log. Do not quit.");
-        // TODO: flush to log
-        //flush_all_stats_to_log(statlog);
+        FILE *file = fopen(statlog, "w");
+        flush_all_stats_to_log(file);
         log_info("Finished outputting stats to log");
 #else
         log_info("Skipping dump to stat log. Set DUMP_STATS=1 to enable");

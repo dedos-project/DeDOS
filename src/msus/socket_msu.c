@@ -70,7 +70,6 @@ static int process_connection(int fd, void *v_state) {
         }
         seed.local_ip = local_runtime_ip();
         set_msg_key(&seed, sizeof(seed), &key);
-        log_custom(HERE, "HERE");
 
         struct msu_type *type = state->default_target;
 
@@ -217,6 +216,7 @@ static int socket_msu_init(struct local_msu *self, struct msu_init_data *init_da
         return -1;
     }
 
+    state->self = self;
     instance = self;
 
     init_call_local_msu(self, self, &self_key, 0, NULL);

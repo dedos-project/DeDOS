@@ -75,7 +75,7 @@ START_DEDOS_TEST(test_get_msu_index__fail) {
 
 START_DEDOS_TEST(test_create_msu_on_thread) {
     init_msu_type_id(msu_type_id);
-    
+
     struct ctrl_create_msu_msg msg = {
         .msu_id = new_msu_id,
         .type_id = msu_type_id

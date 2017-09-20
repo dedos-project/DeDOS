@@ -1,4 +1,4 @@
-TARGETS=global_controller runtime
+TARGETS=runtime global_controller
 
 TESTS=$(foreach TARG, $(TARGETS), $(TARG)-test)
 CLEANS=$(foreach TARG, $(TARGETS), $(TARG)-clean)

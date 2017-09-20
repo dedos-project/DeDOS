@@ -41,12 +41,14 @@ struct worker_thread thread = {
 
 struct local_msu target_msu = {
     .type = &test_type,
-    .id = test_msu_id
+    .id = test_msu_id,
+    .thread = &thread
 };
 
 struct local_msu sock_msu = {
     .type = &SOCKET_MSU_TYPE,
-    .id = 66
+    .id = 66,
+    .thread = &thread
 };
 
 int route_id = 2;
