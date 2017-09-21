@@ -30,6 +30,8 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
+OPTIM=6
+
 CC:=gcc
 CXX:=g++
 
@@ -44,7 +46,7 @@ SELF=./global_controller.mk
 
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname))
 
-CFLAGS=-Wall -pthread $(LOG_DEFINES)
+CFLAGS=-Wall -pthread -O$(OPTIM) $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
 ifeq ($(DEBUG), 1)

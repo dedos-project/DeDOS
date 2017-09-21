@@ -142,7 +142,7 @@ static int worker_mod_msu_route(struct worker_thread *thread, struct ctrl_msu_ro
     }
 
 static int process_worker_thread_msg(struct worker_thread *thread, struct thread_msg *msg) {
-    int rtn;
+    int rtn = -1;
     switch (msg->type) {
         case CREATE_MSU:
             CHECK_MSG_SIZE(msg, struct ctrl_create_msu_msg);

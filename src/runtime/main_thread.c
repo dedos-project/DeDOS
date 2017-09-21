@@ -121,7 +121,7 @@ static int main_thread_control_route(struct ctrl_route_msg *msg) {
 static int process_main_thread_msg(struct dedos_thread *main_thread,
                                    struct thread_msg *msg) {
 
-    int rtn;
+    int rtn = -1;
     switch (msg->type) {
         case CONNECT_TO_RUNTIME:
             CHECK_MSG_SIZE(msg, struct ctrl_add_runtime_msg);

@@ -16,7 +16,11 @@ char *socat_cmd[] = {SOCAT, "stdio", "/tmp/haproxy.socket", NULL};
 int reweight_haproxy(int server, int weight){
 
     int fd[2];
-    pipe(fd);
+    int rtn = pipe(fd);
+    if (rtn < 0) {
+        log_error("Error creating pipe");
+        return -1;
+    }
 
     pid_t pid = fork();
 

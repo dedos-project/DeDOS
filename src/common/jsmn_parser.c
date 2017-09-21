@@ -127,7 +127,11 @@ int parse_file_into_obj(const char *filename, void *obj, struct key_mapping *km)
 
     // Read the file
     char *contents = malloc(fsize + 1);
-    fread(contents, fsize, 1, file);
+    size_t rtn = fread(contents, fsize, 1, file);
+    if (rtn == 0) {
+        log_error("Could not read from file");
+        return -1;
+    }
     contents[fsize] = '\0';
     fclose(file);
 

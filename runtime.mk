@@ -15,7 +15,9 @@ LOGS = \
 	   ALL
 
 NO_LOGS = \
-		  MSU_ENQUEUES \
+		  JSMN_PARSING \
+		  DFG_PARSING
+		  #MSU_ENQUEUES \
 		  MSU_DEQUEUES
 
 SRC_DIR = src/
@@ -48,6 +50,8 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
+OPTIM=6
+
 CC:=gcc
 CXX:=g++
 
@@ -63,7 +67,7 @@ SELF=./runtime.mk
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 
-CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap $(LOG_DEFINES)
+CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -O$(OPTIM) $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
 ifeq ($(DEBUG), 1)
