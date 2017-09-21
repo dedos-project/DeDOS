@@ -100,7 +100,7 @@ int connect_to_db(struct db_state *state) {
     int rtn = connect(state->db_fd, (struct sockaddr*)&db_addr, sizeof(db_addr)) < 0;
     if (rtn < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINPROGRESS) {
-            log_custom(LOG_DB_OPS, "Connection in progress..");
+            log(LOG_DB_OPS, "Connection in progress..");
             return 1;
         } else {
             log_perror("Connect to socket failed");

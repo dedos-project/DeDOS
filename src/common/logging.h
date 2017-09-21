@@ -72,7 +72,7 @@
 #ifdef LOG_CUSTOM
 #define LOG_CUSTOM_STRINGIFY(val) "" #val
 #define LOG_CUSTOM_STRINGIFY2(val) LOG_CUSTOM_STRINGIFY(val)
-#define log_custom(level, fmt, ...)\
+#define log(level, fmt, ...)\
     do { \
         if ((LOG_ALL || strcmp( "" #level, LOG_CUSTOM_STRINGIFY(level))) \
                         && !strcmp( "NO_" #level, LOG_CUSTOM_STRINGIFY2(NO_##level))) { \
@@ -80,7 +80,7 @@
         } \
     } while (0)
 #else
-#define log_custom(...) do {} while (0)
+#define log(...) do {} while (0)
 #endif
 
 #if defined(DATA_PROFILING_PRINT) && DATA_PROFILING_PRINT

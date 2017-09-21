@@ -45,7 +45,7 @@ int send_to_runtime(unsigned int runtime_id, struct ctrl_runtime_msg_hdr *hdr, v
         log_error("Error sending payload to runtime %d", runtime_id);
         return -1;
     }
-    log_custom(LOG_RUNTIME_SENDS, "Sent a payload of size %d to runtime %d (fd: %d)",
+    log(LOG_RUNTIME_SENDS, "Sent a payload of size %d to runtime %d (fd: %d)",
                (int)hdr->payload_size, runtime_id, endpoint->fd);
     return 0;
 }
@@ -69,7 +69,7 @@ static int send_add_runtime_msg(unsigned int target_id, int new_rt_id,
         log_error("Error sending initialization message for rt %d to rt %d",
                   new_rt_id, target_id);
     } else {
-        log_custom(LOG_RT_COMMUNICATION, "Send initialization message for rt %d to rt %d",
+        log(LOG_RT_COMMUNICATION, "Send initialization message for rt %d to rt %d",
                    new_rt_id, target_id);
     }
     return 0;
@@ -179,7 +179,7 @@ static int handle_runtime_communication(int fd, void UNUSED *data) {
         }
         return 0;
     } else {
-        log_custom(LOG_RT_COMMUNICATION,
+        log(LOG_RT_COMMUNICATION,
                    "received header from runtime");
     }
 

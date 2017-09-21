@@ -25,7 +25,7 @@ static int add_dfg_route_endpoints(int route_id,
             return -1;
         }
     }
-    log_custom(LOG_DFG_INSTANTIATION, "Added %d endpoints to route %d",
+    log(LOG_DFG_INSTANTIATION, "Added %d endpoints to route %d",
                n_endpoints, route_id);
     return 0;
 }
@@ -39,7 +39,7 @@ static int spawn_dfg_routes(struct dfg_route **routes, int n_routes) {
             return -1;
         }
     }
-    log_custom(LOG_DFG_INSTANTIATION, "Spawned %d routes", n_routes);
+    log(LOG_DFG_INSTANTIATION, "Spawned %d routes", n_routes);
     return 0;
 }
 
@@ -64,7 +64,7 @@ static int add_dfg_routes_to_msu(struct local_msu *msu, struct dfg_route **route
             return -1;
         }
     }
-    log_custom(LOG_DFG_INSTANTIATION, "Added %d routes to msu %d",
+    log(LOG_DFG_INSTANTIATION, "Added %d routes to msu %d",
                n_routes, msu->id);
     return 0;
 }
@@ -82,14 +82,14 @@ static int spawn_dfg_msus(struct worker_thread *thread, struct dfg_msu **msus, i
             log_error("Error instantiating MSU %d", dfg_msu->type->id);
             return -1;
         }
-        log_custom(LOG_DFG_INSTANTIATION, "Initialized MSU %d from dfg", dfg_msu->id);
+        log(LOG_DFG_INSTANTIATION, "Initialized MSU %d from dfg", dfg_msu->id);
         struct dfg_scheduling *sched = &dfg_msu->scheduling;
         if (add_dfg_routes_to_msu(msu, sched->routes, sched->n_routes) != 0) {
             log_error("Error adding routes to MSU %d", msu->id);
             return -1;
         }
     }
-    log_custom(LOG_DFG_INSTANTIATION, "Initialized %d MSUs", n_msus);
+    log(LOG_DFG_INSTANTIATION, "Initialized %d MSUs", n_msus);
     return 0;
 }
 
@@ -101,17 +101,17 @@ static int spawn_dfg_threads(struct dfg_thread **threads, int n_threads) {
             log_error("Error instantiating thread %d! Can not continue!", dfg_thread->id);
             return -1;
         }
-        log_custom(LOG_DFG_INSTANTIATION, "Created worker thread %d, mode = %s",
+        log(LOG_DFG_INSTANTIATION, "Created worker thread %d, mode = %s",
                    dfg_thread->id, dfg_thread->mode == PINNED_THREAD ? "Pinned" : "Unpinned");
         struct worker_thread *thread = get_worker_thread(dfg_thread->id);
         if (spawn_dfg_msus(thread, dfg_thread->msus, dfg_thread->n_msus) != 0) {
             log_error("Error instantiating thread %d MSUs", dfg_thread->id);
             return -1;
         }
-        log_custom(LOG_DFG_INSTANTIATION, "Spawned %d MSUs on thread %d",
+        log(LOG_DFG_INSTANTIATION, "Spawned %d MSUs on thread %d",
                    dfg_thread->n_msus, dfg_thread->id);
     }
-    log_custom(LOG_DFG_INSTANTIATION, "Initialized %d threads", n_threads);
+    log(LOG_DFG_INSTANTIATION, "Initialized %d threads", n_threads);
     return 0;
 }
 
@@ -122,10 +122,10 @@ int init_dfg_msu_types(struct dfg_msu_type **msu_types, int n_msu_types) {
             log_error("Could not instantiate required type %d", type->id);
             return -1;
         }
-        log_custom(LOG_DFG_INSTANTIATION, "Initialized MSU Type %d from dfg",
+        log(LOG_DFG_INSTANTIATION, "Initialized MSU Type %d from dfg",
                    type->id);
     }
-    log_custom(LOG_DFG_INSTANTIATION, "Initialized %d MSU types", n_msu_types);
+    log(LOG_DFG_INSTANTIATION, "Initialized %d MSU types", n_msu_types);
     return 0;
 }
 

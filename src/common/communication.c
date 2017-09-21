@@ -9,7 +9,7 @@ int read_payload(int fd, size_t size, void *buff) {
     ssize_t rtn = 0;
     int attempts = 0;
     do {
-        log_custom(LOG_READS, "Attempting to read payload of size %d", (int)size);
+        log(LOG_READS, "Attempting to read payload of size %d", (int)size);
         int new_rtn = recv(fd, buff, size, 0);
         if (new_rtn < 0 && errno != EAGAIN) {
             log_perror("Error reading from fd: %d", fd);
@@ -22,7 +22,7 @@ int read_payload(int fd, size_t size, void *buff) {
         rtn += new_rtn;
     } while (errno == EAGAIN || (rtn > 0 && rtn < size));
     if (rtn == 0) {
-        log_custom(LOG_CONNECTIONS, "fd %d has been closed by peer", fd);
+        log(LOG_CONNECTIONS, "fd %d has been closed by peer", fd);
         return 1;
     }
     if (rtn != size) {
@@ -67,14 +67,14 @@ int init_connected_socket(struct sockaddr_in *addr) {
     uint32_t ip_h = ntohl(addr->sin_addr.s_addr);
     inet_ntop(AF_INET, &ip_h, ip, INET_ADDRSTRLEN);
     int port = ntohs(addr->sin_port);
-    log_custom(LOG_CONNECTIONS, "Attepting to connect to socket at %s:%d", ip, port);
+    log(LOG_CONNECTIONS, "Attepting to connect to socket at %s:%d", ip, port);
     if (connect(sock, (struct sockaddr*)addr, sizeof(*addr)) < 0) {
         log_perror("Failed to connect to socket at %s:%d", ip, port);
         close(sock);
         return -1;
     }
 
-    log_custom(LOG_CONNECTIONS, "Connected socket to %s:%d", ip, port);
+    log(LOG_CONNECTIONS, "Connected socket to %s:%d", ip, port);
     return sock;
 }
 
@@ -120,6 +120,6 @@ int init_listening_socket(int port) {
         log_perror("Error starting listening socket");
         return -1;
     }
-    log_custom(LOG_COMMUNICATION, "Started listening socket on fd %d", sock);
+    log(LOG_COMMUNICATION, "Started listening socket on fd %d", sock);
     return sock;
 }

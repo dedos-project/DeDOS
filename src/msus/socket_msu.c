@@ -49,7 +49,7 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
 
 static int process_connection(int fd, void *v_state) {
     struct sock_msu_state *state = v_state;
-    log_custom(LOG_SOCKET_HANDLER, "Processing connection: fd = %d", fd);
+    log(LOG_SOCKET_HANDLER, "Processing connection: fd = %d", fd);
 
     struct socket_msg *msg = malloc(sizeof(*msg));
     msg->fd = fd;
@@ -57,7 +57,7 @@ static int process_connection(int fd, void *v_state) {
     struct local_msu *destination= state->destinations[fd];
     if (destination == NULL) {
         // This is a file descriptor we haven't seen before
-        log_custom(LOG_SOCKET_HANDLER, "New connection: fd = %d", fd);
+        log(LOG_SOCKET_HANDLER, "New connection: fd = %d", fd);
 
         // Generate the key for the message
         struct msu_msg_key key;
@@ -92,7 +92,7 @@ static int process_connection(int fd, void *v_state) {
             log_error("Error enqueueing to next MSU");
             return -1;
         }
-        log_custom(LOG_SOCKET_HANDLER,"Enqueued to MSU %d", destination->id);
+        log(LOG_SOCKET_HANDLER,"Enqueued to MSU %d", destination->id);
         return 0;
     }
 }
@@ -191,7 +191,7 @@ static int socket_msu_init(struct local_msu *self, struct msu_init_data *init_da
     struct sock_init init;
     parse_init_payload(init_cmd, &init);
 
-    log_custom(LOG_SOCKET_INIT, "Initializing socket handler with port %d, target %d",
+    log(LOG_SOCKET_INIT, "Initializing socket handler with port %d, target %d",
                init.port, init.target_type);
 
     struct sock_msu_state *state = malloc(sizeof(*state));

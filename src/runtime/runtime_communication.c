@@ -63,7 +63,7 @@ int send_to_peer(unsigned int runtime_id, struct inter_runtime_msg_hdr *hdr, voi
         log_error("Error sending payload to runtime %d", runtime_id);
         return -1;
     }
-    log_custom(LOG_RUNTIME_COMMUNICATION, "Send a payload of size %d to runtime %d (fd: %d)",
+    log(LOG_RUNTIME_COMMUNICATION, "Send a payload of size %d to runtime %d (fd: %d)",
                (int)hdr->payload_size, runtime_id, peer->fd);
     return 0;
 }
@@ -124,7 +124,7 @@ int connect_to_runtime_peer(unsigned int id, struct sockaddr_in *addr){
         close(fd);
         return -1;
     }
-    log_custom(LOG_RUNTIME_CONNECTION, "Connected to runtime peer %d (fd: %d)", id, fd);
+    log(LOG_RUNTIME_CONNECTION, "Connected to runtime peer %d (fd: %d)", id, fd);
     return 0;
 }
 
@@ -158,7 +158,7 @@ static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
         return -1;
     }
 
-    log_custom(LOG_RUNTIME_CONNECTION, "Attempting to read MSU message");
+    log(LOG_RUNTIME_CONNECTION, "Attempting to read MSU message");
     struct msu_msg *msu_msg = read_msu_msg(msu, fd, payload_size);
     if (msu_msg == NULL) {
         log_error("Error reading MSU msg off of fd %d", fd);
@@ -236,7 +236,7 @@ int handle_runtime_communication(int fd) {
         // Return of -1 will make epoll loop exit
         return 1;
     } else {
-        log_custom(LOG_INTER_RUNTIME_COMMUNICATION,
+        log(LOG_INTER_RUNTIME_COMMUNICATION,
                    "Read message from runtime with fd %d", fd);
     }
 

@@ -80,7 +80,7 @@ ssize_t serialize_stat_samples(struct stat_sample *samples, int n_samples,
         curr_buff += new_size;
     }
 
-    log_custom(LOG_STAT_SERIALIZATION, "Serialized %d samples into buffer of size %d",
+    log(LOG_STAT_SERIALIZATION, "Serialized %d samples into buffer of size %d",
                n_samples, (int)(curr_buff - (char*)buffer));
     return curr_buff - (char*)buffer;
 }
@@ -131,7 +131,7 @@ int deserialize_stat_samples(void *buffer, size_t buff_len, struct stat_sample *
         curr_buff += consumed;
     }
 
-    log_custom(LOG_STAT_SERIALIZATION, "Deserialized buffer of size %d into %d samples",
+    log(LOG_STAT_SERIALIZATION, "Deserialized buffer of size %d into %d samples",
                ((int)(curr_buff - (char*) buffer)), hdr->n_samples);
 
     if (curr_buff - (char*)buffer < buff_len) {

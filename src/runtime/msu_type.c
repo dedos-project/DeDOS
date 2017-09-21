@@ -33,7 +33,7 @@ static int register_msu_type(struct msu_type *type) {
         return -1;
     }
     msu_types[type->id] = type;
-    log_custom(LOG_MSU_TYPE_INIT, "Registered MSU type %s", type->name);
+    log(LOG_MSU_TYPE_INIT, "Registered MSU type %s", type->name);
     return 0;
 }
 
@@ -72,7 +72,7 @@ static int init_msu_type(struct msu_type *type) {
                       type->name);
             return -1;
         } else {
-            log_custom(LOG_MSU_TYPE_INIT, "Initialized msu type %s", type->name);
+            log(LOG_MSU_TYPE_INIT, "Initialized msu type %s", type->name);
         }
     }
     if (register_msu_type(type) != 0) {
@@ -88,7 +88,7 @@ static int init_msu_type(struct msu_type *type) {
  * @return 0 on success, -1 on error
  */
 int init_msu_type_id(unsigned int type_id) {
-    log_custom(TEST, "Number of MSU types: %d", (int)N_MSU_TYPES); 
+    log(TEST, "Number of MSU types: %d", (int)N_MSU_TYPES); 
     for (int i=0; i<N_MSU_TYPES; i++) {
         struct msu_type *type = DEFINED_MSU_TYPES[i];
         if (type->id == type_id) {

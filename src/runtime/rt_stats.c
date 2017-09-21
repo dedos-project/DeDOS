@@ -504,7 +504,7 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
 
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {
-        log_custom(LOG_STATS, "Skipping initialization of type %s item %d",
+        log(LOG_STATS, "Skipping initialization of type %s item %d",
                    type->label, item_id);
         return 0;
     }
@@ -547,7 +547,7 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
 
-    log_custom(LOG_STAT_INITS, "Initialized stat item %s.%d (idx: %d)", 
+    log(LOG_STAT_INITS, "Initialized stat item %s.%d (idx: %d)", 
             stat_types[stat_id].label, item_id, index);
     return 0;
 }
@@ -614,7 +614,7 @@ void finalize_statistics(char *statlog) {
         if (type->enabled) {
             pthread_rwlock_wrlock(&type->lock);
             for (int j = 0; j < type->num_items; j++) {
-                log_custom(LOG_STAT_INITS, "Destroying item %s.idx=%d",
+                log(LOG_STAT_INITS, "Destroying item %s.idx=%d",
                            type->label, j);
                 destroy_stat_item(&type->items[j]);
             }

@@ -56,7 +56,7 @@ static int init_dedos_thread(struct dedos_thread *thread,
         log_error("Error initializing message queue for main thread");
         return -1;
     }
-    log_custom(LOG_DEDOS_THREADS, "Initialized thread %d (mode: %s, addr: %p)",
+    log(LOG_DEDOS_THREADS, "Initialized thread %d (mode: %s, addr: %p)",
                id, mode == PINNED_THREAD ? "pinned" : "unpinned", thread);
     dedos_threads[id] = thread;
     return 0;
@@ -88,7 +88,7 @@ static int pin_thread(pthread_t ptid) {
         return -1;
     }
     pinned_cores[cpu_id] = 1;
-    log_custom(LOG_DEDOS_THREADS, "Successfully pinned pthread %d", (int)ptid);
+    log(LOG_DEDOS_THREADS, "Successfully pinned pthread %d", (int)ptid);
     return 0;
 }
 
@@ -115,11 +115,11 @@ static void *dedos_thread_starter(void *thread_init_v) {
     }
 
     sem_post(&init->sem);
-    log_custom(LOG_DEDOS_THREADS, "Started thread %d (mode: %s, addr: %p)",
+    log(LOG_DEDOS_THREADS, "Started thread %d (mode: %s, addr: %p)",
                thread->id, thread-> mode == PINNED_THREAD ? "pinned" : "unpinned", thread);
 
     int rtn = thread_fn(thread, init_rtn);
-    log_custom(LOG_DEDOS_THREADS, "Thread %d ended.", thread->id);
+    log(LOG_DEDOS_THREADS, "Thread %d ended.", thread->id);
 
     if (destroy_fn) {
         destroy_fn(thread, init_rtn);
@@ -155,7 +155,7 @@ int start_dedos_thread(dedos_thread_fn thread_fn,
         log_perror("Error initializing semaphore for dedos thread");
         return -1;
     }
-    log_custom(LOG_DEDOS_THREADS, "Waiting on thread %d to start", id);
+    log(LOG_DEDOS_THREADS, "Waiting on thread %d to start", id);
     rtn = pthread_create(&thread->pthread, NULL,
                          dedos_thread_starter, (void*)&init);
     if (rtn < 0) {
@@ -166,7 +166,7 @@ int start_dedos_thread(dedos_thread_fn thread_fn,
         log_perror("Error waiting on thread start semaphore");
         return -1;
     }
-    log_custom(LOG_DEDOS_THREADS, "Thread %d started successfully", id);
+    log(LOG_DEDOS_THREADS, "Thread %d started successfully", id);
     sem_destroy(&init.sem);
     return 0;
 }

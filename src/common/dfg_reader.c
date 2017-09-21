@@ -28,11 +28,11 @@ static int fix_num_threads(struct dedos_dfg *dfg) {
             } else {
                 if (n_pinned > 0) {
                     thread->mode = PINNED_THREAD;
-                    log_custom(LOG_DFG_READER, "Setting thread %d with no MSUs to pinned", t);
+                    log(LOG_DFG_READER, "Setting thread %d with no MSUs to pinned", t);
                     n_pinned--;
                 } else if (n_unpinned > 0) {
                     thread->mode = UNPINNED_THREAD;
-                    log_custom(LOG_DFG_READER, "Setting thread %d with no MSUs to unpinned", t);
+                    log(LOG_DFG_READER, "Setting thread %d with no MSUs to unpinned", t);
                     n_unpinned--;
                 } else {
                     log_error("Cannot determine pinned/unpinned status of threads "
@@ -243,7 +243,7 @@ PARSE_FN(set_blocking_mode) {
 
     struct dfg_thread *thread = vertex->scheduling.thread;
     if (thread == NULL) {
-        log_custom(LOG_DFG_READER, "Waiting for thread instantiation");
+        log(LOG_DFG_READER, "Waiting for thread instantiation");
         return 1;
     }
 
@@ -339,7 +339,7 @@ PARSE_FN(set_route_id) {
         return -1;
     }
     route->id = id;
-    log_custom(LOG_DFG_PARSING, "Created route with id: %d", id);
+    log(LOG_DFG_PARSING, "Created route with id: %d", id);
     return 0;
 }
 
@@ -380,7 +380,7 @@ PARSE_FN(set_dest_msu) {
     struct dfg_msu *msu = get_dfg_msu(msu_id);
     if (msu == NULL) {
         // Wait for MSU to be instantiated
-        log_custom(LOG_DFG_PARSING, "MSU %d is not yet instantiated", msu_id);
+        log(LOG_DFG_PARSING, "MSU %d is not yet instantiated", msu_id);
         return 1;
     }
     dest->msu = msu;
@@ -396,7 +396,7 @@ PARSE_FN(set_source_types) {
         struct dfg_msu_type *type = get_dfg_msu_type(str_type);
         if (type == NULL) {
             // Wait for type to be instantiated
-            log_custom(LOG_DFG_PARSING, "Type %d is not yet instantiated", str_type);
+            log(LOG_DFG_PARSING, "Type %d is not yet instantiated", str_type);
             found_types = false;
         } else {
             meta->src_types[i] = type;
@@ -416,7 +416,7 @@ PARSE_FN(set_dst_types) {
         int str_type = GET_INT_TOK();
         struct dfg_msu_type *type = get_dfg_msu_type(str_type);
         if (type == NULL) {
-            log_custom(LOG_DFG_PARSING, "Type %d is not yet instantiated", str_type);
+            log(LOG_DFG_PARSING, "Type %d is not yet instantiated", str_type);
             found_types = false;
         } else {
             meta->dst_types[i] = type;
@@ -438,7 +438,7 @@ PARSE_FN(set_dep_type) {
 
     if (type == NULL) {
         // Return once type has been instantiated
-        log_custom(LOG_DFG_PARSING, "Type %d is not yet instantiated", type_id);
+        log(LOG_DFG_PARSING, "Type %d is not yet instantiated", type_id);
         return 1;
     }
     dep->type = type;
@@ -465,7 +465,7 @@ PARSE_FN(set_msu_runtime) {
     int id = GET_INT_TOK();
     struct dfg_runtime *rt = get_dfg_runtime(id);
     if (rt == NULL) {
-        log_custom(LOG_DFG_PARSING, "Runtime %d is not yet instantiated", id);
+        log(LOG_DFG_PARSING, "Runtime %d is not yet instantiated", id);
         return 1;
     }
     sched->runtime = rt;
@@ -477,14 +477,14 @@ PARSE_FN(set_msu_thread) {
 
     if (sched->runtime == NULL) {
         // Runtime must be instantiated before thread
-        log_custom(LOG_DFG_PARSING, "MSU runtime not yet instantiated");
+        log(LOG_DFG_PARSING, "MSU runtime not yet instantiated");
         return 1;
     }
     int id = GET_INT_TOK();
     struct dfg_thread *thread = get_dfg_thread(sched->runtime, id);
     if (thread == NULL) {
         // Thread must be instantiated too
-        log_custom(LOG_DFG_PARSING, "Thread %d not yet instantiated", id);
+        log(LOG_DFG_PARSING, "Thread %d not yet instantiated", id);
         return 1;
     }
     sched->thread = thread;
@@ -502,7 +502,7 @@ PARSE_FN(set_msu_thread) {
     }
     // Shouldn't happen, really...
     if (msu == NULL) {
-        log_custom(LOG_DFG_PARSING, "Msu for thead %d not yet instantiated", id);
+        log(LOG_DFG_PARSING, "Msu for thead %d not yet instantiated", id);
         return 1;
     }
     thread->msus[thread->n_msus] = msu;
@@ -516,13 +516,13 @@ PARSE_FN(set_msu_routes) {
 
     bool set_routes = true;
     int i;
-    log_custom(LOG_DFG_PARSING, "MSU_ROUTE pre TOK: %s", GET_STR_TOK());
+    log(LOG_DFG_PARSING, "MSU_ROUTE pre TOK: %s", GET_STR_TOK());
     START_ITER_TOK_LIST(i) {
-        log_custom(LOG_DFG_PARSING, "MSU_ROUTE TOK: %s", GET_STR_TOK());
+        log(LOG_DFG_PARSING, "MSU_ROUTE TOK: %s", GET_STR_TOK());
         int route_id = GET_INT_TOK();
         struct dfg_route *route = get_dfg_route(route_id);
         if (route == NULL) {
-            log_custom(LOG_DFG_PARSING, "Route %d not yet instantiated for msu", route_id);
+            log(LOG_DFG_PARSING, "Route %d not yet instantiated for msu", route_id);
             set_routes = false;
         } else {
             sched->routes[i] = route;

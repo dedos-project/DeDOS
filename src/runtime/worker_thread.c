@@ -73,7 +73,7 @@ int register_msu_with_thread(struct local_msu *msu) {
     }
     msu->thread->msus[msu->thread->n_msus] = msu;
     msu->thread->n_msus++;
-    log_custom(LOG_MSU_REGISTRATION, "Registered msu %d with thread", msu->id);
+    log(LOG_MSU_REGISTRATION, "Registered msu %d with thread", msu->id);
     return 0;
 }
 
@@ -197,7 +197,7 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
             continue;
         }
         for (int i=0; i<self->n_msus; i++) {
-            log_custom(LOG_MSU_DEQUEUES, "Attempting to dequeue from msu %d (thread %d)",
+            log(LOG_MSU_DEQUEUES, "Attempting to dequeue from msu %d (thread %d)",
                        self->msus[i]->id, thread->id);
             msu_dequeue(self->msus[i]);
         }
@@ -207,7 +207,7 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
         }
         // ???: Should i be looping till no more messages?
         while (msg != NULL) {
-            log_custom(LOG_THREAD_MESSAGES,"Dequeued thread message on thread %d",
+            log(LOG_THREAD_MESSAGES,"Dequeued thread message on thread %d",
                        thread->id);
             if (process_worker_thread_msg(self, msg) != 0) {
                 log_error("Error processing worker thread message");
@@ -237,7 +237,7 @@ int create_worker_thread(unsigned int thread_id,
         log_error("Error starting dedos thread %d", thread_id);
         return -1;
     }
-    log_custom(LOG_THREAD_INITS, "Created worker thread %d", thread_id);
+    log(LOG_THREAD_INITS, "Created worker thread %d", thread_id);
     return 0;
 }
 

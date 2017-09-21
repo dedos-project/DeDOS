@@ -47,7 +47,7 @@ int send_to_controller(struct rt_controller_msg_hdr *hdr, void *payload) {
         return -1;
     }
 
-    log_custom(LOG_CONTROLLER_COMMUNICATION, "Sent payload of size %d to controller",
+    log(LOG_CONTROLLER_COMMUNICATION, "Sent payload of size %d to controller",
                (int)hdr->payload_size);
     return 0;
 }
@@ -186,7 +186,7 @@ static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *
         free(msg_data);
         return NULL;
     }
-    log_custom(LOG_CONTROLLER_COMMUNICATION, "Read control payload %p of size %d", 
+    log(LOG_CONTROLLER_COMMUNICATION, "Read control payload %p of size %d", 
                msg_data, (int)hdr->payload_size);
     enum thread_msg_type type = get_thread_msg_type(hdr->type);
     return construct_thread_msg(type, hdr->payload_size, msg_data);
@@ -227,7 +227,7 @@ int handle_controller_communication(int fd) {
         close(fd);
         return 1;
     } else {
-        log_custom(LOG_CONTROLLER_COMMUNICATION,
+        log(LOG_CONTROLLER_COMMUNICATION,
                    "Read header from controller");
     }
 

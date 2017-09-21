@@ -24,7 +24,7 @@ static int handle_db(struct http_state *http_state,
         log_warn("HELP!");
         return -1;
     } else if (rtn & (WS_INCOMPLETE_READ | WS_INCOMPLETE_WRITE)) {
-        log_custom(LOG_HTTP_MSU, "Partial db access, requeuing state %p", http_state);
+        log(LOG_HTTP_MSU, "Partial db access, requeuing state %p", http_state);
         http_state->conn.status = CON_DB_REQUEST;
         return msu_monitor_fd(http_state->db.db_fd, RTN_TO_EVT(rtn), self, msg->hdr);
     } else {
@@ -36,7 +36,7 @@ static int handle_db(struct http_state *http_state,
         free(msg->data);
 
         if (!has_regex(resp->url)) {
-            log_custom(LOG_HTTP_MSU, "Crafting response for url %s", resp->url);
+            log(LOG_HTTP_MSU, "Crafting response for url %s", resp->url);
             resp->resp_len = craft_nonregex_response(resp->url, resp->resp);
             return call_msu(self, &WEBSERVER_WRITE_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
         }
@@ -50,11 +50,11 @@ static int handle_parsing(struct read_state *read_state,
                           struct local_msu *self,
                           struct msu_msg *msg) {
     if (read_state->req_len == -1) {
-        log_custom(LOG_HTTP_MSU, "Clearing state (fd: %d)", read_state->conn.fd);
+        log(LOG_HTTP_MSU, "Clearing state (fd: %d)", read_state->conn.fd);
         msu_free_state(self, &msg->hdr->key);
         return 0;
     }
-    log_custom(LOG_HTTP_MSU, "Parsing request: %s (fd: %d)", read_state->req, read_state->conn.fd);
+    log(LOG_HTTP_MSU, "Parsing request: %s (fd: %d)", read_state->req, read_state->conn.fd);
     int rtn = parse_request(read_state->req, read_state->req_len, http_state);
 
     if (rtn & WS_COMPLETE) {
@@ -64,7 +64,7 @@ static int handle_parsing(struct read_state *read_state,
         return -1;
     } else {
         http_state->conn.status = CON_READING;
-        log_custom(LOG_PARTIAL_READS, "Got partial request %s (fd: %d)",
+        log(LOG_PARTIAL_READS, "Got partial request %s (fd: %d)",
                    read_state->req, read_state->conn.fd);
         return call_msu(self, &WEBSERVER_READ_MSU_TYPE, msg->hdr, msg->data_size, msg->data);
     }
@@ -82,10 +82,10 @@ static int craft_http_response(struct local_msu *self,
         init_http_state(http_state, &read_state->conn);
         memcpy(&http_state->conn, &read_state->conn, sizeof(read_state->conn));
     } else {
-        log_custom(LOG_HTTP_MSU, "Retrieved state %p (status %d)",
+        log(LOG_HTTP_MSU, "Retrieved state %p (status %d)",
                    http_state, http_state->conn.status);
         if (http_state->conn.status != CON_DB_REQUEST) {
-            log_custom(LOG_PARTIAL_READS, "Recovering partial read state ID: %d",
+            log(LOG_PARTIAL_READS, "Recovering partial read state ID: %d",
                        msg->hdr->key.id);
         }
     }
@@ -93,7 +93,7 @@ static int craft_http_response(struct local_msu *self,
     switch (http_state->conn.status) {
         case NIL:
         case CON_READING:
-            log_custom(LOG_HTTP_MSU, "got CON_READING");
+            log(LOG_HTTP_MSU, "got CON_READING");
             rtn = handle_parsing(read_state, http_state, self, msg);
             if (rtn < 0) {
                 log_error("Error processing fd %d, ID %u", read_state->conn.fd, 
@@ -101,7 +101,7 @@ static int craft_http_response(struct local_msu *self,
             }
             return rtn;
         case CON_DB_REQUEST:
-            log_custom(LOG_HTTP_MSU, "got CON_DB_REQUEST");
+            log(LOG_HTTP_MSU, "got CON_DB_REQUEST");
             return handle_db(http_state, self, msg);
         default:
             log_error("Received unknown packet status: %d", read_state->conn.status);

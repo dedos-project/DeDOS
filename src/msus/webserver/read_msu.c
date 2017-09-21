@@ -19,11 +19,11 @@ static int handle_read(struct read_state *read_state,
                        struct ws_read_state *msu_state,
                        struct local_msu *self,
                        struct msu_msg *msg) {
-    log_custom(LOG_WEBSERVER_READ, "Attempting read from %p", read_state);
+    log(LOG_WEBSERVER_READ, "Attempting read from %p", read_state);
     int rtn = read_request(read_state);
     if (rtn & (WS_INCOMPLETE_WRITE | WS_INCOMPLETE_READ)) {
         read_state->conn.status = CON_READING;
-        log_custom(LOG_WEBSERVER_READ, "Read incomplete. Re-enabling (fd: %d)", read_state->conn.fd);
+        log(LOG_WEBSERVER_READ, "Read incomplete. Re-enabling (fd: %d)", read_state->conn.fd);
         free(msg->data);
         msu_monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self, msg->hdr);
         return 0;
@@ -33,7 +33,7 @@ static int handle_read(struct read_state *read_state,
         read_state->req_len = -1;
         return -1;
     } else {
-        log_custom(LOG_WEBSERVER_READ, "Read %s", read_state->req);
+        log(LOG_WEBSERVER_READ, "Read %s", read_state->req);
     }
     struct read_state *out = malloc(sizeof(*out));
     memcpy(out, read_state, sizeof(*read_state));
@@ -87,7 +87,7 @@ static int read_http_request(struct local_msu *self,
         read_state = msu_init_state(self, &msg->hdr->key, sizeof(*read_state));
         init_read_state(read_state, &conn_in);
     } else {
-        log_custom(LOG_WEBSERVER_READ, "Retrieved read ptr %p", read_state);
+        log(LOG_WEBSERVER_READ, "Retrieved read ptr %p", read_state);
     }
     if (read_state->conn.fd != conn_in.fd) {
         log_error("Got non-matching FDs! %d vs %d", read_state->conn.fd, conn_in.fd);

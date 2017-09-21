@@ -16,14 +16,14 @@ static int url_callback(http_parser *parser, const char *at, size_t length) {
     strncpy(&state->url[state->url_len], at, length);
     state->url[state->url_len + length] = '\0';
     state->url_len += length;
-    log_custom(LOG_HTTP_PARSING, "Got URL: %s", state->url);
+    log(LOG_HTTP_PARSING, "Got URL: %s", state->url);
     return 0;
 }
 
 static int headers_complete_callback(http_parser *parser) {
     struct parser_state *state = parser->data;
     state->headers_complete = 1;
-    log_custom(LOG_HTTP_PARSING, "Got end of headers");
+    log(LOG_HTTP_PARSING, "Got end of headers");
     return 0;
 }
 
@@ -34,7 +34,7 @@ static int header_field_or_value_callback(http_parser UNUSED *parser,
     char cpy[length+1];
     strncpy(cpy, at, length);
     cpy[length] = '\0'
-    log_custom(LOG_HTTP_PARSING, "Got header field %s", cpy);
+    log(LOG_HTTP_PARSING, "Got header field %s", cpy);
 #endif
     return 0;
 }

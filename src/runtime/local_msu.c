@@ -201,7 +201,7 @@ static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
 int msu_dequeue(struct local_msu *msu) {
     struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
     if (msg) {
-        log_custom(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
+        log(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
         record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
         int rtn = msu_receive(msu, msg);
         increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
@@ -246,7 +246,7 @@ static int enqueue_for_remote_send(struct msu_msg *msg,
         return -1;
     }
 
-    log_custom(LOG_MSU_ENQUEUES, "Enqueued message for remote send to dst %d on runtime %d",
+    log(LOG_MSU_ENQUEUES, "Enqueued message for remote send to dst %d on runtime %d",
                dst->id, dst->runtime_id);
     return 0;
 }
@@ -255,7 +255,7 @@ static int enqueue_for_remote_send(struct msu_msg *msg,
 int call_local_msu(struct local_msu *sender, struct local_msu *dest,
                 struct msu_msg_hdr *hdr, size_t data_size, void *data) {
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
-    log_custom(LOG_MSU_ENQUEUES, "Enqueing data %p directly to destination %d",
+    log(LOG_MSU_ENQUEUES, "Enqueing data %p directly to destination %d",
                msg->data, dest->id);
 
     int rtn = add_provinance(&msg->hdr->provinance, sender);
@@ -298,7 +298,7 @@ int call_msu(struct local_msu *sender, struct msu_type *dst_type,
         log_warn("Could not add provinance to message %p", msg);
     }
 
-    log_custom(LOG_MSU_ENQUEUES, "Sending data %p to destination type %s",
+    log(LOG_MSU_ENQUEUES, "Sending data %p to destination type %s",
                msg->data, dst_type->name);
 
     struct msu_endpoint dst;
@@ -325,7 +325,7 @@ int call_msu(struct local_msu *sender, struct msu_type *dst_type,
                 free(msg);
                 return -1;
             }
-            log_custom(LOG_MSU_ENQUEUES, "Enqueued data %p to local msu %d", msg->data, dst.id);
+            log(LOG_MSU_ENQUEUES, "Enqueued data %p to local msu %d", msg->data, dst.id);
             return 0;
         case MSU_IS_REMOTE:
             rtn = enqueue_for_remote_send(msg, dst_type, &dst);
@@ -333,7 +333,7 @@ int call_msu(struct local_msu *sender, struct msu_type *dst_type,
                 log_error("Error sending data %p to remote MSU %d", msg->data, dst.id);
                 return -1.i;
             }
-            log_custom(LOG_MSU_ENQUEUES, "Sending data %p to remote msu %d", msg->data, dst.id);
+            log(LOG_MSU_ENQUEUES, "Sending data %p to remote msu %d", msg->data, dst.id);
 
             // Since the data has been sent to a remote MSU, we can now
             // free the msu message from this runtime's memory

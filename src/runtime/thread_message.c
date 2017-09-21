@@ -15,7 +15,7 @@ int enqueue_thread_msg(struct thread_msg *thread_msg, struct msg_queue *queue) {
         log_error("Error enqueueing message on thread message queue");
         return -1;
     }
-    log_custom(LOG_THREAD_MESSAGES, "Enqueued thread message %p on queue %p", 
+    log(LOG_THREAD_MESSAGES, "Enqueued thread message %p on queue %p", 
                thread_msg, queue);
     return 0;
 }
@@ -31,7 +31,7 @@ struct thread_msg *dequeue_thread_msg(struct msg_queue *queue) {
     }
 
     struct thread_msg *thread_msg = msg->data;
-    log_custom(LOG_THREAD_MESSAGES, "Dequeued thread message %p from queue %p", 
+    log(LOG_THREAD_MESSAGES, "Dequeued thread message %p from queue %p", 
                thread_msg, queue);
     free(msg);
     return thread_msg;
@@ -48,13 +48,13 @@ struct thread_msg *construct_thread_msg(enum thread_msg_type type,
     msg->type = type;
     msg->data_size = data_size;
     msg->data = data;
-    log_custom(LOG_THREAD_MESSAGES, "Constructed thread message %p of size %d",
+    log(LOG_THREAD_MESSAGES, "Constructed thread message %p of size %d",
                msg, (int)data_size);
     return msg;
 }
 
 void destroy_thread_msg(struct thread_msg *msg) {
-    log_custom(LOG_THREAD_MESSAGES, "Freeing thread message %p",
+    log(LOG_THREAD_MESSAGES, "Freeing thread message %p",
                msg);
     free(msg);
 }

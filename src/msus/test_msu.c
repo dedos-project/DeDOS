@@ -43,7 +43,7 @@ int receive(struct local_msu *self, struct msu_msg *msg) {
             }
             test_msg->n_hops = atoi(buf);
             test_msg->id = increment_id();
-            log_custom(LOG_TEST_MSU, "Received %d-hop message", test_msg->n_hops);
+            log(LOG_TEST_MSU, "Received %d-hop message", test_msg->n_hops);
             free(sock_msg);
             record_start_time(MSU_STAT1, test_msg->id);
             break;

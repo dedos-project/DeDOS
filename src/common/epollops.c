@@ -21,11 +21,11 @@ int enable_epoll(int epoll_fd, int new_fd, uint32_t events) {
     int rtn = epoll_ctl(epoll_fd, EPOLL_CTL_MOD, new_fd, &event);
 
     if (rtn == -1) {
-        log_custom(LOG_EPOLL_OPS, "failed to enable fd %d on epoll %d: %s",
+        log(LOG_EPOLL_OPS, "failed to enable fd %d on epoll %d: %s",
                     new_fd, epoll_fd, strerror(errno));
         return -1;
     }
-    log_custom(LOG_EPOLL_OPS, "enabled fd %d on epoll", new_fd);
+    log(LOG_EPOLL_OPS, "enabled fd %d on epoll", new_fd);
     return 0;
 }
 
@@ -46,11 +46,11 @@ int add_to_epoll(int epoll_fd, int new_fd, uint32_t events, bool oneshot) {
     int rtn = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_fd, &event);
 
     if (rtn == -1) {
-        log_custom(LOG_EPOLL_OPS, "failed to add fd %d on epoll %d: %s",
+        log(LOG_EPOLL_OPS, "failed to add fd %d on epoll %d: %s",
                     new_fd, epoll_fd, strerror(errno));
         return -1;
     }
-    log_custom(LOG_EPOLL_OPS, "Added fd %d to epoll", new_fd);
+    log(LOG_EPOLL_OPS, "Added fd %d to epoll", new_fd);
     return 0;
 }
 
@@ -59,7 +59,7 @@ int add_to_epoll(int epoll_fd, int new_fd, uint32_t events, bool oneshot) {
  */
 static int accept_new_connection(int socketfd, int epoll_fd, int oneshot) {
     int rtn;
-    log_custom(LOG_EPOLL_OPS, "Accepting a new connection");
+    log(LOG_EPOLL_OPS, "Accepting a new connection");
 
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
@@ -77,7 +77,7 @@ static int accept_new_connection(int socketfd, int epoll_fd, int oneshot) {
                       sbuf, sizeof(sbuf),
                       NI_NUMERICHOST| NI_NUMERICSERV);
     if ( rtn == 0) {
-        log_custom(LOG_EPOLL_OPS, "Accepted connection on descriptor %d"
+        log(LOG_EPOLL_OPS, "Accepted connection on descriptor %d"
                                        "host=%s, port=%s", 
                    new_fd, hbuf, sbuf);
     }
@@ -128,7 +128,7 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
 
         for (int i=0; i < n; ++i) {
             if (socket_fd == events[i].data.fd) {
-                log_custom(LOG_EPOLL_OPS, "Accepting connection on %d", socket_fd);
+                log(LOG_EPOLL_OPS, "Accepting connection on %d", socket_fd);
                 int new_fd = accept_new_connection(socket_fd, epoll_fd, oneshot);
                 if ( new_fd < 0) {
                     log_error("Failed accepting new connection on epoll %d", epoll_fd);
@@ -137,10 +137,10 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
                     if (accept_handler) {
                         accept_handler(new_fd, data);
                     }
-                    log_custom(LOG_EPOLL_OPS, "Accepted new connection");
+                    log(LOG_EPOLL_OPS, "Accepted new connection");
                 }
             } else {
-                log_custom(LOG_EPOLL_OPS, "Processing connection (fd: %d)", 
+                log(LOG_EPOLL_OPS, "Processing connection (fd: %d)", 
                            events[i].data.fd);
                 int rtn = connection_handler(events[i].data.fd, data);
                 if (rtn != 0) {
@@ -148,12 +148,12 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
                         log_error("Failed processing existing connection (fd: %d)",
                                   events[i].data.fd);
                     } else {
-                        log_custom(LOG_EPOLL_OPS, "Got exit code %d from fd %d",
+                        log(LOG_EPOLL_OPS, "Got exit code %d from fd %d",
                                    rtn, events[i].data.fd);
                     }
                     return rtn;
                 } else {
-                    log_custom(LOG_EPOLL_OPS, "Processed connection (fd: %d)",
+                    log(LOG_EPOLL_OPS, "Processed connection (fd: %d)",
                                events[i].data.fd);
                 }
             }

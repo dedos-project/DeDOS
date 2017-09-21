@@ -24,7 +24,7 @@ static int add_worker_thread(struct ctrl_create_thread_msg *msg) {
         log_error("Error creating worker thread %d", id);
         return -1;
     }
-    log_custom(LOG_MAIN_THREAD, "Created worker thread %d", id);
+    log(LOG_MAIN_THREAD, "Created worker thread %d", id);
     return 0;
 }
 
@@ -49,7 +49,7 @@ static int main_thread_add_connected_runtime(struct runtime_connected_msg *msg) 
         log_error("Could not add runtime peer %d (fd: %d)", msg->runtime_id, msg->fd);
         return -1;
     }
-    log_custom(LOG_MAIN_THREAD_MESSAGES, "runtime peer %d (fd: %d) added",
+    log(LOG_MAIN_THREAD_MESSAGES, "runtime peer %d (fd: %d) added",
                msg->runtime_id, msg->fd);
     return 0;
 }
@@ -236,7 +236,7 @@ int enqueue_to_main_thread(struct thread_msg *msg) {
         log_error("Error enqueuing message %p to main thread", msg);
         return -1;
     }
-    log_custom(MAIN_THREAD, "Enqueued message %p to main thread queue", msg);
+    log(MAIN_THREAD, "Enqueued message %p to main thread queue", msg);
     return 0;
 }
 

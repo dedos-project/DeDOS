@@ -36,7 +36,7 @@ static void print_routing_table(struct routing_table *table) {
         struct msu_endpoint *destination = &table->endpoints[i];
         offset += sprintf(output+offset, "- %4d: %3d\n", destination->id, (int)table->keys[i]);
     }
-    log_custom(LOG_ROUTING_CHANGES, "%s", output);
+    log(LOG_ROUTING_CHANGES, "%s", output);
 }
 #else
 #define print_routing_table(t)
@@ -131,7 +131,7 @@ static int rm_routing_table_entry(struct routing_table *table, int msu_id) {
     }
     table->n_endpoints--;
     unlock(table);
-    log_custom(LOG_ROUTING_CHANGES, "Removed destination %d from table %d (type %d)",
+    log(LOG_ROUTING_CHANGES, "Removed destination %d from table %d (type %d)",
                msu_id, table->id, table->type_id);
     return 0;
 }
@@ -164,7 +164,7 @@ static int add_routing_table_entry(struct routing_table *table,
     table->n_endpoints++;
     unlock(table);
 
-    log_custom(LOG_ROUTING_CHANGES, "Added destination %d to table %d (type: %d)",
+    log(LOG_ROUTING_CHANGES, "Added destination %d to table %d (type: %d)",
                dest->id, table->id, table->type_id);
     print_routing_table(table);
     return 0;
@@ -206,7 +206,7 @@ static int alter_routing_table_entry(struct routing_table *table,
     table->keys[i] = new_key;
     table->endpoints[i] = endpoint;
     unlock(table);
-    log_custom(LOG_ROUTING_CHANGES, "Changed key of msu %d in table %d from %d to %d",
+    log(LOG_ROUTING_CHANGES, "Changed key of msu %d in table %d from %d to %d",
                msu_id, table->id, orig_key, new_key);
     print_routing_table(table);
     return 0;
@@ -393,7 +393,7 @@ int get_route_endpoint(struct routing_table *table, uint32_t key, struct msu_end
         return -1;
     }
     *endpoint = table->endpoints[index];
-    log_custom(LOG_ROUTING_DECISIONS, "Endpoint for key %u is %d", key, endpoint->id);
+    log(LOG_ROUTING_DECISIONS, "Endpoint for key %u is %d", key, endpoint->id);
     unlock(table);
     return 0;
 }
@@ -423,7 +423,7 @@ struct routing_table *get_type_from_route_set(struct route_set *set, int type_id
  * @return 0 on success, -1 on error
  */
 int add_route_endpoint(int route_id, struct msu_endpoint endpoint, uint32_t key) {
-    log_custom(LOG_ROUTING_CHANGES, "Adding endpoint %d to route %d", endpoint.id, route_id);
+    log(LOG_ROUTING_CHANGES, "Adding endpoint %d to route %d", endpoint.id, route_id);
     struct routing_table *table = get_routing_table(route_id);
     if (table == NULL) {
         log_error("Route %d does not exist", route_id);
@@ -449,7 +449,7 @@ int remove_route_endpoint(int route_id, int msu_id) {
         log_error("Error removing msu %d from route %d", msu_id, route_id);
         return -1;
     }
-    log_custom(LOG_ROUTING_CHANGES, "Removed destination %d from route %d", msu_id, route_id);
+    log(LOG_ROUTING_CHANGES, "Removed destination %d from route %d", msu_id, route_id);
     return -1;
 }
 
@@ -471,7 +471,7 @@ int modify_route_endpoint(int route_id, int msu_id, uint32_t new_key) {
         log_error("Error altering routing for msu %d on route %d", msu_id, route_id);
         return -1;
     }
-    log_custom(LOG_ROUTING_CHANGES, "Altered key %d for msu %d in route %d",
+    log(LOG_ROUTING_CHANGES, "Altered key %d for msu %d in route %d",
                new_key, msu_id, route_id);
     return 0;
 }

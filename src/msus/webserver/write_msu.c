@@ -26,9 +26,9 @@ static int write_http_response(struct local_msu *self,
         return msu_monitor_fd(resp->conn.fd, RTN_TO_EVT(rtn), self, msg->hdr);
     } else {
         close_connection(&resp->conn);
-        log_custom(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
+        log(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
                    resp->conn.fd);
-        log_custom(LOG_WEBSERVER_WRITE, "Wrote request: %s", resp->resp);
+        log(LOG_WEBSERVER_WRITE, "Wrote request: %s", resp->resp);
         msu_free_state(self, &msg->hdr->key);
         free(resp_in);
         return 0;

@@ -18,7 +18,7 @@ struct msu_msg_hdr *init_msu_msg_hdr(struct msu_msg_key *key) {
 }
 
 unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
-    log_custom(LOG_GET_PROVINANCE, "Sender of %p (idx %d) was type %d",
+    log(LOG_GET_PROVINANCE, "Sender of %p (idx %d) was type %d",
                prov, prov->path_len-1, prov->path[prov->path_len - 1].type_id);
     return prov->path[prov->path_len-1].type_id;
 }
@@ -36,7 +36,7 @@ int set_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
 
 int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
     int idx = prov->path_len % MAX_PATH_LEN;
-    log_custom(LOG_ADD_PROVINANCE, "Adding provinance: %d.%d to idx %d, prov %p ",
+    log(LOG_ADD_PROVINANCE, "Adding provinance: %d.%d to idx %d, prov %p ",
                sender->type->id, sender->id, idx, prov);
     prov->path[idx].type_id = sender->type->id;
     prov->path[idx].msu_id = sender->id;
@@ -46,7 +46,7 @@ int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
         return -1;
     }
     prov->path_len++;
-    log_custom(LOG_ADD_PROVINANCE, "Path len of prov %p is now %d", prov, prov->path_len);
+    log(LOG_ADD_PROVINANCE, "Path len of prov %p is now %d", prov, prov->path_len);
     return 0;
 }
 
@@ -70,7 +70,7 @@ int enqueue_msu_msg(struct msg_queue *q, struct msu_msg *data) {
 struct msu_msg *dequeue_msu_msg(struct msg_queue *q) {
     struct dedos_msg *msg = dequeue_msg(q);
     if (msg == NULL) {
-        log_custom(LOG_FAILED_DEQUEUE_ATTEMPTS, "Could not dequeue from MSU queue");
+        log(LOG_FAILED_DEQUEUE_ATTEMPTS, "Could not dequeue from MSU queue");
         return NULL;
     }
 
@@ -129,7 +129,7 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
         log_error("Size of incoming message is not big enough to fit header");
         return NULL;
     }
-    log_custom(LOG_MSU_MSG_READ, "Reading header from %d", fd);
+    log(LOG_MSU_MSG_READ, "Reading header from %d", fd);
     struct msu_msg_hdr *hdr = read_msu_msg_hdr(fd);
     if (hdr == NULL) {
         log_perror("Error reading msu msg header");
@@ -144,14 +144,14 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
             destroy_msu_msg_hdr(hdr);
             return NULL;
         }
-        log_custom(LOG_MSU_MSG_READ, "Reading payload of size %d from %d", (int)data_size, fd);
+        log(LOG_MSU_MSG_READ, "Reading payload of size %d from %d", (int)data_size, fd);
         if (read_payload(fd, data_size, data) != 0) {
             log_perror("Error reading msu msg payload of size %d", (int)data_size);
             destroy_msu_msg_hdr(hdr);
             free(data);
             return NULL;
         }
-        log_custom(LOG_MSU_MSG_DESERIALIZE, "Deserialized MSU message of size %d", (int)data_size);
+        log(LOG_MSU_MSG_DESERIALIZE, "Deserialized MSU message of size %d", (int)data_size);
     }
     struct msu_msg *msg = malloc(sizeof(*msg));
     if (msg == NULL) {
@@ -174,7 +174,7 @@ void *serialize_msu_msg(struct msu_msg *msg, struct msu_type *dst_type, size_t *
     if (dst_type->serialize != NULL) {
         void *payload = NULL;
         ssize_t payload_size = dst_type->serialize(dst_type, msg, &payload);
-        log_custom(LOG_SERIALIZE,
+        log(LOG_SERIALIZE,
                    "Serialized message into payload of size %d using %s serialization",
                    (int)payload_size, dst_type->name);
         if (payload_size < 0) {

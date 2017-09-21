@@ -39,7 +39,7 @@ int fix_route_ranges(struct dfg_route *route) {
                 log_error("Error modifying endpoint");
                 return -1;
             } else {
-                log_custom(LOG_ROUTING_CHANGES,
+                log(LOG_ROUTING_CHANGES,
                           "Modified endpoint %d in route %d to have key %d (old: %d)",
                           route->endpoints[i]->msu->id, route->id, new_keys[i], old_key);
             }
@@ -147,7 +147,7 @@ struct dfg_thread *find_unused_pinned_thread(struct dfg_runtime *runtime,
         }
 
         if (thread->n_msus == 0) {
-            log_custom(LOG_THREAD_DECISIONS, "Placing type %d on thread %d",
+            log(LOG_THREAD_DECISIONS, "Placing type %d on thread %d",
                        type->id, thread->id);
             return thread;
         }
@@ -164,7 +164,7 @@ struct dfg_thread *find_unused_pinned_thread(struct dfg_runtime *runtime,
             continue;
         }
 
-        log_custom(LOG_THREAD_DECISIONS, "Placing type %d on thread %d",
+        log(LOG_THREAD_DECISIONS, "Placing type %d on thread %d",
                    type->id, thread->id);
         return thread;
     }

@@ -19,7 +19,7 @@ void *msu_init_state(struct local_msu *msu, struct msu_msg_key *key, size_t size
     state->data = malloc(size);
     state->size = size;
 
-    log_custom(LOG_STATE_MANAGEMENT, "Allocating new state of size %d for msu %d, key %d",
+    log(LOG_STATE_MANAGEMENT, "Allocating new state of size %d for msu %d, key %d",
                (int)size, msu->id, (int)key->id);
 
 #if CHECK_STATE_REPLACEMENT
@@ -41,10 +41,10 @@ void *msu_init_state(struct local_msu *msu, struct msu_msg_key *key, size_t size
 void *msu_get_state(struct local_msu *msu, struct msu_msg_key *key, size_t *size) {
     struct msu_state *state;
     HASH_FIND(hh, msu->item_state, &key->key, key->key_len, state);
-    log_custom(LOG_STATE_MANAGEMENT, "Accessing state for MSU %d, key %d",
+    log(LOG_STATE_MANAGEMENT, "Accessing state for MSU %d, key %d",
                msu->id, (int)key->id);
     if (state == NULL) {
-        log_custom(LOG_STATE_MANAGEMENT, "State does not exist");
+        log(LOG_STATE_MANAGEMENT, "State does not exist");
         return NULL;
     }
     if (size != NULL) {
@@ -56,7 +56,7 @@ void *msu_get_state(struct local_msu *msu, struct msu_msg_key *key, size_t *size
 int msu_free_state(struct local_msu *msu, struct msu_msg_key *key) {
     struct msu_state *state;
     HASH_FIND(hh, msu->item_state, &key->key, key->key_len, state);
-    log_custom(LOG_STATE_MANAGEMENT, "Freeing state for MSU %d, key %d",
+    log(LOG_STATE_MANAGEMENT, "Freeing state for MSU %d, key %d",
                msu->id, (int)key->id);
     if (state == NULL) {
         log_warn("State for MSU %d, key %d does not exist",
