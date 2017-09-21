@@ -67,15 +67,13 @@ int unregister_msu_with_thread(struct local_msu *msu) {
 }
 
 int register_msu_with_thread(struct local_msu *msu) {
-    log_warn("%p", msu);
-    log_warn("%p", msu->thread);
-    log_warn("%d", msu->thread->n_msus);
     if (msu->thread->n_msus >= MAX_MSU_PER_THREAD) {
         log_error("Too many MSUs on thread %d", msu->thread->thread->id);
         return -1;
     }
     msu->thread->msus[msu->thread->n_msus] = msu;
     msu->thread->n_msus++;
+    log_custom(LOG_MSU_REGISTRATION, "Registered msu %d with thread", msu->id);
     return 0;
 }
 
@@ -204,6 +202,9 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
             msu_dequeue(self->msus[i]);
         }
         struct thread_msg *msg = dequeue_thread_msg(&thread->queue);
+        if (msg == NULL && self->n_msus == 0) {
+            log_warn("Semaphore posted with no MSUs or control messages");
+        }
         // ???: Should i be looping till no more messages?
         while (msg != NULL) {
             log_custom(LOG_THREAD_MESSAGES,"Dequeued thread message on thread %d",

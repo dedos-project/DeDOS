@@ -132,6 +132,16 @@ struct local_msu *init_msu(unsigned int id,
         return NULL;
     }
 
+    // Must be done before running init function
+    int rtn = register_msu_with_thread(msu);
+    if (rtn < 0) {
+        log_error("Error registering MSU With thread");
+        msu_free(msu);
+        rm_from_local_registry(msu->id);
+        return NULL;
+    }
+    // TODO: Unregister if creation fails
+
     log_info("Initializing msu (ID: %d, type: %s, data: '%s')", id, type->name,
              data->init_data);
     if (type->init) {
@@ -142,19 +152,13 @@ struct local_msu *init_msu(unsigned int id,
             return NULL;
         }
     }
-    int rtn = add_to_local_registry(msu);
+    rtn = add_to_local_registry(msu);
     if (rtn < 0) {
         log_error("Error adding MSU to local registry");
         msu_free(msu);
         return NULL;
     }
-    rtn = register_msu_with_thread(msu);
-    if (rtn < 0) {
-        log_error("Error registering MSU With thread");
-        msu_free(msu);
-        rm_from_local_registry(msu->id);
-        return NULL;
-    }
+
 
     return msu;
 }
@@ -194,14 +198,17 @@ static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
     return 0;
 }
 
-void msu_dequeue(struct local_msu *msu) {
+int msu_dequeue(struct local_msu *msu) {
     struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
     if (msg) {
+        log_custom(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
         record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
-        msu_receive(msu, msg);
+        int rtn = msu_receive(msu, msg);
         increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
         free(msg);
+        return rtn;
     }
+    return 1;
 }
 
 /**

@@ -18,6 +18,8 @@ struct msu_msg_hdr *init_msu_msg_hdr(struct msu_msg_key *key) {
 }
 
 unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
+    log_custom(LOG_GET_PROVINANCE, "Sender of %p (idx %d) was type %d",
+               prov, prov->path_len-1, prov->path[prov->path_len - 1].type_id);
     return prov->path[prov->path_len-1].type_id;
 }
 
@@ -34,6 +36,8 @@ int set_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
 
 int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
     int idx = prov->path_len % MAX_PATH_LEN;
+    log_custom(LOG_ADD_PROVINANCE, "Adding provinance: %d.%d to idx %d, prov %p ",
+               sender->type->id, sender->id, idx, prov);
     prov->path[idx].type_id = sender->type->id;
     prov->path[idx].msu_id = sender->id;
     prov->path[idx].runtime_id = local_runtime_id();
@@ -42,6 +46,7 @@ int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
         return -1;
     }
     prov->path_len++;
+    log_custom(LOG_ADD_PROVINANCE, "Path len of prov %p is now %d", prov, prov->path_len);
     return 0;
 }
 
