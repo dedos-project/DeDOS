@@ -66,21 +66,31 @@ static int read_http_request(struct local_msu *self,
                              struct msu_msg *msg) {
     struct ws_read_state *msu_state = self->msu_state;
 
-    struct socket_msg *msg_in = msg->data;
-    int fd = msg_in->fd;
+    struct connection conn_in;
+    int sender_type_id = msu_msg_sender_type(&msg->hdr->provinance);
+    switch (sender_type_id) {
+        case SOCKET_MSU_TYPE_ID:;
+            struct socket_msg *msg_in = msg->data;
+            init_connection(&conn_in, msg_in->fd);
+            break;
+        case WEBSERVER_HTTP_MSU_TYPE_ID:
+            conn_in = *(struct connection*)msg->data;
+            break;
+        default:
+            log_error("Unknown sender MSU type ID: %d", sender_type_id);
+            return -1;
+    }
 
     size_t size = -1;
     struct read_state *read_state = msu_get_state(self, &msg->hdr->key, &size);
     if (read_state == NULL) {
         read_state = msu_init_state(self, &msg->hdr->key, sizeof(*read_state));
-        struct connection conn_in;
-        init_connection(&conn_in, fd);
         init_read_state(read_state, &conn_in);
     } else {
         log_custom(LOG_WEBSERVER_READ, "Retrieved read ptr %p", read_state);
     }
-    if (read_state->conn.fd != fd) {
-        log_error("Got non-matching FDs! %d vs %d", read_state->conn.fd, fd);
+    if (read_state->conn.fd != conn_in.fd) {
+        log_error("Got non-matching FDs! %d vs %d", read_state->conn.fd, conn_in.fd);
         return -1;
     }
 
