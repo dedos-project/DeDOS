@@ -12,7 +12,10 @@
 #include "pico_config.h"
 #include "logging.h"
 
+#ifndef PICO_SUPPORT_MUTEX
 #define PICO_SUPPORT_MUTEX
+#endif 
+
 #ifdef PICO_SUPPORT_MUTEX
 /* POSIX mutex implementation */
 void *pico_mutex_init(void)

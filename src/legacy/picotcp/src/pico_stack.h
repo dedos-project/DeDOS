@@ -59,7 +59,7 @@ int32_t pico_ethernet_receive(struct pico_frame *f);
 #endif
 
 /* ----- Initialization ----- */
-int pico_stack_init();
+int pico_stack_init(void);
 
 /* ----- Loop Function. ----- */
 void pico_stack_tick(void);

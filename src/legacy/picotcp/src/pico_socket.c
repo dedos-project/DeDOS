@@ -6,7 +6,7 @@
    Authors: Daniele Lacamera
  *********************************************************************/
 
-
+#include "unused_def.h"
 #include "pico_config.h"
 #include "pico_queue.h"
 #include "pico_socket.h"
@@ -22,7 +22,7 @@
 #include "pico_socket_multicast.h"
 #include "pico_socket_tcp.h"
 #include "pico_socket_udp.h"
-#include "modules/msu_tcp_handshake.h"
+#include "pico_tcp/msu_tcp_handshake.h"
 #include "logging.h"
 
 #if defined (PICO_SUPPORT_IPV4) || defined (PICO_SUPPORT_IPV6)
@@ -2004,10 +2004,11 @@ static inline int pico_transport_crc_check(struct pico_frame *f)
 }
 #endif /* PICO_SUPPORT_CRC */
 
+/*
 static struct pico_socket_tcp* socket_tcp_find_listen_ipv4(struct pico_socket *s, struct pico_socket *r)
 {
     struct pico_socket *found = NULL;
-    struct pico_ip4 s_local, s_remote, p_src, p_dst;
+    struct pico_ip4 s_local, p_dst;
     s_local.addr = s->local_addr.ip4.addr;
     p_dst.addr = r->remote_addr.ip4.addr;
 
@@ -2015,8 +2016,9 @@ static struct pico_socket_tcp* socket_tcp_find_listen_ipv4(struct pico_socket *s
         ((s_local.addr == PICO_IPV4_INADDR_ANY) || (s_local.addr == p_dst.addr))){
         found = s;
     }
-    return found;
+    return (struct pico_socket_tcp*)found;
 }
+*/
 
 int pico_transport_process_in(struct pico_protocol *self, struct pico_frame *f)
 {
@@ -2056,7 +2058,7 @@ static int check_socket_sanity(struct pico_socket *s)
     /* checking for pending connections */
     if(TCP_STATE(s) == PICO_SOCKET_STATE_TCP_SYN_RECV) {
         if((PICO_TIME_MS() - s->timestamp) >= PICO_SOCKET_BOUND_TIMEOUT){
-            syn_state_used_memory = syn_state_used_memory - sizeof(struct pico_tree_node);
+            syn_state_used_memory = syn_state_used_memory - (int)sizeof(struct pico_tree_node);
             if(syn_state_used_memory<= 0){
     //          printf("syn_state_cleanup RESET:  %ld\n",syn_state_used_memory);
                 syn_state_used_memory = 0;

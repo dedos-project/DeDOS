@@ -280,8 +280,8 @@ void transport_flags_update(struct pico_frame *f, struct pico_socket *s)
 #endif
 }
 
-void print_tcp_socket_queues(struct pico_socket *s){
-    struct pico_socket_tcp *t = NULL;
+static void UNUSED print_tcp_socket_queues(struct pico_socket *s){
+    struct pico_socket_tcp UNUSED *t;
     t = (struct pico_socket_tcp *)s;
     dbg("tcpq_in: max_size: %u, size: %u, frames: %u",t->tcpq_in.max_size, t->tcpq_in.size, t->tcpq_in.frames);
     dbg("tcpq_out: max_size: %u, size: %u, frames: %u",t->tcpq_out.max_size, t->tcpq_out.size, t->tcpq_out.frames);
@@ -293,7 +293,7 @@ void print_tcp_socket_queues(struct pico_socket *s){
 
 void print_tcp_socket(struct pico_socket *s)
 {
-    struct pico_socket_tcp *t = NULL;
+    struct pico_socket_tcp UNUSED *t = NULL;
     t = (struct pico_socket_tcp *)s;
 
     dbg(">>>TCP SOCKET DUMP: \n");

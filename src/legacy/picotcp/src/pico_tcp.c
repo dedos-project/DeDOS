@@ -8,6 +8,7 @@
  *********************************************************************/
 
 #include "legacy_logging.h"
+#include "logging.h"
 #include "pico_tcp.h"
 #include "pico_config.h"
 #include "pico_eth.h"
@@ -16,16 +17,12 @@
 #include "pico_socket.h"
 #include "pico_queue.h"
 #include "pico_tree.h"
-#include "runtime.h"
-#include "generic_msu.h"
-#include "communication.h"
-#include "data_plane_profiling.h"
-#include "dedos_thread_queue.h"
-#include "modules/msu_tcp_handshake.h"
-#include "dedos_msu_msg_type.h"
-#include "dedos_msu_list.h"
-#include "modules/msu_pico_tcp.h"
-#include "modules/hs_request_routing_msu.h" //for struct routing item
+#include "pico_tcp/msu_tcp_handshake.h"
+#include "pico_tcp/msu_pico_tcp.h"
+#include "local_msu.h"
+#include "msu_calls.h"
+#include "msu_message.h"
+
 #include "uthash.h"
 
 struct fack_track {
@@ -54,7 +51,7 @@ long int syn_state_used_memory = 0;
 long int SYN_MEMORY_LIMIT = 1 * 1024 * 1024; //1 MB
 static unsigned long int syn_processed;
 static unsigned long int syn_dropped;
-static unsigned long int synacks_generated;
+//static unsigned long int synacks_generated;
 
 #define TCP_IS_STATE(s, st) ((s->state & PICO_SOCKET_STATE_TCP) == st)
 #define TCP_SOCK(s) ((struct pico_socket_tcp *)s)
@@ -96,7 +93,7 @@ static unsigned long int synacks_generated;
 #ifdef PICO_SUPPORT_TCP
 #define tcp_dbg_nagle(...) do {} while(0)
 //#define tcp_dbg_options(...) do {} while(0)
-#define tcp_dbg_options(...) printf
+#define tcp_dbg_options(...) log(LOG_PICO_DEBUG, __VA_ARGS__)
 
 
 //#define tcp_dbg(...) do {} while(0)
@@ -1738,8 +1735,9 @@ static inline void tcp_data_in_send_ack(struct pico_socket_tcp *t, struct pico_f
 
 static int tcp_data_in(struct pico_socket *s, struct pico_frame *f)
 {
+    struct pico_socket_tcp *t;
     log_debug("TCP data in");
-    struct pico_socket_tcp *t = (struct pico_socket_tcp *)s;
+    t = (struct pico_socket_tcp *)s;
     struct pico_tcp_hdr *hdr = (struct pico_tcp_hdr *) f->transport_hdr;
     uint16_t payload_len = (uint16_t)(f->transport_len - ((hdr->len & 0xf0u) >> 2u));
     int ret = 0;
@@ -2612,57 +2610,7 @@ static int tcp_lastackwait(struct pico_socket *s, struct pico_frame *f)
     return 0;
 }
 
-static void forward_data_over_sock(struct msu_endpoint *tmp, char *buf, unsigned int bufsize, void* opt_data)
-{
-    struct dedos_intermsu_message *msg;
-    int ret = 0;
-    msg = (struct dedos_intermsu_message*) malloc(
-            sizeof(struct dedos_intermsu_message));
-    if (!msg) {
-        log_error("Unable to allocate memory for intermsu message: %s", "");
-        return;
-    }
-
-    msg->dst_msu_id = tmp->id;
-    msg->src_msu_id = pico_tcp_msu->id; //!one pico_tcp_data msu per runtime for now
-    msg->proto_msg_type = MSU_PROTO_TCP_ROUTE_HS_REQUEST;
-    msg->payload_len = bufsize;
-    msg->payload = (char*) malloc(sizeof(char) * bufsize);
-    if (!msg->payload) {
-        log_error("Unable to allocate memory for intermsu payload: %s", "");
-        free(msg);
-        return;
-    }
-    memcpy(msg->payload, buf, bufsize);
-
-    struct dedos_thread_msg *thread_msg;
-    thread_msg = (struct dedos_thread_msg *) malloc(
-            sizeof(struct dedos_thread_msg));
-    if (!thread_msg) {
-        log_error("Unable to allocate memory for dedos_thread_msg: %s", "");
-        free(msg->payload);
-        free(msg); //prev allocated mem
-    }
-
-    thread_msg->next = NULL;
-    thread_msg->action = FORWARD_DATA;
-    thread_msg->action_data = tmp->ipv4;
-
-    thread_msg->buffer_len = sizeof(struct dedos_intermsu_message)
-            + msg->payload_len;
-    thread_msg->data = (struct dedos_intermsu_message*) msg;
-
-    ret = dedos_thread_enqueue(main_thread, thread_msg);
-    if (ret < 0) {
-        log_error("Failed to enqueue data in main threads queue %s", "");
-        free(thread_msg);
-        free(msg->payload);
-        free(msg); //prev allocated mem
-        return;
-    }
-    log_debug("Successfully enqueued msg in main queue, which has size: %d",
-            ret);
-}
+struct local_msu *pico_tcp_msu;
 
 static inline int route_to_handshake_msu(struct pico_socket *s, struct pico_frame *f, char *flag)
 {
@@ -2670,181 +2618,46 @@ static inline int route_to_handshake_msu(struct pico_socket *s, struct pico_fram
     //a copy of it
     //serialize f as a queue item data struct
     int ret;
-    struct generic_msu *self = pico_tcp_msu;
-    struct generic_msu_queue_item *queue_item;
-    queue_item = create_generic_msu_queue_item();
-    if(!queue_item){
-        log_error("Failed to malloc queue_item queue item");
-        return -1;
-    }
+    struct local_msu *self = pico_tcp_msu;
+
+    /*
 #ifdef DATAPLANE_PROFILING
     if(strncmp(flag,"SYN",3) == 0){
         queue_item->dp_profile_info.dp_id = get_request_id();
         log_dp_event(self->id, DEDOS_ENTRY, &queue_item->dp_profile_info);
     }
 #endif
+    */
 
-    uint32_t id = pico_tcp_generate_id(self, f);
-    set_queue_key(id, sizeof(id), &queue_item->key);
-    log_debug("Assigned id to item: %d": keytoi(queue_item->key.key));
-    queue_item->buffer_len = sizeof(struct tcp_intermsu_queue_item) + f->buffer_len;
+    struct msu_msg_key key;
+    int32_t id = pico_tcp_generate_id(self, f);
+    set_msg_key(id, &key);
 
-    queue_item->buffer = (char*)malloc(sizeof(char) * queue_item->buffer_len);
-    if(!queue_item->buffer){
+    log(LOG_PICO, "Assigned id to item: %d", (int)id);
+
+    size_t buffer_len = sizeof(struct tcp_intermsu_queue_item) + f->buffer_len;
+    void *buffer = malloc(buffer_len);
+    if (buffer == NULL){
         log_error("Failed to malloc queue item buffer");
-        free(queue_item);
         return -1;
     }
-    struct tcp_intermsu_queue_item *tcp_queue_data_item = (struct tcp_intermsu_queue_item*)queue_item->buffer;
-    tcp_queue_data_item->src_msu_id = self->id;
+    struct tcp_intermsu_queue_item *tcp_queue_data_item = buffer;
+    tcp_queue_data_item->src_msu_id = (int)self->id;
     tcp_queue_data_item->msg_type = MSU_PROTO_TCP_HANDSHAKE;
-    tcp_queue_data_item->data_len = f->buffer_len;
-    tcp_queue_data_item->data = queue_item->buffer + sizeof(struct tcp_intermsu_queue_item);
-    memcpy(tcp_queue_data_item->data, f->buffer, tcp_queue_data_item->data_len);
-    log_debug("routing to handshake msu msg_type: %d",tcp_queue_data_item->msg_type);
-    log_debug("routing to handshake frame len: %d",tcp_queue_data_item->data_len);
-    log_debug("routing to handshake msg len: %d",queue_item->buffer_len);
-
-    //next msu type id
-    unsigned int type_id = DEDOS_TCP_HANDSHAKE_MSU_ID;
-    log_debug("type ID of next MSU is %d", type_id);
+    tcp_queue_data_item->data_len = (int)f->buffer_len;
+    tcp_queue_data_item->data = buffer + sizeof(struct tcp_intermsu_queue_item);
+    memcpy(tcp_queue_data_item->data, f->buffer, (size_t)tcp_queue_data_item->data_len);
+    log(LOG_PICO, "routing to handshake msu msg_type: %d",tcp_queue_data_item->msg_type);
+    log(LOG_PICO, "routing to handshake frame len: %d",tcp_queue_data_item->data_len);
+    log(LOG_PICO, "routing to handshake msg len: %d", (int)buffer_len);
 
     // Get the MSU type to deliver to
-    struct msu_type *type = NULL;
-    ret = msu_type_by_id_corrected((unsigned int)type_id, &type);
-    if (type == NULL){
-        log_error("Type ID %d not recognized", type_id);
-        if (queue_item){
-            free(queue_item->buffer);
-            free(queue_item);
-        }
+    ret = init_call_msu_type(self, &TCP_HANDSHAKE_MSU_TYPE, &key, buffer_len, buffer);
+    if (ret < 0) {
+        log_error("Error calling TCP_HANDSHAKE_MSU from pico_tcp MSU");
         return -1;
     }
-    log_debug("retrieved msu type from id. name: %s", type->name);
-/* 
- *  NOW CALLED within msu_route()
-    // Get the specific MSU to deliver to
-    struct msu_endpoint *dst = type->route(type, self, queue_item);
-    if (dst == NULL){
-        log_error("No destination endpoint of type %s (%d) for msu %d",
-                  type->name, type_id, self->id);
-        if (queue_item){
-            free(queue_item->buffer);
-            free(queue_item);
-        }
-        return -1;
-    }
-    log_debug("Next msu id is %d", dst->id);
-*/
-    // Send to the specific destination
-    int rtn = msu_route(type, self, queue_item);
-    if (rtn < 0){
-        log_error("Error sending to destination msu %s", "");
-        if (queue_item){
-            free(queue_item->buffer);
-            free(queue_item);
-        }
-    }
-    return rtn;
-}
-
-static int forward_to_routing_MSU_deprecated(struct pico_socket *s, struct pico_frame *f, char *flag)
-{
-	//the incoming f pointer will be freed when this function returs, so need to create
-	//a copy of it
-    int ret = 0;
-    struct msu_endpoint* msu_endpoint = NULL;
-    struct msu_endpoint *all_msu_enpoints = NULL;
-    unsigned int next_msu_type = DEDOS_TCP_HS_REQUEST_ROUTING_MSU_ID;
-
-    //find an entry for routing msu from the routing table based on some info from frame f, like 4 tuple
-/*    all_msu_enpoints = get_all_type_msus(pico_tcp_msu->rt_table, next_msu_type);
-    if(!all_msu_enpoints){
-        log_error("%s","No next MSU info...can't continue");
-        return -1;
-    }
-*/
-    struct pico_tcp_hdr *tcp_hdr = (struct pico_tcp_hdr *) (f->transport_hdr);
-    struct pico_ipv4_hdr *net_hdr = (struct pico_ipv4_hdr *) (f->net_hdr);
-
-    log_debug("picking up the first entry of request type: %u",next_msu_type);
-    struct route_set *type_set = get_type_from_route_set(&pico_tcp_msu->routes, next_msu_type);
-    msu_endpoint = get_route_endpoint(type_set, 0);
-    if(!msu_endpoint){
-        return -1;
-    }
-
-    if (msu_endpoint->locality == MSU_IS_LOCAL) {
-    	void *serialized_queue_item_payload;
-        struct routing_queue_item *rt_queue_item;
-    	struct pico_frame *new_frame;
-        log_debug("Local next routing MSU");
-/*
-    	new_frame = pico_frame_alloc(f->buffer_len);
-    	if(!new_frame){
-    		log_error("pico_frame_alloc failed %s","");
-    		return -1;
-    	}
-*/
-        int rt_queue_item_total_size = sizeof(struct routing_queue_item) +
-                                       //sizeof(struct pico_frame) +
-                                       f->buffer_len;
-    	serialized_queue_item_payload = malloc(rt_queue_item_total_size);
-    	if(!serialized_queue_item_payload){
-    		log_error("Failed to malloc serial buffer for queue item%s","");
-    		//pico_frame_discard(new_frame);
-    		return -1;
-    	}
-        rt_queue_item = (struct rt_queue_item*)serialized_queue_item_payload;
-    	rt_queue_item->src_msu_id = pico_tcp_msu->id; //one picotcp msu per runtime for now
-    	rt_queue_item->f = NULL; //rt_queue_item + sizeof(struct routing_queue_item);
-    	//rt_queue_item->f->buffer = rt_queue_item + sizeof(struct routing_queue_item) + sizeof(struct pico_frame);
-       	//new_frame->buffer = rt_queue_item->f->buffer;
-        log_debug("Before memcpy of f->buffer into new_frame");
-        print_frame(f);
-        memcpy(serialized_queue_item_payload + sizeof(struct routing_queue_item), f->buffer, f->buffer_len);
-        log_debug("After memcpy of f->buffer into new_frame");
-    	/* fix new frame pointers */
-/*
-        new_frame->buffer_len = f->buffer_len;
-        new_frame->start = new_frame->buffer;
-        new_frame->len = new_frame->buffer_len;
-        new_frame->datalink_hdr = new_frame->buffer;
-        new_frame->net_hdr = new_frame->datalink_hdr + PICO_SIZE_ETHHDR;
-        new_frame->net_len = 20;
-        new_frame->transport_hdr = new_frame->net_hdr + new_frame->net_len;
-        new_frame->transport_len = (uint16_t) (new_frame->len - new_frame->net_len
-                - (uint16_t) (new_frame->net_hdr - new_frame->buffer));
-*/
-
-    	struct generic_msu_queue_item *queue_item;
-        queue_item = (struct generic_msu_queue_item*)malloc(sizeof(struct generic_msu_queue_item));
-        if(!queue_item){
-        	log_error("Failed to malloc queue item %s","");
-        	return -1;
-        }
-        queue_item->buffer_len = rt_queue_item_total_size;
-        queue_item->buffer = serialized_queue_item_payload;
-        log_debug("Enqueuing following to next hs_request_routing_msu: %s","");
-        log_debug("\tqueue_item->buffer_len: %u",queue_item->buffer_len);
-        log_debug("\trt_queue_item->src_msu_id: %d",rt_queue_item->src_msu_id);
-        ret = generic_msu_queue_enqueue(msu_endpoint->msu_queue, queue_item);
-        if(ret < 0){
-            log_debug("Failed to enqueue request %s","");
-//            pico_frame_discard(new_frame);
-//            free(rt_queue_item);
-              free(serialized_queue_item_payload);
-        } else {
-            log_debug("Same host next MSU of type: %u, Enqueued %s request to MSU queue", next_msu_type, flag);
-        }
-        return ret;
-
-    } else {
-        log_debug("Different host HS MSU, forwarding %s frame", flag);
-        print_frame(f);
-        forward_data_over_sock(msu_endpoint, f->buffer, f->buffer_len, NULL); //let the send function decide for now
-        return ret;
-    }
+    return 0;
 }
 
 static int tcp_syn(struct pico_socket *s, struct pico_frame *f)
@@ -2933,7 +2746,7 @@ static int tcp_syn(struct pico_socket *s, struct pico_frame *f)
     int stat = -1;
     stat = pico_socket_add(&new->sock);
     if(stat == 0){
-        syn_state_used_memory += sizeof(struct pico_tree_node);
+        syn_state_used_memory += (long int)sizeof(struct pico_tree_node);
     //printf("Added SYN state size %ld, total %ld, limit is %ld\n",sizeof(struct pico_tree_node), syn_state_used_memory, SYN_MEMORY_LIMIT);
     }
     tcp_send_synack(&new->sock);
@@ -3019,12 +2832,14 @@ static int tcp_synack(struct pico_socket *s, struct pico_frame *f)
         return 0;
     }
 }
+
+#define CLOCK_ID CLOCK_MONOTONIC
 static inline unsigned long long int get_ts(){
 
     struct timespec cur_timestamp;
     unsigned long long int ts;
     clock_gettime(CLOCK_ID, &cur_timestamp);
-    ts = (cur_timestamp.tv_sec * 1000 * 1000) + (cur_timestamp.tv_nsec / 1000);
+    ts = (unsigned)(cur_timestamp.tv_sec * 1000 * 1000) + (unsigned) (cur_timestamp.tv_nsec / 1000);
     return ts;
 }
 
@@ -3043,7 +2858,7 @@ int is_duplicate_fack(struct pico_frame *f){
         return 0;
     }
     //Check if item is hash table
-    int ack = ACKN(f);
+    int ack = (int)ACKN(f);
     unsigned long long int cur_ts = 0;
     struct fack_track *s;
     int duplicate = 0;
@@ -3122,7 +2937,7 @@ static int tcp_first_ack(struct pico_socket *s, struct pico_frame *f)
         s->ev_pending |= PICO_SOCK_EV_WR;
         tcp_dbg("%s: snd_nxt is now %08x\n", __FUNCTION__, t->snd_nxt);
         tcp_dbg("%s: rcv_nxt is now %08x\n", __FUNCTION__, t->rcv_nxt);
-        syn_state_used_memory = syn_state_used_memory - sizeof(struct pico_tree_node);
+        syn_state_used_memory = syn_state_used_memory - (long)sizeof(struct pico_tree_node);
         //printf("Established conn decrement...%ld\n",syn_state_used_memory);
         if(syn_state_used_memory < 0){
             //printf("RESET TO ZERO...%ld\n",syn_state_used_memory);

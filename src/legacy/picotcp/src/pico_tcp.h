@@ -7,6 +7,7 @@
  *********************************************************************/
 #ifndef INCLUDE_PICO_TCP
 #define INCLUDE_PICO_TCP
+#include "unused_def.h"
 #include "pico_addressing.h"
 #include "pico_protocol.h"
 #include "pico_socket.h"
@@ -109,10 +110,10 @@ struct pico_tcp_queue
 };
 
 /* Queues */
-static struct pico_queue tcp_in = {
+static struct pico_queue UNUSED tcp_in = {
     0
 };
-static struct pico_queue tcp_out = {
+static struct pico_queue UNUSED tcp_out = {
     0
 };
 
