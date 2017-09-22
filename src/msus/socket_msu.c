@@ -5,6 +5,7 @@
 #include "msu_message.h"
 #include "runtime_dfg.h"
 #include "communication.h"
+#include "msu_calls.h"
 
 #include <stdlib.h>
 #include <netinet/ip.h>
@@ -69,11 +70,11 @@ static int process_connection(int fd, void *v_state) {
             return -1;
         }
         seed.local_ip = local_runtime_ip();
-        set_msg_key(&seed, sizeof(seed), &key);
+        seed_msg_key(&seed, sizeof(seed), &key);
 
         struct msu_type *type = state->default_target;
 
-        rtn = init_call_msu(state->self, type, &key, sizeof(*msg), msg);
+        rtn = init_call_msu_type(state->self, type, &key, sizeof(*msg), msg);
         if (rtn < 0) {
             log_error("Error enqueing to destination");
             free(msg);

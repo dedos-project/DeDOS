@@ -10,6 +10,7 @@
 #include "msu_message.h"
 #include "routing.h"
 #include "local_files.h"
+#include "msu_calls.h"
 
 struct ws_read_state {
     int use_ssl;
@@ -39,7 +40,7 @@ static int handle_read(struct read_state *read_state,
     memcpy(out, read_state, sizeof(*read_state));
     free(msg->data);
     msu_free_state(self, &msg->hdr->key);
-    call_msu(self, &WEBSERVER_HTTP_MSU_TYPE, msg->hdr, sizeof(*out), out);
+    call_msu_type(self, &WEBSERVER_HTTP_MSU_TYPE, msg->hdr, sizeof(*out), out);
     return 0;
 }
 

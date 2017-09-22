@@ -5,6 +5,7 @@
 #include "msu_type.h"
 #include "msu_message.h"
 #include "logging.h"
+#include "msu_calls.h"
 #include <stdlib.h>
 
 #define MAX_TEST_MSG_ID 32
@@ -64,7 +65,7 @@ int receive(struct local_msu *self, struct msu_msg *msg) {
     }
 
     record_start_time(MSU_STAT1, test_msg->id);
-    return call_msu(self, self->type, msg->hdr, sizeof(*test_msg), test_msg);
+    return call_msu_type(self, self->type, msg->hdr, sizeof(*test_msg), test_msg);
 }
 
 int init_type(struct msu_type *type) {

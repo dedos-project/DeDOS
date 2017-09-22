@@ -38,7 +38,7 @@ START_DEDOS_TEST(test_serialize_and_deserialize_stat_sample) {
     }
 
     size_t buffer_size = serialized_stat_sample_size(samples, n_samples);
-    log_custom(TEST, "Buffer size is %d", (int)buffer_size);
+    log(TEST, "Buffer size is %d", (int)buffer_size);
     void *buffer = malloc(buffer_size);
 
     ssize_t used_size = serialize_stat_samples(samples, n_samples, buffer, buffer_size);

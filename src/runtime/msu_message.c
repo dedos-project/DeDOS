@@ -23,7 +23,14 @@ unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
     return prov->path[prov->path_len-1].type_id;
 }
 
-int set_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
+int set_msg_key(int32_t id, struct msu_msg_key *key) {
+    memcpy(&key->key, &id, sizeof(id));
+    key->key_len = sizeof(id);
+    key->id = id;
+    return 0;
+}
+
+int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
     HASH_VALUE(seed, seed_size, key->id);
     if (seed_size > sizeof(key->key)) {
         log_warn("Key length too large for composite key!");

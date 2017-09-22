@@ -82,7 +82,7 @@ int init_test_listening_socket(int port) {
         log_perror("Error starting listening socket");
         return -1;
     }
-    log_custom(LOG_TEST, "Started listen socket on port %d", port);
+    log(LOG_TEST, "Started listen socket on port %d", port);
     return sock;
 }
 

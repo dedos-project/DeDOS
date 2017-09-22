@@ -32,7 +32,7 @@ START_DEDOS_TEST(test_add_worker_thread) {
 static int port = 1234;
 int fake_listening_runtime() {
     int sock = init_listening_socket(port);
-    log_custom(TEST, "Initialized listening socket %d on port %d", sock, port);
+    log(TEST, "Initialized listening socket %d on port %d", sock, port);
     ck_assert_int_gt(sock, 0);
     return sock;
 }

@@ -124,7 +124,7 @@ START_DEDOS_TEST(test_process_fwd_to_msu_message) {
     void *serialized = serialize_msu_msg(&msg, &msu_type, &written_size);
     write(fds[1], serialized, written_size);
 
-    log_custom(LOG_TEST, "Wrote %d bytes to fd %d", (int)written_size, fds[1]);
+    log(LOG_TEST, "Wrote %d bytes to fd %d", (int)written_size, fds[1]);
     int rtn = process_fwd_to_msu_message(written_size, msu_id, fds[0]);
 
     ck_assert_int_eq(rtn, 0);

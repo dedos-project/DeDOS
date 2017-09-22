@@ -1,6 +1,7 @@
 #include "local_msu.h"
 #include "msu_type.h"
 #include "msu_message.h"
+#include "msu_calls.h"
 #include "logging.h"
 
 #include "webserver/write_msu.h"
@@ -17,7 +18,7 @@ static int craft_ws_regex_response(struct local_msu *self,
     }
 
     resp->resp_len = craft_regex_response(resp->url, resp->resp);
-    call_msu(self, &WEBSERVER_WRITE_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
+    call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
     return 0;
 }
 

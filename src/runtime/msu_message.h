@@ -46,7 +46,8 @@ int add_provinance(struct msg_provinance *prov,
 
 struct msu_msg_hdr *init_msu_msg_hdr(struct msu_msg_key *key);
 
-int set_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key);
+int set_msg_key(int32_t id, struct msu_msg_key *key);
+int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key);
 
 void destroy_msu_msg_contents(struct msu_msg *msg);
 

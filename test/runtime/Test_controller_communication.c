@@ -59,7 +59,11 @@ START_DEDOS_TEST(test_thread_msg_from_ctrl_hdr__add_runtime) {
         .payload_size = sizeof(msg)
     };
 
-    write(fds[1], &msg, sizeof(msg));
+    size_t  written = write(fds[1], &msg, sizeof(msg));
+    if (written < 0) {
+        log_error("Error writing");
+        ck_assert(0);
+    }
 
     struct thread_msg *thread_msg = thread_msg_from_ctrl_hdr(&hdr, fds[0]);
 

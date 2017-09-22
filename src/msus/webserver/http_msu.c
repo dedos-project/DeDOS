@@ -4,6 +4,7 @@
 #include "webserver/write_msu.h"
 #include "webserver/read_msu.h"
 #include "socket_msu.h"
+#include "msu_calls.h"
 #include "logging.h"
 #include "epollops.h"
 #include "msu_state.h"
@@ -38,10 +39,10 @@ static int handle_db(struct http_state *http_state,
         if (!has_regex(resp->url)) {
             log(LOG_HTTP_MSU, "Crafting response for url %s", resp->url);
             resp->resp_len = craft_nonregex_response(resp->url, resp->resp);
-            return call_msu(self, &WEBSERVER_WRITE_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
+            return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
         }
 
-        return call_msu(self, &WEBSERVER_REGEX_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
+        return call_msu_type(self, &WEBSERVER_REGEX_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
     }
 }
 
@@ -66,7 +67,7 @@ static int handle_parsing(struct read_state *read_state,
         http_state->conn.status = CON_READING;
         log(LOG_PARTIAL_READS, "Got partial request %s (fd: %d)",
                    read_state->req, read_state->conn.fd);
-        return call_msu(self, &WEBSERVER_READ_MSU_TYPE, msg->hdr, msg->data_size, msg->data);
+        return call_msu_type(self, &WEBSERVER_READ_MSU_TYPE, msg->hdr, msg->data_size, msg->data);
     }
 }
 

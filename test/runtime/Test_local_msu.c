@@ -1,5 +1,6 @@
 #include "dedos_testing.h"
 #include "stats.h"
+#include "msu_calls.h"
 
 // Include the file under test
 #include "local_msu.c"
@@ -198,7 +199,7 @@ START_DEDOS_TEST(test_msu_enqueue__local) {
 
     int data = 123;
 
-    call_msu(msu, &test_type_custom, &hdr, sizeof(data), &data);
+    call_msu_type(msu, &test_type_custom, &hdr, sizeof(data), &data);
 
     ck_assert_int_eq(msu2->queue.num_msgs, 1);
 } END_DEDOS_TEST

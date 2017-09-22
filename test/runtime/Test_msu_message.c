@@ -95,7 +95,7 @@ void *custom_deserialize(struct local_msu *msu, size_t input_size, void *input, 
 
     memcpy(l1->l2, input + sizeof(*l1), sizeof(*l1->l2));
     *size_out = sizeof(*l1);
-    log_custom(TEST, "Set size_out to %d", (int)*size_out);
+    log(TEST, "Set size_out to %d", (int)*size_out);
     return l1;
 }
 

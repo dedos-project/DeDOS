@@ -44,7 +44,7 @@ LEG_BLD_DIR = $(BLD_DIR)legacy/
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 
-#LEGACY_LIBS = picotcp
+LEGACY_LIBS = picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
@@ -59,6 +59,7 @@ COMPILE=$(CC) -c
 COMPILE_PP=$(CXX) -c
 DEPEND=$(CC) -MM -MF
 DEPEND_PP=$(CXX) -MM -MF
+LINK=ld -r
 FINAL=$(CXX)
 FINAL_TEST=$(CC)
 
@@ -132,7 +133,7 @@ endef
 CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
-TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm
+TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm -O0
 
 DIRS = $(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS)
 
