@@ -194,8 +194,8 @@ def fix_route_keys(dfg):
     For each route in each runtime, set the value of each route's destination to
     min_key.
 
-    :param dfg:
-    :return:
+    :param dfg: the dfg to update the route keys in
+    :return: None, the dfg is directly modified
     """
     msus = {msu['id']: msu for msu in dfg['MSUs']}
 
@@ -303,8 +303,8 @@ def make_dfg(cfg_fpath):
     Generate a dfg from the given yaml cfg file as a dictionary to be dumped
     into the json format.
 
-    :param cfg_fpath:
-    :return:
+    :param cfg_fpath: path to the cfg file
+    :return: the dfg generated from the cfg file
     """
     with open(cfg_fpath, 'r') as cfg_file:
         cfg_yaml = yaml.load(cfg_file)
