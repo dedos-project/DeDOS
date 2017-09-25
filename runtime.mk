@@ -61,7 +61,7 @@ DEPEND=$(CC) -MM -MF
 DEPEND_PP=$(CXX) -MM -MF
 LINK=ld -r
 FINAL=$(CXX)
-FINAL_TEST=$(CC)
+FINAL_TEST=$(CXX)
 
 SELF=./runtime.mk
 
@@ -103,6 +103,7 @@ TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS))
 TSTS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.c))
 TST_MKS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.mk))
 TST_RSCS = $(foreach TST_D, $(TST_DIRS), $(foreach EXT, $(RESOURCE_EXTS), $(wildcard $(TST_D)*$(EXT))))
+TST_OBJS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.o, $(TSTS))
 
 SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
 SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
@@ -117,7 +118,8 @@ DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS))
 
 OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS)) \
 		  $(patsubst $(SRC_DIR)%.cc, $(OBJ_DIR)%.o, $(SRCS_PP))
-OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS)))
+OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS))) \
+				 $(patsubst $(SRC_DIR)%.cc, $(OBJ_DIR)%.o, $(SRCS_PP))
 
 TST_BLD_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
 RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
@@ -164,7 +166,7 @@ $(TARGET): ${OBJECTS} ${LEG_OBJ}
 
 test: all test-blds test-results
 
-test-blds: $(TST_BLDS) $(TST_BLD_RSCS)
+test-blds: $(TST_OBJS) $(TST_BLDS) $(TST_BLD_RSCS)
 
 test-results: all test-blds $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
@@ -189,9 +191,12 @@ $(RES_DIR)%.txt: $(TST_BLD_DIR)%.out
 	$(call kill_proc $(notdir $^))
 	-./$< > $@ 2>&1
 
+$(TST_BLD_DIR)%.o:: $(TST_DIR)%.c $(SELF)
+	$(COMPILE) $(TEST_CFLAGS) $< -o $@
+
 # creates the test executables by linking the test objects with the build objects excluding 
 # the specific source under test
-$(TST_BLD_DIR)%.out:: $(TST_DIR)%.c $(OBJECTS_NOMAIN) $(LEG_OBJ)
+$(TST_BLD_DIR)%.out:: $(TST_BLD_DIR)%.o $(OBJECTS_NOMAIN) $(LEG_OBJ)
 	$(FINAL_TEST) -o $@ $(filter-out $(call test_filters, $(@:.out=)), $^) $(TEST_CFLAGS)
 #	$(FINAL) -o $@ $(filter-out $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@)), $^) $(TEST_CFLAGS)
 
