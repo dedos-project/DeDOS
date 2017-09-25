@@ -14,6 +14,8 @@ LOGS = \
 	   DFG_PARSING \
 	   ALL
 
+MSU_APPLICATIONS = pico_tcp ndlog webserver
+
 NO_LOGS = \
 		  JSMN_PARSING \
 		  DFG_PARSING
@@ -27,7 +29,7 @@ COM_DIR = $(SRC_DIR)common/
 LEG_DIR = $(SRC_DIR)legacy/
 TST_DIR = test/
 
-MSU_DIRS = $(MSU_DIR) $(filter %/, $(wildcard $(MSU_DIR)*/))
+MSU_DIRS = $(MSU_DIR) $(foreach APP, $(MSU_APPLICATIONS), $(MSU_DIR)$(APP)/)
 
 SRC_DIRS = $(RNT_DIR) $(COM_DIR) $(MSU_DIRS)
 
@@ -65,10 +67,16 @@ FINAL_TEST=$(CXX)
 
 SELF=./runtime.mk
 
+define upper
+$(shell echo $1 | tr a-z A-Z)
+endef
+
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
+MSU_DEFINES=$(foreach MSU_APP, $(MSU_APPLICATIONS), -DCOMPILE_$(call upper, $(MSU_APP))_MSUS)
 
-CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -lgmp -O$(OPTIM) $(LOG_DEFINES)
+CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -lgmp -O$(OPTIM) \
+	   $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
 ifeq ($(DEBUG), 1)
@@ -205,6 +213,7 @@ $(TST_BLD_DIR)%: $(TST_DIR)%
 
 # Creates object files from the source file
 $(OBJ_DIR)%.o:: $(SRC_DIR)%.c $(SELF)
+	echo $(SRC_DIRS)
 	$(COMPILE) $(CCFLAGS) $< -o $@
 
 $(OBJ_DIR)%.o:: $(SRC_DIR)%.cc $(SELF)
