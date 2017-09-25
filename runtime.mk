@@ -50,7 +50,7 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=6
+OPTIM=3
 
 CC:=gcc
 CXX:=g++
@@ -68,7 +68,7 @@ SELF=./runtime.mk
 LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 
-CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -O$(OPTIM) $(LOG_DEFINES)
+CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -lgmp -O$(OPTIM) $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
 ifeq ($(DEBUG), 1)
@@ -111,7 +111,12 @@ TST_BLDS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.out, $(TSTS))
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
-OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS))
+DEP_DIRS = $(patsubst $(SRC_DIR)%/, $(DEP_DIR)%/, $(SRC_DIRS))
+DEP_TST = $(patsubst $(TST_DIR)%.c, $(DEP_DIR)%.d, $(TSTS))
+DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS))
+
+OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS)) \
+		  $(patsubst $(SRC_DIR)%.cc, $(OBJ_DIR)%.o, $(SRCS_PP))
 OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS)))
 
 TST_BLD_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
