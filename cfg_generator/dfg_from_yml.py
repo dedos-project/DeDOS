@@ -1,77 +1,139 @@
-import yaml
-import json
 import sys
-from collections import OrderedDict
+import json
+import copy
+import yaml
+from collections import OrderedDict, defaultdict
 
-def sort_msus(msus):
-    if len(msus) == 0:
-        return []
-    msus_out = []
-    start_msus = [msu for msu in msus if msu['vertex_type'] == 'entry']
-    msus_out.extend(start_msus)
+ROOT_MAPPING = OrderedDict([
+    ('application_name', ['application', 'name']),
+    ('global_ctl_ip', ['global_ctl', 'ip']),
+    ('global_ctl_port', ['global_ctl', 'port']),
+])
 
-    last_types = start_msus[-1]['meta_routing']['dst_types']
-    while any(msu['type'] in last_types for msu in msus):
-        next_types = set()
-        rid = []
-        for i, msu in enumerate(msus[:]):
-            if (msu['type'] in last_types):
-                if 'dst_types' in msu['meta_routing']:
-                    for type in msu['meta_routing']['dst_types']:
-                        next_types.add(type)
-                msus_out.append(msu)
-                rid.append(msu)
-        msus = [msu for msu in msus if msu not in rid]
-        last_types = next_types
-    return msus_out
+MSU_MAPPING = OrderedDict([
+    ('vertex_type', 'vertex_type'),
+    ('meta_routing', 'meta_routing'),
+    ('working_mode', 'working_mode'),
+    ('type', 'type'),
+    ('name', 'name'),
+    ('scheduling', OrderedDict([
+        ('thread_id', 'thread'),
+        ('runtime', ['scheduling', 'runtime_id']),
+    ]))
+])
 
-max_id = 1
+RUNTIME_MAPPING = OrderedDict([
+    ('id', 'runtime_id'),
+    ('ip', 'ip'),
+    ('port', 'port'),
+    ('num_cores', 'num_cores'),
+    ('num_threads', 'num_threads'),
+    ('num_pinned_threads', 'num_pinned_threads')
+])
+
+
+def nested_dict_getter(a_dict, keys):
+    """
+    Retrieve the value from the given dictionary containing other nested
+    dictionaries using the list of nested keys. Should also work for lists.
+
+    :param a_dict: a dictionary or list containing nested dictionaries or
+                   lists
+    :param keys: a list of ordered keys to find the value in a_dict
+    :return: the value retrieved from a_dict[key_0][key_1]...[key_n-1]
+    """
+    for k in keys:
+        a_dict = a_dict[k]
+    return a_dict
+
+
+def dict_from_mapping(a_dict, mapping):
+    """
+    Transform a given dictionary into a new dictionary using the mapping
+    dictionary given. The mapping dictionary may contain a mapping from
+    output dictionary key to a list of nested keys, a single key, or
+    a nested mapping dictionary.
+
+    :param a_dict: dictionary to copy values from
+    :param mapping: dictionary mapping output keys to input keys
+    :return: the new dictionary transformed from the input dictionary
+    """
+    output = OrderedDict()
+    for key in mapping:
+        value = mapping[key]
+        if isinstance(value, dict):
+            output[key] = dict_from_mapping(a_dict, mapping)
+        elif isinstance(value, list):
+            output[key] = nested_dict_getter(a_dict, value)
+        else:
+            output[key] = a_dict[key]
+    return output
+
 
 def route_name(runtime_id, type, i):
     return '%03d%01d' % (type, i)
-    #return '%03d%01d%01d' % (type, runtime_id, i)
 
-def add_pseudo_routing(rt_id, froms, tos, routes, json_route):
 
-    types = [msu['type'] for msu in tos]
+def add_routing(rt_id, froms, tos, routes, route_indexes):
+    """
+    Generates new routes to the MSUs given in tos, and adds them to the MSUs in
+    froms, as well as to the full list of routes in routes.
+
+    :param rt_id: the id of the runtime the routes will be added to
+    :param froms: the set of msus to add the new routes to
+    :param tos: the set of msus that the routes will be generated from
+    :param routes: the current set of all routes for the runtime with id rt_id
+    :param route_indexes: the defaultdict(int) needed to generate unique ids for
+                          each route that is generated
+    :return: None
+    """
+    type_counts = defaultdict(int)
+    for msu in tos:
+        type_counts[msu['type']] += 1
 
     new_routes = {}
 
-    for type in set(types):
-        for i in range(99):
-            name = route_name(rt_id, type, i)
-            if name not in routes:
-                routes[name] = {'destinations':{}, 'type': type, 'link': json_route, 'key-max': 0}
-                new_routes[type] = name
-                break
+    # Initialize new routes for each type of route being added
+    for t in type_counts:
+        name = route_name(rt_id, type, route_indexes[t])
+        route_indexes[t] += 1
+        new_routes[t] = {'id': name, 'destinations': {}, 'type': t}
 
+    # For each type, sequentially initialize each destination's routing key
+    type_iters = defaultdict(int)  # Maintaining iter value for each type
     for msu in tos:
-        route_out = routes[new_routes[msu['type']]]
-        last_max = route_out['key-max']
-        route_out['destinations'][msu['id']] = last_max + 1
-        route_out['key-max'] += 1
+        t = msu['type']
+        new_routes[t]['destinations'][msu['id']] = type_iters[t] + 1
+        type_iters[t] += 1
 
+    # Add these new routes to each msu in froms
     for msu in froms:
-        for type in types:
-            if new_routes[type] not in msu['scheduling']['routing']:
-                msu['scheduling']['routing'].append(new_routes[type])
+        msu['scheduling']['routing'].extend(new_routes)
 
-def runtime_routes(rt_id, msus, routes):
+    # Now add the new routes to the main list
+    routes.append(new_routes.items())
 
-    routes_out = {}
 
-    for i, route in enumerate(routes):
-        if isinstance(route['to'], list):
-            tos = route['to']
-        else:
-            tos = [route['to']]
+def runtime_routes(rt_id, msus, yaml_routes):
+    """
+    Generates all the routes for the json output given the routes defined in
+    the yaml config, the list of msus, and the id of the runtime for which to
+    consider the routes for.
 
-        if isinstance(route['from'], list):
-            froms = route['from']
-        else:
-            froms = [route['from']]
+    :param rt_id: the runtime id
+    :param msus: the list of msus
+    :param yaml_routes: all of the routes as defined in the yaml config
+    :return: the list of generated rotues
+    """
+    json_routes = []
+    route_indexes = defaultdict(int)
 
-        from_msus = [msu for msu in msus if msu['name'] in froms and msu['scheduling']['runtime_id'] == rt_id]
+    for i, route in enumerate(yaml_routes):
+        tos = list(route['to'])
+        froms = list(route['from'])
+
+        from_msus = [msu for msu in msus if msu['name'] in froms and
+                     msu['scheduling']['runtime_id'] == rt_id]
 
         if len(from_msus) == 0:
             continue
@@ -79,54 +141,63 @@ def runtime_routes(rt_id, msus, routes):
         thread_match = route.get('thread-match', False)
 
         if not thread_match:
-            to_msus = [msu for msu in msus if msu['name'] in tos ]
-            add_pseudo_routing(rt_id, from_msus, to_msus, routes_out, route)
+            to_msus = [msu for msu in msus if msu['name'] in tos]
+            add_routing(rt_id, from_msus, to_msus, json_routes, route_indexes)
         else:
             threads = set(msu['scheduling']['thread_id'] for msu in from_msus)
             for thread in threads:
-                thread_froms = [msu for msu in msus if msu['scheduling']['thread_id'] == thread
-                                and msu['scheduling']['runtime_id'] == rt_id
-                                and msu['name'] in froms]
-                thread_tos = [msu for msu in msus if msu['name'] in tos and msu['scheduling']['thread_id'] == thread]
-                add_pseudo_routing(rt_id, thread_froms, thread_tos, routes_out, route)
+                thread_froms = [msu for msu in from_msus
+                                if msu['scheduling']['thread_id'] == thread]
+                thread_tos = [msu for msu in msus if msu['name'] in tos and
+                              msu['scheduling']['thread_id'] == thread]
+                add_routing(rt_id, thread_froms, thread_tos, json_routes,
+                            route_indexes)
 
-    for id, route_out in routes_out.items():
-        if 'key-max' in route_out['link']:
-            ratio = route_out['link']['key-max'] / route_out['key-max']
-            for msu_id in route_out['destinations']:
-                route_out['destinations'][msu_id] *= ratio
-        del route_out['key-max']
-        del route_out['link']
+    return json_routes
 
-    routes_final = [ dict(id=k, **v) for k, v in routes_out.items()]
-
-    return routes_final
 
 def count_downstream(msu, dfg, found_already=None):
+    """
+    Recursively count the number of downstream destinations from the current msu.
 
-    found_already = {msu['id']} if found_already is None else found_already
+    :param msu: the msu to search the routing from
+    :param dfg: the entire dfg
+    :param found_already: the set of MSU ids that have been seen already
+    :return: the number of downstream destinations
+    """
+    found_already = {msu['id'] if found_already is None else found_already}
 
     if 'routing' not in msu['scheduling']:
         return 1
 
+    # Get runtime of the given msu
+    runtime = next(rt for rt in dfg['runtimes']
+                   if rt['id'] == msu['scheduling']['runtime_id'])
+
+    # Get the unique MSUs that exist downstream from this MSU
     for route in msu['scheduling']['routing']:
-        runtime = [rt for rt in dfg['runtimes'] if rt['id'] == msu['scheduling']['runtime_id']][0]
-        dfg_route = [r for r in runtime['routes'] if r['id'] == route][0]
+        dfg_route = next(r for r in runtime['routes'] if r['id'] == route)
 
         for dst in dfg_route['destinations']:
-            if not dst in found_already:
-                dst_msus = [m for m in dfg['MSUs'] if m['id'] == dst]
-                if len(dst_msus) == 0:
-                    print "MSU %s can't find" % dst
-                dst_msu = dst_msus[0]
+            if dst not in found_already:
+                dst_msu = next(m for m in dfg['MSUs'] if m['id'] == dst)
+                if dst_msu is None:
+                    print "Cannot find MSU {0}".format(dst)
                 found_already.add(dst_msu['id'])
                 count_downstream(dst_msu, dfg, found_already)
 
     return len(found_already)
 
-def fix_route_keys(dfg):
 
-    msus = {msu['id']:msu for msu in dfg['MSUs']}
+def fix_route_keys(dfg):
+    """
+    For each route in each runtime, set the value of each route's destination to
+    min_key.
+
+    :param dfg:
+    :return:
+    """
+    msus = {msu['id']: msu for msu in dfg['MSUs']}
 
     for runtime in dfg['runtimes']:
         for route in runtime['routes']:
@@ -136,44 +207,15 @@ def fix_route_keys(dfg):
                 min_key += count_downstream(msu, dfg)
                 route['destinations'][destination] = min_key
 
-def make_msus_out(msu):
-    global max_id
-    reps = msu['reps'] if 'reps' in msu else 1
-    msus = []
-    for i in range(reps):
-        msu_out = OrderedDict()
-        msu_out['vertex_type'] = msu['vertex_type']
-        msu_out['profiling'] = msu['profiling']
-        msu_out['meta_routing'] = msu['meta_routing']
-        msu_out['working_mode'] = msu['working_mode']
-        msu_out['scheduling'] = OrderedDict()
-        msu_out['scheduling']['thread_id'] = msu['thread']+i
-        msu_out['scheduling']['deadline'] = msu['deadline']
-        msu_out['scheduling']['runtime_id'] = msu['scheduling']['runtime_id']
-        msu_out['scheduling']['cloneable'] = msu['cloneable']
-        msu_out['scheduling']['colocation_group'] = msu['colocation_group'] if 'colocation_group' in msu else 0
-        if msu_out['vertex_type'] != 'exit':
-            msu_out['scheduling']['routing'] = []
-        if 'depedencies' in msu:
-            msu_out['dependencies'] = []
-            for dependency in msu['dependencies']:
-                msu_out['dependencies'].append(dependency)
-        msu_out['type'] = msu['type']
-        msu_out['id'] = max_id
-        msu_out['name'] = msu['name']
-        if ('dependencies' in msu and len(msu['dependencies']) > 0):
-            msu_out['dependencies'] = []
-            for dep in msu['dependencies']:
-                msu_out['dependencies'].append(dict(
-                    msu_type = dep['msu_type'],
-                    locality = dep['locality']))
-        if 'init_data' in msu:
-            msu_out['init_data'] = msu['init_data']
-        max_id += 1
-        msus.append(msu_out)
-    return msus
 
 def stringify(output):
+    """
+    Modifies the given output by converting anything not a list or a dict
+    into a string (eg: ints, floats, etc)
+
+    :param output: the output to stringify
+    :return: None, the given output is directly modified
+    """
 
     if isinstance(output, dict) or isinstance(output, OrderedDict):
         for k, v in output.items():
@@ -191,49 +233,100 @@ def stringify(output):
                 stringify(v)
             else:
                 output[i] = str(v)
-def make_dfg(yml_filename, pretty=False):
-    input = yaml.load(open(yml_filename))
-    output = OrderedDict()
 
-    output['application_name'] = input['application']['name']
-    output['application_deadline'] = input['application']['deadline']
-    output['global_ctl_ip'] = input['global_ctl']['ip']
-    output['global_ctl_port'] = input['global_ctl']['port']
-    output['load_mode'] = input['application']['load_mode']
 
-    rts = []
-    for rt in input['runtimes'].values():
-        rts.append(dict(
-            id = rt['runtime_id'],
-            ip = rt['ip'],
-            port = rt['port'],
-            num_cores = rt['num_cores'],
-            dram = rt['dram'],
-            io_network_bw = rt['io_network_bw'],
-            num_threads = rt['num_threads'],
-            num_pinned_threads = rt['num_pinned_threads'],
-        ))
-    output['runtimes'] = rts
+class MSUGenerator(list):
+    """
+    This class makes copies of a base MSU as defined by the config in yaml for
+    up to the number of reps specified.
+    """
 
-    msus = input['msus'] #sort_msus(input['msus'])
-    msus_out = []
-    for msu in msus:
-        msus_out.extend(make_msus_out(msu))
+    next_msu_id = 1  # To ensure each MSU has a unique id
 
-    for rt in output['runtimes']:
-        rt['routes'] = runtime_routes(rt['id'], msus_out, input['routes'])
+    def __init__(self, msu):
+        """
+        Initialize some of the generator values and generate the base msu from
+        the given msu yaml dictionary.
 
-    output['MSUs'] = msus_out
-    fix_route_keys(output)
-    stringify(output)
+        :param msu: the dictionary parsed from the yaml msu input
+        """
+        list.__init__(self)
+        self.reps = msu['reps'] if 'reps' in msu else 1
+        self.starting_id = self.next_msu_id
+        self.generated = 0
 
-    return output
+        # Create the base MSU
+        self.base_msu = dict_from_mapping(msu, MSU_MAPPING)
+        if 'dependencies' in msu and len(msu['dependencies']) > 0:
+            self.base_msu['dependencies'] = []
+            for dep in msu['dependencies']:
+                self.base_msu['dependencies'].append({
+                    'msu_type': dep['msu_type'],
+                    'locality': dep['locality']
+                })
+        if 'init_data' in msu:
+            self.base_msu['init_data'] = msu['init_data']
+
+        # Pre-allocating IDs
+        self.base_msu['id'] = self.next_msu_id
+        self.next_msu_id += self.reps
+
+    def __iter__(self):
+        """
+        Generates the next MSU up to self.reps MSUs
+
+        :return: the next MSU
+        """
+        if self.generated < self.reps:
+            self.generated += 1
+            return self.generate_msu(self.generated - 1)
+        raise StopIteration()
+
+    def generate_msu(self, i):
+        """
+        Generate the next rep of this MSU and override its id and thread_id.
+
+        :param i: the rep value of this MSU
+        :return: a new deep copy of the base MSU updated for the next rep
+        """
+        next_msu = copy.deepcopy(self.base_msu)
+        next_msu['scheduling']['thread_id'] += i
+        next_msu['id'] += i
+        return next_msu
+
+    def __len__(self):
+        return self.reps
+
+
+def make_dfg(cfg_fpath):
+    """
+    Generate a dfg from the given yaml cfg file as a dictionary to be dumped
+    into the json format.
+
+    :param cfg_fpath:
+    :return:
+    """
+    with open(cfg_fpath, 'r') as cfg_file:
+        cfg_yaml = yaml.load(cfg_file)
+        dfg = dict_from_mapping(cfg_yaml, ROOT_MAPPING)
+
+        dfg['runtimes'] = [dict_from_mapping(rt, RUNTIME_MAPPING)
+                           for rt in cfg_yaml['runtimes'].values()]
+
+        msus = [msu for base_msu in cfg_yaml['msus']
+                for msu in MSUGenerator(base_msu)]
+
+        for rt in dfg['runtimes']:
+            rt['routes'] = runtime_routes(rt['id'], msus, input['routes'])
+
+        dfg['MSUs'] = msus
+        fix_route_keys(dfg)
+        stringify(dfg)
+
+        return dfg
+
 
 if __name__ == '__main__':
-    pretty = True
     cfg = sys.argv[-1]
-    output = make_dfg(cfg, pretty)
-    if pretty:
-        print(json.dumps(output, indent=2))
-    else:
-        print(json.dumps(output))
+    dfg = make_dfg(cfg)
+    print(json.dumps(dfg, indent=2))
