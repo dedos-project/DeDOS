@@ -14,13 +14,17 @@ LOGS = \
 	   DFG_PARSING \
 	   ALL
 
-MSU_APPLICATIONS = pico_tcp ndlog webserver
+MSU_APPLICATIONS =u # pico_tcp ndlog webserver
 
 NO_LOGS = \
 		  JSMN_PARSING \
-		  DFG_PARSING
-		  #MSU_ENQUEUES \
-		  MSU_DEQUEUES
+		  DFG_PARSING \
+		  MSU_ENQUEUES \
+		  MSU_DEQUEUES \
+		  ADD_PROVINANCE \
+		  STAT_SEND \
+		  STAT_SERIALIZATION \
+		  CONTROLLER_COMMUNICATION
 
 SRC_DIR = src/
 RNT_DIR = $(SRC_DIR)runtime/
@@ -46,13 +50,13 @@ LEG_BLD_DIR = $(BLD_DIR)legacy/
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 
-LEGACY_LIBS = picotcp
+LEGACY_LIBS = #picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=3
+OPTIM=0
 
 CC:=gcc
 CXX:=g++
@@ -223,6 +227,9 @@ $(DEP_SRC): $(DEP_DIRS)
 
 $(DEP_DIR)%.d:: $(SRC_DIR)%.c $(LEG_OBJ)
 	@$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(TEST_CFLAGS) $<
+
+$(DEP_DIR)%.d:: $(TST_DIR)%.c $(LEG_OBJ)
+	@$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(TST_BLD_DIR)%.o, $@) $(TEST_CFLAGS) $<
 
 $(DIRS)::
 	@$(MKDIR) $@
