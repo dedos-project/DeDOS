@@ -192,7 +192,7 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
     // TODO: Exit condition!
     while (1) {
         // TODO: Get context switches
-        if (thread_wait(thread) != 0) {
+        if (thread_wait(thread, NULL) != 0) {
             log_error("Error waiting on thread semaphore");
             continue;
         }

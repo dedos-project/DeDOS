@@ -29,7 +29,7 @@ int handle_serialized_stats_buffer(void *buffer, size_t buffer_len) {
         return -1;
     }
 
-    int n_samples = deserialize_stat_samples(buffer, buffer_len, 
+    int n_samples = deserialize_stat_samples(buffer, buffer_len,
                                              incoming_samples, MAX_STAT_SAMPLES);
     if (n_samples < 0) {
         log_error("Error deserializing stat samples");
@@ -48,6 +48,11 @@ int init_stats_msg_handler() {
     incoming_samples = init_stat_samples(MAX_STAT_SAMPLES, MAX_SAMPLE_SIZE);
     if (incoming_samples == NULL) {
         log_error("Error initializing stat samples");
+        return -1;
+    }
+    int rtn = init_statistics();
+    if (rtn < 0) {
+        log_error("Error initializing statistics");
         return -1;
     }
     return 0;

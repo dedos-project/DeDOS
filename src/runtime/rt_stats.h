@@ -24,5 +24,7 @@ int increment_stat(enum stat_id stat_id, unsigned int item_id, double value);
 
 /** Records a statistic in the statlog */
 int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool relog);
+
+struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_sample_out);
 #endif
 

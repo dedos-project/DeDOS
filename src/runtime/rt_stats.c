@@ -14,7 +14,6 @@
 static struct timespec stats_start_time;
 static bool stats_initialized = false;
 
-#define MAX_ID 64
 
 /**
  * The internal statistics structure where stats are aggregated
@@ -35,7 +34,7 @@ struct stat_type {
     int max_stats;            /**< Maximum number of statistics that can be held in memory */
     char *format;             /**< Format for printf */
     char *label;              /**< Name to output for this statistic */
-    int id_indices[MAX_ID];   /**< Index at which the IDs are stored */
+    int id_indices[MAX_STAT_ITEM_ID];   /**< Index at which the IDs are stored */
     int num_items;            /**< Number of items currently registered for logging */
     pthread_rwlock_t lock;    /**< Lock for adding new stat items */
     struct stat_item *items;  /**< The items of this type being logged */
@@ -81,7 +80,7 @@ struct stat_type stat_types[] = {
         return -1; \
     }
 
-/* TODO: Incremental flushes of raw items, followed by eventual conversion 
+/* TODO: Incremental flushes of raw items, followed by eventual conversion
 static inline int flush_raw_item_to_log(FILE *file, struct stat_type *type,
                                         int item_idx) {
     struct stat_item *item = &type->items[item_idx];
@@ -222,8 +221,8 @@ static void destroy_stat_item(struct stat_item *item) {
 }
 
 static struct stat_item *get_item_stat(struct stat_type *type, unsigned int item_id) {
-    if (item_id > MAX_ID) {
-        log_error("Item ID %u too high. Max: %d", item_id, MAX_ID);
+    if (item_id > MAX_STAT_ITEM_ID) {
+        log_error("Item ID %u too high. Max: %d", item_id, MAX_STAT_ITEM_ID);
         return NULL;
     }
     int id_index = type->id_indices[item_id];
@@ -404,19 +403,22 @@ static inline int time_cmp(struct timespec *t1, struct timespec *t2) {
 
 static int find_time_index(struct timed_stat *stats, struct timespec *time,
                     int start_index, int stat_size) {
+    if (start_index < 0) {
+        start_index = stat_size - 1;
+    }
     if (time_cmp(&stats[start_index].time, time) <= 0) {
         return start_index;
     }
     int search_index = start_index - 1;
-    while (search_index != start_index) {
+    do {
+        if (search_index < 0) {
+            search_index = stat_size - 1;
+        }
         if (time_cmp(&stats[search_index].time, time) <= 0) {
             return search_index;
         }
         search_index--;
-        if (search_index < 0) {
-            search_index = stat_size - 1;
-        }
-    }
+    } while (search_index != start_index - 1);
     return -1;
 }
 
@@ -426,15 +428,24 @@ static int sample_stat_item(struct stat_item *item, int stat_size,
     struct timespec sample_time = *sample_end;
     lock_item(item);
     int sample_index = item->write_index - 1;
+    if (sample_index < 0) {
+        sample_index = stat_size + sample_index;
+    }
+    int max_index = item->rolled_over ? item->write_index : stat_size;
     int i;
     for (i=0; i<sample_size; i++) {
-        sample_index = find_time_index(item->stats, &sample_time, sample_index, stat_size);
-        if (sample_index < 0) {
-            log_error("Couldn't find time index for item %d", item->id);
-            unlock_item(item);
-            return -1;
+        if (max_index > 1) {
+            sample_index = find_time_index(item->stats, &sample_time, sample_index, max_index);
+        } else {
+            sample_index = 0;
         }
-        sample[i] = item->stats[sample_index];
+        if (sample_index < 0) {
+            log(LOG_STATS, "Couldn't find time index for item %d", item->id);
+            unlock_item(item);
+            return i;
+        }
+        sample[sample_size - i - 1].value = item->stats[sample_index].value;
+        sample[sample_size - i - 1].time = sample_time;
         sample_time.tv_nsec -= interval->tv_nsec;
         if (sample_time.tv_nsec < 0) {
             sample_time.tv_sec -= 1;
@@ -443,7 +454,7 @@ static int sample_stat_item(struct stat_item *item, int stat_size,
         sample_time.tv_sec -= interval->tv_sec;
     }
     unlock_item(item);
-    return 0;
+    return i;
 }
 
 static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timespec *interval,
@@ -474,6 +485,8 @@ static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timesp
             log_error("Error sampling item %d (idx %d)", type->items[i].id, i);
             unlock_type(type);
             return -1;
+        } else {
+            sample[i].hdr.n_stats = rtn;
         }
     }
     unlock_type(type);
@@ -486,11 +499,60 @@ int n_stat_items(enum stat_id stat_id) {
 }
 
 
-int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
-                        int sample_size, struct stat_sample *sample, int n_samples) {
+static int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
+                               int sample_size, struct stat_sample *sample, int n_samples) {
+    CHECK_INITIALIZATION;
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
     struct timespec now;
     get_elapsed_time(&now);
     return sample_stat(stat_id, &now, interval, sample_size, sample, n_samples);
+}
+
+static struct stat_sample *stat_samples[N_REPORTED_STAT_TYPES];
+
+static struct timespec stat_sample_interval = {
+    .tv_sec = STAT_SAMPLE_PERIOD_S / STAT_SAMPLE_SIZE,
+    .tv_nsec = (int)(STAT_SAMPLE_PERIOD_S * 1e9 / STAT_SAMPLE_SIZE) % (int)1e9
+};
+
+struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
+    if (!stats_initialized) {
+        log_error("Stats not initialized");
+        return NULL;
+    }
+
+    int i = -1;
+    for (i=0; i < N_REPORTED_STAT_TYPES; i++) {
+        if (reported_stat_types[i].id == stat_id) {
+            break;
+        }
+    }
+    if (i == -1) {
+        log_error("%d is not a reported stat type", stat_id);
+        return NULL;
+    }
+
+    int rtn = sample_recent_stats(stat_id, &stat_sample_interval, STAT_SAMPLE_SIZE,
+                                  stat_samples[i], n_stat_items(stat_id));
+    if (rtn < 0) {
+        log_error("Error sampling recent stats");
+        return NULL;
+    }
+    *n_samples_out = rtn;
+    return stat_samples[i];
+}
+
+static void realloc_stat_samples(enum stat_id stat_id, int n_samples) {
+    for (int i=0; i < N_REPORTED_STAT_TYPES; i++) {
+        if (reported_stat_types[i].id == stat_id) {
+            free_stat_samples(stat_samples[i], n_samples - 1);
+            stat_samples[i] = init_stat_samples(STAT_SAMPLE_SIZE, n_samples);
+            return;
+        }
+    }
 }
 
 /**
@@ -543,6 +605,8 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
 
     type->id_indices[item_id] = index;
 
+    realloc_stat_samples(stat_id, type->num_items);
+
     if (unlock_type(type) != 0) {
         return -1;
     }
@@ -578,7 +642,7 @@ int init_statistics() {
             }
             type->num_items = 0;
             type->items = NULL;
-            for (int j = 0; j < MAX_ID; j++) {
+            for (int j = 0; j < MAX_STAT_ITEM_ID; j++) {
                 type->id_indices[j] = -1;
             }
         }

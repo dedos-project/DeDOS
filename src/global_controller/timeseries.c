@@ -41,7 +41,6 @@ double average_n(struct timed_rrdb *timeseries, int n_samples) {
 int append_to_timeseries(struct timed_stat *input, int input_size,
                          struct timed_rrdb *timeseries) {
     int write_index = timeseries->write_index;
-    log_debug("Starting index for append: %d", write_index);
     for (int i=0; i<input_size; i++) {
         write_index %= RRDB_ENTRIES;
         timeseries->data[write_index] = input[i].value;
@@ -49,13 +48,12 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
         write_index++;
     }
     timeseries->write_index = write_index % RRDB_ENTRIES;
-    log_debug("End index for append: %d", timeseries->write_index);
     return 0;
 }
 
 /** The length of the begnning and end of the timeseries that's printed
  * when print_timeseries() is called */
-#define PRINT_LEN 3
+#define PRINT_LEN 8
 
 /** Prints the beginning and end of a timeseries.
  * @param timeseries The timeseries to print

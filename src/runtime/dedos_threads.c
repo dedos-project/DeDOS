@@ -102,8 +102,6 @@ static void *dedos_thread_starter(void *thread_init_v) {
     dedos_thread_fn thread_fn = init->thread_fn;
     dedos_thread_destroy_fn destroy_fn = init->destroy_fn;
 
-    // TODO: Pin thread!
-
     void *init_rtn = NULL;
     if (init->init_fn) {
         init_rtn = init->init_fn(thread);
@@ -128,9 +126,14 @@ static void *dedos_thread_starter(void *thread_init_v) {
     return (void*)(intptr_t)rtn;
 }
 
-int thread_wait(struct dedos_thread *thread) {
-    int rtn = sem_wait(&thread->sem);
-    if (rtn < 0) {
+int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout) {
+    int rtn;
+    if (abs_timeout == NULL) {
+        rtn = sem_wait(&thread->sem);
+    } else {
+        rtn = sem_timedwait(&thread->sem, abs_timeout);
+    }
+    if (rtn < 0 && errno != ETIMEDOUT) {
         log_perror("Error waiting on thread semaphore");
         exit(-1);
         return -1;

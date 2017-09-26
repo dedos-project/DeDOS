@@ -11,6 +11,7 @@
 #include "scheduling.h"
 #include "dfg.h"
 #include "dfg_reader.h"
+#include "stat_msg_handler.h"
 
 #define FILENAME_LEN 32
 
@@ -44,7 +45,13 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int rtn = init_controller_dfg(filename);
+    int rtn = init_stats_msg_handler();
+    if (rtn < 0) {
+        log_error("Error initializing stat message handler");
+        return -1;
+    }
+
+    rtn = init_controller_dfg(filename);
     if (rtn < 0){
         log_error("Error loading dfg!");
         return -1;

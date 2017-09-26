@@ -9,6 +9,7 @@
 #include "dedos_threads.h"
 #include "thread_message.h"
 #include "runtime_dfg.h"
+#include "rt_stats.h"
 
 #include <stdlib.h>
 #include <arpa/inet.h>
@@ -107,19 +108,6 @@ static int connect_to_controller(struct sockaddr_in *addr) {
     return controller_sock;
 }
 
-int init_controller_socket(struct sockaddr_in *addr) {
-    int sock = connect_to_controller(addr);
-    if (sock < 0) {
-        log_error("Error connecting to global controller");
-        return -1;
-    }
-    if (monitor_socket(sock) != 0) {
-        log_error("Attempted to initialize controller socket "
-                  "before initializing runtime epoll");
-        return -1;
-    }
-    return sock;
-}
 
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->payload_size != sizeof(target)) { \
@@ -204,7 +192,7 @@ static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     if (thread == NULL) {
         log_error("Error getting dedos thread %d to deliver control message",
                   hdr->thread_id);
-        //FIXME: Free thread message and payload
+        destroy_thread_msg(thread_msg);
         return -1;
     }
 
@@ -242,4 +230,55 @@ int handle_controller_communication(int fd) {
 
 bool is_controller_fd(int fd) {
     return fd == controller_sock;
+}
+
+
+int init_controller_socket(struct sockaddr_in *addr) {
+    int sock = connect_to_controller(addr);
+    if (sock < 0) {
+        log_error("Error connecting to global controller");
+        return -1;
+    }
+    if (monitor_socket(sock) != 0) {
+        log_error("Attempted to initialize controller socket "
+                  "before initializing runtime epoll");
+        return -1;
+    }
+    return sock;
+}
+
+void send_stats_to_controller() {
+    if (controller_sock < 0) {
+        log(LOG_STAT_SEND, "Skipping sending statistics: controller not initialized");
+        return;
+    }
+    log(LOG_STAT_SEND, "Sending statistics to controller");
+    for (int i=0; i<N_REPORTED_STAT_TYPES; i++) {
+        enum stat_id stat_id = reported_stat_types[i].id;
+        int n_items;
+        struct stat_sample *samples = get_stat_samples(stat_id, &n_items);
+        if (samples == NULL) {
+            log_error("Error getting stat sample for send to controller");
+            continue;
+        }
+        size_t serial_size = serialized_stat_sample_size(samples, n_items);
+
+        char buffer[serial_size];
+        size_t ser_rtn = serialize_stat_samples(samples, n_items, buffer, serial_size);
+        if (ser_rtn < 0) {
+            log_error("Error serializing stat sample");
+            continue;
+        }
+
+        struct rt_controller_msg_hdr hdr = {
+            .type = RT_STATS,
+            .payload_size = ser_rtn
+        };
+
+        int rtn = send_to_controller(&hdr, buffer);
+        if (rtn < 0) {
+            log_error("Error sending statistics to controller");
+            continue;
+        }
+    }
 }

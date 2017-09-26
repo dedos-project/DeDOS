@@ -4,6 +4,7 @@
 #include "dedos_threads.h"
 #include "thread_message.h"
 #include "msu_type.h"
+#include "controller_communication.h"
 #include "ctrl_runtime_messages.h"
 
 #include <stdlib.h>
@@ -201,12 +202,12 @@ static int check_main_thread_queue(struct dedos_thread *main_thread) {
 #define STAT_REPORTING_DURATION_S 1
 
 static int main_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {
-    struct timespec begin;
-    clock_gettime(CLOCK_MONOTONIC, &begin);
 
     struct timespec elapsed;
+    struct timespec timeout_abs;
+    clock_gettime(CLOCK_MONOTONIC, &timeout_abs);
     while (1) {
-        int rtn = thread_wait(self);
+        int rtn = thread_wait(self, &timeout_abs);
         if (rtn < 0) {
             log_error("Error waiting on main thread semaphore");
             return -1;
@@ -220,10 +221,11 @@ static int main_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {
         }
 
         clock_gettime(CLOCK_MONOTONIC, &elapsed);
-        int time_spent = elapsed.tv_sec - begin.tv_sec;
-        if (time_spent >= STAT_REPORTING_DURATION_S) {
-            // TODO: send_stats_to_controller();
-            clock_gettime(CLOCK_MONOTONIC, &begin);
+        if (elapsed.tv_sec >= timeout_abs.tv_sec) {
+            send_stats_to_controller();
+            clock_gettime(CLOCK_MONOTONIC, &timeout_abs);
+            timeout_abs.tv_sec += STAT_REPORTING_DURATION_S;
+
         }
     }
     // TODO: destroy_runtime();

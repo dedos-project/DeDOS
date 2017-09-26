@@ -17,6 +17,15 @@ static int init_stat_sample(int max_stats, struct stat_sample *sample) {
     return 0;
 }
 
+void free_stat_samples(struct stat_sample *sample, int n_samples) {
+    if (sample != NULL) {
+        for (int i=0; i<n_samples; i++) {
+            free(sample[i].stats);
+        }
+        free(sample);
+    }
+}
+
 struct stat_sample *init_stat_samples(int max_stats, int n_samples) {
     struct stat_sample *sample = calloc(n_samples, sizeof(*sample));
     if (sample == NULL) {

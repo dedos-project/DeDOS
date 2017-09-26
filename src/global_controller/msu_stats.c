@@ -5,7 +5,20 @@
 
 #include <stdbool.h>
 
-bool stats_initialized = false;
+struct stat_type {
+    enum stat_id id;
+    char *name;
+    int id_indices[MAX_STAT_ID];
+    int num_items;
+    struct stat_item *items;
+};
+
+static struct stat_type stat_types[] = {
+    REPORTED_STAT_TYPES
+};
+
+#define N_STAT_TYPES sizeof(stat_types) / sizeof(*stat_types)
+static bool stats_initialized = false;
 
 static struct stat_type *get_stat_type(enum stat_id id) {
     for (int i=0; i < N_STAT_TYPES; i++) {
@@ -39,6 +52,7 @@ int register_stat_item(unsigned int item_id) {
         log_error("Stats not initialized");
         return -1;
     }
+    log(LOG_STATS, "Allocating new msu stat item: %u", item_id);
     for (int i=0; i < N_STAT_TYPES; i++) {
         struct stat_type *type = &stat_types[i];
         if (type->id_indices[item_id] != -1) {
@@ -46,10 +60,13 @@ int register_stat_item(unsigned int item_id) {
                       item_id, type->id_indices[item_id]);
             return 1;
         }
-        int index = type->id_indices[item_id];
+        int index = type->num_items;
+        type->id_indices[item_id] = index;
         type->num_items++;
-        type->items = realloc(type->items, sizeof(*type->items) * type->num_items);
-        if (type->items == NULL) {
+        struct stat_item *new_item = realloc(type->items, sizeof(*type->items) * type->num_items);
+        if (new_item != NULL) {
+            type->items = new_item;
+        } else {
             log_error("Error reallocating stat item");
             return -1;
         }
@@ -68,9 +85,10 @@ int init_statistics() {
     }
 
     for (int i=0; i < N_STAT_TYPES; i++) {
-        for (int j=0; j<MAX_STAT_ID; i++) {
+        for (int j=0; j<MAX_STAT_ID; j++) {
             stat_types[i].id_indices[j] = -1;
         }
+        stat_types[i].items = NULL;
     }
     stats_initialized = true;
     return 0;

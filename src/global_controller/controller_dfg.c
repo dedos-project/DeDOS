@@ -1,6 +1,7 @@
 #include "dfg.h"
 #include "logging.h"
 #include "dfg_reader.h"
+#include "msu_stats.h"
 
 #include <stdlib.h>
 
@@ -15,6 +16,10 @@ int init_controller_dfg(char *filename) {
         return -1;
     }
     set_dfg(DFG);
+
+    for (int i=0; i<DFG->n_msus; i++) {
+        register_stat_item(DFG->msus[i]->id);
+    }
 
     return 0;
 }

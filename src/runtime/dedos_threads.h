@@ -28,6 +28,6 @@ int start_dedos_thread(dedos_thread_fn thread_fn,
                        int id,
                        struct dedos_thread *thread);
 
-int thread_wait(struct dedos_thread *thread);
+int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout);
 
 #endif // DEDOS_THREADS_H
