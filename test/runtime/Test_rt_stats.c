@@ -221,10 +221,10 @@ START_DEDOS_TEST(test_sample_stat_item) {
     struct timed_stat *stats = malloc(sample_size * sizeof(*stats));
     int rtn = sample_stat_item(item, max_time, end, &interval, sample_size, stats);
 
-    ck_assert_int_eq(rtn, 0);
+    ck_assert_int_gt(rtn, 0);
 
     for (int i=0; i<sample_size; i++) {
-        ck_assert_int_eq(stats[i].time.tv_sec,
+        ck_assert_int_eq(stats[sample_size - i - 1].time.tv_sec,
                          max_time - (i) * interval_s - ((i *interval_ns * 1e-9))- 1);
     }
 
