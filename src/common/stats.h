@@ -27,10 +27,12 @@ struct stat_type_label {
     char *name;
 };
 
+#ifndef REPORTED_STAT_TYPES
 #define REPORTED_STAT_TYPES \
     {MSU_QUEUE_LEN, "QUEUE_LEN"}, \
     {MSU_ITEMS_PROCESSED, "ITEMS_PROCESSED"}, \
     {MSU_MEM_ALLOC, "MEMORY_ALLOCATED"}
+#endif
 
 static struct stat_type_label UNUSED reported_stat_types[] = {
     REPORTED_STAT_TYPES

@@ -137,7 +137,7 @@ static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat
     int n_stats = item->rolled_over ? type->max_stats : item->write_index;
     for (int i=0; i<n_stats; i++) {
         fwrite(label, 1, label_size, out_file);
-        fprintf(out_file, "%05ld.%09ld", item->stats[i].time.tv_sec, item->stats[i].time.tv_nsec);
+        fprintf(out_file, "%05ld.%09ld:", item->stats[i].time.tv_sec, item->stats[i].time.tv_nsec);
         fprintf(out_file, type->format, item->stats[i].value);
         fwrite("\n", 1, 1, out_file);
     }
@@ -248,16 +248,21 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
     if (!type->enabled) {
         return 0;
     }
-    rlock_type(type);
+    if (rlock_type(type)) {
+        return -1;
+    }
     struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
     if (item == NULL) {
         return -1;
     }
 
-    lock_item(item);
+    if (lock_item(item)) {
+        unlock_type(type);
+        return -1;
+    }
     get_elapsed_time(&item->stats[item->write_index].time);
     unlock_item(item);
+    unlock_type(type);
 
     return 0;
 }
@@ -283,17 +288,22 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     if (!type->enabled) {
         return 0;
     }
-    rlock_type(type);
+    if (rlock_type(type)) {
+        return -1;
+    }
     struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
     if (item == NULL) {
+        unlock_type(type);
         return -1;
     }
 
     struct timespec new_time;
     get_elapsed_time(&new_time);
 
-    lock_item(item);
+    if (lock_item(item)) {
+        unlock_type(type);
+        return -1;
+    }
     time_t timediff_s = new_time.tv_sec - item->stats[item->write_index].time.tv_sec;
     long timediff_ns = new_time.tv_nsec - item->stats[item->write_index].time.tv_nsec;
     item->stats[item->write_index].value  =
@@ -307,6 +317,7 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     }
 
     unlock_item(item);
+    unlock_type(type);
     return 0;
 }
 
@@ -324,14 +335,19 @@ int increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
     if (!type->enabled) {
         return 0;
     }
-    rlock_type(type);
+    if (rlock_type(type)) {
+        return -1;
+    }
     struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
     if (item == NULL) {
+        unlock_type(type);
         return -1;
     }
 
-    lock_item(item);
+    if (lock_item(item)) {
+        unlock_type(type);
+        return -1;
+    }
 
     get_elapsed_time(&item->stats[item->write_index].time);
     int last_index = item->write_index - 1;
@@ -347,6 +363,7 @@ int increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
     }
 
     unlock_item(item);
+    unlock_type(type);
     return 0;
 }
 
@@ -365,14 +382,19 @@ int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool re
     if (!type->enabled) {
         return 0;
     }
-    rlock_type(type);
+    if (rlock_type(type)) {
+        return -1;
+    }
     struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
     if (item == NULL) {
+        unlock_type(type);
         return -1;
     }
 
-    lock_item(item);
+    if (lock_item(item)) {
+        unlock_type(type);
+        return -1;
+    }
 
     int last_index = item->write_index - 1;
     bool do_log = true;
@@ -391,6 +413,7 @@ int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool re
         }
     }
     unlock_item(item);
+    unlock_type(type);
     return 0;
 }
 
@@ -426,12 +449,14 @@ static int sample_stat_item(struct stat_item *item, int stat_size,
                      struct timespec *sample_end, struct timespec *interval, int sample_size,
                      struct timed_stat *sample) {
     struct timespec sample_time = *sample_end;
-    lock_item(item);
+    if (lock_item(item)) {
+        return -1;
+    }
     int sample_index = item->write_index - 1;
     if (sample_index < 0) {
         sample_index = stat_size + sample_index;
     }
-    int max_index = item->rolled_over ? item->write_index : stat_size;
+    int max_index = item->rolled_over ?  stat_size : item->write_index;
     int i;
     for (i=0; i<sample_size; i++) {
         if (max_index > 1) {
@@ -467,7 +492,9 @@ static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timesp
         return -1;
     }
 
-    rlock_type(type);
+    if (rlock_type(type)) {
+        return -1;
+    }
     if (n_samples < type->num_items) {
         log_error("Not enough samples (%d) to fit all stat items (%d)", n_samples, type->num_items);
         unlock_type(type);
@@ -478,7 +505,7 @@ static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timesp
         sample[i].hdr.stat_id = stat_id;
         sample[i].hdr.item_id = type->items[i].id;
         sample[i].hdr.n_stats = sample_size;
-        int rtn = sample_stat_item(&type->items[i], sample_size, end, interval, sample_size,
+        int rtn = sample_stat_item(&type->items[i], type->max_stats, end, interval, sample_size,
                                     sample[i].stats);
 
         if ( rtn < 0) {
@@ -676,14 +703,14 @@ void finalize_statistics(char *statlog) {
     for (int i = 0; i < N_STAT_TYPES; i++) {
         struct stat_type *type = &stat_types[i];
         if (type->enabled) {
-            pthread_rwlock_wrlock(&type->lock);
+            wrlock_type(type);
             for (int j = 0; j < type->num_items; j++) {
                 log(LOG_STAT_INITS, "Destroying item %s.idx=%d",
                            type->label, j);
                 destroy_stat_item(&type->items[j]);
             }
             free(type->items);
-            pthread_rwlock_unlock(&type->lock);
+            unlock_type(type);
             pthread_rwlock_destroy(&type->lock);
         }
     }

@@ -114,6 +114,7 @@ struct dfg_msu_type {
     int colocation_group;
 };
 
+
 enum msu_locality {
     UNDEFINED_LOCALITY = 0,
     MSU_IS_LOCAL = 1,
@@ -126,8 +127,8 @@ struct dfg_dependency {
 };
 
 // CHANGE: Replacing char *vertex_type with uint8 so we can 'or' ENTRY and EXIT
-static uint8_t UNUSED ENTRY_VERTEX_TYPE = 0x01;
-static uint8_t UNUSED EXIT_VERTEX_TYPE  = 0x02;
+#define ENTRY_VERTEX_TYPE 0x01
+#define EXIT_VERTEX_TYPE  0x02
 
 struct dfg_msu {
     int id;

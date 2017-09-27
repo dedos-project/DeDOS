@@ -126,10 +126,15 @@ static void *dedos_thread_starter(void *thread_init_v) {
     return (void*)(intptr_t)rtn;
 }
 
+#define DEFAULT_WAIT_TIMEOUT_S 1
+
 int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout) {
     int rtn;
     if (abs_timeout == NULL) {
-        rtn = sem_wait(&thread->sem);
+        struct timespec timeout_abs;
+        clock_gettime(CLOCK_REALTIME, &timeout_abs);
+        timeout_abs.tv_sec += DEFAULT_WAIT_TIMEOUT_S;
+        rtn = sem_timedwait(&thread->sem, &timeout_abs);
     } else {
         rtn = sem_timedwait(&thread->sem, abs_timeout);
     }

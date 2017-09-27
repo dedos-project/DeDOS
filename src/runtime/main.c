@@ -9,6 +9,7 @@
 #include <libgen.h>
 #include <stdio.h>
 
+#include "worker_thread.h"
 #include "local_files.h"
 #include "rt_stats.h"
 #include "logging.h"
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
 
     while (1) {
         int option_index = 0;
-        int c = getopt_long(argc, argv, "j:i:z:", long_options, &option_index);
+        int c = getopt_long(argc, argv, "j:i:l:", long_options, &option_index);
 
         if (c == -1) {
             break;
@@ -60,7 +61,7 @@ int main(int argc, char **argv) {
             case 'l':
                 statlog = optarg;
                 break;
-            case 'z':
+            //case 'z':
                 /*
                 // TODO: Fix global dprof_tag_probability
                 tag_probability = optarg;
@@ -115,6 +116,7 @@ int main(int argc, char **argv) {
         log_critical("Error running socket monitor. Runtime will exit");
     }
 
+    stop_all_worker_threads();
     finalize_statistics(statlog);
     log_info("Exiting runtime...");
     return 0;

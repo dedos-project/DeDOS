@@ -17,9 +17,30 @@ static void *init_worker_thread(struct dedos_thread *thread) {
         return NULL;
     }
     worker->thread = thread;
-
+    worker->exit_signal = 0;
     worker_threads[thread->id] = worker;
     return worker;
+}
+
+void stop_worker_thread(struct worker_thread *thread) {
+    pthread_mutex_lock(&thread->exit_lock);
+    thread->exit_signal = 1;
+    pthread_mutex_unlock(&thread->exit_lock);
+}
+
+void stop_all_worker_threads() {
+    for (int i=0; i<MAX_DEDOS_THREAD_ID; i++) {
+        if (worker_threads[i] != NULL) {
+            stop_worker_thread(worker_threads[i]);
+        }
+    }
+}
+
+static inline int should_exit(struct worker_thread *thread) {
+    pthread_mutex_lock(&thread->exit_lock);
+    int exit_signal = thread->exit_signal;
+    pthread_mutex_unlock(&thread->exit_lock);
+    return exit_signal;
 }
 
 static void destroy_worker_thread(struct dedos_thread *thread, void *v_worker_thread) {
@@ -190,7 +211,7 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
     struct worker_thread *self = v_worker_thread;
 
     // TODO: Exit condition!
-    while (1) {
+    while (!should_exit(self)) {
         // TODO: Get context switches
         if (thread_wait(thread, NULL) != 0) {
             log_error("Error waiting on thread semaphore");

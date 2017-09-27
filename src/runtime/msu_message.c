@@ -18,9 +18,10 @@ struct msu_msg_hdr *init_msu_msg_hdr(struct msu_msg_key *key) {
 }
 
 unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
+    int idx = (prov->path_len - 1) % MAX_PATH_LEN;
     log(LOG_GET_PROVINANCE, "Sender of %p (idx %d) was type %d",
-               prov, prov->path_len-1, prov->path[prov->path_len - 1].type_id);
-    return prov->path[prov->path_len-1].type_id;
+               prov, idx, prov->path[idx].type_id);
+    return prov->path[idx].type_id;
 }
 
 int set_msg_key(int32_t id, struct msu_msg_key *key) {
@@ -77,7 +78,6 @@ int enqueue_msu_msg(struct msg_queue *q, struct msu_msg *data) {
 struct msu_msg *dequeue_msu_msg(struct msg_queue *q) {
     struct dedos_msg *msg = dequeue_msg(q);
     if (msg == NULL) {
-        log(LOG_FAILED_DEQUEUE_ATTEMPTS, "Could not dequeue from MSU queue");
         return NULL;
     }
 

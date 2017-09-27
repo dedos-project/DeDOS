@@ -205,7 +205,7 @@ static int main_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {
 
     struct timespec elapsed;
     struct timespec timeout_abs;
-    clock_gettime(CLOCK_MONOTONIC, &timeout_abs);
+    clock_gettime(CLOCK_REALTIME, &timeout_abs);
     while (1) {
         int rtn = thread_wait(self, &timeout_abs);
         if (rtn < 0) {
@@ -220,10 +220,10 @@ static int main_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {
             break;
         }
 
-        clock_gettime(CLOCK_MONOTONIC, &elapsed);
+        clock_gettime(CLOCK_REALTIME, &elapsed);
         if (elapsed.tv_sec >= timeout_abs.tv_sec) {
             send_stats_to_controller();
-            clock_gettime(CLOCK_MONOTONIC, &timeout_abs);
+            clock_gettime(CLOCK_REALTIME, &timeout_abs);
             timeout_abs.tv_sec += STAT_REPORTING_DURATION_S;
 
         }
