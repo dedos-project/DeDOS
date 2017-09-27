@@ -223,9 +223,6 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
             msu_dequeue(self->msus[i]);
         }
         struct thread_msg *msg = dequeue_thread_msg(&thread->queue);
-        if (msg == NULL && self->n_msus == 0) {
-            log_warn("Semaphore posted with no MSUs or control messages");
-        }
         // ???: Should i be looping till no more messages?
         while (msg != NULL) {
             log(LOG_THREAD_MESSAGES,"Dequeued thread message on thread %d",

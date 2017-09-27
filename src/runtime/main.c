@@ -18,20 +18,13 @@
 #include "main_thread.h"
 #include "socket_monitor.h"
 
-#define USE_OPENSSL
-
 #define USAGE_ARGS \
-    " -j dfg.json -i runtime_id [-z prof_tag_probability] [-l statlog]"
+    " -j dfg.json -i runtime_id [-l statlog]"
 
 /**
  * Entry point to start the runtime
  */
 int main(int argc, char **argv) {
-
-#ifdef DATAPLANE_PROFILING
-    log_warn("Data plane profiling enabled");
-    init_data_plane_profiling();
-#endif
 
     char *dfg_json = NULL;
     char *statlog = NULL;
@@ -40,7 +33,6 @@ int main(int argc, char **argv) {
     //char *tag_probability = NULL;
 
     struct option long_options[] = {
-        {"prof-tag-probability", optional_argument, 0, 'z'},
         {NULL, 0, 0, 0}
     };
 
@@ -61,18 +53,6 @@ int main(int argc, char **argv) {
             case 'l':
                 statlog = optarg;
                 break;
-            //case 'z':
-                /*
-                // TODO: Fix global dprof_tag_probability
-                tag_probability = optarg;
-                if(tag_probability != NULL){
-                    sscanf(tag_probability, "%f", &dprof_tag_probability);
-                }
-                if(tag_probability == NULL || dprof_tag_probability < 0.0  ||
-                        dprof_tag_probability > 1){
-                    dprof_tag_probability = 1.0;
-                }
-                */
             default:
                 printf("Unknown option provided: %c. Exiting\n", c);
                 exit(-1);

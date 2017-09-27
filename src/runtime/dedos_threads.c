@@ -132,7 +132,7 @@ int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout) {
     int rtn;
     if (abs_timeout == NULL) {
         struct timespec timeout_abs;
-        clock_gettime(CLOCK_REALTIME, &timeout_abs);
+        clock_gettime(CLOCK_REALTIME_COARSE, &timeout_abs);
         timeout_abs.tv_sec += DEFAULT_WAIT_TIMEOUT_S;
         rtn = sem_timedwait(&thread->sem, &timeout_abs);
     } else {
