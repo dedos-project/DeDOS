@@ -5,13 +5,16 @@ LOGS = \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   CUSTOM \
-	   EPOLL_OPS
+	   CUSTOM 
+
+NO_LOGS = \
+		  LOG_READS \
+		  LOG_EPOLL_OPS
 
 SRC_DIR = src/
 GLC_DIR = $(SRC_DIR)global_controller/
 COM_DIR = $(SRC_DIR)common/
-TST_DIR = $(SRC_DIR)test/
+TST_DIR = test/
 
 SRC_DIRS = $(GLC_DIR) $(COM_DIR)
 
@@ -30,7 +33,7 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=6
+OPTIM=0
 
 CC:=gcc
 CXX:=g++
@@ -44,7 +47,8 @@ FINAL_TEST=$(CC)
 
 SELF=./global_controller.mk
 
-LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname))
+LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
+			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 
 CFLAGS=-Wall -pthread -O$(OPTIM) $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
@@ -55,14 +59,18 @@ endif
 
 RESOURCE_EXTS=.txt .json
 
-TSTS = $(foreach SRC_D, $(SRC_DIRS), $(wildcard $(TST_DIR)$(SRC_D)/*.c))
-TST_MKS = $(foreach SRC_D, $(SRC_DIRS), $(wildcard $(TST_DIR)$(SRC_D)/*.mk))
-TST_RSCS = $(foreach SRC_D, $(SRC_DIRS), $(foreach EXT, $(RESOURCE_EXTS), \
-		   $(wildcard $(TST_DIR)$(SRC_D)/*$(EXT))))
+TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS))
+
+
+TSTS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.c))
+TST_MKS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.mk))
+TST_RSCS = $(foreach TST_D, $(TST_DIRS), $(foreach EXT, $(RESOURCE_EXTS), $(wildcard $(TST_D)*$(EXT))))
+TST_OBJS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.o, $(TSTS))
 
 SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
 SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
 
+TST_BLDS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.out, $(TSTS))
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
@@ -76,7 +84,7 @@ OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS)) \
 
 OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS)))
 
-TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
+TST_BLD_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
 RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
 
 INCS=$(GLC_DIR) $(COM_DIR)
@@ -97,11 +105,12 @@ CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
 TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm
 
-DIRS=$(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_DIRS) $(RES_DIRS)
+DIRS=$(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS)
 
 all: dirs ${TARGET}
 
 dirs: $(DIRS)
+	echo $(TST_OBJS)
 
 depends: $(DEP_DIRS) ${DEP_SRC}
 
@@ -109,10 +118,13 @@ $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
 test: all $(TST_BLD_RSCS) test-results
+	echo $(TSTS)
 
-test-results: all $(RESULTS)
+test-blds: $(TST_OBJS) $(TST_BLDS) $(TST_BLD_RSCS)
+
+test-results: all test-blds $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
-	@for FILE in $(filter-out all, $^); do \
+	@for FILE in $(filter-out all test-blds, $^); do \
 		if grep -q ":[FE]:" "$$FILE"; then \
 			echo ___ $$FILE ___ ; \
 			cat $$FILE; \
@@ -132,11 +144,13 @@ test-results: all $(RESULTS)
 $(RES_DIR)%.txt: $(TST_BLD_DIR)%.out
 	-./$< > $@ 2>&1
 
+$(TST_BLD_DIR)%.o:: $(TST_DIR)%.c $(SELF)
+	$(COMPILE) $(TEST_CFLAGS) $< -o $@
+
 # creates the test executables by linking the test objects with the build objects excluding 
 # the specific source under test
-$(TST_BLD_DIR)%.out: $(TST_DIR)%.c $(OBJECTS_NOMAIN) $(LEG_OBJ)
+$(TST_BLD_DIR)%.out:: $(TST_BLD_DIR)%.o $(OBJECTS_NOMAIN) $(LEG_OBJ)
 	$(FINAL_TEST) -o $@ $(filter-out $(call test_filters, $(@:.out=)), $^) $(TEST_CFLAGS)
-#	$(FINAL) -o $@ $(filter-out $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@)), $^) $(TEST_CFLAGS)
 
 $(TST_BLD_DIR)%: $(TST_DIR)%
 	@cp $^ $@
@@ -152,6 +166,10 @@ $(DEP_SRC): $(DEP_DIRS)
 
 $(DEP_DIR)%.d:: $(SRC_DIR)%.c $(LEG_OBJ)
 	@$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(TEST_CFLAGS) $<
+
+$(DEP_DIR)%.d:: $(TST_DIR)%.c $(LEG_OBJ)
+	@$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(TST_BLD_DIR)%.o, $@) $(TEST_CFLAGS) $<
+
 
 $(DIRS):
 	@$(MKDIR) $@

@@ -14,7 +14,7 @@ LOGS = \
 	   DFG_PARSING \
 	   ALL
 
-MSU_APPLICATIONS =u # pico_tcp ndlog webserver
+MSU_APPLICATIONS = webserver # pico_tcp ndlog webserver
 
 NO_LOGS = \
 		  JSMN_PARSING \
@@ -24,7 +24,9 @@ NO_LOGS = \
 		  ADD_PROVINANCE \
 		  STAT_SEND \
 		  STAT_SERIALIZATION \
-		  CONTROLLER_COMMUNICATION
+		  CONTROLLER_COMMUNICATION \
+		  LOG_READS \
+		  LOG_EPOLL_OPS
 
 SRC_DIR = src/
 RNT_DIR = $(SRC_DIR)runtime/
