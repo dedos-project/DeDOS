@@ -1,0 +1,81 @@
+{
+    "application_name": "dedos_webserver",
+    "global_ctl_ip": "127.0.0.1",
+    "global_ctl_port": 8090,
+    "MSU_types": [
+        {
+            "id": 100,
+            "name": "Test_MSU"
+        },
+        {
+            "id": 10,
+            "name": "Socket_MSU"
+        }
+    ],
+    "runtimes": [
+        {
+            "id": 1,
+            "ip": "127.0.0.1",
+            "port": 8091,
+            "num_cores": 8,
+            "num_pinned_threads": 2,
+            "num_unpinned_threads": 1,
+            "routes": [
+            {
+                "id": 2,
+                "type": 100,
+                "endpoints": [
+                {
+                    "key": 1,
+                    "msu": 2
+                }]
+            },
+            {
+                "id": 3,
+                "type": 100,
+                "endpoints": [
+                {
+                    "key": 1,
+                    "msu": 3
+                }]
+            }]
+        }
+    ],
+    "MSUs": [
+            {
+                "id": 1,
+                "type": 10,
+                "blocking_mode": "blocking",
+                "vertex_type": "entry",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 1,
+                    "routes": [
+                        2
+                    ]
+                }
+            },
+            {
+                "id": 2,
+                "type": 100,
+                "blocking_mode": "non-blocking",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 2,
+                    "routes": [
+                        3
+                    ]
+                }
+            },
+            {
+                "id": 3,
+                "type": 100,
+                "blocking_mode": "non-blocking",
+                "vertex_type": "exit",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 3,
+                }
+            }
+        ]
+}

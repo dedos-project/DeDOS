@@ -1,0 +1,7 @@
+#ifndef WEBSERVER_WRITE_MSU_H_
+#define WEBSERVER_WRITE_MSU_H_
+
+#define WEBSERVER_WRITE_MSU_TYPE_ID 554
+struct msu_type WEBSERVER_WRITE_MSU_TYPE;
+
+#endif

@@ -1,25 +1,45 @@
-CC=g++ -c
-LD=ld -r
+TARGETS=runtime global_controller
 
-COM=common
-RT=runtime
-GC=global_controller
+TESTS=$(foreach TARG, $(TARGETS), $(TARG)-test)
+CLEANS=$(foreach TARG, $(TARGETS), $(TARG)-clean)
 
-DIRS=$(COM) $(RT) $(GC)
+BLD_DIR = build/
+RES_DIR = $(BLD_DIR)reults/
 
-all: $(DIRS)
+define tst_results
+$(wildcard $(RES_DIR)*/*.txt)
+endef
 
-rt: $(RT)
+all: $(TARGETS)
 
-gc: $(GC)
+test: $(TESTS) test-results
 
-$(DIRS): FORCE
-	cd $@ && make;
+clean: $(CLEANS)
 
-clean:
-	cd $(RT) && make clean;
-	cd $(GC) && make clean;
-	cd $(COM) && make clean;
+runtime-%::
+	make -f $(patsubst %-$*, %.mk, $@) $*
 
-.PHONY: clean all
+global_controller-%::
+	make -f $(patsubst %-$*, %.mk, $@) $*
+
+$(TARGETS): FORCE
+	make -f $@.mk
+
+test-results: $(TESTS) 
+	@echo "-----------------------\nALL TEST OUTPUTS:\n-----------------------"
+	@for FILE in $(call tst_results); do \
+		if grep -q ":[FE]:" "$$FILE"; then \
+			echo ___ $$FILE ___ ; \
+			cat $$FILE; \
+		else \
+			echo ___ $$FILE ___ ; \
+			tail -1 $$FILE; \
+		fi \
+	done
+	@echo "-----------------------\nALL FAILURES:\n-----------------------"
+	@-grep -s ":F:" $(call tst_results); echo "";
+	@echo "-----------------------\nALL ERRORS:\n-----------------------"
+	@-grep -s ":E:" $(call tst_results); echo "";
+	@echo "\nDONE"
+
 FORCE:;
