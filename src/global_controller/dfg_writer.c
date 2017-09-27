@@ -3,6 +3,7 @@
 #include "msu_stats.h"
 #include "timeseries.h"
 #include "dfg.h"
+#include "controller_dfg.h"
 #include "jsmn.h"
 #include "logging.h"
 
@@ -379,3 +380,12 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
     return json.string;
 }
 
+void dfg_to_file(char *filename) {
+    struct dedos_dfg *dfg = get_dfg();
+    char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
+    int json_size = strlen(dfg_json);
+    FILE *file = fopen(filename, "w");
+    fwrite(dfg_json, sizeof(char), json_size, file);
+    fwrite("\n", sizeof(char), 1, file);
+    fclose(file);
+}

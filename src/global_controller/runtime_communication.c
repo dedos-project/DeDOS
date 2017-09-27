@@ -4,7 +4,9 @@
 #include "rt_controller_messages.h"
 #include "stat_msg_handler.h"
 #include "epollops.h"
+#include "stats.h"
 #include "unused_def.h"
+#include "dfg_writer.h"
 
 #include <sys/stat.h>
 
@@ -193,7 +195,7 @@ static int handle_runtime_communication(int fd, void UNUSED *data) {
 
 static int listen_sock = -1;
 
-int runtime_communication_loop(int listen_port) {
+int runtime_communication_loop(int listen_port, char *output_file) {
     if (listen_sock > 0) {
         log_error("Communication loop already started");
         return -1;
@@ -214,12 +216,23 @@ int runtime_communication_loop(int listen_port) {
     }
 
     int rtn = 0;
+    struct timespec begin;
+    clock_gettime(CLOCK_REALTIME_COARSE, &begin);
+
+    struct timespec elapsed;
     while (rtn == 0) {
         rtn = epoll_loop(listen_sock, epoll_fd, 1, 1000, 0,
                          handle_runtime_communication, NULL, NULL);
         if (rtn < 0) {
             log_error("Epoll loop exited with error");
             return -1;
+        }
+        if (output_file != NULL) {
+            clock_gettime(CLOCK_REALTIME_COARSE, &elapsed);
+            if (elapsed.tv_sec - begin.tv_sec >= STAT_SAMPLE_PERIOD_S) {
+                dfg_to_file(output_file);
+                clock_gettime(CLOCK_REALTIME_COARSE, &begin);
+            }
         }
     }
     log_info("Epoll loop exited");
