@@ -13,7 +13,14 @@ enum stat_id {
     THREAD_CTX_SWITCHES,
     MSU_STAT1,
     MSU_STAT2,
-    MSU_STAT3
+    MSU_STAT3,
+
+    PROF_ENQUEUE,
+    PROF_DEQUEUE,
+    PROF_REMOTE_SEND,
+    PROF_REMOTE_RECV,
+    PROF_DEDOS_ENTRY,
+    PROF_DEDOS_EXIT
 };
 
 #endif

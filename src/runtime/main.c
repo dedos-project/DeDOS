@@ -2,13 +2,6 @@
  * @file runtime/main.c
  * Main executable file to start the runtime
  */
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <getopt.h>
-#include <libgen.h>
-#include <stdio.h>
-
 #include "worker_thread.h"
 #include "local_files.h"
 #include "rt_stats.h"
@@ -17,9 +10,18 @@
 #include "controller_communication.h"
 #include "main_thread.h"
 #include "socket_monitor.h"
+#include "profiler.h"
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <getopt.h>
+#include <libgen.h>
+#include <stdio.h>
+
 
 #define USAGE_ARGS \
-    " -j dfg.json -i runtime_id [-l statlog]"
+    " -j dfg.json -i runtime_id [-l statlog] [-p profiling_prob]"
 
 /**
  * Entry point to start the runtime
@@ -29,6 +31,7 @@ int main(int argc, char **argv) {
     char *dfg_json = NULL;
     char *statlog = NULL;
     int runtime_id = -1;
+    float prof_prob = 0;
     // TODO: tag_probability
     //char *tag_probability = NULL;
 
@@ -38,7 +41,7 @@ int main(int argc, char **argv) {
 
     while (1) {
         int option_index = 0;
-        int c = getopt_long(argc, argv, "j:i:l:", long_options, &option_index);
+        int c = getopt_long(argc, argv, "j:i:l:p:", long_options, &option_index);
 
         if (c == -1) {
             break;
@@ -52,6 +55,9 @@ int main(int argc, char **argv) {
                 break;
             case 'l':
                 statlog = optarg;
+                break;
+            case 'p':
+                prof_prob = atof(optarg);
                 break;
             default:
                 printf("Unknown option provided: %c. Exiting\n", c);
@@ -68,6 +74,7 @@ int main(int argc, char **argv) {
     if (init_statistics() != 0) {
         log_warn("Error initializing runtime statistics");
     }
+    INIT_PROFILER(prof_prob);
 
     if (init_runtime_dfg(dfg_json, runtime_id) != 0) {
         log_critical("Error initializing runtime %d  from json file %s. Exiting",

@@ -3,6 +3,7 @@ DATAPLANE_PROFILING=0
 DEBUG = 1
 COLLECT_STATS = 1
 DUMP_STATS = 1
+DO_PROFILE = 1
 
 LOGS = \
 	   INFO \
@@ -14,7 +15,7 @@ LOGS = \
 	   DFG_PARSING \
 	   ALL
 
-MSU_APPLICATIONS = webserver  pico_tcp ndlog 
+MSU_APPLICATIONS = #webserver  pico_tcp ndlog 
 
 NO_LOGS = \
 		  JSMN_PARSING \
@@ -52,13 +53,13 @@ LEG_BLD_DIR = $(BLD_DIR)legacy/
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 
-LEGACY_LIBS = picotcp
+LEGACY_LIBS =# picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=0
+OPTIM=6
 
 CC:=gcc
 CXX:=g++
@@ -103,6 +104,10 @@ endif
 
 ifeq ($(DUMP_STATS), 1)
   CFLAGS+=-DDUMP_STATS=1
+endif
+
+ifeq ($(DO_PROFILE), 1)
+  CFLAGS+=-DDEDOS_PROFILER
 endif
 
 LEG_MAKE=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_DIR)$(LEG_LIB)/Makefile)

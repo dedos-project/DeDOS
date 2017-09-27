@@ -4,6 +4,7 @@
 #include "local_msu.h"
 #include "uthash.h"
 #include "runtime_dfg.h"
+#include "profiler.h"
 
 #include <stdlib.h>
 
@@ -68,6 +69,7 @@ int enqueue_msu_msg(struct msg_queue *q, struct msu_msg *data) {
     msg->data_size = sizeof(*data);
     msg->data = data;
 
+    PROFILE_EVENT(data->hdr, PROF_ENQUEUE);
     if (enqueue_msg(q, msg) != 0) {
         log_error("Error MSU message to MSU");
         return -1;
@@ -94,6 +96,7 @@ struct msu_msg *dequeue_msu_msg(struct msg_queue *q) {
 
     struct msu_msg *msu_msg = msg->data;
     free(msg);
+    PROFILE_EVENT(msu_msg->hdr, PROF_DEQUEUE);
     return msu_msg;
 }
 
@@ -173,6 +176,7 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
     } else {
         msg->data = data;
     }
+    PROFILE_EVENT(msg->hdr, PROF_REMOTE_RECV);
     return msg;
 }
 

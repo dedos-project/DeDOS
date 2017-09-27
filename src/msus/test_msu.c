@@ -6,6 +6,7 @@
 #include "msu_message.h"
 #include "logging.h"
 #include "msu_calls.h"
+#include "profiler.h"
 #include <stdlib.h>
 
 #define MAX_TEST_MSG_ID 32
@@ -69,6 +70,7 @@ static int receive(struct local_msu *self, struct msu_msg *msg) {
     }
 
     if (test_msg->n_hops == 0) {
+        PROFILE_EVENT(msg->hdr, PROF_DEDOS_EXIT);
         close(test_msg->fd);
         free(test_msg);
         return 0;
