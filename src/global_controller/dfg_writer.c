@@ -86,7 +86,7 @@ struct json_output {
 };
 
 
-char *stat_to_json(struct timed_rrdb *timeseries, int n_stats) {
+static char *stat_to_json(struct timed_rrdb *timeseries, int n_stats) {
     static struct json_output json;
 
     int write_index = timeseries->write_index;
@@ -111,7 +111,7 @@ char *stat_to_json(struct timed_rrdb *timeseries, int n_stats) {
 }
 
 
-char *meta_routing_to_json(struct dfg_meta_routing *meta_routing) {
+static char *meta_routing_to_json(struct dfg_meta_routing *meta_routing) {
     static struct json_output json;
 
     START_JSON(json);
@@ -136,7 +136,7 @@ char *meta_routing_to_json(struct dfg_meta_routing *meta_routing) {
     return json.string;
 }
 
-char *dependency_to_json(struct dfg_dependency *dep) {
+static char *dependency_to_json(struct dfg_dependency *dep) {
     static struct json_output json;
 
     START_JSON(json);
@@ -149,7 +149,7 @@ char *dependency_to_json(struct dfg_dependency *dep) {
     return json.string;
 }
 
-char *msu_type_to_json(struct dfg_msu_type *type) {
+static char *msu_type_to_json(struct dfg_msu_type *type) {
     static struct json_output json;
 
     START_JSON(json);
@@ -178,7 +178,7 @@ char *msu_type_to_json(struct dfg_msu_type *type) {
     return json.string;
 }
 
-char *scheduling_to_json(struct dfg_scheduling *sched) {
+static char *scheduling_to_json(struct dfg_scheduling *sched) {
     static struct json_output json;
 
     START_JSON(json);
@@ -200,7 +200,7 @@ char *scheduling_to_json(struct dfg_scheduling *sched) {
     return json.string;
 }
 
-char *msu_stats_to_json(int msu_id, int n_stats) {
+static char *msu_stats_to_json(int msu_id, int n_stats) {
     static struct json_output json;
 
     START_JSON(json);
@@ -222,7 +222,7 @@ char *msu_stats_to_json(int msu_id, int n_stats) {
 }
 
 
-char *msu_to_json(struct dfg_msu *msu, int n_stats) {
+static char *msu_to_json(struct dfg_msu *msu, int n_stats) {
     static struct json_output json;
 
     START_JSON(json);
@@ -258,7 +258,7 @@ char *msu_to_json(struct dfg_msu *msu, int n_stats) {
     return json.string;
 }
 
-char *endpoint_to_json(struct dfg_route_endpoint *ep) {
+static char *endpoint_to_json(struct dfg_route_endpoint *ep) {
     static struct json_output json;
     START_JSON(json);
     START_OBJ(json);
@@ -271,7 +271,7 @@ char *endpoint_to_json(struct dfg_route_endpoint *ep) {
     return json.string;
 }
 
-char *route_to_json(struct dfg_route *route) {
+static char *route_to_json(struct dfg_route *route) {
     static struct json_output json;
 
     START_JSON(json);
@@ -294,7 +294,7 @@ char *route_to_json(struct dfg_route *route) {
 }
 
 
-char *runtime_to_json(struct dfg_runtime *rt) {
+static char *runtime_to_json(struct dfg_runtime *rt) {
     static struct json_output json;
 
     START_JSON(json);
@@ -325,8 +325,16 @@ char *runtime_to_json(struct dfg_runtime *rt) {
     return json.string;
 }
 
+static pthread_mutex_t json_lock;
+static int initialized = 0;
+
 char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
     static struct json_output json;
+    if (!initialized) {
+        pthread_mutex_init(&json_lock, NULL);
+        initialized = 1;
+    }
+    pthread_mutex_lock(&json_lock);
 
     START_JSON(json);
     START_OBJ(json);
@@ -367,292 +375,7 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
     END_OBJ(json);
     END_JSON(json);
 
+    pthread_mutex_unlock(&json_lock);
     return json.string;
 }
-
-
-/**
- * Parse the DFG and format it as a JSON string
- * @return none
-char *dfg_to_json(struct dfg_config *dfg, int n_statistics) {
-    static struct json_output_state json;
-
-    START_JSON(json);
-
-    START_OBJ(json);
-
-    ////// APPLICATION
-
-    //application name
-    KEY_VAL(json, "application_name", "%s", dfg->application_name);
-
-    //applicatin deadline
-    KEY_VAL(json, "application_deadline", "%d", (int)dfg->application_deadline);
-
-    //global ctl ip
-    KEY_VAL(json, "global_ctl_ip", "%s", dfg->global_ctl_ip);
-
-    //global ctl port
-    KEY_VAL(json, "global_ctl_port", "%d", dfg->global_ctl_port);
-
-    ///// RUNTIMES
-
-    if (dfg->runtimes_cnt > 0 ){
-
-        KEY(json, "runtimes");
-        START_LIST(json);
-
-        for (int r=0; r<dfg->runtimes_cnt; ++r) {
-            log_custom(LOG_DFG_WRITER, "writing runtime %d", r);
-            struct dfg_runtime_endpoint *rt = dfg->runtimes[r];
-
-            START_OBJ(json);
-
-            KEY_VAL(json, "id", "%d", rt->id);
-            if ( rt->sock != -1 ) {
-                KEY_VAL(json, "sock", "%d", rt->sock);
-            }
-            KEY(json, "routes");
-
-            START_LIST(json);
-
-            for (int route_i = 0; route_i < rt->num_routes; ++route_i) {
-                struct dfg_route *route = rt->routes[route_i];
-
-                START_OBJ(json);
-                KEY_VAL(json, "id", "%d", route->route_id);
-
-                KEY(json, "destinations");
-                START_OBJ(json);
-
-                for (int dest_i = 0; dest_i < route->num_destinations; ++dest_i) {
-                    FMT_KEY_VAL(json, "%d", route->destinations[dest_i]->msu_id,
-                                      "%d", route->destination_keys[dest_i]);
-                }
-
-                END_OBJ(json);
-                END_OBJ(json);
-            }
-            END_LIST(json);
-
-            struct in_addr addr;
-            addr.s_addr = rt->ip;
-            char *ipstr = inet_ntoa(addr);
-            log_custom(LOG_DFG_WRITER, "Got IP string: %s", ipstr);
-            if ( ipstr != NULL ) {
-                KEY_VAL(json, "ip", "%s", ipstr);
-            } else {
-                log_error("Could not convert IP to string");
-            }
-
-            // port
-            KEY_VAL(json, "port", "%d", rt->port);
-            // Number of cores
-            KEY_VAL(json, "num_cores", "%d", rt->num_cores);
-            // dram
-            KEY_VAL(json, "dram", "%ld", rt->dram);
-            // io_network_bw
-            KEY_VAL(json, "io_network_bw", "%ld", rt->io_network_bw);
-
-            if (rt->current_alloc != NULL) {
-                int timestamp = time(NULL);
-
-                START_OBJ(json);
-                KEY_VAL(json, "timestamp", "%d", timestamp);
-                // non-blocking-threads
-                KEY_VAL(json, "non_blocking_workers", "%d", rt->num_pinned_threads);
-                // blocking threads
-                int num_blocking = rt->num_threads - rt->num_pinned_threads;
-                KEY_VAL(json, "blocking_workers", "%d", num_blocking);
-                // cores
-                KEY_VAL(json, "cores", "%d",  rt->current_alloc->num_cores);
-                // bissection bw
-                KEY_VAL(json, "io_network_bw", "%ld", rt->current_alloc->io_network_bw);
-                // egress bw
-                KEY_VAL(json, "egress_bw", "%ld", rt->current_alloc->egress_bw);
-                // Incress bw
-                KEY_VAL(json, "ingress_bw", "%ld", rt->current_alloc->ingress_bw);
-                // num msus
-                KEY_VAL(json, "num_msus", "%d", rt->current_alloc->num_msu);
-
-                END_OBJ(json);
-            }
-
-            END_OBJ(json);
-
-        }
-
-        END_LIST(json);
-    }
-
-    ////////  MSUS
-
-    if (dfg->vertex_cnt > 0 ) {
-        log_custom(LOG_DFG_WRITER, "Writing %d MSUs", dfg->vertex_cnt);
-        KEY(json, "MSUs");
-        START_LIST(json);
-
-        for (int msu_i=0; msu_i < dfg->vertex_cnt; ++msu_i) {
-            log_custom(LOG_DFG_WRITER, "Writing MSU %d", msu_i);
-            struct dfg_vertex *msu = dfg->vertices[msu_i];
-            START_OBJ(json);
-            // id
-            KEY_VAL(json, "id", "%d", msu->msu_id);
-            // name
-            KEY_VAL(json, "name", "%s", msu->msu_name);
-            // type
-            KEY_VAL(json, "type", "%d", msu->msu_type);
-            // mode
-            KEY_VAL(json, "working-mode", "%s", msu->msu_mode);
-            // profiling
-            KEY(json, "profiling");
-            START_OBJ(json);
-
-            log_custom(LOG_DFG_WRITER, "Writing Profiling");
-            // wcet
-            KEY_VAL(json, "wcet", "%d", msu->profiling.wcet);
-            // footprint
-            KEY_VAL(json, "mem_footprint", "%ld", msu->profiling.dram);
-            // tx_node_local
-            KEY_VAL(json, "tx_node_local", "%d", msu->profiling.tx_node_local);
-            // tx_core_local
-            KEY_VAL(json, "tx_core_local", "%d", msu->profiling.tx_core_local);
-            // tx_node_remote
-            KEY_VAL(json, "tx_node_remote", "%d", msu->profiling.tx_node_remote);
-            END_OBJ(json);
-
-            KEY(json, "meta_routing");
-            START_OBJ(json);
-
-            // sources
-            if (strcmp(msu->vertex_type, "entry") != 0 &&
-                    msu->meta_routing.num_src_types > 0 ) {
-                KEY(json, "sources_types");
-                START_LIST(json);
-                for (int s=0; s < msu->meta_routing.num_src_types; ++s) {
-                    VALUE(json, "%d", msu->meta_routing.src_types[s]);
-                }
-                END_LIST(json);
-            }
-
-            // destinations
-            if (strcmp(msu->vertex_type, "exit") != 0 &&
-                    msu->meta_routing.num_dst_types > 0) {
-
-                KEY(json, "dst_types");
-                START_LIST(json);
-                for (int s=0; s<msu->meta_routing.num_dst_types; ++s) {
-                    VALUE(json, "%d", msu->meta_routing.dst_types[s]);
-                }
-                END_LIST(json);
-            }
-
-            END_OBJ(json);
-
-            log_custom(LOG_DFG_WRITER, "writing scheduling");
-            KEY(json, "scheduling");
-            START_OBJ(json);
-
-            KEY_VAL(json, "runtime_id", "%d", msu->scheduling.runtime->id);
-            KEY_VAL(json, "thread_id", "%d", msu->scheduling.thread_id);
-            KEY_VAL(json, "deadline", "%d", (int)msu->scheduling.deadline);
-
-            log_custom(LOG_DFG_WRITER, "writing routes");
-            if (msu->scheduling.num_routes > 0) {
-                KEY(json, "routing");
-                START_LIST(json);
-
-                for (int r=0; r<msu->scheduling.num_routes; ++r) {
-                    VALUE(json, "%d", msu->scheduling.routes[r]->route_id);
-                }
-                END_LIST(json);
-            }
-
-            END_OBJ(json);
-
-
-            KEY(json, "statistics");
-            START_OBJ(json);
-
-            KEY(json, "queue_items_processed");
-            output_statistic(&json, &msu->statistics.queue_items_processed, n_statistics);
-            KEY(json, "queue_length");
-            output_statistic(&json, &msu->statistics.queue_length, n_statistics);
-            KEY(json, "memory_allocated");
-            output_statistic(&json, &msu->statistics.memory_allocated, n_statistics);
-            // END statistics
-            END_OBJ(json);
-
-            // END MSU
-            END_OBJ(json);
-        }
-        // END MSUs
-        END_LIST(json);
-    }
-
-    // END top-level object
-    END_OBJ(json);
-
-    END_JSON(json);
-    return json.string;
-}
-*/
-
-
-
-
-
-/**
- * Print a trimmed version of the DFG
- * @return none
-void print_dfg(void) {
-    struct dfg_config *dfg = get_dfg();
-    printf("This DeDOS instance currently manages %d runtimes: \n", dfg->runtimes_cnt);
-
-    if (dfg->runtimes_cnt > 0 ) {
-        char ip[INET_ADDRSTRLEN];
-        int r;
-
-        for (r = 0; r < dfg->runtimes_cnt; r++) {
-            if (dfg->runtimes[r] != NULL) {
-                ipv4_to_string(ip, dfg->runtimes[r]->ip);
-
-                printf("runtime #%d. [ip] %s | [socket] %d | [cores] %d | [pin_t] %d | [threads] %d\n",
-                        r + 1,
-                        ip,
-                        dfg->runtimes[r]->sock,
-                        dfg->runtimes[r]->num_cores,
-                        dfg->runtimes[r]->num_pinned_threads,
-                        dfg->runtimes[r]->num_threads);
-            }
-        }
-    }
-
-    printf("The current dataflow graph has %d MSUs\n", dfg->vertex_cnt);
-    if (dfg->vertex_cnt > 0 ) {
-        int v = 0;
-        for (v = 0; v < dfg->vertex_cnt; v++) {
-            if (dfg->vertices[v] != NULL) {
-                printf("The %d-th MSU: msu_id=%d, msu_type =%d, msu_mode=%s\n",
-                        v + 1,
-                        dfg->vertices[v]->msu_id,
-                        dfg->vertices[v]->msu_type,
-                        dfg->vertices[v]->msu_mode);
-            }
-        }
-    }
-}
- */
-
-/*
-void dfg_to_file(struct dfg_config *dfg, int n_statistics, char *filename) {
-    char *dfg_json = dfg_to_json(dfg, n_statistics);
-    int json_size = strlen(dfg_json);
-    FILE *file = fopen(filename, "w");
-    fwrite(dfg_json, sizeof(char), json_size, file);
-    fclose(file);
-    log_custom(LOG_DFG_WRITER, "Wrote DFG with length %d to %s", json_size, filename);
-}
-*/
-
 

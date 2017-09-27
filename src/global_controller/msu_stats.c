@@ -93,3 +93,7 @@ int init_statistics() {
     stats_initialized = true;
     return 0;
 }
+
+void show_stats(struct dfg_msu *msu){
+    return;
+}

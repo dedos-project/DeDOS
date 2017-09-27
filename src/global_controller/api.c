@@ -2,6 +2,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include "msu_stats.h"
 #include "logging.h"
 #include "api.h"
 #include "dfg.h"
@@ -49,6 +50,7 @@ int add_msu(unsigned int msu_id, unsigned int type_id,
         unschedule_dfg_msu(msu);
         return -1;
     } else {
+        register_stat_item(msu_id);
         return 0;
     }
 }
@@ -262,11 +264,6 @@ int create_worker_thread(unsigned int thread_id, unsigned int runtime_id, char *
         log_error("Error sending create_thread_msg");
         return -1;
     }
-    return 0;
-}
-
-int show_stats(unsigned int msu_id) {
-    // TODO
     return 0;
 }
 
