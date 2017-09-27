@@ -274,7 +274,7 @@ int msu_pico_tcp_process_queue_item(struct local_msu *self, struct msu_msg *msg)
         unsigned int proto_msg_type = pico_msg->proto_msg_type;
         msu_pico_tcp_restore(proto_msg_type, pico_msg->payload, pico_msg->payload_len);
 
-        log_debug("Processed queue item of %s",msu->type->name);
+        log_debug("Processed queue item of %s",self->type->name);
 #ifdef DATAPLANE_PROFILING
         if (proto_msg_type == MSU_PROTO_TCP_HANDSHAKE_RESPONSE) {
             log_dp_event(msu->id, DEDOS_EXIT, &queue_item->dp_profile_info);

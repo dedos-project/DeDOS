@@ -47,6 +47,7 @@
 #include "pico_tcp/pico_msg_types.h"
 #include "logging.h"
 #include "local_msu.h"
+#include "unused_def.h"
 
 #include <poll.h>
 #include <errno.h>
@@ -75,7 +76,7 @@ union {
 };
 
 
-static char *msu_cpy_arg(char **dst, char *str)
+static char UNUSED *msu_cpy_arg(char **dst, char *str)
 {
     char *p, *nxt = NULL;
     char *start = str;
@@ -264,24 +265,11 @@ static int msu_app_tcp_echo_init(struct local_msu *self, struct msu_init_data *i
     #define PCAP 1
     #define TAP 2
     //
-    log_debug("create_action->init_data: %s",create_action->init_data);
-    struct pico_ip4 ZERO_IP4 = {
-        0
-    };
-    struct pico_ip4 bcastAddr = ZERO_IP4;
-    char *if_file_name = "em4";
-    int mode = 0;
 
 //    char *nxt, *name = NULL, *addr = NULL, *nm = NULL, *gw = NULL, *lport;
-    char *nxt, *name = "em4", *addr = "10.0.0.10", *nm = "255.255.255.0", *gw = NULL, *lport="6667";
-    struct pico_ip4 ipaddr, netmask, gateway, zero = ZERO_IP4;
-    int listen_port;
-    char *optarg = (char*)malloc(sizeof(char) * create_action->init_data_len + 1);
-    strncpy(optarg, create_action->init_data,create_action->init_data_len);
-    optarg[create_action->init_data_len] = '\0';
     // 
     log(LOG_PICO_TCP_ECHO, "init_data: %s",init_data->init_data);
-    char *nxt, *name = NULL, *addr = NULL, *nm = NULL, *lport;
+    char *name = "em4", *addr = "10.0.0.10", *nm = "255.255.255.0", *lport="6667";
     struct pico_ip4 ipaddr, netmask;
     int listen_port;
     char *optarg = init_data->init_data;

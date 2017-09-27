@@ -46,6 +46,13 @@ struct hs_internal_state
     long unsigned int syns_processed;
     long unsigned int syns_dropped;
     long unsigned int synacks_generated;
+    long unsigned int syn_established_sock;
+    long unsigned int syn_with_sock;
+    long unsigned int duplicate_syns_processed;
+    long unsigned int acks_received;
+    long unsigned int acks_ignored;
+    long unsigned int completed_handshakes;
+    long unsigned int socket_restore_gen_request_count;
     long unsigned int last_ts; //for storing last ts to measure elapsed time for calling cleanup
 };
 
@@ -319,7 +326,6 @@ static int pico_sockets_check(struct hs_internal_state *in_state, int loop_score
 
     sp_msu = index_msu->keyValue;
     start = sp_msu;
-    int count;
 
     //count = hs_count_sockets(in_state->hs_table);
     //printf("before remove: Sockets count: %d\n",count);
@@ -858,7 +864,7 @@ static int hs_tcp_send_rst(struct local_msu *self, struct pico_socket *s, struct
 
     struct pico_socket_tcp *t = (struct pico_socket_tcp *) s;
     struct pico_tcp_hdr *hdr_rcv;
-    int ret;
+    int ret = 0;
 
     /* non-synchronized state, go to CLOSED here to prevent timer callback to go on after timeout */
     (t->sock).state &= 0x00FFU;
@@ -999,7 +1005,7 @@ static int msu_process_hs_request_in(struct local_msu *self, int reply_msu_id, s
 
         else if (sock_found->state  == (PICO_SOCKET_STATE_BOUND | PICO_SOCKET_STATE_TCP_ESTABLISHED | PICO_SOCKET_STATE_CONNECTED)) {
             in_state->syn_established_sock++;
-            struct pico_trans *tr = (struct pico_trans *) f->transport_hdr;
+            //struct pico_trans *tr = (struct pico_trans *) f->transport_hdr;
         //    printf("Established socket SYN for sport: %u\n",short_be(tr->sport));
             log_warn("SYN for established socket..ignoring..%s","");
             goto end;
@@ -1203,7 +1209,7 @@ char* pico_frame_to_buf(struct pico_frame *f)
 {
     return (char*) f->buffer;
 
-    log_debug("f: %p", *f);
+    log_debug("f: %p", f);
     log_debug("f->buffer : %p", f->buffer);
     log_debug("f->buffer_len: %u", f->buffer_len);
     log_debug("f->start: %p", f->start);
