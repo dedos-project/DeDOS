@@ -239,7 +239,7 @@ int init_controller_socket(struct sockaddr_in *addr) {
         log_error("Error connecting to global controller");
         return -1;
     }
-    if (monitor_socket(sock) != 0) {
+    if (monitor_controller_socket(sock) != 0) {
         log_error("Attempted to initialize controller socket "
                   "before initializing runtime epoll");
         return -1;

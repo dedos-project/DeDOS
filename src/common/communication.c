@@ -64,8 +64,7 @@ int init_connected_socket(struct sockaddr_in *addr) {
         log_perror("Error setting SO_REUSEADDR");
     }
     char ip[INET_ADDRSTRLEN];
-    uint32_t ip_h = ntohl(addr->sin_addr.s_addr);
-    inet_ntop(AF_INET, &ip_h, ip, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &addr->sin_addr, ip, INET_ADDRSTRLEN);
     int port = ntohs(addr->sin_port);
     log(LOG_CONNECTIONS, "Attepting to connect to socket at %s:%d", ip, port);
     if (connect(sock, (struct sockaddr*)addr, sizeof(*addr)) < 0) {

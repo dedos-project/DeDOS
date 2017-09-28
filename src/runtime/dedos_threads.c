@@ -108,8 +108,9 @@ static void *dedos_thread_starter(void *thread_init_v) {
     }
 
     if (thread->mode == PINNED_THREAD) {
-        pin_thread(thread->pthread);
-        log_warn("Could not pin thread %d", thread->id);
+        if (pin_thread(thread->pthread) != 0) {
+            log_warn("Could not pin thread %d", thread->id);
+        }
     }
 
     sem_post(&init->sem);

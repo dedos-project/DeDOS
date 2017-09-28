@@ -89,7 +89,7 @@ static int socket_monitor_epoll_loop() {
     return rtn;
 }
 
-int monitor_socket(int new_fd) {
+int monitor_controller_socket(int new_fd) {
     if ( epoll_fd == -1 ) {
         log_error("Epoll not initialized. Cannot monitor new socket");
         return -1;
@@ -97,7 +97,22 @@ int monitor_socket(int new_fd) {
 
     int rtn = add_to_epoll(epoll_fd, new_fd, EPOLLIN, false);
     if (rtn < 0) {
-        log_error("Error adding socket %d to epoll", new_fd);
+        log_perror("Error adding socket %d to epoll", new_fd);
+        return -1;
+    }
+    return 0;
+}
+
+int monitor_runtime_socket(int new_fd) {
+    if ( epoll_fd == -1 ) {
+        log_error("Epoll not initialized. Cannot monitor new socket");
+        return -1;
+    }
+
+    int rtn = add_to_epoll(epoll_fd, new_fd, EPOLLIN, false);
+    runtime_fds[new_fd] = true;
+    if (rtn < 0) {
+        log_perror("Error adding socket %d to epoll", new_fd);
         return -1;
     }
     return 0;

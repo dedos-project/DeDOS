@@ -140,7 +140,7 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
                     log(LOG_EPOLL_OPS, "Accepted new connection");
                 }
             } else {
-                log(LOG_EPOLL_OPS, "Processing connection (fd: %d)", 
+                log(LOG_EPOLL_OPS, "Processing connection (fd: %d)",
                            events[i].data.fd);
                 int rtn = connection_handler(events[i].data.fd, data);
                 if (rtn != 0) {
