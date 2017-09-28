@@ -128,7 +128,7 @@ static enum stat_id MSU_STAT_IDS[] = {
     MSU_NUM_STATES
 };
 
-#define NUM_MSU_STAT_IDS sizeof(MSU_STAT_IDS) / sizeof(enum stat_id);
+#define NUM_MSU_STAT_IDS sizeof(MSU_STAT_IDS) / sizeof(enum stat_id)
 
 /**
  * Initializes the stat IDS that are relevant to an MSU

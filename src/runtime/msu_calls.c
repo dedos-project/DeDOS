@@ -267,7 +267,7 @@ int call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
  * @param data_size The size of the sending data
  * @param data The data sent
  * @return 0 on success, -1 on error
- */*
+ */
 int init_call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
                            struct msu_type *endpoint_type,
                            struct msu_msg_key *key, size_t data_size, void *data) {
