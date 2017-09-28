@@ -9,20 +9,30 @@
 #include "logging.h"
 #include "msu_type_list.h"
 
+/**
+ * MOVEME: MAX_TYPE_ID
+ * This is the maximum ID that can be assigned to an MSU type
+ */
 #define MAX_TYPE_ID 1000
 
+/** 
+ * Every MSU type that can be used. Defined in `msu_type_list.h`, 
+ * or overridden from previous definition
+ */
 static struct msu_type *DEFINED_MSU_TYPES[] = MSU_TYPE_LIST;
 
+/**
+ * The number of available MSU types
+ */
 #define N_MSU_TYPES (sizeof(DEFINED_MSU_TYPES) / sizeof(struct msu_type*))
+
 /**
  * Pointers to MSU Types, indexed by ID
  */
 static struct msu_type *msu_types[MAX_TYPE_ID];
 
-
 /**
- * Regsiters an MSU type so that it can be later
- * referenced by its ID
+ * Regsiters an MSU type so that it can be later referenced by its ID
  * @param type MSU Type to be registered
  * @return 0 on success, -1 on error
  */
@@ -51,6 +61,11 @@ struct msu_type *get_msu_type(int id) {
     return msu_types[id];
 }
 
+/**
+ * Checks whether the msu type has the required fields to be used.
+ * (At the moment, the only required field is `receive`)
+ * @return true/false
+ */
 static bool has_required_fields(struct msu_type *type) {
     if (type->receive == NULL) {
         log_error("MSU type %s does not register a recieve function",
@@ -60,6 +75,12 @@ static bool has_required_fields(struct msu_type *type) {
     return true;
 }
 
+/**
+ * Initializes a specific MSU type, calling its init function
+ * and registering it for future calls
+ * @param type The type of MSU to be registered
+ * @return 0 on success, -1 on error
+ */
 static int init_msu_type(struct msu_type *type) {
     if (!has_required_fields(type)) {
         log_error("Not registering MSU type %s due to missing fields", 
@@ -85,6 +106,8 @@ static int init_msu_type(struct msu_type *type) {
 /**
  * Initializes the MSU type with the given ID, 
  * calling the custom constructor if appropriate. 
+ * This function is meant to be called on each MSU type that 
+ * is defined in the DFG used to initialize the runtime.
  * @return 0 on success, -1 on error
  */
 int init_msu_type_id(unsigned int type_id) {

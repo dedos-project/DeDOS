@@ -1,7 +1,7 @@
 /**
  * @file msu_type.h
  *
- * Defines a type of MSU, callback functions
+ * Defines a type of MSU, including callback and accessor functions
  */
 #ifndef MSU_TYPE_H
 #define MSU_TYPE_H
@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-// Need forward declaration due to circular dependency
+// Need forward declarations due to circular dependency
 struct local_msu;
 struct msu_msg;
 
@@ -47,62 +47,55 @@ struct msu_type{
      */
     int (*init)(struct local_msu *self, struct msu_init_data *initial_data);
 
-    /**
-     * Type-specific destructor that frees any internal data or state.
+    /** Type-specific destructor that frees any internal data or state.
      * Can be NULL if no additional freeing must occur
      * @param self MSU to be destroyed
      */
     void (*destroy)(struct local_msu *self);
 
-    // TODO: rewrite docstring
     /** Handles the receiving of data sent from other MSUs.
-     * This field can **not** be set to NULL, and must be defined
-     * for each msu_type.
+     * This field can **not** be set to NULL, and must be defined for each msu_type.
      * @param self MSU receieving data
-     * @param input_data data to receive from previous MSU
-     * @return MSU type-id of next MSU to receive data, 0 if no rcpt, -1 on err
+     * @param msg data to receive from previous MSU
+     * @return 0 on success, -1 on error
      */
     int (*receive)(struct local_msu *self, struct msu_msg *msg);
 
-
-
-    /* Move state within same process and physical machine, like pointers.
-     * Runtime should call this.
-     * @param data ???
-     * @param optional_data ???
-     * This never appeared to be used in the current codebase, so I am removing it
-     * till we know the exact requirements
-     */
-     // removed: int (*same_machine_move_state)(void *data, void *optional_data);
-
     /** Choose which MSU of **this** type the **previous** MSU will route to.
-     * Can **not** be NULL.
+     * If NULL, defaults to `default_routing()` in runtime/routing_strategies.c
      * @param type MSU type of endpoint
-     * @param sender MSU sending the information
-     * @param data data to be sent, in case destination depends on specifics of data
-     * @return msu_endpoint destination
+     * @param sender MSU sending the message
+     * @param msg data to be sent, in case destination depends on specifics of data
+     * @param output Output argument to be filled with the appropriate destination
+     * @return 0 on succes, -1 on error
      */
     int (*route)(struct msu_type *type, struct local_msu *sender,
                  struct msu_msg *msg, struct msu_endpoint *output);
 
-    /** TODO: Serialization function */
+    /** Defines serialization protocol for data sent to this MSU type
+     * If NULL, assumes no pointers in the msu message, and simply serializes the input for
+     * the length defined in the msu message header.
+     * @param type The type of MSU to which the serialized message is to be delivered
+     * @param input The MSU message to be serialized
+     * @param output To be allocated and filled with the serialized MSU message
+     * @return Size of the serialized message
+     */
     ssize_t (*serialize)(struct msu_type *type, struct msu_msg *input, void **output);
 
-    // TODO: rewrite docstring
-    /** Deserializes data received from remote MSU and enqueues the
-     * message payload onto the msu queue.
-     * Can **not** be NULL. Set to default_deserialize for default behavior.
-     * @param self MSU receiving data
-     * @param msg message being received
-     * @param buf ???? Unused?
-     * @param bufsize Size of the buffer being received
-     * @return 0 on success, -1 on error
+    /** Defines deserialization protocl for data received by this MSU type
+     * If NULL, assumes no pointers in the msu message, and simply assigns `input` as the message
+     * @param self The MSU to receive the deserialized buffer
+     * @param input_size Size of the received buffer
+     * @param input Message to be deserialized
+     * @param out_size To be filled with the size of the struct deserialized off of the buffer
+     * @return The deserialized buffer
      */
     void *(*deserialize)(struct local_msu *self, size_t input_size, void *input, size_t *out_size);
 };
 
 /** Initializes an MSU type, optionally calling init function */
 int init_msu_type_id(unsigned int type_id);
+
 /** Gets the MSU type with the provided ID */
 struct msu_type *get_msu_type(int id);
 
