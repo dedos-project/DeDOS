@@ -1,18 +1,15 @@
 ADDRESS_SANITIZER?=0
-DATAPLANE_PROFILING=0
-DEBUG = 1
-COLLECT_STATS = 1
+DEBUG = 0
 DUMP_STATS = 1
-DO_PROFILE = 1
+DO_PROFILE = 0
 
 LOGS = \
 	   INFO \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   CONNECTIONS \
 	   CUSTOM \
-	   DFG_PARSING \
+	   #DFG_PARSING \
 	   ALL
 
 MSU_APPLICATIONS = #webserver  pico_tcp ndlog 
@@ -26,8 +23,8 @@ NO_LOGS = \
 		  STAT_SEND \
 		  STAT_SERIALIZATION \
 		  CONTROLLER_COMMUNICATION \
-		  LOG_READS \
-		  LOG_EPOLL_OPS
+		  STAT_INITS \
+		  STATS
 
 SRC_DIR = src/
 RNT_DIR = $(SRC_DIR)runtime/
@@ -59,7 +56,7 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=6
+OPTIM=9
 
 CC:=gcc
 CXX:=g++
@@ -82,7 +79,7 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 MSU_DEFINES=$(foreach MSU_APP, $(MSU_APPLICATIONS), -DCOMPILE_$(call upper, $(MSU_APP))_MSUS)
 
-CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -lgmp -O$(OPTIM) \
+CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -O$(OPTIM) \
 	   $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
@@ -96,10 +93,6 @@ endif
 
 ifeq ($(ADDRESS_SANITIZER),1)
   CFLAGS+=-fsanitize=address -fno-omit-frame-pointer
-endif
-
-ifeq ($(COLLECT_STATS), 1)
-  CFLAGS+=-DCOLLECT_STATS=1
 endif
 
 ifeq ($(DUMP_STATS), 1)

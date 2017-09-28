@@ -5,11 +5,12 @@ LOGS = \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   CUSTOM 
+	   CUSTOM \
+	   ALL
 
 NO_LOGS = \
-		  LOG_READS \
-		  LOG_EPOLL_OPS
+		  EPOLL_OPS \
+		  STAT_SERIALIZATION
 
 SRC_DIR = src/
 GLC_DIR = $(SRC_DIR)global_controller/
