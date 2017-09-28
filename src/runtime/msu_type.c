@@ -15,8 +15,8 @@
  */
 #define MAX_TYPE_ID 1000
 
-/** 
- * Every MSU type that can be used. Defined in `msu_type_list.h`, 
+/**
+ * Every MSU type that can be used. Defined in `msu_type_list.h`,
  * or overridden from previous definition
  */
 static struct msu_type *DEFINED_MSU_TYPES[] = MSU_TYPE_LIST;
@@ -38,7 +38,7 @@ static struct msu_type *msu_types[MAX_TYPE_ID];
  */
 static int register_msu_type(struct msu_type *type) {
     if (type->id > MAX_TYPE_ID) {
-        log_error("MSU type %s not registered. Type ID %d too high. Max: %d", 
+        log_error("MSU type %s not registered. Type ID %d too high. Max: %d",
                   type->name, type->id, MAX_TYPE_ID);
         return -1;
     }
@@ -83,7 +83,7 @@ static bool has_required_fields(struct msu_type *type) {
  */
 static int init_msu_type(struct msu_type *type) {
     if (!has_required_fields(type)) {
-        log_error("Not registering MSU type %s due to missing fields", 
+        log_error("Not registering MSU type %s due to missing fields",
                   type->name);
         return -1;
     }
@@ -104,14 +104,14 @@ static int init_msu_type(struct msu_type *type) {
 }
 
 /**
- * Initializes the MSU type with the given ID, 
- * calling the custom constructor if appropriate. 
- * This function is meant to be called on each MSU type that 
+ * Initializes the MSU type with the given ID,
+ * calling the custom constructor if appropriate.
+ * This function is meant to be called on each MSU type that
  * is defined in the DFG used to initialize the runtime.
  * @return 0 on success, -1 on error
  */
 int init_msu_type_id(unsigned int type_id) {
-    log(TEST, "Number of MSU types: %d", (int)N_MSU_TYPES); 
+    log(TEST, "Number of MSU types: %d", (int)N_MSU_TYPES);
     for (int i=0; i<N_MSU_TYPES; i++) {
         struct msu_type *type = DEFINED_MSU_TYPES[i];
         if (type->id == type_id) {

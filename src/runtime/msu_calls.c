@@ -1,3 +1,8 @@
+/**
+ * @file msu_calls.c
+ * Defines methods used for calling MSUs from other MSUs
+ */
+
 #include "msu_calls.h"
 #include "logging.h"
 #include "thread_message.h"
@@ -8,6 +13,10 @@
 /**
  * Calls type-specific MSU serialization function and enqueues data into main
  * thread queue so it can be forwarded to remote MSU
+ * @param msg Message to be enqueued to the remote MSU
+ * @param dst_type MSU type of the destination
+ * @param dst The specific MSU destination
+ * @return 0 on success, -1 on error
  */
 static int enqueue_for_remote_send(struct msu_msg *msg,
                                    struct msu_type *dst_type,
@@ -46,7 +55,17 @@ static int enqueue_for_remote_send(struct msu_msg *msg,
     return 0;
 }
 
-// TESTME: call_local_msu()
+/** Enqueues a message in the queue of a local MSU.
+ * TESTME: call_local_msu()
+ *
+ * @param sender The MSU sending the message
+ * @param dest The MSU to receive the message
+ * @param hdr The header of the message received by the sender. To be modified
+ *            with provinance and used in routing decisions
+ * @param data_size Size of the data to be enqueued to the next MSU
+ * @param data The data to be enqueued to the next MSU
+ * @return 0 on success, -1 on error
+ */
 int call_local_msu(struct local_msu *sender, struct local_msu *dest,
                 struct msu_msg_hdr *hdr, size_t data_size, void *data) {
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
@@ -67,6 +86,18 @@ int call_local_msu(struct local_msu *sender, struct local_msu *dest,
     return 0;
 }
 
+/** Enqueues a new message in the queue of a local MSU.
+ * This function is identical to `call_local_msu()` with the exception that it
+ * creates the required header from the specified message key. It is to be used
+ * for initial enqueueing rather than existing message passsing
+ *
+ * @param sender The MSU sending the message
+ * @param dest The MSU to receive the message
+ * @param key The key to assign to the header of the new MSU message
+ * @param data_size Size of the data to be enqueued to the next MSU
+ * @param data the data to be enqueued to the next MSU
+ * @return 0 on success, -1 on error
+ */
 int init_call_local_msu(struct local_msu *sender, struct local_msu *dest,
                         struct msu_msg_key *key, size_t data_size, void *data) {
     struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
@@ -84,6 +115,13 @@ int init_call_local_msu(struct local_msu *sender, struct local_msu *dest,
 /**
  * Sends an MSU message to a destination of the given type,
  * utilizing the sending MSU's routing function.
+ *
+ * @param sender The MSU sending the message
+ * @param dst_type The MSU type to receive the message
+ * @param hdr The header to be used in routing, passed on from the sender's received message
+ * @param data_size Size of the data to be enqueued
+ * @param data The data to be enqueued
+ * @return 0 on success, -1 on error
  */
 int call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
                   struct msu_msg_hdr *hdr, size_t data_size, void *data) {
@@ -142,7 +180,18 @@ int call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
     }
 }
 
-// TESTME: init_call_msu()
+/**
+ * Sends an MSU message to a destination of the specified type.
+ * This function is identical to `call_msu_type()` with the exception that it
+ * performs header initialization. To be used when performing an initial enqueue, rather
+ * than continuing a chain of enqueues.
+ * @param sender The MSU sending the message
+ * @param dst_type The MSU type to receive the message
+ * @param key The key to assign to the message header
+ * @param data_size The size of the data to be enqueued
+ * @param data The data to be enqueued
+ * @return 0 on success, -1 on error
+ */
 int init_call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
                        struct msu_msg_key *key, size_t data_size, void *data) {
     struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
@@ -155,6 +204,17 @@ int init_call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
     return call_msu_type(sender, dst_type, hdr, data_size, data);
 }
 
+/**
+ * Sends an MSU message to a speicific destination, either local or remote.
+ *
+ * @param sender The MSU sending the message
+ * @param endpoint The endpoint to which the message is to be delivered
+ * @param endpoint_type The MSU type of the endpoint to receive the message
+ * @param hdr The header of the MSU message received by the sender
+ * @param data_size The size of the sending data
+ * @param data The data sent
+ * @return 0 on success, -1 on error
+ */
 int call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
                       struct msu_type *endpoint_type, 
                       struct msu_msg_hdr *hdr, size_t data_size, void *data) {
@@ -195,6 +255,19 @@ int call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
     }
 }
 
+/**
+ * Sends an MSU message to a specific destination, either local or remote.
+ *
+ * This function is identical to `call_msu_endpoint()` with the exception that
+ * it constructs the header for the message and is to be used for initial enqueues.
+ * @param sender The MSU sending the message
+ * @param endpoint The endpoint to which the message is to be delivered
+ * @param endpoint_type The MSU type of the endpoint to receive the message
+ * @param hdr The header of the MSU message received by the sender
+ * @param data_size The size of the sending data
+ * @param data The data sent
+ * @return 0 on success, -1 on error
+ */*
 int init_call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
                            struct msu_type *endpoint_type,
                            struct msu_msg_key *key, size_t data_size, void *data) {
