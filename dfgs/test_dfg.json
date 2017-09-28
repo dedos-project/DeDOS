@@ -18,7 +18,7 @@
             "ip": "0.0.0.0",
             "port": 8091,
             "num_cores": 8,
-            "num_pinned_threads": 2,
+            "num_pinned_threads": 4,
             "num_unpinned_threads": 1,
             "routes": [
             {
@@ -37,6 +37,24 @@
                 {
                     "key": 1,
                     "msu": 3
+                }]
+            },
+            {
+                "id": 1003,
+                "type": 100,
+                "endpoints": [
+                {
+                    "key": 1,
+                    "msu": 4
+                }]
+            },
+            {
+                "id": 1004,
+                "type": 100,
+                "endpoints": [
+                {
+                    "key": 1,
+                    "msu": 5
                 }]
             }
             ]
@@ -68,7 +86,7 @@
                         1002
                     ]
                 },
-                "init_data": "1, 3",
+                "init_data": "0, 3",
             },
             {
                 "id": 3,
@@ -78,8 +96,29 @@
                     "runtime": 1,
                     "thread_id": 3,
                     "routes": [
-                        1001
+                        1003
                     ]
+                },
+            },
+            {
+                "id": 4,
+                "type": 100,
+                "blocking_mode": "non-blocking",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 4,
+                    "routes": [
+                        1004
+                    ]
+                },
+            },
+            {
+                "id": 5,
+                "type": 100,
+                "blocking_mode": "non-blocking",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 5
                 },
             }
         ]
