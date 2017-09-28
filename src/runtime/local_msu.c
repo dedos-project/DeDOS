@@ -1,3 +1,8 @@
+/**
+ * @file local_msu.c
+ * Defines the structures and functions used by MSUs on the local machine
+ */
+
 #include "local_msu.h"
 #include "routing_strategies.h"
 #include "logging.h"
@@ -6,13 +11,22 @@
 #include "inter_runtime_messages.h"
 #include "main_thread.h"
 #include "thread_message.h"
+
 #include <stdlib.h>
 
+/**
+ * MOVEME: MAX_MSU_ID
+ * Defines the maximum ID that can be assigned to an MSU.
+ * Necessary becaues MSUs are indexed by ID in the local registry.
+ */
 #define MAX_MSU_ID 1024
 
 // TODO: This lock might not be useful, as I believe this registry will
 // TODO: only ever be accessed from the socket handler thread
+
+/** Lock to protect access to local msu registry */
 pthread_rwlock_t msu_registry_lock;
+/** Mapping of MSU ID to the specific instance of the local MSU */
 struct local_msu *local_msu_registry[MAX_MSU_ID];
 
 /**
@@ -35,6 +49,11 @@ static void msu_free(struct local_msu *msu) {
     free(msu);
 }
 
+/**
+ * Removes an MSU from the local MSU registry
+ * @param id ID of the MSU to remove
+ * @return 0 on success, -1 on error
+ */
 static int rm_from_local_registry(int id) {
     if (pthread_rwlock_wrlock(&msu_registry_lock) != 0) {
         log_perror("Error opening write lock on msu registry");
@@ -54,6 +73,11 @@ static int rm_from_local_registry(int id) {
     return rtn;
 }
 
+/**
+ * Adds an MSU to the local registry so it can be referred to elsewhere by ID
+ * @param MSU the local MSU to add to the registry
+ * @return 0 on success, -1 on error
+ */
 static int add_to_local_registry(struct local_msu *msu) {
     if (pthread_rwlock_wrlock(&msu_registry_lock) != 0) {
         log_perror("Error opening write lock on msu registry");
@@ -73,6 +97,11 @@ static int add_to_local_registry(struct local_msu *msu) {
     return rtn;
 }
 
+/**
+ * Gets the local MSU with the given ID, or NULL if N/A 
+ * @param id ID of the MSU to retrieve
+ * @return local msu instance, or NULL on error
+ */
 struct local_msu *get_local_msu(unsigned int id) {
     if (pthread_rwlock_rdlock(&msu_registry_lock) != 0) {
         log_perror("Error opening read lock on MSU registry");
@@ -89,6 +118,7 @@ struct local_msu *get_local_msu(unsigned int id) {
     return msu;
 }
 
+/** The stat IDs that are associated with an MSU, to be registered on MSU creation */
 static enum stat_id MSU_STAT_IDS[] = {
     MSU_QUEUE_LEN,
     MSU_ITEMS_PROCESSED,
@@ -98,11 +128,12 @@ static enum stat_id MSU_STAT_IDS[] = {
     MSU_NUM_STATES
 };
 
-static int NUM_MSU_STAT_IDS = sizeof(MSU_STAT_IDS) / sizeof(enum stat_id);
+#define NUM_MSU_STAT_IDS sizeof(MSU_STAT_IDS) / sizeof(enum stat_id)
 
 /**
- * Initializes the stat IDS that are relevant to MSUs
- */
+ * Initializes the stat IDS that are relevant to an MSU
+ * @param msu_id ID of the msu to register
+  */
 static void init_msu_stats(int msu_id) {
     for (int i=0; i<NUM_MSU_STAT_IDS; i++) {
         if (init_stat_item(MSU_STAT_IDS[i], msu_id) != 0) {
@@ -114,6 +145,11 @@ static void init_msu_stats(int msu_id) {
 
 /**
  * Allocates and creates a new MSU of the specified type and ID on the given thread
+ * @param id ID of the MSU to be created
+ * @param type MSU type of the MSU to be created
+ * @param thread The thread on which this MSU is to be created
+ * @param data Any initial data that is passed to the MSU's specific init function
+ * @return The created local MSU, or NULL on error
  */
 struct local_msu *init_msu(unsigned int id,
                            struct msu_type *type,
@@ -132,7 +168,7 @@ struct local_msu *init_msu(unsigned int id,
         return NULL;
     }
 
-    // Must be done before running init function
+    // Must be done before running init function, or the msu cannot enqueue to itself
     int rtn = register_msu_with_thread(msu);
     if (rtn < 0) {
         log_error("Error registering MSU With thread");
@@ -140,10 +176,12 @@ struct local_msu *init_msu(unsigned int id,
         rm_from_local_registry(msu->id);
         return NULL;
     }
-    // TODO: Unregister if creation fails
 
+    // TODO: Unregister if creation fails
     log_info("Initializing msu (ID: %d, type: %s, data: '%s')", id, type->name,
              data->init_data);
+
+    // Run the MSU's type-specific init function if it has one
     if (type->init) {
         if (type->init(msu, data) != 0) {
             log_error("Error running MSU %d (type: %s) type-specific initialization function",
@@ -152,13 +190,13 @@ struct local_msu *init_msu(unsigned int id,
             return NULL;
         }
     }
+
     rtn = add_to_local_registry(msu);
     if (rtn < 0) {
         log_error("Error adding MSU to local registry");
         msu_free(msu);
         return NULL;
     }
-
 
     return msu;
 }
@@ -198,6 +236,11 @@ static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
     return 0;
 }
 
+/** 
+ * Dequeus a message from a local MSU and calls its receive function
+ * @param msu MSU to dequeue the message from
+ * @return 0 on success, -1 on error, 1 if no message existed to be dequeued
+ */
 int msu_dequeue(struct local_msu *msu) {
     struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
     if (msg) {
