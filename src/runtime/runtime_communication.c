@@ -11,8 +11,13 @@
 #include "runtime_dfg.h"
 #include "main_thread.h"
 #include "thread_message.h"
+#include "rt_stats.h"
+#include "socket_monitor.h"
 
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/tcp.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -63,8 +68,8 @@ int send_to_peer(unsigned int runtime_id, struct inter_runtime_msg_hdr *hdr, voi
         log_error("Error sending payload to runtime %d", runtime_id);
         return -1;
     }
-    log(LOG_RUNTIME_COMMUNICATION, "Send a payload of size %d to runtime %d (fd: %d)",
-               (int)hdr->payload_size, runtime_id, peer->fd);
+    log(LOG_RUNTIME_COMMUNICATION, "Send a payload of size %d (type %d) to runtime %d (fd: %d)",
+               (int)hdr->payload_size, hdr->type, runtime_id, peer->fd);
     return 0;
 }
 
@@ -79,6 +84,14 @@ int add_runtime_peer(unsigned int runtime_id, int fd) {
         log_warn("Replacing runtime peer with id %d", runtime_id);
     }
     runtime_peers[runtime_id].fd = fd;
+
+    int val = 1;
+    int rtn = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+    if (rtn < 0) {
+        log_perror("Error setting TCP_NODELAY");
+    }
+
+    log_info("Added runtime peer %d (fd: %d)", runtime_id, fd);
     return 0;
 }
 
@@ -118,13 +131,20 @@ int connect_to_runtime_peer(unsigned int id, struct sockaddr_in *addr){
         return -1;
     }
     runtime_peers[id].fd = fd;
-    
+
+    int val = 1;
+    int rtn = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+    if (rtn < 0) {
+        log_perror("Error setting TCP_NODELAY");
+    }
+
     if (send_init_msg(id) != 0) {
         log_error("Failed to send initialization message to runtime %d (fd: %d)", id, fd);
         close(fd);
         return -1;
     }
-    log(LOG_RUNTIME_CONNECTION, "Connected to runtime peer %d (fd: %d)", id, fd);
+    monitor_runtime_socket(fd);
+    log_info("Connected to runtime peer %d (fd: %d)", id, fd);
     return 0;
 }
 

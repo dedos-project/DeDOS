@@ -70,7 +70,7 @@ int controller_address(struct sockaddr_in *addr) {
 
     bzero(addr, sizeof(*addr));
     addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = htonl(DFG->global_ctl_ip);
+    addr->sin_addr.s_addr = DFG->global_ctl_ip;
     addr->sin_port = htons(DFG->global_ctl_port);
 
     return 0;

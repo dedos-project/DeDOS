@@ -3,14 +3,14 @@
 
 #include <arpa/inet.h>
 
-#define MAX_READ_ATTEMPTS 16
+#define MAX_READ_ATTEMPTS 99999
 
 int read_payload(int fd, size_t size, void *buff) {
     ssize_t rtn = 0;
     int attempts = 0;
     do {
-        log(LOG_READS, "Attempting to read payload of size %d", (int)size);
-        int new_rtn = recv(fd, buff, size, 0);
+        log(LOG_READS, "Attempting to read payload of size %d", (int)size - (int)rtn);
+        int new_rtn = recv(fd, buff + rtn, size - rtn, 0);
         if (new_rtn < 0 && errno != EAGAIN) {
             log_perror("Error reading from fd: %d", fd);
             return -1;
@@ -19,8 +19,9 @@ int read_payload(int fd, size_t size, void *buff) {
             log_error("Attempted to read %d times", MAX_READ_ATTEMPTS);
             return -1;
         }
-        rtn += new_rtn;
-    } while (errno == EAGAIN || (rtn > 0 && rtn < size));
+        if (new_rtn > 0)
+            rtn += new_rtn;
+    } while ((errno == EAGAIN || rtn > 0) && (int)rtn < (int)size);
     if (rtn == 0) {
         log(LOG_CONNECTIONS, "fd %d has been closed by peer", fd);
         return 1;
@@ -64,8 +65,7 @@ int init_connected_socket(struct sockaddr_in *addr) {
         log_perror("Error setting SO_REUSEADDR");
     }
     char ip[INET_ADDRSTRLEN];
-    uint32_t ip_h = ntohl(addr->sin_addr.s_addr);
-    inet_ntop(AF_INET, &ip_h, ip, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &addr->sin_addr, ip, INET_ADDRSTRLEN);
     int port = ntohs(addr->sin_port);
     log(LOG_CONNECTIONS, "Attepting to connect to socket at %s:%d", ip, port);
     if (connect(sock, (struct sockaddr*)addr, sizeof(*addr)) < 0) {

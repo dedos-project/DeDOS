@@ -58,6 +58,11 @@ struct stat_type {
 #define GATHER_MSU_NUM_STATES 1
 #define GATHER_CUSTOM_STATS 1
 
+#ifdef DEDOS_PROFILER
+#define GATHER_PROFILING 1
+#else
+#define GATHER_PROFILING 0
+#endif
 
 struct stat_type stat_types[] = {
     {MSU_QUEUE_LEN,       GATHER_MSU_QUEUE_LEN,   MAX_STATS, "%02.0f", "MSU_Q_LEN"},
@@ -69,10 +74,16 @@ struct stat_type stat_types[] = {
     {THREAD_CTX_SWITCHES, GATHER_CTX_SWITCHES,    MAX_STATS, "%03.0f", "CTX_SWITCHES"},
     {MSU_STAT1,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT1"},
     {MSU_STAT2,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT2"},
-    {MSU_STAT3,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT3"}
+    {MSU_STAT3,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT3"},
+    {PROF_ENQUEUE,        GATHER_PROFILING,       MAX_STATS, "%.0f", "ENQUEUE"},
+    {PROF_DEQUEUE,        GATHER_PROFILING,       MAX_STATS, "%.0f", "DEQUEUE"},
+    {PROF_REMOTE_SEND,    GATHER_PROFILING,       MAX_STATS, "%.0f", "SEND"},
+    {PROF_REMOTE_RECV,    GATHER_PROFILING,       MAX_STATS, "%.0f", "RECV"},
+    {PROF_DEDOS_ENTRY,    GATHER_PROFILING,       MAX_STATS, "%.0f", "ENTRY"},
+    {PROF_DEDOS_EXIT,     GATHER_PROFILING,       MAX_STATS, "%.0f", "EXIT"},
 };
 
-#define N_STAT_TYPES (sizeof(stat_types) / sizeof(struct stat_type))
+#define N_STAT_TYPES (sizeof(stat_types) / sizeof(*stat_types))
 
 #define CHECK_INITIALIZATION \
     if (!stats_initialized) { \
@@ -141,6 +152,7 @@ static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat
         fprintf(out_file, type->format, item->stats[i].value);
         fwrite("\n", 1, 1, out_file);
     }
+    log(LOG_STATS, "Flushed %d items for type %s", n_stats, type->label);
     return 0;
 }
 void flush_all_stats_to_log(FILE *file) {
@@ -601,8 +613,8 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
     if (type->id_indices[item_id] != -1) {
-        log_error("Item ID %u already assigned index %d",
-                item_id, type->id_indices[item_id]);
+        log_error("Item ID %u already assigned index %d for stat %s",
+                item_id, type->id_indices[item_id], type->label);
         return -1;
     }
     int index = type->num_items;
@@ -672,6 +684,7 @@ int init_statistics() {
             for (int j = 0; j < MAX_STAT_ITEM_ID; j++) {
                 type->id_indices[j] = -1;
             }
+            log(LOG_STATS, "Initialized stat type %s (%d ids)", type->label, MAX_STAT_ITEM_ID);
         }
     }
 

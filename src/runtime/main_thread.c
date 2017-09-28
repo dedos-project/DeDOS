@@ -33,7 +33,7 @@ static int main_thread_connect_to_runtime(struct ctrl_add_runtime_msg *msg){
     struct sockaddr_in addr;
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(msg->ip);
+    addr.sin_addr.s_addr = msg->ip;
     addr.sin_port = htons(msg->port);
 
     int rtn = connect_to_runtime_peer(msg->runtime_id, &addr);
@@ -179,6 +179,9 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
         default:
             log_error("Unknown message type %d delivered to main thread", msg->type);
             break;
+    }
+    if (rtn > 0) {
+        log(LOG_MAIN_THREAD, "Successfully processed message with type id: %d", msg->type);
     }
     return rtn;
 }

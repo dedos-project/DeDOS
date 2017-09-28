@@ -99,11 +99,14 @@ static int add_runtime_endpoint(unsigned int runtime_id, int fd, uint32_t ip, in
     }
     runtime_endpoints[runtime_id].fd = fd;
 
+    int n_sent = 0;
     for (int i=0; i<MAX_RUNTIME_ID; i++) {
         if (i != runtime_id && runtime_endpoints[i].fd != 0) {
             if (send_add_runtime_msg(i, runtime_id, ip, port) != 0) {
                 log_error("Failed to add runtime %d to runtime %d (fd: %d)",
                           runtime_id, i, runtime_endpoints[runtime_id].fd);
+            } else {
+                n_sent++;
             }
         }
     }

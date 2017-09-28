@@ -1,3 +1,4 @@
+#undef DEDOS_PROFILER
 #include "dedos_testing.h"
 
 // Include file under test

@@ -1,20 +1,18 @@
 ADDRESS_SANITIZER?=0
-DATAPLANE_PROFILING=0
-DEBUG = 1
-COLLECT_STATS = 1
+DEBUG = 0
 DUMP_STATS = 1
+DO_PROFILE = 0
 
 LOGS = \
 	   INFO \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
-	   CONNECTIONS \
 	   CUSTOM \
-	   DFG_PARSING \
+	   #DFG_PARSING \
 	   ALL
 
-MSU_APPLICATIONS = webserver  pico_tcp ndlog 
+MSU_APPLICATIONS = #webserver  pico_tcp ndlog 
 
 NO_LOGS = \
 		  JSMN_PARSING \
@@ -25,8 +23,8 @@ NO_LOGS = \
 		  STAT_SEND \
 		  STAT_SERIALIZATION \
 		  CONTROLLER_COMMUNICATION \
-		  LOG_READS \
-		  LOG_EPOLL_OPS
+		  STAT_INITS \
+		  STATS
 
 SRC_DIR = src/
 RNT_DIR = $(SRC_DIR)runtime/
@@ -52,13 +50,13 @@ LEG_BLD_DIR = $(BLD_DIR)legacy/
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 
-LEGACY_LIBS = picotcp
+LEGACY_LIBS =# picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=0
+OPTIM=9
 
 CC:=gcc
 CXX:=g++
@@ -81,7 +79,7 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 MSU_DEFINES=$(foreach MSU_APP, $(MSU_APPLICATIONS), -DCOMPILE_$(call upper, $(MSU_APP))_MSUS)
 
-CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -lgmp -O$(OPTIM) \
+CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -O$(OPTIM) \
 	   $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
@@ -97,12 +95,12 @@ ifeq ($(ADDRESS_SANITIZER),1)
   CFLAGS+=-fsanitize=address -fno-omit-frame-pointer
 endif
 
-ifeq ($(COLLECT_STATS), 1)
-  CFLAGS+=-DCOLLECT_STATS=1
-endif
-
 ifeq ($(DUMP_STATS), 1)
   CFLAGS+=-DDUMP_STATS=1
+endif
+
+ifeq ($(DO_PROFILE), 1)
+  CFLAGS+=-DDEDOS_PROFILER
 endif
 
 LEG_MAKE=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_DIR)$(LEG_LIB)/Makefile)
@@ -198,6 +196,9 @@ test-results: all test-blds $(RESULTS)
 	@echo "-----------------------\nERRORS:\n-----------------------"
 	@-grep -s ":E:" $^; echo "";
 	@echo "\nDONE"
+	@if grep -q ":[FE]:" $(filter-out all test-blds, $^); then \
+		false;\
+	fi
 
 # Output the results of the tests by executing each of the builds
 # of the tests. Output STDOUT and STDERR to the name of the rule

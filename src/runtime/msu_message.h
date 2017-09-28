@@ -31,6 +31,9 @@ struct msg_provinance {
 struct msu_msg_hdr {
     struct msu_msg_key key;
     struct msg_provinance provinance;
+#ifdef DEDOS_PROFILER
+    bool do_profile;
+#endif
 };
 
 struct msu_msg {

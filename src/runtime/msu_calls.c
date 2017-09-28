@@ -3,6 +3,7 @@
 #include "thread_message.h"
 #include "main_thread.h"
 #include "routing_strategies.h"
+#include "profiler.h"
 
 /**
  * Calls type-specific MSU serialization function and enqueues data into main
@@ -31,6 +32,7 @@ static int enqueue_for_remote_send(struct msu_msg *msg,
         return -1;
     }
 
+    PROFILE_EVENT(msg->hdr, PROF_REMOTE_SEND);
     int rtn = enqueue_to_main_thread(thread_msg);
     if (rtn < 0) {
         log_error("Error enqueuing MSU msg for msu %u on main thread", dst->id);
@@ -68,6 +70,8 @@ int call_local_msu(struct local_msu *sender, struct local_msu *dest,
 int init_call_local_msu(struct local_msu *sender, struct local_msu *dest,
                         struct msu_msg_key *key, size_t data_size, void *data) {
     struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
     if (hdr == NULL) {
         log_error("Error initializing msu message header");
         return -1;
@@ -142,6 +146,8 @@ int call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
 int init_call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
                        struct msu_msg_key *key, size_t data_size, void *data) {
     struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
     if (hdr == NULL) {
         log_error("Error initializing msu messgae header");
         return -1;
@@ -193,6 +199,8 @@ int init_call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoi
                            struct msu_type *endpoint_type,
                            struct msu_msg_key *key, size_t data_size, void *data) {
     struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
     if (hdr == NULL) {
         log_error("Error initializing msu message header");
         return -1;

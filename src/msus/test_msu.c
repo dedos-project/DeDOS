@@ -6,6 +6,7 @@
 #include "msu_message.h"
 #include "logging.h"
 #include "msu_calls.h"
+#include "profiler.h"
 #include <stdlib.h>
 
 #define MAX_TEST_MSG_ID 32
@@ -44,6 +45,11 @@ static int receive(struct local_msu *self, struct msu_msg *msg) {
         case SOCKET_MSU_TYPE_ID:;
             struct socket_msg *sock_msg = msg->data;
             test_msg = malloc(sizeof(*test_msg));
+            char buf[1024];
+            size_t n_read = read(sock_msg->fd, buf, 1024);
+            if (n_read < 0) {
+                log_error("ERRO RREADING");
+            }
             test_msg->fd = sock_msg->fd;
             if ( (float)rand()/(float)RAND_MAX < state->tag_probability) {
                 test_msg->id = increment_id();
@@ -69,6 +75,7 @@ static int receive(struct local_msu *self, struct msu_msg *msg) {
     }
 
     if (test_msg->n_hops == 0) {
+        PROFILE_EVENT(msg->hdr, PROF_DEDOS_EXIT);
         close(test_msg->fd);
         free(test_msg);
         return 0;

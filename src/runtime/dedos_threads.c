@@ -53,7 +53,7 @@ static int init_dedos_thread(struct dedos_thread *thread,
 
 
     if (init_msg_queue(&thread->queue, &thread->sem) != 0) {
-        log_error("Error initializing message queue for main thread");
+        log_error("Error initializing message queue for dedos thread");
         return -1;
     }
     log(LOG_DEDOS_THREADS, "Initialized thread %d (mode: %s, addr: %p)",
@@ -108,8 +108,9 @@ static void *dedos_thread_starter(void *thread_init_v) {
     }
 
     if (thread->mode == PINNED_THREAD) {
-        pin_thread(thread->pthread);
-        log_warn("Could not pin thread %d", thread->id);
+        if (pin_thread(thread->pthread) != 0) {
+            log_warn("Could not pin thread %d", thread->id);
+        }
     }
 
     sem_post(&init->sem);
@@ -126,7 +127,7 @@ static void *dedos_thread_starter(void *thread_init_v) {
     return (void*)(intptr_t)rtn;
 }
 
-#define DEFAULT_WAIT_TIMEOUT_S 1
+#define DEFAULT_WAIT_TIMEOUT_S 5
 
 int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout) {
     int rtn;
