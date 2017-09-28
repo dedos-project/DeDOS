@@ -3,21 +3,9 @@ image: alpine
 pages:
     script:
     - apk update && apk add doxygen
-    - cd runtime && doxygen Doxyfile
-    - cd .. && mkdir public
-    - mv runtime/html public/runtime
-    artifacts:
-        paths:
-        - public
-    only:
-    - master
-
-pages_dev:
-    script:
-    - apk update && apk add doxygen
-    - cd runtime && doxygen Doxyfile
-    - cd .. && mkdir -p public
-    - mv runtime/html public/runtime_dev
+    - doxygen Doxyfile
+    - mkdir public
+    - mv html public/
     artifacts:
         paths:
         - public
