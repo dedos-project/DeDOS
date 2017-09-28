@@ -196,6 +196,9 @@ test-results: all test-blds $(RESULTS)
 	@echo "-----------------------\nERRORS:\n-----------------------"
 	@-grep -s ":E:" $^; echo "";
 	@echo "\nDONE"
+	@if grep -q ":[FE]:" $(filter-out all test-blds, $^); then \
+		false;\
+	fi
 
 # Output the results of the tests by executing each of the builds
 # of the tests. Output STDOUT and STDERR to the name of the rule
