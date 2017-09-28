@@ -111,6 +111,7 @@ static struct msu_msg_hdr *read_msu_msg_hdr(int fd) {
         free(hdr);
         return NULL;
     }
+
     return hdr;
 }
 
@@ -141,6 +142,7 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
     }
     log(LOG_MSU_MSG_READ, "Reading header from %d", fd);
     struct msu_msg_hdr *hdr = read_msu_msg_hdr(fd);
+    PROFILE_EVENT(hdr, PROF_REMOTE_RECV);
     if (hdr == NULL) {
         log_perror("Error reading msu msg header");
         return NULL;
@@ -176,7 +178,6 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
     } else {
         msg->data = data;
     }
-    PROFILE_EVENT(msg->hdr, PROF_REMOTE_RECV);
     return msg;
 }
 

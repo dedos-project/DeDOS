@@ -45,6 +45,11 @@ static int receive(struct local_msu *self, struct msu_msg *msg) {
         case SOCKET_MSU_TYPE_ID:;
             struct socket_msg *sock_msg = msg->data;
             test_msg = malloc(sizeof(*test_msg));
+            char buf[1024];
+            size_t n_read = read(sock_msg->fd, buf, 1024);
+            if (n_read < 0) {
+                log_error("ERRO RREADING");
+            }
             test_msg->fd = sock_msg->fd;
             if ( (float)rand()/(float)RAND_MAX < state->tag_probability) {
                 test_msg->id = increment_id();
