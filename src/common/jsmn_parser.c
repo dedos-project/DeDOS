@@ -278,6 +278,7 @@ static int retry_saved(struct json_state **saved_states, char *j){
 
     if (success == -1 && key != NULL) {
         log_error("Failed while reprocessing key '%s' for missing dependencies", key);
+        log_error("Value for improper key %s", key + (strlen(key) + 1));
     }
     return success;
 }
