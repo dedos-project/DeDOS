@@ -85,8 +85,8 @@ def dict_from_mapping(a_dict, mapping):
 
 def add_routing(rt_id, froms, tos, routes, route_indexes):
     """
-    Generates new routes to the MSUs given in tos, and adds them to the MSUs in
-    froms, as well as to the full list of routes in routes.
+    Generates new routes to the MSUs given in tos, and adds them to all the MSUs in
+    froms, as well as to the full list of routes.
 
     :param rt_id: the id of the runtime the routes will be added to
     :param froms: the set of msus to add the new routes to
@@ -262,8 +262,8 @@ class MSUGenerator(list):
             self.base_msu['init_data'] = msu['init_data']
 
         # Pre-allocating IDs
-        self.base_msu['id'] = self.next_msu_id
-        self.next_msu_id += self.reps
+        self.base_msu['id'] = MSUGenerator.next_msu_id
+        MSUGenerator.next_msu_id += self.reps
 
     def __iter__(self):
         """
