@@ -17,7 +17,6 @@ ROOT_MAPPING = OrderedDict([
 MSU_MAPPING = OrderedDict([
     ('vertex_type', 'vertex_type'),
     ('blocking_mode', 'blocking_mode'),
-    ('type', 'type'),
     ('name', 'name'),
     ('scheduling', OrderedDict([
         ('thread_id', 'thread'),
@@ -244,7 +243,7 @@ class MSUGenerator(list):
 
     next_msu_id = 1  # To ensure each MSU has a unique id
 
-    def __init__(self, msu):
+    def __init__(self, msu, type_name_to_id):
         """
         Initialize some of the generator values and generate the base msu from
         the given msu yaml dictionary.
@@ -258,6 +257,7 @@ class MSUGenerator(list):
 
         # Create the base MSU
         self.base_msu = dict_from_mapping(msu, MSU_MAPPING)
+        self.base_msu['type'] = type_name_to_id[msu['type']]
         if 'init_data' in msu:
             self.base_msu['init_data'] = msu['init_data']
 
@@ -310,6 +310,7 @@ def make_dfg(cfg_fpath):
             dfg_rt['id'] = rt_id
             dfg['runtimes'].append(dfg_rt)
 
+        msu_type_name_to_id = {}
         dfg['MSU_types'] = []
         for (name, msu_type) in cfg_yaml['msu_types'].items():
             dfg_msu_type = dict_from_mapping(msu_type, MSU_TYPE_MAPPING)
@@ -319,9 +320,10 @@ def make_dfg(cfg_fpath):
                 dfg_msu_type['dependencies'] = [dict_from_mapping(dep, DEPENDENCY_MAPPING)
                                 for dep in msu_type['dependencies']]
             dfg['MSU_types'].append(dfg_msu_type)
+            msu_type_name_to_id[name] = dfg_msu_type['id']
 
         msus = [msu for base_msu in cfg_yaml['msus']
-                for msu in MSUGenerator(base_msu)]
+                for msu in MSUGenerator(base_msu, msu_type_name_to_id)]
 
         for rt in dfg['runtimes']:
             rt['routes'] = runtime_routes(rt['id'], msus, cfg_yaml['routes'])
