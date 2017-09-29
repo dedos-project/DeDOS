@@ -1,7 +1,7 @@
 ADDRESS_SANITIZER?=0
 DEBUG = 0
 DUMP_STATS = 1
-DO_PROFILE = 0
+DO_PROFILE = 1
 
 LOGS = \
 	   INFO \
@@ -12,7 +12,7 @@ LOGS = \
 	   #DFG_PARSING \
 	   ALL
 
-MSU_APPLICATIONS = webserver  pico_tcp ndlog
+MSU_APPLICATIONS = baremetal webserver pico_tcp ndlog
 
 NO_LOGS = \
 		  JSMN_PARSING \

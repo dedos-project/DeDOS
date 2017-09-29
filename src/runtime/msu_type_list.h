@@ -7,12 +7,21 @@
 #define MSU_TYPE_LIST_H_
 
 // These MSUs are always included
-#include "test_msu.h"
 #include "socket_msu.h"
 
 // These ifdef guards below allow you to optionally compile different groups of MSUS
 // Define the appropriate macro in the Makefile to enable compilation of the
 // MSU group
+
+#ifdef COMPILE_BAREMETAL_MSUS
+#include "baremetal/baremetal_msu.h"
+#include "baremetal/baremetal_socket_msu.h"
+#define BAREMETAL_MSUS  \
+        &BAREMETAL_MSU_TYPE, \
+        &BAREMETAL_SOCK_MSU_TYPE,
+#else
+#define BAREMETAL_MSUS
+#endif
 
 /** Enables compilation of webserver MSUs */
 #ifdef COMPILE_WEBSERVER_MSUS
@@ -68,8 +77,8 @@
 #ifndef MSU_TYPE_LIST
 #define MSU_TYPE_LIST  \
     { \
-        &TEST_MSU_TYPE, \
         &SOCKET_MSU_TYPE, \
+        BAREMETAL_MSUS \
         WEBSERVER_MSUS \
         NDLOG_MSUS \
         PICO_TCP_MSUS \

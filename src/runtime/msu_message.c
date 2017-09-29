@@ -135,7 +135,7 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
         free(msg);
         return NULL;
     }
-    PROFILE_EVENT(&msg->hdr, PROF_REMOTE_RECV);
+    PROFILE_EVENT(msg->hdr, PROF_REMOTE_RECV);
     size_t data_size = size - sizeof(msg->hdr);
     void *data = NULL;
     if (data_size > 0) {

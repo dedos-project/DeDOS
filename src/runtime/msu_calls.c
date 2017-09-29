@@ -105,8 +105,8 @@ int init_call_local_msu(struct local_msu *sender, struct local_msu *dest,
         log_error("Error initializing message header");
         return -1;
     }
-    SET_PROFILING(&hdr);
-    PROFILE_EVENT(&hdr, PROF_DEDOS_ENTRY);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
     return call_local_msu(sender, dest, &hdr, data_size, data);
 }
 
@@ -199,8 +199,8 @@ int init_call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
         log_error("Error initializing message header");
         return -1;
     }
-    SET_PROFILING(&hdr);
-    PROFILE_EVENT(&hdr, PROF_DEDOS_ENTRY);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
     return call_msu_type(sender, dst_type, &hdr, data_size, data);
 }
 
@@ -276,7 +276,7 @@ int init_call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoi
         log_error("Error initializing message header");
         return -1;
     }
-    SET_PROFILING(&hdr);
-    PROFILE_EVENT(&hdr, PROF_DEDOS_ENTRY);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
     return call_msu_endpoint(sender, endpoint, endpoint_type, &hdr, data_size, data);
 }
