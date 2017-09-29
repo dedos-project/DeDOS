@@ -4,6 +4,8 @@ import copy
 import yaml
 from collections import OrderedDict, defaultdict
 
+route_id = 1000
+
 """ Ordered dictionaries containing simple mappings from fields in json to fields in yaml. """
 
 ROOT_MAPPING = OrderedDict([
@@ -81,10 +83,6 @@ def dict_from_mapping(a_dict, mapping):
     return output
 
 
-def route_name(runtime_id, type, i):
-    return '%03d%01d' % (type, i)
-
-
 def add_routing(rt_id, froms, tos, routes, route_indexes):
     """
     Generates new routes to the MSUs given in tos, and adds them to the MSUs in
@@ -98,31 +96,23 @@ def add_routing(rt_id, froms, tos, routes, route_indexes):
                           each route that is generated
     :return: None
     """
-    type_counts = defaultdict(int)
-    for msu in tos:
-        type_counts[msu['type']] += 1
+    global route_id
 
+    # Create the new routes and add each destination
     new_routes = {}
+    for dest in tos:
+        if dest['type'] not in new_routes:
+            new_routes[dest['type']] = OrderedDict([('id', route_id), ('type', dest['type']), ('endpoints', [])])
+            route_id += 1
+        endpoints = new_routes[dest['type']]['endpoints']
+        endpoints.append({'key': len(endpoints) + 1, 'msu': dest['id']})
 
-    # Initialize new routes for each type of route being added
-    for t in type_counts:
-        name = route_name(rt_id, type, route_indexes[t])
-        route_indexes[t] += 1
-        new_routes[t] = {'id': name, 'destinations': {}, 'type': t}
-
-    # For each type, sequentially initialize each destination's routing key
-    type_iters = defaultdict(int)  # Maintaining iter value for each type
-    for msu in tos:
-        t = msu['type']
-        new_routes[t]['destinations'][msu['id']] = type_iters[t] + 1
-        type_iters[t] += 1
-
-    # Add these new routes to each msu in froms
+    # Now add these new routes to runtime and their ids to the msus in froms
+    routes.append(new_routes.values())
     for msu in froms:
-        msu['scheduling']['routing'].extend(new_routes)
-
-    # Now add the new routes to the main list
-    routes.append(new_routes.items())
+        if 'routes' not in msu['scheduling']:
+            msu['scheduling']['routes'] = []
+        msu['scheduling']['routes'].extend([new_routes[key]['id'] for key in new_routes])
 
 
 def runtime_routes(rt_id, msus, yaml_routes):
@@ -136,21 +126,15 @@ def runtime_routes(rt_id, msus, yaml_routes):
     :param yaml_routes: all of the routes as defined in the yaml config
     :return: the list of generated rotues
     """
-
-    # TODO: REMOVE THIS
-    # Tos: list of names
-    # Froms: list of names
-
-
     json_routes = []
     route_indexes = defaultdict(int)
 
     for i, route in enumerate(yaml_routes):
-        tos = list(route['to'])
-        froms = list(route['from'])
+        tos = route['to'] if isinstance(route['to'], list) else [route['to']]
+        froms = route['to'] if isinstance(route['from'], list) else [route['from']]
 
         from_msus = [msu for msu in msus if msu['name'] in froms and
-                     msu['scheduling']['runtime_id'] == rt_id]
+                     msu['scheduling']['runtime'] == rt_id]
 
         if len(from_msus) == 0:
             continue
@@ -267,6 +251,7 @@ class MSUGenerator(list):
 
         :param msu: the dictionary parsed from the yaml msu input
         """
+        list.__init__(self)
         self.reps = msu['reps'] if 'reps' in msu else 1
         self.starting_id = self.next_msu_id
         self.generated = 0
@@ -331,7 +316,7 @@ def make_dfg(cfg_fpath):
             dfg_msu_type['name'] = name
             dfg_msu_type['colocation_group'] = msu_type['colocation_group'] if 'colocation_group' in msu_type else 0
             if 'dependencies' in msu_type:
-                dfg_msu_type = [dict_from_mapping(dep, DEPENDENCY_MAPPING)
+                dfg_msu_type['dependencies'] = [dict_from_mapping(dep, DEPENDENCY_MAPPING)
                                 for dep in msu_type['dependencies']]
             dfg['MSU_types'].append(dfg_msu_type)
 
@@ -342,7 +327,7 @@ def make_dfg(cfg_fpath):
             rt['routes'] = runtime_routes(rt['id'], msus, cfg_yaml['routes'])
 
         dfg['MSUs'] = msus
-        fix_route_keys(dfg)
+        #fix_route_keys(dfg)
         stringify(dfg)
 
         return dfg
