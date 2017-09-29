@@ -14,6 +14,8 @@
 #include "cli.h"
 #include "dedos_msu_msg_type.h"
 #include "runtime_messages.h"
+#include "controller_dfg.h"
+#include "runtime_communication.h"
 #include "dfg.h"
 #include "api.h"
 
@@ -42,7 +44,16 @@ struct cmd_action {
 static void parse_cmd_action(char *cmd);
 
 static int parse_show_runtimes(char *args) {
-    // TODO: show_connected_peers();
+    struct dedos_dfg *dfg = get_dfg();
+    for (int i=0; i<dfg->n_runtimes; i++) {
+        int fd = runtime_fd(dfg->runtimes[i]->id);
+        printf("Runtime id: %d -- ", dfg->runtimes[i]->id);
+        if (fd <= 0) {
+            printf("NOT CONNECTED\n");
+        } else {
+            printf("fd: %d\n", fd);
+        }
+    }
     return 0;
 }
 
