@@ -4,6 +4,8 @@ import copy
 import yaml
 from collections import OrderedDict, defaultdict
 
+""" Ordered dictionaries containing simple mappings from fields in json to fields in yaml. """
+
 ROOT_MAPPING = OrderedDict([
     ('application_name', ['application', 'name']),
     ('global_ctl_ip', ['global_ctl', 'ip']),
@@ -12,23 +14,32 @@ ROOT_MAPPING = OrderedDict([
 
 MSU_MAPPING = OrderedDict([
     ('vertex_type', 'vertex_type'),
-    ('meta_routing', 'meta_routing'),
-    ('working_mode', 'working_mode'),
+    ('blocking_mode', 'blocking_mode'),
     ('type', 'type'),
     ('name', 'name'),
     ('scheduling', OrderedDict([
         ('thread_id', 'thread'),
-        ('runtime', ['scheduling', 'runtime_id']),
+        ('runtime', 'runtime'),
     ]))
 ])
 
+MSU_TYPE_MAPPING = OrderedDict([
+    ('id', 'id'),
+    ('meta_routing', 'meta_routing'),
+    ('cloneable', 'cloneable'),
+])
+
+DEPENDENCY_MAPPING = OrderedDict([
+    ('type', 'type'),
+    ('locality', 'locality'),
+])
+
 RUNTIME_MAPPING = OrderedDict([
-    ('id', 'runtime_id'),
     ('ip', 'ip'),
     ('port', 'port'),
-    ('num_cores', 'num_cores'),
-    ('num_threads', 'num_threads'),
-    ('num_pinned_threads', 'num_pinned_threads')
+    ('num_cores', 'n_cores'),
+    ('num_unpinned_threads', 'n_unpinned_threads'),
+    ('num_pinned_threads', 'n_pinned_threads')
 ])
 
 
@@ -62,11 +73,11 @@ def dict_from_mapping(a_dict, mapping):
     for key in mapping:
         value = mapping[key]
         if isinstance(value, dict):
-            output[key] = dict_from_mapping(a_dict, mapping)
+            output[key] = dict_from_mapping(a_dict, value)
         elif isinstance(value, list):
             output[key] = nested_dict_getter(a_dict, value)
         else:
-            output[key] = a_dict[key]
+            output[key] = a_dict[value]
     return output
 
 
@@ -125,6 +136,12 @@ def runtime_routes(rt_id, msus, yaml_routes):
     :param yaml_routes: all of the routes as defined in the yaml config
     :return: the list of generated rotues
     """
+
+    # TODO: REMOVE THIS
+    # Tos: list of names
+    # Froms: list of names
+
+
     json_routes = []
     route_indexes = defaultdict(int)
 
@@ -250,20 +267,12 @@ class MSUGenerator(list):
 
         :param msu: the dictionary parsed from the yaml msu input
         """
-        list.__init__(self)
         self.reps = msu['reps'] if 'reps' in msu else 1
         self.starting_id = self.next_msu_id
         self.generated = 0
 
         # Create the base MSU
         self.base_msu = dict_from_mapping(msu, MSU_MAPPING)
-        if 'dependencies' in msu and len(msu['dependencies']) > 0:
-            self.base_msu['dependencies'] = []
-            for dep in msu['dependencies']:
-                self.base_msu['dependencies'].append({
-                    'msu_type': dep['msu_type'],
-                    'locality': dep['locality']
-                })
         if 'init_data' in msu:
             self.base_msu['init_data'] = msu['init_data']
 
@@ -277,9 +286,9 @@ class MSUGenerator(list):
 
         :return: the next MSU
         """
-        if self.generated < self.reps:
+        while self.generated < self.reps:
             self.generated += 1
-            return self.generate_msu(self.generated - 1)
+            yield self.generate_msu(self.generated - 1)
         raise StopIteration()
 
     def generate_msu(self, i):
@@ -310,14 +319,27 @@ def make_dfg(cfg_fpath):
         cfg_yaml = yaml.load(cfg_file)
         dfg = dict_from_mapping(cfg_yaml, ROOT_MAPPING)
 
-        dfg['runtimes'] = [dict_from_mapping(rt, RUNTIME_MAPPING)
-                           for rt in cfg_yaml['runtimes'].values()]
+        dfg['runtimes'] = []
+        for (rt_id, rt) in cfg_yaml['runtimes'].items():
+            dfg_rt = dict_from_mapping(rt, RUNTIME_MAPPING)
+            dfg_rt['id'] = rt_id
+            dfg['runtimes'].append(dfg_rt)
+
+        dfg['MSU_types'] = []
+        for (name, msu_type) in cfg_yaml['msu_types'].items():
+            dfg_msu_type = dict_from_mapping(msu_type, MSU_TYPE_MAPPING)
+            dfg_msu_type['name'] = name
+            dfg_msu_type['colocation_group'] = msu_type['colocation_group'] if 'colocation_group' in msu_type else 0
+            if 'dependencies' in msu_type:
+                dfg_msu_type = [dict_from_mapping(dep, DEPENDENCY_MAPPING)
+                                for dep in msu_type['dependencies']]
+            dfg['MSU_types'].append(dfg_msu_type)
 
         msus = [msu for base_msu in cfg_yaml['msus']
                 for msu in MSUGenerator(base_msu)]
 
         for rt in dfg['runtimes']:
-            rt['routes'] = runtime_routes(rt['id'], msus, input['routes'])
+            rt['routes'] = runtime_routes(rt['id'], msus, cfg_yaml['routes'])
 
         dfg['MSUs'] = msus
         fix_route_keys(dfg)
