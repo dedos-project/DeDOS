@@ -358,7 +358,7 @@ struct cmd_action cmd_actions[] = {
     {"*allocate", parse_allocate, {},
         "gather all msu not possessing a 'scheduling' object, and compute a placement"},
 
-    {"*show stats", parse_show_stats, {"MSU-ID"},
+    {"show stats", parse_show_stats, {"MSU-ID"},
         "display stored time serie for a given msu"},
 
     {"loadcfg", parse_load_cfg, {"FILENAME"},
