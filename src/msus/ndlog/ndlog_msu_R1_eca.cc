@@ -93,7 +93,7 @@ int ndlog_msu_R1_eca_receive(struct local_msu *self, struct msu_msg *msg)
   //enum tuple_type updateType = SEND;
   //updateTupleType(projectResult, updateType);
   //printf("%d\n", projectResult->tuples.size());
-  result_to_msu_calls(projectResult, self, msg->hdr);
+  result_to_msu_calls(projectResult, self, &msg->hdr);
 
   return 0;
   //printf("ndlog_msu_R1_eca: Receive finished\n");

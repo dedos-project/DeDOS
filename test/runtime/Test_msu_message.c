@@ -36,16 +36,12 @@ struct local_msu default_msu= {
 };
 START_DEDOS_TEST(test_serialize_and_read_msu_msg__default) {
 
-    struct msu_msg_hdr hdr = {
-        .key = {
-            .key = {1234},
-        }
-    };
-
     int data = 12345;
 
     struct msu_msg msg = {
-        .hdr = &hdr,
+        .hdr = {
+            .key = {{1234}}
+        },
         .data_size = sizeof(data),
         .data = &data
     };
@@ -57,12 +53,12 @@ START_DEDOS_TEST(test_serialize_and_read_msu_msg__default) {
 
     size_t output_size;
     void *output = serialize_msu_msg(&msg, &default_type, &output_size);
-    ck_assert_int_eq(output_size, sizeof(hdr) + sizeof(data));
+    ck_assert_int_eq(output_size, sizeof(msg.hdr) + sizeof(data));
 
     write(fds[1], output, output_size);
     struct msu_msg *out = read_msu_msg(&default_msu, fds[0], output_size);
 
-    ck_assert_int_eq(out->hdr->key.key.k1, hdr.key.key.k1);
+    ck_assert_int_eq(out->hdr.key.key.k1, msg.hdr.key.key.k1);
 
     ck_assert_int_eq(out->data_size, msg.data_size);
     ck_assert_int_eq(*(int*)out->data, data);
@@ -127,7 +123,7 @@ START_DEDOS_TEST(test_serialize_and_read_msu_msg__custom) {
     };
 
     struct msu_msg msg = {
-        .hdr = &hdr,
+        .hdr = { .key = {{1234}} },
         .data_size = sizeof(data),
         .data = &data
     };
@@ -142,7 +138,7 @@ START_DEDOS_TEST(test_serialize_and_read_msu_msg__custom) {
 
     struct msu_msg *out = read_msu_msg(&custom_msu, fds[0], sz);
 
-    ck_assert_int_eq(out->hdr->key.key.k1, hdr.key.key.k1);
+    ck_assert_int_eq(out->hdr.key.key.k1, hdr.key.key.k1);
     ck_assert_int_eq(out->data_size, msg.data_size);
     struct layer_1 *data_out = out->data;
     ck_assert_int_eq(data_out->value_1, data.value_1);

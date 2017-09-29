@@ -26,7 +26,7 @@ int default_routing(struct msu_type *type, struct local_msu *sender,
                   sender->id, type->id);
         return -1;
     }
-    int rtn = get_route_endpoint(table, msg->hdr->key.id, output);
+    int rtn = get_route_endpoint(table, msg->hdr.key.id, output);
     if (rtn < 0) {
         log_error("Error getting endpoint from msu %d", sender->id);
         return -1;
@@ -50,7 +50,7 @@ int shortest_queue_route(struct msu_type *type, struct local_msu *sender,
                   sender->id, type->id);
         return -1;
     }
-    int rtn = get_shortest_queue_endpoint(table, msg->hdr->key.id, output);
+    int rtn = get_shortest_queue_endpoint(table, msg->hdr.key.id, output);
     if (rtn < 0) {
         log_error("Error getting shortest queue endpoint from msu %d", sender->id);
         return -1;
@@ -99,7 +99,7 @@ int route_to_id(struct msu_type *type, struct local_msu *sender, int msu_id,
 int route_to_origin_runtime(struct msu_type *type, struct local_msu *sender, struct msu_msg *msg,
                             struct msu_endpoint *output) {
 
-    uint32_t runtime_id = msg->hdr->provinance.path[0].runtime_id;
+    uint32_t runtime_id = msg->hdr.provinance.path[0].runtime_id;
 
     struct routing_table *table = get_type_from_route_set(&sender->routes, type->id);
     if (table == NULL) {
@@ -117,7 +117,7 @@ int route_to_origin_runtime(struct msu_type *type, struct local_msu *sender, str
         return -1;
     }
 
-    *output = eps[msg->hdr->key.id % n_rt_endpoints];
+    *output = eps[msg->hdr.key.id % n_rt_endpoints];
 
     return 0;
 }

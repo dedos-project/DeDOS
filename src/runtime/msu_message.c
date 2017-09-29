@@ -8,14 +8,9 @@
 
 #include <stdlib.h>
 
-struct msu_msg_hdr *init_msu_msg_hdr(struct msu_msg_key *key) {
-    struct msu_msg_hdr *hdr = calloc(1, sizeof(*hdr));
-    if (hdr == NULL) {
-        log_error("Error allocating msu message header");
-        return NULL;
-    }
+int init_msu_msg_hdr(struct msu_msg_hdr *hdr, struct msu_msg_key *key) {
     hdr->key = *key;
-    return hdr;
+    return 0;
 }
 
 unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
@@ -100,27 +95,16 @@ struct msu_msg *dequeue_msu_msg(struct msg_queue *q) {
     return msu_msg;
 }
 
-static struct msu_msg_hdr *read_msu_msg_hdr(int fd) {
-    struct msu_msg_hdr *hdr = malloc(sizeof(*hdr));
-    if (hdr == NULL) {
-        log_perror("Error allocating msu msg header");
-        return NULL;
-    }
+int read_msu_msg_hdr(int fd, struct msu_msg_hdr *hdr) {
     if (read_payload(fd, sizeof(*hdr), hdr) != 0) {
         log_error("Error reading msu msg header from fd %d", fd);
-        free(hdr);
-        return NULL;
+        return -1;
     }
 
-    return hdr;
+    return 0;
 }
 
-static void destroy_msu_msg_hdr(struct msu_msg_hdr *hdr) {
-    free(hdr);
-}
-
-void destroy_msu_msg_contents(struct msu_msg *msg) {
-    destroy_msu_msg_hdr(msg->hdr);
+void destroy_msu_msg_and_contents(struct msu_msg *msg) {
     free(msg->data);
     free(msg);
 }
@@ -129,7 +113,7 @@ struct msu_msg *create_msu_msg(struct msu_msg_hdr *hdr,
                                      size_t data_size, 
                                      void *data) {
     struct msu_msg *msg = malloc(sizeof(*msg));
-    msg->hdr = hdr;
+    msg->hdr = *hdr;
     msg->data_size = data_size;
     msg->data = data;
     return msg;
@@ -141,37 +125,35 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
         return NULL;
     }
     log(LOG_MSU_MSG_READ, "Reading header from %d", fd);
-    struct msu_msg_hdr *hdr = read_msu_msg_hdr(fd);
-    PROFILE_EVENT(hdr, PROF_REMOTE_RECV);
-    if (hdr == NULL) {
-        log_perror("Error reading msu msg header");
+    struct msu_msg *msg = malloc(sizeof(*msg));
+    if (msg == NULL) {
+        log_perror("Error allocating MSU message");
         return NULL;
     }
-    size_t data_size = size - sizeof(*hdr);
+    if (read_msu_msg_hdr(fd, &msg->hdr) != 0) {
+        log_error("Error reading msu message header");
+        free(msg);
+        return NULL;
+    }
+    PROFILE_EVENT(&msg->hdr, PROF_REMOTE_RECV);
+    size_t data_size = size - sizeof(msg->hdr);
     void *data = NULL;
     if (data_size > 0) {
         data = malloc(data_size);
         if (data == NULL) {
             log_perror("Error allocating msu msg of size %d", (int)data_size);
-            destroy_msu_msg_hdr(hdr);
+            free(msg);
             return NULL;
         }
         log(LOG_MSU_MSG_READ, "Reading payload of size %d from %d", (int)data_size, fd);
         if (read_payload(fd, data_size, data) != 0) {
             log_perror("Error reading msu msg payload of size %d", (int)data_size);
-            destroy_msu_msg_hdr(hdr);
+            free(msg);
             free(data);
             return NULL;
         }
         log(LOG_MSU_MSG_DESERIALIZE, "Deserialized MSU message of size %d", (int)data_size);
     }
-    struct msu_msg *msg = malloc(sizeof(*msg));
-    if (msg == NULL) {
-        log_perror("Error allocating msu msg");
-        return NULL;
-    }
-
-    msg->hdr = hdr;
     msg->data_size = data_size;
     if (msu->type->deserialize) {
         msg->data = msu->type->deserialize(msu, data_size, data, &msg->data_size);
@@ -201,8 +183,8 @@ void *serialize_msu_msg(struct msu_msg *msg, struct msu_type *dst_type, size_t *
             free(payload);
             return NULL;
         }
-        memcpy(output, msg->hdr, sizeof(*msg->hdr));
-        memcpy(output + sizeof(*msg->hdr), payload, payload_size);
+        memcpy(output, &msg->hdr, sizeof(msg->hdr));
+        memcpy(output + sizeof(msg->hdr), payload, payload_size);
 
         *size_out = serialized_size;
         return output;
@@ -215,8 +197,8 @@ void *serialize_msu_msg(struct msu_msg *msg, struct msu_type *dst_type, size_t *
             return NULL;
         }
 
-        memcpy(output, msg->hdr, sizeof(*msg->hdr));
-        memcpy(output + sizeof(*msg->hdr), msg->data, msg->data_size);
+        memcpy(output, &msg->hdr, sizeof(msg->hdr));
+        memcpy(output + sizeof(msg->hdr), msg->data, msg->data_size);
 
         *size_out = serialized_size;
         return output;

@@ -26,7 +26,7 @@ static int handle_read(struct read_state *read_state,
         read_state->conn.status = CON_READING;
         log(LOG_WEBSERVER_READ, "Read incomplete. Re-enabling (fd: %d)", read_state->conn.fd);
         free(msg->data);
-        msu_monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self, msg->hdr);
+        msu_monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self, &msg->hdr);
         return 0;
     } else if (rtn & WS_ERROR) {
         free(msg->data);
@@ -39,8 +39,8 @@ static int handle_read(struct read_state *read_state,
     struct read_state *out = malloc(sizeof(*out));
     memcpy(out, read_state, sizeof(*read_state));
     free(msg->data);
-    msu_free_state(self, &msg->hdr->key);
-    call_msu_type(self, &WEBSERVER_HTTP_MSU_TYPE, msg->hdr, sizeof(*out), out);
+    msu_free_state(self, &msg->hdr.key);
+    call_msu_type(self, &WEBSERVER_HTTP_MSU_TYPE, &msg->hdr, sizeof(*out), out);
     return 0;
 }
 
@@ -54,12 +54,12 @@ static int handle_accept(struct read_state *read_state,
         return rtn;
     } else if (rtn & WS_ERROR) {
         close_connection(&read_state->conn);
-        msu_free_state(self, &msg->hdr->key);
+        msu_free_state(self, &msg->hdr.key);
         free(msg->data);
         return -1;
     } else {
         read_state->conn.status = CON_SSL_CONNECTING;
-        return msu_monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self, msg->hdr);
+        return msu_monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self, &msg->hdr);
     }
 }
 
@@ -68,7 +68,7 @@ static int read_http_request(struct local_msu *self,
     struct ws_read_state *msu_state = self->msu_state;
 
     struct connection conn_in;
-    int sender_type_id = msu_msg_sender_type(&msg->hdr->provinance);
+    int sender_type_id = msu_msg_sender_type(&msg->hdr.provinance);
     switch (sender_type_id) {
         case SOCKET_MSU_TYPE_ID:;
             struct socket_msg *msg_in = msg->data;
@@ -83,9 +83,9 @@ static int read_http_request(struct local_msu *self,
     }
 
     size_t size = -1;
-    struct read_state *read_state = msu_get_state(self, &msg->hdr->key, &size);
+    struct read_state *read_state = msu_get_state(self, &msg->hdr.key, &size);
     if (read_state == NULL) {
-        read_state = msu_init_state(self, &msg->hdr->key, sizeof(*read_state));
+        read_state = msu_init_state(self, &msg->hdr.key, sizeof(*read_state));
         init_read_state(read_state, &conn_in);
     } else {
         log(LOG_WEBSERVER_READ, "Retrieved read ptr %p", read_state);

@@ -37,7 +37,7 @@ static int increment_id() {
 }
 
 static int receive(struct local_msu *self, struct msu_msg *msg) {
-    unsigned int sender_type_id = msu_msg_sender_type(&msg->hdr->provinance);
+    unsigned int sender_type_id = msu_msg_sender_type(&msg->hdr.provinance);
 
     struct test_msu_state *state = self->msu_state;
     struct test_msu_msg *test_msg;
@@ -84,7 +84,7 @@ static int receive(struct local_msu *self, struct msu_msg *msg) {
     if (test_msg->id >= 0) {
         record_start_time(MSU_STAT1, test_msg->id);
     }
-    return call_msu_type(self, self->type, msg->hdr, sizeof(*test_msg), test_msg);
+    return call_msu_type(self, self->type, &msg->hdr, sizeof(*test_msg), test_msg);
 }
 
 static int init(struct local_msu *self, struct msu_init_data *data) {

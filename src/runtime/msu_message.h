@@ -37,7 +37,7 @@ struct msu_msg_hdr {
 };
 
 struct msu_msg {
-    struct msu_msg_hdr *hdr;
+    struct msu_msg_hdr hdr;
     size_t data_size;
     void *data;
 };
@@ -47,12 +47,12 @@ unsigned int msu_msg_sender_type(struct msg_provinance *prov);
 int add_provinance(struct msg_provinance *prov,
                    struct local_msu *sender);
 
-struct msu_msg_hdr *init_msu_msg_hdr(struct msu_msg_key *key);
+int init_msu_msg_hdr(struct msu_msg_hdr *hdr, struct msu_msg_key *key);
 
 int set_msg_key(int32_t id, struct msu_msg_key *key);
 int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key);
 
-void destroy_msu_msg_contents(struct msu_msg *msg);
+void destroy_msu_msg_and_contents(struct msu_msg *msg);
 
 struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size);
 

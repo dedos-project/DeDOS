@@ -21,28 +21,28 @@ static int handle_db(struct http_state *http_state,
     int rtn = access_database(http_state->parser.url, &http_state->db);
 
     if (rtn & WS_ERROR) {
-        msu_free_state(self, &msg->hdr->key);
+        msu_free_state(self, &msg->hdr.key);
         log_warn("HELP!");
         return -1;
     } else if (rtn & (WS_INCOMPLETE_READ | WS_INCOMPLETE_WRITE)) {
         log(LOG_HTTP_MSU, "Partial db access, requeuing state %p", http_state);
         http_state->conn.status = CON_DB_REQUEST;
-        return msu_monitor_fd(http_state->db.db_fd, RTN_TO_EVT(rtn), self, msg->hdr);
+        return msu_monitor_fd(http_state->db.db_fd, RTN_TO_EVT(rtn), self, &msg->hdr);
     } else {
         struct response_state *resp = malloc(sizeof(*resp));
         init_response_state(resp, &http_state->conn);
         strcpy(resp->url, http_state->parser.url);
-        msu_free_state(self, &msg->hdr->key);
+        msu_free_state(self, &msg->hdr.key);
         // SHOULDI: be freeing this data?
         free(msg->data);
 
         if (!has_regex(resp->url)) {
             log(LOG_HTTP_MSU, "Crafting response for url %s", resp->url);
             resp->resp_len = craft_nonregex_response(resp->url, resp->resp);
-            return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
+            return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         }
 
-        return call_msu_type(self, &WEBSERVER_REGEX_MSU_TYPE, msg->hdr, sizeof(*resp), resp);
+        return call_msu_type(self, &WEBSERVER_REGEX_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
     }
 }
 
@@ -52,7 +52,7 @@ static int handle_parsing(struct read_state *read_state,
                           struct msu_msg *msg) {
     if (read_state->req_len == -1) {
         log(LOG_HTTP_MSU, "Clearing state (fd: %d)", read_state->conn.fd);
-        msu_free_state(self, &msg->hdr->key);
+        msu_free_state(self, &msg->hdr.key);
         return 0;
     }
     log(LOG_HTTP_MSU, "Parsing request: %s (fd: %d)", read_state->req, read_state->conn.fd);
@@ -61,13 +61,13 @@ static int handle_parsing(struct read_state *read_state,
     if (rtn & WS_COMPLETE) {
         return handle_db(http_state, self, msg);
     } else if (rtn & WS_ERROR) {
-        msu_free_state(self, &msg->hdr->key);
+        msu_free_state(self, &msg->hdr.key);
         return -1;
     } else {
         http_state->conn.status = CON_READING;
         log(LOG_PARTIAL_READS, "Got partial request %s (fd: %d)",
                    read_state->req, read_state->conn.fd);
-        return call_msu_type(self, &WEBSERVER_READ_MSU_TYPE, msg->hdr, msg->data_size, msg->data);
+        return call_msu_type(self, &WEBSERVER_READ_MSU_TYPE, &msg->hdr, msg->data_size, msg->data);
     }
 }
 
@@ -76,9 +76,9 @@ static int craft_http_response(struct local_msu *self,
     struct read_state *read_state = msg->data;
 
     size_t size = 0;
-    struct http_state *http_state = msu_get_state(self, &msg->hdr->key, &size);
+    struct http_state *http_state = msu_get_state(self, &msg->hdr.key, &size);
     if (http_state == NULL) {
-        http_state = msu_init_state(self, &msg->hdr->key, sizeof(*http_state));
+        http_state = msu_init_state(self, &msg->hdr.key, sizeof(*http_state));
         read_state->conn.status = CON_READING;
         init_http_state(http_state, &read_state->conn);
         memcpy(&http_state->conn, &read_state->conn, sizeof(read_state->conn));
@@ -87,7 +87,7 @@ static int craft_http_response(struct local_msu *self,
                    http_state, http_state->conn.status);
         if (http_state->conn.status != CON_DB_REQUEST) {
             log(LOG_PARTIAL_READS, "Recovering partial read state ID: %d",
-                       msg->hdr->key.id);
+                       msg->hdr.key.id);
         }
     }
     int rtn;
@@ -98,7 +98,7 @@ static int craft_http_response(struct local_msu *self,
             rtn = handle_parsing(read_state, http_state, self, msg);
             if (rtn < 0) {
                 log_error("Error processing fd %d, ID %u", read_state->conn.fd, 
-                          (msg->hdr->key.id));
+                          (msg->hdr.key.id));
             }
             return rtn;
         case CON_DB_REQUEST:
