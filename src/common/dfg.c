@@ -116,7 +116,7 @@ uint8_t str_to_vertex_type(char *str_type) {
     if (strstr(str_type, "exit") != NULL) {
         vertex_type |= EXIT_VERTEX_TYPE;
     }
-    if (vertex_type == 0 && strstr(str_type, "nop") != NULL) {
+    if (vertex_type == 0 && strstr(str_type, "nop") == NULL) {
         log_warn("Unknown vertex type %s specified (neither exit, entry, nop found)", str_type);
         return 0;
     }
