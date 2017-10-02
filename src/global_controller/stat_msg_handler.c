@@ -1,6 +1,7 @@
 #include "stat_msg_handler.h"
 #include "timeseries.h"
 #include "msu_stats.h"
+#include "scheduling_decision.h"
 #include "logging.h"
 
 #define MAX_STAT_SAMPLES 128
@@ -41,6 +42,11 @@ int handle_serialized_stats_buffer(void *buffer, size_t buffer_len) {
             log_error("Error processing stat sample");
         }
     }
+
+#ifdef DYN_SCHED
+    perform_cloning();
+#endif
+
     return 0;
 }
 

@@ -61,6 +61,29 @@ uint32_t generate_endpoint_key(struct dfg_route *route) {
     return route->endpoints[route->n_endpoints-1]->key + 1;
 }
 
+pthread_mutex_t dfg_mutex;
+
+int init_dfg_lock() {
+    return pthread_mutex_init(&dfg_mutex, NULL);
+}
+
+int lock_dfg() {
+    int rtn = pthread_mutex_lock(&dfg_mutex);
+    if (rtn < 0) {
+        log_error("Error locking dfg");
+        return -1;
+    }
+    return 0;
+}
+
+int unlock_dfg() {
+    int rtn = pthread_mutex_unlock(&dfg_mutex);
+    if (rtn < 0) {
+        log_perror("Error unlocking dfg");
+        return -1;
+    }
+    return 0;
+}
 struct dedos_dfg *get_dfg(void) {
     return DFG;
 }

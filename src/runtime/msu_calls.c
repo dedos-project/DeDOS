@@ -72,7 +72,7 @@ int call_local_msu(struct local_msu *sender, struct local_msu *dest,
     log(LOG_MSU_ENQUEUES, "Enqueing data %p directly to destination %d",
                msg->data, dest->id);
 
-    int rtn = add_provinance(&msg->hdr->provinance, sender);
+    int rtn = add_provinance(&msg->hdr.provinance, sender);
     if (rtn < 0) {
         log_warn("Could not add provinance to message %p", msg);
     }
@@ -100,14 +100,14 @@ int call_local_msu(struct local_msu *sender, struct local_msu *dest,
  */
 int init_call_local_msu(struct local_msu *sender, struct local_msu *dest,
                         struct msu_msg_key *key, size_t data_size, void *data) {
-    struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
-    SET_PROFILING(hdr);
-    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
-    if (hdr == NULL) {
-        log_error("Error initializing msu message header");
+    struct msu_msg_hdr hdr;
+    if (init_msu_msg_hdr(&hdr, key) != 0) {
+        log_error("Error initializing message header");
         return -1;
     }
-    return call_local_msu(sender, dest, hdr, data_size, data);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
+    return call_local_msu(sender, dest, &hdr, data_size, data);
 }
 
 
@@ -128,7 +128,7 @@ int call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
 
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
 
-    int rtn = add_provinance(&msg->hdr->provinance, sender);
+    int rtn = add_provinance(&msg->hdr.provinance, sender);
     if (rtn < 0) {
         log_warn("Could not add provinance to message %p", msg);
     }
@@ -172,7 +172,7 @@ int call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
 
             // Since the data has been sent to a remote MSU, we can now
             // free the msu message from this runtime's memory
-            destroy_msu_msg_contents(msg);
+            destroy_msu_msg_and_contents(msg);
             return 0;
         default:
             log_error("Unknown MSU locality: %d", dst.locality);
@@ -194,14 +194,14 @@ int call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
  */
 int init_call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
                        struct msu_msg_key *key, size_t data_size, void *data) {
-    struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
-    SET_PROFILING(hdr);
-    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
-    if (hdr == NULL) {
-        log_error("Error initializing msu messgae header");
+    struct msu_msg_hdr hdr;
+    if (init_msu_msg_hdr(&hdr, key) != 0) {
+        log_error("Error initializing message header");
         return -1;
     }
-    return call_msu_type(sender, dst_type, hdr, data_size, data);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
+    return call_msu_type(sender, dst_type, &hdr, data_size, data);
 }
 
 /**
@@ -220,7 +220,7 @@ int call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
                       struct msu_msg_hdr *hdr, size_t data_size, void *data) {
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
 
-    int rtn = add_provinance(&msg->hdr->provinance, sender);
+    int rtn = add_provinance(&msg->hdr.provinance, sender);
     if (rtn < 0) {
         log_warn("Could not add provinance to message %p", msg);
     }
@@ -271,12 +271,12 @@ int call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
 int init_call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
                            struct msu_type *endpoint_type,
                            struct msu_msg_key *key, size_t data_size, void *data) {
-    struct msu_msg_hdr *hdr = init_msu_msg_hdr(key);
-    SET_PROFILING(hdr);
-    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
-    if (hdr == NULL) {
-        log_error("Error initializing msu message header");
+    struct msu_msg_hdr hdr;
+    if (init_msu_msg_hdr(&hdr, key) != 0) {
+        log_error("Error initializing message header");
         return -1;
     }
-    return call_msu_endpoint(sender, endpoint, endpoint_type, hdr, data_size, data);
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
+    return call_msu_endpoint(sender, endpoint, endpoint_type, &hdr, data_size, data);
 }

@@ -117,8 +117,7 @@ START_DEDOS_TEST(test_process_fwd_to_msu_message) {
     int fds[2];
     fds[0] = init_sock_pair(&fds[1]);
 
-    struct msu_msg_hdr hdr = {};
-    struct msu_msg msg = {.hdr = &hdr};
+    struct msu_msg msg = {.hdr = {}};
 
     size_t written_size;
     void *serialized = serialize_msu_msg(&msg, &msu_type, &written_size);

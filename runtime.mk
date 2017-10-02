@@ -1,7 +1,7 @@
 ADDRESS_SANITIZER?=0
 DEBUG = 0
 DUMP_STATS = 1
-DO_PROFILE = 0
+DO_PROFILE = 1
 
 LOGS = \
 	   INFO \
@@ -12,7 +12,7 @@ LOGS = \
 	   #DFG_PARSING \
 	   ALL
 
-MSU_APPLICATIONS = #webserver  pico_tcp ndlog 
+MSU_APPLICATIONS = baremetal webserver pico_tcp ndlog
 
 NO_LOGS = \
 		  JSMN_PARSING \
@@ -50,7 +50,7 @@ LEG_BLD_DIR = $(BLD_DIR)legacy/
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 
-LEGACY_LIBS =# picotcp
+LEGACY_LIBS = picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
@@ -101,6 +101,10 @@ endif
 
 ifeq ($(DO_PROFILE), 1)
   CFLAGS+=-DDEDOS_PROFILER
+endif
+
+ifneq (,$(findstring ndlog,$(MSU_APPLICATIONS)))
+  CFLAGS+=-lgmp
 endif
 
 LEG_MAKE=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_DIR)$(LEG_LIB)/Makefile)

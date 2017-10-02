@@ -4,12 +4,12 @@
     "global_ctl_port": 8090,
     "MSU_types": [
         {
-            "id": 10,
-            "name": "Socket_MSU"
+            "id": 110,
+            "name": "BM_socket"
         },
         {
             "id": 100,
-            "name": "Test_MSU"
+            "name": "BM_MSU"
         }
     ],
     "runtimes": [
@@ -63,7 +63,7 @@
     "MSUs": [
             {
                 "id": 1,
-                "type": 10,
+                "type": 110,
                 "blocking_mode": "blocking",
                 "vertex_type": "entry",
                 "scheduling": {
@@ -73,7 +73,7 @@
                         1001
                     ]
                 },
-                "init_data": "8081, 100",
+                "init_data": "8081 4",
             },
             {
                 "id": 2,
@@ -85,8 +85,7 @@
                     "routes": [
                         1002
                     ]
-                },
-                "init_data": "0, 3",
+                }
             },
             {
                 "id": 3,

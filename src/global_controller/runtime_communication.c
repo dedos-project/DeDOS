@@ -20,6 +20,13 @@ struct runtime_endpoint {
 
 static struct runtime_endpoint runtime_endpoints[MAX_RUNTIME_ID];
 
+int runtime_fd(unsigned int runtime_id) {
+    if (runtime_endpoints[runtime_id].fd > 0) {
+        return runtime_endpoints[runtime_id].fd;
+    }
+    return 0;
+}
+
 int send_to_runtime(unsigned int runtime_id, struct ctrl_runtime_msg_hdr *hdr, void *payload) {
     if (runtime_id > MAX_RUNTIME_ID) {
         log_error("Requested runtime %d is greater than max runtime ID %d",

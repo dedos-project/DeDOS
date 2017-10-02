@@ -10,13 +10,13 @@ void set_profiling(struct msu_msg_hdr *hdr);
 void init_profiler(float tag_probability);
 #ifdef DEDOS_PROFILER
 
-#define SET_PROFILING(hdr) set_profiling(hdr)
+#define SET_PROFILING(hdr) set_profiling(&hdr)
 
 #define INIT_PROFILER(tprof) init_profiler(tprof)
 
 #define PROFILE_EVENT(hdr, stat_id) \
-    if (hdr->do_profile && hdr->key.id != 0) \
-        record_stat(stat_id, PROFILER_ITEM_ID, (double)hdr->key.id, true)
+    if (hdr.do_profile && hdr.key.id != 0) \
+        record_stat(stat_id, PROFILER_ITEM_ID, (double)hdr.key.id, true)
 #else
 
 #define SET_PROFILING(hdr)

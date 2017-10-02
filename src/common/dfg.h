@@ -168,6 +168,7 @@ void set_dfg(struct dedos_dfg *dfg);
 struct dfg_runtime *get_dfg_runtime(unsigned int id);
 struct dfg_msu_type *get_dfg_msu_type(unsigned int id);
 struct dfg_route *get_dfg_route(unsigned int id);
+struct dfg_route *get_dfg_rt_route_by_type(struct dfg_runtime *rt, struct dfg_msu_type *route_type);
 struct dfg_route *get_dfg_msu_route_by_type(struct dfg_msu *msu, struct dfg_msu_type *route_type);
 struct dfg_msu *get_dfg_msu(unsigned int id);
 struct dfg_thread *get_dfg_thread(struct dfg_runtime *rt, unsigned int id);
@@ -201,8 +202,5 @@ int mod_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *e
                            uint32_t new_key);
 struct dfg_thread * create_dfg_thread(struct dfg_runtime *rt, int thread_id,
                                       enum thread_mode mode);
-
-
-int show_connected_peers(void);
 
 #endif //DFG_H_

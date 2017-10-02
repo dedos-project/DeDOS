@@ -103,6 +103,10 @@ static int add_to_local_registry(struct local_msu *msu) {
  * @return local msu instance, or NULL on error
  */
 struct local_msu *get_local_msu(unsigned int id) {
+    if (id >= MAX_MSU_ID) {
+        log_error("MSU id %u too high!", id);
+        return NULL;
+    }
     if (pthread_rwlock_rdlock(&msu_registry_lock) != 0) {
         log_perror("Error opening read lock on MSU registry");
         return NULL;

@@ -189,7 +189,7 @@ static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
     if (rtn < 0) {
         log_error("Error enqueuing inter-msu message to MSU %d from runtime fd %d",
                   msu_id, fd);
-        destroy_msu_msg_contents(msu_msg);
+        destroy_msu_msg_and_contents(msu_msg);
         return -1;
     }
     return 0;

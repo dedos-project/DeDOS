@@ -6,7 +6,7 @@
 #include "webserver/regex_msu.h"
 
 static int routing_receive(struct local_msu *self, struct msu_msg *msg) {
-    return call_msu_type(self, &WEBSERVER_REGEX_MSU_TYPE, msg->hdr, msg->data_size, msg->data);
+    return call_msu_type(self, &WEBSERVER_REGEX_MSU_TYPE, &msg->hdr, msg->data_size, msg->data);
 }
 
 struct msu_type WEBSERVER_REGEX_ROUTING_MSU_TYPE = {

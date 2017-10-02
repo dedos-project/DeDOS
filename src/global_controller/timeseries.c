@@ -53,7 +53,7 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
 
 /** The length of the begnning and end of the timeseries that's printed
  * when print_timeseries() is called */
-#define PRINT_LEN 8
+#define PRINT_LEN 6
 
 /** Prints the beginning and end of a timeseries.
  * @param timeseries The timeseries to print

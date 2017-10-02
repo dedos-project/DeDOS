@@ -1,9 +1,31 @@
 #include "dfg.h"
 #include "logging.h"
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 struct dedos_dfg *dfg;
+pthread_mutex_t dfg_mutex;
+pthread_t locking_thread;
+bool dfg_locked = false;
+
+bool check_dfg_lock() {
+    if (dfg_locked && pthread_self() != locking_thread) {
+        pthread_mutex_lock(&dfg_mutex);
+        return true;
+    }
+    return false;
+}
+
+// HALP: THIS IS UGLY
+#define CHECK_LOCK \
+    bool lock_local__ = check_dfg_lock()
+
+#define UNLOCK \
+    if (lock_local__) { \
+        pthread_mutex_unlock(&dfg_mutex); \
+    }
+
 
 void set_dfg(struct dedos_dfg *dfg_in) {
     dfg = dfg_in;
@@ -12,15 +34,18 @@ void set_dfg(struct dedos_dfg *dfg_in) {
 #define SEARCH_FOR_ID(s, n, field, id_) \
     if (dfg == NULL) \
         return NULL; \
+    CHECK_LOCK; \
     for (int i=0; i<(n); ++i) { \
         if (field[i]->id == id_) { \
+            UNLOCK; \
             return field[i]; \
         } \
     } \
+    UNLOCK \
     return NULL;
 
 struct dfg_runtime *get_dfg_runtime(unsigned int runtime_id) {
-    SEARCH_FOR_ID(dfg, dfg->n_runtimes, dfg->runtimes, runtime_id)
+    SEARCH_FOR_ID(dfg, dfg->n_runtimes, dfg->runtimes, runtime_id);
 }
 
 struct dfg_msu_type *get_dfg_msu_type(unsigned int id){
@@ -28,16 +53,19 @@ struct dfg_msu_type *get_dfg_msu_type(unsigned int id){
 }
 
 struct dfg_route *get_dfg_runtime_route(struct dfg_runtime *rt, unsigned int id) {
-    SEARCH_FOR_ID(rt, rt->n_routes, rt->routes, id)
+    SEARCH_FOR_ID(rt, rt->n_routes, rt->routes, id);
 }
 
 struct dfg_route *get_dfg_route(unsigned int id) {
+    CHECK_LOCK;
     for (int i=0; i<dfg->n_runtimes; i++) {
         struct dfg_route *route = get_dfg_runtime_route(dfg->runtimes[i], id);
         if (route != NULL) {
+            UNLOCK;
             return route;
         }
     }
+    UNLOCK;
     return NULL;
 }
 
@@ -45,12 +73,27 @@ struct dfg_msu *get_dfg_msu(unsigned int id){
     SEARCH_FOR_ID(dfg, dfg->n_msus, dfg->msus, id)
 }
 
+struct dfg_route *get_dfg_rt_route_by_type(struct dfg_runtime *rt, struct dfg_msu_type *type) {
+    CHECK_LOCK;
+    for (int i=0; i<rt->n_routes; i++) {
+        if (rt->routes[i]->msu_type == type) {
+            UNLOCK;
+            return rt->routes[i];
+        }
+    }
+    UNLOCK;
+    return NULL;
+}
+
 struct dfg_route *get_dfg_msu_route_by_type(struct dfg_msu *msu, struct dfg_msu_type *route_type) {
+    CHECK_LOCK;
     for (int i=0; i<msu->scheduling.n_routes; i++) {
         if (msu->scheduling.routes[i]->msu_type == route_type) {
+            UNLOCK;
             return msu->scheduling.routes[i];
         }
     }
+    UNLOCK;
     return NULL;
 }
 
@@ -59,29 +102,38 @@ struct dfg_thread *get_dfg_thread(struct dfg_runtime *rt, unsigned int id){
 }
 
 struct dfg_route_endpoint *get_dfg_route_endpoint(struct dfg_route *route, unsigned int msu_id) {
+    CHECK_LOCK;
     for (int i=0; i<route->n_endpoints; i++) {
         if (route->endpoints[i]->msu->id == msu_id) {
+            UNLOCK;
             return route->endpoints[i];
         }
     }
+    UNLOCK;
     return NULL;
 }
 
 int msu_has_route(struct dfg_msu *msu, struct dfg_route *route) {
+    CHECK_LOCK;
     for (int i=0; i<msu->scheduling.n_routes; i++) {
         if (msu->scheduling.routes[i] == route) {
+            UNLOCK;
             return 1;
         }
     }
+    UNLOCK;
     return 0;
 }
 
 struct dfg_msu *msu_type_on_runtime(struct dfg_runtime *rt, struct dfg_msu_type *type) {
+    CHECK_LOCK;
     for (int i=0; i<type->n_instances; i++) {
         if (type->instances[i]->scheduling.runtime == rt) {
+            UNLOCK
             return type->instances[i];
         }
     }
+    UNLOCK
     return NULL;
 }
 
@@ -116,7 +168,7 @@ uint8_t str_to_vertex_type(char *str_type) {
     if (strstr(str_type, "exit") != NULL) {
         vertex_type |= EXIT_VERTEX_TYPE;
     }
-    if (vertex_type == 0 && strstr(str_type, "nop") != NULL) {
+    if (vertex_type == 0 && strstr(str_type, "nop") == NULL) {
         log_warn("Unknown vertex type %s specified (neither exit, entry, nop found)", str_type);
         return 0;
     }
@@ -185,6 +237,7 @@ static int schedule_msu_on_thread(struct dfg_msu *msu, struct dfg_thread *thread
         log_error("Too many MSUs in DFG");
         return -1;
     }
+    CHECK_LOCK;
     dfg->msus[dfg->n_msus] = msu;
     dfg->n_msus++;
 
@@ -196,7 +249,7 @@ static int schedule_msu_on_thread(struct dfg_msu *msu, struct dfg_thread *thread
 
     msu->scheduling.thread = thread;
     msu->scheduling.runtime = rt;
-
+    UNLOCK;
     return 0;
 }
 
@@ -281,6 +334,7 @@ struct dfg_route *create_dfg_route(unsigned int id, struct dfg_msu_type *type,
 }
 
 int delete_dfg_route(struct dfg_route *route) {
+    CHECK_LOCK;
     for (int i=0; i<dfg->n_msus; i++) {
         struct dfg_msu *msu = dfg->msus[i];
         for (int j=0; j<msu->scheduling.n_routes; j++) {
@@ -305,6 +359,7 @@ int delete_dfg_route(struct dfg_route *route) {
         rt->routes[i] = rt->routes[i+1];
     }
     rt->n_routes--;
+    UNLOCK;
     return 0;
 }
 
@@ -325,7 +380,9 @@ int add_dfg_route_to_msu(struct dfg_route *route, struct dfg_msu *msu) {
 
     if (route->n_endpoints == 0) {
         log_warn("Route with no destinations added to an MSU! "
-                 "This could have unfortunate results!");
+                 "(Route: %d, msu: %d) "
+                 "This could have unfortunate results!",
+                 (int)route->id, (int)msu->id);
     }
 
     msu->scheduling.routes[msu->scheduling.n_routes] = route;
