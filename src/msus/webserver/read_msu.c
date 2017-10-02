@@ -12,6 +12,8 @@
 #include "local_files.h"
 #include "msu_calls.h"
 
+#include <signal.h>
+
 struct ws_read_state {
     int use_ssl;
 };
@@ -91,7 +93,7 @@ static int read_http_request(struct local_msu *self,
         log(LOG_WEBSERVER_READ, "Retrieved read ptr %p", read_state);
     }
     if (read_state->conn.fd != conn_in.fd) {
-        log_error("Got non-matching FDs! %d vs %d", read_state->conn.fd, conn_in.fd);
+        log_error("Got non-matching FDs! state: %d vs input: %d", read_state->conn.fd, conn_in.fd);
         return -1;
     }
 
@@ -151,6 +153,9 @@ static int init_ssl_ctx(struct msu_type UNUSED *type) {
         log_error("Error loading SSL cert");
         return -1;
     }
+
+    signal(SIGPIPE, SIG_IGN);
+
     return 0;
 }
 

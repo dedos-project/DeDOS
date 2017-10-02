@@ -176,6 +176,8 @@ int add_endpoint(unsigned int msu_id, uint32_t key, unsigned int route_id) {
         // TODO: Remove endpoint
         return -1;
     }
+    log(LOG_API_CALLS, "Added endpoint %u with key %d to route %u",
+        msu_id, (int)key, route_id);
     return 0;
 }
 

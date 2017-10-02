@@ -219,8 +219,8 @@ PARSE_FN(set_msu_type) {
     }
     vertex->type = type;
 
-    type->n_instances++;
     type->instances[type->n_instances] = vertex;
+    type->n_instances++;
     return 0;
 }
 
@@ -324,6 +324,7 @@ INIT_OBJ_FN(init_route) {
     int index = GET_OBJ_INDEX();
     rt->n_routes++;
     rt->routes[index] = calloc(1, sizeof(**rt->routes));
+    rt->routes[index]->runtime = rt;
 
     RETURN_OBJ(rt->routes[index], ROUTES);
 }

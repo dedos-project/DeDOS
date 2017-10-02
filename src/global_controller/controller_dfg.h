@@ -9,4 +9,9 @@ int generate_route_id();
 uint32_t generate_endpoint_key(struct dfg_route *route);
 struct dedos_dfg *get_dfg(void);
 
+int init_dfg_lock();
+int lock_dfg();
+int unlock_dfg();
+
+
 #endif

@@ -51,6 +51,12 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    rtn = init_dfg_lock();
+    if (rtn < 0) {
+        log_error("Error initializing DFG lock");
+        return -1;
+    }
+
     rtn = init_controller_dfg(filename);
     if (rtn < 0){
         log_error("Error loading dfg!");

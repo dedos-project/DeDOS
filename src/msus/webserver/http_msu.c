@@ -10,7 +10,7 @@
 #include "msu_state.h"
 #include "unused_def.h"
 #include "local_msu.h"
-#include "webserver/regex_msu.h"
+#include "webserver/regex_routing_msu.h"
 
 
 static int handle_db(struct http_state *http_state,
@@ -42,7 +42,7 @@ static int handle_db(struct http_state *http_state,
             return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         }
 
-        return call_msu_type(self, &WEBSERVER_REGEX_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
+        return call_msu_type(self, &WEBSERVER_REGEX_ROUTING_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
     }
 }
 

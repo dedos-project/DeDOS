@@ -30,6 +30,7 @@ int send_create_msu_msg(struct dfg_msu *msu) {
                   msu->scheduling.runtime->id);
         return -1;
     }
+    log(LOG_RUNTIME_MESSAGES, "Sent CREATE_MSU message");
     return 0;
 }
 
@@ -57,6 +58,7 @@ int send_delete_msu_msg(struct dfg_msu *msu) {
                   msu->scheduling.runtime->id);
         return -1;
     }
+    log(LOG_RUNTIME_MESSAGES, "Sent DELETE_MSU message");
     return 0;
 }
 
@@ -77,6 +79,7 @@ int send_create_route_msg(struct dfg_route *route) {
         log_error("Error sending add-route msg to runtime %d", route->runtime->id);
         return -1;
     }
+    log(LOG_RUNTIME_MESSAGES, "Sent CREATE_ROUTE message");
     return 0;
 }
 
@@ -97,6 +100,7 @@ int send_delete_route_msg(struct dfg_route *route) {
         log_error("Error sending del-route msg to runtime %d", route->runtime->id);
         return -1;
     }
+    log(LOG_RUNTIME_MESSAGES, "Sent DELETE_ROUTE message");
     return 0;
 }
 
@@ -119,6 +123,7 @@ int send_add_route_to_msu_msg(struct dfg_route *route, struct dfg_msu *msu) {
                    msu->scheduling.runtime->id);
         return -1;
     }
+    log(LOG_RUNTIME_MESSAGES, "Sent ADD_ROUTE_TO_MSU message");
     return 0;
 }
 
@@ -132,7 +137,7 @@ int send_add_endpoint_msg(struct dfg_route *route, struct dfg_route_endpoint *en
     };
 
     struct ctrl_runtime_msg_hdr hdr = {
-        .type = CTRL_MSU_ROUTES,
+        .type = CTRL_MODIFY_ROUTE,
         .thread_id = MAIN_THREAD_ID,
         .payload_size = sizeof(msg)
     };
@@ -143,6 +148,7 @@ int send_add_endpoint_msg(struct dfg_route *route, struct dfg_route_endpoint *en
                   route->runtime->id);
         return -1;
     }
+    log(LOG_RUNTIME_MESSAGES, "Sent ADD_ENDPOINT message");
     return 0;
 }
 
@@ -164,6 +170,7 @@ int send_del_endpoint_msg(struct dfg_route *route, struct dfg_route_endpoint *en
         log_error("Error sending del-endpoint msg to runtime %d", route->runtime->id);
         return -1;
     }
+    log(LOG_RUNTIME_MESSAGES, "Sent ADD_ENDPOINT message");
     return 0;
 }
 
@@ -206,5 +213,6 @@ int send_create_thread_msg(struct dfg_thread *thread, struct dfg_runtime *rt) {
         log_error("Error sending create-thread msg to runtime %d", rt->id);
         return -1;
     }
+    log(LOG_RUNTIME_MESSAGES, "Sent CREATE_THREAD message");
     return 0;
 }

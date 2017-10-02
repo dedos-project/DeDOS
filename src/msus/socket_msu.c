@@ -19,7 +19,7 @@ struct sock_msu_state {
     int epoll_fd;
     struct local_msu *self;
     struct msu_type *default_target;
-    struct msu_msg_hdr *hdr_mask[MAX_FDS];
+    struct msu_msg_hdr hdr_mask[MAX_FDS];
     struct local_msu *destinations[MAX_FDS];
 };
 
@@ -36,7 +36,7 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
                    struct msu_msg_hdr *hdr) {
     struct sock_msu_state *state = instance->msu_state;
 
-    state->hdr_mask[fd] = hdr;
+    state->hdr_mask[fd] = *hdr;
     state->destinations[fd] = destination;
 
     int rtn = enable_epoll(state->epoll_fd, fd, events);
@@ -83,7 +83,7 @@ static int process_connection(int fd, void *v_state) {
         return 0;
     } else {
         // This file descriptor was enqueued with a particular target in mind
-        struct msu_msg_hdr *hdr = state->hdr_mask[fd];
+        struct msu_msg_hdr *hdr = &state->hdr_mask[fd];
         if (hdr == NULL) {
             log_error("Existing destination with null header for fd %d", fd);
             return -1;
@@ -100,7 +100,6 @@ static int process_connection(int fd, void *v_state) {
 
 static int set_default_target(int fd, void *v_state) {
     struct sock_msu_state *state = v_state;
-    state->hdr_mask[fd] = NULL;
     state->destinations[fd] = NULL;
     return 0;
 }

@@ -66,6 +66,7 @@ static int main_thread_send_to_peer(struct send_to_peer_msg *msg) {
 
 static int main_thread_control_route(struct ctrl_route_msg *msg) {
     int rtn;
+    log(LOG_MAIN_THREAD, "Got control route message of type %d", msg->type);
     switch (msg->type) {
         case CREATE_ROUTE:
             rtn = init_route(msg->route_id, msg->type_id);
@@ -119,9 +120,11 @@ static int main_thread_control_route(struct ctrl_route_msg *msg) {
         break; \
     }
 
-static int process_main_thread_msg(struct dedos_thread *main_thread,
+int process_main_thread_msg(struct dedos_thread *main_thread,
                                    struct thread_msg *msg) {
 
+    log(LOG_MAIN_THREAD, "processing message %p with type id: %d",
+        msg, msg->type);
     int rtn = -1;
     switch (msg->type) {
         case CONNECT_TO_RUNTIME:
@@ -162,6 +165,7 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
             }
             break;
         case MODIFY_ROUTE:
+            log(LOG_MAIN_THREAD, "Got MODIFY_ROUTE");
             CHECK_MSG_SIZE(msg, struct ctrl_route_msg);
             struct ctrl_route_msg *route_msg = msg->data;
             rtn = main_thread_control_route(route_msg);
@@ -179,9 +183,6 @@ static int process_main_thread_msg(struct dedos_thread *main_thread,
         default:
             log_error("Unknown message type %d delivered to main thread", msg->type);
             break;
-    }
-    if (rtn > 0) {
-        log(LOG_MAIN_THREAD, "Successfully processed message with type id: %d", msg->type);
     }
     return rtn;
 }

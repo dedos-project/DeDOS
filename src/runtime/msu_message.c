@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 int init_msu_msg_hdr(struct msu_msg_hdr *hdr, struct msu_msg_key *key) {
+    memset(hdr, '\0', sizeof(*hdr));
     hdr->key = *key;
     return 0;
 }

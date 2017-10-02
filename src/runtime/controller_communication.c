@@ -111,8 +111,9 @@ static int connect_to_controller(struct sockaddr_in *addr) {
 
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->payload_size != sizeof(target)) { \
-        log_error("Message data size (%d) does not match size" \
-                 "of target type " #target, (int)msg->payload_size ); \
+        log_warn("Message data size (%d) does not match size" \
+                 "of target type (%d)" #target, (int)msg->payload_size , \
+                 (int)sizeof(target)); \
         return -1; \
     } \
     return 0;
@@ -163,8 +164,7 @@ static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type)
 
 static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     if (verify_msg_size(hdr) != 0) {
-        log_error("Cannot process message. Incorrect payload size for type.");
-        return NULL;
+        log_warn("May not process message. Incorrect payload size for type.");
     }
 
     void *msg_data = malloc(hdr->payload_size);
@@ -196,7 +196,12 @@ static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
         return -1;
     }
 
-    int rtn = enqueue_thread_msg(thread_msg, &thread->queue);
+    int rtn;
+    if (hdr->thread_id == MAIN_THREAD_ID) {
+        rtn = process_main_thread_msg(thread, thread_msg);
+    } else {
+         rtn = enqueue_thread_msg(thread_msg, &thread->queue);
+    }
     if (rtn < 0) {
         log_error("Error enqueuing control message on thread %d", hdr->thread_id);
         return -1;
@@ -216,7 +221,7 @@ int handle_controller_communication(int fd) {
         return 1;
     } else {
         log(LOG_CONTROLLER_COMMUNICATION,
-                   "Read header from controller");
+                   "Read header (type %d) from controller", hdr.type);
     }
 
     rtn = process_ctrl_message_hdr(&hdr, fd);
@@ -258,7 +263,7 @@ void send_stats_to_controller() {
         int n_items;
         struct stat_sample *samples = get_stat_samples(stat_id, &n_items);
         if (samples == NULL) {
-            log_error("Error getting stat sample for send to controller");
+            log(LOG_STAT_SEND, "Error getting stat sample for send to controller");
             continue;
         }
         size_t serial_size = serialized_stat_sample_size(samples, n_items);

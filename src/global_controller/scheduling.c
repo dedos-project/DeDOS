@@ -4,6 +4,7 @@
 #include "api.h"
 #include "logging.h"
 #include "runtime_messages.h"
+#include "msu_stats.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -123,8 +124,7 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
 //FIXME: add error handling
 void prepare_clone(struct dfg_msu  *msu) {
     msu->id = generate_msu_id();
-
-    memset(&msu->scheduling, '\0', sizeof(struct dfg_scheduling));
+    msu->scheduling.n_routes = 0;
 }
 
 /**
@@ -184,7 +184,7 @@ int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     struct dfg_thread *free_thread = find_unused_pinned_thread(rt, msu->type);
     //struct dfg_thread *free_thread = find_unused_pinned_thread(rt, msu);
     if (free_thread == NULL) {
-        debug("There are no free worker threads on runtime %d", rt->id);
+        log(LOG_SCHEDULING, "There are no free worker threads on runtime %d", rt->id);
         return -1;
     }
 
@@ -194,9 +194,10 @@ int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     msu->scheduling.thread = free_thread;
     msu->scheduling.runtime = rt;
 
+    register_stat_item(msu->id);
     ret = send_create_msu_msg(msu);
     if (ret == -1) {
-        debug("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);
+        log_error("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);
         return ret;
     }
 
@@ -248,27 +249,21 @@ int wire_msu(struct dfg_msu *msu) {
                 continue;
             } else {
                 //Does the new MSU's runtime has a route toward destination MSU's type?
-                struct dfg_route *route = get_dfg_msu_route_by_type(msu, dst->type);
+                struct dfg_route *route = get_dfg_rt_route_by_type(msu->scheduling.runtime,
+                                                                   dst->type);
                 if (route == NULL) {
+                    log(LOG_SCHEDULING, "Route of type %d doesn't exist on rt %d. Creating",
+                        dst->type->id, msu->scheduling.runtime->id);
                     int route_id = generate_route_id();
 
                     route = create_dfg_route(route_id, dst->type, rt->id);
                     if (route == NULL) {
-                        debug("Could not add new route on runtime %d toward type %d",
-                              rt->id, dst->msu_type);
+                        log_error("Could not add new route on runtime %d toward type %d",
+                              rt->id, dst->type->id);
                         return -1;
                     }
                     if (send_create_route_msg(route) != 0) {
                         log_error("Could not send create route message");
-                        return -1;
-                    }
-                }
-
-                //Is the route already attached to the new MSU?
-                if (!msu_has_route(msu, route)) {
-                    ret = add_route_to_msu(msu->id, route->id);
-                    if (ret != 0) {
-                        log_error("Could not add route %d to msu %d", route->id, msu->id);
                         return -1;
                     }
                 }
@@ -283,6 +278,15 @@ int wire_msu(struct dfg_msu *msu) {
                         return -1;
                     }
                 }
+                //Is the route already attached to the new MSU?
+                if (!msu_has_route(msu, route)) {
+                    ret = add_route_to_msu(msu->id, route->id);
+                    if (ret != 0) {
+                        log_error("Could not add route %d to msu %d", route->id, msu->id);
+                        return -1;
+                    }
+                }
+
             }
         }
     }
@@ -316,15 +320,18 @@ int wire_msu(struct dfg_msu *msu) {
                 struct dfg_runtime *src_rt = source->scheduling.runtime;
 
                 //Does the source's runtime has a route toward new MSU's type?
-                struct dfg_route *route = get_dfg_msu_route_by_type(source, msu->type);
+                struct dfg_route *route = get_dfg_rt_route_by_type(src_rt, msu->type);
                 if (route == NULL) {
+                    log(LOG_SCHEDULING, "Route of type %d doesn't exist from rt %d",
+                        msu->type->id, src_rt->id);
                     int route_id = generate_route_id();
-                    route = create_dfg_route(route_id, msu->type, src_rt->id);
+                    int ret = create_route(route_id, msu->type->id, src_rt->id);
                     if (ret != 0) {
-                        debug("Could not add new route on runtime %d toward type %d",
-                              src_rt->id, msu->type->id);
+                        log_error("Could not add new route on runtime %d toward type %d",
+                                  src_rt->id, msu->type->id);
                         return -1;
                     }
+                    route = get_dfg_rt_route_by_type(src_rt, msu->type);
                 }
 
                 //Is the route attached to that source msu?
@@ -373,6 +380,7 @@ struct dfg_msu *clone_msu(int msu_id) {
 
     if (msu->type->cloneable == 0) {
         debug("Cannot clone msu %d", clone->msu_id);
+        unlock_dfg();
         return NULL;
     }
 
@@ -381,6 +389,8 @@ struct dfg_msu *clone_msu(int msu_id) {
     prepare_clone(clone);
     clone->type = msu->type;
 
+
+    lock_dfg();
     struct dedos_dfg *dfg = get_dfg();
     struct dfg_msu *msus[MAX_MSU];
     bzero(msus, MAX_MSU * sizeof(struct dfg_msu *));
@@ -413,6 +423,7 @@ struct dfg_msu *clone_msu(int msu_id) {
         ret = wire_msu(msus[n]);
         if (ret == -1) {
             debug("Could not update routes for msu %d", msus[n]->msu_id);
+            unlock_dfg();
             return NULL;
         }
 
@@ -422,6 +433,7 @@ struct dfg_msu *clone_msu(int msu_id) {
     if (clone->scheduling.runtime == NULL) {
         debug("Unable to clone msu %d of type %d", msu->msu_id, msu->msu_type);
         free(clone);
+        unlock_dfg();
         return NULL;
     } else {
         debug("Cloned msu %d of type %d into msu %d on runtime %d",
@@ -430,10 +442,11 @@ struct dfg_msu *clone_msu(int msu_id) {
         int rtn = fix_all_route_ranges(dfg);
         if (rtn < 0) {
             log_error("Unable to properly modify route ranges");
+            unlock_dfg();
             return NULL;
         }
         log_debug("properly changed route ranges");
-
+        unlock_dfg();
         return clone;
     }
 }
@@ -450,14 +463,12 @@ int schedule_msu(struct dfg_msu *msu, struct dfg_runtime *rt, struct dfg_msu **n
     // First of all, find a thread on the runtime
     ret = place_on_runtime(rt, msu);
     if (ret == -1) {
-        debug("Could not spawn a new worker thread on runtime %d", rt->id);
+        log_error("Could not spawn a new worker thread on runtime %d", rt->id);
         return -1;
     }
 
     struct dedos_dfg *dfg = get_dfg();
 
-    dfg->msus[dfg->n_msus] = msu;
-    dfg->n_msus++;
 
     //Add the new MSU to the list of new additions
     memcpy(new_msus, &msu, sizeof(struct dfg_msu *));
@@ -465,16 +476,25 @@ int schedule_msu(struct dfg_msu *msu, struct dfg_runtime *rt, struct dfg_msu **n
     //Handle dependencies before wiring
     int l;
     int skipped = 0;
+    dfg->msus[dfg->n_msus] = msu;
+    dfg->n_msus++;
+    msu->type->instances[msu->type->n_instances] = msu;
+    msu->type->n_instances++;
     for (l = 0; l < msu->type->n_dependencies; ++l) {
         struct dfg_msu_type *dep_type = msu->type->dependencies[l]->type;
         if (msu->type->dependencies[l]->locality == MSU_IS_LOCAL) {
-            struct dfg_msu *template = msu_type_on_runtime(msu->scheduling.runtime, dep_type);
-            if (template != NULL) {
+            struct dfg_msu *existing = msu_type_on_runtime(msu->scheduling.runtime, dep_type);
+            if (existing== NULL) {
+                if (dep_type->n_instances == 0) {
+                    log_error("No instances to spawn from!");
+                    return -1;
+                }
+                struct dfg_msu *template = dep_type->instances[0];
                 //spawn missing local dependency
                 struct dfg_msu *dep = copy_dfg_msu(template);
 
                 if (dep == NULL) {
-                    debug("Could not allocate memory for missing dependency");
+                    log_error("Could not allocate memory for missing dependency");
                     return -1;
                 }
 
@@ -484,8 +504,10 @@ int schedule_msu(struct dfg_msu *msu, struct dfg_runtime *rt, struct dfg_msu **n
 
                 ret = schedule_msu(dep, rt, new_msus + l + 1 - skipped);
                 if (ret == -1) {
-                    debug("Could not schedule dependency %d on runtime %d",
-                          dep->msu_id, rt->id);
+                    // FIXME: This doesn't properly remove the original MSUs
+                    log_info("Could not schedule dependency %d on runtime %d",
+                          dep->id, rt->id);
+                    dfg->n_msus--;
                     free(dep);
                     return -1;
                 } else {

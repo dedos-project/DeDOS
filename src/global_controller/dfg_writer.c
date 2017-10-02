@@ -381,8 +381,10 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
 }
 
 void dfg_to_file(char *filename) {
+    lock_dfg();
     struct dedos_dfg *dfg = get_dfg();
     char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
+    unlock_dfg();
     int json_size = strlen(dfg_json);
     FILE *file = fopen(filename, "w");
     fwrite(dfg_json, sizeof(char), json_size, file);

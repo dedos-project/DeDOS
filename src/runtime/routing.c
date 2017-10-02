@@ -264,6 +264,7 @@ int init_route(int route_id, int type_id) {
         return -1;
     }
     all_routes[route_id] = table;
+    log(LOG_ROUTING_CHANGES, "Initialized route %d (type %d)", route_id, type_id);
     return 0;
 }
 

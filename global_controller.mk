@@ -1,3 +1,4 @@
+DYNAMIC_SCHEDULING=1
 DEBUG = 1
 
 LOGS = \
@@ -6,7 +7,10 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   ALL
+	   RUNTIME_MESSAGES \
+	   SCHEDULING \
+	   API_CALLS
+	   #ALL
 
 NO_LOGS = \
 		  EPOLL_OPS \
@@ -56,6 +60,10 @@ CC_EXTRAFLAGS = --std=gnu99
 
 ifeq ($(DEBUG), 1)
   CFLAGS+=-ggdb
+endif
+
+ifeq ($(DYNAMIC_SCHEDULING), 1)
+  CFLAGS+=-DDYN_SCHED
 endif
 
 RESOURCE_EXTS=.txt .json

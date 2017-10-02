@@ -18,8 +18,8 @@ struct cloning_info {
 };
 
 static struct cloning_info CLONING_INFO[] = {
-    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 100 },
-    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 100 },
+    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 20 },
+    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 20 },
     { WEBSERVER_HTTP_MSU_TYPE_ID, MSU_NUM_STATES, 2048 }
 };
 
@@ -36,16 +36,17 @@ static int gather_cloning_info(struct cloning_info *info) {
         return 0;
     }
 
+    log(LOG_SCHEDULING_DECISIONS, "N instances: %d", type->n_instances);
     for (int i=0; i<type->n_instances; i++) {
         struct dfg_msu *instance = type->instances[i];
-        struct timed_rrdb *stat = get_stat(type->id, instance->id);
+        struct timed_rrdb *stat = get_stat(info->stat_id, instance->id);
 
         if (stat == NULL) {
             log_error("Cannot get stat sample for cloning decision for stat %d.%u",
                       type->id, instance->id);
             continue;
         }
-        
+
         info->stats[info->num_msus] = average_n(stat, SAMPLES_FOR_CLONING_DECISION);
         if (info->stats[info->num_msus] < 0) {
             log_error("Error averaging statistics");
@@ -54,7 +55,7 @@ static int gather_cloning_info(struct cloning_info *info) {
         info->num_msus++;
         info->sample_msu = instance;
     }
-    return -1;
+    return 0;
 }
 
 static bool should_clone(struct cloning_info *info) {
@@ -64,7 +65,13 @@ static bool should_clone(struct cloning_info *info) {
     }
 
     double mean = sum / info->num_msus;
-    return mean > info->threshold;
+    bool do_clone =  mean > info->threshold;
+    if (do_clone) {
+        log(LOG_SCHEDULING_DECISIONS, "Trying to clone");
+    } else {
+        log(LOG_SCHEDULING_DECISIONS, "Not trying to clone (mean: %f)", mean);
+    }
+    return do_clone;
 }
 
 static void set_haproxy_weights() {
@@ -95,6 +102,7 @@ int perform_cloning() {
     struct timespec cur_time;
     clock_gettime(CLOCK_MONOTONIC, &cur_time);
     if (cur_time.tv_sec - last_clone_time.tv_sec > MIN_CLONE_DURATION) {
+        log(LOG_SCHEDULING_DECISIONS, "Gathering cloning info");
         for (int i=0; i<CLONING_INFO_LEN; i++) {
             int rtn = gather_cloning_info(&CLONING_INFO[i]);
             if (rtn < 0) {
@@ -112,6 +120,8 @@ int perform_cloning() {
                 break;
             }
         }
+    } else {
+        log(LOG_SCHEDULING_DECISIONS, "Too soon to clone");
     }
     return 0;
 }

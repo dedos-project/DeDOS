@@ -23,6 +23,7 @@ static void *init_worker_thread(struct dedos_thread *thread) {
 }
 
 void stop_worker_thread(struct worker_thread *thread) {
+    log_info("Signaling thread %d to exit", thread->thread->id);
     pthread_mutex_lock(&thread->exit_lock);
     thread->exit_signal = 1;
     pthread_mutex_unlock(&thread->exit_lock);
