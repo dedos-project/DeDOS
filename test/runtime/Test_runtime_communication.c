@@ -6,7 +6,7 @@
 // And other dependencies as stated in Test_runtime_communication.mk
 #include "runtime_dfg.c"
 #include "local_msu.c"
-#include "main_thread.c"
+#include "output_thread.c"
 
 #define local_id 1
 struct dfg_runtime local_runtime = {
@@ -139,31 +139,23 @@ START_DEDOS_TEST(test_process_init_rt_message) {
 
     write(fds[1], &msg, sizeof(msg));
 
-    struct dedos_thread main_thread = {};
-    static_main_thread = &main_thread;
-    init_msg_queue(&main_thread.queue, NULL);
+    struct dedos_thread output_thread = {};
+    static_output_thread = &output_thread;
+    init_msg_queue(&output_thread.queue, NULL);
 
     int rtn = process_init_rt_message(sizeof(msg), fds[0]);
 
     ck_assert_int_eq(rtn, 0);
-    ck_assert_int_eq(main_thread.queue.num_msgs, 1);
-    ck_assert_int_eq(main_thread.queue.head->type, THREAD_MSG);
-    ck_assert_int_eq(main_thread.queue.head->data_size, sizeof(struct thread_msg));
-    struct thread_msg *msg_out = main_thread.queue.head->data;
 
-    ck_assert_int_eq(msg_out->type, RUNTIME_CONNECTED);
-    struct runtime_connected_msg * conn_msg = msg_out->data;
-
-    ck_assert_int_eq(conn_msg->runtime_id, peer_id);
-    ck_assert_int_eq(conn_msg->fd, fds[0]);
+    ck_assert_int_eq(runtime_peers[msg.origin_id].fd, fds[0]);
 
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_handle_runtime_communication) {
 
-    struct dedos_thread main_thread = {};
-    static_main_thread = &main_thread;
-    init_msg_queue(&main_thread.queue, NULL);
+    struct dedos_thread output_thread = {};
+    static_output_thread = &output_thread;
+    init_msg_queue(&output_thread.queue, NULL);
 
     int fd = init_sock_pair(&runtime_peers[peer_id].fd);
     send_to_peer(peer_id, &hdr, &msg);
