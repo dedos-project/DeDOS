@@ -3,6 +3,7 @@
 #include "msu_message.h"
 #include "msu_calls.h"
 #include "logging.h"
+#include "routing_strategies.h"
 
 #include "webserver/write_msu.h"
 #include "webserver/regex_msu.h"
@@ -25,5 +26,6 @@ static int craft_ws_regex_response(struct local_msu *self,
 struct msu_type WEBSERVER_REGEX_MSU_TYPE = {
     .name = "Webserver_regex_msu",
     .id = WEBSERVER_REGEX_MSU_TYPE_ID,
-    .receive = craft_ws_regex_response
+    .receive = craft_ws_regex_response,
+    .route = shortest_queue_route
 };

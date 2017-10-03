@@ -456,14 +456,19 @@ int mod_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *e
     for (new=0; new<route->n_endpoints && route->endpoints[new]->key < new_key; new++);
 
     // Which direction are we moving the in-between endpoints
-    int delta = new < old ? -1 : 1;
-    // If we're deleting from below the new location, subtract one from the new location
-    new -= delta == 1 ? -1 : 0;
+    int delta = new > old ? 1 : -1;
+    // If we're deleting from below the new location, subtract one to the new location
+    if (delta == 1) {
+        new -= 1;
+    }
 
     // Iterate from the old to the new location, moving the endpoints in the other direction
     for (int i=old; delta * i < delta * new; i += delta) {
-        route->endpoints[i+delta] = route->endpoints[delta];
+        log(LOG_ROUTING_CHANGES, "moving %d to %d", i+delta, i);
+        route->endpoints[i] = route->endpoints[i + delta];
     }
+
+    log(LOG_ROUTING_CHANGES, "Moved %d from %d to %d", ep->msu->id, old, new);
 
     // Replace the new endpoint
     ep->key = new_key;

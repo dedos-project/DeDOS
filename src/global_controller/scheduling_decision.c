@@ -18,12 +18,12 @@ struct cloning_info {
 };
 
 static struct cloning_info CLONING_INFO[] = {
-    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 20 },
-    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 20 },
+    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 10 },
+    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 10 },
     { WEBSERVER_HTTP_MSU_TYPE_ID, MSU_NUM_STATES, 2048 }
 };
 
-#define SAMPLES_FOR_CLONING_DECISION 20
+#define SAMPLES_FOR_CLONING_DECISION 10
 
 #define CLONING_INFO_LEN sizeof(CLONING_INFO) / sizeof(*CLONING_INFO)
 
@@ -94,14 +94,14 @@ static void set_haproxy_weights() {
     }
 }
 
-#define MIN_CLONE_DURATION 2
+#define MIN_CLONE_DURATION 4
 
 static struct timespec last_clone_time;
 
 int perform_cloning() {
     struct timespec cur_time;
     clock_gettime(CLOCK_MONOTONIC, &cur_time);
-    if (cur_time.tv_sec - last_clone_time.tv_sec > MIN_CLONE_DURATION) {
+    if (cur_time.tv_sec - last_clone_time.tv_sec >= MIN_CLONE_DURATION) {
         log(LOG_SCHEDULING_DECISIONS, "Gathering cloning info");
         for (int i=0; i<CLONING_INFO_LEN; i++) {
             int rtn = gather_cloning_info(&CLONING_INFO[i]);

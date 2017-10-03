@@ -42,8 +42,11 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
     int rtn = enable_epoll(state->epoll_fd, fd, events);
 
     if (rtn < 0) {
-        log_error("Error enabling epoll");
-        return -1;
+        rtn = add_to_epoll(state->epoll_fd, fd, events, true);
+        if (rtn < 0) {
+            log_perror("Error enabling epoll for fd %d", fd);
+            return -1;
+        }
     }
     return 0;
 }

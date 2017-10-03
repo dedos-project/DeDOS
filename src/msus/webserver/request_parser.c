@@ -7,10 +7,6 @@
 #define UNUSED
 #endif
 
-#ifndef LOG_HTTP_PARSING
-#define LOG_HTTP_PARSING 0
-#endif
-
 static int url_callback(http_parser *parser, const char *at, size_t length) {
     struct parser_state *state = parser->data;
     strncpy(&state->url[state->url_len], at, length);

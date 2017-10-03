@@ -5,9 +5,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdbool.h>
-#ifndef LOG_STATS
-#define LOG_STATS 0
-#endif
 
 #define CLOCK_ID CLOCK_MONOTONIC
 
@@ -143,28 +140,30 @@ static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat
 
     char label[64];
     sprintf(label, "%s:%02d:", type->label, item->id);
-    size_t label_size = strlen(label);
+    //size_t label_size = strlen(label);
 
     int n_stats = item->rolled_over ? type->max_stats : item->write_index;
     for (int i=0; i<n_stats; i++) {
-        fwrite(label, 1, label_size, out_file);
-        fprintf(out_file, "%05ld.%09ld:", item->stats[i].time.tv_sec, item->stats[i].time.tv_nsec);
-        fprintf(out_file, type->format, item->stats[i].value);
-        fwrite("\n", 1, 1, out_file);
+        int rtn;
+        if ((rtn = fprintf(out_file, "%s", label)) > 30) {
+            log_warn("printed out %d characters while outputting value %d", rtn, i);
+        }
+
+        //fwrite(label, 1, label_size, out_file);
+        if ((rtn = fprintf(out_file, "%05ld.%09ld:",
+                (long int)item->stats[i].time.tv_sec,
+                (long int)item->stats[i].time.tv_nsec)) > 30) {
+            log_warn("Printed out %d characters outputting value %d",rtn,  i);
+        }
+        if ((rtn = fprintf(out_file, type->format, item->stats[i].value)) > 30) {
+            log_warn("printed out %d characters while outputting value %d", rtn, i);
+        }
+        fprintf(out_file, "\n");
     }
     log(LOG_STATS, "Flushed %d items for type %s", n_stats, type->label);
     return 0;
 }
-void flush_all_stats_to_log(FILE *file) {
-    for (int i=0; i<N_STAT_TYPES; i++) {
-        if (!stat_types[i].enabled) {
-            continue;
-        }
-        for (int j=0; j<stat_types[i].num_items; j++) {
-            write_item_to_log(file, &stat_types[i], &stat_types[i].items[j]);
-        }
-    }
-}
+
 
 /**
  * Gets the amount of time that has elapsed since logging started.
@@ -226,6 +225,20 @@ static inline int unlock_item(struct stat_item *item) {
     return 0;
 }
 
+void flush_all_stats_to_log(FILE *file) {
+    for (int i=0; i<N_STAT_TYPES; i++) {
+        if (!stat_types[i].enabled) {
+            continue;
+        }
+        rlock_type(&stat_types[i]);
+        for (int j=0; j<stat_types[i].num_items; j++) {
+            lock_item(&stat_types[i].items[j]);
+            write_item_to_log(file, &stat_types[i], &stat_types[i].items[j]);
+            unlock_item(&stat_types[i].items[j]);
+        }
+        unlock_type(&stat_types[i]);
+    }
+}
 /** Frees the memory associated with an individual stat item */
 static void destroy_stat_item(struct stat_item *item) {
     free(item->stats);
@@ -707,6 +720,7 @@ void finalize_statistics(char *statlog) {
         log_info("Outputting stats to log. Do not quit.");
         FILE *file = fopen(statlog, "w");
         flush_all_stats_to_log(file);
+        fclose(file);
         log_info("Finished outputting stats to log");
 #else
         log_info("Skipping dump to stat log. Set DUMP_STATS=1 to enable");

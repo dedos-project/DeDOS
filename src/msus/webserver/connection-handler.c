@@ -13,10 +13,6 @@
 #define UNUSED
 #endif
 
-#ifndef LOG_CONNECTION_INFO
-#define LOG_CONNECTION_INFO 0
-#endif
-
 void init_connection(struct connection *conn, int fd) {
     conn->fd = fd;
     conn->ssl = NULL;

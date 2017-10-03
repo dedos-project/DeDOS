@@ -10,10 +10,6 @@
 #define MAX_FILE_SIZE (long)(1 * (1 << 29))
 #define JUMP_SIZE (1 << 14)
 
-#ifndef LOG_DB_OPS
-#define LOG_DB_OPS 0
-#endif
-
 int db_num_files = -1;
 struct sockaddr_in db_addr;
 

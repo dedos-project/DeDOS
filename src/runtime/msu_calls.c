@@ -175,7 +175,8 @@ int call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
             destroy_msu_msg_and_contents(msg);
             return 0;
         default:
-            log_error("Unknown MSU locality: %d", dst.locality);
+            log_error("Unknown MSU locality for msu %d (from %d): %d",
+                      dst.id, sender->id, dst.locality);
             return -1;
     }
 }
