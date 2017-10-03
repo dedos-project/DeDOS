@@ -361,6 +361,7 @@ int get_endpoints_by_runtime_id(struct routing_table *table, int runtime_id,
         if (table->endpoints[i].runtime_id == runtime_id) {
             if (n_endpoints <= found_endpoints) {
                 log_error("Not enough endpoints passed in to hold results");
+                unlock(table);
                 return -1;
             }
             endpoints[found_endpoints] = table->endpoints[i];

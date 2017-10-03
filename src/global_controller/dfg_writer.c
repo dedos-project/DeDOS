@@ -10,7 +10,7 @@
 #define JSON_LEN_INCREMENT 1024
 
 #define CHECK_JSON_LEN(json, len)\
-    if ( (json).allocated_size - (json).length < len) { \
+    while ( (int)((json).allocated_size - (json).length) < (len)) { \
         log(LOG_DFG_WRITER, "Reallocating to %d", (int)(json.allocated_size + JSON_LEN_INCREMENT)); \
         (json).string = realloc((json).string, (json).allocated_size + JSON_LEN_INCREMENT); \
         (json).allocated_size += JSON_LEN_INCREMENT; \

@@ -110,7 +110,7 @@ START_DEDOS_TEST(test_process_connection__existing) {
 
     int fd = 10;
     state.destinations[fd] = &sock_msu;
-    state.hdr_mask[fd] = &hdr;
+    state.hdr_mask[fd] = hdr;
 
     process_connection(fd, &state);
 

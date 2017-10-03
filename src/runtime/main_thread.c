@@ -12,6 +12,7 @@
 
 #define MAX_WORKER_THREADS 16
 static struct dedos_thread *static_main_thread;
+static int exit_signal;
 
 static void *init_main_thread(struct dedos_thread *main_thread) {
     static_main_thread = main_thread;
@@ -113,6 +114,15 @@ static int main_thread_control_route(struct ctrl_route_msg *msg) {
     }
 }
 
+void stop_main_thread() {
+    exit_signal = 1;
+}
+
+void join_main_thread() {
+    pthread_join(static_main_thread->pthread, NULL);
+    free(static_main_thread);
+}
+
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->data_size != sizeof(target)) { \
         log_warn("Message data size does not match size" \
@@ -210,7 +220,7 @@ static int main_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {
     struct timespec elapsed;
     struct timespec timeout_abs;
     clock_gettime(CLOCK_REALTIME, &timeout_abs);
-    while (1) {
+    while (!exit_signal) {
         int rtn = thread_wait(self, &timeout_abs);
         if (rtn < 0) {
             log_error("Error waiting on main thread semaphore");

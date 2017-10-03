@@ -110,8 +110,31 @@ static int craft_http_response(struct local_msu *self,
     }
 }
 
-static int http_init(struct local_msu *self, struct msu_init_data UNUSED *data) {
+static int http_init(struct local_msu *self, struct msu_init_data *data) {
     self->msu_state = allocate_db_memory();
+
+    char *init_data = data->init_data;
+
+    char *ip, *saveptr;
+
+    if ((ip = strtok_r(init_data, " ", &saveptr)) == NULL) {
+        log_error("Did not provide IP for DB initialization to http MSU");
+        return -1;
+    }
+    char *port_str;
+    if ((port_str = strtok_r(NULL, " ", &saveptr)) == NULL) {
+        log_error("Did not provide port for DB initialization to http MSU");
+        return -1;
+    }
+    int port = atoi(port_str);
+    char *n_files_str;
+    if ((n_files_str = strtok_r(NULL, " ", &saveptr)) == NULL) {
+        log_error("Did not provide n_files for DB initialization to http MSU");
+        return -1;
+    }
+    int n_files = atoi(n_files_str);
+
+    init_db(ip, port, n_files);
     return 0;
 }
 

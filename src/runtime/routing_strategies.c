@@ -117,8 +117,11 @@ int route_to_origin_runtime(struct msu_type *type, struct local_msu *sender, str
         return -1;
     }
 
-    *output = eps[msg->hdr.key.id % n_rt_endpoints];
-
+    log(LOG_ROUTING_DECISIONS, "Sending to one of %d endpoints with correct runtime",
+        n_rt_endpoints);
+    *output = eps[((unsigned int)msg->hdr.key.id) % n_rt_endpoints];
+    log(LOG_ROUTING_DECISIONS, "Chose endpoint %d (idx: %d)",
+        output->id, ((unsigned int)msg->hdr.key.id) % n_rt_endpoints);
     return 0;
 }
 

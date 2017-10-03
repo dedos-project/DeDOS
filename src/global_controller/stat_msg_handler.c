@@ -3,6 +3,8 @@
 #include "msu_stats.h"
 #include "scheduling_decision.h"
 #include "logging.h"
+#include "scheduling.h"
+#include "controller_dfg.h"
 
 #define MAX_STAT_SAMPLES 128
 #define MAX_SAMPLE_SIZE 64
@@ -45,6 +47,7 @@ int handle_serialized_stats_buffer(void *buffer, size_t buffer_len) {
 
 #ifdef DYN_SCHED
     perform_cloning();
+    fix_all_route_ranges(get_dfg());
 #endif
 
     return 0;

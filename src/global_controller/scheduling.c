@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-static int n_downstream_msus(struct dfg_msu * msu) {
+static int UNUSED n_downstream_msus(struct dfg_msu * msu) {
 
     int n = 0;
     struct dfg_route **routes = msu->scheduling.routes;
@@ -21,28 +21,62 @@ static int n_downstream_msus(struct dfg_msu * msu) {
     return n;
 }
 
-int fix_route_ranges(struct dfg_route *route) {
+#ifdef QLEN_ROUTING
+
+static double get_q_len(struct dfg_msu *msu) {
+    struct timed_rrdb *q_len = get_stat(MSU_QUEUE_LEN, msu->id);
+    return average_n(q_len, 5);
+}
+
+static int downstream_q_len(struct dfg_msu *msu) {
+    double qlen = get_q_len(msu);
+    struct dfg_route **routes = msu->scheduling.routes;
+    for (int r_i = 0; r_i < msu->scheduling.n_routes; ++r_i) {
+        struct dfg_route *r = routes[r_i];
+        for (int i=0; i<r->n_endpoints; i++) {
+            qlen += get_q_len(r->endpoints[i]->msu);
+        }
+    }
+    return qlen;
+}
+#endif
+
+static int fix_route_ranges(struct dfg_route *route) {
 
     // Calculate what the new keys will be based on the number of downstream MSUs
+    int old_ids[route->n_endpoints];
+    int old_keys[route->n_endpoints];
     int new_keys[route->n_endpoints];
     int last = 0;
     for (int i=0; i<route->n_endpoints; i++) {
-        int downstream = n_downstream_msus(route->endpoints[i]->msu);
-        new_keys[i] = last + downstream;
+
+        old_keys[i] = route->endpoints[i]->key;
+        old_ids[i] = route->endpoints[i]->msu->id;
+#ifdef QLEN_ROUTING
+        double key = downstream_q_len(route->endpoints[i]->msu);
+
+        if (down_q_len < 1) {
+            new_keys[i] = last + 100;
+        } else {
+            new_keys[i] = last + (int)(100 / down_q_len + 1);
+        }
+#else
+        double key = n_downstream_msus(route->endpoints[i]->msu);
+        new_keys[i] = last + key;
+#endif
         last = new_keys[i];
     }
 
     for (int i=0; i<route->n_endpoints; i++) {
-        int old_key = route->endpoints[i]->key;
-        if (old_key != new_keys[i]) {
-            int rtn = mod_endpoint(route->endpoints[i]->msu->id, new_keys[i], route->id);
+        if (old_keys[i] != new_keys[i]) {
+            int rtn = mod_endpoint(old_ids[i], new_keys[i], route->id);
             if (rtn < 0) {
                 log_error("Error modifying endpoint");
                 return -1;
             } else {
                 log(LOG_ROUTING_CHANGES,
-                          "Modified endpoint %d in route %d to have key %d (old: %d)",
-                          route->endpoints[i]->msu->id, route->id, new_keys[i], old_key);
+                          "Modified endpoint %d (idx: %d) in route %d to have key %d (old: %d)",
+                          old_ids[i], i, route->id, new_keys[i], old_keys[i]);
             }
         }
     }

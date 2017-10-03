@@ -11,6 +11,7 @@ struct to_schedule {
 
 void prepare_clone(struct dfg_msu *msu);
 struct dfg_msu *clone_msu(int msu_id);
+int fix_all_route_ranges(struct dedos_dfg *dfg);
 int schedule_msu(struct dfg_msu *msu, struct dfg_runtime *rt, struct dfg_msu **new_msus);
 int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu);
 
