@@ -257,9 +257,47 @@ START_DEDOS_TEST(test_sample_stat) {
 
 } END_DEDOS_TEST
 
+char stat_output_path[64];
+
+#define N_ITEMS 4
+START_DEDOS_TEST(test_output_stat_item) {
+    struct stat_type type = {
+        .id = 10,
+        .enabled = true,
+        .max_stats = 262144,
+        .format = "%09.9f",
+        .label = "LONG_TEST_TITLE",
+        .id_indices = {},
+        .num_items = N_ITEMS
+    };
+    type.items = malloc(N_ITEMS * sizeof(*type.items));
+    for (int i=0; i<N_ITEMS; i++) {
+        type.id_indices[i] = i;
+        type.items[i].id = i;
+        type.items[i].write_index = rand() % 262144;
+        type.items[i].rolled_over = false;
+        type.items[i].stats = malloc(262144 * sizeof(*type.items[i].stats));
+        for (int j=0; j<1000; j++) {
+            int idx = rand() % type.items[i].write_index;
+            type.items[i].stats[idx].time.tv_sec = rand() % 1234;
+            type.items[i].stats[idx].time.tv_nsec = rand() % 5678;
+            type.items[i].stats[idx].value = (double) (rand() % 1000);
+        }
+    }
+
+    FILE *file = fopen(stat_output_path, "w");
+    for (int i=0; i<N_ITEMS; i++) {
+        log(LOG_TEST, "HERE %d %d", i, type.items[i].write_index);
+        write_item_to_log(file, &type, &type.items[i]);
+    }
+    fclose(file);
+} END_DEDOS_TEST
+
 
 DEDOS_START_TEST_LIST("Statistics")
+DEDOS_ADD_TEST_RESOURCE(stat_output_path, "stat_output.txt")
 
+DEDOS_ADD_TEST_FN(test_output_stat_item);
 DEDOS_ADD_TEST_FN(test_init_stat_item);;
 DEDOS_ADD_TEST_FN(test_record_uninitialized_stat);
 DEDOS_ADD_TEST_FN(test_record_start_time);

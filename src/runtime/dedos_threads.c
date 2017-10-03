@@ -92,6 +92,10 @@ static int pin_thread(pthread_t ptid) {
     return 0;
 }
 
+void dedos_thread_join(struct dedos_thread *thread) {
+    pthread_join(thread->pthread, NULL);
+    free(thread);
+}
 
 static void *dedos_thread_starter(void *thread_init_v) {
     struct thread_init *init = thread_init_v;
@@ -127,7 +131,7 @@ static void *dedos_thread_starter(void *thread_init_v) {
     return (void*)(intptr_t)rtn;
 }
 
-#define DEFAULT_WAIT_TIMEOUT_S 5
+#define DEFAULT_WAIT_TIMEOUT_S 1
 
 int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout) {
     int rtn;

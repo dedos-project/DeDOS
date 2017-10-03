@@ -4,6 +4,7 @@
 #include "logging.h"
 #include "thread_message.h"
 #include "msu_message.h"
+#include "main_thread.h"
 
 #include <stdlib.h>
 
@@ -30,11 +31,20 @@ void stop_worker_thread(struct worker_thread *thread) {
 }
 
 void stop_all_worker_threads() {
+    struct dedos_thread *d_threads[MAX_DEDOS_THREAD_ID];
+    int n_threads=0;
     for (int i=0; i<MAX_DEDOS_THREAD_ID; i++) {
         if (worker_threads[i] != NULL) {
+            d_threads[n_threads] = worker_threads[i]->thread;
+            n_threads++;
             stop_worker_thread(worker_threads[i]);
         }
     }
+    stop_main_thread();
+    for (int i=0; i<n_threads; i++) {
+        dedos_thread_join(d_threads[i]);
+    }
+    join_main_thread();
 }
 
 static inline int should_exit(struct worker_thread *thread) {

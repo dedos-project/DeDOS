@@ -27,6 +27,7 @@ int start_dedos_thread(dedos_thread_fn thread_fn,
                        enum blocking_mode mode,
                        int id,
                        struct dedos_thread *thread);
+void dedos_thread_join(struct dedos_thread *thread);
 
 int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout);
 

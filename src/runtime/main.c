@@ -104,6 +104,7 @@ int main(int argc, char **argv) {
     }
 
     stop_all_worker_threads();
+    stop_main_thread();
     finalize_statistics(statlog);
     log_info("Exiting runtime...");
     return 0;

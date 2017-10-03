@@ -2,6 +2,8 @@
 #include "stats.h"
 #include "logging.h"
 
+#include <stdio.h>
+#include <stdio_ext.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -72,12 +74,12 @@ struct stat_type stat_types[] = {
     {MSU_STAT1,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT1"},
     {MSU_STAT2,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT2"},
     {MSU_STAT3,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT3"},
-    {PROF_ENQUEUE,        GATHER_PROFILING,       MAX_STATS, "%.0f", "ENQUEUE"},
-    {PROF_DEQUEUE,        GATHER_PROFILING,       MAX_STATS, "%.0f", "DEQUEUE"},
-    {PROF_REMOTE_SEND,    GATHER_PROFILING,       MAX_STATS, "%.0f", "SEND"},
-    {PROF_REMOTE_RECV,    GATHER_PROFILING,       MAX_STATS, "%.0f", "RECV"},
-    {PROF_DEDOS_ENTRY,    GATHER_PROFILING,       MAX_STATS, "%.0f", "ENTRY"},
-    {PROF_DEDOS_EXIT,     GATHER_PROFILING,       MAX_STATS, "%.0f", "EXIT"},
+    {PROF_ENQUEUE,        GATHER_PROFILING,       MAX_STATS, "%0.0f", "ENQUEUE"},
+    {PROF_DEQUEUE,        GATHER_PROFILING,       MAX_STATS, "%0.0f", "DEQUEUE"},
+    {PROF_REMOTE_SEND,    GATHER_PROFILING,       MAX_STATS, "%0.0f", "SEND"},
+    {PROF_REMOTE_RECV,    GATHER_PROFILING,       MAX_STATS, "%0.0f", "RECV"},
+    {PROF_DEDOS_ENTRY,    GATHER_PROFILING,       MAX_STATS, "%0.0f", "ENTRY"},
+    {PROF_DEDOS_EXIT,     GATHER_PROFILING,       MAX_STATS, "%0.0f", "EXIT"},
 };
 
 #define N_STAT_TYPES (sizeof(stat_types) / sizeof(*stat_types))
@@ -139,28 +141,29 @@ static int convert_raw_item_from_log(FILE *in_file, FILE *out_file) {
 static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat_item *item) {
 
     char label[64];
-    sprintf(label, "%s:%02d:", type->label, item->id);
+    int ln = snprintf(label, 64, "%s:%02d:", type->label, item->id);
+    label[ln] = '\0';
     //size_t label_size = strlen(label);
 
     int n_stats = item->rolled_over ? type->max_stats : item->write_index;
     for (int i=0; i<n_stats; i++) {
         int rtn;
-        if ((rtn = fprintf(out_file, "%s", label)) > 30) {
+        if ((rtn = fprintf(out_file, "%s", label)) > 30 || rtn < 0) {
             log_warn("printed out %d characters while outputting value %d", rtn, i);
         }
 
         //fwrite(label, 1, label_size, out_file);
         if ((rtn = fprintf(out_file, "%05ld.%09ld:",
                 (long int)item->stats[i].time.tv_sec,
-                (long int)item->stats[i].time.tv_nsec)) > 30) {
+                (long int)item->stats[i].time.tv_nsec)) > 30 || rtn < 0)  {
             log_warn("Printed out %d characters outputting value %d",rtn,  i);
         }
-        if ((rtn = fprintf(out_file, type->format, item->stats[i].value)) > 30) {
+        if ((rtn = fprintf(out_file, type->format, item->stats[i].value)) > 30 || rtn < 0) {
             log_warn("printed out %d characters while outputting value %d", rtn, i);
         }
-        fprintf(out_file, "\n");
+        fprintf(out_file, "%s", "\n");
     }
-    log(LOG_STATS, "Flushed %d items for type %s", n_stats, type->label);
+    log(LOG_STATS, "Flushed %d items for type %s (rollover: %d)", n_stats, type->label, item->rolled_over);
     return 0;
 }
 
