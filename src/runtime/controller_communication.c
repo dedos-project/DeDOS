@@ -10,6 +10,7 @@
 #include "thread_message.h"
 #include "runtime_dfg.h"
 #include "rt_stats.h"
+#include "worker_thread.h"
 
 #include <stdlib.h>
 #include <arpa/inet.h>
@@ -140,16 +141,83 @@ static int verify_msg_size(struct ctrl_runtime_msg_hdr *msg) {
     }
 }
 
+static int process_connect_to_runtime(struct ctrl_add_runtime_msg *msg) {
+    struct sockaddr_in addr = {};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = msg->ip;
+    addr.sin_port = htons(msg->port);
+
+    int rtn = connect_to_runtime_peer(msg->runtime_id, &addr);
+    if (rtn < 0) {
+        log_error("Could not add runtime peer");
+        return -1;
+    }
+    return 0;
+}
+
+static int process_create_thread_msg(struct ctrl_create_thread_msg *msg) {
+    int id = msg->thread_id;
+    int rtn = create_worker_thread(id, msg->mode);
+    if (rtn < 0) {
+        log_error("Error creating worker thread %d", id);
+        return -1;
+    }
+    log(LOG_THREAD_CREATION, "Created worker thread %d", id);
+    return 0;
+}
+
+static int process_ctrl_route_msg(struct ctrl_route_msg *msg) {
+    int rtn;
+    log(LOG_CONTROLLER_COMMUNICATION, "Got control route message of type %d", msg->type);
+    switch (msg->type) {
+        case CREATE_ROUTE:
+            rtn = init_route(msg->route_id, msg->type_id);
+            if (rtn < 0) {
+                log_error("Error creating new route of id %d, type %d",
+                          msg->route_id, msg->type_id);
+                return -1;
+            }
+            return 0;
+        case ADD_ENDPOINT:;
+            struct msu_endpoint endpoint;
+            int rtn = init_msu_endpoint(msg->msu_id, msg->runtime_id, &endpoint);
+            if (rtn < 0) {
+                log_error("Cannot initilize runtime endpoint for adding "
+                          "endpoint %d to route %d", msg->msu_id, msg->route_id);
+                return -1;
+            }
+            rtn = add_route_endpoint(msg->route_id, endpoint, msg->key);
+            if (rtn < 0) {
+                log_error("Error adding endpoint %d to route %d with key %d",
+                          msg->msu_id, msg->route_id, msg->key);
+                return -1;
+            }
+            return 0;
+        case DEL_ENDPOINT:
+            rtn = remove_route_endpoint(msg->route_id, msg->msu_id);
+            if (rtn < 0) {
+                log_error("Error removing endpoint %d from route %d",
+                          msg->msu_id, msg->route_id);
+                return -1;
+            }
+            return 0;
+        case MOD_ENDPOINT:
+            rtn = modify_route_endpoint(msg->route_id, msg->msu_id, msg->key);
+            if (rtn < 0) {
+                log_error("Error modifying endpoint %d on route %d to have key %d",
+                          msg->msu_id, msg->route_id, msg->key);
+                return -1;
+            }
+            return 0;
+        default:
+            log_error("Unknown route control message type received: %d", msg->type);
+            return -1;
+    }
+}
+
+
 static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type) {
     switch (type) {
-        case CTRL_CONNECT_TO_RUNTIME:
-            return CONNECT_TO_RUNTIME;
-        case CTRL_CREATE_THREAD:
-            return CREATE_THREAD;
-        case CTRL_DELETE_THREAD:
-            return DELETE_THREAD;
-        case CTRL_MODIFY_ROUTE:
-            return MODIFY_ROUTE;
         case CTRL_CREATE_MSU:
             return CREATE_MSU;
         case CTRL_DELETE_MSU:
@@ -174,20 +242,18 @@ static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *
         free(msg_data);
         return NULL;
     }
-    log(LOG_CONTROLLER_COMMUNICATION, "Read control payload %p of size %d", 
+    log(LOG_CONTROLLER_COMMUNICATION, "Read control payload %p of size %d",
                msg_data, (int)hdr->payload_size);
     enum thread_msg_type type = get_thread_msg_type(hdr->type);
     return construct_thread_msg(type, hdr->payload_size, msg_data);
 }
 
-
-static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
+static int pass_ctrl_msg_to_thread(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     struct thread_msg *thread_msg = thread_msg_from_ctrl_hdr(hdr, fd);
     if (thread_msg == NULL) {
-        log_error("Error constructing thread msg from control header");
+        log_error("Error constructing thread msg from control hdr");
         return -1;
     }
-
     struct dedos_thread *thread = get_dedos_thread(hdr->thread_id);
     if (thread == NULL) {
         log_error("Error getting dedos thread %d to deliver control message",
@@ -196,16 +262,90 @@ static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
         return -1;
     }
 
-    int rtn;
-    if (hdr->thread_id == MAIN_THREAD_ID) {
-        rtn = process_main_thread_msg(thread, thread_msg);
-    } else {
-         rtn = enqueue_thread_msg(thread_msg, &thread->queue);
-    }
+    int rtn = enqueue_thread_msg(thread_msg, &thread->queue);
     if (rtn < 0) {
-        log_error("Error enqueuing control message on thread %d", hdr->thread_id);
+        log_error("Error enquing control message on thread %d", hdr->thread_id);
         return -1;
     }
+    return 0;
+}
+
+static int process_ctrl_message(struct ctrl_runtime_msg_hdr *hdr, int fd) {
+    if (verify_msg_size(hdr) != 0) {
+        log_warn("May not process message. Incorrect payload size for type");
+    }
+
+    char msg_data[hdr->payload_size];
+    int rtn = read_payload(fd, hdr->payload_size, (void*)msg_data);
+
+    if (rtn < 0) {
+        log_error("Error reading control payload. Cannot process message");
+        return -1;
+    }
+    log(LOG_CONTROLLER_COMMUNICATION, "Read control payload %p of size %d",
+               msg_data, (int)hdr->payload_size);
+
+    switch (hdr->type) {
+        case CTRL_CONNECT_TO_RUNTIME:
+            rtn = process_connect_to_runtime((struct ctrl_add_runtime_msg*) msg_data);
+            if (rtn < 0) {
+                log_error("Error processing connect to runtime message");
+                return -1;
+            }
+            break;
+        case CTRL_CREATE_THREAD:
+            rtn = process_create_thread_msg((struct ctrl_create_thread_msg*) msg_data);
+            if (rtn < 0) {
+                log_error("Error processing create thread message");
+                return -1;
+            }
+            break;
+        case CTRL_DELETE_THREAD:
+            log_critical("TODO!");
+            break;
+        case CTRL_MODIFY_ROUTE:
+            rtn = process_ctrl_route_msg((struct ctrl_route_msg*) msg_data);
+            if (rtn < 0) {
+                log_error("Error processing control route message");
+                return -1;
+            }
+            break;
+        default:
+            log_error("Unknown message type delivered to input thread: %d", hdr->type);
+            return -1;
+    }
+    return 0;
+}
+
+
+static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
+
+    int rtn;
+    switch (hdr->type) {
+        case CTRL_CREATE_MSU:
+        case CTRL_DELETE_MSU:
+        case CTRL_MSU_ROUTES:
+            rtn = pass_ctrl_msg_to_thread(hdr, fd);
+            if (rtn < 0) {
+                log_error("Error passing control message to thread");
+                return -1;
+            }
+            break;
+        case CTRL_CONNECT_TO_RUNTIME:
+        case CTRL_CREATE_THREAD:
+        case CTRL_DELETE_THREAD:
+        case CTRL_MODIFY_ROUTE:
+            rtn = process_ctrl_message(hdr, fd);
+            if (rtn < 0) {
+                log_error("Error processing control message");
+                return -1;
+            }
+            break;
+        default:
+            log_error("Unknown header type %d in receiving thread", hdr->type);
+            return -1;
+    }
+
     return 0;
 }
 

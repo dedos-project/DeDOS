@@ -9,7 +9,6 @@
 #include "rt_stats.h"
 #include "msu_message.h"
 #include "inter_runtime_messages.h"
-#include "main_thread.h"
 #include "thread_message.h"
 
 #include <stdlib.h>

@@ -9,7 +9,6 @@
 #include "inter_runtime_messages.h"
 #include "local_msu.h"
 #include "runtime_dfg.h"
-#include "main_thread.h"
 #include "thread_message.h"
 #include "rt_stats.h"
 #include "socket_monitor.h"
@@ -206,18 +205,13 @@ static int process_init_rt_message(size_t payload_size, int fd) {
         return -1;
     }
 
-    struct thread_msg *thread_msg = init_runtime_connected_thread_msg(msg.origin_id, fd);
-    if (thread_msg == NULL) {
-        log_error("Error creating thread message for connection to runtime %d (fd: %d)",
-                  msg.origin_id, fd);
-        return -1;
-    }
-
-    int rtn = enqueue_to_main_thread(thread_msg);
+    int rtn = add_runtime_peer(msg.origin_id, fd);
     if (rtn < 0) {
-        log_error("Error enqueing runtime-connected-msg (id: %d) to main thread", msg.origin_id);
+        log_error("Could not add runtime peer %d (fd: %d)", msg.origin_id, fd);
         return -1;
     }
+    log(LOG_RUNTIME_COMMUNICATION, "Runtime peer %d (fd: %d) added", 
+        msg.origin_id, fd);
 
     return 0;
 }
