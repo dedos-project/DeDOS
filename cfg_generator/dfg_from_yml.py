@@ -2,7 +2,7 @@ import sys
 import json
 import copy
 import yaml
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 MSU_ID_START = 10
 route_id = 1000
@@ -87,17 +87,14 @@ def dict_from_mapping(a_dict, mapping, output=None):
     return output
 
 
-def add_routing(rt_id, froms, tos, routes, route_indexes):
+def add_routing(froms, tos, routes):
     """
     Generates new routes to the MSUs given in tos, and adds them to all the MSUs in
-    froms, as well as to the full list of routes.
+    froms as well as to the full list of routes.
 
-    :param rt_id: the id of the runtime the routes will be added to
     :param froms: the set of msus to add the new routes to
     :param tos: the set of msus that the routes will be generated from
-    :param routes: the current set of all routes for the runtime with id rt_id
-    :param route_indexes: the defaultdict(int) needed to generate unique ids for
-                          each route that is generated
+    :param routes: the current set of all routes for the runtime
     :return: None
     """
     global route_id
@@ -131,7 +128,6 @@ def runtime_routes(rt_id, msus, yaml_routes):
     :return: the list of generated rotues
     """
     json_routes = []
-    route_indexes = defaultdict(int)
 
     for i, route in enumerate(yaml_routes):
         tos = route['to'] if isinstance(route['to'], list) else [route['to']]
@@ -147,7 +143,7 @@ def runtime_routes(rt_id, msus, yaml_routes):
 
         if not thread_match:
             to_msus = [msu for msu in msus if msu['name'] in tos]
-            add_routing(rt_id, from_msus, to_msus, json_routes, route_indexes)
+            add_routing(from_msus, to_msus, json_routes)
         else:
             threads = set(msu['scheduling']['thread_id'] for msu in from_msus)
             for thread in threads:
@@ -155,8 +151,7 @@ def runtime_routes(rt_id, msus, yaml_routes):
                                 if msu['scheduling']['thread_id'] == thread]
                 thread_tos = [msu for msu in msus if msu['name'] in tos and
                               msu['scheduling']['thread_id'] == thread]
-                add_routing(rt_id, thread_froms, thread_tos, json_routes,
-                            route_indexes)
+                add_routing(thread_froms, thread_tos, json_routes)
 
     return json_routes
 
@@ -307,7 +302,7 @@ def make_dfg(cfg_fpath):
             dfg_msu_type['colocation_group'] = msu_type['colocation_group'] if 'colocation_group' in msu_type else 0
             if 'dependencies' in msu_type:
                 dfg_msu_type['dependencies'] = [dict_from_mapping(dep, DEPENDENCY_MAPPING)
-                                for dep in msu_type['dependencies']]
+                                                for dep in msu_type['dependencies']]
             dfg['MSU_types'].append(dfg_msu_type)
             msu_type_name_to_id[name] = dfg_msu_type['id']
 
