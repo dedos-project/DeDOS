@@ -1,0 +1,130 @@
+{
+    "application_name": "dedos_webserver",
+    "global_ctl_ip": "0.0.0.0",
+    "global_ctl_port": 8090,
+    "MSU_types": [
+        {
+            "id": 10,
+            "name": "Socket_MSU"
+        },
+        {
+            "id": 500,
+            "name": "Read_MSU"
+        },
+        {
+            "id": 552,
+            "name": 'HTTP_MSU"
+        },
+        {
+            "id": 553,
+            "name": "Regex_MSU"
+        },
+        {
+            "id": 554,
+            "name": "Write_MSU"
+        },
+        {
+            "id": 560,
+            "name": "RegexRoute_MSU"
+        }
+    ],
+    "runtimes": [
+        {
+            "id": 1,
+            "ip": "0.0.0.0",
+            "port": 8091,
+            "num_cores": 8,
+            "num_pinned_threads": 4,
+            "num_unpinned_threads": 1,
+            "routes": [
+            {
+                "id": 500,
+                "type": 500,
+                "endpoints": [
+                {
+                    "key": 1,
+                    "msu": 2
+                }]
+            },
+            {
+                "id": 552,
+                "type": 552,
+                "endpoints": [
+                {
+                    "key": 1,
+                    "msu": 3
+                }]
+            },
+            {
+                "id": 554,
+                "type": 554,
+                "endpoints": [
+                {
+                    "key": 1,
+                    "msu": 4
+                }]
+            },
+            ]
+        },
+        {
+            "id": 2,
+            "ip": "0.0.0.0",
+            "port": 8092,
+            "num_cores": 8,
+            "num_pinned_threads": 0,
+            "num_unpinned_threads": 0
+        }
+    ],
+    "MSUs": [
+            {
+                "id": 1,
+                "type": 10,
+                "blocking_mode": "blocking",
+                "vertex_type": "entry",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 1,
+                    "routes": [
+                        500
+                    ]
+                },
+                "init_data": "8081, 500",
+            },
+            {
+                "id": 2,
+                "type": 500,
+                "blocking_mode": "non-blocking",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 2,
+                    "routes": [
+                        552
+                    ]
+                },
+                "init_data": "ssl",
+            },
+            {
+                "id": 3,
+                "type": 552,
+                "blocking_mode": "non-blocking",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 3,
+                    "routes": [
+                        554,
+                        500
+                    ]
+                },
+                "init_data": "0.0.0.0 1234 1024"
+            },
+            {
+                "id": 4,
+                "type": 554,
+                "blocking_mode": "non-blocking",
+                "scheduling": {
+                    "runtime": 1,
+                    "thread_id": 4,
+                },
+            }
+        ]
+}
