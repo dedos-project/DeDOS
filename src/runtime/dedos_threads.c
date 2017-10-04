@@ -2,6 +2,7 @@
 
 #include "dedos_threads.h"
 #include "thread_message.h"
+#include "output_thread.h"
 #include "logging.h"
 #include "rt_stats.h"
 
@@ -12,11 +13,18 @@
 #define MAX_DEDOS_THREAD_ID 16
 #define MAX_CORES 16
 
-static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID];
+#define OUTPUT_THREAD_INDEX MAX_DEDOS_THREAD_ID + 1
+
+static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID + 2];
 static int pinned_cores[MAX_CORES];
 
-struct dedos_thread *get_dedos_thread(unsigned int id) {
-    if (id > MAX_DEDOS_THREAD_ID) {
+struct dedos_thread *get_dedos_thread(int id) {
+    if (id == OUTPUT_THREAD_ID) {
+        id = MAX_DEDOS_THREAD_ID;
+    } else if (id < 0) {
+        log_error("Dedos thread ID cannot be negative! Provided: %d", id);
+        return NULL;
+    } else if (id > MAX_DEDOS_THREAD_ID) {
         log_error("Requested thread ID too high. Maximum is %d", MAX_DEDOS_THREAD_ID);
         return NULL;
     }
@@ -58,6 +66,9 @@ static int init_dedos_thread(struct dedos_thread *thread,
     }
     log(LOG_DEDOS_THREADS, "Initialized thread %d (mode: %s, addr: %p)",
                id, mode == PINNED_THREAD ? "pinned" : "unpinned", thread);
+    if (id == OUTPUT_THREAD_ID) {
+        id = OUTPUT_THREAD_INDEX;
+    }
     dedos_threads[id] = thread;
     return 0;
 }
@@ -157,6 +168,9 @@ int start_dedos_thread(dedos_thread_fn thread_fn,
                        enum blocking_mode mode,
                        int id,
                        struct dedos_thread *thread) {
+    if (id == OUTPUT_THREAD_ID) {
+        id = MAX_DEDOS_THREAD_ID;
+    }
     int rtn = init_dedos_thread(thread, mode, id);
     struct thread_init init = {
         .thread_fn = thread_fn,

@@ -4,7 +4,6 @@
 #include "logging.h"
 #include "thread_message.h"
 #include "msu_message.h"
-#include "main_thread.h"
 
 #include <stdlib.h>
 
@@ -27,6 +26,7 @@ void stop_worker_thread(struct worker_thread *thread) {
     log_info("Signaling thread %d to exit", thread->thread->id);
     pthread_mutex_lock(&thread->exit_lock);
     thread->exit_signal = 1;
+    sem_post(&thread->thread->sem);
     pthread_mutex_unlock(&thread->exit_lock);
 }
 
@@ -40,11 +40,9 @@ void stop_all_worker_threads() {
             stop_worker_thread(worker_threads[i]);
         }
     }
-    stop_main_thread();
     for (int i=0; i<n_threads; i++) {
         dedos_thread_join(d_threads[i]);
     }
-    join_main_thread();
 }
 
 static inline int should_exit(struct worker_thread *thread) {
@@ -201,9 +199,7 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
             }
             break;
         case CONNECT_TO_RUNTIME:
-        case CREATE_THREAD:
         case SEND_TO_PEER:
-        case MODIFY_ROUTE:
             log_error("Message (type %d) meant for main thread send to worker thread",
                       msg->type);
             break;
@@ -251,6 +247,11 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
 
 int create_worker_thread(unsigned int thread_id,
                          enum blocking_mode mode) {
+    if (worker_threads[thread_id] != NULL) {
+        log_error("Worker thread %u already exists", thread_id);
+        return -1;
+    }
+
     struct dedos_thread *thread = malloc(sizeof(*thread));
     if (thread == NULL) {
         log_error("Error allocating worker thread");

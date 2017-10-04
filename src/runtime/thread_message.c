@@ -59,26 +59,6 @@ void destroy_thread_msg(struct thread_msg *msg) {
     free(msg);
 }
 
-struct thread_msg *init_runtime_connected_thread_msg(unsigned int runtime_id,
-                                                     int fd) {
-    struct runtime_connected_msg *msg = malloc(sizeof(*msg));
-    if (msg == NULL) {
-        log_error("Error allocating runtime_connected_msg");
-        return NULL;
-    }
-    msg->runtime_id = runtime_id;
-    msg->fd = fd;
-
-    struct thread_msg *thread_msg = construct_thread_msg(RUNTIME_CONNECTED,
-                                                         sizeof(*msg),
-                                                         msg);
-    if (thread_msg == NULL) {
-        log_error("Error creating thread message for runtime-connected message");
-        return NULL;
-    }
-    return thread_msg;
-}
-
 struct thread_msg *init_send_thread_msg(unsigned int runtime_id,
                                         unsigned int target_id,
                                         size_t data_len,

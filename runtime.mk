@@ -1,5 +1,5 @@
 ADDRESS_SANITIZER?=0
-DEBUG = 0
+DEBUG = 1
 DUMP_STATS = 1
 DO_PROFILE = 1
 
@@ -56,7 +56,7 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=9
+OPTIM=0
 
 CC:=gcc
 CXX:=g++
@@ -126,6 +126,7 @@ SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
 
 TST_BLDS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.out, $(TSTS))
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
+MEM_RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%_memcheck.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
 DEP_DIRS = $(patsubst $(SRC_DIR)%/, $(DEP_DIR)%/, $(SRC_DIRS))
@@ -182,12 +183,24 @@ $(TARGET): ${OBJECTS} ${LEG_OBJ}
 
 test: all test-blds test-results
 
+memcheck: test $(MEM_RESULTS)
+	@for FILE in $(filter-out test, $^); do \
+		echo ___ $$FILE ___ ; \
+		if grep -q "definitely lost: [^0]" "$$FILE"; then \
+			grep  --color=never '\(\*\*\*\*\*.*\*\*\*\*\)\|\(definitely lost: [^0]\)' "$$FILE" | sed s/==/`printf "\\033[032m"==`/g ;\
+			tput sgr0; \
+		else \
+			echo "Nothing definitely lost!"; \
+		fi \
+	done;
+
+
 test-blds: $(TST_OBJS) $(TST_BLDS) $(TST_BLD_RSCS)
 
 test-results: all test-blds $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
 	@for FILE in $(filter-out all test-blds, $^); do \
-		if grep -q ":[FE]:" "$$FILE"; then \
+		if grep -q ":[FES]:" "$$FILE"; then \
 			echo ___ $$FILE ___ ; \
 			cat $$FILE; \
 		else \
@@ -203,6 +216,9 @@ test-results: all test-blds $(RESULTS)
 	@if grep -q ":[FE]:" $(filter-out all test-blds, $^); then \
 		false;\
 	fi
+
+$(RES_DIR)%_memcheck.txt: $(TST_BLD_DIR)%.out
+	-valgrind  --track-origins=yes --leak-check=full $< > $@ 2>&1
 
 # Output the results of the tests by executing each of the builds
 # of the tests. Output STDOUT and STDERR to the name of the rule

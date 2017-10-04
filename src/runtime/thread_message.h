@@ -8,19 +8,17 @@
  */
 enum thread_msg_type {
     UNKNOWN_THREAD_MSG = 0,
-    // For main thread
-    // removed: SET_INIT_CONFIG = 11,
-    // removed: GET_MSU_LIST    = 12,
 
+    // For the output monitor thread
     CONNECT_TO_RUNTIME = 13, // ctrl_add_runtime_msg (ctrl_runtime_messages.h)
-    RUNTIME_CONNECTED  = 14, // runtime_connected_msg (below)
-
-    CREATE_THREAD = 21, // ctrl_create_thread_msg (ctrl_runtime_messages.h)
-    DELETE_THREAD = 22, // ctrl_delete_thread_msg (ctrl_runtime_messages.h)
-
+    //RUNTIME_CONNECTED  = 14, // runtime_connected_msg (below)
     SEND_TO_PEER = 1000, // send_to_runtime_msg (below)
 
-    MODIFY_ROUTE = 3000, // ctrl_route_msg (ctrl_runtime_messages.h)
+    //CREATE_THREAD = 21, // ctrl_create_thread_msg (ctrl_runtime_messages.h)
+    //DELETE_THREAD = 22, // ctrl_delete_thread_msg (ctrl_runtime_messages.h)
+
+
+    //MODIFY_ROUTE = 3000, // ctrl_route_msg (ctrl_runtime_messages.h)
 
     // For worker threads
     CREATE_MSU = 2001, // ctrl_create_msu_msg (ctrl_runtime_messages.h)

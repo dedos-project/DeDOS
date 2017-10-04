@@ -49,8 +49,6 @@
         return (num_failed == 0) ? 0 : -1; \
     }
 
-#endif
-
 int init_test_listening_socket(int port) {
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == -1) {
@@ -97,3 +95,4 @@ int init_sock_pair(int *other_end) {
     return fds[1];
 }
 
+#endif

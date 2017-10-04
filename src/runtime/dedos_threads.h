@@ -15,7 +15,7 @@ struct dedos_thread {
     // TODO: Exit signal
 };
 
-struct dedos_thread *get_dedos_thread(unsigned int id);
+struct dedos_thread *get_dedos_thread(int id);
 
 typedef void* (*dedos_thread_init_fn)(struct dedos_thread *thread);
 typedef int (*dedos_thread_fn)(struct dedos_thread *thread, void *init_output);

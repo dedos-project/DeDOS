@@ -8,7 +8,7 @@
 #include "logging.h"
 #include "runtime_dfg.h"
 #include "controller_communication.h"
-#include "main_thread.h"
+#include "output_thread.h"
 #include "socket_monitor.h"
 #include "profiler.h"
 
@@ -89,10 +89,9 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    // TODO: Initialize openssl in msu_type constructor for webserver
-    struct dedos_thread *main_thread = start_main_thread();
-    if (main_thread == NULL) {
-        log_critical("Error starting main thread!");
+    struct dedos_thread *output_thread = start_output_monitor_thread();
+    if (output_thread == NULL) {
+        log_critical("Error starting output thread!");
         exit(-1);
     }
 
@@ -104,7 +103,9 @@ int main(int argc, char **argv) {
     }
 
     stop_all_worker_threads();
-    stop_main_thread();
+    stop_output_monitor();
+    join_output_thread();
+
     finalize_statistics(statlog);
     log_info("Exiting runtime...");
     return 0;

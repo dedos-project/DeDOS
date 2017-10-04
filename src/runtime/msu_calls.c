@@ -6,7 +6,7 @@
 #include "msu_calls.h"
 #include "logging.h"
 #include "thread_message.h"
-#include "main_thread.h"
+#include "output_thread.h"
 #include "routing_strategies.h"
 #include "profiler.h"
 
@@ -42,7 +42,7 @@ static int enqueue_for_remote_send(struct msu_msg *msg,
     }
 
     PROFILE_EVENT(msg->hdr, PROF_REMOTE_SEND);
-    int rtn = enqueue_to_main_thread(thread_msg);
+    int rtn = enqueue_for_output(thread_msg);
     if (rtn < 0) {
         log_error("Error enqueuing MSU msg for msu %u on main thread", dst->id);
         destroy_thread_msg(thread_msg);
