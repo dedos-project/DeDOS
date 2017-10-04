@@ -4,6 +4,7 @@ import copy
 import yaml
 from collections import OrderedDict, defaultdict
 
+MSU_ID_START = 10
 route_id = 1000
 
 """ Ordered dictionaries containing simple mappings from fields in json to fields in yaml. """
@@ -16,12 +17,14 @@ ROOT_MAPPING = OrderedDict([
 
 MSU_MAPPING = OrderedDict([
     ('vertex_type', 'vertex_type'),
+    ('init_data', 'init_data'),
+    ('type', 'type'),  # Directly copied but properly resolved later, easier to get correct ordering for gc parser
     ('blocking_mode', 'blocking_mode'),
-    ('name', 'name'),
     ('scheduling', OrderedDict([
         ('thread_id', 'thread'),
         ('runtime', 'runtime'),
-    ]))
+    ])),
+    ('name', 'name')  # Needed for routes, but not output
 ])
 
 MSU_TYPE_MAPPING = OrderedDict([
@@ -59,7 +62,7 @@ def nested_dict_getter(a_dict, keys):
     return a_dict
 
 
-def dict_from_mapping(a_dict, mapping):
+def dict_from_mapping(a_dict, mapping, output=None):
     """
     Transform a given dictionary into a new dictionary using the mapping
     dictionary given. The mapping dictionary may contain a mapping from
@@ -70,7 +73,8 @@ def dict_from_mapping(a_dict, mapping):
     :param mapping: dictionary mapping output keys to input keys
     :return: the new dictionary transformed from the input dictionary
     """
-    output = OrderedDict()
+    if output is None:
+        output = OrderedDict()
     for key in mapping:
         value = mapping[key]
         if isinstance(value, dict):
@@ -78,7 +82,8 @@ def dict_from_mapping(a_dict, mapping):
         elif isinstance(value, list):
             output[key] = nested_dict_getter(a_dict, value)
         else:
-            output[key] = a_dict[value]
+            if value in a_dict:
+                output[key] = a_dict[value]
     return output
 
 
@@ -104,10 +109,10 @@ def add_routing(rt_id, froms, tos, routes, route_indexes):
             new_routes[dest['type']] = OrderedDict([('id', route_id), ('type', dest['type']), ('endpoints', [])])
             route_id += 1
         endpoints = new_routes[dest['type']]['endpoints']
-        endpoints.append({'key': len(endpoints) + 1, 'msu': dest['id']})
+        endpoints.append(OrderedDict([('key', len(endpoints) + 1), ('msu', dest['id'])]))
 
     # Now add these new routes to runtime and their ids to the msus in froms
-    routes.append(new_routes.values())
+    routes.extend(new_routes.values())
     for msu in froms:
         if 'routes' not in msu['scheduling']:
             msu['scheduling']['routes'] = []
@@ -156,43 +161,33 @@ def runtime_routes(rt_id, msus, yaml_routes):
     return json_routes
 
 
-def count_downstream(msu, dfg, found_already=None):
+def count_endpoints(msu, dfg):
     """
-    Recursively count the number of downstream destinations from the current msu.
+    Count the total number of endpoints for any route with the given msu
+    as a source.
 
-    :param msu: the msu to search the routing from
+    :param msu: the source msu of the routes to consider
     :param dfg: the entire dfg
-    :param found_already: the set of MSU ids that have been seen already
-    :return: the number of downstream destinations
+    :return: the total number of endpoints
     """
-    found_already = {msu['id'] if found_already is None else found_already}
-
-    if 'routing' not in msu['scheduling']:
+    if 'routes' not in msu['scheduling']:
         return 1
 
-    # Get runtime of the given msu
-    runtime = next(rt for rt in dfg['runtimes']
-                   if rt['id'] == msu['scheduling']['runtime_id'])
+    msu_route_ids = set(msu['scheduling']['routes'])
 
-    # Get the unique MSUs that exist downstream from this MSU
-    for route in msu['scheduling']['routing']:
-        dfg_route = next(r for r in runtime['routes'] if r['id'] == route)
+    # Find the runtime for the given msu
+    runtime = next(rt for rt in dfg['runtimes'] if rt['id'] == msu['scheduling']['runtime'])
+    if runtime is None:
+        print "Failed to find runtime {0} for msu {1}".format(msu['scheduling']['runtime'], msu['id'])
 
-        for dst in dfg_route['destinations']:
-            if dst not in found_already:
-                dst_msu = next(m for m in dfg['MSUs'] if m['id'] == dst)
-                if dst_msu is None:
-                    print "Cannot find MSU {0}".format(dst)
-                found_already.add(dst_msu['id'])
-                count_downstream(dst_msu, dfg, found_already)
-
-    return len(found_already)
+    # Return the sum of the endpoints for each route referenced in the MSU
+    return sum([len(route['endpoints']) for route in runtime['routes'] if route['id'] in msu_route_ids])
 
 
 def fix_route_keys(dfg):
     """
-    For each route in each runtime, set the value of each route's destination to
-    min_key.
+    For each route in each runtime, set the key for each MSU to the number
+    of endpoints in the MSU's routes.
 
     :param dfg: the dfg to update the route keys in
     :return: None, the dfg is directly modified
@@ -202,10 +197,10 @@ def fix_route_keys(dfg):
     for runtime in dfg['runtimes']:
         for route in runtime['routes']:
             min_key = 0
-            for destination in route['destinations']:
-                msu = msus[destination]
-                min_key += count_downstream(msu, dfg)
-                route['destinations'][destination] = min_key
+            for (i, endpoint) in enumerate(route['endpoints']):
+                msu = msus[endpoint['msu']]
+                min_key += count_endpoints(msu, dfg)
+                route['endpoints'][i]['key'] = min_key
 
 
 def stringify(output):
@@ -241,7 +236,7 @@ class MSUGenerator(list):
     up to the number of reps specified.
     """
 
-    next_msu_id = 1  # To ensure each MSU has a unique id
+    next_msu_id = MSU_ID_START  # To ensure each MSU has a unique id
 
     def __init__(self, msu, type_name_to_id):
         """
@@ -255,15 +250,15 @@ class MSUGenerator(list):
         self.starting_id = self.next_msu_id
         self.generated = 0
 
-        # Create the base MSU
-        self.base_msu = dict_from_mapping(msu, MSU_MAPPING)
-        self.base_msu['type'] = type_name_to_id[msu['type']]
+        # Pre-allocating IDs
+        self.base_msu = OrderedDict([('id', MSUGenerator.next_msu_id)])
+        MSUGenerator.next_msu_id += self.reps
+
+        # Add simple mappings to base_msu now
+        self.base_msu = dict_from_mapping(msu, MSU_MAPPING, self.base_msu)
+        self.base_msu['type'] = type_name_to_id[msu['type']]  # Overwrite with the id
         if 'init_data' in msu:
             self.base_msu['init_data'] = msu['init_data']
-
-        # Pre-allocating IDs
-        self.base_msu['id'] = MSUGenerator.next_msu_id
-        MSUGenerator.next_msu_id += self.reps
 
     def __iter__(self):
         """
@@ -304,12 +299,6 @@ def make_dfg(cfg_fpath):
         cfg_yaml = yaml.load(cfg_file)
         dfg = dict_from_mapping(cfg_yaml, ROOT_MAPPING)
 
-        dfg['runtimes'] = []
-        for (rt_id, rt) in cfg_yaml['runtimes'].items():
-            dfg_rt = dict_from_mapping(rt, RUNTIME_MAPPING)
-            dfg_rt['id'] = rt_id
-            dfg['runtimes'].append(dfg_rt)
-
         msu_type_name_to_id = {}
         dfg['MSU_types'] = []
         for (name, msu_type) in cfg_yaml['msu_types'].items():
@@ -322,15 +311,35 @@ def make_dfg(cfg_fpath):
             dfg['MSU_types'].append(dfg_msu_type)
             msu_type_name_to_id[name] = dfg_msu_type['id']
 
-        msus = [msu for base_msu in cfg_yaml['msus']
-                for msu in MSUGenerator(base_msu, msu_type_name_to_id)]
+        # Fix types in MSU dependencies and meta_routing->dst_types from name to id
+        for msu_type in dfg['MSU_types']:
+            if 'dependencies' in msu_type:
+                for dep in msu_type['dependencies']:
+                    if not isinstance(dep['type'], int):
+                        dep['type'] = msu_type_name_to_id[dep['type']]
+            for key in ['source_types', 'dst_types']:
+                if key in msu_type['meta_routing']:
+                    for (i, t) in enumerate(msu_type['meta_routing'][key]):
+                        if not isinstance(t, int):
+                            msu_type['meta_routing'][key][i] = msu_type_name_to_id[t]
+
+        dfg['MSUs'] = [msu for base_msu in cfg_yaml['msus']
+                       for msu in MSUGenerator(base_msu, msu_type_name_to_id)]
+
+        dfg['runtimes'] = []
+        for (rt_id, rt) in cfg_yaml['runtimes'].items():
+            dfg_rt = OrderedDict([('id', rt_id)])
+            dfg_rt = dict_from_mapping(rt, RUNTIME_MAPPING, dfg_rt)
+            dfg['runtimes'].append(dfg_rt)
 
         for rt in dfg['runtimes']:
-            rt['routes'] = runtime_routes(rt['id'], msus, cfg_yaml['routes'])
+            rt['routes'] = runtime_routes(rt['id'], dfg['MSUs'], cfg_yaml['routes'])
 
-        dfg['MSUs'] = msus
-        #fix_route_keys(dfg)
-        stringify(dfg)
+        for msu in dfg['MSUs']:
+            del(msu['name'])  # Name needed for routing but not output
+
+        fix_route_keys(dfg)
+        #stringify(dfg)
 
         return dfg
 
