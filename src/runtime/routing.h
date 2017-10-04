@@ -7,6 +7,7 @@
 struct msu_endpoint {
     int id;
     enum msu_locality locality;
+    unsigned int route_id;   // The route used to get to the endpoint
     unsigned int runtime_id;
     struct msg_queue *queue; // Only filled if MSU_IS_LOCAL
 };

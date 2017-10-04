@@ -161,6 +161,7 @@ static int add_routing_table_entry(struct routing_table *table,
     }
     table->keys[i] = key;
     table->endpoints[i] = *dest;
+    table->endpoints[i].route_id = table->id;
     table->n_endpoints++;
     unlock(table);
 

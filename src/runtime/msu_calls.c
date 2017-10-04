@@ -151,6 +151,7 @@ int call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
         return -1;
     }
 
+    msg->hdr.key.group_id = dst.route_id;
 
     switch (dst.locality) {
         case MSU_IS_LOCAL:

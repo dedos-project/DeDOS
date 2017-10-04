@@ -25,6 +25,7 @@ int set_msg_key(int32_t id, struct msu_msg_key *key) {
     memcpy(&key->key, &id, sizeof(id));
     key->key_len = sizeof(id);
     key->id = id;
+    key->group_id = -1;
     return 0;
 }
 
@@ -36,6 +37,7 @@ int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
     }
     memcpy(&key->key, seed, seed_size);
     key->key_len = seed_size;
+    key->group_id = -1;
     return 0;
 }
 

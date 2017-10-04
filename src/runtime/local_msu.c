@@ -239,7 +239,7 @@ static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
     return 0;
 }
 
-/** 
+/**
  * Dequeus a message from a local MSU and calls its receive function
  * @param msu MSU to dequeue the message from
  * @return 0 on success, -1 on error, 1 if no message existed to be dequeued

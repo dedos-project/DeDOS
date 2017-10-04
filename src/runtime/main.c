@@ -32,8 +32,6 @@ int main(int argc, char **argv) {
     char *statlog = NULL;
     int runtime_id = -1;
     float prof_prob = 0;
-    // TODO: tag_probability
-    //char *tag_probability = NULL;
 
     struct option long_options[] = {
         {NULL, 0, 0, 0}
@@ -96,7 +94,6 @@ int main(int argc, char **argv) {
     }
 
     // This will block until the socket monitor exits
-    // TODO: Shut down main thread when socket monitor exits
     rtn = run_socket_monitor(local_runtime_port(), &ctrl_addr);
     if (rtn < 0) {
         log_critical("Error running socket monitor. Runtime will exit");
