@@ -85,7 +85,7 @@ int local_runtime_id() {
 }
 
 int local_runtime_port() {
-    if (DFG == NULL) {
+    if (LOCAL_RUNTIME == NULL) {
         log_error("Runtime DFG not instantiated");
         return -1;
     }
