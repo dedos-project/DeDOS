@@ -39,16 +39,15 @@ struct worker_thread thread = {
     .thread = &d_thread
 };
 
-struct local_msu target_msu = {
-    .type = &test_type,
-    .id = test_msu_id,
-    .thread = &thread
-};
-
 struct local_msu sock_msu = {
     .type = &SOCKET_MSU_TYPE,
     .id = 66,
     .thread = &thread
+};
+
+static struct sock_msu_state state = {
+    .self = &sock_msu,
+    .default_target = &test_type
 };
 
 int route_id = 2;
@@ -73,11 +72,6 @@ START_DEDOS_TEST(test_process_connection__new) {
     struct local_msu *msu = create_target();
     route_to_target(&sock_msu);
 
-    struct sock_msu_state state = {
-        .self = &sock_msu,
-        .default_target = &test_type
-    };
-
     int listen_port = 1234;
     init_listening_socket(listen_port);
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -101,11 +95,6 @@ START_DEDOS_TEST(test_process_connection__existing) {
     create_target();
     route_to_target(&sock_msu);
 
-    struct sock_msu_state state = {
-        .self = &sock_msu,
-        .default_target = &test_type
-    };
-
     struct msu_msg_hdr hdr = {};
 
     int fd = 10;
@@ -115,11 +104,11 @@ START_DEDOS_TEST(test_process_connection__existing) {
     process_connection(fd, &state);
 
     ck_assert_int_eq(sock_msu.queue.num_msgs, 1);
+
 } END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("test_socket_msu")
-
-LOCAL_RUNTIME = &rt;
+    LOCAL_RUNTIME = &rt;
 
 DEDOS_ADD_TEST_FN(test_process_connection__new)
 DEDOS_ADD_TEST_FN(test_process_connection__existing)
