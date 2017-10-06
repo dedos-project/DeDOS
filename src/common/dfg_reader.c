@@ -42,8 +42,8 @@ static int fix_num_threads(struct dedos_dfg *dfg) {
             }
         }
         if (n_pinned < 0 || n_unpinned < 0) {
-            log_error("More pinned/unpinned threads specified by MSUs than by DFG: "
-                      "%d more pinned, %d more unpinned", -1 * n_pinned, -1 * n_unpinned);
+            log_error("More pinned/unpinned threads specified by MSUs than by DFG on rt %d: "
+                      "%d more pinned, %d more unpinned", rt->id, -1 * n_pinned, -1 * n_unpinned);
             return -1;
         }
     }

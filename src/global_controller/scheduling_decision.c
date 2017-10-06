@@ -32,7 +32,7 @@ static int gather_cloning_info(struct cloning_info *info) {
     info->num_msus = 0;
 
     struct dfg_msu_type *type = get_dfg_msu_type(info->msu_type_id);
-    if (!type->cloneable) {
+    if (type == NULL || !type->cloneable) {
         return 0;
     }
 

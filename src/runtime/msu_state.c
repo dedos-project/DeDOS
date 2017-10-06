@@ -7,29 +7,33 @@
 #define CHECK_STATE_REPLACEMENT 1
 
 struct msu_state {
-    struct composite_key id;
+    struct composite_key key;
     size_t size;
+    int group_id;
+    int32_t id;
     void *data;
     UT_hash_handle hh;
 };
 
 void *msu_init_state(struct local_msu *msu, struct msu_msg_key *key, size_t size) {
     struct msu_state *state = malloc(sizeof(*state));
-    memcpy(&state->id, &key->key, key->key_len);
+    memcpy(&state->key, &key->key, key->key_len);
+    state->group_id = key->group_id;
     state->data = malloc(size);
     state->size = size;
+    state->id = key->id;
 
     log(LOG_STATE_MANAGEMENT, "Allocating new state of size %d for msu %d, key %d",
                (int)size, msu->id, (int)key->id);
 
 #if CHECK_STATE_REPLACEMENT
     struct msu_state *old_state = NULL;
-    HASH_REPLACE(hh, msu->item_state, id, key->key_len, state, old_state);
+    HASH_REPLACE(hh, msu->item_state, key, key->key_len, state, old_state);
     if (old_state != NULL) {
         log_warn("Replacing old state! Not freeing! Bad!");
     }
 #else
-    HASH_ADD(hh, msu->item_state, id, key->key_len, state);
+    HASH_ADD(hh, msu->item_state, key, key->key_len, state);
 #endif
 
     increment_stat(MSU_MEM_ALLOC, msu->id, (double)(sizeof(*state) + size));

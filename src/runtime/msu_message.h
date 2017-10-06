@@ -3,16 +3,31 @@
 #include "message_queue.h"
 #include "msu_type.h"
 
+/**
+ * The composite key is used to store a key of
+ * arbitrary length (up to 192 bytes).
+ * This is used for storing/retrieving state.
+ */
 struct composite_key {
     uint64_t k1;
     uint64_t k2;
     uint64_t k3;
 };
 
+/**
+ * Used to uniquely identify the source of a message,
+ * used in state storage as well as routing
+ */
 struct msu_msg_key {
+    /** The full, arbitrary-length, unique key (used in state) */
     struct composite_key key;
+    /** The length of the composite key */
     size_t key_len;
+    /** A shorter, often hashed id for the key of fixed length (used in routing) */
     int32_t id;
+    /** Used to mark a route ID when storing state, enabling state migration
+     * within a specific group */
+    int group_id;
 };
 
 struct msu_provinance_item {
@@ -49,7 +64,15 @@ int add_provinance(struct msg_provinance *prov,
 
 int init_msu_msg_hdr(struct msu_msg_hdr *hdr, struct msu_msg_key *key);
 
+/**
+ * Sets the key's ID and composite-ID to be equal to the provided id.
+ */
 int set_msg_key(int32_t id, struct msu_msg_key *key);
+
+/**
+ * Sets the key's composite-ID to the provided value,
+ * and sets the key's ID to a hash of the value.
+ */
 int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key);
 
 void destroy_msu_msg_and_contents(struct msu_msg *msg);

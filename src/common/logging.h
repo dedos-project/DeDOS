@@ -15,8 +15,11 @@
 
 #define PICO_SUPPORT_NDEBUG
 
+/** Where logs are printed to */
 #define LOG_FD stderr
 
+// Switch LOG_ALL definition to a 1 or 0. Makes for easier checking of the condition
+// in log()
 #ifndef LOG_ALL
 #define LOG_ALL 0
 #else
@@ -24,12 +27,13 @@
 #define LOG_ALL 1
 #endif
 
+/** Macro utilized by all loggers **/
 #define log_at_level(lvl_label, color, fd, fmt, ...)\
         fprintf(fd, "" color "%lu:%s:%d:%s(): " lvl_label ": " fmt ANSI_COLOR_RESET "\n", \
                 pthread_self(), __FILE__, __LINE__, __func__, ##__VA_ARGS__)
 
-
 #ifdef LOG_DEBUG
+/** Use of log_debug(fmt, ...) is not recommended. Use log(LVL, fmt, ...) below */
 #define log_debug(fmt, ...)\
     log_at_level("DEBUG", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
 #else
@@ -70,8 +74,12 @@
 #endif
 
 #ifdef LOG_CUSTOM
+/** Helper macros to test for the existence of a preprocessor definition */
 #define LOG_CUSTOM_STRINGIFY(val) "" #val
 #define LOG_CUSTOM_STRINGIFY2(val) LOG_CUSTOM_STRINGIFY(val)
+/** Log at a custom level. Compiled away if LOG_CUSTOM is not defined,
+ * and optimized out if the preprocessor macro `level` is not defined
+ * (and optimization level is sufficiently high) */
 #define log(level, fmt, ...)\
     do { \
         if ((LOG_ALL || strcmp( "" #level, LOG_CUSTOM_STRINGIFY(level))) \

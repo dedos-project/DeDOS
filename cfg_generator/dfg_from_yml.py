@@ -313,7 +313,7 @@ def make_dfg(cfg_fpath):
                     if not isinstance(dep['type'], int):
                         dep['type'] = msu_type_name_to_id[dep['type']]
             for key in ['source_types', 'dst_types']:
-                if key in msu_type['meta_routing']:
+                if 'meta_routing' in msu_type and key in msu_type['meta_routing']:
                     for (i, t) in enumerate(msu_type['meta_routing'][key]):
                         if not isinstance(t, int):
                             msu_type['meta_routing'][key][i] = msu_type_name_to_id[t]
