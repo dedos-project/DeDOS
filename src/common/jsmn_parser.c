@@ -120,6 +120,11 @@ int parse_file_into_obj(const char *filename, void *obj, struct key_mapping *km)
 
     FILE *file = fopen(filename, "r");
 
+    if (file == NULL) {
+        log_perror("Error opening %s", filename);
+        return -1;
+    }
+
     // Get the size of the file
     fseek(file, 0, SEEK_END);
     long fsize = ftell(file);
@@ -138,7 +143,7 @@ int parse_file_into_obj(const char *filename, void *obj, struct key_mapping *km)
     return parse_str_into_obj(contents, obj, km);
 }
 
-#define MAX_RETRIES 100
+#define MAX_RETRIES 1024
 
 /**
  * Using the provided functions, parses the JSON present in
