@@ -43,6 +43,10 @@ static int downstream_q_len(struct dfg_msu *msu) {
 
 static int fix_route_ranges(struct dfg_route *route) {
 
+    if (route->n_endpoints <= 1) {
+        return 0;
+    }
+
     // Calculate what the new keys will be based on the number of downstream MSUs
     int old_ids[route->n_endpoints];
     int old_keys[route->n_endpoints];
@@ -62,10 +66,27 @@ static int fix_route_ranges(struct dfg_route *route) {
         }
 #else
         double key = n_downstream_msus(route->endpoints[i]->msu);
-        new_keys[i] = last + key;
+        new_keys[i] = last + (key > 0 ? key : 1);
 #endif
         last = new_keys[i];
     }
+
+    int old_diff = old_keys[0];
+    int new_diff =  new_keys[0];
+
+    // If the differences between the keys is the same across all endpoints, no need to change
+    int change_in_diffs = 0;
+    for (int i=1; i<route->n_endpoints; i++) {
+        if (old_keys[i] - old_keys[i-1] != old_diff ||
+                new_keys[i] - new_keys[i-1] != new_diff) {
+            change_in_diffs = 1;
+            break;
+        }
+    }
+    if (!change_in_diffs) {
+        return 0;
+    }
+
 
     for (int i=0; i<route->n_endpoints; i++) {
         if (old_keys[i] != new_keys[i]) {
@@ -368,14 +389,19 @@ int wire_msu(struct dfg_msu *msu) {
                     route = get_dfg_rt_route_by_type(src_rt, msu->type);
                 }
 
+                struct dfg_route *msu_route = get_dfg_msu_route_by_type(source, msu->type);
                 //Is the route attached to that source msu?
-                if (!msu_has_route(source, route)) {
+                if (msu_route == NULL) {
+                    log(LOG_SCHEDULING, "Route %d doesn't exist from source %d",
+                        route->id, source->id);
                     ret = add_route_to_msu(source->id, route->id);
                     if (ret != 0) {
                         log_error("Could not attach route %d to msu %d",
                                   source->id, route->id);
                         return -1;
                     }
+                } else {
+                    route = msu_route;
                 }
 
                 //Is the new MSU already an endpoint of that route?

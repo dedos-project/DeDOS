@@ -12,15 +12,15 @@ struct cloning_info {
     int msu_type_id;
     enum stat_id stat_id;
     double threshold;
-    struct dfg_msu *sample_msu;
+    int clone_type_id;
     double stats[MAX_MSU];
     int num_msus;
 };
 
 static struct cloning_info CLONING_INFO[] = {
-    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 10 },
-    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 10 },
-    { WEBSERVER_HTTP_MSU_TYPE_ID, MSU_NUM_STATES, 2048 }
+    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 10, WEBSERVER_READ_MSU_TYPE_ID},
+    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 10, WEBSERVER_REGEX_MSU_TYPE_ID },
+    { WEBSERVER_HTTP_MSU_TYPE_ID, MSU_NUM_STATES, 2048, WEBSERVER_READ_MSU_TYPE_ID }
 };
 
 #define SAMPLES_FOR_CLONING_DECISION 10
@@ -53,7 +53,6 @@ static int gather_cloning_info(struct cloning_info *info) {
             continue;
         }
         info->num_msus++;
-        info->sample_msu = instance;
     }
     return 0;
 }
@@ -94,7 +93,7 @@ static void set_haproxy_weights() {
     }
 }
 
-#define MIN_CLONE_DURATION 4
+#define MIN_CLONE_DURATION 2
 
 static struct timespec last_clone_time;
 
@@ -110,7 +109,9 @@ int perform_cloning() {
                 continue;
             }
             if (should_clone(&CLONING_INFO[i])) {
-                struct dfg_msu *msu = clone_msu(CLONING_INFO[i].sample_msu->id);
+                struct dfg_msu_type *clone_type = get_dfg_msu_type(CLONING_INFO[i].clone_type_id);
+                struct dfg_msu *cloned_msu = clone_type->instances[0];
+                struct dfg_msu *msu = clone_msu(cloned_msu->id);
                 if (msu == NULL) {
                     log_error("Cloning MSU failed for MSU type %d", CLONING_INFO[i].msu_type_id);
                     continue;

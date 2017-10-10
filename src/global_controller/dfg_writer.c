@@ -387,6 +387,10 @@ void dfg_to_file(char *filename) {
     unlock_dfg();
     int json_size = strlen(dfg_json);
     FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        log_perror("Cannot write DFG to %s", filename);
+        return;
+    }
     fwrite(dfg_json, sizeof(char), json_size, file);
     fwrite("\n", sizeof(char), 1, file);
     fclose(file);

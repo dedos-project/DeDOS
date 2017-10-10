@@ -133,6 +133,17 @@ static int parse_show_msus(char *args) {
     }
 
     //TODO: int rtn = send_report_msus_msg(rt);
+
+    struct dedos_dfg *dfg = get_dfg();
+    for (int i=0; i<dfg->n_msus; i++) {
+        struct dfg_msu *msu = dfg->msus[i];
+        if (msu->scheduling.runtime == rt) {
+            printf("ID: %d\t Type: %s (%d)\n",
+                    msu->id, msu->type->name, msu->type->id);
+        }
+    }
+
+
     int rtn = 0;
 
     if (rtn < 0) {
@@ -326,14 +337,84 @@ static int parse_load_cfg(char *args) {
     return 0;
 }
 
+static int parse_clone_msu(char *args) {
+    char *msu_c;
+    NEXT_ARG(msu_c, args);
+
+    int id = atoi(msu_c);
+
+    struct dfg_msu *to_clone = get_dfg_msu(id);
+    if (to_clone == NULL) {
+        log_error("MSU %d does not exist", id);
+        return -1;
+    }
+    struct dfg_msu *cloned = clone_msu(id);
+    if (cloned == NULL) {
+        log_error("Could not clone msu %d", id);
+        return -1;
+    }
+    return 0;
+}
+
+static int parse_show_routes(char *args) {
+    char *msu_c;
+    NEXT_ARG(msu_c, args);
+
+    int id = atoi(msu_c);
+
+    struct dfg_msu *msu = get_dfg_msu(id);
+
+    if (msu == NULL) {
+        log_error("Msu %d does not exist", id);
+        return -1;
+    }
+    for (int i=0; i<msu->scheduling.n_routes; i++) {
+        struct dfg_route *route = msu->scheduling.routes[i];
+        printf("Route: %d\tType: %d\n", route->id, route->msu_type->id);
+    }
+    return 0;
+}
+
+static int parse_show_route(char *args) {
+    char *route_id_c;
+    NEXT_ARG(route_id_c, args);
+
+    int id = atoi(route_id_c);
+
+    struct dfg_route *route = get_dfg_route(id);
+    if (route == NULL) {
+        log_error("Route %d does not exist", id);
+        return -1;
+    }
+
+    for (int i=0; i<route->n_endpoints; i++) {
+        struct dfg_route_endpoint *ep = route->endpoints[i];
+        printf("Destination: %d\tKey: %d\n", ep->msu->id, (int)ep->key);
+    }
+    return 0;
+}
+
+
 static int parse_help(char *cmd);
 
 struct cmd_action cmd_actions[] = {
     {"show runtimes", parse_show_runtimes, {},
         "List connected runtimes and socket num"},
 
-    {"*show msus", parse_show_msus, {"RUNTIME-ID"},
+    {"show msus", parse_show_msus, {"RUNTIME-ID"},
         "Get MSUs running on the runtime" },
+
+    {"show stats", parse_show_stats, {"MSU-ID"},
+        "display stored time serie for a given msu"},
+
+    {"show routes", parse_show_routes, {"MSU-ID"},
+        "display routes attached to a given msu"},
+
+    {"show route", parse_show_route, {"MSU-ID"},
+        "display endpoints of a given route"},
+
+    {"clone msu", parse_clone_msu, {"MSU-ID"},
+        "clones and schedules the clone of an MSU"},
 
     {"add msu", parse_add_msu,
         {"RUNTIME-ID", "MSU_TYPE", "MSU-ID", "MSU_MODE", "THREAD-ID", "[VERTEX_TYPE]",
@@ -368,9 +449,6 @@ struct cmd_action cmd_actions[] = {
 
     {"*allocate", parse_allocate, {},
         "gather all msu not possessing a 'scheduling' object, and compute a placement"},
-
-    {"show stats", parse_show_stats, {"MSU-ID"},
-        "display stored time serie for a given msu"},
 
     {"loadcfg", parse_load_cfg, {"FILENAME"},
         "load a suite of commands from a file"},
