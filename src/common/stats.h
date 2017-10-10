@@ -31,7 +31,8 @@ struct stat_type_label {
 #define REPORTED_STAT_TYPES \
     {MSU_QUEUE_LEN, "QUEUE_LEN"}, \
     {MSU_ITEMS_PROCESSED, "ITEMS_PROCESSED"}, \
-    {MSU_MEM_ALLOC, "MEMORY_ALLOCATED"}
+    {MSU_MEM_ALLOC, "MEMORY_ALLOCATED"}, \
+    {MSU_NUM_STATES, "NUM_STATES"}
 #endif
 
 static struct stat_type_label UNUSED reported_stat_types[] = {
