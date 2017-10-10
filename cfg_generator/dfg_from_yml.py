@@ -194,7 +194,8 @@ def fix_route_keys(dfg):
             min_key = 0
             for (i, endpoint) in enumerate(route['endpoints']):
                 msu = msus[endpoint['msu']]
-                min_key += count_endpoints(msu, dfg)
+                endpoints = count_endpoints(msu, dfg)
+                min_key += endpoints if endpoints > 0 else 1
                 route['endpoints'][i]['key'] = min_key
 
 
