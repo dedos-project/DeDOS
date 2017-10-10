@@ -5,6 +5,7 @@
 #include "local_msu.h"
 #include "unused_def.h"
 #include <stdlib.h>
+#include <limits.h>
 #include <pthread.h>
 
 /** The maximum number of destinations a route can have */
@@ -270,7 +271,7 @@ int init_route(int route_id, int type_id) {
 }
 
 // TODO: Redefine, move  MAX_MSU_Q_SIZE!!
-#define MAX_MSU_Q_SIZE 1024
+#define MAX_MSU_Q_SIZE INT_MAX
 
 /**
  * Gets the local endpoint from a route with the shortest queue length.
