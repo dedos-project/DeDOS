@@ -11,7 +11,6 @@
 #include <netinet/ip.h>
 
 static struct dedos_thread *static_output_thread;
-static int exit_signal;
 
 static void *init_output_thread(struct dedos_thread *output_thread) {
     static_output_thread = output_thread;
@@ -42,9 +41,8 @@ static int output_thread_connect_to_runtime(struct ctrl_add_runtime_msg *msg){
     return 0;
 }
 
-
 void stop_output_monitor() {
-    exit_signal = 1;
+    dedos_thread_stop(static_output_thread);
 }
 
 void join_output_thread() {
@@ -120,11 +118,14 @@ static int output_thread_loop(struct dedos_thread *self, void UNUSED *init_data)
     struct timespec elapsed;
     struct timespec timeout_abs;
     clock_gettime(CLOCK_REALTIME, &timeout_abs);
-    while (!exit_signal) {
+    while (!dedos_thread_should_exit(self)) {
 
         clock_gettime(CLOCK_REALTIME, &elapsed);
         if (elapsed.tv_sec >= timeout_abs.tv_sec) {
-            send_stats_to_controller();
+            if (send_stats_to_controller() < 0) {
+                log_error("Error sending stats to controller");
+            }
+            log(LOG_STATS_SEND, "Sent stats");
             clock_gettime(CLOCK_REALTIME, &timeout_abs);
             timeout_abs.tv_sec += STAT_REPORTING_DURATION_S;
         }

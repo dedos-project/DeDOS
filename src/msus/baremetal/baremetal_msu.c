@@ -7,6 +7,7 @@
 #include "logging.h"
 #include "msu_calls.h"
 #include "profiler.h"
+#include "routing_strategies.h"
 #include <stdlib.h>
 
 static int receive(struct local_msu *self, struct msu_msg *msu_msg) {

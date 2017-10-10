@@ -464,11 +464,9 @@ int mod_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *e
 
     // Iterate from the old to the new location, moving the endpoints in the other direction
     for (int i=old; delta * i < delta * new; i += delta) {
-        log(LOG_ROUTING_CHANGES, "moving %d to %d", i+delta, i);
         route->endpoints[i] = route->endpoints[i + delta];
     }
 
-    log(LOG_ROUTING_CHANGES, "Moved %d from %d to %d", ep->msu->id, old, new);
 
     // Replace the new endpoint
     ep->key = new_key;

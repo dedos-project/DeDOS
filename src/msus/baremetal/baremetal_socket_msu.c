@@ -47,7 +47,7 @@ static int read_and_forward(int fd, void UNUSED *v_state) {
     return 0;
 }
 
-#define BAREMETAL_EPOLL_TIMEOUT 5000
+#define BAREMETAL_EPOLL_TIMEOUT 1000
 #define BAREMETAL_EPOLL_BATCH 1000
 
 static int socket_handler_main_loop(struct local_msu *self) {

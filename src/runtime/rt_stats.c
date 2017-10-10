@@ -48,14 +48,16 @@ struct stat_type {
 #define MAX_MSU 32
 #define MAX_THREADS 12
 
-#define GATHER_CTX_SWITCHES 1
-#define GATHER_MSU_QUEUE_LEN 1
-#define GATHER_MSU_EXEC_TIME 1
-#define GATHER_MSU_IDLE_TIME 1
-#define GATHER_MSU_MEM_ALLOC 1
-#define GATHER_MSU_ITEMS_PROC 1
-#define GATHER_MSU_NUM_STATES 1
-#define GATHER_CUSTOM_STATS 1
+#define GATHER_STATS 1
+
+#define GATHER_CTX_SWITCHES 1 & GATHER_STATS
+#define GATHER_MSU_QUEUE_LEN 1 & GATHER_STATS
+#define GATHER_MSU_EXEC_TIME 1 & GATHER_STATS
+#define GATHER_MSU_IDLE_TIME 1 & GATHER_STATS
+#define GATHER_MSU_MEM_ALLOC 1 & GATHER_STATS
+#define GATHER_MSU_ITEMS_PROC 1 & GATHER_STATS
+#define GATHER_MSU_NUM_STATES 1 & GATHER_STATS
+#define GATHER_CUSTOM_STATS 1 & GATHER_STATS
 
 #ifdef DEDOS_PROFILER
 #define GATHER_PROFILING 1
@@ -280,17 +282,16 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
     struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
     if (item == NULL) {
         return -1;
     }
 
     if (lock_item(item)) {
-        unlock_type(type);
         return -1;
     }
     get_elapsed_time(&item->stats[item->write_index].time);
     unlock_item(item);
-    unlock_type(type);
 
     return 0;
 }
@@ -320,8 +321,8 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
     struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
     if (item == NULL) {
-        unlock_type(type);
         return -1;
     }
 
@@ -329,7 +330,6 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     get_elapsed_time(&new_time);
 
     if (lock_item(item)) {
-        unlock_type(type);
         return -1;
     }
     time_t timediff_s = new_time.tv_sec - item->stats[item->write_index].time.tv_sec;
@@ -345,7 +345,6 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     }
 
     unlock_item(item);
-    unlock_type(type);
     return 0;
 }
 
@@ -367,13 +366,12 @@ int increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
         return -1;
     }
     struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
     if (item == NULL) {
-        unlock_type(type);
         return -1;
     }
 
     if (lock_item(item)) {
-        unlock_type(type);
         return -1;
     }
 
@@ -391,7 +389,6 @@ int increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
     }
 
     unlock_item(item);
-    unlock_type(type);
     return 0;
 }
 
@@ -414,13 +411,12 @@ int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool re
         return -1;
     }
     struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
     if (item == NULL) {
-        unlock_type(type);
         return -1;
     }
 
     if (lock_item(item)) {
-        unlock_type(type);
         return -1;
     }
 
@@ -441,7 +437,6 @@ int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool re
         }
     }
     unlock_item(item);
-    unlock_type(type);
     return 0;
 }
 
@@ -724,7 +719,7 @@ void finalize_statistics(char *statlog) {
         FILE *file = fopen(statlog, "w");
         flush_all_stats_to_log(file);
         fclose(file);
-        log_info("Finished outputting stats to log");
+        log_info("Finished outputting stats to %s", statlog);
 #else
         log_info("Skipping dump to stat log. Set DUMP_STATS=1 to enable");
 #endif

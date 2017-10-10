@@ -99,8 +99,8 @@ int main(int argc, char **argv) {
         log_critical("Error running socket monitor. Runtime will exit");
     }
 
-    stop_all_worker_threads();
     stop_output_monitor();
+    stop_all_worker_threads();
     join_output_thread();
 
     finalize_statistics(statlog);

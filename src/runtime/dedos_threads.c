@@ -54,6 +54,8 @@ static int init_dedos_thread(struct dedos_thread *thread,
     thread->id = id;
     thread->mode = mode;
     sem_init(&thread->sem, 0, 0);
+    pthread_mutex_init(&thread->exit_lock, NULL);
+    thread->exit_signal = 0;
 
     if (init_thread_stat_items(thread->id) != 0) {
         log_warn("Error initializing thread statistics");
@@ -103,9 +105,40 @@ static int pin_thread(pthread_t ptid) {
     return 0;
 }
 
+static void get_thread_affinity(pthread_t pid) {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    int rtn = pthread_getaffinity_np(pid, sizeof(cpuset), &cpuset);
+    if (rtn != 0) {
+        log_perror("pthread_getaffinity");
+    }
+    for (int i=0; i < CPU_SETSIZE; i++) {
+        if (CPU_ISSET(i, &cpuset)) {
+            log(LOG_THREAD_AFFINITY, "Thread %ld has affinity with core %d",
+                (long)pid, i);
+        }
+    }
+}
+
+void dedos_thread_stop(struct dedos_thread *thread) {
+    log_info("Signaling thread %d to exit", thread->id);
+    pthread_mutex_lock(&thread->exit_lock);
+    thread->exit_signal = 1;
+    sem_post(&thread->sem);
+    pthread_mutex_unlock(&thread->exit_lock);
+}
+
+
 void dedos_thread_join(struct dedos_thread *thread) {
     pthread_join(thread->pthread, NULL);
     free(thread);
+}
+
+int dedos_thread_should_exit(struct dedos_thread *thread) {
+    pthread_mutex_lock(&thread->exit_lock);
+    int exit_signal = thread->exit_signal;
+    pthread_mutex_unlock(&thread->exit_lock);
+    return exit_signal;
 }
 
 static void *dedos_thread_starter(void *thread_init_v) {
@@ -131,6 +164,7 @@ static void *dedos_thread_starter(void *thread_init_v) {
     sem_post(&init->sem);
     log(LOG_DEDOS_THREADS, "Started thread %d (mode: %s, addr: %p)",
                thread->id, thread-> mode == PINNED_THREAD ? "pinned" : "unpinned", thread);
+    get_thread_affinity(thread->pthread);
 
     int rtn = thread_fn(thread, init_rtn);
     log(LOG_DEDOS_THREADS, "Thread %d ended.", thread->id);

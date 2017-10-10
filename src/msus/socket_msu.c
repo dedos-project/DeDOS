@@ -24,8 +24,8 @@ struct sock_msu_state {
 };
 
 
-#define SOCKET_HANDLER_TIMEOUT 100
-#define SOCKET_HANDLER_BATCH_SIZE 100
+#define SOCKET_HANDLER_TIMEOUT 1000
+#define SOCKET_HANDLER_BATCH_SIZE 1000
 
 struct key_seed {
     struct sockaddr_in sockaddr;
@@ -48,6 +48,7 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
             return -1;
         }
     }
+    log(LOG_SOCKET_MSU, "Added fd %d to epoll", fd);
     return 0;
 }
 
@@ -124,11 +125,10 @@ struct msu_msg_key self_key = {
     .id = 0
 };
 
-static int socket_msu_receive(struct local_msu *self, struct msu_msg *data) {
+static int socket_msu_receive(struct local_msu *self, struct msu_msg *msg) {
     int rtn = socket_handler_main_loop(self);
     if (rtn < 0) {
         log_error("Error exiting socket handler main loop");
-        return -1;
     }
     init_call_local_msu(self, self, &self_key, 0, NULL);
     return 0;

@@ -392,11 +392,12 @@ int init_controller_socket(struct sockaddr_in *addr) {
     return sock;
 }
 
-void send_stats_to_controller() {
+int send_stats_to_controller() {
     if (controller_sock < 0) {
-        log(LOG_STAT_SEND, "Skipping sending statistics: controller not initialized");
-        return;
+        log_error("Skipping sending statistics: controller not initialized");
+        return -1;
     }
+    int rtn = 0;
     log(LOG_STAT_SEND, "Sending statistics to controller");
     for (int i=0; i<N_REPORTED_STAT_TYPES; i++) {
         enum stat_id stat_id = reported_stat_types[i].id;
@@ -404,7 +405,6 @@ void send_stats_to_controller() {
         struct stat_sample *samples = get_stat_samples(stat_id, &n_items);
         if (samples == NULL) {
             log(LOG_STAT_SEND, "Error getting stat sample for send to controller");
-            continue;
         }
         size_t serial_size = serialized_stat_sample_size(samples, n_items);
 
@@ -412,7 +412,7 @@ void send_stats_to_controller() {
         size_t ser_rtn = serialize_stat_samples(samples, n_items, buffer, serial_size);
         if (ser_rtn < 0) {
             log_error("Error serializing stat sample");
-            continue;
+            rtn = -1;
         }
 
         struct rt_controller_msg_hdr hdr = {
@@ -423,7 +423,8 @@ void send_stats_to_controller() {
         int rtn = send_to_controller(&hdr, buffer);
         if (rtn < 0) {
             log_error("Error sending statistics to controller");
-            continue;
+            rtn = -1;
         }
     }
+    return rtn;
 }

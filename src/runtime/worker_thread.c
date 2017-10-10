@@ -22,14 +22,6 @@ static void *init_worker_thread(struct dedos_thread *thread) {
     return worker;
 }
 
-void stop_worker_thread(struct worker_thread *thread) {
-    log_info("Signaling thread %d to exit", thread->thread->id);
-    pthread_mutex_lock(&thread->exit_lock);
-    thread->exit_signal = 1;
-    sem_post(&thread->thread->sem);
-    pthread_mutex_unlock(&thread->exit_lock);
-}
-
 void stop_all_worker_threads() {
     struct dedos_thread *d_threads[MAX_DEDOS_THREAD_ID];
     int n_threads=0;
@@ -37,19 +29,12 @@ void stop_all_worker_threads() {
         if (worker_threads[i] != NULL) {
             d_threads[n_threads] = worker_threads[i]->thread;
             n_threads++;
-            stop_worker_thread(worker_threads[i]);
+            dedos_thread_stop(worker_threads[i]->thread);
         }
     }
     for (int i=0; i<n_threads; i++) {
         dedos_thread_join(d_threads[i]);
     }
-}
-
-static inline int should_exit(struct worker_thread *thread) {
-    pthread_mutex_lock(&thread->exit_lock);
-    int exit_signal = thread->exit_signal;
-    pthread_mutex_unlock(&thread->exit_lock);
-    return exit_signal;
 }
 
 static void destroy_worker_thread(struct dedos_thread *thread, void *v_worker_thread) {
@@ -149,6 +134,8 @@ static int worker_mod_msu_route(struct worker_thread *thread, struct ctrl_msu_ro
                 log_error("Error adding route %d to msu %d route set", msg->route_id, msg->msu_id);
                 return -1;
             }
+            log(LOG_ROUTING_CHANGES, "Added route %d to msu %d route set", 
+                msg->route_id, msg->msu_id);
             return 0;
         case DEL_ROUTE:
             rtn = rm_route_from_set(&msu->routes, msg->route_id);
@@ -156,6 +143,8 @@ static int worker_mod_msu_route(struct worker_thread *thread, struct ctrl_msu_ro
                 log_error("Error removing route %d from msu %d route set", msg->route_id, msg->msu_id);
                 return -1;
             }
+            log(LOG_ROUTING_CHANGES, "Removed route %d from msu %d route set", 
+                msg->route_id, msg->msu_id);
             return 0;
         default:
             log_error("Unknown route message type: %d", msg->type);
@@ -217,8 +206,7 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
 
     struct worker_thread *self = v_worker_thread;
 
-    // TODO: Exit condition!
-    while (!should_exit(self)) {
+    while (!dedos_thread_should_exit(thread)) {
         // TODO: Get context switches
         if (thread_wait(thread, NULL) != 0) {
             log_error("Error waiting on thread semaphore");

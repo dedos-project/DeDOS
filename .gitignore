@@ -9,6 +9,7 @@ examplecode
 build/
 global_controller
 rt
+trash/
 cfg_generator/*.json
 cfg_generator/*.yml
 dfgs/*.json

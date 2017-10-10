@@ -12,6 +12,8 @@ struct dedos_thread {
     enum thread_mode mode;
     struct msg_queue queue; // Queue for incoming messages
     sem_t sem;
+    pthread_mutex_t exit_lock;
+    int exit_signal;
     // TODO: Exit signal
 };
 
@@ -27,6 +29,9 @@ int start_dedos_thread(dedos_thread_fn thread_fn,
                        enum blocking_mode mode,
                        int id,
                        struct dedos_thread *thread);
+
+int dedos_thread_should_exit(struct dedos_thread *thread);
+void dedos_thread_stop(struct dedos_thread *thread);
 void dedos_thread_join(struct dedos_thread *thread);
 
 int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout);

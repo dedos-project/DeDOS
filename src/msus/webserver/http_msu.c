@@ -65,8 +65,8 @@ static int handle_parsing(struct read_state *read_state,
         return -1;
     } else {
         http_state->conn.status = CON_READING;
-        log(LOG_PARTIAL_READS, "Got partial request %s (fd: %d)",
-                   read_state->req, read_state->conn.fd);
+        log(LOG_PARTIAL_READS, "Got partial request %.*s (fd: %d)",
+                   read_state->req_len, read_state->req, read_state->conn.fd);
         return call_msu_type(self, &WEBSERVER_READ_MSU_TYPE, &msg->hdr, msg->data_size, msg->data);
     }
 }
@@ -77,6 +77,7 @@ static int craft_http_response(struct local_msu *self,
 
     size_t size = 0;
     struct http_state *http_state = msu_get_state(self, &msg->hdr.key, &size);
+    int retrieved = 0;
     if (http_state == NULL) {
         http_state = msu_init_state(self, &msg->hdr.key, sizeof(*http_state));
         read_state->conn.status = CON_READING;
@@ -85,8 +86,9 @@ static int craft_http_response(struct local_msu *self,
     } else {
         log(LOG_HTTP_MSU, "Retrieved state %p (status %d)",
                    http_state, http_state->conn.status);
+        retrieved = 1;
         if (http_state->conn.status != CON_DB_REQUEST) {
-            log(LOG_PARTIAL_READS, "Recovering partial read state ID: %d",
+            log(LOG_PARTIAL_READS, "Recovering partial read state ID: %u",
                        msg->hdr.key.id);
         }
     }
@@ -97,8 +99,8 @@ static int craft_http_response(struct local_msu *self,
             log(LOG_HTTP_MSU, "got CON_READING");
             rtn = handle_parsing(read_state, http_state, self, msg);
             if (rtn < 0) {
-                log_error("Error processing fd %d, ID %u", read_state->conn.fd, 
-                          (msg->hdr.key.id));
+                log_error("Error processing fd %d, ID %u, retrieved %d", read_state->conn.fd,
+                          (msg->hdr.key.id), retrieved);
             }
             return rtn;
         case CON_DB_REQUEST:
