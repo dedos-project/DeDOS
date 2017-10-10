@@ -31,10 +31,9 @@ static int handle_read(struct read_state *read_state,
         msu_monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self, &msg->hdr);
         return 0;
     } else if (rtn & WS_ERROR) {
-        free(msg->data);
         close_connection(&read_state->conn);
         read_state->req_len = -1;
-        return -1;
+        // Send the failure message (req_len = -1) to http
     } else {
         log(LOG_WEBSERVER_READ, "Read %s", read_state->req);
     }
@@ -77,6 +76,7 @@ static int read_http_request(struct local_msu *self,
             init_connection(&conn_in, msg_in->fd);
             break;
         case WEBSERVER_HTTP_MSU_TYPE_ID:
+            log(LOG_WEBSERVER_READ, "Got back read msg %u", msg->hdr.key.id);
             conn_in = *(struct connection*)msg->data;
             break;
         default:
@@ -127,7 +127,7 @@ static int ws_read_init(struct local_msu *self, struct msu_init_data *data) {
         log_info("Initializing SSL webserver-reading MSU");
         ws_state->use_ssl = 1;
     } else {
-        log_info("Initializing NON-SSL webserver-reading MSU due to init cmd %s", init_cmd);
+        log_info("Initializing SSL webserver-reading MSU anyway");
         ws_state->use_ssl = 1;
     }
 

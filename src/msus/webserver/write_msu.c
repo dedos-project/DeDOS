@@ -4,6 +4,7 @@
 #include "msu_state.h"
 #include "logging.h"
 #include "routing_strategies.h"
+#include "profiler.h"
 
 static int write_http_response(struct local_msu *self,
                                struct msu_msg *msg) {
@@ -25,6 +26,7 @@ static int write_http_response(struct local_msu *self,
     } else if (rtn & (WS_INCOMPLETE_READ | WS_INCOMPLETE_WRITE)) {
         return msu_monitor_fd(resp->conn.fd, RTN_TO_EVT(rtn), self, &msg->hdr);
     } else {
+        PROFILE_EVENT(msg->hdr, PROF_DEDOS_EXIT);
         close_connection(&resp->conn);
         log(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
                    resp->conn.fd);
