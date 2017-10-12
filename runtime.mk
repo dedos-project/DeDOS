@@ -1,7 +1,7 @@
 ADDRESS_SANITIZER?=0
 DEBUG = 1
 DUMP_STATS = 1
-DO_PROFILE = 1
+DO_PROFILE = 0
 
 LOGS = \
 	   INFO \
@@ -9,12 +9,16 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   #DFG_PARSING \
-	   ALL
+	   #ROUTING_CHANGES \
+	   SOCKET_MSU
+	   #PARTIAL_READS
+	   #THREAD_AFFINITY \
+	   #STATS_SEND
+	   #ALL
 
 MSU_APPLICATIONS = baremetal webserver pico_tcp ndlog
 
-NO_LOGS = \
+#NO_LOGS = \
 		  JSMN_PARSING \
 		  DFG_PARSING \
 		  MSU_ENQUEUES \
@@ -43,8 +47,9 @@ MAIN=$(RNT_DIR)main.c
 BLD_DIR = build/
 DEP_DIR = $(BLD_DIR)depends/
 OBJ_DIR = $(BLD_DIR)objs/
-RES_DIR = $(BLD_DIR)reults/
 TST_BLD_DIR = $(BLD_DIR)test/
+RES_DIR = $(TST_BLD_DIR)reults/
+COV_DIR = $(TST_BLD_DIR)coverage/
 LEG_BLD_DIR = $(BLD_DIR)legacy/
 
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
@@ -82,6 +87,10 @@ MSU_DEFINES=$(foreach MSU_APP, $(MSU_APPLICATIONS), -DCOMPILE_$(call upper, $(MS
 CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -O$(OPTIM) \
 	   $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
+
+ifeq ($(MAKECMDGOALS), coverage)
+  CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
+endif
 
 ifeq ($(DEBUG), 1)
   CFLAGS+=-ggdb
@@ -124,7 +133,16 @@ TST_OBJS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.o, $(TSTS))
 SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
 SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
 
+TST_SRCS = $(filter-out $(MAIN), $(patsubst $(SRC_DIR)%, $(TST_DIR)%, $(foreach src, $(SRCS), $(dir $(src))Test_$(notdir $(src)))))
 TST_BLDS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.out, $(TSTS))
+TST_COV = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcda, $(TSTS)) \
+		  $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcno, $(TSTS))
+
+COV_DIRS = $(sort $(dir $(patsubst $(SRC_DIR)%/, $(COV_DIR)%, $(SRC_DIRS)) $(COV_DIR)))
+COV_INFOS = $(patsubst $(SRC_DIR)%/, $(COV_DIR)%.info, $(SRC_DIRS))
+COV_INIT_INFOS = $(patsubst $(SRC_DIR)%/, $(COV_DIR)%_init.info, $(SRC_DIRS))
+COV_INDEX = $(COV_DIR)index.html
+
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
 MEM_RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%_memcheck.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
@@ -157,9 +175,10 @@ endef
 CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
-TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm -O0
+TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm -O0 \
+			 -fprofile-arcs -ftest-coverage --coverage
 
-DIRS = $(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS)
+DIRS = $(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIRS)
 
 define kill_proc
 if pgrep -x "$1" > /dev/null; then killall "$1"; fi
@@ -172,6 +191,22 @@ dirs: $(DIRS)
 legacy: $(LEG_OBJ)
 
 depends: $(DEP_DIRS) ${DEP_SRC}
+
+coverage: $(DIRS)  test $(TST_COV) $(COV_INFOS)
+
+cov-site: coverage
+	genhtml -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
+	cd $(COV_DIR) && python2 -m SimpleHTTPServer 8081
+
+$(TST_BLD_DIR)%.gcda: $(TST_BLD_DIR)%.out $(DIRS)
+
+lcov: $(DIRS) $(TST_COV) $(COV_INFOS)
+
+$(COV_DIR)%.info: $(TST_BLD_DIR)%/ $(TST_BLDS)
+	-lcov --directory $< --capture --output-file $(subst .info,.raw_info,$@)
+	-lcov --no-external --directory $(patsubst $(TST_BLD_DIR)%,$(OBJ_DIR)%,$<) --capture --initial --output-file $(subst .info,.init_info,$@)
+	-lcov -a $(subst .info,.raw_info,$@) -a $(subst .info,.init_info,$@) -o $(subst .info,.all_info,$@)
+	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@
 
 $(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
 	@filename=$$(basename "$@"); filename="$${filename%.*}"; echo $$filename; cd $(LEG_DIR)/$$filename && make;
@@ -226,7 +261,7 @@ $(RES_DIR)%.txt: $(TST_BLD_DIR)%.out
 	$(call kill_proc $(notdir $^))
 	-./$< > $@ 2>&1
 
-$(TST_BLD_DIR)%.o:: $(TST_DIR)%.c $(SELF)
+$(TST_BLD_DIR)%.o:: $(TST_DIR)%.c $(SELF) 
 	$(COMPILE) $(TEST_CFLAGS) $< -o $@
 
 # creates the test executables by linking the test objects with the build objects excluding 
@@ -240,7 +275,6 @@ $(TST_BLD_DIR)%: $(TST_DIR)%
 
 # Creates object files from the source file
 $(OBJ_DIR)%.o:: $(SRC_DIR)%.c $(SELF)
-	echo $(SRC_DIRS)
 	$(COMPILE) $(CCFLAGS) $< -o $@
 
 $(OBJ_DIR)%.o:: $(SRC_DIR)%.cc $(SELF)
@@ -273,4 +307,5 @@ endif
 .PHONY: test
 .PHONY: legacy
 .PHONY: depends
+.PHONY: coverage
 .PRECIOUS: $(DEP_DIR)%.d $(RES_DIR)%.txt $(OBJ_DIR)%.o $(TST_BLD_DIR)%.out

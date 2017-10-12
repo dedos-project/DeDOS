@@ -117,7 +117,7 @@ START_DEDOS_TEST(test_process_connect_to_runtime) {
 static void cleanup_worker(int id) {
     struct worker_thread *thread = get_worker_thread(id);
     struct dedos_thread *d_thread = thread->thread;
-    stop_worker_thread(thread);
+    dedos_thread_stop(d_thread);
     dedos_thread_join(d_thread);
 }
 

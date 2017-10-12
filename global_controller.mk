@@ -7,9 +7,10 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   RUNTIME_MESSAGES \
+	   #RUNTIME_MESSAGES \
 	   SCHEDULING \
-	   API_CALLS
+	   #SCHEDULING_DECISIONS \
+	   API_CALLS \
 	   #ALL
 
 NO_LOGS = \
@@ -29,8 +30,9 @@ MAIN=$(GLC_DIR)main.c
 BLD_DIR = build/
 DEP_DIR = $(BLD_DIR)depends/
 OBJ_DIR = $(BLD_DIR)objs/
-RES_DIR = $(BLD_DIR)reults/
 TST_BLD_DIR = $(BLD_DIR)test/
+RES_DIR = $(TST_BLD_DIR)reults/
+COV_DIR = $(TST_BLD_DIR)coverage/
 
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR)
 
@@ -58,6 +60,10 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 CFLAGS=-Wall -pthread -O$(OPTIM) $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
+ifeq ($(MAKECMDGOALS), coverage)
+  CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
+endif
+
 ifeq ($(DEBUG), 1)
   CFLAGS+=-ggdb
 endif
@@ -80,7 +86,15 @@ SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
 SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
 
 TST_BLDS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.out, $(TSTS))
+TST_COV = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcda, $(TSTS)) \
+		  $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcno, $(TSTS))
+
+COV_DIRS = $(sort $(dir $(patsubst $(SRC_DIR)%/, $(COV_DIR)%, $(SRC_DIRS)) $(COV_DIR)))
+COV_INFOS = $(patsubst $(SRC_DIR)%/, $(COV_DIR)%.info, $(SRC_DIRS))
+COV_INDEX = $(COV_DIR)index.html
+
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
+MEM_RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%_memcheck.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
 DEP_DIRS = $(patsubst $(SRC_DIR)%/, $(DEP_DIR)%/, $(SRC_DIRS))
@@ -112,9 +126,10 @@ endef
 CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
-TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm
+TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm -O0 \
+			 -fprofile-arcs -ftest-coverage --coverage
 
-DIRS=$(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS)
+DIRS=$(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIRS)
 
 all: dirs ${TARGET}
 
@@ -122,6 +137,22 @@ dirs: $(DIRS)
 	echo $(TST_OBJS)
 
 depends: $(DEP_DIRS) ${DEP_SRC}
+
+coverage: test $(COV_DIR) $(TST_COV) $(COV_INFOS)
+
+cov-site: coverage
+	genhtml -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
+	cd $(COV_DIR) && python2 -m SimpleHTTPServer 8081
+
+$(TST_BLD_DIR)%.gcda: $(TST_BLD_DIR)%.out $(DIRS)
+
+lcov: $(DIRS) $(TST_COV) $(COV_INFOS)
+
+$(COV_DIR)%.info: $(TST_BLD_DIR)%/ $(TST_BLDS)
+	-lcov --directory $< --capture --output-file $(subst .info,.raw_info,$@)
+	-lcov --no-external --directory $(patsubst $(TST_BLD_DIR)%,$(OBJ_DIR)%,$<) --capture --initial --output-file $(subst .info,.init_info,$@)
+	-lcov -a $(subst .info,.raw_info,$@) -a $(subst .info,.init_info,$@) -o $(subst .info,.all_info,$@)
+	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@
 
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
