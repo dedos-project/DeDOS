@@ -62,11 +62,13 @@
 #ifdef COMPILE_PICO_TCP_MSUS
 #include "pico_tcp/msu_pico_tcp.h"
 #include "pico_tcp/msu_tcp_handshake.h"
+#include "pico_tcp/msu_app_tcp_echo.h"
 
 /** The MSUs that comprise the pico_tcp application */
 #define PICO_TCP_MSUS \
         &PICO_TCP_MSU_TYPE, \
-        &TCP_HANDSHAKE_MSU_TYPE,
+        &TCP_HANDSHAKE_MSU_TYPE, \
+        &MSU_APP_TCP_ECHO_TYPE,
 #else
 #define PICO_TCP_MSUS
 #endif
