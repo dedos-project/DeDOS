@@ -149,8 +149,8 @@ TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
 DEP_DIRS = $(patsubst $(SRC_DIR)%/, $(DEP_DIR)%/, $(SRC_DIRS))
 DEP_TST = $(patsubst $(TST_DIR)%.c, $(DEP_DIR)%.d, $(TSTS))
-DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS))
-
+DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS)) \
+		  $(patsubst $(SRC_DIR)%.cc, $(DEP_DIR)%.d, $(SRCS_PP))
 OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS)) \
 		  $(patsubst $(SRC_DIR)%.cc, $(OBJ_DIR)%.o, $(SRCS_PP))
 OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS))) \
@@ -281,6 +281,9 @@ $(OBJ_DIR)%.o:: $(SRC_DIR)%.cc $(SELF)
 	$(COMPILE_PP) $(CPPFLAGS) $< -o $@
 
 $(DEP_SRC): $(DEP_DIRS)
+
+$(DEP_DIR)%.d:: $(SRC_DIR)%.cc $(LEG_OBJ)
+	@$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(CPPFLAGS) $<
 
 $(DEP_DIR)%.d:: $(SRC_DIR)%.c $(LEG_OBJ)
 	@$(DEPEND) $@ -MT $(patsubst $(DEP_DIR)%.d, $(OBJ_DIR)%.o, $@) $(TEST_CFLAGS) $<
