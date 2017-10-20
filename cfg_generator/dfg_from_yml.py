@@ -131,7 +131,7 @@ def runtime_routes(rt_id, msus, yaml_routes):
 
     for i, route in enumerate(yaml_routes):
         tos = route['to'] if isinstance(route['to'], list) else [route['to']]
-        froms = route['to'] if isinstance(route['from'], list) else [route['from']]
+        froms = route['from'] if isinstance(route['from'], list) else [route['from']]
 
         from_msus = [msu for msu in msus if msu['name'] in froms and
                      msu['scheduling']['runtime'] == rt_id]
