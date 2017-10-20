@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/wait.h>
+#include "msu_ids.h"
+#include "runtime_communication.h"
 #include "logging.h"
 #define SOCAT "/usr/bin/socat"
 
@@ -48,3 +50,35 @@ int reweight_haproxy(int server, int weight){
     }
     return 0;
 }
+
+void set_haproxy_weights(int rt_id, int offset) {
+    int n_reads[MAX_RUNTIMES+1];
+    for (int i=0; i< MAX_RUNTIMES + 1; i++) {
+        if (runtime_fd(i) > 0) {
+            if (i == rt_id) {
+                n_reads[i] = -offset;
+            } else {
+                n_reads[i] = 0;
+            }
+        } else {
+            n_reads[i] = -1;
+        }
+    }
+    struct dfg_msu_type *type = get_dfg_msu_type(WEBSERVER_READ_MSU_TYPE_ID);
+    if (type == NULL) {
+        log_error("Error getting read type");
+        return;
+    }
+    for (int i=0; i<type->n_instances; i++) {
+        int rt_id = type->instances[i]->scheduling.runtime->id;
+        n_reads[rt_id]++;
+    }
+
+    for (int i=0; i <= MAX_RUNTIMES; i++) {
+        if (n_reads[i] >= 0) {
+            reweight_haproxy(i, n_reads[i]);
+        }
+    }
+}
+
+

@@ -73,26 +73,6 @@ static bool should_clone(struct cloning_info *info) {
     return do_clone;
 }
 
-static void set_haproxy_weights() {
-    int n_reads[MAX_RUNTIMES+1];
-    memset(n_reads, 0, sizeof(n_reads));
-    struct dfg_msu_type *type = get_dfg_msu_type(WEBSERVER_READ_MSU_TYPE_ID);
-    if (type == NULL) {
-        log_error("Error getting read type");
-        return;
-    }
-    for (int i=0; i<type->n_instances; i++) {
-        int rt_id = type->instances[i]->scheduling.runtime->id;
-        n_reads[rt_id]++;
-    }
-
-    for (int i=0; i <= MAX_RUNTIMES; i++) {
-        if (n_reads[i] > 0) {
-            reweight_haproxy(i, n_reads[i]);
-        }
-    }
-}
-
 #define MIN_CLONE_DURATION 2
 
 static struct timespec last_clone_time;
@@ -117,7 +97,7 @@ int perform_cloning() {
                     continue;
                 }
                 clock_gettime(CLOCK_MONOTONIC, &last_clone_time);
-                set_haproxy_weights();
+                set_haproxy_weights(-1, -1);
                 break;
             }
         }

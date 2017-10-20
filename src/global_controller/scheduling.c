@@ -5,7 +5,8 @@
 #include "logging.h"
 #include "runtime_messages.h"
 #include "msu_stats.h"
-
+#include "msu_ids.h"
+#include "haproxy.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -209,8 +210,8 @@ struct dfg_thread *find_unused_pinned_thread(struct dfg_runtime *runtime,
 
         int cannot_place = 0;
         for (int j=0; j<thread->n_msus; ++j) {
-            if (thread->msus[i]->type->colocation_group != type->colocation_group ||
-                    thread->msus[i]->type == type) {
+            if (thread->msus[j]->type->colocation_group != type->colocation_group ||
+                    thread->msus[j]->type == type) {
                 cannot_place = 1;
                 break;
             }
@@ -421,6 +422,107 @@ int wire_msu(struct dfg_msu *msu) {
     return 0;
 }
 
+static int remove_routes_to_msu(struct dfg_msu *msu) {
+    struct dedos_dfg *dfg = get_dfg();
+    for (int i=0; i<dfg->n_runtimes; i++) {
+        struct dfg_runtime *rt = dfg->runtimes[i];
+        for (int j=0; j<rt->n_routes; j++) {
+            struct dfg_route *route = rt->routes[j];
+            struct dfg_route_endpoint *ep = get_dfg_route_endpoint(route, msu->id);
+
+            if (ep == NULL) {
+                continue;
+            }
+
+            int rtn = del_endpoint(msu->id, route->id);
+            if (rtn < 0) {
+                log_error("Error deleting endpoint from route %d for removal of %d",
+                          route->id, msu->id);
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+static int get_dependencies(struct dfg_msu *msu, struct dfg_msu **output, int out_size) {
+    output[0] = msu;
+    int n_on_runtime = 0;
+    struct dfg_runtime *rt = msu->scheduling.runtime;
+    for (int i=0; i<msu->type->n_instances; i++) {
+        if (msu->type->instances[i]->scheduling.runtime == rt) {
+            n_on_runtime++;
+            if (n_on_runtime > 1) {
+                // More than one on this runtime, just return the passed-in MSU
+                return 1;
+            }
+        }
+    }
+
+    int n_out = 1;
+    for (int i=0; i<msu->type->n_dependencies; i++) {
+        struct dfg_dependency *dep = msu->type->dependencies[i];
+        // TODO: Check dep->locality
+        struct dfg_msu_type *dep_type = dep->type;
+        for (int j=0; j<dep_type->n_instances; j++) {
+            struct dfg_msu *dep_msu = dep_type->instances[j];
+            if (dep_msu->scheduling.runtime == rt) {
+                if (n_out >= out_size - 1) {
+                    log_error("Cannot get dependencies -- output too small");
+                    return -1;
+                }
+                output[n_out] = dep_msu;
+                n_out++;
+            }
+        }
+    }
+    output[n_out] = NULL;
+    msu_hierarchical_sort(output);
+    return n_out;
+}
+
+
+int unclone_msu(int msu_id) {
+
+    struct dfg_msu *msu = get_dfg_msu(msu_id);
+
+    if (msu->type->n_instances <= 1) {
+        log(LOG_SCHEDULING, "Cannot remove last instance of msu type %s", msu->type->name);
+        return -1;
+    }
+
+
+    struct dfg_msu *dependencies[MAX_MSU];
+    int n_deps = get_dependencies(msu, dependencies, MAX_MSU);
+
+    for (int i=0; i<n_deps; i++) {
+        if (dependencies[i]->type->id == WEBSERVER_READ_MSU_TYPE_ID) {
+            set_haproxy_weights(dependencies[i]->scheduling.runtime->id, 1);
+        }
+        int rtn = remove_routes_to_msu(dependencies[i]);
+        if (rtn < 0) {
+            log_error("Error removing routes to msu %d", dependencies[i]->id);
+            return -1;
+        }
+        int id = dependencies[i]->id;
+        char *name = dependencies[i]->type->name;
+        rtn = remove_msu(id);
+        if (rtn < 0) {
+            log_error("Error removing MSU %d", id);
+            return -1;
+        }
+        log(LOG_SCHEDULING, "Removed msu %d (type: %s)", id, name);
+
+        //TODO: This should really wait for confirmation of deletion of MSU
+        usleep(2000e3); // 2 seconds
+    }
+
+    return 0;
+}
+
+
+
+
 
 /**
  * Clone a msu of given ID
@@ -523,7 +625,7 @@ int schedule_msu(struct dfg_msu *msu, struct dfg_runtime *rt, struct dfg_msu **n
     // First of all, find a thread on the runtime
     ret = place_on_runtime(rt, msu);
     if (ret == -1) {
-        log_error("Could not spawn a new worker thread on runtime %d", rt->id);
+        log(SCHEDULING, "Could not spawn a new worker thread on runtime %d", rt->id);
         return -1;
     }
 
