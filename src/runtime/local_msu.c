@@ -10,6 +10,7 @@
 #include "msu_message.h"
 #include "inter_runtime_messages.h"
 #include "thread_message.h"
+#include "msu_state.h"
 
 #include <stdlib.h>
 
@@ -145,6 +146,18 @@ static void init_msu_stats(int msu_id) {
     }
 }
 
+/**
+ * Unregisters the stat IDS that are relevant to an MSU
+ * @param msu_id ID of the MSU to register
+ */
+static void unregister_msu_stats(int msu_id) {
+    for (int i=0; i < NUM_MSU_STAT_IDS; i++) {
+        if (remove_stat_item(MSU_STAT_IDS[i], msu_id) != 0) {
+            log_warn("Could not remove stat item %d for msu %d",
+                     MSU_STAT_IDS[i], msu_id);
+        }
+    }
+}
 
 /**
  * Allocates and creates a new MSU of the specified type and ID on the given thread
@@ -176,7 +189,6 @@ struct local_msu *init_msu(unsigned int id,
     if (rtn < 0) {
         log_error("Error registering MSU With thread");
         msu_free(msu);
-        rm_from_local_registry(msu->id);
         return NULL;
     }
 
@@ -189,6 +201,7 @@ struct local_msu *init_msu(unsigned int id,
         if (type->init(msu, data) != 0) {
             log_error("Error running MSU %d (type: %s) type-specific initialization function",
                       id, type->name);
+            unregister_msu_with_thread(msu);
             msu_free(msu);
             return NULL;
         }
@@ -198,10 +211,24 @@ struct local_msu *init_msu(unsigned int id,
     if (rtn < 0) {
         log_error("Error adding MSU to local registry");
         msu_free(msu);
+        unregister_msu_with_thread(msu);
         return NULL;
     }
 
     return msu;
+}
+
+/**
+ * Destroys an MSU only if it has no registered states
+ * @param msu MSU to destroy
+ * @return 0 on success, 1 if MSU had states
+ */
+int try_destroy_msu(struct local_msu *msu) {
+    if (msu_num_states(msu) > 0) {
+        return 1;
+    }
+    destroy_msu(msu);
+    return 0;
 }
 
 /**
@@ -210,11 +237,14 @@ struct local_msu *init_msu(unsigned int id,
  */
 void destroy_msu(struct local_msu *msu) {
     int id = msu->id;
+    char *type = msu->type->name;
+    unregister_msu_stats(msu->id);
     if (msu->type->destroy) {
         msu->type->destroy(msu);
     }
     msu_free(msu);
     rm_from_local_registry(id);
+    log_info("Removed msu (ID: %d, Type: %s)", id, type);
 }
 
 /**

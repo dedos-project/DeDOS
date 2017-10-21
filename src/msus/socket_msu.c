@@ -34,6 +34,9 @@ struct key_seed {
 
 int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
                    struct msu_msg_hdr *hdr) {
+    if (instance == NULL) {
+        return -1;
+    }
     struct sock_msu_state *state = instance->msu_state;
 
     state->hdr_mask[fd] = *hdr;
@@ -142,6 +145,8 @@ static void socket_msu_destroy(struct local_msu *self) {
     if (rtn == -1) {
         log_error("Error closing socket");
     }
+
+    instance = NULL;
 }
 
 #define DEFAULT_PORT 8080

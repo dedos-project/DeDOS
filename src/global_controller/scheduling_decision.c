@@ -21,15 +21,15 @@ struct cloning_info {
 
 #define CLONING_SAMPLES 10
 static struct cloning_info CLONING_INFO[] = {
-    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 10, CLONING_SAMPLES, WEBSERVER_READ_MSU_TYPE_ID},
-    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 10, CLONING_SAMPLES, WEBSERVER_REGEX_MSU_TYPE_ID },
+    { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 2, CLONING_SAMPLES, WEBSERVER_READ_MSU_TYPE_ID},
+    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 2, CLONING_SAMPLES, WEBSERVER_REGEX_MSU_TYPE_ID },
     { WEBSERVER_HTTP_MSU_TYPE_ID, MSU_NUM_STATES, 2048, CLONING_SAMPLES, WEBSERVER_READ_MSU_TYPE_ID }
 };
 
 #define UNCLONING_SAMPLES 100
 static struct cloning_info UNCLONING_INFO[] = {
     { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, .1, UNCLONING_SAMPLES, WEBSERVER_READ_MSU_TYPE_ID, 2},
-    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, .1, UNCLONING_SAMPLES, WEBSERVER_REGEX_MSU_TYPE_ID, 1},
+    { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, .1, UNCLONING_SAMPLES, WEBSERVER_REGEX_MSU_TYPE_ID, 3},
 };
 
 
@@ -79,20 +79,22 @@ static bool should_clone(struct cloning_info *info) {
 }
 
 static bool should_unclone(struct cloning_info *info) {
-    double sum = 0;
+    double max = 0;
     for (int i=0; i<info->num_msus; i++) {
-        sum += info->stats[i];
+        if (info->stats[i] > info->threshold) {
+            return false;
+        }
+        max = max > info->stats[i] ? max : info->stats[i];
     }
-    double mean = sum / info->num_msus;
-    bool do_clone = mean < info->threshold && info->num_msus > info->min_instances;
-    if (do_clone && mean > 0) {
-        log(LOG_SCHEDULING_DECISIONS, "Trying to unclone due to mean: %.2f", mean);
+    if (info->num_msus > info->min_instances) {
+        log(LOG_SCHEDULING_DECISIONS, "Trying to unclone due to max : %.2f", max);
+        return true;
     }
-    return do_clone;
+    return false;
 }
 
-#define MIN_CLONE_DURATION 2
-#define MIN_UNCLONE_DURATION 1
+#define MIN_CLONE_DURATION 1
+#define MIN_UNCLONE_DURATION 2
 
 static struct timespec last_clone_time;
 static struct timespec last_unclone_time;
@@ -147,10 +149,10 @@ int perform_cloning() {
     if (cur_time.tv_sec - last_clone_time.tv_sec >= MIN_CLONE_DURATION) {
         clock_gettime(CLOCK_MONOTONIC, &last_clone_time);
         try_to_clone();
-    }
-    if (cur_time.tv_sec - last_unclone_time.tv_sec >= MIN_UNCLONE_DURATION) {
-        clock_gettime(CLOCK_MONOTONIC, &last_unclone_time);
-        try_to_unclone();
+        if (cur_time.tv_sec - last_unclone_time.tv_sec >= MIN_UNCLONE_DURATION) {
+            clock_gettime(CLOCK_MONOTONIC, &last_unclone_time);
+            try_to_unclone();
+        }
     }
     return 0;
 }

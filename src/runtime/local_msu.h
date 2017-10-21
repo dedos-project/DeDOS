@@ -54,6 +54,7 @@ struct local_msu {
 struct local_msu *init_msu(unsigned int id, struct msu_type *type,
                            struct worker_thread *thread, struct msu_init_data *data);
 
+int try_destroy_msu(struct local_msu *msu);
 /** Calls type-specific destroy function and frees associated memory */
 void destroy_msu(struct local_msu *msu);
 

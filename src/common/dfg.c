@@ -11,7 +11,7 @@ bool dfg_locked = false;
 
 bool check_dfg_lock() {
     if (dfg_locked && pthread_self() != locking_thread) {
-        pthread_mutex_lock(&dfg_mutex);
+        //pthread_mutex_lock(&dfg_mutex);
         return true;
     }
     return false;
@@ -23,7 +23,7 @@ bool check_dfg_lock() {
 
 #define UNLOCK \
     if (lock_local__) { \
-        pthread_mutex_unlock(&dfg_mutex); \
+        /*pthread_mutex_unlock(&dfg_mutex);*/ \
     }
 
 
@@ -281,8 +281,59 @@ int schedule_dfg_msu(struct dfg_msu *msu, unsigned int runtime_id, unsigned int 
         return -1;
     }
 
+    log_info("TEST");
+    log(LOG_DFG, "Scheduled DFG msu %d", msu->id);
     return 0;
 }
+
+static int remove_msu_from_thread(struct dfg_msu *msu) {
+    struct dfg_thread *thread = msu->scheduling.thread;
+    CHECK_LOCK;
+    int ti;
+    for (ti=0; ti<thread->n_msus && thread->msus[ti] != msu; ti++){}
+    if (ti == thread->n_msus) {
+        log_error("MSU %d does not exist on thread %d", msu->id, thread->id);
+        UNLOCK;
+        return -1;
+    }
+    int di;
+    for (di = 0; di < dfg->n_msus && dfg->msus[di] != msu; di++){}
+    if (di == dfg->n_msus) {
+        log_critical("Cannot find MSU %d in DFG!", msu->id);
+        UNLOCK;
+        return -1;
+    }
+    int ii;
+    for (ii = 0; ii < msu->type->n_instances && msu->type->instances[ii] != msu; ii++) {}
+    if (ii == msu->type->n_instances) {
+        log_error("Cannot find MSU %d in list of instances of %s", msu->id, msu->type->name);
+        UNLOCK;
+        return -1;
+    }
+
+    for (int i=ti; i < thread->n_msus - 1; i++) {
+        thread->msus[i] = thread->msus[i+1];
+    }
+    thread->n_msus--;
+
+    for (int i=di; i < dfg->n_msus - 1; i++) {
+        dfg->msus[i] = dfg->msus[i+1];
+    }
+    dfg->n_msus--;
+
+    for (int i=ii; i < msu->type->n_instances - 1; i++) {
+        msu->type->instances[i] = msu->type->instances[i+1];
+    }
+    msu->type->n_instances--;
+
+    msu->scheduling.runtime = NULL;
+    msu->scheduling.thread = NULL;
+    UNLOCK;
+    return 0;
+}
+
+
+
 
 int unschedule_dfg_msu(struct dfg_msu *msu) {
     if (dfg == NULL) {
@@ -295,9 +346,20 @@ int unschedule_dfg_msu(struct dfg_msu *msu) {
         return -1;
     }
 
-    // FIXME: NEED TO ACTUALLY REMOVE
-    log_critical("UNSCHEDULING NOT YET IMPLEMENTED");
-    return -1;
+    for (int i=0; i<dfg->n_runtimes; i++) {
+        struct dfg_runtime *rt = dfg->runtimes[i];
+        for (int j=0; j<rt->n_routes; j++) {
+            struct dfg_route *route = rt->routes[j];
+            if (get_dfg_route_endpoint(route, msu->id) != NULL) {
+                log_error("MSU %d Cannot be unscheduled: referenced by route %d",
+                          msu->id, route->id);
+                return -1;
+            }
+        }
+    }
+
+    log(LOG_DFG, "Unscheduled DFG msu %d", msu->id);
+    return remove_msu_from_thread(msu);
 }
 
 struct dfg_route *create_dfg_route(unsigned int id, struct dfg_msu_type *type,
@@ -427,7 +489,7 @@ int del_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *e
     int i;
     // Search for endpoint index
     for (i=0; i<route->n_endpoints && route->endpoints[i] != ep; i++);
-    
+
     if (i == route->n_endpoints) {
         log_error("Could not find endpoint in route");
         return -1;
@@ -437,6 +499,7 @@ int del_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *e
         route->endpoints[i] = route->endpoints[i+1];
     }
     route->n_endpoints--;
+    log(LOG_ROUTING_CHANGES, "Route %d now has %d endpoints", route->id, route->n_endpoints);
     return 0;
 }
 

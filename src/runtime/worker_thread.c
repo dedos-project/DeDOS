@@ -4,6 +4,7 @@
 #include "logging.h"
 #include "thread_message.h"
 #include "msu_message.h"
+#include "controller_communication.h"
 
 #include <stdlib.h>
 
@@ -107,15 +108,35 @@ static int create_msu_on_thread(struct worker_thread *thread, struct ctrl_create
     return 0;
 }
 
-static int del_msu_from_thread(struct worker_thread *thread, struct ctrl_delete_msu_msg *msg) {
+static int del_msu_from_thread(struct worker_thread *thread, struct ctrl_delete_msu_msg *msg,
+                               int ack_id) {
     int idx = get_msu_index(thread, msg->msu_id);
     if (idx == -1) {
         log_error("MSU %d does not exist on thread %d", msg->msu_id, thread->thread->id);
         return -1;
     }
     struct local_msu *msu = thread->msus[idx];
-    destroy_msu(msu);
-    remove_idx_from_msu_list(thread, idx);
+    if (msg->force) {
+        destroy_msu(msu);
+        remove_idx_from_msu_list(thread, idx);
+    } else {
+        int rtn = try_destroy_msu(msu);
+        if (rtn == 1) {
+            struct ctrl_delete_msu_msg *msg_cpy = malloc(sizeof(*msg_cpy));
+            memcpy(msg_cpy, msg, sizeof(*msg));
+
+            struct thread_msg *thread_msg = construct_thread_msg(DELETE_MSU,
+                                                                 sizeof(*msg),
+                                                                 msg_cpy);
+            thread_msg->ack_id = ack_id;
+            rtn = enqueue_thread_msg(thread_msg, &thread->thread->queue);
+            if (rtn < 0) {
+                log_error("Error re-enqueing delete MSU message");
+            }
+        } else {
+            remove_idx_from_msu_list(thread, idx);
+        }
+    }
     return 0;
 }
 
@@ -174,7 +195,7 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
         case DELETE_MSU:
             CHECK_MSG_SIZE(msg, struct ctrl_delete_msu_msg);
             struct ctrl_delete_msu_msg *del_msg = msg->data;
-            rtn = del_msu_from_thread(thread, del_msg);
+            rtn = del_msu_from_thread(thread, del_msg, msg->ack_id);
             if (rtn < 0) {
                 log_error("Error deleting MSU");
             }
@@ -197,6 +218,10 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
                       msg->type, thread->thread->id);
             break;
     }
+    if (msg->ack_id > 0) {
+        send_ack_message(msg->ack_id, rtn == 0);
+        log_warn("SENT ACK %d", msg->ack_id);
+    }
     return rtn;
 }
 
@@ -217,16 +242,20 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
                        self->msus[i]->id, thread->id);
             msu_dequeue(self->msus[i]);
         }
-        struct thread_msg *msg = dequeue_thread_msg(&thread->queue);
-        // ???: Should i be looping till no more messages?
-        while (msg != NULL) {
+        // FIXME: Protect read of num_msgs through mutex
+        int num_msgs = thread->queue.num_msgs;
+        for (int i=0; i<num_msgs; i++) {
+            struct thread_msg *msg = dequeue_thread_msg(&thread->queue);
+            if (msg == NULL) {
+                log_error("Could not read message though queue is not empty!");
+                continue;
+            }
             log(LOG_THREAD_MESSAGES,"Dequeued thread message on thread %d",
                        thread->id);
             if (process_worker_thread_msg(self, msg) != 0) {
                 log_error("Error processing worker thread message");
             }
             free(msg);
-            msg = dequeue_thread_msg(&thread->queue);
         }
     }
     log_info("Leaving thread %d", thread->id);

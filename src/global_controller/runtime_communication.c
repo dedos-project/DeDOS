@@ -198,7 +198,7 @@ static int handle_runtime_communication(int fd, void UNUSED *data) {
     rtn = process_rt_message_hdr(&hdr, fd);
     if (rtn < 0) {
         log_error("Error processing rt message");
-        return -1;
+        return 0;
     }
     return 0;
 }

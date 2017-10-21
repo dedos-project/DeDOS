@@ -8,6 +8,7 @@
 int send_to_controller(struct rt_controller_msg_hdr *msg, void *payload);
 int init_controller_socket(struct sockaddr_in *addr);
 int handle_controller_communication(int fd);
+int send_ack_message(int ack_id, bool success);
 bool is_controller_fd(int fd);
 int send_stats_to_controller();
 

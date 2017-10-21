@@ -224,14 +224,14 @@ static int process_runtime_message_hdr(struct inter_runtime_msg_hdr *hdr, int fd
             rtn = process_fwd_to_msu_message(hdr->payload_size, hdr->target, fd);
             if (rtn < 0) {
                 log_error("Error processing forward message from fd %d", fd);
-                return -1;
+                return 1;
             }
             return 0;
         case INTER_RT_INIT:
             rtn = process_init_rt_message(hdr->payload_size, fd);
             if (rtn < 0) {
                 log_error("Error processing init runtime message from fd %d", fd);
-                return -1;
+                return 1;
             }
             return 0;
         default:

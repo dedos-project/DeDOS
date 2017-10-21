@@ -11,6 +11,7 @@
 #include "runtime_dfg.h"
 #include "rt_stats.h"
 #include "worker_thread.h"
+#include "output_thread.h"
 
 #include <stdlib.h>
 #include <arpa/inet.h>
@@ -49,8 +50,8 @@ int send_to_controller(struct rt_controller_msg_hdr *hdr, void *payload) {
         return -1;
     }
 
-    log(LOG_CONTROLLER_COMMUNICATION, "Sent payload of size %d to controller",
-               (int)hdr->payload_size);
+    log(LOG_CONTROLLER_COMMUNICATION, "Sent payload of size %d type %d to controller",
+               (int)hdr->payload_size, hdr->type);
     return 0;
 }
 
@@ -175,7 +176,7 @@ static int process_ctrl_route_msg(struct ctrl_route_msg *msg) {
             if (rtn < 0) {
                 log_error("Error creating new route of id %d, type %d",
                           msg->route_id, msg->type_id);
-                return -1;
+                return 1;
             }
             return 0;
         case ADD_ENDPOINT:;
@@ -184,13 +185,13 @@ static int process_ctrl_route_msg(struct ctrl_route_msg *msg) {
             if (rtn < 0) {
                 log_error("Cannot initilize runtime endpoint for adding "
                           "endpoint %d to route %d", msg->msu_id, msg->route_id);
-                return -1;
+                return 1;
             }
             rtn = add_route_endpoint(msg->route_id, endpoint, msg->key);
             if (rtn < 0) {
                 log_error("Error adding endpoint %d to route %d with key %d",
                           msg->msu_id, msg->route_id, msg->key);
-                return -1;
+                return 1;
             }
             return 0;
         case DEL_ENDPOINT:
@@ -198,7 +199,7 @@ static int process_ctrl_route_msg(struct ctrl_route_msg *msg) {
             if (rtn < 0) {
                 log_error("Error removing endpoint %d from route %d",
                           msg->msu_id, msg->route_id);
-                return -1;
+                return 1;
             }
             return 0;
         case MOD_ENDPOINT:
@@ -206,7 +207,7 @@ static int process_ctrl_route_msg(struct ctrl_route_msg *msg) {
             if (rtn < 0) {
                 log_error("Error modifying endpoint %d on route %d to have key %d",
                           msg->msu_id, msg->route_id, msg->key);
-                return -1;
+                return 1;
             }
             return 0;
         default:
@@ -245,7 +246,9 @@ static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *
     log(LOG_CONTROLLER_COMMUNICATION, "Read control payload %p of size %d",
                msg_data, (int)hdr->payload_size);
     enum thread_msg_type type = get_thread_msg_type(hdr->type);
-    return construct_thread_msg(type, hdr->payload_size, msg_data);
+    struct thread_msg *thread_msg = construct_thread_msg(type, hdr->payload_size, msg_data);
+    thread_msg->ack_id = hdr->id;
+    return thread_msg;
 }
 
 static int pass_ctrl_msg_to_thread(struct ctrl_runtime_msg_hdr *hdr, int fd) {
@@ -317,6 +320,10 @@ static int process_ctrl_message(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     return 0;
 }
 
+int send_ack_message(int id, bool success) {
+    // Not implemented yet
+    return 0;
+}
 
 static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
 
@@ -338,8 +345,10 @@ static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
             rtn = process_ctrl_message(hdr, fd);
             if (rtn < 0) {
                 log_error("Error processing control message");
+                send_ack_message(hdr->id, false);
                 return -1;
             }
+            send_ack_message(hdr->id, true);
             break;
         default:
             log_error("Unknown header type %d in receiving thread", hdr->type);
@@ -398,13 +407,15 @@ int send_stats_to_controller() {
         return -1;
     }
     int rtn = 0;
-    log(LOG_STAT_SEND, "Sending statistics to controller");
+    int total_items = 0;
     for (int i=0; i<N_REPORTED_STAT_TYPES; i++) {
         enum stat_id stat_id = reported_stat_types[i].id;
         int n_items;
         struct stat_sample *samples = get_stat_samples(stat_id, &n_items);
+        total_items += n_items;
         if (samples == NULL) {
             log(LOG_STAT_SEND, "Error getting stat sample for send to controller");
+            continue;
         }
         size_t serial_size = serialized_stat_sample_size(samples, n_items);
 
@@ -426,5 +437,6 @@ int send_stats_to_controller() {
             rtn = -1;
         }
     }
+    log(LOG_STAT_SEND, "Sending %d statistics to controller", total_items);
     return rtn;
 }

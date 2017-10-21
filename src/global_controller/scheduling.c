@@ -152,21 +152,38 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
 
     //Awful linear search to sort
     for (i = 0; i < n_msus; ++i) {
-        struct dfg_msu *msu = msus[i];
         int up;
-        for (up = 0; up < msu->type->meta_routing.n_dst_types; ++up) {
-            for (j = 0; j != i && j < n_msus; ++j) {
-                if (msus[j]->type == msu->type->meta_routing.dst_types[up] && j > i) {
+        for (j = 0; j < n_msus; ++j) {
+            if (j == i)
+                continue;
+            for (up = 0; up < msus[i]->type->meta_routing.n_dst_types; ++up) {
+                struct dfg_msu_type *upt = msus[i]->type->meta_routing.dst_types[up];
+                if (msus[j]->type == msus[i]->type->meta_routing.dst_types[up] && j > i) {
+                    log_warn("Swap %d lower than %d", msus[j]->type->id, msus[i]->type->id);
                     struct dfg_msu *tmp = msus[j];
                     msus[j] = msus[i];
                     msus[i] = tmp;
+                    i = 0;
+                    j = 0;
+                    break;
+                }
+                for (int upup = 0; upup < upt->meta_routing.n_dst_types; ++upup) {
+                    if (msus[j]->type == upt->meta_routing.dst_types[upup] && j > i) {
+                        log_warn("Swap %d lower than %d", msus[j]->type->id, msus[i]->type->id);
+                        struct dfg_msu *tmp = msus[j];
+                        msus[j] = msus[i];
+                        msus[i] = tmp;
+                        i = 0;
+                        j = 0;
+                        break;
+                    }
                 }
             }
         }
     }
 
     for (i = 0; i < n_msus; ++i) {
-        log_debug("new msu n°%d has ID %d and type", i, msus[i]->msu_id, msus[i]->msu_type);
+        log_warn("new msu n°%d has ID %d and typ %de", i, msus[i]->id, msus[i]->type->id);
     }
 
     return 0;
@@ -495,7 +512,7 @@ int unclone_msu(int msu_id) {
     struct dfg_msu *dependencies[MAX_MSU];
     int n_deps = get_dependencies(msu, dependencies, MAX_MSU);
 
-    for (int i=0; i<n_deps; i++) {
+    for (int i=n_deps-1; i>=0; i--) {
         if (dependencies[i]->type->id == WEBSERVER_READ_MSU_TYPE_ID) {
             set_haproxy_weights(dependencies[i]->scheduling.runtime->id, 1);
         }

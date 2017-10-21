@@ -134,6 +134,7 @@ static int rm_routing_table_entry(struct routing_table *table, int msu_id) {
     unlock(table);
     log(LOG_ROUTING_CHANGES, "Removed destination %d from table %d (type %d)",
                msu_id, table->id, table->type_id);
+    print_routing_table(table);
     return 0;
 }
 
@@ -454,7 +455,7 @@ int remove_route_endpoint(int route_id, int msu_id) {
         return -1;
     }
     log(LOG_ROUTING_CHANGES, "Removed destination %d from route %d", msu_id, route_id);
-    return -1;
+    return 0;
 }
 
 /**
@@ -521,7 +522,7 @@ int rm_route_from_set(struct route_set *set, int route_id) {
     }
     for (; i<set->n_routes - 1; i++) {
         set->routes[i] = set->routes[i+1];
-    } 
+    }
     set->n_routes--;
     return 0;
 }

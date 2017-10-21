@@ -2,23 +2,18 @@
 #define THREAD_MESSAGE_H_
 #include "runtime_communication.h"
 #include "inter_runtime_messages.h"
+#include "rt_controller_messages.h"
 
 /**
- * All messages that can be received by main thread or workers
+ * All messages that can be received by output thread or workers
  */
 enum thread_msg_type {
     UNKNOWN_THREAD_MSG = 0,
 
     // For the output monitor thread
     CONNECT_TO_RUNTIME = 13, // ctrl_add_runtime_msg (ctrl_runtime_messages.h)
-    //RUNTIME_CONNECTED  = 14, // runtime_connected_msg (below)
     SEND_TO_PEER = 1000, // send_to_runtime_msg (below)
-
-    //CREATE_THREAD = 21, // ctrl_create_thread_msg (ctrl_runtime_messages.h)
-    //DELETE_THREAD = 22, // ctrl_delete_thread_msg (ctrl_runtime_messages.h)
-
-
-    //MODIFY_ROUTE = 3000, // ctrl_route_msg (ctrl_runtime_messages.h)
+    SEND_TO_CTRL = 1001, // send_to_ctrl_msg (below)
 
     // For worker threads
     CREATE_MSU = 2001, // ctrl_create_msu_msg (ctrl_runtime_messages.h)
@@ -28,6 +23,7 @@ enum thread_msg_type {
 
 struct thread_msg {
     enum thread_msg_type type;
+    int ack_id;
     ssize_t data_size;
     void *data;
 };
@@ -38,9 +34,9 @@ struct send_to_peer_msg {
     void *data;
 };
 
-struct runtime_connected_msg {
-    unsigned int runtime_id;
-    int fd;
+struct send_to_ctrl_msg {
+    struct rt_controller_msg_hdr hdr;
+    void *data;
 };
 
 struct thread_msg *init_runtime_connected_thread_msg(unsigned int runtime_id,

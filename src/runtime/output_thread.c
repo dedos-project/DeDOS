@@ -17,6 +17,16 @@ static void *init_output_thread(struct dedos_thread *output_thread) {
     return NULL;
 }
 
+static int output_thread_send_to_ctrl(struct send_to_ctrl_msg *msg) {
+    int rtn = send_to_controller(&msg->hdr, msg->data);
+    if (rtn < 0) {
+        log_error("Error sending message to controller");
+        return -1;
+    }
+    // TODO: Free msg? data?
+    return 0;
+}
+
 static int output_thread_send_to_peer(struct send_to_peer_msg *msg) {
     int rtn = send_to_peer(msg->runtime_id, &msg->hdr, msg->data);
     if (rtn < 0) {
@@ -80,6 +90,14 @@ static int process_output_thread_msg(struct thread_msg *msg) {
 
             if (rtn < 0) {
                 log_warn("Error forwarding message to peer");
+            }
+            break;
+        case SEND_TO_CTRL:
+            CHECK_MSG_SIZE(msg, struct send_to_ctrl_msg);
+            struct send_to_ctrl_msg *ctrl_msg = msg->data;
+            rtn = output_thread_send_to_ctrl(ctrl_msg);
+            if (rtn < 0) {
+                log_warn("Error sending message to controller");
             }
             break;
         case CREATE_MSU:
