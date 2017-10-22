@@ -138,8 +138,8 @@ static int parse_show_msus(char *args) {
     for (int i=0; i<dfg->n_msus; i++) {
         struct dfg_msu *msu = dfg->msus[i];
         if (msu->scheduling.runtime == rt) {
-            printf("ID: %d\t Type: %s (%d)\n",
-                    msu->id, msu->type->name, msu->type->id);
+            printf("ID: %d\t  Thread: %d \t Type: %s (%d)\n",
+                    msu->id, msu->scheduling.thread->id, msu->type->name, msu->type->id);
         }
     }
 
