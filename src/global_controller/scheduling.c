@@ -22,11 +22,17 @@ static int UNUSED n_downstream_msus(struct dfg_msu * msu) {
     return n;
 }
 
+#define QLEN_ROUTING
+
 #ifdef QLEN_ROUTING
 
 static double get_q_len(struct dfg_msu *msu) {
     struct timed_rrdb *q_len = get_stat(MSU_QUEUE_LEN, msu->id);
-    return average_n(q_len, 5);
+    double avg = average_n(q_len, 5);
+    if (avg < 0) {
+        return 0;
+    }
+    return avg;
 }
 
 static int downstream_q_len(struct dfg_msu *msu) {
@@ -41,6 +47,55 @@ static int downstream_q_len(struct dfg_msu *msu) {
     return qlen;
 }
 #endif
+
+#ifdef QLEN_ROUTING
+static int fix_route_ranges(struct dfg_route *route) {
+
+    if (route->n_endpoints <= 1) {
+        return 0;
+    }
+
+    double total_q_len = 0;
+    double q_lens[route->n_endpoints];
+    for (int i=0; i < route->n_endpoints; i++) {
+        q_lens[i] = downstream_q_len(route->endpoints[i]->msu);
+        if (q_lens[i] < .1) {
+            q_lens[i] = .1;
+        }
+        total_q_len += q_lens[i];
+    }
+    int last = 0;
+    int keys[route->n_endpoints];
+    int old_keys[route->n_endpoints];
+    int ids[route->n_endpoints];
+    for (int i=0; i < route->n_endpoints; i++) {
+        double pct = (1.0 - q_lens[i] / total_q_len) * 1000;
+        if (pct < 1) {
+            pct = 1;
+        }
+        keys[i] = pct + last;
+        last = keys[i];
+        old_keys[i] = route->endpoints[i]->key;
+        ids[i] = route->endpoints[i]->msu->id;
+    }
+
+    for (int i=0; i < route->n_endpoints; i++) {
+        if (old_keys[i] != keys[i]) {
+            int rtn = mod_endpoint(ids[i], keys[i], route->id);
+             if (rtn < 0) {
+                log_error("Error modifying endpoint");
+                return -1;
+            } else {
+                log(LOG_ROUTING_CHANGES,
+                          "Modified endpoint %d (idx: %d) in route %d to have key %d (old: %d)",
+                          ids[i], i, route->id, keys[i], old_keys[i]);
+            }
+        }
+    }
+    return 0;
+}
+
+#else
 
 static int fix_route_ranges(struct dfg_route *route) {
 
@@ -57,18 +112,9 @@ static int fix_route_ranges(struct dfg_route *route) {
 
         old_keys[i] = route->endpoints[i]->key;
         old_ids[i] = route->endpoints[i]->msu->id;
-#ifdef QLEN_ROUTING
-        double key = downstream_q_len(route->endpoints[i]->msu);
 
-        if (down_q_len < 1) {
-            new_keys[i] = last + 100;
-        } else {
-            new_keys[i] = last + (int)(100 / down_q_len + 1);
-        }
-#else
         double key = n_downstream_msus(route->endpoints[i]->msu);
         new_keys[i] = last + (key > 0 ? key : 1);
-#endif
         last = new_keys[i];
     }
 
@@ -105,6 +151,7 @@ static int fix_route_ranges(struct dfg_route *route) {
 
     return 0;
 }
+#endif
 
 int fix_all_route_ranges(struct dedos_dfg *dfg) {
     for (int i=0; i<dfg->n_runtimes; i++) {
@@ -153,9 +200,7 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
     //Awful linear search to sort
     for (i = 0; i < n_msus; ++i) {
         int up;
-        for (j = 0; j < n_msus; ++j) {
-            if (j == i)
-                continue;
+        for (j = i+1; j < n_msus; ++j) {
             for (up = 0; up < msus[i]->type->meta_routing.n_dst_types; ++up) {
                 struct dfg_msu_type *upt = msus[i]->type->meta_routing.dst_types[up];
                 if (msus[j]->type == msus[i]->type->meta_routing.dst_types[up] && j > i) {

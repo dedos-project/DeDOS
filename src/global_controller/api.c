@@ -75,6 +75,7 @@ int remove_msu(unsigned int id) {
         log_error("Error unscheduling DFG msu");
         return -1;
     }
+    unregister_stat_item(id);
 
     return 0;
 }
