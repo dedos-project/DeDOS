@@ -41,7 +41,7 @@ static struct stat_type_label UNUSED reported_stat_types[] = {
 
 #define N_REPORTED_STAT_TYPES sizeof(reported_stat_types) / sizeof(*reported_stat_types)
 
-#define MAX_STAT_ITEM_ID 128
+#define MAX_STAT_ITEM_ID 4192
 
 #define STAT_SAMPLE_SIZE 10
 

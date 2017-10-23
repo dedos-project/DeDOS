@@ -70,8 +70,6 @@ int main(int argc, char *argv[]) {
 
     start_cli_thread(&cli_thread);
     runtime_communication_loop(port, output_filename);
-    // TODO: Output dfg to file
-    (void)output_filename;
     //start_communication(tcp_control_listen_port, output_filename);
 
     pthread_join(cli_thread, NULL);

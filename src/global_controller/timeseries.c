@@ -10,21 +10,17 @@
 #include "logging.h"
 
 double average_n(struct timed_rrdb *timeseries, int n_samples) {
-    double sum = -1;
+    double sum = 0;
     int i;
     int start_index = timeseries->write_index - 1;
     for (i = 0; i < n_samples; i++) {
         int index = start_index - i;
         if ( index < 0 )
             index = RRDB_ENTRIES + index;
-        if ( timeseries->time[index].tv_sec == 0 ){
+        if ( timeseries->time[index].tv_sec < 0 ){
             continue;
         }
-        if ( sum == -1 ) {
-            sum = timeseries->data[index];
-        } else {
-            sum += timeseries->data[index];
-        }
+        sum += timeseries->data[index];
     }
 
     if (i == 0)

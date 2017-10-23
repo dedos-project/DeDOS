@@ -59,8 +59,8 @@ static int fix_route_ranges(struct dfg_route *route) {
     double q_lens[route->n_endpoints];
     for (int i=0; i < route->n_endpoints; i++) {
         q_lens[i] = downstream_q_len(route->endpoints[i]->msu);
-        if (q_lens[i] < .1) {
-            q_lens[i] = .1;
+        if (q_lens[i] < .001) {
+            q_lens[i] = .001;
         }
         total_q_len += q_lens[i];
     }
@@ -69,7 +69,7 @@ static int fix_route_ranges(struct dfg_route *route) {
     int old_keys[route->n_endpoints];
     int ids[route->n_endpoints];
     for (int i=0; i < route->n_endpoints; i++) {
-        double pct = (1.0 - q_lens[i] / total_q_len) * 1000;
+        double pct = (1.0 - q_lens[i] / total_q_len) * 10000;
         if (pct < 1) {
             pct = 1;
         }

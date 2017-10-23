@@ -14,7 +14,7 @@ struct dfg_vertex;
 
 #define MAIN_THREAD_ID 0
 
-#define MAX_RUNTIMES 4
+#define MAX_RUNTIMES 10
 #define MAX_THREADS 32
 #define MAX_ROUTES 32
 #define MAX_ROUTE_ENDPOINTS 32

@@ -36,7 +36,7 @@ struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
     }
     if (item_id >= MAX_STAT_ID) {
         log_error("Item ID %u too high!", item_id);
-        return -1;
+        return NULL;
     }
     struct stat_type *type = get_stat_type(id);
     if (type == NULL) {
@@ -98,6 +98,9 @@ int register_stat_item(unsigned int item_id) {
 
         struct stat_item *item = &type->items[index];
         item->id = item_id;
+        for (int i=0; i < RRDB_ENTRIES; i++) {
+            item->stats.time[i].tv_sec = -1;
+        }
         memset(&item->stats, 0, sizeof(item->stats));
     }
     return 0;
