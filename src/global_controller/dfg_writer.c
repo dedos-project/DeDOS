@@ -349,7 +349,7 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
 
     KEY_INTVAL(json, "global_ctl_port", dfg->global_ctl_port);
 
-    KEY(json, "msu_types");
+    KEY(json, "MSU_types");
     START_LIST(json);
     for (int i=0; i<dfg->n_msu_types; i++) {
         char *type = msu_type_to_json(dfg->msu_types[i]);
@@ -357,7 +357,7 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
     }
     END_LIST(json);
 
-    KEY(json, "msus");
+    KEY(json, "MSUs");
     START_LIST(json);
     for (int i=0; i<dfg->n_msus; i++) {
         char *msu = msu_to_json(dfg->msus[i], n_stats);
