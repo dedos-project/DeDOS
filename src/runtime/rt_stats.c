@@ -571,8 +571,8 @@ static int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
 static struct stat_sample *stat_samples[N_REPORTED_STAT_TYPES];
 
 static struct timespec stat_sample_interval = {
-    .tv_sec = STAT_SAMPLE_PERIOD_S / STAT_SAMPLE_SIZE,
-    .tv_nsec = (int)(STAT_SAMPLE_PERIOD_S * 1e9 / STAT_SAMPLE_SIZE) % (int)1e9
+    .tv_sec = (STAT_SAMPLE_PERIOD_MS / 1000) / STAT_SAMPLE_SIZE,
+    .tv_nsec = (int)(STAT_SAMPLE_PERIOD_MS * 1e6 / STAT_SAMPLE_SIZE) % (int)1e9
 };
 
 struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
@@ -601,7 +601,7 @@ struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
         return NULL;
     }
     int rtn = sample_recent_stats(stat_id, &stat_sample_interval, STAT_SAMPLE_SIZE,
-                                  stat_samples[i], stat_samples[i]->max_stats);
+                                  stat_samples[i], type->num_items);
     unlock_type(type);
     if (rtn < 0) {
         log_error("Error sampling recent stats");

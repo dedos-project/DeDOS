@@ -11,7 +11,7 @@ struct stat_item {
     struct timed_rrdb stats;
 };
 
-#define MAX_STAT_ID 512
+#define MAX_STAT_ID 4192
 
 
 struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id);

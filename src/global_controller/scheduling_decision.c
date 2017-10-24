@@ -23,6 +23,7 @@ struct cloning_info {
 static struct cloning_info CLONING_INFO[] = {
     { WEBSERVER_READ_MSU_TYPE_ID, MSU_QUEUE_LEN, 1, CLONING_SAMPLES, WEBSERVER_READ_MSU_TYPE_ID},
     { WEBSERVER_REGEX_MSU_TYPE_ID, MSU_QUEUE_LEN, 1, CLONING_SAMPLES, WEBSERVER_REGEX_MSU_TYPE_ID },
+    { WEBSERVER_HTTP_MSU_TYPE_ID, MSU_QUEUE_LEN, 1, CLONING_SAMPLES, WEBSERVER_HTTP_MSU_TYPE_ID },
     { WEBSERVER_HTTP_MSU_TYPE_ID, MSU_NUM_STATES, 2048, CLONING_SAMPLES, WEBSERVER_READ_MSU_TYPE_ID }
 };
 
@@ -73,7 +74,7 @@ static bool should_clone(struct cloning_info *info) {
     double mean = sum / info->num_msus;
     bool do_clone =  mean > info->threshold;
     if (do_clone) {
-        log(LOG_SCHEDULING_DECISIONS, "Trying to clone due to mean: %.2f", mean);
+        log(LOG_SCHEDULING_DECISIONS, "Trying to clone type %d due to mean: %.2f",info->msu_type_id,  mean);
     }
     return do_clone;
 }
@@ -90,14 +91,14 @@ static bool should_unclone(struct cloning_info *info) {
         max = max > info->stats[i] ? max : info->stats[i];
     }
     if (info->num_msus > info->min_instances) {
-        log(LOG_SCHEDULING_DECISIONS, "Trying to unclone due to max : %.2f", max);
+        log(LOG_SCHEDULING_DECISIONS, "Trying to unclone type %d due to max : %.2f", info->msu_type_id, max);
         return true;
     }
     return false;
 }
 
 #define MIN_CLONE_DURATION 1
-#define MIN_UNCLONE_DURATION 2
+#define MIN_UNCLONE_DURATION 3
 
 static struct timespec last_clone_time;
 static struct timespec last_unclone_time;

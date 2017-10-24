@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 enum inter_runtime_msg_type {
+    UNKNOWN_INTER_RT_MSG,
     INTER_RT_INIT,
     RT_FWD_TO_MSU,
 };

@@ -403,7 +403,7 @@ int init_controller_socket(struct sockaddr_in *addr) {
 
 int send_stats_to_controller() {
     if (controller_sock < 0) {
-        log_error("Skipping sending statistics: controller not initialized");
+        log(LOG_STAT_SEND, "Skipping sending statistics: controller not initialized");
         return -1;
     }
     int rtn = 0;

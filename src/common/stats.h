@@ -43,9 +43,9 @@ static struct stat_type_label UNUSED reported_stat_types[] = {
 
 #define MAX_STAT_ITEM_ID 4192
 
-#define STAT_SAMPLE_SIZE 10
+#define STAT_SAMPLE_SIZE 5
 
-#define STAT_SAMPLE_PERIOD_S 1
+#define STAT_SAMPLE_PERIOD_MS 500
 
 void free_stat_samples(struct stat_sample *samples, int n_samples);
 

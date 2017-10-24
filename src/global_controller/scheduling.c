@@ -252,11 +252,12 @@ void prepare_clone(struct dfg_msu  *msu) {
  * @param int msu_type: MSU type ID to filter
  * @return: pointer to dfg_thread or NULL
  */
-struct dfg_thread *find_unused_pinned_thread(struct dfg_runtime *runtime,
-                                             struct dfg_msu_type *type) {
+struct dfg_thread *find_unused_thread(struct dfg_runtime *runtime,
+                                      struct dfg_msu_type *type,
+                                      int is_pinned) {
     for (int i=0; i<runtime->n_pinned_threads + runtime->n_unpinned_threads; i++) {
         struct dfg_thread *thread = runtime->threads[i];
-        if (thread->mode != PINNED_THREAD) {
+        if ( (is_pinned && thread->mode == PINNED_THREAD) || (!is_pinned && thread->mode != PINNED_THREAD)) {
             continue;
         }
 
@@ -299,7 +300,8 @@ struct dfg_thread *find_unused_pinned_thread(struct dfg_runtime *runtime,
 int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     int ret = 0;
 
-    struct dfg_thread *free_thread = find_unused_pinned_thread(rt, msu->type);
+    struct dfg_thread *free_thread = find_unused_thread(rt, msu->type,
+                                                        msu->blocking_mode == NONBLOCK_MSU);
     //struct dfg_thread *free_thread = find_unused_pinned_thread(rt, msu);
     if (free_thread == NULL) {
         log(LOG_SCHEDULING, "There are no free worker threads on runtime %d", rt->id);
@@ -547,6 +549,11 @@ static int get_dependencies(struct dfg_msu *msu, struct dfg_msu **output, int ou
 int unclone_msu(int msu_id) {
 
     struct dfg_msu *msu = get_dfg_msu(msu_id);
+
+    if (msu == NULL) {
+        log_error("Cannot unclone MSU %d. Does not exist!", msu_id);
+        return -1;
+    }
 
     if (msu->type->n_instances <= 1) {
         log(LOG_SCHEDULING, "Cannot remove last instance of msu type %s", msu->type->name);

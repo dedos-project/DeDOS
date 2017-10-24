@@ -239,7 +239,9 @@ int runtime_communication_loop(int listen_port, char *output_file) {
         }
         if (output_file != NULL) {
             clock_gettime(CLOCK_REALTIME_COARSE, &elapsed);
-            if (elapsed.tv_sec - begin.tv_sec >= STAT_SAMPLE_PERIOD_S) {
+            if (elapsed.tv_sec - begin.tv_sec >= STAT_SAMPLE_PERIOD_MS / 1000 ||
+                    (elapsed.tv_sec - begin.tv_sec == STAT_SAMPLE_PERIOD_MS / 1000 &&
+                     elapsed.tv_nsec - begin.tv_nsec > STAT_SAMPLE_PERIOD_MS * 1e6)) {
                 dfg_to_file(output_file);
                 clock_gettime(CLOCK_REALTIME_COARSE, &begin);
             }

@@ -9,8 +9,9 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   ROUTING_CHANGES # \
-	   SOCKET_MSU
+	   ROUTING_CHANGES \
+	   #STATS_SEND
+#	   SOCKET_MSU
 	   #PARTIAL_READS
 	   #THREAD_AFFINITY \
 	   #STATS_SEND
@@ -61,7 +62,7 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=6
+OPTIM=0
 
 CC:=gcc
 CXX:=g++
