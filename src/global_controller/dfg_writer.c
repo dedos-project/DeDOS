@@ -395,3 +395,21 @@ void dfg_to_file(char *filename) {
     fwrite("\n", sizeof(char), 1, file);
     fclose(file);
 }
+
+void dfg_to_fd(int fd) {
+    struct dedos_dfg *dfg = get_dfg();
+    char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
+    unlock_dfg();
+
+    size_t json_size = strlen(dfg_json);
+
+    size_t written = 0;
+    while (written < json_size) {
+        ssize_t rtn = write(fd, dfg_json + written, json_size - written);
+        if (rtn < 0) {
+            log_error("error writing dfg to fd %d", fd);
+            return;
+        }
+        written += rtn;
+    }
+}
