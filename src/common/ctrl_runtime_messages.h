@@ -63,11 +63,11 @@ enum ctrl_route_msg_type {
 /** For creating routes or adding endpoints _to_ routes */
 struct ctrl_route_msg {
     enum ctrl_route_msg_type type;
-    int route_id;  
+    int route_id;
     int type_id;    /*<< Only needed if creating a new route */
     int msu_id;     /*<< Only needed if dealing with an endpoint*/
     int key;        /*<< Only filled if adding or modifying an endpoint */
-    
+
     unsigned int runtime_id; /*<< Only needed if adding an endpoint */
 };
 

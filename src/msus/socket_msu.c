@@ -7,6 +7,7 @@
 #include "communication.h"
 #include "msu_calls.h"
 
+#include <sys/epoll.h>
 #include <stdlib.h>
 #include <netinet/ip.h>
 
@@ -55,6 +56,14 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
     return 0;
 }
 
+struct msu_msg_key self_key = {
+    .key = {0},
+    .key_len = 0,
+    .id = 0
+};
+
+struct msu_msg_hdr blank_hdr = {};
+
 static int process_connection(int fd, void *v_state) {
     struct sock_msu_state *state = v_state;
     log(LOG_SOCKET_HANDLER, "Processing connection: fd = %d", fd);
@@ -85,6 +94,7 @@ static int process_connection(int fd, void *v_state) {
         if (rtn < 0) {
             log_error("Error enqueing to destination");
             free(msg);
+            msu_monitor_fd(fd, EPOLLIN | EPOLLOUT, NULL, &blank_hdr);
             return -1;
         }
         return 0;
@@ -98,6 +108,7 @@ static int process_connection(int fd, void *v_state) {
         int rtn = call_local_msu(state->self, destination, hdr, sizeof(*msg), msg);
         if (rtn < 0) {
             log_error("Error enqueueing to next MSU");
+            msu_monitor_fd(fd, EPOLLIN | EPOLLOUT, destination, hdr);
             return -1;
         }
         log(LOG_SOCKET_HANDLER,"Enqueued to MSU %d", destination->id);
@@ -122,11 +133,6 @@ static int socket_handler_main_loop(struct local_msu *self) {
     return rtn;
 }
 
-struct msu_msg_key self_key = {
-    .key = {0},
-    .key_len = 0,
-    .id = 0
-};
 
 static int socket_msu_receive(struct local_msu *self, struct msu_msg *msg) {
     int rtn = socket_handler_main_loop(self);

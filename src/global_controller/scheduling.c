@@ -51,6 +51,10 @@ static int downstream_q_len(struct dfg_msu *msu) {
 #ifdef QLEN_ROUTING
 static int fix_route_ranges(struct dfg_route *route) {
 
+    if (route->msu_type->id == WEBSERVER_HTTP_MSU_TYPE_ID) {
+        return 0;
+    }
+
     if (route->n_endpoints <= 1) {
         return 0;
     }
@@ -257,7 +261,7 @@ struct dfg_thread *find_unused_thread(struct dfg_runtime *runtime,
                                       int is_pinned) {
     for (int i=0; i<runtime->n_pinned_threads + runtime->n_unpinned_threads; i++) {
         struct dfg_thread *thread = runtime->threads[i];
-        if ( (is_pinned && thread->mode == PINNED_THREAD) || (!is_pinned && thread->mode != PINNED_THREAD)) {
+        if ( (!is_pinned && thread->mode == PINNED_THREAD) || (is_pinned && thread->mode != PINNED_THREAD)) {
             continue;
         }
 
@@ -583,7 +587,8 @@ int unclone_msu(int msu_id) {
         log(LOG_SCHEDULING, "Removed msu %d (type: %s)", id, name);
 
         //TODO: This should really wait for confirmation of deletion of MSU
-        usleep(2000e3); // 2 seconds
+        if (i > 0)
+            usleep(2000e3); // 2 seconds
     }
 
     return 0;

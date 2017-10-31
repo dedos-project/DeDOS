@@ -42,6 +42,11 @@ int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
 }
 
 int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
+    if (prov->path_len == 0) {
+        prov->origin.type_id = sender->type->id;
+        prov->origin.msu_id = sender->id;
+        prov->origin.runtime_id = local_runtime_id();
+    }
     int idx = prov->path_len % MAX_PATH_LEN;
     log(LOG_ADD_PROVINANCE, "Adding provinance: %d.%d to idx %d, prov %p ",
                sender->type->id, sender->id, idx, prov);

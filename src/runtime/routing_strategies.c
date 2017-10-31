@@ -99,7 +99,7 @@ int route_to_id(struct msu_type *type, struct local_msu *sender, int msu_id,
 int route_to_origin_runtime(struct msu_type *type, struct local_msu *sender, struct msu_msg *msg,
                             struct msu_endpoint *output) {
 
-    uint32_t runtime_id = msg->hdr.provinance.path[0].runtime_id;
+    uint32_t runtime_id = msg->hdr.provinance.origin.runtime_id;
 
     struct routing_table *table = get_type_from_route_set(&sender->routes, type->id);
     if (table == NULL) {

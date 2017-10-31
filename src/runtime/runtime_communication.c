@@ -178,6 +178,10 @@ static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
     if (msu == NULL) {
         log_error("Error getting MSU with ID %d, requested from runtime fd %d",
                   msu_id, fd);
+        // Read the payload anyway just so it doesn't mess future things up
+        void *unused = malloc(payload_size);
+        read_payload(fd, payload_size, unused);
+        free(unused);
         return -1;
     }
 

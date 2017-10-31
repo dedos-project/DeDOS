@@ -8,7 +8,7 @@
 #include "unused_def.h"
 
 // Putting these up here helps deal with circular dependency warnings
-#define MAX_MSU 128
+#define MAX_MSU 512
 struct dfg_config;
 struct dfg_vertex;
 
@@ -16,7 +16,7 @@ struct dfg_vertex;
 
 #define MAX_RUNTIMES 10
 #define MAX_THREADS 32
-#define MAX_ROUTES 32
+#define MAX_ROUTES 64
 #define MAX_ROUTE_ENDPOINTS 256
 #define MAX_INIT_DATA_LEN 32
 #define MAX_MSU_NAME_LEN 32

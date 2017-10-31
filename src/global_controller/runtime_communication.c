@@ -7,6 +7,7 @@
 #include "stats.h"
 #include "unused_def.h"
 #include "dfg_writer.h"
+#include "haproxy.h"
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -118,7 +119,7 @@ static int add_runtime_endpoint(unsigned int runtime_id, int fd, uint32_t ip, in
             }
         }
     }
-
+    set_haproxy_weights(0,0);
     return 0;
 }
 
@@ -181,8 +182,8 @@ static int handle_runtime_communication(int fd, void UNUSED *data) {
     struct rt_controller_msg_hdr hdr;
     int rtn = read_payload(fd, sizeof(hdr), &hdr);
     if (rtn < 0) {
-        log_error("Error reading runtime message header");
-        return -1;
+        log_error("Error reading runtime message header from fd %d", fd);
+        return 1;
     } else if (rtn == 1) {
         int id = remove_runtime_endpoint(fd);
         if (id < 0) {

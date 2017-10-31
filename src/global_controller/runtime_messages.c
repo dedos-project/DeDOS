@@ -42,7 +42,8 @@ int send_delete_msu_msg(struct dfg_msu *msu) {
     }
 
     struct ctrl_delete_msu_msg msg = {
-        .msu_id = msu->id
+        .msu_id = msu->id,
+        .force = 1
     };
 
     struct ctrl_runtime_msg_hdr hdr = {

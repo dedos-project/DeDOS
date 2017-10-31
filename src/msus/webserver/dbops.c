@@ -138,10 +138,10 @@ int recv_from_db(struct db_state *state) {
         }
     }
 
-    long file_size = atol(rcv);
+    //long file_size = atol(rcv);
     struct mock_file *local_file = state->data;
 
-    access_file(local_file, file_size);
+    access_file(local_file, MAX_FILE_SIZE);
     close(state->db_fd);
     state->db_fd = 0;
     return 0;

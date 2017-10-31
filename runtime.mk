@@ -1,15 +1,14 @@
 ADDRESS_SANITIZER?=0
-DEBUG = 1
+DEBUG = 0
 DUMP_STATS = 1
 DO_PROFILE = 0
 
 LOGS = \
 	   INFO \
 	   ERROR \
-	   WARN \
+	   #WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   ROUTING_CHANGES \
 	   #STATS_SEND
 #	   SOCKET_MSU
 	   #PARTIAL_READS
@@ -62,7 +61,7 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=0
+OPTIM=3
 
 CC:=gcc
 CXX:=g++

@@ -44,7 +44,7 @@ struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
         return NULL;
     }
     if (type->id_indices[item_id] == -1) {
-        log_error("ID %u for types %d not initialized", item_id, id);
+        //log_error("ID %u for types %d not initialized", item_id, id);
         return NULL;
     }
     return &type->items[type->id_indices[item_id]].stats;

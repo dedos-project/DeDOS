@@ -9,7 +9,7 @@
 #include <pthread.h>
 
 /** The maximum number of destinations a route can have */
-#define MAX_DESTINATIONS 32
+#define MAX_DESTINATIONS 128
 
 /** The maximum ID that may be assigned to a route */
 #define MAX_ROUTE_ID 10000
