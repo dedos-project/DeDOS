@@ -5,7 +5,6 @@
 // Wheeee!
 // (Need static methods...)
 #include "controller_communication.c"
-#include "runtime_dfg.c"
 #include "runtime_communication.c"
 #include "dedos_threads.c"
 
@@ -22,7 +21,7 @@ static struct dfg_runtime rt = {
 };
 
 static void init_local_runtime() {
-    LOCAL_RUNTIME = &rt;
+    set_local_runtime(&rt);
 }
 
 static void confirm_received_ctl_init_msg(int fd) {
@@ -37,9 +36,9 @@ static void confirm_received_ctl_init_msg(int fd) {
     ck_assert_int_eq(hdr.payload_size, sizeof(msg));
 
     rtn = read(fd, &msg, sizeof(msg));
-    ck_assert_int_eq(msg.runtime_id, LOCAL_RUNTIME->id);
-    ck_assert_int_eq(msg.ip, LOCAL_RUNTIME->ip);
-    ck_assert_int_eq(msg.port, LOCAL_RUNTIME->port);
+    ck_assert_int_eq(msg.runtime_id, rt.id);
+    ck_assert_int_eq(msg.ip, rt.ip);
+    ck_assert_int_eq(msg.port, rt.port);
 }
 
 START_DEDOS_TEST(test_send_ctl_init_msg) {
@@ -92,7 +91,7 @@ static void assert_received_rt_init_msg(int fd) {
     ck_assert_int_eq(hdr.payload_size, sizeof(msg));
 
     rtn = read(fd, &msg, sizeof(msg));
-    ck_assert_int_eq(msg.origin_id, LOCAL_RUNTIME->id);
+    ck_assert_int_eq(msg.origin_id, rt.id);
 }
 
 START_DEDOS_TEST(test_process_connect_to_runtime) {

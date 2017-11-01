@@ -5,7 +5,6 @@
 #include "dfg_instantiation.c"
 
 // See Test_dfg_instantiation.mk (and Makefile) for how I can do this
-#include "runtime_dfg.c"
 #include "routing.c"
 
 #include <unistd.h>
@@ -69,7 +68,7 @@ struct dfg_route *routes[] = {
 };
 
 START_DEDOS_TEST(test_add_dfg_route_endpoints_success) {
-    LOCAL_RUNTIME = &local_runtime;
+    set_local_runtime(&local_runtime);
     int route_id = 6;
 
     ck_assert_int_eq(init_route(route_id, 500), 0);
@@ -91,7 +90,7 @@ START_DEDOS_TEST(test_add_dfg_route_endpoints_success) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_spawn_dfg_routes) {
-    LOCAL_RUNTIME = &local_runtime;
+    set_local_runtime(&local_runtime);
 
     ck_assert_int_eq(spawn_dfg_routes(routes, 2), 0);
 
@@ -104,7 +103,7 @@ START_DEDOS_TEST(test_spawn_dfg_routes) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_add_dfg_routes_to_msu) {
-    LOCAL_RUNTIME = &local_runtime;
+    set_local_runtime(&local_runtime);
 
     spawn_dfg_routes(routes, 2);
 

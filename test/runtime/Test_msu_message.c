@@ -4,8 +4,6 @@
 // Include file under test
 #include "msu_message.c"
 
-#include "runtime_dfg.c"
-
 START_DEDOS_TEST(test_enqueue_and_dequeue_msu_msg) {
 
     struct msg_queue q;
@@ -166,7 +164,7 @@ START_DEDOS_TEST(test_add_provinance) {
     struct dfg_runtime rt = {
         .ip = 1
     };
-    LOCAL_RUNTIME = &rt;
+    set_local_runtime(&rt);
 
     ck_assert_int_eq(add_provinance(&hdr.provinance, &custom_msu),0);
     ck_assert_int_eq(hdr.provinance.path_len, 1);

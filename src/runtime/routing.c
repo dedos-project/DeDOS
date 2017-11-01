@@ -140,13 +140,14 @@ static int rm_routing_table_entry(struct routing_table *table, int msu_id) {
 
 /**
  * Adds a (copy of the) destination to a routing table.
+ * Note: Kept non-static but excluded from header so it can be used for testing
  * @param table The table to which the destination is to be added
  * @param destination The endpoint to add (a copy is made)
  * @param key The key to be associated with this destination
  * @return 0 on success, -1 on error
  */
-static int add_routing_table_entry(struct routing_table *table,
-                                   struct msu_endpoint *dest, uint32_t key) {
+int add_routing_table_entry(struct routing_table *table,
+                            struct msu_endpoint *dest, uint32_t key) {
     write_lock(table);
 
     int i;
@@ -218,9 +219,10 @@ static int alter_routing_table_entry(struct routing_table *table,
 /**
  * Initializes and returns a new routing table.
  * Note: Not for external access! Use init_route()
+ * Note: Kept non-static (but exclued from header) so it can be accessed during testing
  * @returns The new routing table
  */
-static struct routing_table *init_routing_table(int route_id, int type_id) {
+struct routing_table *init_routing_table(int route_id, int type_id) {
     struct routing_table *table = calloc(1, sizeof(*table));
     if (table == NULL) {
         log_error("Error allocating routing table");

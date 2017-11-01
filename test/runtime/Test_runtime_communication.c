@@ -4,7 +4,6 @@
 #include "runtime_communication.c"
 
 // And other dependencies as stated in Test_runtime_communication.mk
-#include "runtime_dfg.c"
 #include "local_msu.c"
 #include "output_thread.c"
 
@@ -175,7 +174,7 @@ START_DEDOS_TEST(test_handle_runtime_communication) {
 
 DEDOS_START_TEST_LIST("Runtime_communication")
 
-LOCAL_RUNTIME = &local_runtime;
+set_local_runtime(&local_runtime);
 
 DEDOS_ADD_TEST_FN(test_send_to_peer__success)
 DEDOS_ADD_TEST_FN(test_send_to_peer__fail_uninitialized_peer)

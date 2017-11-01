@@ -14,6 +14,10 @@ static struct dedos_dfg *DFG = NULL;
 /** Static (global) variable holding this runtime's dfg */
 static struct dfg_runtime *LOCAL_RUNTIME = NULL;
 
+void set_local_runtime(struct dfg_runtime *rt) {
+    LOCAL_RUNTIME = rt;
+}
+
 /**
  * Initializes the DFG as loaded from a JSON file, and sets
  * the global variables such that the DFG and runtime can be accessed

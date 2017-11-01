@@ -1,12 +1,10 @@
 #include "dedos_testing.h"
 #include "stats.h"
 #include "msu_calls.h"
+#include "runtime_dfg.h"
 
 // Include the file under test
 #include "local_msu.c"
-
-// Include other files referenced in the dependency makefile
-#include "runtime_dfg.c"
 
 struct dfg_runtime local_runtime = {
     .id = 1
@@ -208,7 +206,7 @@ START_DEDOS_TEST(test_msu_enqueue__local) {
 
 DEDOS_START_TEST_LIST("local_msu")
 
-LOCAL_RUNTIME = &local_runtime;
+set_local_runtime(&local_runtime);
 // Just to keep it from complaining
 init_statistics();
 
