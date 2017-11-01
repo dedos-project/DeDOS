@@ -7,10 +7,7 @@
 // Spot-checking a single thread message type
 START_DEDOS_TEST(test_enqueue_and_dequeue_thread_msg) {
 
-    struct runtime_connected_msg msg = {
-        .runtime_id = 123,
-        .fd = 456
-    };
+    struct send_to_ctrl_msg msg = {};
 
     struct thread_msg tmsg = {
         .type = CONNECT_TO_RUNTIME,
@@ -44,6 +41,8 @@ START_DEDOS_TEST(test_init_send_thread_msg) {
     ck_assert_int_eq(pmsg->hdr.target, target_id);
     ck_assert_int_eq(pmsg->hdr.payload_size, sizeof(data));
     ck_assert_ptr_eq(pmsg->data, &data);
+    free(pmsg);
+    free(msg);
 } END_DEDOS_TEST
 
 

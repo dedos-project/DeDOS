@@ -198,15 +198,17 @@ int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km) {
         rtn = retry_saved(&saved_state, contents);
         if (rtn < 0){
             log_error("Failed to re-interpret saved JSMN tokens");
+            free(tokens);
             return -1;
         }
         n_retries++;
         if (n_retries > 100) {
             log_error("Something is wrong. Retried too many times");
+            free(tokens);
             return -1;
         }
     }
-
+    free(tokens);
     return 0;
 }
 

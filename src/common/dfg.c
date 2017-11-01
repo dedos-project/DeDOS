@@ -570,3 +570,38 @@ struct dfg_thread * create_dfg_thread(struct dfg_runtime *rt, int thread_id,
     }
     return thread;
 }
+
+static void free_dfg_msu_type(struct dfg_msu_type *type) {
+    for (int i=0; i<type->n_dependencies; i++) {
+        free(type->dependencies[i]);
+    }
+    free(type);
+}
+
+static void free_dfg_runtime(struct dfg_runtime *rt) {
+    for (int i=0; i < rt->n_pinned_threads + rt->n_unpinned_threads; i++) {
+        free(rt->threads[i]);
+    }
+    for (int i=0; i < rt->n_routes; i++) {
+        for (int j=0; j < rt->routes[i]->n_endpoints; j++) {
+            free(rt->routes[i]->endpoints[j]);
+        }
+        free(rt->routes[i]);
+    }
+    free(rt);
+}
+    
+
+void free_dfg(struct dedos_dfg *dfg) {
+    for (int i=0; i < dfg->n_msu_types; i++) {
+        free_dfg_msu_type(dfg->msu_types[i]);
+    }
+    for (int i=0; i < dfg->n_msus; i++) {
+        free(dfg->msus[i]);
+    }
+    for (int i=0; i < dfg->n_runtimes; i++) {
+        free_dfg_runtime(dfg->runtimes[i]);
+    }
+}
+    
+

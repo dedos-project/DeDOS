@@ -529,7 +529,12 @@ int rm_route_from_set(struct route_set *set, int route_id) {
 
 int init_msu_endpoint(int msu_id, int runtime_id, struct msu_endpoint *endpoint) {
     endpoint->id = msu_id;
-    if (runtime_id == local_runtime_id()) {
+    int local_id = local_runtime_id();
+    if (local_id < 0) {
+        log_error("Cannot get local runtime ID");
+        return -1;
+    }
+    if (runtime_id == local_id) {
         endpoint->locality = MSU_IS_LOCAL;
         struct local_msu *msu = get_local_msu(msu_id);
         if (msu == NULL) {

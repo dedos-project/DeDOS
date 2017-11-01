@@ -203,4 +203,6 @@ int mod_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *e
 struct dfg_thread * create_dfg_thread(struct dfg_runtime *rt, int thread_id,
                                       enum thread_mode mode);
 
+void free_dfg(struct dedos_dfg *dfg);
+
 #endif //DFG_H_

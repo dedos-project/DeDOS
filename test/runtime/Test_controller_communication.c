@@ -1,10 +1,13 @@
+#define _GNU_SOURCE
 #include "dedos_testing.h"
+#include "socket_msu.h"
 
 // Wheeee!
 // (Need static methods...)
 #include "controller_communication.c"
 #include "runtime_dfg.c"
 #include "runtime_communication.c"
+#include "dedos_threads.c"
 
 #include <unistd.h>
 
@@ -153,7 +156,120 @@ START_DEDOS_TEST(test_process_create_thread_msg__fail_already_exists) {
 
 } END_DEDOS_TEST
 
-// TESTME: process_ctrl_route_msg()
+#define TEST_ROUTE_ID 123
+
+START_DEDOS_TEST(test_process_ctrl_route_msg__creation_success) {
+    struct ctrl_route_msg msg = {
+        .type = CREATE_ROUTE,
+        .route_id = TEST_ROUTE_ID,
+        .type_id = SOCKET_MSU_TYPE_ID
+    };
+
+    int rtn = process_ctrl_route_msg(&msg);
+    ck_assert_int_eq(rtn, 0);
+
+    struct route_set set = {};
+    rtn = add_route_to_set(&set, TEST_ROUTE_ID);
+    ck_assert_int_eq(rtn, 0);
+    free(set.routes);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_process_ctrl_route_msg__creation_fail_exists) {
+
+    int rtn = init_route(TEST_ROUTE_ID, SOCKET_MSU_TYPE_ID);
+
+    ck_assert_int_eq(rtn, 0);
+
+    struct ctrl_route_msg msg = {
+        .type= CREATE_ROUTE,
+        .route_id = TEST_ROUTE_ID,
+        .type_id = SOCKET_MSU_TYPE_ID
+    };
+    
+    rtn = process_ctrl_route_msg(&msg);
+    ck_assert_int_ne(rtn, 0);
+} END_DEDOS_TEST
+
+#define TEST_MSU_ID 12
+#define TEST_ROUTE_KEY 2
+
+START_DEDOS_TEST(test_process_ctrl_route_msg__addition_fail_nonexistent_msu) {
+    init_local_runtime();
+    int rtn = init_route(TEST_ROUTE_ID, SOCKET_MSU_TYPE_ID);
+
+    ck_assert_int_eq(rtn, 0);
+
+    struct ctrl_route_msg msg = {
+        .type = ADD_ENDPOINT,
+        .route_id = TEST_ROUTE_ID,
+        .msu_id = TEST_MSU_ID,
+        .key = TEST_ROUTE_KEY,
+        .runtime_id = RT_ID
+    };
+
+
+    rtn = process_ctrl_route_msg(&msg);
+    ck_assert_int_ne(rtn, 0);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_process_ctrl_route_msg__addition_success_remote_msu) {
+    init_local_runtime();
+    int rtn = init_route(TEST_ROUTE_ID, SOCKET_MSU_TYPE_ID);
+
+    ck_assert_int_eq(rtn, 0);
+
+    struct ctrl_route_msg msg = {
+        .type = ADD_ENDPOINT,
+        .route_id = TEST_ROUTE_ID,
+        .msu_id = TEST_MSU_ID,
+        .key = TEST_ROUTE_KEY,
+        .runtime_id = RT_ID + 1
+    };
+
+
+    rtn = process_ctrl_route_msg(&msg);
+    ck_assert_int_eq(rtn, 0);
+} END_DEDOS_TEST
+
+#define TEST_THREAD_ID 1
+
+START_DEDOS_TEST(test_pass_ctrl_msg_to_thread__success) {
+    struct dedos_thread thread = {
+        .id = TEST_THREAD_ID,
+    };
+    dedos_threads[TEST_THREAD_ID] = &thread;
+
+    struct ctrl_create_msu_msg msg = {
+        .msu_id = 4321,
+        .type_id = 1234
+    };
+    struct ctrl_runtime_msg_hdr hdr = {
+        .type = CTRL_CREATE_MSU,
+        .id = -1,
+        .thread_id = TEST_THREAD_ID,
+        .payload_size = sizeof(msg)
+    };
+
+    int fds[2];
+    fds[0] = init_sock_pair(&fds[1]);
+    write(fds[0], &msg, sizeof(msg));
+
+    int rtn = pass_ctrl_msg_to_thread(&hdr, fds[1]);
+    ck_assert_int_eq(rtn, 0);
+    ck_assert_int_eq(thread.queue.num_msgs, 1);
+
+    struct thread_msg *tmsg = dequeue_thread_msg(&thread.queue);
+    struct ctrl_create_msu_msg *msg_out = tmsg->data;
+    ck_assert_int_eq(msg_out->msu_id, 4321);
+    ck_assert_int_eq(msg_out->type_id, 1234);
+
+    free(tmsg);
+    free(msg_out);
+    close(fds[0]);
+    close(fds[1]);
+} END_DEDOS_TEST
+
+
 // TESTME: pass_ctrl_msg_to_thread()
 // TESTME: thread_msg_from_ctrl_hdr()
 
@@ -207,9 +323,16 @@ DEDOS_START_TEST_LIST("controller_communication")
 DEDOS_ADD_TEST_FN(test_send_ctl_init_msg)
 DEDOS_ADD_TEST_FN(test_connect_to_controller)
 DEDOS_ADD_TEST_FN(test_process_connect_to_runtime)
+
 DEDOS_ADD_TEST_FN(test_process_create_thread_msg__success)
 DEDOS_ADD_TEST_FN(test_process_create_thread_msg__fail_already_exists)
+DEDOS_ADD_TEST_FN(test_process_ctrl_route_msg__addition_fail_nonexistent_msu);
+DEDOS_ADD_TEST_FN(test_process_ctrl_route_msg__addition_success_remote_msu);
 
+DEDOS_ADD_TEST_FN(test_pass_ctrl_msg_to_thread__success);
+
+DEDOS_ADD_TEST_FN(test_process_ctrl_route_msg__creation_success)
+DEDOS_ADD_TEST_FN(test_process_ctrl_route_msg__creation_fail_exists)
 DEDOS_ADD_TEST_FN(test_thread_msg_from_ctrl_hdr__create_msu)
 
 DEDOS_END_TEST_LIST()

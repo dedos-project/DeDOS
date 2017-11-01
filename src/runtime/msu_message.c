@@ -165,6 +165,7 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
     msg->data_size = data_size;
     if (msu->type->deserialize) {
         msg->data = msu->type->deserialize(msu, data_size, data, &msg->data_size);
+        free(data);
     } else {
         msg->data = data;
     }
@@ -193,6 +194,8 @@ void *serialize_msu_msg(struct msu_msg *msg, struct msu_type *dst_type, size_t *
         }
         memcpy(output, &msg->hdr, sizeof(msg->hdr));
         memcpy(output + sizeof(msg->hdr), payload, payload_size);
+
+        free(payload);
 
         *size_out = serialized_size;
         return output;

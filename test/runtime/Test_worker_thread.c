@@ -98,7 +98,7 @@ START_DEDOS_TEST(test_del_msu_from_thread__success) {
     wthread.msus[wthread.n_msus] = msu3;
     wthread.n_msus++;
 
-    ck_assert_int_eq(del_msu_from_thread(&wthread, &msg), 0);
+    ck_assert_int_eq(del_msu_from_thread(&wthread, &msg, 1), 0);
     ck_assert_int_eq(wthread.n_msus, 2);
     ck_assert_ptr_eq(wthread.msus[2], NULL);
 } END_DEDOS_TEST
@@ -108,7 +108,7 @@ START_DEDOS_TEST(test_del_msu_from_thread__fail_no_such_msu) {
         .msu_id = new_msu_id
     };
 
-    ck_assert_int_eq(del_msu_from_thread(&wthread, &msg), -1);
+    ck_assert_int_eq(del_msu_from_thread(&wthread, &msg, 1), -1);
 } END_DEDOS_TEST
 
 // TODO: worker_thread_mod_msu_route

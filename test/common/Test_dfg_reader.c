@@ -26,7 +26,12 @@ struct dedos_dfg *setup_dfg(int total_threads, int pinned_threads, int marked_pi
     dfg->runtimes[0] = rt;
     dfg->n_runtimes = 1;
     return dfg;
+}
 
+void tear_down_dfg(struct dedos_dfg *dfg) {
+    free(dfg->runtimes[0]->threads[0]);
+    free(dfg->runtimes[0]);
+    free(dfg);
 }
 
 START_DEDOS_TEST(test_fix_num_threads_correct) {
@@ -55,7 +60,7 @@ START_DEDOS_TEST(test_fix_num_threads_correct) {
     log_info("Set unpinned: %d", set_unpinned);
     ck_assert_int_eq(set_pinned, pinned_threads);
     ck_assert_int_eq(set_unpinned,unpinned_threads);
-
+    tear_down_dfg(dfg);
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_fix_num_threads_incorrect) {
@@ -64,11 +69,13 @@ START_DEDOS_TEST(test_fix_num_threads_incorrect) {
     int rtn = fix_num_threads(dfg);
 
     ck_assert(rtn != 0);
+    tear_down_dfg(dfg);
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_parse_dfg_json_file) {
     struct dedos_dfg *dfg = parse_dfg_json_file(test_dfg_path);
     ck_assert_ptr_ne(dfg, NULL);
+    free_dfg(dfg);
 } END_DEDOS_TEST
 
 
