@@ -140,7 +140,9 @@ int parse_file_into_obj(const char *filename, void *obj, struct key_mapping *km)
     contents[fsize] = '\0';
     fclose(file);
 
-    return parse_str_into_obj(contents, obj, km);
+    rtn = parse_str_into_obj(contents, obj, km);
+    free(contents);
+    return rtn;
 }
 
 #define MAX_RETRIES 1024
@@ -164,6 +166,7 @@ int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km) {
     int n_tokens = jsmn_parse(&parser, contents, strlen(contents), NULL, 16384);
     log(LOG_JSMN_PARSING, "Allocating %d tokens", n_tokens);
     jsmntok_t *tokens = malloc(n_tokens * sizeof(*tokens));
+    jsmntok_t *tok_orig = tokens;
     // Parse the JSON
     jsmn_init(&parser);
     n_tokens = jsmn_parse(&parser, contents, strlen(contents), tokens, n_tokens);
@@ -198,17 +201,17 @@ int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km) {
         rtn = retry_saved(&saved_state, contents);
         if (rtn < 0){
             log_error("Failed to re-interpret saved JSMN tokens");
-            free(tokens);
+            free(tok_orig);
             return -1;
         }
         n_retries++;
         if (n_retries > 100) {
             log_error("Something is wrong. Retried too many times");
-            free(tokens);
+            free(tok_orig);
             return -1;
         }
     }
-    free(tokens);
+    free(tok_orig);
     return 0;
 }
 

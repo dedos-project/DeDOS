@@ -163,6 +163,17 @@ $(TARGET): ${OBJECTS} ${LEG_OBJ}
 test: all $(TST_BLD_RSCS) test-results
 	echo $(TSTS)
 
+memcheck: test $(MEM_RESULTS) 
+	@for FILE in $(filter-out test, $^); do \
+		echo ___ $$FILE ___ ; \
+		if grep -q "definitely lost: [^0]" "$$FILE"; then \
+			grep  --color=never '\(\*\*\*\*\*.*\*\*\*\*\)\|\(definitely lost: [^0]\)' "$$FILE" | sed s/==/`printf "\\033[032m"==`/g ;\
+			tput sgr0; \
+		else \
+			echo "Nothing definitely lost!"; \
+		fi \
+	done;
+
 test-blds: $(TST_OBJS) $(TST_BLDS) $(TST_BLD_RSCS)
 
 test-results: all test-blds $(RESULTS)
@@ -184,6 +195,10 @@ test-results: all test-blds $(RESULTS)
 	@if grep -q ":[FE]:" $(filter-out all test-blds, $^); then \
 		false;\
 	fi
+
+$(RES_DIR)%_memcheck.txt: $(TST_BLD_DIR)%.out
+	-valgrind  --track-origins=yes --leak-check=full $< > $@ 2>&1
+
 
 # Output the results of the tests by executing each of the builds
 # of the tests. Output STDOUT and STDERR to the name of the rule
