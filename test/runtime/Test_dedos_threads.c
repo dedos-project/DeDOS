@@ -51,6 +51,7 @@ void destroy_fn(struct dedos_thread *thread, void *data) {
     ck_assert_int_eq(t->t, thread->id * 15);
     DESTROYED_THREADS[thread->id] = 1;
     sem_post(&DESTROYED_THREAD_SEM);
+    free(t);
 }
 
 #define TEST_THREAD(th, id) \

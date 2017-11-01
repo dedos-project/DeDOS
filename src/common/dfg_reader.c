@@ -230,8 +230,8 @@ PARSE_FN(set_blocking_mode) {
 
     char *str_mode = GET_STR_TOK();
 
-    enum blocking_mode mode = str_to_blocking_mode(str_mode);
-    if (mode == UNKNOWN_BLOCKING_MODE) {
+    vertex->blocking_mode = str_to_blocking_mode(str_mode);
+    if (vertex->blocking_mode == UNKNOWN_BLOCKING_MODE) {
         log_error("Unknown blocking mode specified: %s", str_mode);
         return -1;
     }
@@ -248,10 +248,10 @@ PARSE_FN(set_blocking_mode) {
     }
 
     if (thread->mode == UNSPECIFIED_THREAD_MODE) {
-        thread->mode = (mode == NONBLOCK_MSU) ? PINNED_THREAD : UNPINNED_THREAD;
+        thread->mode = (vertex->blocking_mode == NONBLOCK_MSU) ? PINNED_THREAD : UNPINNED_THREAD;
     }
 
-    if ((thread->mode == PINNED_THREAD) ^ (mode == NONBLOCK_MSU)) {
+    if ((thread->mode == PINNED_THREAD) ^ (vertex->blocking_mode == NONBLOCK_MSU)) {
         log_error("Can only put blocking MSUs on pinned threads, and nonblock MSUs on unpinned");
         return -1;
     }

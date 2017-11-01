@@ -8,16 +8,16 @@
 #include "unused_def.h"
 
 // Putting these up here helps deal with circular dependency warnings
-#define MAX_MSU 128
+#define MAX_MSU 512
 struct dfg_config;
 struct dfg_vertex;
 
 #define MAIN_THREAD_ID 0
 
-#define MAX_RUNTIMES 4
+#define MAX_RUNTIMES 10
 #define MAX_THREADS 32
-#define MAX_ROUTES 32
-#define MAX_ROUTE_ENDPOINTS 32
+#define MAX_ROUTES 64
+#define MAX_ROUTE_ENDPOINTS 256
 #define MAX_INIT_DATA_LEN 32
 #define MAX_MSU_NAME_LEN 32
 #define MAX_MSU_TYPES 32
@@ -202,5 +202,7 @@ int mod_dfg_route_endpoint(struct dfg_route *route, struct dfg_route_endpoint *e
                            uint32_t new_key);
 struct dfg_thread * create_dfg_thread(struct dfg_runtime *rt, int thread_id,
                                       enum thread_mode mode);
+
+void free_dfg(struct dedos_dfg *dfg);
 
 #endif //DFG_H_

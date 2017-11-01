@@ -131,7 +131,7 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
                 log(LOG_EPOLL_OPS, "Accepting connection on %d", socket_fd);
                 int new_fd = accept_new_connection(socket_fd, epoll_fd, oneshot);
                 if ( new_fd < 0) {
-                    log_error("Failed accepting new connection on epoll %d", epoll_fd);
+                    //log_error("Failed accepting new connection on epoll %d", epoll_fd);
                     return -1;
                 } else {
                     if (accept_handler) {

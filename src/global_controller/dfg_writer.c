@@ -349,7 +349,7 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
 
     KEY_INTVAL(json, "global_ctl_port", dfg->global_ctl_port);
 
-    KEY(json, "msu_types");
+    KEY(json, "MSU_types");
     START_LIST(json);
     for (int i=0; i<dfg->n_msu_types; i++) {
         char *type = msu_type_to_json(dfg->msu_types[i]);
@@ -357,7 +357,7 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
     }
     END_LIST(json);
 
-    KEY(json, "msus");
+    KEY(json, "MSUs");
     START_LIST(json);
     for (int i=0; i<dfg->n_msus; i++) {
         char *msu = msu_to_json(dfg->msus[i], n_stats);
@@ -394,4 +394,22 @@ void dfg_to_file(char *filename) {
     fwrite(dfg_json, sizeof(char), json_size, file);
     fwrite("\n", sizeof(char), 1, file);
     fclose(file);
+}
+
+void dfg_to_fd(int fd) {
+    struct dedos_dfg *dfg = get_dfg();
+    char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
+    unlock_dfg();
+
+    size_t json_size = strlen(dfg_json);
+
+    size_t written = 0;
+    while (written < json_size) {
+        ssize_t rtn = write(fd, dfg_json + written, json_size - written);
+        if (rtn < 0) {
+            log_error("error writing dfg to fd %d", fd);
+            return;
+        }
+        written += rtn;
+    }
 }

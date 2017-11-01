@@ -53,7 +53,7 @@ int accept_connection(struct connection *conn, int use_ssl) {
         log(LOG_CONNECTION_INFO, "Accepted SSL connection on fd %d", conn->fd);
         return WS_COMPLETE;
     } else if (rtn == -1) {
-        log_error("Error accepting SSL (fd: %d)", conn->fd);
+        //log_error("Error accepting SSL (fd: %d)", conn->fd);
         return WS_ERROR;
     } else {
         log(LOG_CONNECTION_INFO, "SSL accept incomplete (fd: %d)", conn->fd);
@@ -83,7 +83,7 @@ int read_request(struct read_state *state) {
                        bytes, state->conn.fd);
             return WS_COMPLETE;
         case WS_ERROR:
-            log_error("Error reading (fd: %d)", state->conn.fd);
+            log(LOG_WS_ERRORS, "Error reading (fd: %d)", state->conn.fd);
             return WS_ERROR;
         default:
             log_error("Unknown return code: %d (fd: %d)", rtn, state->conn.fd);

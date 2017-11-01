@@ -40,7 +40,7 @@ struct thread_msg *dequeue_thread_msg(struct msg_queue *queue) {
 
 struct thread_msg *construct_thread_msg(enum thread_msg_type type,
                                         ssize_t data_size, void *data) {
-    struct thread_msg *msg = malloc(sizeof(*msg));
+    struct thread_msg *msg = calloc(1, sizeof(*msg));
     if (msg == NULL) {
         log_error("Error allocating thread message");
         return NULL;

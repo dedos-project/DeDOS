@@ -113,6 +113,8 @@ START_DEDOS_TEST(test_add_dfg_routes_to_msu) {
     ck_assert_int_eq(add_dfg_routes_to_msu(&msu, routes, 2), 0);
 
     ck_assert_int_eq(msu.routes.n_routes, 2);
+
+    free(msu.routes.routes);
 } END_DEDOS_TEST
 
 // TODO: test_spawn_dfg_msus

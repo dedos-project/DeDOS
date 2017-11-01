@@ -228,6 +228,7 @@ START_DEDOS_TEST(test_sample_stat_item) {
                          max_time - (i) * interval_s - ((i *interval_ns * 1e-9))- 1);
     }
 
+    free(stats);
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_sample_stat) {
@@ -254,6 +255,8 @@ START_DEDOS_TEST(test_sample_stat) {
         ck_assert_int_eq(samples[i].hdr.item_id, items[i]);
         ck_assert_int_eq(samples[i].hdr.n_stats, sample_size);
     }
+
+    free_stat_samples(samples, n_items);
 
 } END_DEDOS_TEST
 

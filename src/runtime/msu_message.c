@@ -42,6 +42,11 @@ int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
 }
 
 int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
+    if (prov->path_len == 0) {
+        prov->origin.type_id = sender->type->id;
+        prov->origin.msu_id = sender->id;
+        prov->origin.runtime_id = local_runtime_id();
+    }
     int idx = prov->path_len % MAX_PATH_LEN;
     log(LOG_ADD_PROVINANCE, "Adding provinance: %d.%d to idx %d, prov %p ",
                sender->type->id, sender->id, idx, prov);
@@ -160,6 +165,7 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
     msg->data_size = data_size;
     if (msu->type->deserialize) {
         msg->data = msu->type->deserialize(msu, data_size, data, &msg->data_size);
+        free(data);
     } else {
         msg->data = data;
     }
@@ -188,6 +194,8 @@ void *serialize_msu_msg(struct msu_msg *msg, struct msu_type *dst_type, size_t *
         }
         memcpy(output, &msg->hdr, sizeof(msg->hdr));
         memcpy(output + sizeof(msg->hdr), payload, payload_size);
+
+        free(payload);
 
         *size_out = serialized_size;
         return output;

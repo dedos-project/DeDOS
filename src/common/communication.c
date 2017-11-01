@@ -35,14 +35,17 @@ int read_payload(int fd, size_t size, void *buff) {
 }
 
 ssize_t send_to_endpoint(int fd, void *data, size_t data_len) {
-    ssize_t rtn = write(fd, data, data_len);
-    if (rtn <= 0) {
-        log_error("Error sending buffer to endpoint with socket %d", fd);
-    } else if (rtn < data_len) {
-        log_error("Full buffer not sent to endpoint!");
-        log_error("TODO: loop until buffer is sent?");
+    ssize_t size = 0;
+    while (size < data_len) {
+        ssize_t rtn = write(fd, data + size, data_len - size);
+        if (rtn <= 0) {
+            log_error("Error sending buffer to endpoint with socket %d", fd);
+        } else if (rtn < data_len) {
+            log_warn("Full buffer not sent to endpoint!");
+        }
+        size += rtn;
     }
-    return rtn;
+    return size;
 }
 
 int init_connected_socket(struct sockaddr_in *addr) {

@@ -10,7 +10,7 @@
 #define UNUSED
 #endif
 
-#define PRINT_REQUEST_ERRORS
+//#define PRINT_REQUEST_ERRORS
 
 #ifdef PRINT_REQUEST_ERRORS
 #define print_request_error(fmt, ...)\
@@ -221,7 +221,7 @@ int close_ssl(SSL *ssl) {
     if (rtn >= 0) {
         rtn = SSL_shutdown(ssl);
         if (rtn == -1) {
-            log_error("Error shutting down SSL connection");
+            log(WS_ERROR, "Error shutting down SSL connection");
             SSL_free(ssl);
             return WS_ERROR;
         }

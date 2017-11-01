@@ -5,6 +5,9 @@
 #include <stdbool.h>
 
 //TODO: docstring
+int remove_stat_item(enum stat_id stat_id, unsigned int item_id);
+
+//TODO: docstring
 int init_stat_item(enum stat_id stat_id, unsigned int item_id);
 
 //TODO: docstring

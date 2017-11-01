@@ -62,6 +62,10 @@ START_DEDOS_TEST(test_serialize_and_read_msu_msg__default) {
 
     ck_assert_int_eq(out->data_size, msg.data_size);
     ck_assert_int_eq(*(int*)out->data, data);
+
+    free(out->data);
+    free(out);
+    free(output);
 } END_DEDOS_TEST
 
 struct layer_2 {
@@ -143,6 +147,12 @@ START_DEDOS_TEST(test_serialize_and_read_msu_msg__custom) {
     struct layer_1 *data_out = out->data;
     ck_assert_int_eq(data_out->value_1, data.value_1);
     ck_assert_int_eq(data_out->l2->value, data.l2->value);
+
+    free(serialized);
+    free(data_out->l2);
+    free(data_out);
+    free(out);
+
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_add_provinance) {

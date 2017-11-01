@@ -34,20 +34,45 @@ struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
         log_error("Stats not initialized");
         return NULL;
     }
+    if (item_id >= MAX_STAT_ID) {
+        log_error("Item ID %u too high!", item_id);
+        return NULL;
+    }
     struct stat_type *type = get_stat_type(id);
     if (type == NULL) {
         log_error("Type %d not initialized", id);
         return NULL;
     }
     if (type->id_indices[item_id] == -1) {
-        log_error("ID %u for types %d not initialized", item_id, id);
+        //log_error("ID %u for types %d not initialized", item_id, id);
         return NULL;
     }
     return &type->items[type->id_indices[item_id]].stats;
 }
 
+int unregister_stat_item(unsigned int item_id) {
+    if (!stats_initialized) {
+        log_error("Stats not initialized");
+        return -1;
+    }
+    for (int i=0; i < N_STAT_TYPES; i++) {
+        struct stat_type *type = &stat_types[i];
+        if (type->id_indices[item_id] == -1) {
+            log_warn("Item ID %u not assigned", item_id);
+            continue;
+        }
+        type->id_indices[item_id] = -1;
+        // TODO: Remove stats
+    }
+    return 0;
+}
+
 
 int register_stat_item(unsigned int item_id) {
+    if (item_id >= MAX_STAT_ID) {
+        log_error("Item ID %u too high!", item_id);
+        return -1;
+    }
     if (!stats_initialized) {
         log_error("Stats not initialized");
         return -1;
@@ -73,6 +98,9 @@ int register_stat_item(unsigned int item_id) {
 
         struct stat_item *item = &type->items[index];
         item->id = item_id;
+        for (int i=0; i < RRDB_ENTRIES; i++) {
+            item->stats.time[i].tv_sec = -1;
+        }
         memset(&item->stats, 0, sizeof(item->stats));
     }
     return 0;

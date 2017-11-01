@@ -131,7 +131,7 @@ def runtime_routes(rt_id, msus, yaml_routes):
 
     for i, route in enumerate(yaml_routes):
         tos = route['to'] if isinstance(route['to'], list) else [route['to']]
-        froms = route['to'] if isinstance(route['from'], list) else [route['from']]
+        froms = route['from'] if isinstance(route['from'], list) else [route['from']]
 
         from_msus = [msu for msu in msus if msu['name'] in froms and
                      msu['scheduling']['runtime'] == rt_id]
@@ -243,12 +243,13 @@ class MSUGenerator(list):
         """
         list.__init__(self)
         self.reps = msu['reps'] if 'reps' in msu else 1
+        self.runtimes = msu['runtime'] if isinstance(msu['runtime'], list) else [msu['runtime']]
         self.starting_id = self.next_msu_id
         self.generated = 0
 
         # Pre-allocating IDs
         self.base_msu = OrderedDict([('id', MSUGenerator.next_msu_id)])
-        MSUGenerator.next_msu_id += self.reps
+        MSUGenerator.next_msu_id += (self.reps * len(self.runtimes))
 
         # Add simple mappings to base_msu now
         self.base_msu = dict_from_mapping(msu, MSU_MAPPING, self.base_msu)
@@ -262,7 +263,7 @@ class MSUGenerator(list):
 
         :return: the next MSU
         """
-        while self.generated < self.reps:
+        while self.generated < (self.reps * len(self.runtimes)):
             self.generated += 1
             yield self.generate_msu(self.generated - 1)
         raise StopIteration()
@@ -275,8 +276,9 @@ class MSUGenerator(list):
         :return: a new deep copy of the base MSU updated for the next rep
         """
         next_msu = copy.deepcopy(self.base_msu)
-        next_msu['scheduling']['thread_id'] += i
-        next_msu['id'] += i
+        next_msu['scheduling']['thread_id'] += i % self.reps
+        next_msu['scheduling']['runtime'] = self.runtimes[i / self.reps]
+        next_msu['id'] += i 
         return next_msu
 
     def __len__(self):

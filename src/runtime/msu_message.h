@@ -36,9 +36,10 @@ struct msu_provinance_item {
     unsigned int runtime_id;
 };
 
-#define MAX_PATH_LEN 16
+#define MAX_PATH_LEN 8
 
 struct msg_provinance {
+    struct msu_provinance_item origin;
     struct msu_provinance_item path[MAX_PATH_LEN];
     int path_len;
 };

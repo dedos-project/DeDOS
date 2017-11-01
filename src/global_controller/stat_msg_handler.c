@@ -13,7 +13,7 @@ struct stat_sample *incoming_samples;
 static int process_stat_sample(struct stat_sample *sample) {
     struct timed_rrdb *stat = get_stat(sample->hdr.stat_id, sample->hdr.item_id);
     if (stat == NULL) {
-        log_error("Error procssing stat sample %d.%u", sample->hdr.stat_id, sample->hdr.item_id);
+        //log_error("Error procssing stat sample %d.%u", sample->hdr.stat_id, sample->hdr.item_id);
         return -1;
     }
     int rtn = append_to_timeseries(sample->stats, sample->hdr.n_stats, stat);
@@ -41,7 +41,7 @@ int handle_serialized_stats_buffer(void *buffer, size_t buffer_len) {
 
     for (int i=0; i<n_samples; i++) {
         if (process_stat_sample(&incoming_samples[i]) != 0) {
-            log_error("Error processing stat sample");
+            //log_error("Error processing stat sample");
         }
     }
 

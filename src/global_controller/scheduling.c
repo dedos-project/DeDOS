@@ -5,7 +5,8 @@
 #include "logging.h"
 #include "runtime_messages.h"
 #include "msu_stats.h"
-
+#include "msu_ids.h"
+#include "haproxy.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,11 +22,17 @@ static int UNUSED n_downstream_msus(struct dfg_msu * msu) {
     return n;
 }
 
+#define QLEN_ROUTING
+
 #ifdef QLEN_ROUTING
 
 static double get_q_len(struct dfg_msu *msu) {
     struct timed_rrdb *q_len = get_stat(MSU_QUEUE_LEN, msu->id);
-    return average_n(q_len, 5);
+    double avg = average_n(q_len, 5);
+    if (avg < 0) {
+        return 0;
+    }
+    return avg;
 }
 
 static int downstream_q_len(struct dfg_msu *msu) {
@@ -40,6 +47,59 @@ static int downstream_q_len(struct dfg_msu *msu) {
     return qlen;
 }
 #endif
+
+#ifdef QLEN_ROUTING
+static int fix_route_ranges(struct dfg_route *route) {
+
+    if (route->msu_type->id == WEBSERVER_HTTP_MSU_TYPE_ID) {
+        return 0;
+    }
+
+    if (route->n_endpoints <= 1) {
+        return 0;
+    }
+
+    double total_q_len = 0;
+    double q_lens[route->n_endpoints];
+    for (int i=0; i < route->n_endpoints; i++) {
+        q_lens[i] = downstream_q_len(route->endpoints[i]->msu);
+        if (q_lens[i] < .001) {
+            q_lens[i] = .001;
+        }
+        total_q_len += q_lens[i];
+    }
+    int last = 0;
+    int keys[route->n_endpoints];
+    int old_keys[route->n_endpoints];
+    int ids[route->n_endpoints];
+    for (int i=0; i < route->n_endpoints; i++) {
+        double pct = (1.0 - q_lens[i] / total_q_len) * 10000;
+        if (pct < 1) {
+            pct = 1;
+        }
+        keys[i] = pct + last;
+        last = keys[i];
+        old_keys[i] = route->endpoints[i]->key;
+        ids[i] = route->endpoints[i]->msu->id;
+    }
+
+    for (int i=0; i < route->n_endpoints; i++) {
+        if (old_keys[i] != keys[i]) {
+            int rtn = mod_endpoint(ids[i], keys[i], route->id);
+             if (rtn < 0) {
+                log_error("Error modifying endpoint");
+                return -1;
+            } else {
+                log(LOG_ROUTING_CHANGES,
+                          "Modified endpoint %d (idx: %d) in route %d to have key %d (old: %d)",
+                          ids[i], i, route->id, keys[i], old_keys[i]);
+            }
+        }
+    }
+    return 0;
+}
+
+#else
 
 static int fix_route_ranges(struct dfg_route *route) {
 
@@ -56,18 +116,9 @@ static int fix_route_ranges(struct dfg_route *route) {
 
         old_keys[i] = route->endpoints[i]->key;
         old_ids[i] = route->endpoints[i]->msu->id;
-#ifdef QLEN_ROUTING
-        double key = downstream_q_len(route->endpoints[i]->msu);
 
-        if (down_q_len < 1) {
-            new_keys[i] = last + 100;
-        } else {
-            new_keys[i] = last + (int)(100 / down_q_len + 1);
-        }
-#else
         double key = n_downstream_msus(route->endpoints[i]->msu);
         new_keys[i] = last + (key > 0 ? key : 1);
-#endif
         last = new_keys[i];
     }
 
@@ -104,6 +155,7 @@ static int fix_route_ranges(struct dfg_route *route) {
 
     return 0;
 }
+#endif
 
 int fix_all_route_ranges(struct dedos_dfg *dfg) {
     for (int i=0; i<dfg->n_runtimes; i++) {
@@ -151,21 +203,36 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
 
     //Awful linear search to sort
     for (i = 0; i < n_msus; ++i) {
-        struct dfg_msu *msu = msus[i];
         int up;
-        for (up = 0; up < msu->type->meta_routing.n_dst_types; ++up) {
-            for (j = 0; j != i && j < n_msus; ++j) {
-                if (msus[j]->type == msu->type->meta_routing.dst_types[up] && j > i) {
+        for (j = i+1; j < n_msus; ++j) {
+            for (up = 0; up < msus[i]->type->meta_routing.n_dst_types; ++up) {
+                struct dfg_msu_type *upt = msus[i]->type->meta_routing.dst_types[up];
+                if (msus[j]->type == msus[i]->type->meta_routing.dst_types[up] && j > i) {
+                    log_warn("Swap %d lower than %d", msus[j]->type->id, msus[i]->type->id);
                     struct dfg_msu *tmp = msus[j];
                     msus[j] = msus[i];
                     msus[i] = tmp;
+                    i = 0;
+                    j = 0;
+                    break;
+                }
+                for (int upup = 0; upup < upt->meta_routing.n_dst_types; ++upup) {
+                    if (msus[j]->type == upt->meta_routing.dst_types[upup] && j > i) {
+                        log_warn("Swap %d lower than %d", msus[j]->type->id, msus[i]->type->id);
+                        struct dfg_msu *tmp = msus[j];
+                        msus[j] = msus[i];
+                        msus[i] = tmp;
+                        i = 0;
+                        j = 0;
+                        break;
+                    }
                 }
             }
         }
     }
 
     for (i = 0; i < n_msus; ++i) {
-        log_debug("new msu n°%d has ID %d and type", i, msus[i]->msu_id, msus[i]->msu_type);
+        log_warn("new msu n°%d has ID %d and typ %de", i, msus[i]->id, msus[i]->type->id);
     }
 
     return 0;
@@ -189,11 +256,12 @@ void prepare_clone(struct dfg_msu  *msu) {
  * @param int msu_type: MSU type ID to filter
  * @return: pointer to dfg_thread or NULL
  */
-struct dfg_thread *find_unused_pinned_thread(struct dfg_runtime *runtime,
-                                             struct dfg_msu_type *type) {
+struct dfg_thread *find_unused_thread(struct dfg_runtime *runtime,
+                                      struct dfg_msu_type *type,
+                                      int is_pinned) {
     for (int i=0; i<runtime->n_pinned_threads + runtime->n_unpinned_threads; i++) {
         struct dfg_thread *thread = runtime->threads[i];
-        if (thread->mode != PINNED_THREAD) {
+        if ( (!is_pinned && thread->mode == PINNED_THREAD) || (is_pinned && thread->mode != PINNED_THREAD)) {
             continue;
         }
 
@@ -209,8 +277,8 @@ struct dfg_thread *find_unused_pinned_thread(struct dfg_runtime *runtime,
 
         int cannot_place = 0;
         for (int j=0; j<thread->n_msus; ++j) {
-            if (thread->msus[i]->type->colocation_group != type->colocation_group ||
-                    thread->msus[i]->type == type) {
+            if (thread->msus[j]->type->colocation_group != type->colocation_group ||
+                    thread->msus[j]->type == type) {
                 cannot_place = 1;
                 break;
             }
@@ -236,7 +304,8 @@ struct dfg_thread *find_unused_pinned_thread(struct dfg_runtime *runtime,
 int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     int ret = 0;
 
-    struct dfg_thread *free_thread = find_unused_pinned_thread(rt, msu->type);
+    struct dfg_thread *free_thread = find_unused_thread(rt, msu->type,
+                                                        msu->blocking_mode == NONBLOCK_MSU);
     //struct dfg_thread *free_thread = find_unused_pinned_thread(rt, msu);
     if (free_thread == NULL) {
         log(LOG_SCHEDULING, "There are no free worker threads on runtime %d", rt->id);
@@ -421,6 +490,113 @@ int wire_msu(struct dfg_msu *msu) {
     return 0;
 }
 
+static int remove_routes_to_msu(struct dfg_msu *msu) {
+    struct dedos_dfg *dfg = get_dfg();
+    for (int i=0; i<dfg->n_runtimes; i++) {
+        struct dfg_runtime *rt = dfg->runtimes[i];
+        for (int j=0; j<rt->n_routes; j++) {
+            struct dfg_route *route = rt->routes[j];
+            struct dfg_route_endpoint *ep = get_dfg_route_endpoint(route, msu->id);
+
+            if (ep == NULL) {
+                continue;
+            }
+
+            int rtn = del_endpoint(msu->id, route->id);
+            if (rtn < 0) {
+                log_error("Error deleting endpoint from route %d for removal of %d",
+                          route->id, msu->id);
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+static int get_dependencies(struct dfg_msu *msu, struct dfg_msu **output, int out_size) {
+    output[0] = msu;
+    int n_on_runtime = 0;
+    struct dfg_runtime *rt = msu->scheduling.runtime;
+    for (int i=0; i<msu->type->n_instances; i++) {
+        if (msu->type->instances[i]->scheduling.runtime == rt) {
+            n_on_runtime++;
+            if (n_on_runtime > 1) {
+                // More than one on this runtime, just return the passed-in MSU
+                return 1;
+            }
+        }
+    }
+
+    int n_out = 1;
+    for (int i=0; i<msu->type->n_dependencies; i++) {
+        struct dfg_dependency *dep = msu->type->dependencies[i];
+        // TODO: Check dep->locality
+        struct dfg_msu_type *dep_type = dep->type;
+        for (int j=0; j<dep_type->n_instances; j++) {
+            struct dfg_msu *dep_msu = dep_type->instances[j];
+            if (dep_msu->scheduling.runtime == rt) {
+                if (n_out >= out_size - 1) {
+                    log_error("Cannot get dependencies -- output too small");
+                    return -1;
+                }
+                output[n_out] = dep_msu;
+                n_out++;
+            }
+        }
+    }
+    output[n_out] = NULL;
+    msu_hierarchical_sort(output);
+    return n_out;
+}
+
+
+int unclone_msu(int msu_id) {
+
+    struct dfg_msu *msu = get_dfg_msu(msu_id);
+
+    if (msu == NULL) {
+        log_error("Cannot unclone MSU %d. Does not exist!", msu_id);
+        return -1;
+    }
+
+    if (msu->type->n_instances <= 1) {
+        log(LOG_SCHEDULING, "Cannot remove last instance of msu type %s", msu->type->name);
+        return -1;
+    }
+
+
+    struct dfg_msu *dependencies[MAX_MSU];
+    int n_deps = get_dependencies(msu, dependencies, MAX_MSU);
+
+    for (int i=n_deps-1; i>=0; i--) {
+        if (dependencies[i]->type->id == WEBSERVER_READ_MSU_TYPE_ID) {
+            set_haproxy_weights(dependencies[i]->scheduling.runtime->id, 1);
+        }
+        int rtn = remove_routes_to_msu(dependencies[i]);
+        if (rtn < 0) {
+            log_error("Error removing routes to msu %d", dependencies[i]->id);
+            return -1;
+        }
+        int id = dependencies[i]->id;
+        char *name = dependencies[i]->type->name;
+        rtn = remove_msu(id);
+        if (rtn < 0) {
+            log_error("Error removing MSU %d", id);
+            return -1;
+        }
+        log(LOG_SCHEDULING, "Removed msu %d (type: %s)", id, name);
+
+        //TODO: This should really wait for confirmation of deletion of MSU
+        if (i > 0)
+            usleep(2000e3); // 2 seconds
+    }
+
+    return 0;
+}
+
+
+
+
 
 /**
  * Clone a msu of given ID
@@ -523,7 +699,7 @@ int schedule_msu(struct dfg_msu *msu, struct dfg_runtime *rt, struct dfg_msu **n
     // First of all, find a thread on the runtime
     ret = place_on_runtime(rt, msu);
     if (ret == -1) {
-        log_error("Could not spawn a new worker thread on runtime %d", rt->id);
+        log(SCHEDULING, "Could not spawn a new worker thread on runtime %d", rt->id);
         return -1;
     }
 

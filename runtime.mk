@@ -1,22 +1,22 @@
 ADDRESS_SANITIZER?=0
-DEBUG = 1
+DEBUG = 0
 DUMP_STATS = 1
 DO_PROFILE = 0
 
 LOGS = \
 	   INFO \
 	   ERROR \
-	   WARN \
+	   #WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   #ROUTING_CHANGES \
-	   SOCKET_MSU
+	   #STATS_SEND
+#	   SOCKET_MSU
 	   #PARTIAL_READS
 	   #THREAD_AFFINITY \
 	   #STATS_SEND
 	   #ALL
 
-MSU_APPLICATIONS = baremetal webserver pico_tcp ndlog
+MSU_APPLICATIONS = webserver #pico_tcp #baremetal webserver ndlog
 
 #NO_LOGS = \
 		  JSMN_PARSING \
@@ -55,13 +55,13 @@ LEG_BLD_DIR = $(BLD_DIR)legacy/
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 
-LEGACY_LIBS = picotcp
+LEGACY_LIBS = #picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=0
+OPTIM=3
 
 CC:=gcc
 CXX:=g++

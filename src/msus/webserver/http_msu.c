@@ -62,7 +62,8 @@ static int handle_parsing(struct read_state *read_state,
         return handle_db(http_state, self, msg);
     } else if (rtn & WS_ERROR) {
         msu_free_state(self, &msg->hdr.key);
-        return -1;
+        // Return to the READ_MSU to close socket (FIXME: free state?, might be done when read sends error back)
+        return call_msu_type(self, &WEBSERVER_READ_MSU_TYPE, &msg->hdr, msg->data_size, msg->data);
     } else {
         http_state->conn.status = CON_READING;
         log(LOG_PARTIAL_READS, "Got partial request %.*s (fd: %d)",
@@ -84,6 +85,7 @@ static int craft_http_response(struct local_msu *self,
         init_http_state(http_state, &read_state->conn);
         memcpy(&http_state->conn, &read_state->conn, sizeof(read_state->conn));
     } else {
+
         log(LOG_HTTP_MSU, "Retrieved state %p (status %d)",
                    http_state, http_state->conn.status);
         retrieved = 1;
@@ -92,6 +94,17 @@ static int craft_http_response(struct local_msu *self,
                        msg->hdr.key.id);
         }
     }
+    if (msg->data_size == sizeof(*read_state) && read_state->req_len == -1) {
+        if (http_state->conn.status == CON_DB_REQUEST) {
+            http_state->conn.status = NO_CONNECTION;
+            return 0;
+        } else {
+            msu_free_state(self, &msg->hdr.key);
+            return 0;
+        }
+    }
+
+
     int rtn;
     switch (http_state->conn.status) {
         case NIL:
@@ -106,6 +119,9 @@ static int craft_http_response(struct local_msu *self,
         case CON_DB_REQUEST:
             log(LOG_HTTP_MSU, "got CON_DB_REQUEST");
             return handle_db(http_state, self, msg);
+        case NO_CONNECTION:
+            msu_free_state(self, &msg->hdr.key);
+            return 0;
         default:
             log_error("Received unknown packet status: %d", read_state->conn.status);
             return -1;

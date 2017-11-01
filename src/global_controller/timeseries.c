@@ -10,26 +10,24 @@
 #include "logging.h"
 
 double average_n(struct timed_rrdb *timeseries, int n_samples) {
-    double sum = -1;
+    double sum = 0;
+    int gathered = 0;
     int i;
     int start_index = timeseries->write_index - 1;
     for (i = 0; i < n_samples; i++) {
         int index = start_index - i;
         if ( index < 0 )
             index = RRDB_ENTRIES + index;
-        if ( timeseries->time[index].tv_sec == 0 ){
+        if ( timeseries->time[index].tv_sec < 0 ){
             continue;
         }
-        if ( sum == -1 ) {
-            sum = timeseries->data[index];
-        } else {
-            sum += timeseries->data[index];
-        }
+        gathered++;
+        sum += timeseries->data[index];
     }
 
-    if (i == 0)
+    if (gathered == 0)
         return -1;
-    return sum / i;
+    return sum / (double)gathered;
 }
 
 /** Appends a number of timed statistics to a timeseries.
@@ -43,6 +41,10 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
     int write_index = timeseries->write_index;
     for (int i=0; i<input_size; i++) {
         write_index %= RRDB_ENTRIES;
+        if (input[i].time.tv_sec == 0 && input[i].time.tv_nsec == 0) {
+            log_warn("WHyyyyy");
+            continue;
+        }
         timeseries->data[write_index] = input[i].value;
         timeseries->time[write_index] = input[i].time;
         write_index++;

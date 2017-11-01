@@ -7,6 +7,7 @@
 #include "communication.h"
 #include "msu_calls.h"
 
+#include <sys/epoll.h>
 #include <stdlib.h>
 #include <netinet/ip.h>
 
@@ -34,6 +35,9 @@ struct key_seed {
 
 int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
                    struct msu_msg_hdr *hdr) {
+    if (instance == NULL) {
+        return -1;
+    }
     struct sock_msu_state *state = instance->msu_state;
 
     state->hdr_mask[fd] = *hdr;
@@ -51,6 +55,14 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
     log(LOG_SOCKET_MSU, "Added fd %d to epoll", fd);
     return 0;
 }
+
+struct msu_msg_key self_key = {
+    .key = {0},
+    .key_len = 0,
+    .id = 0
+};
+
+struct msu_msg_hdr blank_hdr = {};
 
 static int process_connection(int fd, void *v_state) {
     struct sock_msu_state *state = v_state;
@@ -82,6 +94,7 @@ static int process_connection(int fd, void *v_state) {
         if (rtn < 0) {
             log_error("Error enqueing to destination");
             free(msg);
+            msu_monitor_fd(fd, EPOLLIN | EPOLLOUT, NULL, &blank_hdr);
             return -1;
         }
         return 0;
@@ -95,6 +108,7 @@ static int process_connection(int fd, void *v_state) {
         int rtn = call_local_msu(state->self, destination, hdr, sizeof(*msg), msg);
         if (rtn < 0) {
             log_error("Error enqueueing to next MSU");
+            msu_monitor_fd(fd, EPOLLIN | EPOLLOUT, destination, hdr);
             return -1;
         }
         log(LOG_SOCKET_HANDLER,"Enqueued to MSU %d", destination->id);
@@ -119,11 +133,6 @@ static int socket_handler_main_loop(struct local_msu *self) {
     return rtn;
 }
 
-struct msu_msg_key self_key = {
-    .key = {0},
-    .key_len = 0,
-    .id = 0
-};
 
 static int socket_msu_receive(struct local_msu *self, struct msu_msg *msg) {
     int rtn = socket_handler_main_loop(self);
@@ -142,6 +151,8 @@ static void socket_msu_destroy(struct local_msu *self) {
     if (rtn == -1) {
         log_error("Error closing socket");
     }
+
+    instance = NULL;
 }
 
 #define DEFAULT_PORT 8080

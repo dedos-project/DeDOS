@@ -9,7 +9,7 @@
 #include <pthread.h>
 
 /** The maximum number of destinations a route can have */
-#define MAX_DESTINATIONS 32
+#define MAX_DESTINATIONS 128
 
 /** The maximum ID that may be assigned to a route */
 #define MAX_ROUTE_ID 10000
@@ -134,6 +134,7 @@ static int rm_routing_table_entry(struct routing_table *table, int msu_id) {
     unlock(table);
     log(LOG_ROUTING_CHANGES, "Removed destination %d from table %d (type %d)",
                msu_id, table->id, table->type_id);
+    print_routing_table(table);
     return 0;
 }
 
@@ -454,7 +455,7 @@ int remove_route_endpoint(int route_id, int msu_id) {
         return -1;
     }
     log(LOG_ROUTING_CHANGES, "Removed destination %d from route %d", msu_id, route_id);
-    return -1;
+    return 0;
 }
 
 /**
@@ -521,14 +522,19 @@ int rm_route_from_set(struct route_set *set, int route_id) {
     }
     for (; i<set->n_routes - 1; i++) {
         set->routes[i] = set->routes[i+1];
-    } 
+    }
     set->n_routes--;
     return 0;
 }
 
 int init_msu_endpoint(int msu_id, int runtime_id, struct msu_endpoint *endpoint) {
     endpoint->id = msu_id;
-    if (runtime_id == local_runtime_id()) {
+    int local_id = local_runtime_id();
+    if (local_id < 0) {
+        log_error("Cannot get local runtime ID");
+        return -1;
+    }
+    if (runtime_id == local_id) {
         endpoint->locality = MSU_IS_LOCAL;
         struct local_msu *msu = get_local_msu(msu_id);
         if (msu == NULL) {

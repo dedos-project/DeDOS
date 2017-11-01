@@ -6,6 +6,7 @@
 #include "controller_communication.h"
 #include "ctrl_runtime_messages.h"
 #include "output_thread.h"
+#include "stats.h"
 
 #include <stdlib.h>
 #include <netinet/ip.h>
@@ -15,6 +16,16 @@ static struct dedos_thread *static_output_thread;
 static void *init_output_thread(struct dedos_thread *output_thread) {
     static_output_thread = output_thread;
     return NULL;
+}
+
+static int output_thread_send_to_ctrl(struct send_to_ctrl_msg *msg) {
+    int rtn = send_to_controller(&msg->hdr, msg->data);
+    if (rtn < 0) {
+        log_error("Error sending message to controller");
+        return -1;
+    }
+    // TODO: Free msg? data?
+    return 0;
 }
 
 static int output_thread_send_to_peer(struct send_to_peer_msg *msg) {
@@ -82,6 +93,14 @@ static int process_output_thread_msg(struct thread_msg *msg) {
                 log_warn("Error forwarding message to peer");
             }
             break;
+        case SEND_TO_CTRL:
+            CHECK_MSG_SIZE(msg, struct send_to_ctrl_msg);
+            struct send_to_ctrl_msg *ctrl_msg = msg->data;
+            rtn = output_thread_send_to_ctrl(ctrl_msg);
+            if (rtn < 0) {
+                log_warn("Error sending message to controller");
+            }
+            break;
         case CREATE_MSU:
         case DELETE_MSU:
         case MSU_ROUTE:
@@ -111,7 +130,7 @@ static int check_output_thread_queue(struct dedos_thread *output_thread) {
     return 0;
 }
 
-#define STAT_REPORTING_DURATION_S 1
+#define STAT_REPORTING_DURATION_MS STAT_SAMPLE_PERIOD_MS
 
 static int output_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {
 
@@ -121,13 +140,19 @@ static int output_thread_loop(struct dedos_thread *self, void UNUSED *init_data)
     while (!dedos_thread_should_exit(self)) {
 
         clock_gettime(CLOCK_REALTIME, &elapsed);
-        if (elapsed.tv_sec >= timeout_abs.tv_sec) {
+        if (elapsed.tv_sec > timeout_abs.tv_sec || (elapsed.tv_sec == timeout_abs.tv_sec &&
+                                                    elapsed.tv_nsec > timeout_abs.tv_nsec)) {
             if (send_stats_to_controller() < 0) {
-                log_error("Error sending stats to controller");
+                log(LOG_STATS_SEND, "Error sending stats to controller");
             }
             log(LOG_STATS_SEND, "Sent stats");
             clock_gettime(CLOCK_REALTIME, &timeout_abs);
-            timeout_abs.tv_sec += STAT_REPORTING_DURATION_S;
+            timeout_abs.tv_nsec += STAT_REPORTING_DURATION_MS * 1e6;
+            if (timeout_abs.tv_nsec > 1e9) {
+                timeout_abs.tv_nsec -= 1e9;
+                timeout_abs.tv_sec += 1;
+            }
+            timeout_abs.tv_sec += STAT_REPORTING_DURATION_MS / 1000;
         }
 
         int rtn = thread_wait(self, &timeout_abs);

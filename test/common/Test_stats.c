@@ -54,6 +54,13 @@ START_DEDOS_TEST(test_serialize_and_deserialize_stat_sample) {
     for (int i=0; i<n_samples; i++) {
         assert_samples_match(&samples_out[i], &samples[i]);
     }
+    free(samples);
+    free(samples_out);
+    free(buffer);
+    for (int i=0; i < n_samples; i++) {
+        free(samples[i].stats);
+        free(samples_out[i].stats);
+    }
 } END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("stats_test");

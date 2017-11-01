@@ -122,6 +122,7 @@ START_DEDOS_TEST(test_process_fwd_to_msu_message) {
     size_t written_size;
     void *serialized = serialize_msu_msg(&msg, &msu_type, &written_size);
     write(fds[1], serialized, written_size);
+    free(serialized);
 
     log(LOG_TEST, "Wrote %d bytes to fd %d", (int)written_size, fds[1]);
     int rtn = process_fwd_to_msu_message(written_size, msu_id, fds[0]);
@@ -130,6 +131,10 @@ START_DEDOS_TEST(test_process_fwd_to_msu_message) {
     ck_assert_int_eq(msu.queue.num_msgs, 1);
     ck_assert_int_eq(msu.queue.head->type, MSU_MSG);
     ck_assert_int_eq(msu.queue.head->data_size, sizeof(msg));
+
+    struct msu_msg *msg_out = dequeue_msu_msg(&msu.queue);
+    free(msg_out);
+
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_process_init_rt_message) {

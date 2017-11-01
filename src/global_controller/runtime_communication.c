@@ -7,7 +7,9 @@
 #include "stats.h"
 #include "unused_def.h"
 #include "dfg_writer.h"
+#include "haproxy.h"
 
+#include <unistd.h>
 #include <sys/stat.h>
 
 struct runtime_endpoint {
@@ -117,7 +119,7 @@ static int add_runtime_endpoint(unsigned int runtime_id, int fd, uint32_t ip, in
             }
         }
     }
-
+    set_haproxy_weights(0,0);
     return 0;
 }
 
@@ -180,8 +182,8 @@ static int handle_runtime_communication(int fd, void UNUSED *data) {
     struct rt_controller_msg_hdr hdr;
     int rtn = read_payload(fd, sizeof(hdr), &hdr);
     if (rtn < 0) {
-        log_error("Error reading runtime message header");
-        return -1;
+        log_error("Error reading runtime message header from fd %d", fd);
+        return 1;
     } else if (rtn == 1) {
         int id = remove_runtime_endpoint(fd);
         if (id < 0) {
@@ -198,14 +200,41 @@ static int handle_runtime_communication(int fd, void UNUSED *data) {
     rtn = process_rt_message_hdr(&hdr, fd);
     if (rtn < 0) {
         log_error("Error processing rt message");
-        return -1;
+        return 0;
     }
     return 0;
 }
 
+int get_output_listener(int port) {
+    int listen_sock = init_listening_socket(port);
+    if (listen_sock < 0) {
+        log_error("Error initializing listening socket on port %d", port);
+        return -1;
+    }
+
+    fd_set fdset;
+    FD_ZERO(&fdset);
+    FD_SET(listen_sock, &fdset);
+
+    int rtn = -1;
+    do {
+        log_info("Waiting for DFG reader to connect on port %d!", port);
+        struct timeval timeout = {.tv_sec = 1};
+        rtn = select(1, &fdset, NULL, NULL, &timeout);
+    } while (rtn < 1);
+
+    int output_sock = accept(listen_sock, NULL, 0);
+    if (output_sock < 0) {
+        log_error("Error accepting output listener!");
+        return -1;
+    }
+    close(listen_sock);
+    return output_sock;
+}
+
 static int listen_sock = -1;
 
-int runtime_communication_loop(int listen_port, char *output_file) {
+int runtime_communication_loop(int listen_port, char *output_file, int output_port) {
     if (listen_sock > 0) {
         log_error("Communication loop already started");
         return -1;
@@ -216,6 +245,19 @@ int runtime_communication_loop(int listen_port, char *output_file) {
         return -1;
     }
     log_info("Starting listening for runtimes on port %d", listen_port);
+
+    int output_sock = -1;
+    if (output_port > 0) {
+        log_info("Listening for DFG reader on port %d", output_port);
+        output_sock = get_output_listener(output_port);
+        if (output_sock < 0) {
+            log_error("Error getting output listener");
+            return -1;
+        }
+        log_info("DFG reader on socket %d", output_sock);
+    }
+
+
 
     int epoll_fd = init_epoll(listen_sock);
 
@@ -237,10 +279,18 @@ int runtime_communication_loop(int listen_port, char *output_file) {
             log_error("Epoll loop exited with error");
             return -1;
         }
-        if (output_file != NULL) {
+        if (output_file != NULL || output_sock > 0) {
             clock_gettime(CLOCK_REALTIME_COARSE, &elapsed);
-            if (elapsed.tv_sec - begin.tv_sec >= STAT_SAMPLE_PERIOD_S) {
-                dfg_to_file(output_file);
+            if (elapsed.tv_sec - begin.tv_sec >= STAT_SAMPLE_PERIOD_MS / 1000 ||
+                    (elapsed.tv_sec - begin.tv_sec == STAT_SAMPLE_PERIOD_MS / 1000 &&
+                     elapsed.tv_nsec - begin.tv_nsec > STAT_SAMPLE_PERIOD_MS * 1e6)) {
+                if (output_file != NULL) {
+                    dfg_to_file(output_file);
+                }
+                if (output_sock > 0) {
+                    dfg_to_fd(output_sock);
+                }
+
                 clock_gettime(CLOCK_REALTIME_COARSE, &begin);
             }
         }

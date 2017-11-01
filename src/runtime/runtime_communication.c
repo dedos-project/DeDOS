@@ -79,6 +79,10 @@ int add_runtime_peer(unsigned int runtime_id, int fd) {
         log_error("Cannot register non-descriptor %d for runtime ID %d", fd, runtime_id);
         return -1;
     }
+    if (runtime_id > MAX_RUNTIME_ID) {
+        log_error("Runtime ID %d too high!", runtime_id);
+        return -1;
+    }
     if (runtime_peers[runtime_id].fd != 0) {
         log_warn("Replacing runtime peer with id %d", runtime_id);
     }
@@ -174,6 +178,10 @@ static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
     if (msu == NULL) {
         log_error("Error getting MSU with ID %d, requested from runtime fd %d",
                   msu_id, fd);
+        // Read the payload anyway just so it doesn't mess future things up
+        void *unused = malloc(payload_size);
+        read_payload(fd, payload_size, unused);
+        free(unused);
         return -1;
     }
 
@@ -224,14 +232,14 @@ static int process_runtime_message_hdr(struct inter_runtime_msg_hdr *hdr, int fd
             rtn = process_fwd_to_msu_message(hdr->payload_size, hdr->target, fd);
             if (rtn < 0) {
                 log_error("Error processing forward message from fd %d", fd);
-                return -1;
+                return 1;
             }
             return 0;
         case INTER_RT_INIT:
             rtn = process_init_rt_message(hdr->payload_size, fd);
             if (rtn < 0) {
                 log_error("Error processing init runtime message from fd %d", fd);
-                return -1;
+                return 1;
             }
             return 0;
         default:

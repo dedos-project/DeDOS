@@ -35,6 +35,7 @@ struct stat_type {
     char *label;              /**< Name to output for this statistic */
     int id_indices[MAX_STAT_ITEM_ID];   /**< Index at which the IDs are stored */
     int num_items;            /**< Number of items currently registered for logging */
+    int max_items;            /**< Number of items allocated for logging */
     pthread_rwlock_t lock;    /**< Lock for adding new stat items */
     struct stat_item *items;  /**< The items of this type being logged */
 };
@@ -515,31 +516,37 @@ static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timesp
         return -1;
     }
 
-    if (rlock_type(type)) {
-        return -1;
-    }
+
     if (n_samples < type->num_items) {
         log_error("Not enough samples (%d) to fit all stat items (%d)", n_samples, type->num_items);
-        unlock_type(type);
         return -1;
     }
 
+    int item_id = -1;
     for (int i=0; i<type->num_items; i++) {
         sample[i].hdr.stat_id = stat_id;
-        sample[i].hdr.item_id = type->items[i].id;
+        // Find the next item index
+        for (item_id += 1;
+                item_id < MAX_STAT_ITEM_ID && type->id_indices[item_id] == -1;
+                item_id++) {}
+        log(LOG_TEST, "Found :%d", item_id);
+        if (item_id == MAX_STAT_ITEM_ID) {
+            log_error("Cannot find item ID %d", i);
+            return -1;
+        }
+        int idx = type->id_indices[item_id];
+        sample[i].hdr.item_id = type->items[idx].id;
         sample[i].hdr.n_stats = sample_size;
-        int rtn = sample_stat_item(&type->items[i], type->max_stats, end, interval, sample_size,
+        int rtn = sample_stat_item(&type->items[idx], type->max_stats, end, interval, sample_size,
                                     sample[i].stats);
 
         if ( rtn < 0) {
             log_error("Error sampling item %d (idx %d)", type->items[i].id, i);
-            unlock_type(type);
             return -1;
         } else {
             sample[i].hdr.n_stats = rtn;
         }
     }
-    unlock_type(type);
     return type->num_items;
 }
 
@@ -564,8 +571,8 @@ static int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
 static struct stat_sample *stat_samples[N_REPORTED_STAT_TYPES];
 
 static struct timespec stat_sample_interval = {
-    .tv_sec = STAT_SAMPLE_PERIOD_S / STAT_SAMPLE_SIZE,
-    .tv_nsec = (int)(STAT_SAMPLE_PERIOD_S * 1e9 / STAT_SAMPLE_SIZE) % (int)1e9
+    .tv_sec = (STAT_SAMPLE_PERIOD_MS / 1000) / STAT_SAMPLE_SIZE,
+    .tv_nsec = (int)(STAT_SAMPLE_PERIOD_MS * 1e6 / STAT_SAMPLE_SIZE) % (int)1e9
 };
 
 struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
@@ -574,19 +581,28 @@ struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
         return NULL;
     }
 
-    int i = -1;
+    *n_samples_out = 0;
+    int i;
     for (i=0; i < N_REPORTED_STAT_TYPES; i++) {
         if (reported_stat_types[i].id == stat_id) {
             break;
         }
     }
-    if (i == -1) {
+    if (i == N_REPORTED_STAT_TYPES) {
         log_error("%d is not a reported stat type", stat_id);
         return NULL;
     }
-
+    if (stat_samples[i] == NULL) {
+        // No stat samples registered!"
+        return NULL;
+    }
+    struct stat_type *type = &stat_types[stat_id];
+    if (rlock_type(type)) {
+        return NULL;
+    }
     int rtn = sample_recent_stats(stat_id, &stat_sample_interval, STAT_SAMPLE_SIZE,
-                                  stat_samples[i], n_stat_items(stat_id));
+                                  stat_samples[i], type->num_items);
+    unlock_type(type);
     if (rtn < 0) {
         log_error("Error sampling recent stats");
         return NULL;
@@ -600,10 +616,41 @@ static void realloc_stat_samples(enum stat_id stat_id, int n_samples) {
         if (reported_stat_types[i].id == stat_id) {
             free_stat_samples(stat_samples[i], n_samples - 1);
             stat_samples[i] = init_stat_samples(STAT_SAMPLE_SIZE, n_samples);
+            log(LOG_STAT_REALLOC, "Reallocated %d to %d samples", stat_id, n_samples);
             return;
         }
     }
 }
+
+int remove_stat_item(enum stat_id stat_id, unsigned int item_id) {
+    CHECK_INITIALIZATION;
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    if (wrlock_type(type) != 0) {
+        return -1;
+    }
+    if (type->id_indices[item_id] == -1) {
+        log_error("Item ID %u not assigned an index", item_id);
+        return -1;
+    }
+
+    int index = type->id_indices[item_id];
+    struct stat_item *item = &type->items[index];
+
+    item->id = -1;
+    item->write_index = 0;
+    item->rolled_over = false;
+    free(item->stats);
+
+    type->id_indices[item_id] = -1;
+    type->num_items--;
+    unlock_type(type);
+    return 0;
+}
+
 
 /**
  * Initializes a stat item so that statistics can be logged to it.
@@ -628,18 +675,27 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
                 item_id, type->id_indices[item_id], type->label);
         return -1;
     }
-    int index = type->num_items;
-    type->num_items++;
-    type->items = realloc(type->items, sizeof(*type->items) * type->num_items);
-    if ( type->items == NULL ) {
-        log_error("Error reallocating stat item");
-        return -1;
+    int index;
+    for (index=0; index<type->max_items; index++) {
+        if (type->items[index].id == -1) {
+            break;
+        }
     }
+    if (index == type->max_items) {
+        type->max_items++;
+        type->items = realloc(type->items, sizeof(*type->items) * (type->max_items));
+        realloc_stat_samples(stat_id, type->max_items);
+
+        if ( type->items == NULL ) {
+            log_error("Error reallocating stat item");
+            return -1;
+        }
+    }
+    log(LOG_STATS, "Item %u has index %d", item_id, index);
     struct stat_item *item = &type->items[index];
 
     if (pthread_mutex_init(&item->mutex,NULL)) {
         log_error("Error initializing item %u lock", item_id);
-        type->num_items--;
         return -1;
     }
 
@@ -655,7 +711,7 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
 
     type->id_indices[item_id] = index;
 
-    realloc_stat_samples(stat_id, type->num_items);
+    type->num_items++;
 
     if (unlock_type(type) != 0) {
         return -1;

@@ -15,6 +15,10 @@ struct msu_state {
     UT_hash_handle hh;
 };
 
+int msu_num_states(struct local_msu *msu) {
+    return HASH_COUNT(msu->item_state);
+}
+
 void *msu_init_state(struct local_msu *msu, struct msu_msg_key *key, size_t size) {
     struct msu_state *state = malloc(sizeof(*state));
     memcpy(&state->key, &key->key, key->key_len);

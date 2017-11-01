@@ -2,6 +2,7 @@
 #define CTRL_RUNTIME_MESSAGES_H_
 #include "unistd.h"
 #include "dfg.h"
+#include <stdbool.h>
 
 enum ctrl_runtime_msg_type {
     // Main thread messages
@@ -22,6 +23,7 @@ enum ctrl_runtime_msg_type {
  */
 struct ctrl_runtime_msg_hdr {
     enum ctrl_runtime_msg_type type;
+    int id;              /**<< Id for confirmation message (not implemented) */
     int thread_id;       /**<< Thread to deliver message to */
     size_t payload_size; /**<< Payload will be serialized following this struct */
 };
@@ -61,11 +63,11 @@ enum ctrl_route_msg_type {
 /** For creating routes or adding endpoints _to_ routes */
 struct ctrl_route_msg {
     enum ctrl_route_msg_type type;
-    int route_id;  
+    int route_id;
     int type_id;    /*<< Only needed if creating a new route */
     int msu_id;     /*<< Only needed if dealing with an endpoint*/
     int key;        /*<< Only filled if adding or modifying an endpoint */
-    
+
     unsigned int runtime_id; /*<< Only needed if adding an endpoint */
 };
 
@@ -85,6 +87,7 @@ struct ctrl_create_msu_msg {
 };
 
 struct ctrl_delete_msu_msg {
+    bool force;
     int msu_id;
 };
 
