@@ -121,11 +121,12 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
     struct epoll_event events[MAX_EPOLL_EVENTS];
 
     for (int j=0; j<batch_size || batch_size == -1;  j++) {
+        log(LOG_EPOLL_OPS, "Waiting on epoll");
         int n = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, timeout);
         if (n == 0) {
             break;
         }
-
+        log(LOG_EPOLL_OPS, "Epoll returned %d events", n);
         for (int i=0; i < n; ++i) {
             if (socket_fd == events[i].data.fd) {
                 log(LOG_EPOLL_OPS, "Accepting connection on %d", socket_fd);
@@ -188,5 +189,6 @@ int init_epoll(int socket_fd) {
             return -1;
         }
     }
+    log(LOG_EPOLL_OPS, "Created epoll fd %d",epoll_fd);
     return epoll_fd;
 }

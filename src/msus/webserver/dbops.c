@@ -7,7 +7,9 @@
 #include <unistd.h>
 #include "webserver/connection-handler.h"
 
+#ifndef MAX_FILE_SIZE
 #define MAX_FILE_SIZE (long)(1 * (1 << 29))
+#endif 
 #define JUMP_SIZE (1 << 14)
 
 int db_num_files = -1;
@@ -68,6 +70,17 @@ void *allocate_db_memory() {
     allocate_file(file, MAX_FILE_SIZE);
     return (void*)file;
 }
+
+void free_db_memory(void *memory) {
+    struct mock_file *file = memory;
+    for (int i=0; i <file->n_chunks; i++) {
+        free(file->data[i]);
+    }
+    free(file->chunk_size);
+    free(file->data);
+    free(file);
+}
+
 
 int init_db_socket() {
     int db_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);

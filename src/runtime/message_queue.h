@@ -17,6 +17,7 @@ struct dedos_msg {
     enum dedos_msg_type type;
     void *data;
     ssize_t data_size;
+    struct timespec delivery_time;
 };
 
 struct msg_queue {
@@ -30,5 +31,6 @@ struct msg_queue {
 
 struct dedos_msg *dequeue_msg(struct msg_queue *q);
 int enqueue_msg(struct msg_queue *q, struct dedos_msg *msg);
+int schedule_msg(struct msg_queue *q, struct dedos_msg *msg, struct timespec *interval);
 int init_msg_queue(struct msg_queue *q, sem_t *sem);
 #endif //DEDOS_THREADS_H_

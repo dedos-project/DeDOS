@@ -39,6 +39,10 @@ void stop_all_worker_threads() {
 }
 
 static void destroy_worker_thread(struct dedos_thread *thread, void *v_worker_thread) {
+    struct worker_thread *wthread = v_worker_thread;
+    for (int i=0; i < wthread->n_msus; i++) {
+        destroy_msu(wthread->msus[i]);
+    }
     worker_threads[thread->id] = NULL;
     free(v_worker_thread);
 }
@@ -225,6 +229,77 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
     return rtn;
 }
 
+#define DEFAULT_WAIT_TIMEOUT_S 1
+
+static double timediff_s(struct timespec *t1, struct timespec *t2) {
+    return (double)(t2->tv_sec - t1->tv_sec) + (double)(t2->tv_nsec - t1->tv_nsec) * 1e-9;
+}
+static struct timespec cur_time;
+
+static struct timespec *next_timeout(struct worker_thread *thread) {
+    if (thread->timeouts == NULL) {
+        return NULL;
+    }
+    struct timespec *time = &thread->timeouts->time;
+    clock_gettime(CLOCK_REALTIME_COARSE, &cur_time);
+    double diff_s = timediff_s(time, &cur_time);
+    if (diff_s >= 0) {
+        thread->timeouts = thread->timeouts->next;
+        free(thread->timeouts);
+        return &cur_time;
+    }
+    if (-diff_s > DEFAULT_WAIT_TIMEOUT_S) {
+        cur_time.tv_sec += DEFAULT_WAIT_TIMEOUT_S;
+        return &cur_time;
+    }
+    cur_time = *time;
+    thread->timeouts = thread->timeouts->next;
+    free(thread->timeouts);
+    return &cur_time;
+}
+
+int enqueue_worker_timeout(struct worker_thread *thread, struct timespec *interval) {
+    struct timeout_list *tlist = calloc(1, sizeof(*tlist));
+    clock_gettime(CLOCK_REALTIME_COARSE, &tlist->time);
+    tlist->time.tv_sec += interval->tv_sec;
+    tlist->time.tv_nsec += interval->tv_nsec;
+    if (tlist->time.tv_nsec > 1e9) {
+        tlist->time.tv_nsec -= 1e9;
+        tlist->time.tv_sec += 1;
+    }
+    if (thread->timeouts == NULL) {
+        thread->timeouts = tlist;
+        log(LOG_WORKER_THREAD, "Enqueued timeout to head of queue");
+        return 0;
+    }
+
+    double diff = timediff_s(&tlist->time, &thread->timeouts->time);
+    if (diff > 0) {
+        tlist->next = thread->timeouts;
+        thread->timeouts = tlist;
+        log(LOG_WORKER_THREAD, "Enqueued timeout to queue");
+        return 0;
+    }
+
+    struct timeout_list *last_timeout = thread->timeouts;
+    while (last_timeout->next != NULL) {
+       struct timespec *next_timeout = &last_timeout->next->time;
+       diff = timediff_s(&tlist->time, next_timeout);
+       if (diff > 0) {
+           tlist->next = last_timeout->next;
+           last_timeout->next = tlist;
+            log(LOG_WORKER_THREAD, "Enqueued timeout to queue");
+           return 0;
+       }
+       last_timeout = last_timeout->next;
+    }
+    last_timeout->next = tlist;
+    tlist->next = NULL;
+    log(LOG_WORKER_THREAD, "Enqueued timeout to queue");
+    return 0;
+}
+
+
 static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread) {
     log_info("Starting worker thread loop %d (%s)",
              thread->id, thread->mode == PINNED_THREAD ? "pinned" : "unpinned");
@@ -233,7 +308,7 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
 
     while (!dedos_thread_should_exit(thread)) {
         // TODO: Get context switches
-        if (thread_wait(thread, NULL) != 0) {
+        if (thread_wait(thread, next_timeout(self)) != 0) {
             log_error("Error waiting on thread semaphore");
             continue;
         }

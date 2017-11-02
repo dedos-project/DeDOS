@@ -19,5 +19,6 @@ struct db_state {
 
 void init_db(char *ip, int port, int max_load);
 void *allocate_db_memory();
+void free_db_memory(void *memory);
 int query_db(struct db_state *state);
 #endif

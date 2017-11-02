@@ -21,20 +21,23 @@ static int handle_db(struct http_state *http_state,
     int rtn = access_database(http_state->parser.url, &http_state->db);
 
     if (rtn & WS_ERROR) {
+        log_warn("Could not access database!");
+        struct response_state *resp = malloc(sizeof(*resp));
+        log_info("resp: %p", resp);
+        init_response_state(resp, &http_state->conn);
+        resp->conn.status = CON_ERROR;
         msu_free_state(self, &msg->hdr.key);
-        log_warn("HELP!");
-        return -1;
+        return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr,
+                             sizeof(*resp), resp);
     } else if (rtn & (WS_INCOMPLETE_READ | WS_INCOMPLETE_WRITE)) {
         log(LOG_HTTP_MSU, "Partial db access, requeuing state %p", http_state);
         http_state->conn.status = CON_DB_REQUEST;
         return msu_monitor_fd(http_state->db.db_fd, RTN_TO_EVT(rtn), self, &msg->hdr);
-    } else {
+    } else if (rtn & WS_COMPLETE) {
         struct response_state *resp = malloc(sizeof(*resp));
         init_response_state(resp, &http_state->conn);
         strcpy(resp->url, http_state->parser.url);
         msu_free_state(self, &msg->hdr.key);
-        // SHOULDI: be freeing this data?
-        free(msg->data);
 
         if (!has_regex(resp->url)) {
             log(LOG_HTTP_MSU, "Crafting response for url %s", resp->url);
@@ -43,6 +46,9 @@ static int handle_db(struct http_state *http_state,
         }
 
         return call_msu_type(self, &WEBSERVER_REGEX_ROUTING_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
+    } else {
+        log_error("Unknown return code from database access: %d", rtn);
+        return -1;
     }
 }
 
@@ -59,11 +65,13 @@ static int handle_parsing(struct read_state *read_state,
     int rtn = parse_request(read_state->req, read_state->req_len, http_state);
 
     if (rtn & WS_COMPLETE) {
+        free(read_state);
         return handle_db(http_state, self, msg);
     } else if (rtn & WS_ERROR) {
         msu_free_state(self, &msg->hdr.key);
-        // Return to the READ_MSU to close socket (FIXME: free state?, might be done when read sends error back)
-        return call_msu_type(self, &WEBSERVER_READ_MSU_TYPE, &msg->hdr, msg->data_size, msg->data);
+        read_state->conn.status = CON_ERROR;
+        // Return to the WRITE_MSU to close socket, but with type CON_ERROR
+        return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, msg->data_size, msg->data);
     } else {
         http_state->conn.status = CON_READING;
         log(LOG_PARTIAL_READS, "Got partial request %.*s (fd: %d)",
@@ -118,6 +126,7 @@ static int craft_http_response(struct local_msu *self,
             return rtn;
         case CON_DB_REQUEST:
             log(LOG_HTTP_MSU, "got CON_DB_REQUEST");
+            free(read_state);
             return handle_db(http_state, self, msg);
         case NO_CONNECTION:
             msu_free_state(self, &msg->hdr.key);
@@ -157,7 +166,7 @@ static int http_init(struct local_msu *self, struct msu_init_data *data) {
 }
 
 static void http_destroy(struct local_msu *self) {
-    free(self->msu_state);
+    free_db_memory(self->msu_state);
 }
 
 struct msu_type WEBSERVER_HTTP_MSU_TYPE = {

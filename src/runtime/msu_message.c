@@ -63,6 +63,11 @@ int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
 }
 
 int enqueue_msu_msg(struct msg_queue *q, struct msu_msg *data) {
+    struct timespec zero = {};
+    return schedule_msu_msg(q, data, &zero);
+}
+
+int schedule_msu_msg(struct msg_queue *q, struct msu_msg *data, struct timespec *interval) {
     struct dedos_msg *msg = malloc(sizeof(*msg));
     if (msg == NULL) {
         log_perror("Error allocating dedos message");
@@ -73,7 +78,7 @@ int enqueue_msu_msg(struct msg_queue *q, struct msu_msg *data) {
     msg->data = data;
 
     PROFILE_EVENT(data->hdr, PROF_ENQUEUE);
-    if (enqueue_msg(q, msg) != 0) {
+    if (schedule_msg(q, msg, interval) != 0) {
         log_error("Error MSU message to MSU");
         return -1;
     }

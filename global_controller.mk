@@ -8,7 +8,8 @@ LOGS = \
 	   CRITICAL \
 	   CUSTOM \
 	   SCHEDULING_DECISIONS \
-	   RUNTIME_MESSAGES
+	   RUNTIME_MESSAGES \
+	   EPOLL_OPS
 	   #RUNTIME_MESSAGES \
 	   SCHEDULING \
 	   #SCHEDULING_DECISIONS \
@@ -16,7 +17,6 @@ LOGS = \
 	   #ALL
 
 NO_LOGS = \
-		  EPOLL_OPS \
 		  STAT_SERIALIZATION
 
 SRC_DIR = src/
@@ -62,8 +62,9 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 CFLAGS=-Wall -pthread -O$(OPTIM) $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
-ifeq ($(MAKECMDGOALS), coverage)
+ifeq ($(MAKECMDGOALS), $(filter $(MAKECMDGOALS),coverage init_cov cov-site))
   CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
+  OPTIM=0
 endif
 
 ifeq ($(DEBUG), 1)
@@ -152,10 +153,10 @@ $(TST_BLD_DIR)%.gcda: $(TST_BLD_DIR)%.out $(DIRS)
 lcov: $(DIRS) $(TST_COV) $(COV_INFOS)
 
 $(COV_DIR)%.info: $(TST_BLD_DIR)%/ $(TST_BLDS)
-	-lcov --directory $< --capture --output-file $(subst .info,.raw_info,$@)
-	-lcov --no-external --directory $(patsubst $(TST_BLD_DIR)%,$(OBJ_DIR)%,$<) --capture --initial --output-file $(subst .info,.init_info,$@)
-	-lcov -a $(subst .info,.raw_info,$@) -a $(subst .info,.init_info,$@) -o $(subst .info,.all_info,$@)
-	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@
+	-lcov --directory $< --capture --output-file $(subst .info,.raw_info,$@) --test-name $(subst .info,,$@)
+	-lcov --no-recursion --directory $(patsubst $(TST_BLD_DIR)%,$(OBJ_DIR)%,$<) --capture --initial --output-file $(subst .info,.init_info,$@) --test-name $(subst .info,,$@)
+	-lcov -a $(subst .info,.raw_info,$@) -a $(subst .info,.init_info,$@) -o $(subst .info,.all_info,$@)  --test-name $(subst .info,,$@)
+	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@ --test-name $(subst .info,,$@)
 
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)

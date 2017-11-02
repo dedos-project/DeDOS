@@ -9,7 +9,7 @@ struct socket_msg {
 
 int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
                    struct msu_msg_hdr *hdr);
-
+int msu_remove_fd_monitor(int fd);
 
 #define SOCKET_MSU_TYPE_ID 10
 struct msu_type SOCKET_MSU_TYPE;

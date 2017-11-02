@@ -86,6 +86,43 @@ int call_local_msu(struct local_msu *sender, struct local_msu *dest,
     return 0;
 }
 
+int schedule_local_msu_call(struct local_msu *sender, struct local_msu *dest, struct timespec *interval,
+                            struct msu_msg_hdr *hdr, size_t data_size, void *data) {
+    struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
+    log(LOG_MSU_ENQUEUES, "Enqueing data %p directly to destination %d",
+               msg->data, dest->id);
+
+    int rtn = add_provinance(&msg->hdr.provinance, sender);
+    if (rtn < 0) {
+        log_warn("Could not add provinance to message %p", msg);
+    }
+
+    rtn = schedule_msu_msg(&dest->queue, msg, interval);
+    if (rtn < 0) {
+        log_error("Error enqueing data %p to local MSU %d", msg->data, dest->id);
+        free(msg);
+        return -1;
+    }
+    rtn = enqueue_worker_timeout(dest->thread, interval);
+    if (rtn < 0) {
+        log_warn("Error enqueing timeout to worker thread");
+    }
+    return 0;
+}
+
+int schedule_local_msu_init_call(struct local_msu *sender, struct local_msu *dest, struct timespec *interval,
+                      struct msu_msg_key *key, size_t data_size, void *data) {
+    struct msu_msg_hdr hdr;
+    if (init_msu_msg_hdr(&hdr, key) != 0) {
+        log_error("Error initializing message header");
+        return -1;
+    }
+    SET_PROFILING(hdr);
+    PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
+    return schedule_local_msu_call(sender, dest, interval, &hdr, data_size, data);
+}
+
+
 /** Enqueues a new message in the queue of a local MSU.
  * This function is identical to `call_local_msu()` with the exception that it
  * creates the required header from the specified message key. It is to be used
@@ -109,8 +146,6 @@ int init_call_local_msu(struct local_msu *sender, struct local_msu *dest,
     PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
     return call_local_msu(sender, dest, &hdr, data_size, data);
 }
-
-
 
 /**
  * Sends an MSU message to a destination of the given type,

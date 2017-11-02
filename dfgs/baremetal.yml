@@ -30,7 +30,7 @@ runtimes:
         n_cores: 8
         n_pinned_threads: 8
         n_unpinned_threads: 1
-    2: 
+    2:
         <<: *dedos02
         port: 4444
         n_cores: 8
