@@ -1,0 +1,150 @@
+machines:
+    - &local
+      ip: 0.0.0.0
+    - &dedos01
+      ip: 192.168.0.2
+    - &dedos02
+      ip: 192.168.0.3
+    - &dedos03
+      ip: 192.168.0.4
+    - &dedos04
+      ip: 192.168.0.5
+
+application:
+    name: app_name
+
+global_ctl:
+    <<: *local
+    port: 8090
+
+msu_types:
+    socket:
+        id: 10
+        cloneable: 2
+        meta_routing:
+            dst_types: [ws_read]
+
+    ws_read:
+        id: 500
+        meta_routing:
+            source_types: [socket]
+            dst_types: [ws_http]
+        dependencies:
+            - type: socket
+              locality: local
+        cloneable: 1
+        colocation_group: 0
+
+    ws_http:
+        id: 552
+        meta_routing:
+            source_types: [ws_read]
+            dst_types: [ws_regex_route]
+        cloneable: 1
+
+    ws_regex_route:
+        id: 560
+        meta_routing:
+            source_types: [ws_http]
+            dst_types: [ws_regex]
+        cloneable: 2
+        dependencies:
+            - type: ws_regex
+              locality: local
+
+    ws_regex:
+        id: 553
+        meta_routing:
+            source_types: [ws_regex_route]
+            dst_types: [ws_write]
+        cloneable: 2
+        dependencies:
+            - type: ws_regex_route
+              locality: local
+
+    ws_write:
+        id: 554
+        meta_routing:
+            source_types: [553]
+        dependencies:
+            - type: ws_read
+              locality: local
+            - type: socket
+              locality: local
+        cloneable: 1
+
+runtimes:
+    1:
+        <<: *local
+        port: 4445
+        n_cores: 8
+        n_pinned_threads: 2
+        n_unpinned_threads: 1
+    2:
+        <<: *local
+        port: 4446
+        n_cores: 8
+        n_pinned_threads: 3
+        n_unpinned_threads: 0
+
+default_msus:
+    - &default_msu
+      vertex_type: nop
+      blocking_mode: non-blocking
+    - &rt1-msu
+      <<: *default_msu
+      runtime: 1
+    - &rt2-msu
+      <<: *default_msu
+      runtime: 2
+
+msus:
+    - name: socket-1
+      <<: *rt1-msu
+      type: socket
+      blocking_mode: blocking
+      thread: 3
+      init_data: "8081, 500"
+
+    - name: read-1
+      <<: *rt1-msu
+      type: ws_read
+      thread: 1
+      init_data: "ssl"
+
+    - name: http
+      <<: *rt2-msu
+      type: ws_http
+      thread: 1
+      init_data: "0.0.0.0 8081 1024"
+
+    - name: regex-2
+      <<: *rt2-msu
+      type: ws_regex
+      thread: 2
+
+    - name: reg-route-2
+      <<: *rt2-msu
+      type: ws_regex_route
+      thread: 3
+
+    - name: write-1
+      <<: *rt1-msu
+      type: ws_write
+      thread: 2
+
+routes:
+    - from: socket-1
+      to: read-1
+
+    - from: read-1
+      to: http
+
+    - from: http
+      to: [read-1, reg-route-2]
+
+    - from: reg-route-2
+      to: regex-2
+
+    - from: [regex-2, http]
+      to: write-1
