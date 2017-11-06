@@ -16,11 +16,11 @@ LOGS = \
 	   #STATS_SEND
 	   #ALL
 
-MSU_APPLICATIONS = webserver #pico_tcp #baremetal webserver ndlog
+MSU_APPLICATIONS = webserver pico_tcp baremetal ndlog
 
 NO_LOGS = \
 		  MSU_DEQUEUES \
-		  ADD_PROVINANCE 
+		  ADD_PROVINANCE
 		  #JSMN_PARSING \
 		  DFG_PARSING \
 		  MSU_ENQUEUES \
@@ -57,7 +57,7 @@ LEG_BLD_DIR = $(BLD_DIR)legacy/
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 
-LEGACY_LIBS =# picotcp
+LEGACY_LIBS = picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
@@ -212,7 +212,7 @@ $(COV_DIR)%.init_info: $(TST_BLD_DIR)%/
 
 $(COV_DIR)%.info: $(TST_BLD_DIR)%/ test-results
 	-lcov --external --directory $< --capture --no-recursion --output-file $(subst .info,.raw_info,$@) --test-name $(notdir $(subst .info,,$@))
-	@if [ -e $(subst .info,.init_info,$@) ]; then \
+	-@if [ -e $(subst .info,.init_info,$@) ]; then \
 		lcov --external -a $(subst .info,.init_info,$@) -a $(subst .info,.raw_info,$@)  -o $(subst .info,.all_info,$@) --test-name $(notdir $(subst .info,,$@)); \
 	else \
 		lcov --external -a $(subst .info,.raw_info,$@) -o $(subst .info,.all_info,$@) --test-name $(notdir $(subst .info,,$@)); \
