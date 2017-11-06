@@ -27,6 +27,7 @@ START_DEDOS_TEST(test_schedule_local_msu_init_call) {
     // If we try to dequeue now, it shouldn't work, message should be NULL
     struct msu_msg *msg = dequeue_msu_msg(&msu.queue);
     ck_assert_ptr_eq(msg, NULL);
+    free(msg);
 
     // Then we wait until the next timeout
     rtn = thread_wait(wthread.thread, next_timeout(&wthread));
@@ -35,6 +36,7 @@ START_DEDOS_TEST(test_schedule_local_msu_init_call) {
     // This time when we dequeue, the message should be there
     msg = dequeue_msu_msg(&msu.queue);
     ck_assert_ptr_ne(msg, NULL);
+    free(msg);
 } END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("MSU calls");

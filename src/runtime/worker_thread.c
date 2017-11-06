@@ -244,8 +244,9 @@ static struct timespec *next_timeout(struct worker_thread *thread) {
     clock_gettime(CLOCK_REALTIME_COARSE, &cur_time);
     double diff_s = timediff_s(time, &cur_time);
     if (diff_s >= 0) {
-        thread->timeouts = thread->timeouts->next;
-        free(thread->timeouts);
+        struct timeout_list *old = thread->timeouts;
+        thread->timeouts = old->next;
+        free(old);
         return &cur_time;
     }
     if (-diff_s > DEFAULT_WAIT_TIMEOUT_S) {
@@ -253,8 +254,9 @@ static struct timespec *next_timeout(struct worker_thread *thread) {
         return &cur_time;
     }
     cur_time = *time;
-    thread->timeouts = thread->timeouts->next;
-    free(thread->timeouts);
+    struct timeout_list *old = thread->timeouts;
+    thread->timeouts = old->next;
+    free(old);
     return &cur_time;
 }
 
