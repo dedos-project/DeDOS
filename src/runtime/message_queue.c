@@ -11,7 +11,6 @@ int enqueue_msg(struct msg_queue *q, struct dedos_msg *msg) {
 int schedule_msg(struct msg_queue *q, struct dedos_msg *msg, struct timespec *interval) {
     if (interval->tv_sec == 0 && interval->tv_nsec == 0) {
         msg->delivery_time = *interval;
-        log_info("Scheduled message for now");
     } else {
         clock_gettime(CLOCK_MONOTONIC_COARSE, &msg->delivery_time);
         msg->delivery_time.tv_sec += interval->tv_sec;
