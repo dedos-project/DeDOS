@@ -78,14 +78,14 @@ runtimes:
         <<: *local
         port: 4445
         n_cores: 8
-        n_pinned_threads: 8
+        n_pinned_threads: 2
         n_unpinned_threads: 1
     2:
         <<: *local
         port: 4446
         n_cores: 8
-        n_pinned_threads: 8
-        n_unpinned_threads: 1
+        n_pinned_threads: 3
+        n_unpinned_threads: 0
 
 default_msus:
     - &default_msu
@@ -103,49 +103,35 @@ msus:
       <<: *rt1-msu
       type: socket
       blocking_mode: blocking
-      thread: 1
+      thread: 3
       init_data: "8081, 500"
 
     - name: read-1
       <<: *rt1-msu
       type: ws_read
-      thread: 2
-      reps: 2
+      thread: 1
       init_data: "ssl"
 
     - name: http
-      <<: *rt1-msu
+      <<: *rt2-msu
       type: ws_http
-      thread: 4
+      thread: 1
       init_data: "0.0.0.0 8081 1024"
-
-    - name: regex-1
-      <<: *rt1-msu
-      type: ws_regex
-      thread: 5
-      reps: 3
 
     - name: regex-2
       <<: *rt2-msu
       type: ws_regex
       thread: 2
-      reps: 6
 
     - name: reg-route-2
       <<: *rt2-msu
       type: ws_regex_route
-      thread: 1
-
-
-    - name: reg-route-1
-      <<: *rt1-msu
-      type: ws_regex_route
-      thread: 8
+      thread: 3
 
     - name: write-1
       <<: *rt1-msu
       type: ws_write
-      thread: 8
+      thread: 2
 
 routes:
     - from: socket-1
@@ -155,13 +141,10 @@ routes:
       to: http
 
     - from: http
-      to: [read-1, reg-route-1]
-
-    - from: reg-route-1
-      to: regex-1
+      to: [read-1, reg-route-2]
 
     - from: reg-route-2
       to: regex-2
 
-    - from: [regex-1, http]
+    - from: [regex-2, http]
       to: write-1

@@ -1,0 +1,277 @@
+{
+  "application_name": "app_name", 
+  "global_ctl_ip": "0.0.0.0", 
+  "global_ctl_port": 8090, 
+  "MSU_types": [
+    {
+      "id": 554, 
+      "meta_routing": {
+        "source_types": [
+          553
+        ]
+      }, 
+      "cloneable": 1, 
+      "name": "ws_write", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 500, 
+          "locality": "local"
+        }, 
+        {
+          "type": 10, 
+          "locality": "local"
+        }
+      ]
+    }, 
+    {
+      "id": 10, 
+      "meta_routing": {
+        "dst_types": [
+          500
+        ]
+      }, 
+      "cloneable": 2, 
+      "name": "socket", 
+      "colocation_group": 0
+    }, 
+    {
+      "id": 560, 
+      "meta_routing": {
+        "source_types": [
+          552
+        ], 
+        "dst_types": [
+          553
+        ]
+      }, 
+      "cloneable": 2, 
+      "name": "ws_regex_route", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 553, 
+          "locality": "local"
+        }
+      ]
+    }, 
+    {
+      "id": 553, 
+      "meta_routing": {
+        "source_types": [
+          560
+        ], 
+        "dst_types": [
+          554
+        ]
+      }, 
+      "cloneable": 2, 
+      "name": "ws_regex", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 560, 
+          "locality": "local"
+        }
+      ]
+    }, 
+    {
+      "id": 552, 
+      "meta_routing": {
+        "source_types": [
+          500
+        ], 
+        "dst_types": [
+          560
+        ]
+      }, 
+      "cloneable": 1, 
+      "name": "ws_http", 
+      "colocation_group": 0
+    }, 
+    {
+      "id": 500, 
+      "meta_routing": {
+        "source_types": [
+          10
+        ], 
+        "dst_types": [
+          552
+        ]
+      }, 
+      "cloneable": 1, 
+      "name": "ws_read", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 10, 
+          "locality": "local"
+        }
+      ]
+    }
+  ], 
+  "MSUs": [
+    {
+      "id": 10, 
+      "vertex_type": "nop", 
+      "init_data": "8081, 500", 
+      "type": 10, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 3, 
+        "runtime": 1, 
+        "routes": [
+          1000
+        ]
+      }
+    }, 
+    {
+      "id": 11, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 1, 
+        "runtime": 1, 
+        "routes": [
+          1001
+        ]
+      }
+    }, 
+    {
+      "id": 12, 
+      "vertex_type": "nop", 
+      "init_data": "0.0.0.0 8081 1024", 
+      "type": 552, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 1, 
+        "runtime": 2, 
+        "routes": [
+          1003, 
+          1002, 
+          1005
+        ]
+      }
+    }, 
+    {
+      "id": 13, 
+      "vertex_type": "nop", 
+      "type": 553, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 2, 
+        "runtime": 2, 
+        "routes": [
+          1005
+        ]
+      }
+    }, 
+    {
+      "id": 14, 
+      "vertex_type": "nop", 
+      "type": 560, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 3, 
+        "runtime": 2, 
+        "routes": [
+          1004
+        ]
+      }
+    }, 
+    {
+      "id": 15, 
+      "vertex_type": "nop", 
+      "type": 554, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 2, 
+        "runtime": 1
+      }
+    }
+  ], 
+  "runtimes": [
+    {
+      "id": 1, 
+      "ip": "0.0.0.0", 
+      "port": 4445, 
+      "num_cores": 8, 
+      "num_unpinned_threads": 1, 
+      "num_pinned_threads": 2, 
+      "routes": [
+        {
+          "id": 1000, 
+          "type": 500, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 11
+            }
+          ]
+        }, 
+        {
+          "id": 1001, 
+          "type": 552, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 12
+            }
+          ]
+        }
+      ]
+    }, 
+    {
+      "id": 2, 
+      "ip": "0.0.0.0", 
+      "port": 4446, 
+      "num_cores": 8, 
+      "num_unpinned_threads": 0, 
+      "num_pinned_threads": 3, 
+      "routes": [
+        {
+          "id": 1003, 
+          "type": 560, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 14
+            }
+          ]
+        }, 
+        {
+          "id": 1002, 
+          "type": 500, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 11
+            }
+          ]
+        }, 
+        {
+          "id": 1004, 
+          "type": 553, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 13
+            }
+          ]
+        }, 
+        {
+          "id": 1005, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 15
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

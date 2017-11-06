@@ -17,8 +17,17 @@ static int write_http_response(struct local_msu *self,
         memcpy(resp, resp_in, sizeof(*resp_in));
     }
 
+    if (resp->conn.status == CON_ERROR) {
+        msu_remove_fd_monitor(resp->conn.fd);
+        close_connection(&resp->conn);
+        msu_free_state(self, &msg->hdr.key);
+        free(resp_in);
+        return 0;
+    }
+
     int rtn = write_response(resp);
     if (rtn & WS_ERROR) {
+        msu_remove_fd_monitor(resp->conn.fd);
         close_connection(&resp->conn);
         msu_free_state(self, &msg->hdr.key);
         free(resp_in);
@@ -27,6 +36,7 @@ static int write_http_response(struct local_msu *self,
         return msu_monitor_fd(resp->conn.fd, RTN_TO_EVT(rtn), self, &msg->hdr);
     } else {
         PROFILE_EVENT(msg->hdr, PROF_DEDOS_EXIT);
+        msu_remove_fd_monitor(resp->conn.fd);
         close_connection(&resp->conn);
         log(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
                    resp->conn.fd);

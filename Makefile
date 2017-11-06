@@ -1,4 +1,4 @@
-TARGETS=runtime global_controller
+TARGETS= runtime  global_controller
 
 COVERAGE=$(foreach TARG, $(TARGETS), $(TARG)-coverage)
 MEMCHECKS=$(foreach TARG, $(TARGETS), $(TARG)-memcheck)
@@ -22,7 +22,7 @@ memcheck: $(MEMCHECKS)
 clean: $(CLEANS)
 
 coverage: $(COVERAGE)
-	genhtml --keep-descriptions -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
+	genhtml --show-details --keep-descriptions -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
 	cd $(COV_DIR) && python2 -m SimpleHTTPServer 8081
 
 runtime-%::

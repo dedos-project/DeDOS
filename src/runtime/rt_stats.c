@@ -441,6 +441,37 @@ int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool re
     return 0;
 }
 
+double get_last_stat(enum stat_id stat_id, unsigned int item_id) {
+    CHECK_INITIALIZATION;
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) { 
+        return 0;
+    }
+    if (rlock_type(type)) {
+        return -1;
+    }
+    struct stat_item *item = get_item_stat(type, item_id);
+    unlock_type(type);
+    if (item == NULL) {
+        return -1;
+    }
+    if (lock_item(item)) {
+        return -1;
+    }
+
+    int last_index = item->write_index - 1;
+    double last_stat = 0;
+    if (last_index >= 0) {
+        last_stat = item->stats[last_index].value;
+    }
+
+    unlock_item(item);
+
+    return last_stat;
+}
+
+
 static inline int time_cmp(struct timespec *t1, struct timespec *t2) {
     return t1->tv_sec > t2->tv_sec ? 1 :
             ( t1->tv_sec < t2->tv_sec ? -1 :

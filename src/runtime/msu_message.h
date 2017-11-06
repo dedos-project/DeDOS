@@ -80,6 +80,7 @@ void destroy_msu_msg_and_contents(struct msu_msg *msg);
 
 struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size);
 
+int schedule_msu_msg(struct msg_queue *q, struct msu_msg *data, struct timespec *interval);
 int enqueue_msu_msg(struct msg_queue *q, struct msu_msg *data);
 struct msu_msg *dequeue_msu_msg(struct msg_queue *q);
 

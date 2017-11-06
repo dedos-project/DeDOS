@@ -16,10 +16,12 @@ LOGS = \
 	   #STATS_SEND
 	   #ALL
 
-MSU_APPLICATIONS = webserver pico_tcp #baremetal webserver ndlog
+MSU_APPLICATIONS = webserver #pico_tcp #baremetal webserver ndlog
 
-#NO_LOGS = \
-		  JSMN_PARSING \
+NO_LOGS = \
+		  MSU_DEQUEUES \
+		  ADD_PROVINANCE 
+		  #JSMN_PARSING \
 		  DFG_PARSING \
 		  MSU_ENQUEUES \
 		  MSU_DEQUEUES \
@@ -55,7 +57,7 @@ LEG_BLD_DIR = $(BLD_DIR)legacy/
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
 
-LEGACY_LIBS = picotcp
+LEGACY_LIBS =# picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
@@ -88,8 +90,10 @@ CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -O$(OPTIM)
 	   $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
-ifeq ($(MAKECMDGOALS), coverage)
+ifeq ($(MAKECMDGOALS), $(filter $(MAKECMDGOALS),coverage init_cov cov-site))
   CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
+  OPTIM=0
+  INIT_COV=init_cov
 endif
 
 ifeq ($(DEBUG), 1)
@@ -123,7 +127,7 @@ LEG_OBJ=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_BLD_DIR)$(LEG_LIB).o)
 
 RESOURCE_EXTS=.txt .json
 
-TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS))
+TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS)) $(TST_DIR)integration_tests/
 
 TSTS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.c))
 TST_MKS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.mk))
@@ -133,21 +137,21 @@ TST_OBJS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.o, $(TSTS))
 SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
 SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
 
-TST_SRCS = $(filter-out $(MAIN), $(patsubst $(SRC_DIR)%, $(TST_DIR)%, $(foreach src, $(SRCS), $(dir $(src))Test_$(notdir $(src)))))
 TST_BLDS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.out, $(TSTS))
 TST_COV = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcda, $(TSTS)) \
 		  $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcno, $(TSTS))
+TST_COV_INFOS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcno, $(TSTS))
 
-COV_DIRS = $(sort $(dir $(patsubst $(SRC_DIR)%/, $(COV_DIR)%, $(SRC_DIRS)) $(COV_DIR)))
-COV_INFOS = $(patsubst $(SRC_DIR)%/, $(COV_DIR)%.info, $(SRC_DIRS))
-COV_INIT_INFOS = $(patsubst $(SRC_DIR)%/, $(COV_DIR)%_init.info, $(SRC_DIRS))
+COV_DIRS = $(sort $(dir $(patsubst $(TST_DIR)%/, $(COV_DIR)%, $(TST_DIRS)) $(COV_DIR)))
+COV_INFOS = $(patsubst $(TST_DIR)%/, $(COV_DIR)%.info, $(TST_DIRS))
+COV_INIT_INFOS = $(patsubst $(TST_DIR)%/, $(COV_DIR)%.init_info, $(TST_DIRS))
 COV_INDEX = $(COV_DIR)index.html
 
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
 MEM_RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%_memcheck.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
-DEP_DIRS = $(patsubst $(SRC_DIR)%/, $(DEP_DIR)%/, $(SRC_DIRS))
+DEP_DIRS = $(patsubst $(TST_DIR)%/, $(DEP_DIR)%/, $(TST_DIRS))
 DEP_TST = $(patsubst $(TST_DIR)%.c, $(DEP_DIR)%.d, $(TSTS))
 DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS)) \
 		  $(patsubst $(SRC_DIR)%.cc, $(DEP_DIR)%.d, $(SRCS_PP))
@@ -156,8 +160,8 @@ OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS)) \
 OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS))) \
 				 $(patsubst $(SRC_DIR)%.cc, $(OBJ_DIR)%.o, $(SRCS_PP))
 
-TST_BLD_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
-RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
+TST_BLD_DIRS = $(patsubst $(TST_DIR)%/, $(TST_BLD_DIR)%/, $(TST_DIRS))
+RES_DIRS = $(patsubst $(TST_DIR)%/, $(RES_DIR)%/, $(TST_DIRS))
 
 INCS=$(LEG_INC) $(RNT_DIR) $(COM_DIR) $(MSU_DIR)
 
@@ -176,13 +180,11 @@ CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
 TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm -O0 \
-			 -fprofile-arcs -ftest-coverage --coverage
+			 -fprofile-arcs -ftest-coverage --coverage\
+
 
 DIRS = $(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIRS)
 
-define kill_proc
-if pgrep -x "$1" > /dev/null; then killall "$1"; fi
-endef
 
 all: dirs legacy ${TARGET}
 
@@ -192,21 +194,30 @@ legacy: $(LEG_OBJ)
 
 depends: $(DEP_DIRS) ${DEP_SRC}
 
-coverage: $(DIRS)  test $(TST_COV) $(COV_INFOS)
+coverage: $(DIRS) $(OBJECTS) $(COV_INIT_INFOS)  test $(TST_COV) $(COV_INFOS)
 
 cov-site: coverage
-	genhtml -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
+	genhtml --show-details -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
 	cd $(COV_DIR) && python2 -m SimpleHTTPServer 8081
 
 $(TST_BLD_DIR)%.gcda: $(TST_BLD_DIR)%.out $(DIRS)
 
+init_cov: $(DIRS) $(OBJECTS) $(COV_INIT_INFOS)
+
 lcov: $(DIRS) $(TST_COV) $(COV_INFOS)
 
-$(COV_DIR)%.info: $(TST_BLD_DIR)%/ $(TST_BLDS)
-	-lcov --directory $< --capture --output-file $(subst .info,.raw_info,$@)
-	-lcov --no-external --directory $(patsubst $(TST_BLD_DIR)%,$(OBJ_DIR)%,$<) --capture --initial --output-file $(subst .info,.init_info,$@)
-	-lcov -a $(subst .info,.raw_info,$@) -a $(subst .info,.init_info,$@) -o $(subst .info,.all_info,$@)
-	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@
+$(COV_DIR)%.init_info: $(TST_BLD_DIR)%/
+	-lcov --no-recursion --directory $(patsubst $(TST_BLD_DIR)%,$(OBJ_DIR)%,$<) --zerocounters
+	-lcov --no-recursion --directory $(patsubst $(TST_BLD_DIR)%,$(OBJ_DIR)%,$<) --capture --initial --output-file $@ --test-name $(notdir $(subst .init_info,,$@));
+
+$(COV_DIR)%.info: $(TST_BLD_DIR)%/ test-results
+	-lcov --external --directory $< --capture --no-recursion --output-file $(subst .info,.raw_info,$@) --test-name $(notdir $(subst .info,,$@))
+	@if [ -e $(subst .info,.init_info,$@) ]; then \
+		lcov --external -a $(subst .info,.init_info,$@) -a $(subst .info,.raw_info,$@)  -o $(subst .info,.all_info,$@) --test-name $(notdir $(subst .info,,$@)); \
+	else \
+		lcov --external -a $(subst .info,.raw_info,$@) -o $(subst .info,.all_info,$@) --test-name $(notdir $(subst .info,,$@)); \
+	fi
+	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@  --test-name $(notdir $(subst .info,,$@))
 
 $(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
 	@filename=$$(basename "$@"); filename="$${filename%.*}"; echo $$filename; cd $(LEG_DIR)/$$filename && make;
@@ -216,10 +227,11 @@ $(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
-test: all test-blds test-results
+test: all ${INIT_COV} test-blds test-results
 
 memcheck: test $(MEM_RESULTS)
-	@for FILE in $(filter-out test, $^); do \
+	@export CK_DEFAULT_TIMEOUT=30; \
+	for FILE in $(filter-out test, $^); do \
 		echo ___ $$FILE ___ ; \
 		if grep -q "definitely lost: [^0]" "$$FILE"; then \
 			grep  --color=never '\(\*\*\*\*\*.*\*\*\*\*\)\|\(definitely lost: [^0]\)' "$$FILE" | sed s/==/`printf "\\033[032m"==`/g ;\
@@ -236,6 +248,9 @@ test-results: all test-blds $(RESULTS)
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
 	@for FILE in $(filter-out all test-blds, $^); do \
 		if grep -q ":[FES]:" "$$FILE"; then \
+			echo ___ $$FILE ___ ; \
+			cat $$FILE; \
+		elif grep -q "Aborted" "$$FILE"; then \
 			echo ___ $$FILE ___ ; \
 			cat $$FILE; \
 		else \
@@ -257,8 +272,8 @@ $(RES_DIR)%_memcheck.txt: $(TST_BLD_DIR)%.out
 
 # Output the results of the tests by executing each of the builds
 # of the tests. Output STDOUT and STDERR to the name of the rule
-$(RES_DIR)%.txt: $(TST_BLD_DIR)%.out
-	$(call kill_proc $(notdir $^))
+$(RES_DIR)%.txt: $(TST_BLD_DIR)%.out FORCE
+	@killall $(notdir $<) 2> /dev/null || true
 	-./$< > $@ 2>&1
 
 $(TST_BLD_DIR)%.o:: $(TST_DIR)%.c $(SELF) 
@@ -270,8 +285,8 @@ $(TST_BLD_DIR)%.out:: $(TST_BLD_DIR)%.o $(OBJECTS_NOMAIN) $(LEG_OBJ)
 	$(FINAL_TEST) -o $@ $(filter-out $(call test_filters, $(@:.out=)), $^) $(TEST_CFLAGS)
 #	$(FINAL) -o $@ $(filter-out $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $@)), $^) $(TEST_CFLAGS)
 
-$(TST_BLD_DIR)%: $(TST_DIR)%
-	@cp $^ $@
+$(TST_BLD_DIR)%: $(TST_DIR)% FORCE
+	-@cp $< $@
 
 # Creates object files from the source file
 $(OBJ_DIR)%.o:: $(SRC_DIR)%.c $(SELF)
@@ -312,3 +327,5 @@ endif
 .PHONY: depends
 .PHONY: coverage
 .PRECIOUS: $(DEP_DIR)%.d $(RES_DIR)%.txt $(OBJ_DIR)%.o $(TST_BLD_DIR)%.out
+FORCE:;
+

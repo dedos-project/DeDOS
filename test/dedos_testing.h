@@ -49,13 +49,6 @@
         return (num_failed == 0) ? 0 : -1; \
     }
 
-#define INIT_LOCAL_RUNTIME(runtime_id) \
-    struct dfg_runtime __LOCAL_RT__ = {\
-        .id = runtime_id \
-    }; \
-    set_local_runtime(&__LOCAL_RT__);
-
-
 
 int init_test_listening_socket(int port) {
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);

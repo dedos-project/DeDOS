@@ -7,6 +7,8 @@
 #include "jsmn.h"
 #include "logging.h"
 
+#include <unistd.h>
+
 #define JSON_LEN_INCREMENT 1024
 
 #define CHECK_JSON_LEN(json, len)\

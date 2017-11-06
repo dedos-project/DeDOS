@@ -151,7 +151,7 @@ static int init_ssl_ctx(struct msu_type UNUSED *type) {
     char pem_file[256];
     get_local_file(pem_file, "mycert.pem");
     if (load_ssl_certificate(pem_file, pem_file) != 0) {
-        log_error("Error loading SSL cert");
+        log_error("Error loading SSL cert %s", pem_file);
         return -1;
     }
 
