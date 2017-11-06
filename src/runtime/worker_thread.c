@@ -260,7 +260,7 @@ static struct timespec *next_timeout(struct worker_thread *thread) {
 
 int enqueue_worker_timeout(struct worker_thread *thread, struct timespec *interval) {
     struct timeout_list *tlist = calloc(1, sizeof(*tlist));
-    clock_gettime(CLOCK_REALTIME_COARSE, &tlist->time);
+    clock_gettime(CLOCK_REALTIME, &tlist->time);
     tlist->time.tv_sec += interval->tv_sec;
     tlist->time.tv_nsec += interval->tv_nsec;
     if (tlist->time.tv_nsec > 1e9) {

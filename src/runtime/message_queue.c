@@ -13,7 +13,7 @@ int schedule_msg(struct msg_queue *q, struct dedos_msg *msg, struct timespec *in
         msg->delivery_time = *interval;
         log_info("Scheduled message for now");
     } else {
-        clock_gettime(CLOCK_REALTIME_COARSE, &msg->delivery_time);
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &msg->delivery_time);
         msg->delivery_time.tv_sec += interval->tv_sec;
         msg->delivery_time.tv_nsec += interval->tv_nsec;
         if (msg->delivery_time.tv_nsec > 1e9) {
@@ -78,7 +78,7 @@ struct dedos_msg *dequeue_msg(struct msg_queue *q) {
             break;
         }
         struct timespec cur_time;
-        clock_gettime(CLOCK_REALTIME_COARSE, &cur_time);
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &cur_time);
         double diff = timediff_s(&msg->delivery_time, &cur_time);
         if (diff >= 0) {
             break;
@@ -99,6 +99,7 @@ struct dedos_msg *dequeue_msg(struct msg_queue *q) {
         msg = q->head;
         num_checked++;
     } while (num_checked < q->num_msgs);
+
     // If we've checked all the messages
     if (num_checked == q->num_msgs) {
         if (q->shared) {

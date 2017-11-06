@@ -136,17 +136,17 @@ static int output_thread_loop(struct dedos_thread *self, void UNUSED *init_data)
 
     struct timespec elapsed;
     struct timespec timeout_abs;
-    clock_gettime(CLOCK_REALTIME, &timeout_abs);
+    clock_gettime(CLOCK_REALTIME_COARSE, &timeout_abs);
     while (!dedos_thread_should_exit(self)) {
 
-        clock_gettime(CLOCK_REALTIME, &elapsed);
+        clock_gettime(CLOCK_REALTIME_COARSE, &elapsed);
         if (elapsed.tv_sec > timeout_abs.tv_sec || (elapsed.tv_sec == timeout_abs.tv_sec &&
                                                     elapsed.tv_nsec > timeout_abs.tv_nsec)) {
             if (send_stats_to_controller() < 0) {
                 log(LOG_STATS_SEND, "Error sending stats to controller");
             }
             log(LOG_STATS_SEND, "Sent stats");
-            clock_gettime(CLOCK_REALTIME, &timeout_abs);
+            clock_gettime(CLOCK_REALTIME_COARSE, &timeout_abs);
             timeout_abs.tv_nsec += STAT_REPORTING_DURATION_MS * 1e6;
             if (timeout_abs.tv_nsec > 1e9) {
                 timeout_abs.tv_nsec -= 1e9;

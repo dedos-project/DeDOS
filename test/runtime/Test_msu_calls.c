@@ -17,7 +17,7 @@ START_DEDOS_TEST(test_schedule_local_msu_init_call) {
     // In how long should the message be delivered
     struct timespec second = {
         .tv_sec = 0,
-        .tv_nsec = 5e8
+        .tv_nsec = 1e8
     };
 
     // This is the actual call that delivers the message
@@ -32,7 +32,7 @@ START_DEDOS_TEST(test_schedule_local_msu_init_call) {
     rtn = thread_wait(wthread.thread, next_timeout(&wthread));
     ck_assert_int_eq(rtn, 0);
 
-    // This time when we dequeue, the mssage is there
+    // This time when we dequeue, the message should be there
     msg = dequeue_msu_msg(&msu.queue);
     ck_assert_ptr_ne(msg, NULL);
 } END_DEDOS_TEST
