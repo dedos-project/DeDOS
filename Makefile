@@ -25,6 +25,10 @@ coverage: $(COVERAGE)
 	genhtml --show-details --keep-descriptions -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
 	cd $(COV_DIR) && python2 -m SimpleHTTPServer 8081
 
+docs:
+	doxygen Doxyfile
+	cd html && python -m SimpleHTTPServer
+
 runtime-%::
 	make -f $(patsubst %-$*, %.mk, $@) $*
 
