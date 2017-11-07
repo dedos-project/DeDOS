@@ -75,7 +75,10 @@ enum thread_mode {
     UNPINNED_THREAD = 2
 };
 
-/** Converts a string of pinned/unpinned to the corresponding enumerator */
+/**
+ * Converts a string of pinned/unpinned to the corresponding enumerator.
+ * String should be "pinned" or "unpinned" (case insensitive).
+ * */
 enum thread_mode str_to_thread_mode(char *mode);
 
 /** Representation of a thread on a runtime in the DFG */
@@ -141,7 +144,10 @@ enum blocking_mode {
     BLOCKING_MSU = 1,
     NONBLOCK_MSU = 2
 };
-/** Converts a string of blocking/non-blocking to the correct enumerator */
+/**
+ * Converts a string of blocking/non-blocking to the correct enumerator.
+ * String should be "blocking" or "non-blocking" (or "nonblocking") (case insensitive).
+ */
 enum blocking_mode str_to_blocking_mode(char *mode_str);
 
 // Forward declaration; defined below
@@ -184,7 +190,7 @@ struct dfg_dependency {
 #define ENTRY_VERTEX_TYPE 0x01
 /** Bitmask representing an MSU through which messages exit DeDOS */
 #define EXIT_VERTEX_TYPE  0x02
-/** Converts a string of entry, exit, or entry/exit to the correct bitmask */
+/** Converts a string containing exit and/or entry to the correct bitmask */
 uint8_t str_to_vertex_type(char *type_str);
 
 /** Representation of a single MSU in the dfg */
@@ -225,8 +231,10 @@ struct dedos_dfg {
     // todo: float application_deadline;
 };
 
-/** Sets the DFG which all of the other functions in this file use, so that it doesn't
- * have to be passed in for each call */
+/**
+ * Sets the local copy of the DFG, so it doesn't have to be passed in for each call.
+ * @param dfg The copy of the DFG to set statically
+ */
 void set_dfg(struct dedos_dfg *dfg);
 
 /** Returns the runtime with the given ID */
