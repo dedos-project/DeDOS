@@ -1,17 +1,35 @@
-#include <strings.h>
-#include <stdbool.h>
-#include <string.h>
-#include "dfg.h"
+/**
+ * @file dfg_reader.c
+ *
+ * Defines conversion of JSON strings to dedos_dfg
+ */
+
 #include "dfg_reader.h"
+#include "dfg.h"
 #include "jsmn_parser.h"
 #include "jsmn.h"
 #include "logging.h"
 
+#include <strings.h>
+#include <stdbool.h>
+#include <string.h>
+
+/** The objects types which can be located in the json DFG
+ * See ::key_map for usage.
+ * */
 enum object_type {
     ROOT=0, RUNTIMES=1, ROUTES=2, DESTINATIONS=3, MSUS=4, PROFILING=5,
     META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8, DEPENDENCIES=9, MSU_TYPES = 10
 };
 
+/**
+ * Fixes the thread assignment within the DFG such that the
+ * pinned and unpinned threads are accurate.
+ * Must be run, because during execution the only hint of pinned/unpinned is
+ * msu blocking mode.
+ * To be run after DFG is fully parsed.
+ * @return 0 on success, -1 on error
+ */
 static int fix_num_threads(struct dedos_dfg *dfg) {
     for (int i=0; i<dfg->n_runtimes; i++) {
         struct dfg_runtime *rt = dfg->runtimes[i];
@@ -50,6 +68,10 @@ static int fix_num_threads(struct dedos_dfg *dfg) {
     return 0;
 }
 
+/**
+ * Provides the mapping between the keys in the JSON and the functions which are called
+ * when those keys are encountered.
+ */
 static struct key_mapping key_map[];
 
 struct dedos_dfg *parse_dfg_json_file(const char *filename){
@@ -72,6 +94,7 @@ struct dedos_dfg *parse_dfg_json_file(const char *filename){
     }
 }
 
+/** Key: "application_name", Object: ::ROOT */
 PARSE_FN(set_app_name) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     char *name = GET_STR_TOK();
@@ -83,6 +106,7 @@ PARSE_FN(set_app_name) {
     return 0;
 }
 
+/** Key: "global_ctl_ip", Object: ::ROOT */
 PARSE_FN(set_ctl_ip) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     char *ip = GET_STR_TOK();
@@ -96,12 +120,14 @@ PARSE_FN(set_ctl_ip) {
     return 0;
 }
 
+/** Key: "global_ctl_port", Object: ::ROOT */
 PARSE_FN(set_ctl_port) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     dfg->global_ctl_port = GET_INT_TOK();
     return 0;
 }
 
+/** Key: element in "runtimes", Object ::ROOT */
 INIT_OBJ_FN(init_runtime) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     int index = GET_OBJ_INDEX();
@@ -112,8 +138,10 @@ INIT_OBJ_FN(init_runtime) {
     RETURN_OBJ(dfg->runtimes[index], RUNTIMES);
 }
 
+/** Key: "runtimes", Object ::ROOT */
 PARSE_OBJ_LIST_FN(set_runtimes, init_runtime);
 
+/** Key: element in "MSUs", Object ::ROOT */
 INIT_OBJ_FN(init_dfg_msu_from_json) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     int index = GET_OBJ_INDEX();
@@ -124,8 +152,10 @@ INIT_OBJ_FN(init_dfg_msu_from_json) {
     RETURN_OBJ(dfg->msus[index], MSUS);
 }
 
+/** Key: "MSUs", Object ::ROOT */
 PARSE_OBJ_LIST_FN(set_msus, init_dfg_msu_from_json);
 
+/** Key: element in "MSU_types", Object ::ROOT */
 INIT_OBJ_FN(init_dfg_msu_type) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
 
@@ -137,14 +167,17 @@ INIT_OBJ_FN(init_dfg_msu_type) {
     RETURN_OBJ(dfg->msu_types[index], MSU_TYPES);
 }
 
+/** Key: "MSU_types", Object: ::ROOT */
 PARSE_OBJ_LIST_FN(set_msu_types, init_dfg_msu_type);
 
+/** Key: "id", Object: ::MSU_TYPES */
 PARSE_FN(set_msu_type_id) {
     struct dfg_msu_type *type = GET_PARSE_OBJ();
     type->id = GET_INT_TOK();
     return 0;
 }
 
+/** Key: "name", Object: ::MSU_TYPES */
 PARSE_FN(set_msu_type_name) {
     struct dfg_msu_type *type = GET_PARSE_OBJ();
     char *name = GET_STR_TOK();
@@ -157,8 +190,10 @@ PARSE_FN(set_msu_type_name) {
     return 0;
 }
 
+/** Key: "meta_routing", Object: ::MSU_TYPES */
 PARSE_OBJ_FN(set_meta_routing, struct dfg_msu_type, meta_routing, META_ROUTING);
 
+/** Key: Element in "dependencies", Object: ::MSU_TYPES */
 INIT_OBJ_FN(init_dependencies) {
     struct dfg_msu_type *type = GET_PARSE_OBJ();
     int index = GET_OBJ_INDEX();
@@ -169,20 +204,24 @@ INIT_OBJ_FN(init_dependencies) {
     RETURN_OBJ(type->dependencies[index], DEPENDENCIES);
 }
 
+/** Key: "dependencies", Object ::MSU_TYPES */
 PARSE_OBJ_LIST_FN(set_dependencies, init_dependencies);
 
+/** Key: "cloneable", Object ::MSU_TYPES */
 PARSE_FN(set_cloneable) {
     struct dfg_msu_type *type = GET_PARSE_OBJ();
     type->cloneable = GET_INT_TOK();
     return 0;
 }
 
+/** Key: "colocation_group", object ::MSU_TYPES */
 PARSE_FN(set_colocation_group) {
     struct dfg_msu_type *type = GET_PARSE_OBJ();
     type->colocation_group = GET_INT_TOK();
     return 0;
 }
 
+/** Key: "init_data", Object: ::MSUS */
 PARSE_FN(set_msu_init_data) {
     struct dfg_msu *vertex = GET_PARSE_OBJ();
 
@@ -195,12 +234,14 @@ PARSE_FN(set_msu_init_data) {
     return 0;
 }
 
+/** Key: "id", Object ::MSUS */
 PARSE_FN(set_msu_id) {
     struct dfg_msu *msu = GET_PARSE_OBJ();
     msu->id = GET_INT_TOK();
     return 0;
 }
 
+/** Key: "vertex_type", Object ::MSUS */
 PARSE_FN(set_msu_vertex_type) {
     struct dfg_msu *msu = GET_PARSE_OBJ();
     char *str_type = GET_STR_TOK();
@@ -208,7 +249,7 @@ PARSE_FN(set_msu_vertex_type) {
     return 0;
 }
 
-
+/** Key "type", Object ::MSUS */
 PARSE_FN(set_msu_type) {
     struct dfg_msu *vertex = GET_PARSE_OBJ();
 
@@ -224,7 +265,7 @@ PARSE_FN(set_msu_type) {
     return 0;
 }
 
-
+/** key: "blocking_mode", object: ::MSUS */ 
 PARSE_FN(set_blocking_mode) {
     struct dfg_msu *vertex = GET_PARSE_OBJ();
 
@@ -258,14 +299,17 @@ PARSE_FN(set_blocking_mode) {
     return 0;
 }
 
+/** Key: "scheduling", Object ::MSUS */
 PARSE_OBJ_FN(set_scheduling, struct dfg_msu, scheduling, SCHEDULING);
 
+/** Key: id, Object ::RUNTIMES */
 PARSE_FN(set_rt_id) {
     struct dfg_runtime *rt = GET_PARSE_OBJ();
     rt->id = GET_INT_TOK();
     return 0;
 }
 
+/** Key: ip, Object ::RUNTIMES */
 PARSE_FN(set_rt_ip) {
     struct dfg_runtime *rt = GET_PARSE_OBJ();
     char *ip = GET_STR_TOK();
@@ -279,18 +323,21 @@ PARSE_FN(set_rt_ip) {
     return 0;
 }
 
+/** Key: port, object ::RUNTIMES */
 PARSE_FN(set_rt_port) {
     struct dfg_runtime *rt = GET_PARSE_OBJ();
     rt->port = GET_INT_TOK();
     return 0;
 }
 
+/** Key: num_cores, object ::RUNTIMES */
 PARSE_FN(set_rt_n_cores) {
     struct dfg_runtime *rt = GET_PARSE_OBJ();
     rt->n_cores = GET_INT_TOK();
     return 0;
 }
 
+/** Key: num_pinned_threads, object ::RUNTIMES */
 PARSE_FN(set_num_pinned_threads) {
     struct dfg_runtime *rt = GET_PARSE_OBJ();
 
@@ -305,6 +352,7 @@ PARSE_FN(set_num_pinned_threads) {
     return 0;
 }
 
+/** Key: num_unpinned_threads, object ::RUNTIMES */
 PARSE_FN(set_num_unpinned_threads) {
     struct dfg_runtime *rt = GET_PARSE_OBJ();
 
@@ -319,6 +367,7 @@ PARSE_FN(set_num_unpinned_threads) {
     return 0;
 }
 
+/** Key: Element in "routes", object ::RUNTIMES */
 INIT_OBJ_FN(init_route) {
     struct dfg_runtime *rt = GET_PARSE_OBJ();
     int index = GET_OBJ_INDEX();
@@ -329,8 +378,10 @@ INIT_OBJ_FN(init_route) {
     RETURN_OBJ(rt->routes[index], ROUTES);
 }
 
+/** Key: "routes", object ::RUNTIMES */
 PARSE_OBJ_LIST_FN(set_rt_routes, init_route);
 
+/** Key: "id", object ::ROUTES */
 PARSE_FN(set_route_id) {
     struct dfg_route *route = GET_PARSE_OBJ();
     int id = GET_INT_TOK();
@@ -344,6 +395,7 @@ PARSE_FN(set_route_id) {
     return 0;
 }
 
+/** Key: "type", object ::ROUTES */
 PARSE_FN(set_route_type) {
     struct dfg_route *route = GET_PARSE_OBJ();
     int type_id = GET_INT_TOK();
@@ -356,6 +408,7 @@ PARSE_FN(set_route_type) {
     return 0;
 }
 
+/** Key: Element in "endpoints", object ::ROUTES */
 INIT_OBJ_FN(init_endpoint) {
     struct dfg_route *route = GET_PARSE_OBJ();
 
@@ -366,14 +419,17 @@ INIT_OBJ_FN(init_endpoint) {
     RETURN_OBJ(route->endpoints[index], DESTINATIONS);
 }
 
+/** Key: "endpoints", object ::ROUTES */
 PARSE_OBJ_LIST_FN(set_route_endpoints, init_endpoint);
 
+/** Key: "key", object ::DESTINATIONS */
 PARSE_FN(set_dest_key) {
     struct dfg_route_endpoint *dest = GET_PARSE_OBJ();
     dest->key = GET_INT_TOK();
     return 0;
 }
 
+/** Key: "msu", object ::DESTINATIONS */
 PARSE_FN(set_dest_msu) {
     struct dfg_route_endpoint *dest = GET_PARSE_OBJ();
     int msu_id = GET_INT_TOK();
@@ -388,6 +444,7 @@ PARSE_FN(set_dest_msu) {
     return 0;
 }
 
+/** Key: "source_types", object ::META_ROUTING */
 PARSE_FN(set_source_types) {
     struct dfg_meta_routing *meta = GET_PARSE_OBJ();
     int i;
@@ -409,6 +466,7 @@ PARSE_FN(set_source_types) {
     return 0;
 }
 
+/** Key: "dst_types", object ::META_ROUTING */
 PARSE_FN(set_dst_types) {
     struct dfg_meta_routing *meta = GET_PARSE_OBJ();
     bool found_types = true;
@@ -431,6 +489,7 @@ PARSE_FN(set_dst_types) {
     return 0;
 }
 
+/** key: "type", object ::DEPENDENCIES */
 PARSE_FN(set_dep_type) {
     struct dfg_dependency *dep = GET_PARSE_OBJ();
 
@@ -446,6 +505,7 @@ PARSE_FN(set_dep_type) {
     return 0;
 }
 
+/** Key: "locality", object: ::DEPENDENCIES */
 PARSE_FN(set_dep_locality) {
     struct dfg_dependency *dep = GET_PARSE_OBJ();
 
@@ -460,6 +520,7 @@ PARSE_FN(set_dep_locality) {
     return 0;
 }
 
+/** Key: "runtime", object: ::SCHEDULING */
 PARSE_FN(set_msu_runtime) {
     struct dfg_scheduling *sched = GET_PARSE_OBJ();
 
@@ -473,6 +534,7 @@ PARSE_FN(set_msu_runtime) {
     return 0;
 }
 
+/** Key: "thread_id", object: ::SCHEDULING */
 PARSE_FN(set_msu_thread) {
     struct dfg_scheduling *sched = GET_PARSE_OBJ();
 
@@ -512,6 +574,7 @@ PARSE_FN(set_msu_thread) {
     return 0;
 }
 
+/** key: "routes", object ::SCHEDULING */
 PARSE_FN(set_msu_routes) {
     struct dfg_scheduling *sched = GET_PARSE_OBJ();
 
@@ -537,12 +600,15 @@ PARSE_FN(set_msu_routes) {
     return 0;
 }
 
-
+/** To be used to raise an error when a JSON key is deprecated */
 static int not_implemented(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {
     log_warn("JSON key %s is not implemented in DFG reader", tok_to_str((*tok)-1, j));
     return 0;
 }
 
+/**
+ * (See jsmn_parser.h for details of key_mapping structure)
+ */
 static struct key_mapping key_map[] = {
     { "application_name", ROOT, set_app_name },
     { "global_ctl_ip", ROOT, set_ctl_ip },
