@@ -1,3 +1,10 @@
+/**
+ * @file epollops.c
+ *
+ * Wrapper functions for epoll to manage event-based communication
+ */
+
+#include "epollops.h"
 #include "logging.h"
 #include <inttypes.h>
 #include <netinet/in.h>
@@ -6,12 +13,13 @@
 #include <fcntl.h>
 #include <stdbool.h>
 
+/** 
+ * The maximum number of events that can be responded to 
+ * in a single call to epoll_wait().
+ * NOT the maximum number of events that can be stored in the epoll.
+ */
 #define MAX_EPOLL_EVENTS 512
 
-/**
- * Enables a file descriptor which has already been aded to an epoll instance.
- * Or's EPOLLONESHOT with events so the event will only be responded to once
- */
 int enable_epoll(int epoll_fd, int new_fd, uint32_t events) {
     struct epoll_event event;
     memset(&event, 0, sizeof(event));
@@ -29,10 +37,6 @@ int enable_epoll(int epoll_fd, int new_fd, uint32_t events) {
     return 0;
 }
 
-/**
- * Adds a file descriptor to the epoll instance.
- * Or's EPOLLONESHOT with events.
- */
 int add_to_epoll(int epoll_fd, int new_fd, uint32_t events, bool oneshot) { 
     struct epoll_event event;
     memset(&event, 0, sizeof(event));
@@ -55,7 +59,11 @@ int add_to_epoll(int epoll_fd, int new_fd, uint32_t events, bool oneshot) {
 }
 
 /**
- * Accepts a new connection and adds it to the epoll instance
+ * Accepts a new connection and adds it to the epoll instance.
+ * @param socketfd The new file descriptor to accept and add to the epoll
+ * @param epoll_fd The epoll file descriptor
+ * @param oneshot Whether the new connection should have EPOLLONESHOT enabled by default
+ * @return 0 on success, -1 on error
  */
 static int accept_new_connection(int socketfd, int epoll_fd, int oneshot) {
     int rtn;
@@ -70,6 +78,7 @@ static int accept_new_connection(int socketfd, int epoll_fd, int oneshot) {
         return -1;
     }
 
+/** If GET_NAME_INFO is defined, prints out the source of the connection */
 #ifdef GET_NAME_INFO
     char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
     rtn = getnameinfo((struct sockaddr*)&client_addr, addr_len,
@@ -100,21 +109,8 @@ static int accept_new_connection(int socketfd, int epoll_fd, int oneshot) {
     }
 }
 
-/**
- * The main (blocking) loop for the socket handler.
- * Loops (epolling), accepting new connections and passing new
- * file descriptors to the next MSUs once data is available to be read
- * @param socket_fd Socket on which to accept new connections, or -1 if no accept is necessary
- * @param epoll_fd Fd of epoll instance
- * @param batch_size Number of connections to process in a row before exiting the loop or -1 for NA
- * @param timeout Epoll timeout. -1 for no timeout.
- * @param connection_handler Calls this function with args (int fd, void *data) on fd activity
- * @param accept_handler Calls this function with args (int fd, void *data) on new connection
- *                       NULL for no callback or N/A
- * @param data Data to be passed through to handler functions
- * @return 0 on success, -1 on error
- */
-int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int oneshot,
+
+int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, bool oneshot,
        int (*connection_handler)(int, void*),
        int (*accept_handler)(int, void*),
        void *data) {
@@ -163,13 +159,7 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, int one
     return 0;
 }
 
-/**
- * Initializes a new instance of an epoll file descriptor and adds a socket to it, listening
- * for input on that socket.
- * @param socket_fd Socket on which to listen for new connections.
- *                  -1 if creating epoll without socket.
- * @return epoll file descriptor
- */
+
 int init_epoll(int socket_fd) {
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
