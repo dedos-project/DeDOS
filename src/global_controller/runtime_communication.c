@@ -9,6 +9,8 @@
 #include "dfg_writer.h"
 #include "haproxy.h"
 
+#include <signal.h>
+#include <sys/epoll.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -178,8 +180,38 @@ static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {
     }
 }
 
+#define MAX_OUTPUT_SOCKS 2
+
+static int output_listen_sock = -1;
+static int output_socks[MAX_OUTPUT_SOCKS];
+static int output_sock_idx = 0;
+
+static void add_output_sock(int fd) {
+    if (output_socks[output_sock_idx] > 0) {
+        close(output_socks[output_sock_idx]);
+    }
+    output_socks[output_sock_idx] = fd;
+    output_sock_idx++;
+    output_sock_idx %= MAX_OUTPUT_SOCKS;
+}
+
+
 static int handle_runtime_communication(int fd, void UNUSED *data) {
     struct rt_controller_msg_hdr hdr;
+
+    if (fd == output_listen_sock) {
+        log_info("Adding new output port");
+        int new_fd = accept(fd, NULL, 0);
+        if (new_fd > 0) {
+            add_output_sock(new_fd);
+            log_info("Added new output listener");
+            return 0;
+        } else {
+            log_error("Error adding new listener");
+            return 0;
+        }
+    }
+
     int rtn = read_payload(fd, sizeof(hdr), &hdr);
     if (rtn < 0) {
         log_error("Error reading runtime message header from fd %d", fd);
@@ -235,6 +267,9 @@ int get_output_listener(int port) {
 static int listen_sock = -1;
 
 int runtime_communication_loop(int listen_port, char *output_file, int output_port) {
+
+    signal(SIGPIPE, SIG_IGN);
+
     if (listen_sock > 0) {
         log_error("Communication loop already started");
         return -1;
@@ -246,19 +281,6 @@ int runtime_communication_loop(int listen_port, char *output_file, int output_po
     }
     log_info("Starting listening for runtimes on port %d", listen_port);
 
-    int output_sock = -1;
-    if (output_port > 0) {
-        log_info("Listening for DFG reader on port %d", output_port);
-        output_sock = get_output_listener(output_port);
-        if (output_sock < 0) {
-            log_error("Error getting output listener");
-            return -1;
-        }
-        log_info("DFG reader on socket %d", output_sock);
-    }
-
-
-
     int epoll_fd = init_epoll(listen_sock);
 
     if (epoll_fd < 0) {
@@ -267,11 +289,21 @@ int runtime_communication_loop(int listen_port, char *output_file, int output_po
         return -1;
     }
 
-    int rtn = 0;
+    if (output_port > 0) {
+        output_listen_sock = init_listening_socket(output_port);
+        if (output_listen_sock < 0) {
+            log_error("Error listening on port %d", output_port);
+            return -1;
+        }
+        log_info("Listening for DFG reader on port %d", output_port);
+        add_to_epoll(epoll_fd, output_listen_sock, EPOLLIN, false);
+    }
+
     struct timespec begin;
     clock_gettime(CLOCK_REALTIME_COARSE, &begin);
 
     struct timespec elapsed;
+    int rtn = 0;
     while (rtn == 0) {
         rtn = epoll_loop(listen_sock, epoll_fd, 1, 1000, 0,
                          handle_runtime_communication, NULL, NULL);
@@ -279,20 +311,22 @@ int runtime_communication_loop(int listen_port, char *output_file, int output_po
             log_error("Epoll loop exited with error");
             return -1;
         }
-        if (output_file != NULL || output_sock > 0) {
-            clock_gettime(CLOCK_REALTIME_COARSE, &elapsed);
-            if (elapsed.tv_sec - begin.tv_sec >= STAT_SAMPLE_PERIOD_MS / 1000 ||
-                    (elapsed.tv_sec - begin.tv_sec == STAT_SAMPLE_PERIOD_MS / 1000 &&
-                     elapsed.tv_nsec - begin.tv_nsec > STAT_SAMPLE_PERIOD_MS * 1e6)) {
-                if (output_file != NULL) {
-                    dfg_to_file(output_file);
-                }
-                if (output_sock > 0) {
-                    dfg_to_fd(output_sock);
-                }
-
-                clock_gettime(CLOCK_REALTIME_COARSE, &begin);
+        clock_gettime(CLOCK_REALTIME_COARSE, &elapsed);
+        if (elapsed.tv_sec - begin.tv_sec >= STAT_SAMPLE_PERIOD_MS / 1000 ||
+                (elapsed.tv_sec - begin.tv_sec == STAT_SAMPLE_PERIOD_MS / 1000 &&
+                 elapsed.tv_nsec - begin.tv_nsec > STAT_SAMPLE_PERIOD_MS * 1e6)) {
+            if (output_file != NULL) {
+                dfg_to_file(output_file);
             }
+            for (int i=0; i < MAX_OUTPUT_SOCKS; i++) {
+                if (output_socks[i] > 0) {
+                    if (dfg_to_fd(output_socks[i]) < 0) {
+                        close(output_socks[i]);
+                        output_socks[i] = 0;
+                    }
+                }
+            }
+            clock_gettime(CLOCK_REALTIME_COARSE, &begin);
         }
     }
     log_info("Epoll loop exited");

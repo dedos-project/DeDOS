@@ -4,6 +4,6 @@
 
 char *dfg_to_json(struct dedos_dfg *dfg, int n_stats);
 void dfg_to_file(char *filename);
-void dfg_to_fd(int fd);
+int dfg_to_fd(int fd);
 
 #endif

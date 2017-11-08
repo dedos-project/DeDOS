@@ -105,6 +105,9 @@ static bool should_clone(struct clone_decision *decision) {
 
 static bool should_unclone(struct clone_decision *decision) {
     struct dfg_msu_type *clone_type = get_dfg_msu_type(decision->clone_type_id);
+    if (clone_type == NULL) {
+        return false;
+    }
     if (clone_type->n_instances <= decision->min_instances) {
         return false;
     }

@@ -398,7 +398,7 @@ void dfg_to_file(char *filename) {
     fclose(file);
 }
 
-void dfg_to_fd(int fd) {
+int dfg_to_fd(int fd) {
     struct dedos_dfg *dfg = get_dfg();
     char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
     unlock_dfg();
@@ -410,8 +410,9 @@ void dfg_to_fd(int fd) {
         ssize_t rtn = write(fd, dfg_json + written, json_size - written);
         if (rtn < 0) {
             log_error("error writing dfg to fd %d", fd);
-            return;
+            return -1;
         }
         written += rtn;
     }
+    return 0;
 }
