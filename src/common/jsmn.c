@@ -1,4 +1,4 @@
-/** @file https://github.com/zserge/jsmn */
+/** @file jsmn.c https://github.com/zserge/jsmn */
 /*
 Copyright (c) 2010 Serge A. Zaitsev
 
