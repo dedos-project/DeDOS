@@ -1,3 +1,11 @@
+/**
+ * @file jsmn_parser.c
+ *
+ * General-purpose function to interact with JSMN library, and create
+ * objects (potentially with circular references) from the parsed
+ * json.
+ */
+
 #include "jsmn.h"
 #include "jsmn_parser.h"
 #include "logging.h"
@@ -104,16 +112,7 @@ int jsmn_ignore(jsmntok_t **tok, char *j, struct json_state *in, struct json_sta
     return 0;
 }
 
-/**
- * Using the provided functions, parses the JSON present in
- * 'filename' and stores the resulting object in 'obj'.
- * Can iterate multiple times on tokens which have dependencies.
- *
- * @param filename - JSON file to be parsed
- * @param obj - object to be filled with the results of parsing
- * @param keymap - the mapping between the JSON key and the function to be called
- * @return 0 on success, -1 on error
- */
+
 int parse_file_into_obj(const char *filename, void *obj, struct key_mapping *km){
     // Set the global key map
     jsmn_key_map = km;
@@ -145,18 +144,11 @@ int parse_file_into_obj(const char *filename, void *obj, struct key_mapping *km)
     return rtn;
 }
 
+/** The maximum number of times that a #PARSE_FN can return `1` before
+ * an error is raised */
 #define MAX_RETRIES 1024
 
-/**
- * Using the provided functions, parses the JSON present in
- * in the provided string and stores the resulting object in 'obj'.
- * Can iterate multiple times on tokens which have dependencies.
- *
- * @param contents - Null-terminated string to be parsed
- * @param obj - object to be filled with the results of parsing
- * @param keymap - the mapping between the JSON key and the function to be called
- * @return 0 on success, -1 on error
- */
+
 int parse_str_into_obj(char *contents, void *obj, struct key_mapping *km) {
 
     // Initialize the JSON parser
