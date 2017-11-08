@@ -127,7 +127,8 @@ START_DEDOS_TEST(test_enqueue_worker_timeouts) {
     ck_assert_ptr_ne(t, NULL);
     for (int i=0; i < 4; i++) {
         ck_assert_ptr_ne(t->next, NULL);
-        ck_assert_int_gt(t->next->time.tv_sec, t->time.tv_sec);
+        ck_assert_int_gt(t->next->time.tv_sec * 1e9 + t->next->time.tv_nsec,
+                         t->time.tv_sec * 1e9 + t->time.tv_nsec);
         t = t->next;
     }
     ck_assert_ptr_eq(t->next, NULL);
