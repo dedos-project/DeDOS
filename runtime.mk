@@ -16,7 +16,7 @@ LOGS = \
 	   #STATS_SEND
 	   #ALL
 
-MSU_APPLICATIONS = webserver pico_tcp baremetal ndlog
+MSU_APPLICATIONS = webserver baremetal ndlog pico_tcp
 
 NO_LOGS = \
 		  MSU_DEQUEUES \
@@ -52,7 +52,7 @@ OBJ_DIR = $(BLD_DIR)objs/
 TST_BLD_DIR = $(BLD_DIR)test/
 RES_DIR = $(TST_BLD_DIR)reults/
 COV_DIR = $(TST_BLD_DIR)coverage/
-LEG_BLD_DIR = $(BLD_DIR)legacy/
+LEG_BLD_DIR =$(BLD_DIR)legacy/
 
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
@@ -189,6 +189,8 @@ DIRS = $(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIR
 all: dirs legacy ${TARGET}
 
 dirs: $(DIRS)
+	echo $(LEG_DIR)
+	echo $(LEG_BLD_DIR)
 
 legacy: $(LEG_OBJ)
 
@@ -219,10 +221,10 @@ $(COV_DIR)%.info: $(TST_BLD_DIR)%/ test-results
 	fi
 	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@  --test-name $(notdir $(subst .info,,$@))
 
-$(LEG_BLD_DIR)%.o:: $(LEG_DIR)%
-	@filename=$$(basename "$@"); filename="$${filename%.*}"; echo $$filename; cd $(LEG_DIR)/$$filename && make;
+$(LEG_OBJ): $(LEG_BLD_DIR)
 	@echo ___________ $< ___________
-	$(LINK) -o $@ $</build/*.o
+	@filename=$$(basename "$@"); filename="$${filename%.*}"; echo $$filename; cd $(LEG_DIR)/$$filename && make;
+	$(LINK) -o $@ src/legacy/$(patsubst %.o,%,$(notdir $(LEG_OBJ)))/build/*.o
 
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
