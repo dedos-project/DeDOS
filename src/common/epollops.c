@@ -13,8 +13,8 @@
 #include <fcntl.h>
 #include <stdbool.h>
 
-/** 
- * The maximum number of events that can be responded to 
+/**
+ * The maximum number of events that can be responded to
  * in a single call to epoll_wait().
  * NOT the maximum number of events that can be stored in the epoll.
  */

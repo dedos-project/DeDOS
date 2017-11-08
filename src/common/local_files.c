@@ -1,5 +1,14 @@
+/**
+ * @file local_files.c
+ *
+ * Accessing local files within the repo
+ */
+
 #include <stdio.h>
 
+/**
+ * Set to the directory of the executabe
+ */
 static char *local_dir;
 
 int set_local_directory(char *dir) {
