@@ -151,6 +151,8 @@ int write_and_read_regex_request() {
     ck_assert_int_eq(rtn, strlen(buffer));
     char buff_out[1024];
     rtn = SSL_read(ssl, buff_out, 1024);
+    log_info("Return %d", rtn);
+    log_info("Read %d %s", rtn, buff_out);
     ck_assert_int_gt(rtn, 0);
     return fd;
 }
@@ -158,8 +160,11 @@ int write_and_read_regex_request() {
 int write_and_read_http() {
     int fd = write_full_http_request();
     char buffer[1024];
+    log_warn("HERE");
     int rtn = SSL_read(ssl, buffer, 1024);
+    log_warn("HERE");
     ck_assert_int_gt(rtn, 0);
+    log_warn("HERE");
     return fd;
 }
 
