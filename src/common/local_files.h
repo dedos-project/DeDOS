@@ -1,3 +1,9 @@
+/**
+ * @file local_files.h
+ *
+ * Access local files within the repo
+ */
+
 #ifndef LOCAL_fILES_H_
 #define LOCAL_fILES_H_
 

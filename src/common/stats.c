@@ -1,12 +1,24 @@
+/**
+ * @file stats.c
+ *
+ * Functions for the sending and receiving of statsitics between ctrl and runtime
+ */
 #include "stats.h"
 #include "logging.h"
 
 #include <stdlib.h>
 
+/**
+ * Header for a serialized stats message.
+ *
+ * Comes before a set of samples (i.e. the whole stats message)
+ */
 struct stat_msg_hdr {
+    /** The number of *items* sampled (not the size of the sample) */
     int n_samples;
 };
 
+/** Initializes a single stat sample with room to hold `max_stats` statistics */
 static int init_stat_sample(int max_stats, struct stat_sample *sample) {
     sample->max_stats = max_stats;
     sample->stats = calloc(max_stats, sizeof(*sample->stats));
@@ -51,6 +63,8 @@ size_t serialized_stat_sample_size(struct stat_sample *sample, int n_samples) {
     return size;
 }
 
+/** Serializes a single stat sample into a buffer of size `buff_len`.
+ * @return 0 on success, -1 if buffer is not large enough to hold sample */
 static ssize_t serialize_stat_sample(struct stat_sample *sample, void *buffer, size_t buff_len) {
     if (buff_len < sizeof(sample->hdr) + sizeof(*sample->stats) * sample->hdr.n_stats) {
         log_error("Buffer isn't large enough to fit serialized stat sample");
@@ -94,6 +108,9 @@ ssize_t serialize_stat_samples(struct stat_sample *samples, int n_samples,
     return curr_buff - (char*)buffer;
 }
 
+/** Deserializes a single stat sample from a buffer
+ * @returns 0 on success, -1 on error
+ */
 static ssize_t deserialize_stat_sample(void *buffer, size_t buff_len, struct stat_sample *sample) {
     if (buff_len < sizeof(sample->hdr)) {
         log_error("Buffer isn't large enough to fit header");
