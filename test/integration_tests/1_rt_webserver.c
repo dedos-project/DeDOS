@@ -114,6 +114,7 @@ void make_nonblock(int fd) {
 }
 
 int write_full_http_request() {
+    mark_point();
     int fd = ssl_fully_connect_to_webserver();
     make_nonblock(fd);
 
