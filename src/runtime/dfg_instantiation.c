@@ -1,8 +1,16 @@
+/**
+ * @file dfg_instantiation.c
+ *
+ * Instantiation of a dfg on a runtime 
+ */
 #include "logging.h"
 #include "local_msu.h"
 #include "dfg.h"
 #include "routing.h"
 
+/**
+ * Adds the provided endpoints to the route with the provided `route_id`
+ */
 static int add_dfg_route_endpoints(int route_id,
                                       struct dfg_route_endpoint **endpoints,
                                       int n_endpoints) {
@@ -30,6 +38,9 @@ static int add_dfg_route_endpoints(int route_id,
     return 0;
 }
 
+/**
+ * Creates the given routes on the runtime
+ */
 static int spawn_dfg_routes(struct dfg_route **routes, int n_routes) {
     for (int i=0; i<n_routes; i++) {
         struct dfg_route *dfg_route = routes[i];
@@ -43,6 +54,9 @@ static int spawn_dfg_routes(struct dfg_route **routes, int n_routes) {
     return 0;
 }
 
+/**
+ * Adds all of the endpoints for the provided routes to the provided routes
+ */
 static int add_all_dfg_route_endpoints(struct dfg_route **routes, int n_routes) {
     for (int i=0; i<n_routes; i++) {
         struct dfg_route *dfg_route = routes[i];
@@ -56,6 +70,9 @@ static int add_all_dfg_route_endpoints(struct dfg_route **routes, int n_routes) 
     return 0;
 }
 
+/**
+ * Subscribes the MSU to the provided routes
+ */
 static int add_dfg_routes_to_msu(struct local_msu *msu, struct dfg_route **routes, int n_routes) {
     for (int i=0; i<n_routes; i++) {
         struct dfg_route *route = routes[i];
@@ -69,6 +86,9 @@ static int add_dfg_routes_to_msu(struct local_msu *msu, struct dfg_route **route
     return 0;
 }
 
+/**
+ * Creates all of the MSUs on the provided worker thread
+ */
 static int spawn_dfg_msus(struct worker_thread *thread, struct dfg_msu **msus, int n_msus) {
     for (int i=0; i<n_msus; i++) {
         struct dfg_msu *dfg_msu = msus[i];
@@ -93,6 +113,9 @@ static int spawn_dfg_msus(struct worker_thread *thread, struct dfg_msu **msus, i
     return 0;
 }
 
+/**
+ * Creates all of the provided threads (including MSUs) on the current runtime 
+ */
 static int spawn_dfg_threads(struct dfg_thread **threads, int n_threads) {
     for (int i=0; i<n_threads; i++) {
         struct dfg_thread *dfg_thread = threads[i];
