@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include "runtime_communication.h"
 #include "msu_stats.h"
 #include "timeseries.h"
 #include "dfg.h"
@@ -314,6 +315,8 @@ static char *runtime_to_json(struct dfg_runtime *rt) {
 
     KEY_INTVAL(json, "n_pinned_threads", rt->n_pinned_threads);
     KEY_INTVAL(json, "n_unpinned_threads", rt->n_unpinned_threads);
+
+    KEY_INTVAL(json, "connected", runtime_fd(rt->id) > 0 ? 1 : 0);
 
     KEY(json, "routes");
     START_LIST(json);
