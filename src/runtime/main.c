@@ -19,7 +19,7 @@
 #include <libgen.h>
 #include <stdio.h>
 
-
+/** The command-line arguments */
 #define USAGE_ARGS \
     " -j dfg.json -i runtime_id [-l statlog] [-p profiling_prob]"
 

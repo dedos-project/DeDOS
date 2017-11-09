@@ -18,13 +18,6 @@ void set_local_runtime(struct dfg_runtime *rt) {
     LOCAL_RUNTIME = rt;
 }
 
-/**
- * Initializes the DFG as loaded from a JSON file, and sets
- * the global variables such that the DFG and runtime can be accessed
- * @param filename File from which to load the json DFG
- * @param runtime_id Idenitifer for this runtime
- * @return 0 on success, -1 on error
- */
 int init_runtime_dfg(char *filename, int runtime_id) {
 
     if (DFG != NULL) {
@@ -61,11 +54,6 @@ int init_runtime_dfg(char *filename, int runtime_id) {
     return 0;
 }
 
-/**
- * Gets the sockaddr associated with the global controller
- * @param addr Output parameter to be filled with controller's ip and port
- * @return 0 on success, -1 on error
- */
 int controller_address(struct sockaddr_in *addr) {
     if (DFG == NULL) {
         log_error("Runtime DFG not instantiated");
@@ -104,10 +92,6 @@ uint32_t local_runtime_ip() {
     return LOCAL_RUNTIME->ip;
 }
 
-/**
- * Gets the loaded DFG
- * @return loaded DFG or NULL if not initialized
- */
 struct dedos_dfg *get_dfg() {
     return DFG;
 }

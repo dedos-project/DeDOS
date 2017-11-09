@@ -1,5 +1,5 @@
 /**
- * @file: controller_communications.c
+ * @file: controller_communication.c
  * Communication with global controller from runtime
  */
 #include "controller_communication.h"

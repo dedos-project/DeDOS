@@ -1,17 +1,31 @@
+/**
+ * @file msu_state.c
+ *
+ * State storage that is tied to a specific MSU message
+ */
 #include "msu_message.h"
 #include "rt_stats.h"
 #include "logging.h"
 #include "uthash.h"
 #include "local_msu.h"
 
+/** Explicitly check whether a state is being replaced on a call to msu_init_state */
 #define CHECK_STATE_REPLACEMENT 1
 
+/** The structure contining msu state */
 struct msu_state {
+    /** The key with which the state is stored */
     struct composite_key key;
+    /** The size of the data being stored */
     size_t size;
+    /** An ID to facilitate the transferring of state between msus (not implemented yet) */
     int group_id;
+    /** A unique identifier for the state 
+     * (not used at the moment, will be utilized in state transfer) */
     int32_t id;
+    /** The payload of the state */
     void *data;
+    /** For use with the UT hash structure */
     UT_hash_handle hh;
 };
 

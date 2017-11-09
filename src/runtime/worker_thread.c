@@ -1,3 +1,8 @@
+/**
+ * @file worker_thread.c
+ *
+ * Threads that hold MSUs
+ */
 #include "worker_thread.h"
 #include "msu_type.h"
 #include "local_msu.h"
@@ -8,9 +13,13 @@
 
 #include <stdlib.h>
 
-#define MAX_DEDOS_THREAD_ID 16
+/** The maximum ID that can be assigned to a worker thread */
+#define MAX_DEDOS_THREAD_ID 32
+
+/** Static struct to keep track of worker threads */
 static struct worker_thread *worker_threads[MAX_DEDOS_THREAD_ID];
 
+/** Allocates and returns a new worker thread structure */
 static void *init_worker_thread(struct dedos_thread *thread) {
     struct worker_thread *worker = calloc(1, sizeof(*worker));
     if (worker == NULL) {
@@ -38,6 +47,7 @@ void stop_all_worker_threads() {
     }
 }
 
+/** Destroys all MSUs on a worker thread and frees the associated structure */
 static void destroy_worker_thread(struct dedos_thread *thread, void *v_worker_thread) {
     struct worker_thread *wthread = v_worker_thread;
     for (int i=0; i < wthread->n_msus; i++) {
@@ -55,6 +65,7 @@ struct worker_thread *get_worker_thread(int id) {
     return worker_threads[id];
 }
 
+/** Gets the index in worker_thread::msus at which the msu_id resides */
 static int get_msu_index(struct worker_thread *thread, int msu_id) {
     for (int i=0; i<thread->n_msus; i++) {
         if (thread->msus[i]->id == msu_id) {
@@ -64,7 +75,7 @@ static int get_msu_index(struct worker_thread *thread, int msu_id) {
     return -1;
 }
 
-
+/** Removes the MSU at the given index from the worker_thread::msus */
 static int remove_idx_from_msu_list(struct worker_thread *thread, int idx) {
     if (idx >= thread->n_msus) {
         return -1;
@@ -97,6 +108,7 @@ int register_msu_with_thread(struct local_msu *msu) {
     return 0;
 }
 
+/** Creates a new MSU on this thread based on the provided message */
 static int create_msu_on_thread(struct worker_thread *thread, struct ctrl_create_msu_msg *msg) {
     struct msu_type *type = get_msu_type(msg->type_id);
     if (type == NULL) {
@@ -112,6 +124,7 @@ static int create_msu_on_thread(struct worker_thread *thread, struct ctrl_create
     return 0;
 }
 
+/** Removes an MSU from this thread based on the provided messages */
 static int del_msu_from_thread(struct worker_thread *thread, struct ctrl_delete_msu_msg *msg,
                                int ack_id) {
     int idx = get_msu_index(thread, msg->msu_id);
@@ -144,6 +157,7 @@ static int del_msu_from_thread(struct worker_thread *thread, struct ctrl_delete_
     return 0;
 }
 
+/** Modifies the MSU's routes, either adding or removing a route subscription */
 static int worker_mod_msu_route(struct worker_thread *thread, struct ctrl_msu_route_msg *msg) {
     int idx = get_msu_index(thread, msg->msu_id);
     if (idx < 0) {
@@ -177,7 +191,7 @@ static int worker_mod_msu_route(struct worker_thread *thread, struct ctrl_msu_ro
     }
 }
 
-
+/** Checks whether the size of the message is equal to the size of the target struct */
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->data_size != sizeof(target)) { \
         log_warn("Message data size does not match size" \
@@ -185,6 +199,7 @@ static int worker_mod_msu_route(struct worker_thread *thread, struct ctrl_msu_ro
         break; \
     }
 
+/** Processes a message which has been sent to the worker thread  */
 static int process_worker_thread_msg(struct worker_thread *thread, struct thread_msg *msg) {
     int rtn = -1;
     switch (msg->type) {
@@ -229,13 +244,18 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
     return rtn;
 }
 
+/** Default amount of time to wait before sem_trywait should return */
 #define DEFAULT_WAIT_TIMEOUT_S 1
 
+/** Returns the difference in time in seconds, t2 - t1 */
 static double timediff_s(struct timespec *t1, struct timespec *t2) {
     return (double)(t2->tv_sec - t1->tv_sec) + (double)(t2->tv_nsec - t1->tv_nsec) * 1e-9;
 }
+
+/** Static structure for holding current time, so it can be returned from ::next_timeout */
 static struct timespec cur_time;
 
+/** Returns the next time at which the worker thread should exit its semaphore wait*/
 static struct timespec *next_timeout(struct worker_thread *thread) {
     if (thread->timeouts == NULL) {
         return NULL;
@@ -301,7 +321,7 @@ int enqueue_worker_timeout(struct worker_thread *thread, struct timespec *interv
     return 0;
 }
 
-
+/** The main worker thread loop. Checks for exit signal, processes messages */
 static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread) {
     log_info("Starting worker thread loop %d (%s)",
              thread->id, thread->mode == PINNED_THREAD ? "pinned" : "unpinned");

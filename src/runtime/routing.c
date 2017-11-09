@@ -1,3 +1,9 @@
+/**
+ * @file routing.c
+ *
+ * Functions for routing MSU messages between MSUs
+ */
+
 #include "dfg.h"
 #include "routing.h"
 #include "logging.h"
@@ -247,12 +253,7 @@ static struct routing_table *get_routing_table(int route_id) {
     return all_routes[route_id];
 }
 
-/**
- * Initializes a new route with the given route_id and type_id.
- * @param route_id The ID to assign to the new route
- * @param type_id The Type ID to assign to the new route
- * @return 0 on success, -1 on error
- */
+
 int init_route(int route_id, int type_id) {
     if (route_id > MAX_ROUTE_ID) {
         log_error("Cannot initialize route with ID > %d", MAX_ROUTE_ID);
@@ -276,14 +277,6 @@ int init_route(int route_id, int type_id) {
 // TODO: Redefine, move  MAX_MSU_Q_SIZE!!
 #define MAX_MSU_Q_SIZE INT_MAX
 
-/**
- * Gets the local endpoint from a route with the shortest queue length.
- * Ignores enpoints on remote runtimes.
- * @param table The route to search for the shortest queue length
- * @param key Used as a tiebreaker in the case of multiple MSUs with same queue length
- * @param endpoint Points to appropriate endpoint on success
- * @return 0 on success, -1 on error
- */
 int get_shortest_queue_endpoint(struct routing_table *table,
                                 uint32_t key, struct msu_endpoint *endpoint) {
     read_lock(table);
@@ -317,13 +310,6 @@ int get_shortest_queue_endpoint(struct routing_table *table,
     return 0;
 }
 
-/**
- * Gets endpoint witih given index in route set
- * @param table the route to get the endpoint from
- * @param index Index of the endpoint to retrieve
- * @param endpoint Points to appropriate endpoint on success
- * @return 0 on success, -1 on error
- */
 int get_endpoint_by_index(struct routing_table *table, int index, 
                           struct msu_endpoint *endpoint) {
     int rtn = -1;
@@ -336,13 +322,6 @@ int get_endpoint_by_index(struct routing_table *table, int index,
     return rtn;
 }
 
-/**
- * Gets endpoint with the given MSU ID in the provided route
- * @param table Route to get the endpoint from
- * @param msu_id MSU ID to search for in the route set
- * @param endpoint Points to appropriate endpoint on success
- * @return 0 on success, -1 on error
- */
 int get_endpoint_by_id(struct routing_table *table, int msu_id, 
                        struct msu_endpoint *endpoint) {
     int rtn = -1;
@@ -384,13 +363,6 @@ int get_n_endpoints(struct routing_table *table) {
     return n_endpoints;
 }
 
-/**
- * Gets the endpoint associated with the given key in the provided route
- * @param route Route to search for key
- * @param key The key with which to search the route set
- * @pararm endpoint Points to the appropraite endpoint on success
- * @return 0 on success, -1 on error
- */
 int get_route_endpoint(struct routing_table *table, uint32_t key, struct msu_endpoint *endpoint) {
     read_lock(table);
     int index = find_value_index(table, key);
@@ -405,13 +377,6 @@ int get_route_endpoint(struct routing_table *table, uint32_t key, struct msu_end
     return 0;
 }
 
-/**
- * Gets the route from the provided array of routes which has the correct type ID
- * @param routes Pointer to array of routes to search
- * @param n_routes Number of routes in route array
- * @param type_id Type ID to search for
- * @return pointer to the routing table  with correct type ID on success, else NULL
- */
 struct routing_table *get_type_from_route_set(struct route_set *set, int type_id) {
     for (int i=0; i<set->n_routes; i++) {
         if (set->routes[i]->type_id == type_id) {
@@ -422,13 +387,6 @@ struct routing_table *get_type_from_route_set(struct route_set *set, int type_id
     return NULL;
 }
 
-/**
- * Adds an endpoint to the route with the given ID
- * @param route_id ID of the route to which the endpoint is added
- * @param endpoint the endpoint to be added
- * @param key Key to associate with endpoint
- * @return 0 on success, -1 on error
- */
 int add_route_endpoint(int route_id, struct msu_endpoint endpoint, uint32_t key) {
     log(LOG_ROUTING_CHANGES, "Adding endpoint %d to route %d", endpoint.id, route_id);
     struct routing_table *table = get_routing_table(route_id);
@@ -439,12 +397,6 @@ int add_route_endpoint(int route_id, struct msu_endpoint endpoint, uint32_t key)
     return add_routing_table_entry(table, &endpoint, key);
 }
 
-/**
- * Removes destination from route with given ID
- * @param route_id ID of the route from which the endpoint is removed
- * @param msu_id ID of the msu to remove
- * @return 0 on success, -1 on error
- */
 int remove_route_endpoint(int route_id, int msu_id) {
     struct routing_table *table = get_routing_table(route_id);
     if (table == NULL) {
@@ -460,13 +412,6 @@ int remove_route_endpoint(int route_id, int msu_id) {
     return 0;
 }
 
-/**
- * Modifies key associated with MSU in route
- * @param route_id The ID of the route to modify
- * @param msu_id ID of MSU to modify
- * @param new_key New key to associate with MSU in route
- * @return 0 on success, -1 on error
- */
 int modify_route_endpoint(int route_id, int msu_id, uint32_t new_key) {
     struct routing_table *table = get_routing_table(route_id);
     if (table == NULL) {
@@ -483,12 +428,6 @@ int modify_route_endpoint(int route_id, int msu_id, uint32_t new_key) {
     return 0;
 }
 
-/**
- * Adds a route to a set of routes
- * @param route_set Set to add the route to
- * @param route_id ID of the route to add
- * @return 0 on success, -1 on error
- */
 int add_route_to_set(struct route_set *set, int route_id) {
     struct routing_table *table = get_routing_table(route_id);
     if (table == NULL) {
@@ -504,13 +443,6 @@ int add_route_to_set(struct route_set *set, int route_id) {
     set->n_routes++;
     return 0;
 }
-
-/**
- * Removes a route from a set of routes
- * @param route_set Set to remove the route from
- * @param route_id ID of the route to remove
- * @returns 0 on success, -1 on error
- */
 int rm_route_from_set(struct route_set *set, int route_id) {
     int i;
     for (i=0; i<set->n_routes; i++) {

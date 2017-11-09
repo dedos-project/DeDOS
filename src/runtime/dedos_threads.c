@@ -1,5 +1,5 @@
 /**
- * @file dedos_threads.h
+ * @file dedos_threads.c
  *
  * Control spawned threads with message queue within DeDOS
  */

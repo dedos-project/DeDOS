@@ -1,7 +1,7 @@
 /**
  * @file dfg_instantiation.c
  *
- * Instantiation of a dfg on a runtime 
+ * Instantiation of a dfg on a runtime
  */
 #include "logging.h"
 #include "local_msu.h"

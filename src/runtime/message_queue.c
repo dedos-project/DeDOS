@@ -1,10 +1,18 @@
+/**
+ * @file message_queue.c
+ *
+ * Structures and functions for enqueueing and dequeuing general-purpose
+ * messages from a queue
+ */
 #include "message_queue.h"
 #include "logging.h"
 
 #include <time.h>
 
+/** Interval 0 seconds from now */
+static struct timespec zero = {};
+
 int enqueue_msg(struct msg_queue *q, struct dedos_msg *msg) {
-    struct timespec zero = {};
     return schedule_msg(q, msg, &zero);
 }
 
@@ -52,6 +60,7 @@ int schedule_msg(struct msg_queue *q, struct dedos_msg *msg, struct timespec *in
     return 0;
 }
 
+/** Returns the difference in time in seconds, t2 - t1 */
 static double timediff_s(struct timespec *t1, struct timespec *t2) {
     return (double)(t2->tv_sec - t1->tv_sec) + (double)(t2->tv_nsec - t1->tv_nsec) * 1e-9;
 }

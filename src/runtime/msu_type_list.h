@@ -1,6 +1,8 @@
 /**
  * @file msu_type_list.h
- * Defines the list of MSUs that can be instantiated on a runtime
+ * Defines the list of MSUs that can be instantiated on a runtime.
+ *
+ * Ifdef guards allow you to optionally compile different groups of MSUS.
  */
 
 #ifndef MSU_TYPE_LIST_H_

@@ -1,5 +1,5 @@
 /**
- * @file dfg_instantiation.c
+ * @file dfg_instantiation.h
  *
  * Instantiation of a dfg on a runtime
  */

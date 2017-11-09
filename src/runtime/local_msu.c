@@ -97,11 +97,7 @@ static int add_to_local_registry(struct local_msu *msu) {
     return rtn;
 }
 
-/**
- * Gets the local MSU with the given ID, or NULL if N/A 
- * @param id ID of the MSU to retrieve
- * @return local msu instance, or NULL on error
- */
+
 struct local_msu *get_local_msu(unsigned int id) {
     if (id >= MAX_MSU_ID) {
         log_error("MSU id %u too high!", id);
@@ -159,14 +155,6 @@ static void unregister_msu_stats(int msu_id) {
     }
 }
 
-/**
- * Allocates and creates a new MSU of the specified type and ID on the given thread
- * @param id ID of the MSU to be created
- * @param type MSU type of the MSU to be created
- * @param thread The thread on which this MSU is to be created
- * @param data Any initial data that is passed to the MSU's specific init function
- * @return The created local MSU, or NULL on error
- */
 struct local_msu *init_msu(unsigned int id,
                            struct msu_type *type,
                            struct worker_thread *thread,
@@ -218,11 +206,6 @@ struct local_msu *init_msu(unsigned int id,
     return msu;
 }
 
-/**
- * Destroys an MSU only if it has no registered states
- * @param msu MSU to destroy
- * @return 0 on success, 1 if MSU had states
- */
 int try_destroy_msu(struct local_msu *msu) {
     if (msu_num_states(msu) > 0) {
         return 1;
@@ -231,10 +214,6 @@ int try_destroy_msu(struct local_msu *msu) {
     return 0;
 }
 
-/**
- * Calls type-specific destroy function and frees associated memory
- * @param msu Msu to destroy
- */
 void destroy_msu(struct local_msu *msu) {
     int id = msu->id;
     char *type = msu->type->name;
@@ -269,11 +248,6 @@ static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
     return 0;
 }
 
-/**
- * Dequeus a message from a local MSU and calls its receive function
- * @param msu MSU to dequeue the message from
- * @return 0 on success, -1 on error, 1 if no message existed to be dequeued
- */
 int msu_dequeue(struct local_msu *msu) {
     struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
     if (msg) {

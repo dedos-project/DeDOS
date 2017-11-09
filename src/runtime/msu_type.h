@@ -22,9 +22,6 @@ struct msu_type{
     /** Name for the msu type */
     char *name;
 
-    /* removed: int layer? */
-    /* removed: unsigned int proto_number*/
-
     /** Numerical identifier for the MSU. */
     unsigned int id;
 
@@ -93,10 +90,20 @@ struct msu_type{
     void *(*deserialize)(struct local_msu *self, size_t input_size, void *input, size_t *out_size);
 };
 
-/** Initializes an MSU type, optionally calling init function */
+/**
+ * Initializes the MSU type with the given ID,
+ * calling the custom constructor if appropriate.
+ * This function is meant to be called on each MSU type that
+ * is defined in the DFG used to initialize the runtime.
+ * @return 0 on success, -1 on error
+ */
 int init_msu_type_id(unsigned int type_id);
 
-/** Gets the MSU type with the provided ID */
+/**
+ * Gets the MSU type with the provided ID
+ * @param id The type ID of the MSU type to retrieve
+ * @return The MSU Type with the given ID, NULL in N/A
+ */
 struct msu_type *get_msu_type(int id);
 
 #endif // MSS_TYPE_H
