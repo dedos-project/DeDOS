@@ -1,3 +1,9 @@
+/**
+ * @file rt_stats.c
+ *
+ * Collecting statistics within the runtime
+ */
+
 #include "rt_stats.h"
 #include "stats.h"
 #include "logging.h"
@@ -8,9 +14,12 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+/** The clock used to mark the time at which events take place */
 #define CLOCK_ID CLOCK_MONOTONIC
 
+/** The time at which the runtime started */
 static struct timespec stats_start_time;
+/** Whether ::init_statistics has been called */
 static bool stats_initialized = false;
 
 
@@ -27,6 +36,9 @@ struct stat_item
     pthread_mutex_t mutex;    /**< Lock for changing stat item */
 };
 
+/**
+ * The structure holding all items of a type of stats
+ */
 struct stat_type {
     enum stat_id id;          /**< Stat ID as defined in stats.h */
     bool enabled;             /**< If true, logging for this item is enabled */
@@ -43,12 +55,11 @@ struct stat_type {
 #if DUMP_STATS
 #define MAX_STATS 262144
 #else
+/** The maximum number of statistics that can be held in the rrdb */
 #define MAX_STATS 8192
 #endif
 
-#define MAX_MSU 32
-#define MAX_THREADS 12
-
+/** If set to 0, will disable all gathering of statistics */
 #define GATHER_STATS 1
 
 #define GATHER_CTX_SWITCHES 1 & GATHER_STATS
@@ -66,6 +77,7 @@ struct stat_type {
 #define GATHER_PROFILING 0
 #endif
 
+/** The list of all statistics that can be gathered in the system */
 struct stat_type stat_types[] = {
     {MSU_QUEUE_LEN,       GATHER_MSU_QUEUE_LEN,   MAX_STATS, "%02.0f", "MSU_Q_LEN"},
     {MSU_ITEMS_PROCESSED, GATHER_MSU_ITEMS_PROC,  MAX_STATS, "%03.0f", "ITEMS_PROCESSED"},
@@ -85,6 +97,7 @@ struct stat_type stat_types[] = {
     {PROF_DEDOS_EXIT,     GATHER_PROFILING,       MAX_STATS, "%0.0f", "EXIT"},
 };
 
+/** The number of types of statistics */
 #define N_STAT_TYPES (sizeof(stat_types) / sizeof(*stat_types))
 
 #define CHECK_INITIALIZATION \
@@ -141,6 +154,8 @@ static int convert_raw_item_from_log(FILE *in_file, FILE *out_file) {
     return write_item_to_log(out_file, &type, &item);
 }
 */
+
+/** Writes a single stat item to the log file */
 static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat_item *item) {
 
     char label[64];
@@ -175,7 +190,7 @@ static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat
  * Gets the amount of time that has elapsed since logging started.
  * @param *t the elapsed time is output into this variable
 */
-void get_elapsed_time(struct timespec *t) {
+static void get_elapsed_time(struct timespec *t) {
    clock_gettime(CLOCK_ID, t);
    t->tv_sec -= stats_start_time.tv_sec;
 }
@@ -231,7 +246,8 @@ static inline int unlock_item(struct stat_item *item) {
     return 0;
 }
 
-void flush_all_stats_to_log(FILE *file) {
+/** Writes all statistics to the provided log file */
+static void flush_all_stats_to_log(FILE *file) {
     for (int i=0; i<N_STAT_TYPES; i++) {
         if (!stat_types[i].enabled) {
             continue;
@@ -245,12 +261,14 @@ void flush_all_stats_to_log(FILE *file) {
         unlock_type(&stat_types[i]);
     }
 }
+
 /** Frees the memory associated with an individual stat item */
 static void destroy_stat_item(struct stat_item *item) {
     free(item->stats);
     pthread_mutex_destroy(&item->mutex);
 }
 
+/** Gets the stat item associated with the given item_id in the given type */
 static struct stat_item *get_item_stat(struct stat_type *type, unsigned int item_id) {
     if (item_id > MAX_STAT_ITEM_ID) {
         log_error("Item ID %u too high. Max: %d", item_id, MAX_STAT_ITEM_ID);
@@ -265,13 +283,7 @@ static struct stat_item *get_item_stat(struct stat_type *type, unsigned int item
     return &type->items[id_index];
 }
 
-/**
- * Starts a measurement of elapsed time.
- * Not added to the log until a call to record_end_time
- * @param stat_id ID for stat type being logged
- * @param item_id ID for the item to which the stat refers
- * @return 0 on success, -1 on error
- */
+
 int record_start_time(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INITIALIZATION;
 
@@ -306,11 +318,6 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
 #endif
 
 
-/**
- * Records the elapsed time since the previous call to record_start_time
- * @param stat_id ID for stat being logged
- * @param item_id ID for item within the statistic
- */
 int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INITIALIZATION;
 
@@ -348,14 +355,6 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     unlock_item(item);
     return 0;
 }
-
-/**
- * Increments the given statistic by the provided value
- * @param stat_id ID for the stat being logged
- * @param item_id ID for the item to which the stat refers (must be registered!)
- * @param value The amount to add to the given stat
- * @return 0 on success, -1 on error
- */
 int increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
     CHECK_INITIALIZATION;
 
@@ -393,14 +392,6 @@ int increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
     return 0;
 }
 
-/**
- * Records a statistic in the statlog
- * @param stat_id ID for stat being logged
- * @param item_id ID for item to which stat refers (must be registered!)
- * @param stat Statistic to record
- * @param relog Whether to log statistic if it matches the previously logged stat
- * @return 0 on success, -1 on error
- */
 int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool relog) {
     CHECK_INITIALIZATION;
 
@@ -471,7 +462,7 @@ double get_last_stat(enum stat_id stat_id, unsigned int item_id) {
     return last_stat;
 }
 
-
+/** Returns 1 if t1 > t2, -1 if t2 > t1, 0 otherwise */
 static inline int time_cmp(struct timespec *t1, struct timespec *t2) {
     return t1->tv_sec > t2->tv_sec ? 1 :
             ( t1->tv_sec < t2->tv_sec ? -1 :
@@ -479,6 +470,7 @@ static inline int time_cmp(struct timespec *t1, struct timespec *t2) {
                ( t1->tv_nsec < t2->tv_nsec ? -1 : 0 ) ) );
 }
 
+/** Finds the index at which the given time occurred in the stats */
 static int find_time_index(struct timed_stat *stats, struct timespec *time,
                     int start_index, int stat_size) {
     if (start_index < 0) {
@@ -500,6 +492,7 @@ static int find_time_index(struct timed_stat *stats, struct timespec *time,
     return -1;
 }
 
+/** Takes a sample of the provided stat item and stores it in `sample` */
 static int sample_stat_item(struct stat_item *item, int stat_size,
                      struct timespec *sample_end, struct timespec *interval, int sample_size,
                      struct timed_stat *sample) {
@@ -537,6 +530,7 @@ static int sample_stat_item(struct stat_item *item, int stat_size,
     return i;
 }
 
+/** Takes a sample of the provided stat type (stat_id) and places it in `sample` */
 static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timespec *interval,
                 int sample_size, struct stat_sample *sample, int n_samples) {
     CHECK_INITIALIZATION;
@@ -581,12 +575,7 @@ static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timesp
     return type->num_items;
 }
 
-int n_stat_items(enum stat_id stat_id) {
-    CHECK_INITIALIZATION;
-    return stat_types[stat_id].num_items;
-}
-
-
+/** Samples `sample_size` most recent stats in `interval` intervals */
 static int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
                                int sample_size, struct stat_sample *sample, int n_samples) {
     CHECK_INITIALIZATION;
@@ -599,8 +588,11 @@ static int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
     return sample_stat(stat_id, &now, interval, sample_size, sample, n_samples);
 }
 
+/** A statically allocated stat_sample structure which is pre-allocated to store samples
+ * from each stat type */
 static struct stat_sample *stat_samples[N_REPORTED_STAT_TYPES];
 
+/** The interval at which stats should be sampled */
 static struct timespec stat_sample_interval = {
     .tv_sec = (STAT_SAMPLE_PERIOD_MS / 1000) / STAT_SAMPLE_SIZE,
     .tv_nsec = (int)(STAT_SAMPLE_PERIOD_MS * 1e6 / STAT_SAMPLE_SIZE) % (int)1e9
@@ -642,6 +634,7 @@ struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
     return stat_samples[i];
 }
 
+/** Reallocates the existing stats structure to store the provided number of samples */
 static void realloc_stat_samples(enum stat_id stat_id, int n_samples) {
     for (int i=0; i < N_REPORTED_STAT_TYPES; i++) {
         if (reported_stat_types[i].id == stat_id) {
@@ -753,9 +746,6 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
     return 0;
 }
 
-/**
- * Initializes the statistics data structures
- */
 int init_statistics() {
     if ( stats_initialized ) {
         log_error("Statistics have already been initialized");
@@ -795,10 +785,6 @@ int init_statistics() {
     return 0;
 }
 
-/**
- * Destroys the statistics structure and dumps the statistics to disk if applicable
- * @param statlog Log file to dump statistics to or NULL if N/A
- */
 void finalize_statistics(char *statlog) {
     if (statlog != NULL) {
 #if DUMP_STATS

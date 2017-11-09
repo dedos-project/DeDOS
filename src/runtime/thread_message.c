@@ -1,3 +1,9 @@
+/**
+ * @file thread_message.c
+ *
+ * Messages to be delivered to dedos_threads
+ */
+
 #include "thread_message.h"
 #include "logging.h"
 

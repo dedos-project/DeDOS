@@ -1,10 +1,17 @@
+/**
+ * @file profiler.c
+ *
+ * For profiling the path of MSU messages through DeDOS
+ */
 #include "profiler.h"
 #include "stats.h"
 #include "logging.h"
 #include "rt_stats.h"
 
+/** The probability that an MSU message will get marked for profiling */
 static float tag_probability = -1;
 
+/** The stat IDs relevant to profiling */
 enum stat_id profiler_stat_ids[] = {
     PROF_ENQUEUE,
     PROF_DEQUEUE,
@@ -15,6 +22,7 @@ enum stat_id profiler_stat_ids[] = {
 };
 #define N_PROF_STAT_IDS sizeof(profiler_stat_ids) / sizeof(*profiler_stat_ids)
 
+/** Sets the profiling flag on the header based on the ::tag_probability */
 void set_profiling(struct msu_msg_hdr *hdr) {
 #ifdef DEDOS_PROFILER
     float r = (float)rand() / (float)RAND_MAX;
@@ -27,7 +35,7 @@ void set_profiling(struct msu_msg_hdr *hdr) {
     return;
 }
 
-
+/** Initializes the profiler to tag headers with tag_prob probability. */
 void init_profiler(float tag_prob) {
     if (tag_probability != -1) {
         log_warn("Profiler initialized twice!");

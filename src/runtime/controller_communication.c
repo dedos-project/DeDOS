@@ -1,6 +1,6 @@
 /**
- * @file: controller_communications.c
- * All communiction with the global controller
+ * @file: controller_communication.c
+ * Communication with global controller from runtime
  */
 #include "controller_communication.h"
 #include "communication.h"
@@ -23,11 +23,7 @@
  */
 static int controller_sock = -1;
 
-/**
- * Sends a message to the global controller
- * @param msg Message to send. Must define payload_len.
- * @return -1 on error, 0 on success
- */
+
 int send_to_controller(struct rt_controller_msg_hdr *hdr, void *payload) {
 
     if (controller_sock < 0) {
@@ -55,6 +51,10 @@ int send_to_controller(struct rt_controller_msg_hdr *hdr, void *payload) {
     return 0;
 }
 
+/**
+ * Sends the initilization message containing runtime ID, ip and port to
+ * global controller
+ */
 static int send_ctl_init_msg() {
     int local_id = local_runtime_id();
     if (local_id < 0) {
@@ -110,7 +110,10 @@ static int connect_to_controller(struct sockaddr_in *addr) {
     return controller_sock;
 }
 
-
+/**
+ * Macro to check whether the size of a message matches the size
+ * of the struct it's supposed to be
+ */
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->payload_size != sizeof(target)) { \
         log_warn("Message data size (%d) does not match size" \
@@ -120,6 +123,9 @@ static int connect_to_controller(struct sockaddr_in *addr) {
     } \
     return 0;
 
+/**
+ * Checks whether the size of a message matches the size of its target struct
+ */
 static int verify_msg_size(struct ctrl_runtime_msg_hdr *msg) {
     switch (msg->type) {
         case CTRL_CONNECT_TO_RUNTIME:
@@ -142,6 +148,9 @@ static int verify_msg_size(struct ctrl_runtime_msg_hdr *msg) {
     }
 }
 
+/**
+ * Processes a received ctrl_add_runtime_msg
+ */
 static int process_connect_to_runtime(struct ctrl_add_runtime_msg *msg) {
     struct sockaddr_in addr = {};
     addr.sin_family = AF_INET;
@@ -156,6 +165,9 @@ static int process_connect_to_runtime(struct ctrl_add_runtime_msg *msg) {
     return 0;
 }
 
+/**
+ * Processes a received ctrl_create_thread_msg
+ */
 static int process_create_thread_msg(struct ctrl_create_thread_msg *msg) {
     int id = msg->thread_id;
     int rtn = create_worker_thread(id, msg->mode);
@@ -167,6 +179,9 @@ static int process_create_thread_msg(struct ctrl_create_thread_msg *msg) {
     return 0;
 }
 
+/**
+ * Processes a received ctrl_route_msg
+ */
 static int process_ctrl_route_msg(struct ctrl_route_msg *msg) {
     int rtn;
     log(LOG_CONTROLLER_COMMUNICATION, "Got control route message of type %d", msg->type);
@@ -216,7 +231,9 @@ static int process_ctrl_route_msg(struct ctrl_route_msg *msg) {
     }
 }
 
-
+/**
+ * Gets the corresponding thread_msg_type for a ctrl_runtime_msg_type
+ */
 static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type) {
     switch (type) {
         case CTRL_CREATE_MSU:
@@ -231,6 +248,13 @@ static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type)
     }
 }
 
+/**
+ * Constructs a thread message from a ctrl_runtime_msg_hdr, reading any additional
+ * information it needs off of the associated socket
+ * @param hdr Header describing the information available to read
+ * @param fd The file descriptor off of which to read the remainder of the control message
+ * @return Created thread_msg on success, NULL on error
+ */
 static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     if (verify_msg_size(hdr) != 0) {
         log_warn("May not process message. Incorrect payload size for type.");
@@ -251,6 +275,12 @@ static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *
     return thread_msg;
 }
 
+/**
+ * Constructs a thread_msg from a control-runtime message and passes it to the relevant thread.
+ * @param hdr Header describing info available to read
+ * @param fd File descriptor to read message from
+ * @return 0 on success, -1 on error
+ */
 static int pass_ctrl_msg_to_thread(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     struct thread_msg *thread_msg = thread_msg_from_ctrl_hdr(hdr, fd);
     if (thread_msg == NULL) {
@@ -273,6 +303,12 @@ static int pass_ctrl_msg_to_thread(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     return 0;
 }
 
+/**
+ * Processes a received control message that is due for delivery to this thread.
+ * @param hdr The header for the control message
+ * @param fd File descriptor off of which to read the control message
+ * @return 0 on success, -1 on error
+ */
 static int process_ctrl_message(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     if (verify_msg_size(hdr) != 0) {
         log_warn("May not process message. Incorrect payload size for type");
@@ -320,11 +356,13 @@ static int process_ctrl_message(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     return 0;
 }
 
+//TODO: send_ack_message()
 int send_ack_message(int id, bool success) {
     // Not implemented yet
     return 0;
 }
 
+/** Processes any received control message. */
 static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {
 
     int rtn;

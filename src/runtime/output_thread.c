@@ -1,3 +1,9 @@
+/**
+ * @file output_thread.c
+ *
+ * A dedos_thread which monitors a queue for output to be sent to
+ * other runtimes or the global controller
+ */
 #include "logging.h"
 #include "worker_thread.h"
 #include "dedos_threads.h"
@@ -11,32 +17,38 @@
 #include <stdlib.h>
 #include <netinet/ip.h>
 
+/** A static copy of the output thread, so others can enqueue messages */
 static struct dedos_thread *static_output_thread;
 
+/** Initializes the static copy of the output thread */
 static void *init_output_thread(struct dedos_thread *output_thread) {
     static_output_thread = output_thread;
     return NULL;
 }
 
+/** Process a ::SEND_TO_CTRL message */
 static int output_thread_send_to_ctrl(struct send_to_ctrl_msg *msg) {
     int rtn = send_to_controller(&msg->hdr, msg->data);
     if (rtn < 0) {
         log_error("Error sending message to controller");
         return -1;
     }
-    // TODO: Free msg? data?
+    free(msg->data);
     return 0;
 }
 
+/** Process a ::SEND_TO_PEER message */
 static int output_thread_send_to_peer(struct send_to_peer_msg *msg) {
     int rtn = send_to_peer(msg->runtime_id, &msg->hdr, msg->data);
     if (rtn < 0) {
         log_error("Error sending message to runtime %d", msg->runtime_id);
         return -1;
     }
+    free(msg->data);
     return 0;
 }
 
+/** Process a ::CONNECT_TO_RUNTIME message */
 static int output_thread_connect_to_runtime(struct ctrl_add_runtime_msg *msg){
     struct sockaddr_in addr;
     bzero(&addr, sizeof(addr));
@@ -61,6 +73,7 @@ void join_output_thread() {
     free(static_output_thread);
 }
 
+/** Checks whether the size of the message matches the size of the target struct */
 #define CHECK_MSG_SIZE(msg, target) \
     if (msg->data_size != sizeof(target)) { \
         log_warn("Message data size (%d) does not match size" \
@@ -69,6 +82,7 @@ void join_output_thread() {
         return -1; \
     } \
 
+/** Processes a thread message that is  delivered to the output thread */
 static int process_output_thread_msg(struct thread_msg *msg) {
 
     log(LOG_MAIN_THREAD, "processing message %p with type id: %d",
@@ -114,6 +128,7 @@ static int process_output_thread_msg(struct thread_msg *msg) {
     return rtn;
 }
 
+/** Checks the queue of the output thread for messages and acts on them if present */
 static int check_output_thread_queue(struct dedos_thread *output_thread) {
 
     struct thread_msg *msg = dequeue_thread_msg(&output_thread->queue);
@@ -130,8 +145,13 @@ static int check_output_thread_queue(struct dedos_thread *output_thread) {
     return 0;
 }
 
+/** How often to report statistics */
 #define STAT_REPORTING_DURATION_MS STAT_SAMPLE_PERIOD_MS
 
+/** 
+ * The main thread loop for the output thread.
+ * Checks the queue for messages, sends them, sends stats messages
+ */
 static int output_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {
 
     struct timespec elapsed;

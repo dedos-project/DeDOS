@@ -47,11 +47,7 @@ static int register_msu_type(struct msu_type *type) {
     return 0;
 }
 
-/**
- * Gets the MSU type with the provided ID
- * @param id The type ID of the MSU type to retrieve
- * @return The MSU Type with the given ID, NULL in N/A
- */
+
 struct msu_type *get_msu_type(int id) {
     if (id > MAX_TYPE_ID) {
         log_error("MSU type %d cannot be found Type ID too high. Max: %d",
@@ -103,13 +99,7 @@ static int init_msu_type(struct msu_type *type) {
     return 0;
 }
 
-/**
- * Initializes the MSU type with the given ID,
- * calling the custom constructor if appropriate.
- * This function is meant to be called on each MSU type that
- * is defined in the DFG used to initialize the runtime.
- * @return 0 on success, -1 on error
- */
+
 int init_msu_type_id(unsigned int type_id) {
     log(TEST, "Number of MSU types: %d", (int)N_MSU_TYPES);
     for (int i=0; i<N_MSU_TYPES; i++) {

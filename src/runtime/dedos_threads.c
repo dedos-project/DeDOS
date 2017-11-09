@@ -1,4 +1,11 @@
-#define _GNU_SOURCE  // Needed for CPU_SET etc.
+/**
+ * @file dedos_threads.c
+ *
+ * Control spawned threads with message queue within DeDOS
+ */
+
+/** Needed for CPU_SET etc. */
+#define _GNU_SOURCE
 
 #include "dedos_threads.h"
 #include "thread_message.h"
@@ -10,12 +17,17 @@
 #include <stdlib.h>
 #include <sched.h>
 
-#define MAX_DEDOS_THREAD_ID 16
+/** The maximum identifier that can be used for a dedos_thread */
+#define MAX_DEDOS_THREAD_ID 32
+/** The maximum number of cores that can be present on a node */
 #define MAX_CORES 16
 
+/** The index at which to store the dedos_thread handling sending messages */
 #define OUTPUT_THREAD_INDEX MAX_DEDOS_THREAD_ID + 1
 
+/** Static structure to hold created dedos_thread's */
 static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID + 2];
+/** Keep track of which cores have been assigned to threads */
 static int pinned_cores[MAX_CORES];
 
 struct dedos_thread *get_dedos_thread(int id) {
@@ -35,8 +47,8 @@ struct dedos_thread *get_dedos_thread(int id) {
     return dedos_threads[id];
 }
 
-
-int init_thread_stat_items(int id) {
+/** Initilizes the stat items associated with a thread */
+static int init_thread_stat_items(int id) {
     int rtn = init_stat_item(THREAD_CTX_SWITCHES, (unsigned int)id);
     if (rtn < 0) {
         log_error("Error initializing CTX_SWITCHES");
@@ -46,7 +58,7 @@ int init_thread_stat_items(int id) {
 }
 
 /**
- * Initializes a dedos_thread structure.
+ * Initializes a dedos_thread structure to contain the appropriate fields
  */
 static int init_dedos_thread(struct dedos_thread *thread,
                       enum thread_mode mode,
@@ -75,6 +87,7 @@ static int init_dedos_thread(struct dedos_thread *thread,
     return 0;
 }
 
+/** Structure which holds the initialization info for a dedos_thread */
 struct thread_init {
     dedos_thread_fn thread_fn;
     dedos_thread_init_fn init_fn;
@@ -83,6 +96,7 @@ struct thread_init {
     sem_t sem;
 };
 
+/** Pins the thread with the pthread id `ptid` to the first unused core */
 static int pin_thread(pthread_t ptid) {
     int cpu_id;
     int num_cpu = sysconf(_SC_NPROCESSORS_ONLN);
@@ -103,21 +117,6 @@ static int pin_thread(pthread_t ptid) {
     pinned_cores[cpu_id] = 1;
     log(LOG_DEDOS_THREADS, "Successfully pinned pthread %d", (int)ptid);
     return 0;
-}
-
-static void get_thread_affinity(pthread_t pid) {
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    int rtn = pthread_getaffinity_np(pid, sizeof(cpuset), &cpuset);
-    if (rtn != 0) {
-        log_perror("pthread_getaffinity");
-    }
-    for (int i=0; i < CPU_SETSIZE; i++) {
-        if (CPU_ISSET(i, &cpuset)) {
-            log(LOG_THREAD_AFFINITY, "Thread %ld has affinity with core %d",
-                (long)pid, i);
-        }
-    }
 }
 
 void dedos_thread_stop(struct dedos_thread *thread) {
@@ -141,6 +140,12 @@ int dedos_thread_should_exit(struct dedos_thread *thread) {
     return exit_signal;
 }
 
+/**
+ * The actual function passed to pthread_create() that starts a new thread.
+ * Initilizes the appropriate structures, posts to the start semaphore,
+ * then calls the appropriate function.
+ * @param thread_init_v Pointer to the thread_init structure
+ */
 static void *dedos_thread_starter(void *thread_init_v) {
     struct thread_init *init = thread_init_v;
 
@@ -164,7 +169,6 @@ static void *dedos_thread_starter(void *thread_init_v) {
     sem_post(&init->sem);
     log(LOG_DEDOS_THREADS, "Started thread %d (mode: %s, addr: %p)",
                thread->id, thread-> mode == PINNED_THREAD ? "pinned" : "unpinned", thread);
-    get_thread_affinity(thread->pthread);
 
     int rtn = thread_fn(thread, init_rtn);
     log(LOG_DEDOS_THREADS, "Thread %d ended.", thread->id);
@@ -176,6 +180,7 @@ static void *dedos_thread_starter(void *thread_init_v) {
     return (void*)(intptr_t)rtn;
 }
 
+/** The amount of time that ::thread_wait should wait for if no timeout is provided */
 #define DEFAULT_WAIT_TIMEOUT_S 1
 
 int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout) {
@@ -231,6 +236,3 @@ int start_dedos_thread(dedos_thread_fn thread_fn,
     sem_destroy(&init.sem);
     return 0;
 }
-
-
-

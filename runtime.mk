@@ -38,6 +38,7 @@ MSU_DIR = $(SRC_DIR)msus/
 COM_DIR = $(SRC_DIR)common/
 LEG_DIR = $(SRC_DIR)legacy/
 TST_DIR = test/
+ITST_DIR = $(TST_DIR)/integration_tests
 
 MSU_DIRS = $(MSU_DIR) $(foreach APP, $(MSU_APPLICATIONS), $(MSU_DIR)$(APP)/)
 
@@ -127,8 +128,10 @@ LEG_OBJ=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_BLD_DIR)$(LEG_LIB).o)
 
 RESOURCE_EXTS=.txt .json
 
-TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS)) $(TST_DIR)integration_tests/
+UTST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS))
+TST_DIRS = $(UTST_DIRS) $(TST_DIR)integration_tests/
 
+UTSTS = $(foreach TST_D, $(UTST_DIRS), $(wildcard $(TST_D)*.c))
 TSTS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.c))
 TST_MKS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.mk))
 TST_RSCS = $(foreach TST_D, $(TST_DIRS), $(foreach EXT, $(RESOURCE_EXTS), $(wildcard $(TST_D)*$(EXT))))
@@ -148,6 +151,7 @@ COV_INIT_INFOS = $(patsubst $(TST_DIR)%/, $(COV_DIR)%.init_info, $(TST_DIRS))
 COV_INDEX = $(COV_DIR)index.html
 
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
+UNIT_RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(UTSTS))
 MEM_RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%_memcheck.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
@@ -229,6 +233,8 @@ $(LEG_OBJ): $(LEG_BLD_DIR)
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
+unit: all ${INIT_COV} test-blds utest-results
+
 test: all ${INIT_COV} test-blds test-results
 
 memcheck: test $(MEM_RESULTS)
@@ -246,9 +252,9 @@ memcheck: test $(MEM_RESULTS)
 
 test-blds: $(TST_OBJS) $(TST_BLDS) $(TST_BLD_RSCS)
 
-test-results: all test-blds $(RESULTS)
+define show_results
 	@echo "-----------------------\nTEST OUTPUT:\n-----------------------"
-	@for FILE in $(filter-out all test-blds, $^); do \
+	@for FILE in $1; do \
 		if grep -q ":[FES]:" "$$FILE"; then \
 			echo ___ $$FILE ___ ; \
 			cat $$FILE; \
@@ -265,9 +271,16 @@ test-results: all test-blds $(RESULTS)
 	@echo "-----------------------\nERRORS:\n-----------------------"
 	@-grep -s ":E:" $^; echo "";
 	@echo "\nDONE"
-	@if grep -q ":[FE]:" $(filter-out all test-blds, $^); then \
+	@if grep -q ":[FE]:" $1; then \
 		false;\
 	fi
+endef
+
+utest-results: all test-blds $(UNIT_RESULTS)
+	$(call show_results, $(filter-out all test-blds, $^))
+
+test-results: all test-blds $(RESULTS)
+	$(call show_results, $(filter-out all test-blds, $^))
 
 $(RES_DIR)%_memcheck.txt: $(TST_BLD_DIR)%.out
 	-valgrind  --track-origins=yes --leak-check=full $< > $@ 2>&1

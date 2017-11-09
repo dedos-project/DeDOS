@@ -1,5 +1,5 @@
 /**
- * @file: runtime_communcication.c
+ * @file: runtime/runtime_communication.c
  * All communication to and from other runtimes
  */
 #include "runtime_communication.h"
@@ -26,14 +26,16 @@
  */
 static int runtime_sock = -1;
 
+/** Holds the file descriptor for a single runtime peer */
 struct runtime_peer {
     int fd;
-    //shouldI: struct dfg_runtime rt
-    //shouldI: uint32_t ip_address
+    // ???: struct dfg_runtime rt
+    // ???: uint32_t ip_address
 };
 
-/** Maximum number of other runtimes that can connect to this one*/
+/** Maximum number of other runtimes that can connect to this one */
 #define MAX_RUNTIME_ID 32
+
 /**
  * Other runtime peer sockets.
  * Structs will be initialized to 0 due to static initialization.
@@ -98,6 +100,9 @@ int add_runtime_peer(unsigned int runtime_id, int fd) {
     return 0;
 }
 
+/**
+ * Sends the inter_runtime_init message to the runtime with the given ID
+ */
 static int send_init_msg(int id) {
     int local_id = local_runtime_id();
     if (local_id < 0) {
@@ -122,7 +127,6 @@ static int send_init_msg(int id) {
     }
     return 0;
 }
-
 
 int connect_to_runtime_peer(unsigned int id, struct sockaddr_in *addr){
     if (runtime_peers[id].fd != 0) {
@@ -164,6 +168,9 @@ int init_runtime_socket(int listen_port) {
     return sock;
 }
 
+/**
+ * Reads a header from a peer runtime
+ */
 static int read_runtime_message_hdr(int fd, struct inter_runtime_msg_hdr *msg) {
     if (read_payload(fd, sizeof(*msg), msg) != 0) {
         log_error("Could not read runtime message header from socket %d", fd);
@@ -172,6 +179,9 @@ static int read_runtime_message_hdr(int fd, struct inter_runtime_msg_hdr *msg) {
     return 0;
 }
 
+/*
+ * Processes a fwd_to_msu message which has just been received from another runtime
+ */
 static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
 
     struct local_msu *msu = get_local_msu(msu_id);
@@ -202,6 +212,9 @@ static int process_fwd_to_msu_message(size_t payload_size, int msu_id, int fd) {
     return 0;
 }
 
+/**
+ * Processes an init message which has just been received from another runtime
+ */
 static int process_init_rt_message(size_t payload_size, int fd) {
 
     if (payload_size != sizeof(struct inter_runtime_init_msg)) {
@@ -224,7 +237,9 @@ static int process_init_rt_message(size_t payload_size, int fd) {
     return 0;
 }
 
-
+/**
+ * Processes the header which has been received on `fd`, and processes the header's payload
+ */
 static int process_runtime_message_hdr(struct inter_runtime_msg_hdr *hdr, int fd) {
     int rtn;
     switch (hdr->type) {

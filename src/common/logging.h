@@ -53,7 +53,8 @@
 #define log_debug(fmt, ...)\
     log_at_level("DEBUG", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
 #else
-#define log_debug(...) do {} while (0)
+/** Use of log_debug(fmt, ...) is not recommended. Use log(LVL, fmt, ...) below */
+#define log_debug(...)
 #endif
 #define debug(fmt, ...) log_debug(__VA_ARGS__)
 #endif
@@ -65,7 +66,7 @@
     log_at_level("INFO", ANSI_COLOR_GREEN, LOG_FD, fmt, ##__VA_ARGS__)
 #endif
 #else
-#define log_info(...) do {} while (0)
+#define log_info(fmt, ...)
 #endif
 #endif
 
@@ -78,8 +79,8 @@
 #define log_perror(fmt, ...)\
     log_at_level("ERROR", ANSI_COLOR_RED, LOG_FD, fmt ": %s", ##__VA_ARGS__, strerror(errno))
 #else
-#define log_error(...) do {} while (0)
-#define log_perror(...) do {} while (0)
+#define log_error(fmt, ...)
+#define log_perror(fmt, ...)
 #endif
 #endif
 
@@ -90,7 +91,7 @@
     log_at_level("WARN", ANSI_COLOR_YELLOW, LOG_FD, fmt, ##__VA_ARGS__)
 #endif
 #else
-#define log_warn(...) do {} while (0)
+#define log_warn(fmt, ...)
 #endif
 #endif
 
@@ -101,7 +102,7 @@
     log_at_level("CRITICAL", ANSI_COLOR_PURPLE, LOG_FD, fmt, ##__VA_ARGS__)
 #endif
 #else
-#define log_critical(...) do {} while (0)
+#define log_critical(fmt, ...)
 #endif
 #endif
 
@@ -121,7 +122,10 @@
         } \
     } while (0)
 #else
-#define log(...) do {} while (0)
+/** Log at a custom level. Compiled away if LOG_CUSTOM is not defined,
+ * and optimized out if the preprocessor macro `level` is not defined
+ * (and optimization level is sufficiently high) */
+#define log(level, fmt, ...)
 #endif
 #endif
 
@@ -130,7 +134,7 @@
 #define log_profile(fmt, ...) \
     log_at_level("DATA_PROFILE", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
 #else
-#define log_profile(...) do {} while (0)
+#define log_profile(...)
 #endif
 #endif
 
@@ -139,7 +143,7 @@
 #define tcp_dbg(fmt, ...) \
     log_at_level("TCP_DEBUG", ANSI_COLOR_RESET, LOG_FD, fmt, ##__VA_ARGS__)
 #else
-#define tcp_dbg(...) do {} while (0)
+#define tcp_dbg(...)
 #endif
 #endif
 

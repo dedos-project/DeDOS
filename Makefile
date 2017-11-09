@@ -4,6 +4,7 @@ COVERAGE=$(foreach TARG, $(TARGETS), $(TARG)-coverage)
 MEMCHECKS=$(foreach TARG, $(TARGETS), $(TARG)-memcheck)
 TESTS=$(foreach TARG, $(TARGETS), $(TARG)-test)
 CLEANS=$(foreach TARG, $(TARGETS), $(TARG)-clean)
+UNITS=$(foreach TARG, $(TARGETS), $(TARG)-unit)
 
 BLD_DIR = build/
 RES_DIR = $(BLD_DIR)reults/
@@ -20,6 +21,9 @@ test: $(TESTS)
 memcheck: $(MEMCHECKS)
 
 clean: $(CLEANS)
+
+# A version of make test which runs only unit tests, not integration tests
+unit: $(UNITS)
 
 coverage: $(COVERAGE)
 	genhtml --show-details --keep-descriptions -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)

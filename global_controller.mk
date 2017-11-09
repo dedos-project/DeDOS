@@ -161,7 +161,7 @@ $(COV_DIR)%.info: $(TST_BLD_DIR)%/ $(TST_BLDS)
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
-test: all $(TST_BLD_RSCS) test-results
+test unit: all $(TST_BLD_RSCS) test-results
 	echo $(TSTS)
 
 memcheck: test $(MEM_RESULTS) 

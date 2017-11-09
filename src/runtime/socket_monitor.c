@@ -1,3 +1,8 @@
+/**
+ * @file socket_monitor.c
+ *
+ * Monitors an incoming port for messages from runtime or controller
+ */
 #include "epollops.h"
 #include "communication.h"
 #include "logging.h"
@@ -6,19 +11,17 @@
 
 #include <sys/epoll.h>
 
-enum fd_handler {
-    NO_HANDLER,
-    RUNTIME_HANDLER,
-    CONTROLLER_HANDLER
-};
-
+/** The maximum file descriptor that can be associated with a runtime */
 #define MAX_RUNTIME_FD 1024
+/** Whether the file descriptor has been associated with a runtime */
 static bool runtime_fds[MAX_RUNTIME_FD];
 
+/** The socket on which incoming connections are monitored */
 int runtime_socket = -1;
+/** The epoll file descriptor monitoring sockets */
 int epoll_fd = -1;
 
-// TODO: Initialize epoll and runtime socket separately
+/** Initializes the socket monitor on the given port */
 static int init_socket_monitor(int port) {
     if (runtime_socket > 0) {
         log_error("Runtime socket already initialized to %d. Cannot reinitialize",
@@ -43,7 +46,7 @@ static int init_socket_monitor(int port) {
     return 0;
 }
 
-
+/** Checks if the file descriptor is a runtime or controller, and handles it appropraitely */
 static int handle_connection(int fd, void *data) {
     if (runtime_fds[fd]) {
         int rtn = handle_runtime_communication(fd);
@@ -63,6 +66,7 @@ static int handle_connection(int fd, void *data) {
     return 0;
 }
 
+/** Accepts a new connection. Assumes it is a runtime */
 static int accept_connection(int fd, void *data) {
     if (fd > MAX_RUNTIME_FD) {
         log_error("Cannot accept runtime connection on file descriptor greater than %d",
@@ -74,6 +78,7 @@ static int accept_connection(int fd, void *data) {
     return 0;
 }
 
+/** The main loop for the socket monitor. Simply calls epoll_loop */
 static int socket_monitor_epoll_loop() {
     if (runtime_socket == -1 || epoll_fd == -1) {
         log_error("Runtime socket or epoll not initialized. Cannot start monitor loop");

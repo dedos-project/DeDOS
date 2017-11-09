@@ -1,3 +1,8 @@
+/**
+ * @file msu_msssage.c
+ *
+ * Messages passed to an MSU
+ */
 #include "msu_message.h"
 #include "logging.h"
 #include "communication.h"
