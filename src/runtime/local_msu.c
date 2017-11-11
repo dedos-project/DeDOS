@@ -43,9 +43,20 @@ static struct local_msu *msu_alloc() {
 }
 
 /**
- * Frees the memory associated with an MSU structure
+ * Frees the memory associated with an MSU structure,
+ * including any routes, messages in its queue, or states
  */
 static void msu_free(struct local_msu *msu) {
+    struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
+    while (msg != NULL) {
+        if (msg->data_size > 0) {
+            free(msg->data);
+        }
+        free(msg);
+        msg = dequeue_msu_msg(&msu->queue);
+    }
+    msu_free_all_state(msu);
+    free(msu->routes.routes);
     free(msu);
 }
 

@@ -39,6 +39,7 @@ int regex_html(char *to_match, char *htmlDoc){
         sprintf(resp, "%s", "YES");
     }
     sprintf(htmlDoc, HTML, to_match, EVIL_REGEX, resp);
+    pcre_free(reCompiled);
     return 0;
 }
 

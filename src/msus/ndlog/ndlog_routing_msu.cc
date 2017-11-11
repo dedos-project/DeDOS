@@ -88,6 +88,7 @@ struct msu_type NDLOG_ROUTING_MSU_TYPE = {
     .name=(char*)"ndlog_routing_msu",
     .id=NDLOG_ROUTING_MSU_ID, // TODO: need to define it in runtime/src/include/dedos_msu_list.h
     .init_type=NULL,
+    .destroy_type=NULL,
     .init=ndlog_routing_msu_init,
     .destroy=NULL,
     .receive=ndlog_routing_msu_receive,

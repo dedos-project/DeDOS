@@ -11,6 +11,7 @@
 #include "output_thread.h"
 #include "socket_monitor.h"
 #include "profiler.h"
+#include "runtime_dfg.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -104,6 +105,7 @@ int main(int argc, char **argv) {
     join_output_thread();
 
     finalize_statistics(statlog);
+    free_runtime_dfg();
     log_info("Exiting runtime...");
     return 0;
 }

@@ -33,7 +33,9 @@ static int write_http_response(struct local_msu *self,
         free(resp_in);
         return -1;
     } else if (rtn & (WS_INCOMPLETE_READ | WS_INCOMPLETE_WRITE)) {
-        return msu_monitor_fd(resp->conn.fd, RTN_TO_EVT(rtn), self, &msg->hdr);
+        rtn = msu_monitor_fd(resp->conn.fd, RTN_TO_EVT(rtn), self, &msg->hdr);
+        free(resp_in);
+        return rtn;
     } else {
         PROFILE_EVENT(msg->hdr, PROF_DEDOS_EXIT);
         msu_remove_fd_monitor(resp->conn.fd);

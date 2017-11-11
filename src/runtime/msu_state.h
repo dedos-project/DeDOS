@@ -35,4 +35,6 @@ void *msu_get_state(struct local_msu *msu, struct msu_msg_key *key, size_t *size
 /** Frees the state assocated with the given MSU and key */
 int msu_free_state(struct local_msu *msu, struct msu_msg_key *key);
 
+/** Frees all state structures associated with the given MSU */
+int msu_free_all_state(struct local_msu *msu);
 #endif

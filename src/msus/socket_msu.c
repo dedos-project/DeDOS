@@ -188,6 +188,8 @@ static void socket_msu_destroy(struct local_msu *self) {
     if (rtn == -1) {
         log_error("Error closing epoll fd");
     }
+
+    free(state);
     instance = NULL;
 }
 

@@ -32,10 +32,11 @@ static void* monitor_routine(void *mon_init_v) {
     log_info("Attempting to start socket monitor on port %d", init->local_port);
     run_socket_monitor(init->local_port, &init->ctrl_addr);
     free(init);
+    pthread_exit(NULL);
     return NULL;
 }
 
-static int start_up_runtime(struct dfg_runtime *rt, char *filename) {
+int start_up_runtime(struct dfg_runtime *rt, char *filename) {
     int rtn = init_runtime_dfg(filename, rt->id);
     if (rtn < 0) {
         log_error("Error initializing runtime %d", rt->id);
@@ -57,6 +58,7 @@ static int start_up_runtime(struct dfg_runtime *rt, char *filename) {
     mon_init->ctrl_addr = ctrl_addr;
     log_info("Creating monitor thread for port %d", mon_init->local_port);
     pthread_create(&mon_thread, NULL, monitor_routine, mon_init);
+    pthread_detach(mon_thread);
     return 0;
 }
 
@@ -65,13 +67,13 @@ static void stop_runtime() {
     stop_output_monitor();
     stop_all_worker_threads();
     join_output_thread();
-
+    free_runtime_dfg();
     // Parent waits on the execution of the test to exit
     log_info("Exiting runtime");
 }
 
 
-static void load_dfg_for_integration_test(char *filename) {
+static int load_dfg_for_integration_test(char *filename) {
 
     log(LOG_TEST, "Loading DFG from %s", filename);
     struct dedos_dfg *dfg = parse_dfg_json_file(filename);
@@ -111,7 +113,8 @@ static void load_dfg_for_integration_test(char *filename) {
         }
         if (pid != 0) {
             close(ctrl_socket);
-            if (start_up_runtime(dfg->runtimes[i], filename) < 0) {
+            int rtn = start_up_runtime(dfg->runtimes[i], filename);
+            if (rtn == -1 ) {
                 log_error("Error starting runtime %d", i);
                 exit(-1);
             }
@@ -122,7 +125,9 @@ static void load_dfg_for_integration_test(char *filename) {
         }
     }
     mark_point();
-    if (start_up_runtime(dfg->runtimes[0], filename) < 0) {
+    int rtn = start_up_runtime(dfg->runtimes[0], filename);
+
+    if (rtn == -1)  {
         log_error("Error starting runtime %d", 0);
         exit(-1);
     }
@@ -178,7 +183,8 @@ static void load_dfg_for_integration_test(char *filename) {
         rt_sockets[i] = fd;
     }
     mark_point();
-
+    free_dfg(dfg);
+    return 0;
 }
 
 static void disconnect_from_runtimes() {

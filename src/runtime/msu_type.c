@@ -47,6 +47,16 @@ static int register_msu_type(struct msu_type *type) {
     return 0;
 }
 
+void destroy_msu_types() {
+    for (int i=0; i < N_MSU_TYPES; i++) {
+        struct msu_type *type = DEFINED_MSU_TYPES[i];
+        if (msu_types[type->id] != NULL) {
+            if (msu_types[type->id]->destroy_type != NULL) {
+                msu_types[type->id]->destroy_type(type);
+            }
+        }
+    }
+}
 
 struct msu_type *get_msu_type(int id) {
     if (id > MAX_TYPE_ID) {

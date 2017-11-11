@@ -95,4 +95,11 @@ int msu_free_state(struct local_msu *msu, struct msu_msg_key *key) {
     return 0;
 }
 
-
+void msu_free_all_state(struct local_msu *msu) {
+    struct msu_state *state, *tmp;
+    HASH_ITER(hh, msu->item_state, state, tmp) {
+        HASH_DEL(msu->item_state, state);
+        free(state->data);
+        free(state);
+    }
+}

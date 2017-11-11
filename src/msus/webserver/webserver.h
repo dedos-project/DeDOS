@@ -18,7 +18,7 @@ enum webserver_status {
     CON_WRITING,
 };
 
-#define RTN_TO_EVT(rtn) (rtn & WS_INCOMPLETE_READ ? EPOLLIN : 0) | \
-                        (rtn & WS_INCOMPLETE_WRITE ? EPOLLOUT : 0)
+#define RTN_TO_EVT(rtn__) (rtn__ & WS_INCOMPLETE_READ ? EPOLLIN : 0) | \
+                          (rtn__ & WS_INCOMPLETE_WRITE ? EPOLLOUT : 0)
 
 #endif

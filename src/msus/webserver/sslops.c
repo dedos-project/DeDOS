@@ -98,15 +98,19 @@ void init_ssl_locks(void) {
     CRYPTO_set_locking_callback(crypto_locking_callback);
 }
 
+SSL_CTX *ssl_ctx = NULL;
+
 void kill_ssl_locks(void) {
     CRYPTO_set_locking_callback(NULL);
     for (int i=0; i<CRYPTO_num_locks(); i++) {
         pthread_mutex_destroy(&(lockarray[i]));
     }
-    OPENSSL_free(lockarray);
+    if (ssl_ctx != NULL) {
+        SSL_CTX_free(ssl_ctx);
+        ssl_ctx = NULL;
+    }
 }
 
-SSL_CTX *ssl_ctx = NULL;
 
 int init_ssl_context(void) {
     if (ssl_ctx != NULL) {
@@ -136,7 +140,7 @@ int init_ssl_context(void) {
 
 int load_ssl_certificate(char *cert_file, char *key_file) {
     /* set the local certificate from CertFile */
-    if ( SSL_CTX_use_certificate_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM) <= 0 ) {
+    if ( SSL_CTX_use_certificate_chain_file(ssl_ctx, cert_file) <= 0 ) {
         return -1;
     }
     /* set the private key from KeyFile (may be the same as CertFile) */

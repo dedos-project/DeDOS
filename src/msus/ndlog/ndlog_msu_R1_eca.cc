@@ -114,6 +114,7 @@ struct msu_type NDLOG_MSU_TYPE = {
     .name=(char*)"ndlog_msu",
     .id=NDLOG_MSU_TYPE_ID,
     .init_type=NULL,
+    .destroy_type=NULL,
     .init=ndlog_msu_R1_eca_init,
     .destroy=NULL,
     .receive=ndlog_msu_R1_eca_receive,

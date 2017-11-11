@@ -50,6 +50,11 @@ uint32_t local_runtime_ip();
  */
 struct dedos_dfg *get_dfg();
 
+/**
+ * Frees the runtime's static instance of the DFG
+ */
+void free_runtime_dfg();
+
 #endif
 
 

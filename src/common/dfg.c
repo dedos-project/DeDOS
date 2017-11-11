@@ -579,6 +579,7 @@ void free_dfg(struct dedos_dfg *dfg) {
     for (int i=0; i < dfg->n_runtimes; i++) {
         free_dfg_runtime(dfg->runtimes[i]);
     }
+    free(dfg);
 }
     
 

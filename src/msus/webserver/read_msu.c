@@ -28,8 +28,8 @@ static int handle_read(struct read_state *read_state,
     if (rtn & (WS_INCOMPLETE_WRITE | WS_INCOMPLETE_READ)) {
         read_state->conn.status = CON_READING;
         log(LOG_WEBSERVER_READ, "Read incomplete. Re-enabling (fd: %d)", read_state->conn.fd);
-        free(msg->data);
         msu_monitor_fd(read_state->conn.fd, RTN_TO_EVT(rtn), self, &msg->hdr);
+        free(msg->data);
         return 0;
     } else if (rtn & WS_ERROR) {
         close_connection(&read_state->conn);
@@ -40,8 +40,8 @@ static int handle_read(struct read_state *read_state,
     }
     struct read_state *out = malloc(sizeof(*out));
     memcpy(out, read_state, sizeof(*read_state));
-    free(msg->data);
     msu_free_state(self, &msg->hdr.key);
+    free(msg->data);
     call_msu_type(self, &WEBSERVER_HTTP_MSU_TYPE, &msg->hdr, sizeof(*out), out);
     return 0;
 }
@@ -160,11 +160,15 @@ static int init_ssl_ctx(struct msu_type UNUSED *type) {
     return 0;
 }
 
+static void destroy_ssl_ctx(struct msu_type UNUSED *type) {
+    kill_ssl_locks();
+}
 
 struct msu_type WEBSERVER_READ_MSU_TYPE = {
     .name = "Webserver_read_MSU",
     .id = WEBSERVER_READ_MSU_TYPE_ID,
     .init_type = init_ssl_ctx,
+    .destroy_type = destroy_ssl_ctx,
     .init = ws_read_init,
     .destroy = ws_read_destroy,
     .route = route_to_origin_runtime,

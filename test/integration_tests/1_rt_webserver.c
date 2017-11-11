@@ -155,6 +155,19 @@ int write_and_read_http() {
     return fd;
 }
 
+#define MANY_REQUESTS 100
+
+int send_many_requests() {
+    for (int i=0; i < MANY_REQUESTS; i++) {
+        int fd = write_and_read_http();
+        SSL_shutdown(ssl);
+        SSL_free(ssl);
+        close(fd);
+    }
+    return 0;
+}
+
+
 START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
     int n_fds = get_last_stat(MSU_STAT1, 10);
     ck_assert_int_eq(n_fds, 1);
@@ -209,6 +222,16 @@ START_DEDOS_INTEGRATION_TEST(write_and_read_http) {
     ck_assert_int_eq(n_states, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
+START_DEDOS_INTEGRATION_TEST(send_many_requests) {
+    int n_fds = get_last_stat(MSU_STAT1, 10);
+    ck_assert_int_eq(n_fds, 0);
+
+    int n_states = type_num_states(&WEBSERVER_READ_MSU_TYPE);
+    ck_assert_int_eq(n_states, 0);
+    n_states = type_num_states(&WEBSERVER_WRITE_MSU_TYPE);
+    ck_assert_int_eq(n_states, 0);
+} END_DEDOS_INTEGRATION_TEST()
+
 
 DEDOS_START_INTEGRATION_TEST_LIST("1_rt_webserver.json");
 DEDOS_ADD_INTEGRATION_TEST_FN(connect_to_webserver)
@@ -218,4 +241,5 @@ DEDOS_ADD_INTEGRATION_TEST_FN(write_full_http_request)
 DEDOS_ADD_INTEGRATION_TEST_FN(write_partial_http_request)
 DEDOS_ADD_INTEGRATION_TEST_FN(write_and_read_regex_request)
 DEDOS_ADD_INTEGRATION_TEST_FN(write_and_read_http)
+DEDOS_ADD_INTEGRATION_TEST_FN(send_many_requests)
 DEDOS_END_INTEGRATION_TEST_LIST()

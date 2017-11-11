@@ -6,6 +6,7 @@
 #include "dfg_reader.h"
 #include "logging.h"
 #include "dfg_instantiation.h"
+#include "msu_type.h"
 
 #include <stdlib.h>
 
@@ -94,4 +95,11 @@ uint32_t local_runtime_ip() {
 
 struct dedos_dfg *get_dfg() {
     return DFG;
+}
+
+void free_runtime_dfg() {
+    log_info("Freeing runtime DFG");
+    free_dfg(DFG);
+    //TODO: This shouldn't be in this function
+    destroy_msu_types();
 }

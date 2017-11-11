@@ -33,6 +33,11 @@ struct msu_type{
      */
     int (*init_type)(struct msu_type *type);
 
+    /** Destructor for an MSU type, should destroy context initialized in `init_type`.
+     * @param type The type to be destroyed
+     */
+    void (*destroy_type)(struct msu_type *type);
+
     /** Type-specific construction function.
      * Generic construction for an MSU is always handled by local_msu.
      * Can be set to NULL if no additional initialization must occur.
@@ -89,6 +94,11 @@ struct msu_type{
      */
     void *(*deserialize)(struct local_msu *self, size_t input_size, void *input, size_t *out_size);
 };
+
+/**
+ * Calls the type-sepecific constructor for each instantiated MSU type
+ */
+void destroy_msu_types();
 
 /**
  * Initializes the MSU type with the given ID,
