@@ -1,0 +1,1 @@
+DROP DATABASE IF EXISTS `dedos`; CREATE DATABASE `dedos` character set utf8 collate utf8_general_ci;
