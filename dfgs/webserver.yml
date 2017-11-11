@@ -17,6 +17,13 @@ global_ctl:
     <<: *local
     port: 8090
 
+database:
+    <<: *local
+    port: 3306
+    user: root
+    pwd: root
+    name: dedos
+
 msu_types:
     socket:
         id: 10
