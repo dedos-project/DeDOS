@@ -60,7 +60,7 @@ struct dfg_runtime {
     struct dfg_thread *threads[MAX_THREADS]; /**< Threads located on the runtime */
     int n_pinned_threads;   /**< Number of the above-threads which are pinned */
     int n_unpinned_threads; /**< Number of the above-threads which are unpinned */
- 
+
     struct dfg_route *routes[MAX_ROUTES]; /**< Routes located on this runtime */
     int n_routes; /**< Number of routes above */
     // todo: uint64_t dram;
@@ -212,6 +212,13 @@ struct dedos_dfg {
     char application_name[64]; /**< Description of the whole application */
     uint32_t global_ctl_ip;    /**< IP address of the global controller */
     int global_ctl_port;       /**< Port of the global controller */
+
+    /** DB information */
+    uint32_t db_ip;
+    int db_port;
+    char db_name[16];
+    char db_user[16];
+    char db_pwd[16];
 
     /** MSU types which may be present in the application */
     struct dfg_msu_type *msu_types[MAX_MSU_TYPES];

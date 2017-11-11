@@ -127,6 +127,56 @@ PARSE_FN(set_ctl_port) {
     return 0;
 }
 
+/** Key: "db_ip", Object: ::ROOT */
+PARSE_FN(set_db_ip) {
+    struct dedos_dfg *dfg = GET_PARSE_OBJ();
+    char *ip = GET_STR_TOK();
+    struct in_addr addr;
+    int rtn = inet_pton(AF_INET, ip, &addr);
+    if (rtn <= 0) {
+        log_perror("Error converting '%s' to IP address", ip);
+        return -1;
+    }
+    dfg->db_ip = addr.s_addr;
+
+    return 0;
+}
+
+/** Key: "global_ctl_port", Object: ::ROOT */
+PARSE_FN(set_db_port) {
+    struct dedos_dfg *dfg = GET_PARSE_OBJ();
+    dfg->db_port = GET_INT_TOK();
+
+    return 0;
+}
+
+/** Key: "db_user", Object ::ROOT */
+PARSE_FN(set_db_user) {
+    struct dedos_dfg *dfg = GET_PARSE_OBJ();
+    char *str_db_user = GET_STR_TOK();
+    memcpy(dfg->db_user, str_db_user, strlen(str_db_user));
+
+    return 0;
+}
+
+/** Key: "db_pwd", Object ::ROOT */
+PARSE_FN(set_db_pwd) {
+    struct dedos_dfg *dfg = GET_PARSE_OBJ();
+    char *str_db_pwd = GET_STR_TOK();
+    memcpy(dfg->db_pwd, str_db_pwd, strlen(str_db_pwd));
+
+    return 0;
+}
+
+/** Key: "db_name", Object ::ROOT */
+PARSE_FN(set_db_name) {
+    struct dedos_dfg *dfg = GET_PARSE_OBJ();
+    char *str_db_name = GET_STR_TOK();
+    memcpy(dfg->db_name, str_db_name, strlen(str_db_name));
+
+    return 0;
+}
+
 /** Key: element in "runtimes", Object ::ROOT */
 INIT_OBJ_FN(init_runtime) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
@@ -613,6 +663,11 @@ static struct key_mapping key_map[] = {
     { "application_name", ROOT, set_app_name },
     { "global_ctl_ip", ROOT, set_ctl_ip },
     { "global_ctl_port", ROOT, set_ctl_port },
+    { "db_ip", ROOT, set_db_ip },
+    { "db_port", ROOT, set_db_port },
+    { "db_user", ROOT, set_db_user },
+    { "db_pwd", ROOT, set_db_pwd },
+    { "db_name", ROOT, set_db_name },
 
     { "MSU_types", ROOT, set_msu_types },
     { "MSUs", ROOT, set_msus },
