@@ -68,6 +68,7 @@ SSL_CTX * InitCTX(void) {
 
     ck_assert_ptr_ne(ctx, NULL);
     SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3);
+    init_ssl_locks();
     log_debug("Initialized the global context\n");
     return ctx;
 }
@@ -97,13 +98,25 @@ int ssl_start_connect_to_webserver() {
 int ssl_fully_connect_to_webserver() {
     int fd = ssl_start_connect_to_webserver();
     ck_assert_int_gt(fd, 0);
-    int rtn, err;
+    int rtn;
+    long err = 0;
     do {
         rtn = SSL_connect(ssl);
-        err = SSL_get_error(ssl, rtn);
-    } while (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE);
-    log_info("Fully connected!");
+        if (rtn != 1) {
+            err = SSL_get_error(ssl, rtn);
+            if (err != SSL_ERROR_WANT_WRITE && err != SSL_ERROR_WANT_READ) {
+                const char* UNUSED error_str = ERR_error_string(err, NULL);
+                log_error("SSL ERROR!: %d, %s", rtn, error_str);
+            }
+        }
+    } while (rtn != 1 && (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE));
+    while ((err = ERR_get_error()) != 0) {
+        const char*  error_str = ERR_error_string(err, NULL);
+        log_error("SSL ERROR!: %ld, %s", err, error_str);
+    }
+
     ck_assert_int_eq(rtn, 1);
+    log_info("Fully connected!");
     return fd;
 }
 
@@ -163,6 +176,7 @@ int send_many_requests() {
         SSL_shutdown(ssl);
         SSL_free(ssl);
         close(fd);
+        usleep(1000);
     }
     return 0;
 }

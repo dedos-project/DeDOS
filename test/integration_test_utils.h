@@ -213,10 +213,10 @@ int type_num_states(struct msu_type *type) {
     START_DEDOS_TEST(init ##_integration_test_) { \
         mark_point(); \
         load_dfg_for_integration_test(DFG_JSON_FILE__); \
-        usleep(50e3); \
+        usleep(10e3); \
         mark_point(); \
         init(); \
-        usleep(50e3); \
+        usleep(10e3); \
         mark_point();
 
 #define END_DEDOS_INTEGRATION_TEST() \
