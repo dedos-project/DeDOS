@@ -266,7 +266,7 @@ int schedule_dfg_msu(struct dfg_msu *msu, unsigned int runtime_id, unsigned int 
 
 /**
  * Removes the msu from it's thread, runtime, and instance,
- *  and removes the thread and runtime from the MSU 
+ *  and removes the thread and runtime from the MSU
  */
 static int remove_msu_from_thread(struct dfg_msu *msu) {
     struct dfg_thread *thread = msu->scheduling.thread;
@@ -308,9 +308,6 @@ static int remove_msu_from_thread(struct dfg_msu *msu) {
     msu->scheduling.thread = NULL;
     return 0;
 }
-
-
-
 
 int unschedule_dfg_msu(struct dfg_msu *msu) {
     if (dfg == NULL) {
@@ -581,5 +578,3 @@ void free_dfg(struct dedos_dfg *dfg) {
     }
     free(dfg);
 }
-    
-
