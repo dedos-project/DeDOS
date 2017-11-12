@@ -23,6 +23,7 @@ SRC_DIR = src/
 GLC_DIR = $(SRC_DIR)global_controller/
 COM_DIR = $(SRC_DIR)common/
 TST_DIR = test/
+MYSQL_DIR = /usr/local/share/mysql/
 
 SRC_DIRS = $(GLC_DIR) $(COM_DIR)
 
@@ -114,9 +115,10 @@ OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), 
 TST_BLD_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
 RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
 
-INCS=$(GLC_DIR) $(COM_DIR)
+INCS=$(GLC_DIR) $(COM_DIR) $(MYSQL_DIR)include
 
-CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
+CFLAGS += $(foreach inc, $(INCS), -I$(inc))
+CFLAGS += -L$(MYSQL_DIR)lib -lmysqlclient
 
 define test_dep_name
 $(notdir $(subst Test_,,$1))_DEPS

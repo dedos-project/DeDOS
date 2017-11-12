@@ -12,6 +12,8 @@
 #include "dfg.h"
 #include "dfg_reader.h"
 #include "stat_msg_handler.h"
+#include "controller_mysql.h"
+#include "mysql.h"
 
 #define FILENAME_LEN 32
 
@@ -61,8 +63,14 @@ int main(int argc, char *argv[]) {
     }
 
     rtn = init_controller_dfg(filename);
-    if (rtn < 0){
+    if (rtn < 0) {
         log_error("Error loading dfg!");
+        return -1;
+    }
+
+    rtn = db_init();
+    if (rtn < 0) {
+        log_error("Error setting up mysql DB!");
         return -1;
     }
 
