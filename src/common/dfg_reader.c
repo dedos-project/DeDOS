@@ -137,7 +137,7 @@ PARSE_FN(set_db_ip) {
         log_perror("Error converting '%s' to IP address", ip);
         return -1;
     }
-    dfg->db.db_ip = addr.s_addr;
+    dfg->db.ip = addr.s_addr;
 
     return 0;
 }
@@ -145,7 +145,7 @@ PARSE_FN(set_db_ip) {
 /** Key: "global_ctl_port", Object: ::ROOT */
 PARSE_FN(set_db_port) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
-    dfg->db.db_port = GET_INT_TOK();
+    dfg->db.port = GET_INT_TOK();
 
     return 0;
 }
@@ -154,7 +154,7 @@ PARSE_FN(set_db_port) {
 PARSE_FN(set_db_user) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     char *str_db_user = GET_STR_TOK();
-    memcpy(dfg->db.db_user, str_db_user, strlen(str_db_user));
+    memcpy(dfg->db.user, str_db_user, strlen(str_db_user));
 
     return 0;
 }
@@ -163,7 +163,7 @@ PARSE_FN(set_db_user) {
 PARSE_FN(set_db_pwd) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     char *str_db_pwd = GET_STR_TOK();
-    memcpy(dfg->db.db_pwd, str_db_pwd, strlen(str_db_pwd));
+    memcpy(dfg->db.pwd, str_db_pwd, strlen(str_db_pwd));
 
     return 0;
 }
@@ -172,7 +172,7 @@ PARSE_FN(set_db_pwd) {
 PARSE_FN(set_db_name) {
     struct dedos_dfg *dfg = GET_PARSE_OBJ();
     char *str_db_name = GET_STR_TOK();
-    memcpy(dfg->db.db_name, str_db_name, strlen(str_db_name));
+    memcpy(dfg->db.name, str_db_name, strlen(str_db_name));
 
     return 0;
 }
@@ -315,7 +315,7 @@ PARSE_FN(set_msu_type) {
     return 0;
 }
 
-/** key: "blocking_mode", object: ::MSUS */ 
+/** key: "blocking_mode", object: ::MSUS */
 PARSE_FN(set_blocking_mode) {
     struct dfg_msu *vertex = GET_PARSE_OBJ();
 

@@ -209,11 +209,11 @@ struct dfg_msu {
 
 /** Info to connect and use database */
 struct db_info {
-    uint32_t db_ip;
-    int db_port;
-    char db_name[16];
-    char db_user[16];
-    char db_pwd[16];
+    uint32_t ip;
+    int port;
+    char name[16];
+    char user[16];
+    char pwd[16];
 };
 
 /** Top-level structure holding the data-flow graph */
@@ -249,6 +249,8 @@ struct dedos_dfg {
  */
 void set_dfg(struct dedos_dfg *dfg);
 
+/** Returns DB info */
+struct db_info *get_db_info();
 /** Returns the runtime with the given ID */
 struct dfg_runtime *get_dfg_runtime(unsigned int id);
 /** Returns the MSU type with the given ID */

@@ -34,6 +34,10 @@ void set_dfg(struct dedos_dfg *dfg_in) {
     } \
     return NULL;
 
+struct db_info *get_db_info() {
+    return &dfg->db;
+}
+
 struct dfg_runtime *get_dfg_runtime(unsigned int runtime_id) {
     SEARCH_FOR_ID(dfg, dfg->n_runtimes, dfg->runtimes, runtime_id);
 }
