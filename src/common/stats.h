@@ -34,7 +34,7 @@ struct stat_sample_hdr {
 struct stat_sample {
     struct stat_sample_hdr hdr;
     /** The allocated size of the stat_sample::stats structure */
-    int max_stats; 
+    int max_stats;
     /** The statistics in question*/
     struct timed_stat *stats;
 };
