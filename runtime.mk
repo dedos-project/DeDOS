@@ -9,28 +9,8 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   #STATS_SEND
-#	   SOCKET_MSU
-	   #PARTIAL_READS
-	   #THREAD_AFFINITY \
-	   #STATS_SEND
-	   #ALL
 
-MSU_APPLICATIONS = webserver baremetal ndlog pico_tcp
-
-NO_LOGS = \
-		  MSU_DEQUEUES \
-		  ADD_PROVINANCE
-		  #JSMN_PARSING \
-		  DFG_PARSING \
-		  MSU_ENQUEUES \
-		  MSU_DEQUEUES \
-		  ADD_PROVINANCE \
-		  STAT_SEND \
-		  STAT_SERIALIZATION \
-		  CONTROLLER_COMMUNICATION \
-		  STAT_INITS \
-		  STATS
+MSU_APPLICATIONS = webserver baremetal
 
 SRC_DIR = src/
 RNT_DIR = $(SRC_DIR)runtime/
@@ -57,8 +37,6 @@ LEG_BLD_DIR =$(BLD_DIR)legacy/
 
 BLD_DIRS = $(BLD_DIR) $(DEP_DIR) $(OBJ_DIR) $(RES_DIR) $(LEG_BLD_DIR)
 BLD_DIRS += $(patsubst $(SRC_DIR)%/, $(OBJ_DIR)%/, $(SRC_DIRS))
-
-LEGACY_LIBS = picotcp
 
 CLEANUP=rm -f
 CLEAN_DIR=rm -rf
@@ -87,15 +65,24 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 MSU_DEFINES=$(foreach MSU_APP, $(MSU_APPLICATIONS), -DCOMPILE_$(call upper, $(MSU_APP))_MSUS)
 
-CFLAGS=-Wall -pthread -lpcre -lvdeplug -lssl -lrt -lcrypto -lm -lpcap -O$(OPTIM) \
+CFLAGS=-Wall -pthread -lssl -lrt -lcrypto -lm -O$(OPTIM) \
 	   $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
-ifeq ($(MAKECMDGOALS), $(filter $(MAKECMDGOALS),coverage init_cov cov-site))
-  CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
-  OPTIM=0
-  INIT_COV=init_cov
+ifneq (,$(findstring webserver,$(MSU_APPLICATIONS)))
+CFLAGS+=-lssl -lpcre
 endif
+
+ifneq (,$(findstring ndlog,$(MSU_APPLICATIONS)))
+CFLAGS+=-lvdeplug
+endif
+
+ifneq (,$(findstring pico_tcp,$(MSU_APPLICATIONS)))
+LEGACY_LIBS+= picotcp
+CFLAGS+=-lpcap
+endif
+
+
 
 ifeq ($(DEBUG), 1)
   CFLAGS+=-ggdb
@@ -168,7 +155,6 @@ TST_BLD_DIRS = $(patsubst $(TST_DIR)%/, $(TST_BLD_DIR)%/, $(TST_DIRS))
 RES_DIRS = $(patsubst $(TST_DIR)%/, $(RES_DIR)%/, $(TST_DIRS))
 
 INCS=$(LEG_INC) $(RNT_DIR) $(COM_DIR) $(MSU_DIR)
-
 CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
 
 define test_dep_name
@@ -180,12 +166,16 @@ $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $1)) \
 	$(foreach dep, $($(call test_dep_name, $1)), $(OBJ_DIR)$(dep:.c=.o))
 endef
 
+TEST_CFLAGS= $(CFLAGS) $(CC_EXTRAFLAGS) -I$(TST_DIR) -O0 -lcheck_pic 
+ifeq ($(MAKECMDGOALS),$(filter $(MAKECMDGOALS),coverage init_cov cov-site))
+  CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
+  OPTIM=0
+  INIT_COV=init_cov
+  TEST_CFLAGS+=-fprofile-arcs -ftest-coverage --coverage
+endif
+
 CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
-
-TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lpcap -lm -O0 \
-			 -fprofile-arcs -ftest-coverage --coverage\
-
 
 DIRS = $(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIRS)
 
