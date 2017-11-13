@@ -189,7 +189,7 @@ static char *scheduling_to_json(struct dfg_scheduling *sched) {
     START_OBJ(json);
 
     KEY_INTVAL(json, "runtime", sched->runtime->id);
-    KEY_INTVAL(json, "thread", sched->thread->id);
+    KEY_INTVAL(json, "thread_id", sched->thread->id);
 
     KEY(json, "routes");
     START_LIST(json);
