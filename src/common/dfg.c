@@ -38,6 +38,10 @@ struct db_info *get_db_info() {
     return &dfg->db;
 }
 
+int get_dfg_n_runtimes() {
+    return dfg->n_runtimes;
+}
+
 struct dfg_runtime *get_dfg_runtime(unsigned int runtime_id) {
     SEARCH_FOR_ID(dfg, dfg->n_runtimes, dfg->runtimes, runtime_id);
 }

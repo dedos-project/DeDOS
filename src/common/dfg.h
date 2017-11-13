@@ -251,6 +251,8 @@ void set_dfg(struct dedos_dfg *dfg);
 
 /** Returns DB info */
 struct db_info *get_db_info();
+/** Returns the number of registered runtime */
+int get_dfg_n_runtimes();
 /** Returns the runtime with the given ID */
 struct dfg_runtime *get_dfg_runtime(unsigned int id);
 /** Returns the MSU type with the given ID */
