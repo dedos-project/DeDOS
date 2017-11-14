@@ -1,5 +1,6 @@
 CREATE TABLE Statistics (
-    id   int NOT NULL AUTO_INCREMENT,
+    id       int NOT NULL AUTO_INCREMENT,
+    stat_id  int NOT NULL,
     name varchar(64),
     PRIMARY KEY (id)
 );
@@ -58,13 +59,10 @@ CREATE TABLE Points (
     PRIMARY KEY (id)
 );
 
-INSERT INTO Statistics (name) VALUES ( "MSU_Q_LEN" );
-INSERT INTO Statistics (name) VALUES ( "ITEMS_PROCESSED" );
-INSERT INTO Statistics (name) VALUES ( "MSU_EXEC_TIME" );
-INSERT INTO Statistics (name) VALUES ( "MSU_IDLE_TIME");
-INSERT INTO Statistics (name) VALUES ( "MSU_MEM_ALLOC");
-INSERT INTO Statistics (name) VALUES ( "MSU_NUM_STATES");
-INSERT INTO Statistics (name) VALUES ( "CTX_SWITCHES");
+INSERT INTO Statistics (stat_id, name) VALUES (0, "QUEUE_LEN");
+INSERT INTO Statistics (stat_id, name) VALUES (1, "ITEMS_PROCESSED");
+INSERT INTO Statistics (stat_id, name) VALUES (4, "MEMORY_ALLOCATED");
+INSERT INTO Statistics (stat_id, name) VALUES (5, "NUM_STATES");
 
 INSERT INTO MsuTypes VALUES (500, "WS_READ");
 INSERT INTO MsuTypes VALUES (501, "SSL_WRITE");
