@@ -231,6 +231,12 @@ int db_check_and_register(const char *check_query, const char *insert_query,
     }
 }
 
+/**
+ * Insert datapoint for a timseries in the DB.
+ * @param input: pointer to timed_stat object
+ * @param input_hdr: header of stat sample
+ * @return: 0 on success
+ */
 int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr) {
     /* Find timeserie to insert data point first */
     char select_stat_id[MAX_REQ_LEN];
