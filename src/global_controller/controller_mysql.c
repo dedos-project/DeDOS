@@ -260,7 +260,7 @@ int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr
                              "insert into Points (timeseries_id, ts, val) values "
                              "((%s), %lu, %f)",
                              ts_query,
-                             input[i].time.tv_sec + input[i].time.tv_nsec,
+                             (unsigned long) input[i].time.tv_sec * 1e9 + input[i].time.tv_nsec,
                              input[i].value);
 
         if (mysql_real_query(&mysql, insert_query, query_len)) {
