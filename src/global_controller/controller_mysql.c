@@ -38,8 +38,17 @@ int db_init() {
         int n_threads = rt->n_pinned_threads + rt->n_unpinned_threads;
         int t;
         for (t = 1; t <= n_threads; ++t) {
-            if (db_register_thread(t, rt->id) != 0) {
+            struct dfg_thread *thread = get_dfg_thread(rt, t);
+            if (db_register_thread(thread->id, rt->id) != 0) {
                 return -1;
+            }
+
+            int m;
+            for (m = 0; m < thread->n_msus; ++m) {
+                struct dfg_msu *msu = thread->msus[m];
+                if (db_register_msu(msu, thread->id, rt->id) != 0) {
+                    return -1;
+                }
             }
         }
 
@@ -92,14 +101,43 @@ int db_register_thread(int thread_id, int runtime_id) {
     const char *element = "thread";
 
     snprintf(check_query, MAX_REQ_LEN,
-             "select * from Threads where num = (%d) AND runtime_id = (%d)",
+             "select * from Threads where thread_id = (%d) AND runtime_id = (%d)",
              thread_id, runtime_id);
 
     snprintf(insert_query, MAX_REQ_LEN,
-             "insert into Threads (num, runtime_id) values (%d, %d)",
+             "insert into Threads (thread_id, runtime_id) values (%d, %d)",
              thread_id, runtime_id);
 
     return db_check_and_register(check_query, insert_query, element, thread_id);
+}
+
+
+/**
+ * Register an MSU in the DB. Does nothing if MSU already exists
+ * @param struct dfg_msu *msu
+ * @param int thread_id
+ * @param int runtime_id
+ * @return: 0 on success
+ */
+int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id) {
+    char check_query[MAX_REQ_LEN];
+    char insert_query[MAX_REQ_LEN];
+    char select_thread_id[MAX_REQ_LEN];
+    const char *element = "MSU";
+
+    snprintf(check_query, MAX_REQ_LEN,
+             "select * from Msus where msu_id = (%d)",
+             msu->id);
+
+    snprintf(select_thread_id, MAX_REQ_LEN,
+             "select id from Threads where thread_id = (%d) and runtime_id = (%d)",
+             thread_id, runtime_id);
+
+    snprintf(insert_query, MAX_REQ_LEN,
+             "insert into Msus (msu_id, msu_type_id, thread_id) values (%d, %d, (%s))",
+             msu->id, msu->type->id, select_thread_id);
+
+    return db_check_and_register(check_query, insert_query, element, msu->id);
 }
 
 /**
@@ -145,8 +183,6 @@ int db_check_and_register(const char *check_query, const char *insert_query,
 }
 
 /*
-int db_register_msu(int thread_id) {
-}
 int db_register_timeserie(int thread_id) {
 }
 */
