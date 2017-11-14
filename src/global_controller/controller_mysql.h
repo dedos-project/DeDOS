@@ -4,7 +4,7 @@
 #include "mysql.h"
 #include "dfg.h"
 
-#define MAX_REQ_LEN 256
+#define MAX_REQ_LEN 512
 
 extern MYSQL mysql;
 
@@ -16,5 +16,6 @@ int db_check_and_register(const char *check_query, const char *insert_query,
 int db_register_runtime(int runtime_id);
 int db_register_thread(int thread_id, int runtime_id);
 int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id);
+int db_register_timeseries(struct dfg_msu *msu, int thread_id, int runtime_id);
 
 #endif

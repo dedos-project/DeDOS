@@ -1,6 +1,7 @@
 #include "controller_mysql.h"
 #include "dfg.h"
 #include "logging.h"
+#include "stats.h"
 #include "stdlib.h"
 #include "mysql.h"
 
@@ -49,9 +50,12 @@ int db_init() {
                 if (db_register_msu(msu, thread->id, rt->id) != 0) {
                     return -1;
                 }
+
+                if (db_register_timeseries(msu, thread->id, rt->id) != 0) {
+                    return -1;
+                }
             }
         }
-
     }
 
     return 0;
@@ -101,7 +105,7 @@ int db_register_thread(int thread_id, int runtime_id) {
     const char *element = "thread";
 
     snprintf(check_query, MAX_REQ_LEN,
-             "select * from Threads where thread_id = (%d) AND runtime_id = (%d)",
+             "select * from Threads where thread_id = (%d) and runtime_id = (%d)",
              thread_id, runtime_id);
 
     snprintf(insert_query, MAX_REQ_LEN,
@@ -110,7 +114,6 @@ int db_register_thread(int thread_id, int runtime_id) {
 
     return db_check_and_register(check_query, insert_query, element, thread_id);
 }
-
 
 /**
  * Register an MSU in the DB. Does nothing if MSU already exists
@@ -141,6 +144,52 @@ int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id) {
 }
 
 /**
+ * Register timseries for an MSU in the DB. Does nothing if timeserie already exists
+ * @param struct dfg_msu *msu
+ * @param int thread_id
+ * @param int runtime_id
+ * @return: 0 on success
+ */
+int db_register_timeseries(struct dfg_msu *msu, int thread_id, int runtime_id) {
+    int i;
+    for (i = 0; i < N_REPORTED_STAT_TYPES; ++i) {
+        char check_query[MAX_REQ_LEN];
+        char insert_query[MAX_REQ_LEN];
+        char select_thread_id[MAX_REQ_LEN];
+        char select_msu_id[MAX_REQ_LEN];
+        char select_stat_id[MAX_REQ_LEN];
+        const char *element = "timeserie";
+
+        snprintf(check_query, MAX_REQ_LEN,
+                 "select * from Timeseries where "
+                 "msu_id = (select id from Msus where msu_id = (%d)) "
+                 "and statistic_id = (select id from Statistics where stat_id = (%d))",
+                 msu->id, reported_stat_types[i].id);
+
+        snprintf(select_stat_id, MAX_REQ_LEN,
+                 "select id from Statistics where name = ('%s')", reported_stat_types[i].name);
+
+        snprintf(select_msu_id, MAX_REQ_LEN,
+                 "select id from Msus where msu_id = (%d)", msu->id);
+
+        snprintf(select_thread_id, MAX_REQ_LEN,
+                 "select id from Threads where thread_id = (%d) and runtime_id = (%d)",
+                 thread_id, runtime_id);
+
+        snprintf(insert_query, MAX_REQ_LEN,
+                 "insert into Timeseries (runtime_id, statistic_id, thread_id, msu_id) "
+                 "values (%d, (%s), (%s), (%s))",
+                 runtime_id, select_stat_id, select_thread_id, select_msu_id);
+
+        if (db_check_and_register(check_query, insert_query, element, msu->id) != 0) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * Register an element in the DB. Does nothing if element already exists
  * @param const char *check_query: query to check existence of element
  * @param const char *insert_query: query to insert element
@@ -167,7 +216,7 @@ int db_check_and_register(const char *check_query, const char *insert_query,
 
                 query_len = strlen(insert_query);
                 if (mysql_real_query(&mysql, insert_query, query_len)) {
-                    log_error("MySQL query failed: %s", mysql_error(&mysql));
+                    log_error("MySQL query (%s) failed: %s", insert_query, mysql_error(&mysql));
                     return -1;
                 } else {
                     log_info("registered element %s (id: %d) in DB", element, element_id);
@@ -181,8 +230,3 @@ int db_check_and_register(const char *check_query, const char *insert_query,
         }
     }
 }
-
-/*
-int db_register_timeserie(int thread_id) {
-}
-*/
