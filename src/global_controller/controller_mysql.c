@@ -230,3 +230,42 @@ int db_check_and_register(const char *check_query, const char *insert_query,
         }
     }
 }
+
+int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr) {
+    /* Find timeserie to insert data point first */
+    char select_stat_id[MAX_REQ_LEN];
+    snprintf(select_stat_id, MAX_REQ_LEN,
+             "select id from Statistics where stat_id = (%d)", input_hdr->stat_id);
+
+    char select_msu_id[MAX_REQ_LEN];
+    snprintf(select_msu_id, MAX_REQ_LEN,
+             "select id from Msus where msu_id = (%d)", input_hdr->item_id);
+
+    char ts_query[MAX_REQ_LEN];
+    snprintf(ts_query, MAX_REQ_LEN,
+             "select id from Timeseries where msu_id = (%s) and statistic_id = (%s)",
+             select_msu_id, select_stat_id);
+
+    int i;
+    for (i = 0; i < input_hdr->n_stats; ++i) {
+        int query_len;
+        char insert_query[MAX_REQ_LEN];
+        query_len = snprintf(insert_query, MAX_REQ_LEN,
+                             "insert into Points (timeseries_id, ts, val) values "
+                             "((%s), %lu, %f)",
+                             ts_query,
+                             input[i].time.tv_sec + input[i].time.tv_nsec,
+                             input[i].value);
+
+        if (mysql_real_query(&mysql, insert_query, query_len)) {
+            log_error("MySQL query (%s) failed: %s", insert_query, mysql_error(&mysql));
+            return -1;
+        } else {
+            log_info("inserted data point for msu %d and stat %d",
+                     input_hdr->item_id, input_hdr->stat_id);
+            return 0;
+        }
+    }
+
+    return 0;
+}
