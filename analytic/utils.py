@@ -14,7 +14,7 @@ class utils:
     """
     def load_config(self):
         config    = {}
-        conf_file = os.path.dirname(__file__) + '/config.json'
+        conf_file = os.path.abspath(os.path.dirname(__file__)) + '/config.json'
         try:
             conf_desc = open(conf_file, 'r')
         except OSError as e:

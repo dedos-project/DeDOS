@@ -9,6 +9,9 @@ from db_api import *
 db = db_api()
 msus = db.get_items('msus')
 
+for msu in msus:
+    print msu.msu_type.name
+
 ts = db.get_msu_timeseries(msus[0])
 
 pts = db.get_ts_points(ts[0])
@@ -18,4 +21,3 @@ times = [pt.ts for pt in pts]
 
 df = pd.DataFrame({'timestamp': times,
                   'value'     :vals})
-print df
