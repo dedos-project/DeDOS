@@ -50,6 +50,8 @@ END OF LICENSE STUB
 #include "webserver/http_msu.h"
 #include "webserver/regex_msu.h"
 #include "webserver/regex_routing_msu.h"
+#include "webserver/cache_msu.h"
+#include "webserver/fileio_msu.h"
 #include "webserver/write_msu.h"
 
 /** The MSUs that comprise the webserver application*/
@@ -58,6 +60,8 @@ END OF LICENSE STUB
         &WEBSERVER_HTTP_MSU_TYPE, \
         &WEBSERVER_REGEX_MSU_TYPE, \
         &WEBSERVER_REGEX_ROUTING_MSU_TYPE, \
+        &WEBSERVER_CACHE_MSU_TYPE, \
+        &WEBSERVER_FILEIO_MSU_TYPE, \
         &WEBSERVER_WRITE_MSU_TYPE,
 #else
 

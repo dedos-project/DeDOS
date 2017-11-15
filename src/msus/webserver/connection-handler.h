@@ -25,7 +25,9 @@ END OF LICENSE STUB
 #include "dbops.h"
 #include "request_parser.h"
 
-#define MAX_RESPONSE_LEN 2048
+#define MAX_HEADER_LEN 4096
+#define MAX_FILEPATH_LEN 512
+#define MAX_BODY_LEN 4096
 #define MAX_RECV_LEN 4096
 
 struct connection {
@@ -51,8 +53,11 @@ void init_http_state(struct http_state *state, struct connection *conn);
 struct response_state {
     struct connection conn;
     char url[MAX_URL_LEN];
-    char resp[MAX_RECV_LEN];
-    int resp_len;
+    char path[MAX_FILEPATH_LEN];
+    char header[MAX_HEADER_LEN];
+    int header_len;
+    char body[MAX_BODY_LEN];
+    int body_len;
 };
 void init_response_state(struct response_state *state, struct connection *conn);
 

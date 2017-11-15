@@ -37,7 +37,8 @@ static int craft_ws_regex_response(struct local_msu *self,
         return -1;
     }
 
-    resp->resp_len = craft_regex_response(resp->url, resp->resp);
+    resp->body_len = craft_regex_response(resp->url, resp->body);
+    resp->header_len = generate_header(resp->header, 200, "text/html", resp->body_len);
     call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
     return 0;
 }

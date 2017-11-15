@@ -148,7 +148,7 @@ static int ws_read_init(struct local_msu *self, struct msu_init_data *data) {
         ws_state->use_ssl = 1;
     } else {
         log_info("Initializing SSL webserver-reading MSU anyway");
-        ws_state->use_ssl = 1;
+        ws_state->use_ssl = 0;
     }
 
     self->msu_state = (void*)ws_state;

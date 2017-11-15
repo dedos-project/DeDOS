@@ -24,6 +24,7 @@ END OF LICENSE STUB
 #include "webserver/dbops.h"
 #include "webserver/regex.h"
 #include "webserver/request_parser.h"
+#include "connection-handler.h"
 #include <unistd.h>
 
 #ifdef __GNUC__
@@ -53,8 +54,11 @@ void init_http_state(struct http_state *state, struct connection *conn) {
 void init_response_state(struct response_state *state, struct connection *conn) {
     state->conn = *conn;
     state->url[0] = '\0';
-    state->resp[0] = '\0';
-    state->resp_len = 0;
+    state->path[0] = '\0';
+    state->header[0] = '\0';
+    state->header_len = 0;
+    state->body[0] = '\0';
+    state->body_len = 0;
 }
 
 int accept_connection(struct connection *conn, int use_ssl) {
@@ -222,34 +226,59 @@ int craft_regex_response(char *url, char *response) {
 }
 
 int write_response(struct response_state *state) {
-    if (state->resp[0] == '\0') {
-        log_error("Attempted to write empty respnose");
+    if (state->body[0] == '\0' && state->header[0] == '\0') {
+        log_error("Attempted to write empty response");
         return WS_ERROR;
     }
 
     int use_ssl = (state->conn.ssl != NULL);
-    int bytes = state->resp_len;
+    int bytes = state->header_len;
     int rtn;
     if (use_ssl) {
-        rtn = write_ssl(state->conn.ssl, state->resp, &bytes);
+        rtn = write_ssl(state->conn.ssl, state->header, &bytes);
     } else {
-        rtn = write_socket(state->conn.fd, state->resp, &bytes);
+        rtn = write_socket(state->conn.fd, state->header, &bytes);
     }
 
     switch (rtn) {
         case WS_INCOMPLETE_READ:
         case WS_INCOMPLETE_WRITE:
-            log(LOG_CONNECTION_INFO, "Write incomplete (fd: %d)", state->conn.fd);
+            log(LOG_CONNECTION_INFO, "Header write incomplete (fd: %d)", state->conn.fd);
             return rtn;
         case WS_COMPLETE:
-            log(LOG_CONNECTION_INFO, "Completed writing response (fd: %d)", state->conn.fd);
-            return WS_COMPLETE;
+            log(LOG_CONNECTION_INFO, "Completed writing headers (fd: %d)", state->conn.fd);
+            break;
         case WS_ERROR:
-            log_error("Error writing response (fd: %d)", state->conn.fd);
+            log_error("Error writing headers (fd: %d)", state->conn.fd);
             return WS_ERROR;
         default:
             log_error("Unknown return %d from call to write (fd: %d)", rtn, state->conn.fd);
             return WS_ERROR;
+    }
+
+    if (state->body_len > 0) {
+        bytes = state->body_len;
+        if (use_ssl) {
+            rtn = write_ssl(state->conn.ssl, state->body, &bytes);
+        } else {
+            rtn = write_socket(state->conn.fd, state->body, &bytes);
+        }
+
+        switch (rtn) {
+            case WS_INCOMPLETE_READ:
+            case WS_INCOMPLETE_WRITE:
+                log(LOG_CONNECTION_INFO, "Write incomplete (fd: %d)", state->conn.fd);
+                return rtn;
+            case WS_COMPLETE:
+                log(LOG_CONNECTION_INFO, "Completed writing response (fd: %d)", state->conn.fd);
+                return WS_COMPLETE;
+            case WS_ERROR:
+                log_error("Error writing response (fd: %d)", state->conn.fd);
+                return WS_ERROR;
+            default:
+                log_error("Unknown return %d from call to write (fd: %d)", rtn, state->conn.fd);
+                return WS_ERROR;
+        }
     }
 }
 
