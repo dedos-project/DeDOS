@@ -6,14 +6,13 @@ import json
 class utils:
     def __repr__(self):
         tools = 'Available tools: \n'
-        tools += 'flattenList(listObject)\n'
-        tools += 'loadConfig()'
+        tools += 'load_config()'
 
     """
     Load configuration from local config.json file
     @return: config, dictionnary containing configuration
     """
-    def loadConfig(self):
+    def load_config(self):
         config    = {}
         conf_file = os.path.dirname(__file__) + '/config.json'
         try:

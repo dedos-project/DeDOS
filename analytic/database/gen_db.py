@@ -23,7 +23,7 @@ metrics = {
 class db_setup:
     def __init__(self):
         self.utils = utils()
-        self.config = self.utils.loadConfig()
+        self.config = self.utils.load_config()
 
         self.json_f = self.config['json']
 
