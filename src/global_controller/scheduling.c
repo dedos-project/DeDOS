@@ -318,7 +318,7 @@ int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     msu->scheduling.thread = free_thread;
     msu->scheduling.runtime = rt;
 
-    register_stat_item(msu->id);
+    register_msu_stat(msu->id, msu->scheduling.thread->id, msu->scheduling.runtime->id);
     ret = send_create_msu_msg(msu);
     if (ret == -1) {
         log_error("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);

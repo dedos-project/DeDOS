@@ -67,10 +67,5 @@ int init_stats_msg_handler() {
         log_error("Error initializing stat samples");
         return -1;
     }
-    int rtn = init_statistics();
-    if (rtn < 0) {
-        log_error("Error initializing statistics");
-        return -1;
-    }
     return 0;
 }

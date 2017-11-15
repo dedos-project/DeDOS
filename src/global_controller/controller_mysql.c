@@ -3,9 +3,74 @@
 #include "logging.h"
 #include "stats.h"
 #include "stdlib.h"
-#include "mysql.h"
+#include "local_files.h"
+#include "controller_dfg.h"
+
+#include <mysql.h>
+#include <stdbool.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 MYSQL mysql;
+
+#define MAX_REQ_LEN 512
+
+#define MAX_INIT_CONTENTS_SIZE 8192
+
+int db_register_msu_type(int msu_type_id);
+int db_register_statistic(int stat_id, char *name);
+
+static int split_exec_cmd(char *cmd) {
+    char req[MAX_REQ_LEN];
+
+    char *delimed = strtok(cmd, ";");
+    while (delimed != NULL && strlen(delimed) > 1) {
+        strcpy(req, delimed);
+        int len = strlen(delimed);
+        req[len] = ';';
+        req[len+1] = '\0';
+
+        int status = mysql_query(&mysql, req);
+        if (status) {
+            log_error("Could not execute mysql query %s. Error: %s", 
+                      req, mysql_error(&mysql));
+            return -1;
+        }
+        delimed = strtok(NULL, ";");
+    }
+    return 0;
+}
+
+
+static int db_clear() {
+    char db_init_file[256];
+    get_local_file(db_init_file, "schema.sql");
+    char contents[MAX_INIT_CONTENTS_SIZE];
+
+    int fd = open(db_init_file, O_RDONLY);
+    if (fd == -1) {
+        log_error("Error opening schema file %s", db_init_file);
+        return -1;
+    }
+
+    ssize_t bytes_read = read(fd, contents, MAX_INIT_CONTENTS_SIZE);
+    close(fd);
+    if (bytes_read == MAX_INIT_CONTENTS_SIZE) {
+        log_error("Contents of %s too large", db_init_file);
+        return -1;
+    }
+
+    contents[bytes_read] = '\0';
+
+    int status = split_exec_cmd(contents);
+    if (status) {
+        log_error("Could not execute mysql query in %s", db_init_file);
+        return -1;
+    }
+    log_info("Initialized cleared db");
+    return 0;
+}
 
 /**
  * Initialize the MySQL client library, and connect to the server
@@ -13,7 +78,7 @@ MYSQL mysql;
  * @param: none
  * @return: 0 on success
  */
-int db_init() {
+int db_init(int clear) {
     struct db_info *db = get_db_info();
 
     if (mysql_library_init(0, NULL, NULL)) {
@@ -24,9 +89,34 @@ int db_init() {
     char db_ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &db->ip, db_ip, INET_ADDRSTRLEN);
 
-    if (!mysql_real_connect(&mysql, db_ip, db->user, db->pwd, db->name, 0, NULL, 0)) {
+    if (!mysql_real_connect(&mysql, db_ip, db->user, db->pwd, db->name, 0, NULL, 
+                            CLIENT_MULTI_STATEMENTS)) {
         log_error("Could not connect to MySQL DB %s", mysql_error(&mysql));
         return -1;
+    }
+
+    if (clear) {
+        int rtn = db_clear();
+        if (rtn < 0) {
+            log_error("Could not clear Database");
+            return -1;
+        }
+    }
+
+    for (int i = 0; i < N_REPORTED_STAT_TYPES; ++i) {
+        if (db_register_statistic(reported_stat_types[i].id,
+                                  reported_stat_types[i].name) != 0) {
+            return -1;
+        }
+    }
+
+    struct dedos_dfg *dfg = get_dfg();
+
+    for (int i=0; i < dfg->n_msu_types; ++i) {
+        struct dfg_msu_type *type = dfg->msu_types[i];
+        if (db_register_msu_type(type->id) != 0) {
+            return -1;
+        }
     }
 
     int r;
@@ -43,18 +133,6 @@ int db_init() {
             if (db_register_thread(thread->id, rt->id) != 0) {
                 return -1;
             }
-
-            int m;
-            for (m = 0; m < thread->n_msus; ++m) {
-                struct dfg_msu *msu = thread->msus[m];
-                if (db_register_msu(msu, thread->id, rt->id) != 0) {
-                    return -1;
-                }
-
-                if (db_register_timeseries(msu, thread->id, rt->id) != 0) {
-                    return -1;
-                }
-            }
         }
     }
 
@@ -70,6 +148,35 @@ int db_terminate() {
     mysql_library_end();
 
     return 1;
+}
+
+int db_register_statistic(int stat_id, char *name) {
+    char check_query[MAX_REQ_LEN];
+    char insert_query[MAX_REQ_LEN];
+    const char *element = "stattype";
+
+    snprintf(check_query, MAX_REQ_LEN,
+             "select * from Statistics where id = (%d)", stat_id);
+
+    snprintf(insert_query, MAX_REQ_LEN,
+             "insert into Statistics (id, name) values (%d, '%s')",
+             stat_id, name);
+
+    return db_check_and_register(check_query, insert_query, element, stat_id);
+}
+
+int db_register_msu_type(int msu_type_id) {
+    char check_query[MAX_REQ_LEN];
+    char insert_query[MAX_REQ_LEN];
+    const char *element = "msutype";
+
+    snprintf(check_query, MAX_REQ_LEN,
+             "select * from MsuTypes where id = (%d)", msu_type_id);
+
+    snprintf(insert_query, MAX_REQ_LEN,
+             "insert into MsuTypes (id) values (%d)", msu_type_id);
+
+    return db_check_and_register(check_query, insert_query, element, msu_type_id);
 }
 
 /**
@@ -115,6 +222,7 @@ int db_register_thread(int thread_id, int runtime_id) {
     return db_check_and_register(check_query, insert_query, element, thread_id);
 }
 
+
 /**
  * Register an MSU in the DB. Does nothing if MSU already exists
  * @param struct dfg_msu *msu
@@ -133,11 +241,11 @@ int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id) {
              msu->id);
 
     snprintf(select_thread_id, MAX_REQ_LEN,
-             "select id from Threads where thread_id = (%d) and runtime_id = (%d)",
+             "select pk from Threads where thread_id = (%d) and runtime_id = (%d)",
              thread_id, runtime_id);
 
     snprintf(insert_query, MAX_REQ_LEN,
-             "insert into Msus (msu_id, msu_type_id, thread_id) values (%d, %d, (%s))",
+             "insert into Msus (msu_id, msu_type_id, thread_pk) values (%d, %d, (%s))",
              msu->id, msu->type->id, select_thread_id);
 
     return db_check_and_register(check_query, insert_query, element, msu->id);
@@ -155,37 +263,40 @@ int db_register_timeseries(struct dfg_msu *msu, int thread_id, int runtime_id) {
     for (i = 0; i < N_REPORTED_STAT_TYPES; ++i) {
         char check_query[MAX_REQ_LEN];
         char insert_query[MAX_REQ_LEN];
-        char select_thread_id[MAX_REQ_LEN];
-        char select_msu_id[MAX_REQ_LEN];
-        char select_stat_id[MAX_REQ_LEN];
+        char select_msu_pk[MAX_REQ_LEN];
         const char *element = "timeserie";
+
+        snprintf(select_msu_pk, MAX_REQ_LEN,
+                 "select pk from Msus where msu_id = (%d)", msu->id);
 
         snprintf(check_query, MAX_REQ_LEN,
                  "select * from Timeseries where "
-                 "msu_id = (select id from Msus where msu_id = (%d)) "
-                 "and statistic_id = (select id from Statistics where stat_id = (%d))",
-                 msu->id, reported_stat_types[i].id);
+                 "msu_pk = (%s) "
+                 "and statistic_id = (%d)",
+                 select_msu_pk, reported_stat_types[i].id);
 
-        snprintf(select_stat_id, MAX_REQ_LEN,
-                 "select id from Statistics where name = ('%s')", reported_stat_types[i].name);
-
-        snprintf(select_msu_id, MAX_REQ_LEN,
-                 "select id from Msus where msu_id = (%d)", msu->id);
-
-        snprintf(select_thread_id, MAX_REQ_LEN,
-                 "select id from Threads where thread_id = (%d) and runtime_id = (%d)",
-                 thread_id, runtime_id);
 
         snprintf(insert_query, MAX_REQ_LEN,
-                 "insert into Timeseries (runtime_id, statistic_id, thread_id, msu_id) "
-                 "values (%d, (%s), (%s), (%s))",
-                 runtime_id, select_stat_id, select_thread_id, select_msu_id);
+                 "insert into Timeseries (statistic_id, msu_pk) "
+                 "values ((%d), (%s))",
+                 reported_stat_types[i].id, select_msu_pk);
 
         if (db_check_and_register(check_query, insert_query, element, msu->id) != 0) {
             return -1;
         }
     }
 
+    return 0;
+}
+
+int db_register_msu_stats(struct dfg_msu *msu, int thread_id, int runtime_id) {
+
+    if (db_register_msu(msu, thread_id, runtime_id) != 0) {
+        return -1;
+    }
+    if (db_register_timeseries(msu, thread_id, runtime_id) != 0) {
+        return -1;
+    }
     return 0;
 }
 
@@ -203,7 +314,7 @@ int db_check_and_register(const char *check_query, const char *insert_query,
 
     query_len = strlen(check_query);
     if (mysql_real_query(&mysql, check_query, query_len)) {
-        log_error("MySQL query failed: %s", mysql_error(&mysql));
+        log_error("MySQL query failed: %s\n %s", mysql_error(&mysql), check_query);
         return -1;
     } else {
         MYSQL_RES *result = mysql_store_result(&mysql);
@@ -219,11 +330,11 @@ int db_check_and_register(const char *check_query, const char *insert_query,
                     log_error("MySQL query (%s) failed: %s", insert_query, mysql_error(&mysql));
                     return -1;
                 } else {
-                    log_info("registered element %s (id: %d) in DB", element, element_id);
+                    log(LOG_SQL, "registered element %s (id: %d) in DB", element, element_id);
                     return 0;
                 }
             } else {
-                log_info("element %s (id: %d) is already registered in DB", element, element_id);
+                log(LOG_SQL, "element %s (id: %d) is already registered in DB", element, element_id);
                 mysql_free_result(result);
                 return 0;
             }
@@ -239,36 +350,35 @@ int db_check_and_register(const char *check_query, const char *insert_query,
  */
 int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr) {
     /* Find timeserie to insert data point first */
-    char select_stat_id[MAX_REQ_LEN];
-    snprintf(select_stat_id, MAX_REQ_LEN,
-             "select id from Statistics where stat_id = (%d)", input_hdr->stat_id);
-
-    char select_msu_id[MAX_REQ_LEN];
-    snprintf(select_msu_id, MAX_REQ_LEN,
-             "select id from Msus where msu_id = (%d)", input_hdr->item_id);
+    char select_msu_pk[MAX_REQ_LEN];
+    snprintf(select_msu_pk, MAX_REQ_LEN,
+             "select pk from Msus where msu_id = (%d)", input_hdr->item_id);
 
     char ts_query[MAX_REQ_LEN];
     snprintf(ts_query, MAX_REQ_LEN,
-             "select id from Timeseries where msu_id = (%s) and statistic_id = (%s)",
-             select_msu_id, select_stat_id);
+             "select pk from Timeseries where msu_pk = (%s) and statistic_id = (%d)",
+             select_msu_pk, input_hdr->stat_id);
 
     int i;
     for (i = 0; i < input_hdr->n_stats; ++i) {
+        if (input[i].time.tv_sec < 0) {
+            continue;
+        }
         int query_len;
         char insert_query[MAX_REQ_LEN];
         query_len = snprintf(insert_query, MAX_REQ_LEN,
-                             "insert into Points (timeseries_id, ts, val) values "
+                             "insert into Points (timeseries_pk, ts, val) values "
                              "((%s), %lu, %f)",
                              ts_query,
-                             (unsigned long) input[i].time.tv_sec * 1e9 + input[i].time.tv_nsec,
+                             (unsigned long) input[i].time.tv_sec * (unsigned long)1e9 + (unsigned long)input[i].time.tv_nsec,
                              input[i].value);
 
         if (mysql_real_query(&mysql, insert_query, query_len)) {
             log_error("MySQL query (%s) failed: %s", insert_query, mysql_error(&mysql));
             return -1;
         } else {
-            log_info("inserted data point for msu %d and stat %d",
-                     input_hdr->item_id, input_hdr->stat_id);
+            log(LOG_SQL, "inserted data point for msu %d and stat %d",
+                input_hdr->item_id, input_hdr->stat_id);
             return 0;
         }
     }

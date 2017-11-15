@@ -2,6 +2,9 @@
 #include "timeseries.h"
 #include "stats.h"
 #include "logging.h"
+#include "controller_mysql.h"
+#include "controller_dfg.h"
+#include "stat_msg_handler.h"
 
 #include <stdbool.h>
 
@@ -50,7 +53,7 @@ struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
     return &type->items[type->id_indices[item_id]].stats;
 }
 
-int unregister_stat_item(unsigned int item_id) {
+int unregister_msu_stat(unsigned int item_id) {
     if (!stats_initialized) {
         log_error("Stats not initialized");
         return -1;
@@ -68,7 +71,7 @@ int unregister_stat_item(unsigned int item_id) {
 }
 
 
-int register_stat_item(unsigned int item_id) {
+int register_msu_stat(unsigned int item_id, int thread_id, int runtime_id) {
     if (item_id >= MAX_STAT_ID) {
         log_error("Item ID %u too high!", item_id);
         return -1;
@@ -103,6 +106,13 @@ int register_stat_item(unsigned int item_id) {
         }
         memset(&item->stats, 0, sizeof(item->stats));
     }
+
+    struct dfg_msu *msu = get_dfg_msu(item_id);
+    if (msu == NULL) {
+        log_error("Cannot get MSU for database registration");
+        return -1;
+    }
+    db_register_msu_stats(msu, thread_id, runtime_id);
     return 0;
 }
 
@@ -119,6 +129,20 @@ int init_statistics() {
         stat_types[i].items = NULL;
     }
     stats_initialized = true;
+
+    struct dedos_dfg *dfg = get_dfg();
+
+    if (dfg == NULL) {
+        log_error("DFG must be initialized before initializing statistics");
+        return -1;
+    }
+
+    for (int i=0; i < dfg->n_msus; i++) {
+        register_msu_stat(dfg->msus[i]->id,
+                          dfg->msus[i]->scheduling.thread->id,
+                          dfg->msus[i]->scheduling.runtime->id);
+    }
+    init_stats_msg_handler();
     return 0;
 }
 

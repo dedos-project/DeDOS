@@ -2,7 +2,9 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+
 #include "msu_stats.h"
+#include "controller_mysql.h"
 #include "logging.h"
 #include "api.h"
 #include "dfg.h"
@@ -50,7 +52,7 @@ int add_msu(unsigned int msu_id, unsigned int type_id,
         unschedule_dfg_msu(msu);
         return -1;
     } else {
-        register_stat_item(msu_id);
+        register_msu_stat(msu_id, thread_id, runtime_id);
         return 0;
     }
 }
@@ -75,7 +77,7 @@ int remove_msu(unsigned int id) {
         log_error("Error unscheduling DFG msu");
         return -1;
     }
-    unregister_stat_item(id);
+    unregister_msu_stat(id);
 
     return 0;
 }

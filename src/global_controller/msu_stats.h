@@ -16,8 +16,8 @@ struct stat_item {
 
 struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id);
 
-int unregister_stat_item(unsigned int item_id);
-int register_stat_item(unsigned int item_id);
+int unregister_msu_stat(unsigned int msu_id);
+int register_msu_stat(unsigned int msu_id, int thread_id, int runtime_id);
 int init_statistics();
 
 void show_stats(struct dfg_msu *msu);

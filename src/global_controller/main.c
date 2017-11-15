@@ -4,6 +4,10 @@
 #include <getopt.h>
 #include <pthread.h>
 #include <string.h>
+#include <libgen.h>
+
+#include "msu_stats.h"
+#include "local_files.h"
 #include "logging.h"
 #include "controller_dfg.h"
 #include "runtime_communication.h"
@@ -11,7 +15,6 @@
 #include "scheduling.h"
 #include "dfg.h"
 #include "dfg_reader.h"
-#include "stat_msg_handler.h"
 #include "controller_mysql.h"
 #include "mysql.h"
 
@@ -24,21 +27,43 @@ static void print_usage() {
 }
 
 int main(int argc, char *argv[]) {
+    set_local_directory(dirname(argv[0]));
+
     int option = 0;
     char filename[FILENAME_LEN];
     memset(filename, '\0', FILENAME_LEN);
     char *output_filename = NULL;
     int output_port = -1;
+    bool db = false;
+    bool init_db = false;
 
-    while ((option = getopt(argc, argv,"j:o:p:")) != -1) {
+    struct option longopts[] = {
+        {"db", no_argument, 0, 0 },
+        {"init-db", no_argument, 0, 0},
+        {NULL, 0, 0, 0}
+    };
+
+    int opt_index;
+    while ((option = getopt_long(argc, argv,"j:o:p", longopts, &opt_index)) != -1) {
         switch (option) {
-            //strncpy results in a segfault here.
-            //e.g strncpy(filename, optarg, FILENAME_LEN);
+            case 0:
+                if (strcmp(longopts[opt_index].name, "db") == 0) {
+                    db = true;
+                } else if (strcmp(longopts[opt_index].name, "init-db") == 0) {
+                    db = true;
+                    init_db = true;
+                } else {
+                    print_usage();
+                    exit(EXIT_FAILURE);
+                }
+                break;
             case 'j' : strcpy(filename, optarg);
                 break;
             case 'o' : output_filename = optarg;
                 break;
             case 'p' : output_port = atoi(optarg);
+                break;
+            case 'd' : init_db = true;
                 break;
             default:
                 print_usage();
@@ -50,11 +75,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int rtn = init_stats_msg_handler();
-    if (rtn < 0) {
-        log_error("Error initializing stat message handler");
-        return -1;
-    }
+    int rtn;
 
     rtn = init_dfg_lock();
     if (rtn < 0) {
@@ -68,12 +89,20 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    rtn = db_init();
-    if (rtn < 0) {
-        log_error("Error setting up mysql DB!");
-        return -1;
+    if (db) {
+        rtn = db_init(init_db);
+        if (rtn < 0) {
+            log_error("Error setting up mysql DB!");
+            return -1;
+        }
     }
 
+    rtn = init_statistics();
+
+    if (rtn < 0) {
+        log_error("Error initializing statistics");
+        return -1;
+    }
     int port = local_listen_port();
 
     //const char *policy = "greedy";

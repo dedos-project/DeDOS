@@ -20,10 +20,6 @@ int init_controller_dfg(char *filename) {
 
     set_haproxy_weights(0,0);
 
-    for (int i=0; i<DFG->n_msus; i++) {
-        register_stat_item(DFG->msus[i]->id);
-    }
-
     return 0;
 }
 
