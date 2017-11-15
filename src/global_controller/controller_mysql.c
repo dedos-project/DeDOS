@@ -33,7 +33,7 @@ static int split_exec_cmd(char *cmd) {
 
         int status = mysql_query(&mysql, req);
         if (status) {
-            log_error("Could not execute mysql query %s. Error: %s", 
+            log_error("Could not execute mysql query %s. Error: %s",
                       req, mysql_error(&mysql));
             return -1;
         }
@@ -89,7 +89,7 @@ int db_init(int clear) {
     char db_ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &db->ip, db_ip, INET_ADDRSTRLEN);
 
-    if (!mysql_real_connect(&mysql, db_ip, db->user, db->pwd, db->name, 0, NULL, 
+    if (!mysql_real_connect(&mysql, db_ip, db->user, db->pwd, db->name, 0, NULL,
                             CLIENT_MULTI_STATEMENTS)) {
         log_error("Could not connect to MySQL DB %s", mysql_error(&mysql));
         return -1;
