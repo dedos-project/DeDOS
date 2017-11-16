@@ -21,3 +21,6 @@ times = [pt.ts for pt in pts]
 
 df = pd.DataFrame({'timestamp': times,
                   'value'     :vals})
+
+df = db.get_msu_full_df(msus[0])
+print df

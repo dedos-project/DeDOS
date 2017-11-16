@@ -2,6 +2,7 @@ import sys
 import os
 from peewee import *
 from models import *
+import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
 from utils import *
@@ -75,3 +76,16 @@ class db_api:
         self.db.close()
 
         return points
+
+    def get_msu_full_df(self, msu):
+        cols = {}
+        timeseries = self.get_msu_timeseries(msu)
+
+        #we assume that times are equal across metrics
+        cols['TIME'] = [datapoint.ts for datapoint in self.get_ts_points(timeseries[0])]
+
+        for ts in timeseries:
+            datapoints = self.get_ts_points(ts)
+            cols[ts.statistic.name] = [datapoint.val for datapoint in datapoints]
+
+        return pd.DataFrame(cols)
