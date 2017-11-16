@@ -28,7 +28,7 @@ CREATE TABLE Threads (
 
 CREATE TABLE MsuTypes (
     id  int NOT NULL,
-    name varchar(64),
+    name varchar(64) NOT NULL,
     PRIMARY KEY (id)
 );
 
