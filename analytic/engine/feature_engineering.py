@@ -1,6 +1,7 @@
 import os
 import sys
 import pandas as pd
+from classifiers import *
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../database/')
 
@@ -23,4 +24,7 @@ df = pd.DataFrame({'timestamp': times,
                   'value'     :vals})
 
 df = db.get_msu_full_df(msus[0])
-print df
+
+X = df.loc[:, ['QUEUE_LEN', 'EXEC_TIME', 'IDLE_TIME']]
+
+k_means_model = do_kmeans(X, 5)
