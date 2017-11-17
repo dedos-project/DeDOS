@@ -16,7 +16,6 @@
 #include "dfg.h"
 #include "dfg_reader.h"
 #include "controller_mysql.h"
-#include "mysql.h"
 
 #define FILENAME_LEN 32
 

@@ -270,8 +270,7 @@ static struct timespec *next_timeout(struct worker_thread *thread) {
         return &cur_time;
     }
     if (-diff_s > DEFAULT_WAIT_TIMEOUT_S) {
-        cur_time.tv_sec += DEFAULT_WAIT_TIMEOUT_S;
-        return &cur_time;
+        return NULL;
     }
     cur_time = *time;
     struct timeout_list *old = thread->timeouts;
@@ -320,6 +319,8 @@ int enqueue_worker_timeout(struct worker_thread *thread, struct timespec *interv
     log(LOG_WORKER_THREAD, "Enqueued timeout to queue");
     return 0;
 }
+
+
 
 /** The main worker thread loop. Checks for exit signal, processes messages */
 static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread) {

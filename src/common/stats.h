@@ -46,14 +46,28 @@ struct stat_type_label {
 };
 
 #ifndef REPORTED_STAT_TYPES
-/** The statistics reported from runtime to global controller. */
-#define REPORTED_STAT_TYPES \
+
+#define REPORTED_MSU_STAT_TYPES \
     {MSU_QUEUE_LEN, "QUEUE_LEN"}, \
     {MSU_ITEMS_PROCESSED, "ITEMS_PROCESSED"}, \
     {MSU_MEM_ALLOC, "MEMORY_ALLOCATED"}, \
     {MSU_NUM_STATES, "NUM_STATES"}, \
     {MSU_EXEC_TIME, "EXEC_TIME"}, \
-    {MSU_IDLE_TIME, "IDLE_TIME"} 
+    {MSU_IDLE_TIME, "IDLE_TIME"}
+
+#define REPORTED_THREAD_STAT_TYPES \
+    {THREAD_UCPUTIME, "USER_TIME"}, \
+    {THREAD_SCPUTIME, "KERNAL_TIME"}, \
+    {THREAD_MAXRSS, "MAX_RSS"}, \
+    {THREAD_MINFLT, "MINOR_FAULTS"}, \
+    {THREAD_MAJFLT, "MAJOR_FAULTS"}, \
+    {THREAD_VCSW, "VOL_CTX_SW"}, \
+    {THREAD_IVCSW, "INVOL_CTX_SW"}
+
+#define REPORTED_STAT_TYPES \
+    REPORTED_MSU_STAT_TYPES, \
+    REPORTED_THREAD_STAT_TYPES 
+
 #endif
 
 /** Static structure so the reported stat types can be referenced as an array */

@@ -146,11 +146,14 @@ int init_statistics() {
     return 0;
 }
 
+static struct stat_type_label msu_stat_types[] = { REPORTED_MSU_STAT_TYPES };
+static int N_MSU_STAT_TYPES = sizeof(msu_stat_types) / sizeof(*msu_stat_types);
+
 void show_stats(struct dfg_msu *msu){
     int stat_id = msu->id;
-    for (int i=0; i < N_STAT_TYPES; i++) {
-        struct timed_rrdb *ts = get_stat(stat_types[i].id, stat_id);
-        printf("******* Statistic: %s\n", stat_types[i].name);
+    for (int i=0; i < N_MSU_STAT_TYPES; i++) {
+        struct timed_rrdb *ts = get_stat(msu_stat_types[i].id, stat_id);
+        printf("******* Statistic: %s\n", msu_stat_types[i].name);
         print_timeseries(ts);
     }
 }

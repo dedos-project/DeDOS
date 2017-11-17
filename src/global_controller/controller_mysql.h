@@ -1,11 +1,9 @@
 #ifndef CONTROLLER_MYSQL_H
 #define CONTROLLER_MYSQL_H
 
-#include "mysql.h"
 #include "dfg.h"
 #include "stats.h"
 
-extern MYSQL mysql;
 
 int db_init(int clear);
 int db_terminate();

@@ -28,6 +28,8 @@ struct dedos_thread {
     pthread_mutex_t exit_lock;
     /** For checking if thread should exit */
     int exit_signal;
+    /** For logging thread metrics */
+    struct timespec last_metric;
 };
 
 /** Returns the dedos_thread with the given ID */

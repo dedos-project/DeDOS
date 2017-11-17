@@ -12,7 +12,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-MYSQL mysql;
+static MYSQL mysql;
 
 #define MAX_REQ_LEN 512
 
