@@ -62,6 +62,6 @@ CREATE TABLE Points (
     timeseries_pk int NOT NULL,
     FOREIGN KEY (timeseries_pk) REFERENCES Timeseries(pk),
     ts BIGINT,
-    val DECIMAL,
+    val DECIMAL(18,9),
     PRIMARY KEY (id)
 );

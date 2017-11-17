@@ -16,8 +16,8 @@ ROOT_MAPPING = OrderedDict([
     ('db_ip', ['database', 'ip']),
     ('db_port', ['database', 'port']),
     ('db_user', ['database', 'user']),
-    ('db_pwd', ['database', 'pwd']),
-    ('db_name', ['database', 'name']),
+    ('db_pwd', ['database', 'password']),
+    ('db_name', ['database', 'name'])
 ])
 
 MSU_MAPPING = OrderedDict([
@@ -283,7 +283,7 @@ class MSUGenerator(list):
         next_msu = copy.deepcopy(self.base_msu)
         next_msu['scheduling']['thread_id'] += i % self.reps
         next_msu['scheduling']['runtime'] = self.runtimes[i / self.reps]
-        next_msu['id'] += i
+        next_msu['id'] += i 
         return next_msu
 
     def __len__(self):

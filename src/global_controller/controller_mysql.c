@@ -18,7 +18,7 @@ MYSQL mysql;
 
 #define MAX_INIT_CONTENTS_SIZE 8192
 
-int db_register_msu_type(int msu_type_id);
+int db_register_msu_type(int msu_type_id, char *name);
 int db_register_statistic(int stat_id, char *name);
 
 static int split_exec_cmd(char *cmd) {
@@ -114,7 +114,7 @@ int db_init(int clear) {
 
     for (int i=0; i < dfg->n_msu_types; ++i) {
         struct dfg_msu_type *type = dfg->msu_types[i];
-        if (db_register_msu_type(type->id) != 0) {
+        if (db_register_msu_type(type->id, type->name) != 0) {
             return -1;
         }
     }
@@ -165,7 +165,7 @@ int db_register_statistic(int stat_id, char *name) {
     return db_check_and_register(check_query, insert_query, element, stat_id);
 }
 
-int db_register_msu_type(int msu_type_id) {
+int db_register_msu_type(int msu_type_id, char *name) {
     char check_query[MAX_REQ_LEN];
     char insert_query[MAX_REQ_LEN];
     const char *element = "msutype";
@@ -174,7 +174,7 @@ int db_register_msu_type(int msu_type_id) {
              "select * from MsuTypes where id = (%d)", msu_type_id);
 
     snprintf(insert_query, MAX_REQ_LEN,
-             "insert into MsuTypes (id) values (%d)", msu_type_id);
+             "insert into MsuTypes (id, name) values (%d, '%s')", msu_type_id, name);
 
     return db_check_and_register(check_query, insert_query, element, msu_type_id);
 }

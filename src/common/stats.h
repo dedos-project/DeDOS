@@ -51,7 +51,9 @@ struct stat_type_label {
     {MSU_QUEUE_LEN, "QUEUE_LEN"}, \
     {MSU_ITEMS_PROCESSED, "ITEMS_PROCESSED"}, \
     {MSU_MEM_ALLOC, "MEMORY_ALLOCATED"}, \
-    {MSU_NUM_STATES, "NUM_STATES"}
+    {MSU_NUM_STATES, "NUM_STATES"}, \
+    {MSU_EXEC_TIME, "EXEC_TIME"}, \
+    {MSU_IDLE_TIME, "IDLE_TIME"} 
 #endif
 
 /** Static structure so the reported stat types can be referenced as an array */
