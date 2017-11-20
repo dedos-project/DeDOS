@@ -1,7 +1,7 @@
 #include "dfg.h"
 #include "logging.h"
 #include "dfg_reader.h"
-#include "msu_stats.h"
+#include "controller_stats.h"
 #include "haproxy.h"
 
 #include <stdlib.h>

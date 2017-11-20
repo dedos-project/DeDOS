@@ -13,20 +13,29 @@
 #include <unistd.h>
 
 static MYSQL mysql;
+bool mysql_initialized = false;
 
-#define MAX_REQ_LEN 512
+#define CHECK_SQL_INIT \
+    if (!mysql_initialized) { \
+        log_warn("MYSQL not initialized"); \
+        return -1; \
+    }
+
+
+#define MAX_REQ_LEN 1024
 
 #define MAX_INIT_CONTENTS_SIZE 8192
 
 int db_register_msu_type(int msu_type_id, char *name);
 int db_register_statistic(int stat_id, char *name);
+int db_register_thread_stats(int thread_id, int runtime_id);
 
 static int split_exec_cmd(char *cmd) {
     char req[MAX_REQ_LEN];
 
     char *delimed = strtok(cmd, ";");
     while (delimed != NULL && strlen(delimed) > 1) {
-        strcpy(req, delimed);
+        strncpy(req, delimed, MAX_REQ_LEN);
         int len = strlen(delimed);
         req[len] = ';';
         req[len+1] = '\0';
@@ -125,17 +134,9 @@ int db_init(int clear) {
         if (db_register_runtime(rt->id) != 0) {
             return -1;
         }
-
-        int n_threads = rt->n_pinned_threads + rt->n_unpinned_threads;
-        int t;
-        for (t = 1; t <= n_threads; ++t) {
-            struct dfg_thread *thread = get_dfg_thread(rt, t);
-            if (db_register_thread(thread->id, rt->id) != 0) {
-                return -1;
-            }
-        }
     }
 
+    mysql_initialized = true;
     return 0;
 }
 
@@ -146,11 +147,12 @@ int db_init(int clear) {
  */
 int db_terminate() {
     mysql_library_end();
-
+    mysql_initialized = false;
     return 1;
 }
 
 int db_register_statistic(int stat_id, char *name) {
+    CHECK_SQL_INIT;
     char check_query[MAX_REQ_LEN];
     char insert_query[MAX_REQ_LEN];
     const char *element = "stattype";
@@ -166,6 +168,7 @@ int db_register_statistic(int stat_id, char *name) {
 }
 
 int db_register_msu_type(int msu_type_id, char *name) {
+    CHECK_SQL_INIT;
     char check_query[MAX_REQ_LEN];
     char insert_query[MAX_REQ_LEN];
     const char *element = "msutype";
@@ -185,6 +188,7 @@ int db_register_msu_type(int msu_type_id, char *name) {
  * @return: 0 on success
  */
 int db_register_runtime(int runtime_id) {
+    CHECK_SQL_INIT;
     char check_query[MAX_REQ_LEN];
     char insert_query[MAX_REQ_LEN];
     const char *element = "runtime";
@@ -207,6 +211,7 @@ int db_register_runtime(int runtime_id) {
  * @return: 0 on success
  */
 int db_register_thread(int thread_id, int runtime_id) {
+    CHECK_SQL_INIT;
     char check_query[MAX_REQ_LEN];
     char insert_query[MAX_REQ_LEN];
     const char *element = "thread";
@@ -231,6 +236,7 @@ int db_register_thread(int thread_id, int runtime_id) {
  * @return: 0 on success
  */
 int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id) {
+    CHECK_SQL_INIT;
     char check_query[MAX_REQ_LEN];
     char insert_query[MAX_REQ_LEN];
     char select_thread_id[MAX_REQ_LEN];
@@ -253,14 +259,12 @@ int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id) {
 
 /**
  * Register timseries for an MSU in the DB. Does nothing if timeserie already exists
- * @param struct dfg_msu *msu
- * @param int thread_id
- * @param int runtime_id
  * @return: 0 on success
  */
-int db_register_timeseries(struct dfg_msu *msu, int thread_id, int runtime_id) {
+int db_register_msu_timeseries(struct dfg_msu *msu) {
+    CHECK_SQL_INIT;
     int i;
-    for (i = 0; i < N_REPORTED_STAT_TYPES; ++i) {
+    for (i = 0; i < N_REPORTED_MSU_STAT_TYPES; ++i) {
         char check_query[MAX_REQ_LEN];
         char insert_query[MAX_REQ_LEN];
         char select_msu_pk[MAX_REQ_LEN];
@@ -273,28 +277,70 @@ int db_register_timeseries(struct dfg_msu *msu, int thread_id, int runtime_id) {
                  "select * from Timeseries where "
                  "msu_pk = (%s) "
                  "and statistic_id = (%d)",
-                 select_msu_pk, reported_stat_types[i].id);
+                 select_msu_pk, reported_msu_stat_types[i].id);
 
 
         snprintf(insert_query, MAX_REQ_LEN,
                  "insert into Timeseries (statistic_id, msu_pk) "
                  "values ((%d), (%s))",
-                 reported_stat_types[i].id, select_msu_pk);
+                 reported_msu_stat_types[i].id, select_msu_pk);
 
         if (db_check_and_register(check_query, insert_query, element, msu->id) != 0) {
             return -1;
         }
     }
+    return 0;
+}
 
+int db_register_thread_timeseries(int thread_id, int runtime_id) {
+    CHECK_SQL_INIT;
+    char check_query[MAX_REQ_LEN];
+    char insert_query[MAX_REQ_LEN];
+    char select_thread_pk[MAX_REQ_LEN];
+    const char *element = "thread_timeseries";
+    for (int i=0; i < N_REPORTED_THREAD_STAT_TYPES; ++i) {
+        snprintf(select_thread_pk, MAX_REQ_LEN,
+                 "select pk from Threads where thread_id = (%d) and runtime_id = (%d)",
+                 thread_id, runtime_id);
+
+        snprintf(check_query, MAX_REQ_LEN,
+                 "select * from Timeseries where "
+                 "thread_pk = (%s) "
+                 "and statistic_id = (%d)",
+                 select_thread_pk, reported_thread_stat_types[i].id);
+
+        snprintf(insert_query, MAX_REQ_LEN,
+                "insert into Timeseries (statistic_id, thread_pk) "
+                "values ((%d), (%s))",
+                reported_thread_stat_types[i].id, select_thread_pk);
+
+        if (db_check_and_register(check_query, insert_query, element, thread_id) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+
+
+int db_register_thread_stats(int thread_id, int runtime_id) {
+    CHECK_SQL_INIT;
+    if (db_register_thread(thread_id, runtime_id) != 0) {
+        return -1;
+    }
+    if (db_register_thread_timeseries(thread_id, runtime_id) != 0) {
+        return -1;
+    }
     return 0;
 }
 
 int db_register_msu_stats(struct dfg_msu *msu, int thread_id, int runtime_id) {
+    CHECK_SQL_INIT;
 
     if (db_register_msu(msu, thread_id, runtime_id) != 0) {
         return -1;
     }
-    if (db_register_timeseries(msu, thread_id, runtime_id) != 0) {
+    if (db_register_msu_timeseries(msu) != 0) {
         return -1;
     }
     return 0;
@@ -310,6 +356,7 @@ int db_register_msu_stats(struct dfg_msu *msu, int thread_id, int runtime_id) {
  */
 int db_check_and_register(const char *check_query, const char *insert_query,
                           const char *element, int element_id) {
+    CHECK_SQL_INIT;
     int query_len;
 
     query_len = strlen(check_query);
@@ -342,23 +389,42 @@ int db_check_and_register(const char *check_query, const char *insert_query,
     }
 }
 
+static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id, int item_id, int runtime_id) {
+    char select_pk[MAX_REQ_LEN];
+    if (is_thread_stat(stat_id)) {
+        snprintf(select_pk, MAX_REQ_LEN,
+                "select pk from Threads where thread_id = %d and runtime_id = %d",
+                item_id, runtime_id);
+        snprintf(query, MAX_REQ_LEN,
+                "select pk from Timeseries where thread_pk = (%s) and statistic_id = (%d)",
+                select_pk, stat_id);
+        return 0;
+    } else if (is_msu_stat(stat_id)) {
+        snprintf(select_pk, MAX_REQ_LEN,
+                "select pk from Msus where msu_id = %d", item_id);
+        snprintf(query, MAX_REQ_LEN,
+                "select pk from Timeseries where msu_pk = (%s) and statistic_id = (%d)",
+                select_pk, stat_id);
+        return 0;
+    } else {
+        log_error("Cannot get timestamp query for stat type %d", stat_id);
+        return -1;
+    }
+}
+
 /**
  * Insert datapoint for a timseries in the DB.
  * @param input: pointer to timed_stat object
  * @param input_hdr: header of stat sample
  * @return: 0 on success
  */
-int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr) {
+int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr, int runtime_id) {
+    CHECK_SQL_INIT;
     /* Find timeserie to insert data point first */
-    char select_msu_pk[MAX_REQ_LEN];
-    snprintf(select_msu_pk, MAX_REQ_LEN,
-             "select pk from Msus where msu_id = (%d)", input_hdr->item_id);
-
     char ts_query[MAX_REQ_LEN];
-    snprintf(ts_query, MAX_REQ_LEN,
-             "select pk from Timeseries where msu_pk = (%s) and statistic_id = (%d)",
-             select_msu_pk, input_hdr->stat_id);
-
+    if (get_ts_query(ts_query, input_hdr->stat_id, input_hdr->item_id, runtime_id) != 0) {
+        return -1;
+    }
     int i;
     for (i = 0; i < input_hdr->n_stats; ++i) {
         if (input[i].time.tv_sec < 0) {

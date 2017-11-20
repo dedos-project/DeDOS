@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "runtime_communication.h"
-#include "msu_stats.h"
+#include "controller_stats.h"
 #include "timeseries.h"
 #include "dfg.h"
 #include "controller_dfg.h"
@@ -210,11 +210,16 @@ static char *msu_stats_to_json(int msu_id, int n_stats) {
     START_JSON(json);
     START_LIST(json);
 
-    for (int i=0; i<N_REPORTED_STAT_TYPES; i++) {
+    for (int i=0; i<N_REPORTED_MSU_STAT_TYPES; i++) {
         START_OBJ(json);
-        KEY_STRVAL(json, "label", reported_stat_types[i].name);
+        KEY_STRVAL(json, "label", reported_msu_stat_types[i].name);
         KEY(json, "stats");
-        struct timed_rrdb *stat = get_stat(reported_stat_types[i].id, msu_id);
+        struct timed_rrdb *stat = get_msu_stat(reported_msu_stat_types[i].id, msu_id);
+        if (stat == NULL) {
+            log_error("Cannot get MSU stat %d (idx %d) msu %d",
+                    reported_msu_stat_types[i].id, i, msu_id);
+            return "";
+        }
         char *stat_json = stat_to_json(stat, n_stats);
         VALUE(json, "%s", stat_json, strlen(stat_json));
         END_OBJ(json);

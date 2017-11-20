@@ -4,7 +4,7 @@
 #include "api.h"
 #include "logging.h"
 #include "runtime_messages.h"
-#include "msu_stats.h"
+#include "controller_stats.h"
 #include "msu_ids.h"
 #include "haproxy.h"
 #include <unistd.h>
@@ -27,7 +27,7 @@ static int UNUSED n_downstream_msus(struct dfg_msu * msu) {
 #ifdef QLEN_ROUTING
 
 static double get_q_len(struct dfg_msu *msu) {
-    struct timed_rrdb *q_len = get_stat(MSU_QUEUE_LEN, msu->id);
+    struct timed_rrdb *q_len = get_msu_stat(MSU_QUEUE_LEN, msu->id);
     double avg = average_n(q_len, 5);
     if (avg < 0) {
         return 0;
@@ -318,7 +318,7 @@ int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     msu->scheduling.thread = free_thread;
     msu->scheduling.runtime = rt;
 
-    register_msu_stat(msu->id, msu->scheduling.thread->id, msu->scheduling.runtime->id);
+    register_msu_stats(msu->id, msu->scheduling.thread->id, msu->scheduling.runtime->id);
     ret = send_create_msu_msg(msu);
     if (ret == -1) {
         log_error("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);

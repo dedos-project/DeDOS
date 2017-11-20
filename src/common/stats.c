@@ -18,6 +18,26 @@ struct stat_msg_hdr {
     int n_samples;
 };
 
+int is_thread_stat(enum stat_id id) {
+    for (int i=0; i < N_REPORTED_THREAD_STAT_TYPES; i++) {
+        if (reported_thread_stat_types[i].id == id) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int is_msu_stat(enum stat_id id) {
+    for (int i=0; i < N_REPORTED_MSU_STAT_TYPES; i++) {
+        if (reported_msu_stat_types[i].id == id) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+
 /** Initializes a single stat sample with room to hold `max_stats` statistics */
 static int init_stat_sample(int max_stats, struct stat_sample *sample) {
     sample->max_stats = max_stats;
