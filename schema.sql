@@ -53,7 +53,9 @@ CREATE TABLE Timeseries (
     FOREIGN KEY (thread_pk) REFERENCES Threads(pk),
     FOREIGN KEY (msu_pk) REFERENCES Msus(pk),
     FOREIGN KEY (statistic_id) REFERENCES Statistics(id),
-    CONSTRAINT unique_item UNIQUE (runtime_id, thread_pk, msu_pk, statistic_id),
+    CONSTRAINT unique_rt_stat UNIQUE (runtime_id, statistic_id),
+    CONSTRAINT unique_msu_stat UNIQUE (msu_pk, statistic_id),
+    CONSTRAINT unique_thread_stat UNIQUE (thread_pk, statistic_id),
     PRIMARY KEY (pk)
 );
 
