@@ -253,7 +253,7 @@ static inline int unlock_item(struct stat_item *item) {
 }
 
 /** Writes all statistics to the provided log file */
-static void flush_all_stats_to_log(FILE *file) {
+static void UNUSED flush_all_stats_to_log(FILE *file) {
     for (int i=0; i<N_STAT_TYPES; i++) {
         if (!stat_types[i].enabled) {
             continue;
@@ -442,7 +442,7 @@ double get_last_stat(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INITIALIZATION;
 
     struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) { 
+    if (!type->enabled) {
         return 0;
     }
     if (rlock_type(type)) {
@@ -747,7 +747,7 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
 
-    log(LOG_STAT_INITS, "Initialized stat item %s.%d (idx: %d)", 
+    log(LOG_STAT_INITS, "Initialized stat item %s.%d (idx: %d)",
             stat_types[stat_id].label, item_id, index);
     return 0;
 }

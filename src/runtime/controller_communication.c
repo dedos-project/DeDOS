@@ -2,6 +2,7 @@
  * @file: controller_communication.c
  * Communication with global controller from runtime
  */
+
 #include "controller_communication.h"
 #include "communication.h"
 #include "logging.h"
