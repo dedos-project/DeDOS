@@ -34,6 +34,14 @@ void set_dfg(struct dedos_dfg *dfg_in) {
     } \
     return NULL;
 
+struct db_info *get_db_info() {
+    return &dfg->db;
+}
+
+int get_dfg_n_runtimes() {
+    return dfg->n_runtimes;
+}
+
 struct dfg_runtime *get_dfg_runtime(unsigned int runtime_id) {
     SEARCH_FOR_ID(dfg, dfg->n_runtimes, dfg->runtimes, runtime_id);
 }
@@ -266,7 +274,7 @@ int schedule_dfg_msu(struct dfg_msu *msu, unsigned int runtime_id, unsigned int 
 
 /**
  * Removes the msu from it's thread, runtime, and instance,
- *  and removes the thread and runtime from the MSU 
+ *  and removes the thread and runtime from the MSU
  */
 static int remove_msu_from_thread(struct dfg_msu *msu) {
     struct dfg_thread *thread = msu->scheduling.thread;
@@ -308,9 +316,6 @@ static int remove_msu_from_thread(struct dfg_msu *msu) {
     msu->scheduling.thread = NULL;
     return 0;
 }
-
-
-
 
 int unschedule_dfg_msu(struct dfg_msu *msu) {
     if (dfg == NULL) {
@@ -581,5 +586,3 @@ void free_dfg(struct dedos_dfg *dfg) {
     }
     free(dfg);
 }
-    
-

@@ -1,7 +1,7 @@
 #include "dfg.h"
 #include "logging.h"
 #include "dfg_reader.h"
-#include "msu_stats.h"
+#include "controller_stats.h"
 #include "haproxy.h"
 
 #include <stdlib.h>
@@ -19,10 +19,6 @@ int init_controller_dfg(char *filename) {
     set_dfg(DFG);
 
     set_haproxy_weights(0,0);
-
-    for (int i=0; i<DFG->n_msus; i++) {
-        register_stat_item(DFG->msus[i]->id);
-    }
 
     return 0;
 }

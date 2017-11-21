@@ -114,7 +114,7 @@ static int spawn_dfg_msus(struct worker_thread *thread, struct dfg_msu **msus, i
 }
 
 /**
- * Creates all of the provided threads (including MSUs) on the current runtime 
+ * Creates all of the provided threads (including MSUs) on the current runtime
  */
 static int spawn_dfg_threads(struct dfg_thread **threads, int n_threads) {
     for (int i=0; i<n_threads; i++) {

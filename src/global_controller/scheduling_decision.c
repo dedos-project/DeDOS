@@ -1,6 +1,6 @@
 #include "controller_dfg.h"
 #include "stats.h"
-#include "msu_stats.h"
+#include "controller_stats.h"
 #include "msu_ids.h"
 #include "logging.h"
 #include "haproxy.h"
@@ -62,7 +62,7 @@ static int gather_cloning_info(struct cloning_info *info) {
 
     for (int i=0; i<type->n_instances; i++) {
         struct dfg_msu *instance = type->instances[i];
-        struct timed_rrdb *stat = get_stat(info->stat_id, instance->id);
+        struct timed_rrdb *stat = get_msu_stat(info->stat_id, instance->id);
 
         if (stat == NULL) {
             continue;

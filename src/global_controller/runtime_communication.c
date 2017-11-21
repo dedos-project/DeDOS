@@ -31,6 +31,15 @@ int runtime_fd(unsigned int runtime_id) {
     return 0;
 }
 
+static int runtime_id(int runtime_fd) {
+    for (int i=0; i < MAX_RUNTIME_ID; i++) {
+        if (runtime_endpoints[i].fd == runtime_fd) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int send_to_runtime(unsigned int runtime_id, struct ctrl_runtime_msg_hdr *hdr, void *payload) {
     if (runtime_id > MAX_RUNTIME_ID) {
         log_error("Requested runtime %d is greater than max runtime ID %d",
@@ -154,7 +163,12 @@ static int process_rt_stats_message(size_t payload_size, int fd) {
         log_error("Error reading stats message payload");
         return -1;
     }
-    return handle_serialized_stats_buffer(buffer, payload_size);
+    int id = runtime_id(fd);
+    if (id < 0) {
+        log_error("Cannot get runtime ID from file descriptor");
+        return -1;
+    }
+    return handle_serialized_stats_buffer(id, buffer, payload_size);
 }
 
 static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {

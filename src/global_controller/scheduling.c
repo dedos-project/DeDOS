@@ -4,7 +4,7 @@
 #include "api.h"
 #include "logging.h"
 #include "runtime_messages.h"
-#include "msu_stats.h"
+#include "controller_stats.h"
 #include "msu_ids.h"
 #include "haproxy.h"
 #include <unistd.h>
@@ -27,7 +27,7 @@ static int UNUSED n_downstream_msus(struct dfg_msu * msu) {
 #ifdef QLEN_ROUTING
 
 static double get_q_len(struct dfg_msu *msu) {
-    struct timed_rrdb *q_len = get_stat(MSU_QUEUE_LEN, msu->id);
+    struct timed_rrdb *q_len = get_msu_stat(MSU_QUEUE_LEN, msu->id);
     double avg = average_n(q_len, 5);
     if (avg < 0) {
         return 0;
@@ -208,7 +208,6 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
             for (up = 0; up < msus[i]->type->meta_routing.n_dst_types; ++up) {
                 struct dfg_msu_type *upt = msus[i]->type->meta_routing.dst_types[up];
                 if (msus[j]->type == msus[i]->type->meta_routing.dst_types[up] && j > i) {
-                    log_warn("Swap %d lower than %d", msus[j]->type->id, msus[i]->type->id);
                     struct dfg_msu *tmp = msus[j];
                     msus[j] = msus[i];
                     msus[i] = tmp;
@@ -218,7 +217,6 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
                 }
                 for (int upup = 0; upup < upt->meta_routing.n_dst_types; ++upup) {
                     if (msus[j]->type == upt->meta_routing.dst_types[upup] && j > i) {
-                        log_warn("Swap %d lower than %d", msus[j]->type->id, msus[i]->type->id);
                         struct dfg_msu *tmp = msus[j];
                         msus[j] = msus[i];
                         msus[i] = tmp;
@@ -229,10 +227,6 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
                 }
             }
         }
-    }
-
-    for (i = 0; i < n_msus; ++i) {
-        log_warn("new msu n°%d has ID %d and typ %de", i, msus[i]->id, msus[i]->type->id);
     }
 
     return 0;
@@ -318,7 +312,7 @@ int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     msu->scheduling.thread = free_thread;
     msu->scheduling.runtime = rt;
 
-    register_stat_item(msu->id);
+    register_msu_stats(msu->id, msu->type->id, msu->scheduling.thread->id, msu->scheduling.runtime->id);
     ret = send_create_msu_msg(msu);
     if (ret == -1) {
         log_error("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);
@@ -763,334 +757,3 @@ int schedule_msu(struct dfg_msu *msu, struct dfg_runtime *rt, struct dfg_msu **n
     log_debug("Processed %d dependencies", l);
     return 0;
 }
-
-/*
- * Find the least loaded suitable thread in a runtime to place an MSU
- *
-struct dfg_thread *find_thread(struct dfg_msu *msu, struct dfg_runtime *runtime) {
-    struct dfg_thread *least_loaded = NULL;
-    int i;
-    //for now we assume that all MSUs are to be scheduled on pinned threads
-    for (int i=0; i<runtime->n_pinned_threads + runtime->n_unpinned_threads; ++i) {
-        if (runtime->threads[i]->mode != PINNED_THREAD) {
-            continue;
-
-        }
-        float new_util = runtime->threads[i]->utilization +
-                       (msu->profiling.wcet / msu->scheduling.deadline);
-
-        if (new_util < 1) {
-            if (least_loaded == NULL || new_util < least_loaded->utilization) {
-                least_loaded = runtime->threads[i];
-            }
-        }
-
-
-    }
-
-    return least_loaded;
-}
-*/
-
-/**
- * Lookup a cut for the presence of a give MSU
- * @param struct cut *c the cut
- * @param int msu_id the msu id
- * @return int 1/0 yes/no
- *
-int is_in_cut(struct cut *c, int msu_id) {
-    int i;
-    for (i = 0; i < c->num_msu; i++) {
-        if (c->msu_ids[i] == msu_id) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-*/
-
-/**
- * Compute in/out traffic requirement for a given msu
- * @param struct dfg_msu *msu the desired msu
- * @param struct cut *c actual cut proposal
- * @param const char *direction egress/ingress
- * @return uint64_t bw requirement in the asked direction
- *
-uint64_t compute_out_of_cut_bw(struct dfg_msu *msu, struct cut *c, const char *direction) {
-    uint64_t out_of_cut_bw = 0;
-
-    if (strncmp(direction, "ingress", strlen("ingress\0")) == 0) {
-        //easiest way right now is to grab all the incoming MSU types,
-        //and lookup for instances of those
-        int i;
-        for (i = 0; i < msu->meta_routing.num_src_types; ++i) {
-            struct msus_of_type *t = NULL;
-            t = get_msus_from_type(msu->meta_routing.src_types[i]);
-
-            int m;
-            for (m = 0; m < t->num_msus; ++m) {
-                if (is_in_cut(c, t->msu_ids[m]) == 0) {
-                    struct dfg_msu *inc_msu = get_msu_from_id(t->msu_ids[m]);
-                    out_of_cut_bw += inc_msu->profiling.tx_node_remote;
-                }
-            }
-        }
-    } else if (strncmp(direction, "egress", strlen("egress\0")) == 0) {
-        int i;
-        //FIXME: update with new route objects
-        //for (i = 0; i < msu->scheduling.num_routes; ++i) {
-        //   if (is_in_cut(c, msu->scheduling.routes.edges[i]->to->msu_id) == 0) {
-        //        out_of_cut_bw += msu->profiling.tx_node_remote;
-        //    }
-        //}
-    }
-
-    return out_of_cut_bw;
-}
-*/
-
-/**
- * Pack as many MSU as possible on the same runtime in a first fit manner
- * @param struct to_schedule *ts information about the msu to be scheduled
- * @param struct dedos_dfg *dfg an instance of the DFG
- * @return int allocation successful/unsuccessful
- *
-int greedy_policy(struct to_schedule *ts, struct dedos_dfg *dfg) {
-    int num_to_allocate = ts->num_msu;
-    int n;
-    for (n = 0; n < dfg->runtimes_cnt; ++n) {
-        struct dfg_runtime *r = NULL;
-        r = dfg->runtimes[n];
-
-        // Wipe out runtime's allocation 
-        //WARNING: forbid partial allocation request for now
-        if (r->current_alloc != NULL) {
-            free(r->current_alloc);
-        }
-
-        //Temporary cut object on the stack
-        struct cut c = {0, 0, 0, 0, 0, 0, NULL};
-
-        int has_placed_msu;
-        while (num_to_allocate > 0) {
-            has_placed_msu = 0;
-
-            int i;
-            //as it is greedy, we should only iterate once through all msus to allocate
-            for (i = 0; i < num_to_allocate; ++i) {
-                int msu_id = ts->msu_ids[i];
-                struct dfg_msu *msu = get_msu_from_id(msu_id);
-
-                //Check memory constraint
-                uint64_t new_cut_dram = msu->profiling.dram + c.dram;
-                if (new_cut_dram > r->dram) {
-                    debug("Not enough dram on runtime %d to host msu %d",
-                          r->id, msu_id);
-                    continue;
-                }
-
-                //Check that one of the runtime's thread can host the msu
-                struct dfg_thread *thread = NULL;
-                thread = find_thread(msu, r);
-                if (thread == NULL) {
-                    debug("Could not find a suitable thread on runtime %d to host msu %d",
-                          r->id, msu_id);
-                    continue;
-                }
-                //Check that the new ingress and egress bandwidth match the node's capacity
-                uint64_t msu_ingress = compute_out_of_cut_bw(msu, &c, "ingress");
-                uint64_t msu_egress = compute_out_of_cut_bw(msu, &c, "egress");
-                uint64_t msu_bw = msu_ingress + msu_egress;
-
-               if (msu_bw > 0 && (msu_bw + c.io_network_bw) > r->io_network_bw) {
-                    debug("Not enough BW on runtime %d to host msu %d",
-                          r->id, msu_id);
-                    continue;
-                }
-
-                //All the constraints are satisfied, allocate the msu to the node
-                msu->scheduling.runtime = r;
-                msu->scheduling.thread_id = thread->id;
-                msu->scheduling.thread = thread;
-
-                //Update the cut
-                c.dram = new_cut_dram;
-                c.io_network_bw = msu_bw;
-                c.egress_bw = msu_egress;
-                c.ingress_bw = msu_ingress;
-                c.msu_ids[c.num_msu] = msu->msu_id;
-                c.num_msu++;
-
-                struct cut *cut = NULL;
-                cut = malloc(sizeof(struct cut));
-                if (cut == NULL) {
-                    debug("could not allocate memory to cut object");
-                    return -1;
-                }
-
-                memcpy(cut, &c, sizeof(c));
-                r->current_alloc = cut;
-
-                num_to_allocate--;
-                has_placed_msu = 1;
-            }
-
-            if (has_placed_msu == 0) {
-                debug("%s", "can't place anymore MSU on this runtime");
-                break;
-            }
-        }
-    }
-
-    if (num_to_allocate > 0) {
-        return -1;
-    }
-
-    return 0;
-}
-*/
-
-/* For now assume one instance of each msu (i.e one edge from src to dst */
-/* FIXME: edge_set are no longer a thing
-int set_edges(struct to_schedule *ts, struct dedos_dfg *dfg) {
-    int n;
-    for (n = 0; n < ts->num_msu; ++n) {
-        int msu_id = ts->msu_ids[n];
-        struct dfg_msu *msu = get_msu_from_id(msu_id);
-
-        struct dfg_edge_set *edge_set = NULL;
-        edge_set = malloc(sizeof(struct dfg_edge_set));
-        if (edge_set == NULL) {
-            debug("Could not allocate memory for dfg_edge_set");
-            return -1;
-        }
-        int num_edges = 0;
-
-        if (strncmp(msu->vertex_type, "exit", strlen("exit\0")) != 0) {
-            struct msus_of_type *t = NULL;
-            int s;
-            for (s = 0; s < msu->meta_routing->num_dst_types; ++s) {
-                t = get_msus_from_type(msu->meta_routing->dst_types[s]);
-
-                int q;
-                for (q = 0; q < t->num_msus; ++q) {
-                    struct dfg_edge *e = NULL;
-                    e = malloc(sizeof(struct dfg_edge));
-                    if (e == NULL) {
-                        debug("Could not allocate memory for dfg_edge");
-                        return -1;
-                    }
-
-                    e->from = msu;
-                    e->to = get_msu_from_id(t->msu_ids[q]);
-
-                    edge_set->edges[edge_set->num_edges] = e;
-                    edge_set->num_edges++;
-                }
-            }
-
-            free(t);
-        }
-
-        msu->scheduling->routing = edge_set;
-    }
-
-    return 0;
-}
-*/
-/*
-int set_msu_deadlines(struct to_schedule *ts, struct dedos_dfg *dfg) {
-    //for now divide evenly the application deadline among msus
-    float msu_deadline = dfg->application_deadline / dfg->vertex_cnt;
-
-    int m;
-    for (m = 0; m < ts->num_msu; ++m) {
-        int msu_id = ts->msu_ids[m];
-        struct dfg_msu *msu = get_msu_from_id(msu_id);
-        msu->scheduling.deadline = msu_deadline;
-    }
-
-    return 0;
-}
-*/
-
-/* Determine the number of initial instance of each MSU, and assign them to computers 
-int allocate(struct to_schedule *ts) {
-    int ret;
-    // create a new dfg structure
-    struct dedos_dfg *tmp_dfg, *dfg;
-    tmp_dfg = malloc(sizeof(struct dedos_dfg));
-    dfg = get_dfg();
-
-    //Are all declared runtime connected ?
-    while (show_connected_peers() < dfg->runtimes_cnt) {
-        debug("One of the declared runtime is not connected... call me back later");
-        free(tmp_dfg);
-        free(ts);
-
-        return -1;
-    }
-
-    pthread_mutex_lock(&dfg->dfg_mutex);
-
-    memcpy(tmp_dfg, dfg, sizeof(*dfg));
-
-    pthread_mutex_unlock(&dfg->dfg_mutex);
-
-    ret = set_msu_deadlines(ts, tmp_dfg);
-    if (ret != 0) {
-        debug("error while setting deadlines for msu to allocate");
-        free(tmp_dfg);
-        free(ts);
-
-        return -1;
-    }
-
-    //TODO: set_num_instances() and then set_edges()
-    //for now we assume one instance of each msu and define edges accordingly
-
-    ret = set_edges(ts, tmp_dfg);
-    if (ret != 0) {
-        debug("error while creating edges for msu to allocate");
-        free(tmp_dfg);
-        free(ts);
-
-        return -1;
-    }
-    *
-
-    ret = policy(ts, tmp_dfg);
-    if (ret != 0) {
-        debug("error while applying allocation policy");
-        free(tmp_dfg);
-        free(ts);
-
-        return -1;
-    }
-
-    // if validated "commit" by replacing current DFG by new one
-    pthread_mutex_lock(&dfg->dfg_mutex);
-
-    memcpy(dfg, tmp_dfg, sizeof(struct dedos_dfg));
-    free(dfg);
-    dfg = tmp_dfg;
-    tmp_dfg = NULL;
-
-    pthread_mutex_unlock(&dfg->dfg_mutex);
-
-    free(ts);
-
-    return 0;
-}
-
-int init_scheduler(const char *policy_name) {
-    if (strcmp(policy_name, "greedy") == 0) {
-        policy = greedy_policy;
-    } else {
-        policy = greedy_policy;
-    }
-
-    return 0;
-}
-*/

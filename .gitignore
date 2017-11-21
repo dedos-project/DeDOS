@@ -7,7 +7,7 @@ examplecode
 /.project
 .DS_Store
 build/
-./global_controller
+global_controller
 rt
 trash/
 cfg_generator/*.json

@@ -1,4 +1,4 @@
-TARGETS= runtime  global_controller
+TARGETS= runtime global_controller
 
 COVERAGE=$(foreach TARG, $(TARGETS), $(TARG)-coverage)
 MEMCHECKS=$(foreach TARG, $(TARGETS), $(TARG)-memcheck)
