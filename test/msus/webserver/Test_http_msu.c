@@ -10,7 +10,7 @@
 #include "webserver/dbops.c"
 #include "socket_msu.c"
 
-#define DB_PORT 9999
+#define DB_PORT 9876
 #define DB_REQUEST "/database"
 
 #define HTTP_MSU_ID 2
@@ -150,12 +150,16 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__no_db_no_regex) {
     FREE_MSU_ROUTES(http_msu);
 } END_DEDOS_TEST
 
+#define XSTR(F) #F
+#define HTTP_INIT_STR(PORT) "127.0.0.1 " XSTR(PORT) " 5"
+
 START_DEDOS_TEST(test_craft_http_response__valid_http__db_access__fail_invalid_addr) {
 
     init_statistics();
 
+    log_info(HTTP_INIT_STR(DB_PORT));
     struct msu_init_data init_data = {
-        "127.0.0.2 9999 5"
+        HTTP_INIT_STR(DB_PORT)
     };
 
     sock_state.epoll_fd = init_epoll(-1);
@@ -208,14 +212,14 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access) {
     init_statistics();
 
     struct msu_init_data init_data = {
-        "127.0.0.1 9999 5"
+        HTTP_INIT_STR(DB_PORT)
     };
 
     sock_state.epoll_fd = init_epoll(-1);
     ck_assert_int_ne(sock_state.epoll_fd, -1);
     init_stat_item(MSU_STAT1, socket_msu.id);
 
-    int sock = init_test_listening_socket(9999);
+    int sock = init_test_listening_socket(DB_PORT);
 
     struct local_msu http_msu = {
         .type = &WEBSERVER_HTTP_MSU_TYPE,
