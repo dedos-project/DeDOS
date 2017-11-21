@@ -17,7 +17,7 @@
  */
 struct timed_stat {
     struct timespec time;
-    double value;
+    long double value;
 };
 
 /** Header for a single stat sample for a single item */

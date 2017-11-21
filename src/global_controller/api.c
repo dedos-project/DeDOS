@@ -52,7 +52,7 @@ int add_msu(unsigned int msu_id, unsigned int type_id,
         unschedule_dfg_msu(msu);
         return -1;
     } else {
-        register_msu_stats(msu_id, thread_id, runtime_id);
+        register_msu_stats(msu_id, type_id, thread_id, runtime_id);
         return 0;
     }
 }

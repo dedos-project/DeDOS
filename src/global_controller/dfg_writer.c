@@ -103,9 +103,10 @@ static char *stat_to_json(struct timed_rrdb *timeseries, int n_stats) {
             continue;
         }
         START_OBJ(json);
-        KEY_VAL(json, "time", "%.2f", (double)timeseries->time[index].tv_sec +
-                                      (double)timeseries->time[index].tv_nsec / 1e9,
-                16);
+        char ts[32];
+        sprintf(ts, "%ld.%09ld", timeseries->time[index].tv_sec,
+                                 timeseries->time[index].tv_nsec);
+        KEY_VAL(json, "time", "%s", ts, 32);
         KEY_VAL(json, "value", "%.3f", timeseries->data[index], 16);
         END_OBJ(json);
     }

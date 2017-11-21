@@ -208,7 +208,6 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
             for (up = 0; up < msus[i]->type->meta_routing.n_dst_types; ++up) {
                 struct dfg_msu_type *upt = msus[i]->type->meta_routing.dst_types[up];
                 if (msus[j]->type == msus[i]->type->meta_routing.dst_types[up] && j > i) {
-                    log_warn("Swap %d lower than %d", msus[j]->type->id, msus[i]->type->id);
                     struct dfg_msu *tmp = msus[j];
                     msus[j] = msus[i];
                     msus[i] = tmp;
@@ -218,7 +217,6 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
                 }
                 for (int upup = 0; upup < upt->meta_routing.n_dst_types; ++upup) {
                     if (msus[j]->type == upt->meta_routing.dst_types[upup] && j > i) {
-                        log_warn("Swap %d lower than %d", msus[j]->type->id, msus[i]->type->id);
                         struct dfg_msu *tmp = msus[j];
                         msus[j] = msus[i];
                         msus[i] = tmp;
@@ -229,10 +227,6 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
                 }
             }
         }
-    }
-
-    for (i = 0; i < n_msus; ++i) {
-        log_warn("new msu n°%d has ID %d and typ %de", i, msus[i]->id, msus[i]->type->id);
     }
 
     return 0;
@@ -318,7 +312,7 @@ int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     msu->scheduling.thread = free_thread;
     msu->scheduling.runtime = rt;
 
-    register_msu_stats(msu->id, msu->scheduling.thread->id, msu->scheduling.runtime->id);
+    register_msu_stats(msu->id, msu->type->id, msu->scheduling.thread->id, msu->scheduling.runtime->id);
     ret = send_create_msu_msg(msu);
     if (ret == -1) {
         log_error("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);

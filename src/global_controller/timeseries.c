@@ -42,7 +42,7 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
     for (int i=0; i<input_size; i++) {
         write_index %= RRDB_ENTRIES;
         if (input[i].time.tv_sec == 0 && input[i].time.tv_nsec == 0) {
-            log_warn("WHyyyyy");
+            // FIXME: I don't know why this happens sometimes
             continue;
         }
         timeseries->data[write_index] = input[i].value;

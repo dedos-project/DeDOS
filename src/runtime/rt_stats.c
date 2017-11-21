@@ -15,7 +15,8 @@
 #include <stdbool.h>
 
 /** The clock used to mark the time at which events take place */
-#define CLOCK_ID CLOCK_MONOTONIC
+#define CLOCK_ID CLOCK_REALTIME_COARSE
+#define DURATION_CLOCK_ID CLOCK_MONOTONIC
 
 /** The time at which the runtime started */
 static struct timespec stats_start_time;
@@ -177,7 +178,7 @@ static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat
         }
 
         //fwrite(label, 1, label_size, out_file);
-        if ((rtn = fprintf(out_file, "%05ld.%09ld:",
+        if ((rtn = fprintf(out_file, "%010ld.%09ld:",
                 (long int)item->stats[i].time.tv_sec,
                 (long int)item->stats[i].time.tv_nsec)) > 30 || rtn < 0)  {
             log_warn("Printed out %d characters outputting value %d",rtn,  i);
@@ -198,7 +199,7 @@ static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat
 */
 static void get_elapsed_time(struct timespec *t) {
    clock_gettime(CLOCK_ID, t);
-   t->tv_sec -= stats_start_time.tv_sec;
+   //t->tv_sec -= stats_start_time.tv_sec;
 }
 
 /** Locks a stat type for writing */
@@ -289,6 +290,11 @@ static struct stat_item *get_item_stat(struct stat_type *type, unsigned int item
     return &type->items[id_index];
 }
 
+static inline long double current_double_time() {
+    struct timespec t;
+    clock_gettime(DURATION_CLOCK_ID, &t);
+    return (long double)t.tv_sec + (long double)t.tv_nsec / 1e9;
+}
 
 int record_start_time(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INITIALIZATION;
@@ -310,6 +316,7 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
     get_elapsed_time(&item->stats[item->write_index].time);
+    item->stats[item->write_index].value = current_double_time();
     unlock_item(item);
 
     return 0;
@@ -327,6 +334,8 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
 int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INITIALIZATION;
 
+    long double new_time = current_double_time();
+
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {
         return 0;
@@ -340,16 +349,11 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
 
-    struct timespec new_time;
-    get_elapsed_time(&new_time);
-
     if (lock_item(item)) {
         return -1;
     }
-    time_t timediff_s = new_time.tv_sec - item->stats[item->write_index].time.tv_sec;
-    long timediff_ns = new_time.tv_nsec - item->stats[item->write_index].time.tv_nsec;
-    item->stats[item->write_index].value  =
-            (double)timediff_s + ((double)timediff_ns/(1e9));
+
+    item->stats[item->write_index].value = new_time - item->stats[item->write_index].value;
     item->write_index++;
 
     if (item->write_index == type->max_stats) {

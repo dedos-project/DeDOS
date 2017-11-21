@@ -148,13 +148,9 @@ int register_stat(enum stat_id stat_id, unsigned int item_id) {
     return 0;
 }
 
-int register_msu_stats(unsigned int msu_id, int thread_id, int runtime_id) {
+int register_msu_stats(unsigned int msu_id, int msu_type_id, int thread_id, int runtime_id) {
     CHECK_INIT;
-    struct dfg_msu *msu = get_dfg_msu(msu_id);
-    if (msu == NULL) {
-        log_error("Cannot get MSU for database registration");
-    }
-    db_register_msu_stats(msu, thread_id, runtime_id);
+    db_register_msu_stats(msu_id, msu_type_id, thread_id, runtime_id);
     for (int i=0; i < N_REPORTED_MSU_STAT_TYPES; i++) {
         if (register_stat(reported_msu_stat_types[i].id, msu_id)) {
             log_warn("Couldn't register msu %u", msu_id);
@@ -204,6 +200,7 @@ int init_statistics() {
     }
     for (int i=0; i < dfg->n_msus; i++) {
         register_msu_stats(dfg->msus[i]->id,
+                           dfg->msus[i]->type->id,
                            dfg->msus[i]->scheduling.thread->id,
                            dfg->msus[i]->scheduling.runtime->id);
     }

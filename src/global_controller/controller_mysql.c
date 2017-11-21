@@ -17,7 +17,7 @@ bool mysql_initialized = false;
 
 #define CHECK_SQL_INIT \
     if (!mysql_initialized) { \
-        log_warn("MYSQL not initialized"); \
+        log(LOG_SQL,"MYSQL not initialized"); \
         return -1; \
     }
 
@@ -111,6 +111,7 @@ int db_init(int clear) {
             return -1;
         }
     }
+    mysql_initialized = true;
 
     for (int i = 0; i < N_REPORTED_STAT_TYPES; ++i) {
         if (db_register_statistic(reported_stat_types[i].id,
@@ -136,7 +137,6 @@ int db_init(int clear) {
         }
     }
 
-    mysql_initialized = true;
     return 0;
 }
 
@@ -235,7 +235,7 @@ int db_register_thread(int thread_id, int runtime_id) {
  * @param int runtime_id
  * @return: 0 on success
  */
-int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id) {
+int db_register_msu(int msu_id, int msu_type_id, int thread_id, int runtime_id) {
     CHECK_SQL_INIT;
     char check_query[MAX_REQ_LEN];
     char insert_query[MAX_REQ_LEN];
@@ -244,7 +244,7 @@ int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id) {
 
     snprintf(check_query, MAX_REQ_LEN,
              "select * from Msus where msu_id = (%d)",
-             msu->id);
+             msu_id);
 
     snprintf(select_thread_id, MAX_REQ_LEN,
              "select pk from Threads where thread_id = (%d) and runtime_id = (%d)",
@@ -252,16 +252,16 @@ int db_register_msu(struct dfg_msu *msu, int thread_id, int runtime_id) {
 
     snprintf(insert_query, MAX_REQ_LEN,
              "insert into Msus (msu_id, msu_type_id, thread_pk) values (%d, %d, (%s))",
-             msu->id, msu->type->id, select_thread_id);
+             msu_id, msu_type_id, select_thread_id);
 
-    return db_check_and_register(check_query, insert_query, element, msu->id);
+    return db_check_and_register(check_query, insert_query, element, msu_id);
 }
 
 /**
  * Register timseries for an MSU in the DB. Does nothing if timeserie already exists
  * @return: 0 on success
  */
-int db_register_msu_timeseries(struct dfg_msu *msu) {
+int db_register_msu_timeseries(int msu_id) {
     CHECK_SQL_INIT;
     int i;
     for (i = 0; i < N_REPORTED_MSU_STAT_TYPES; ++i) {
@@ -271,7 +271,7 @@ int db_register_msu_timeseries(struct dfg_msu *msu) {
         const char *element = "timeserie";
 
         snprintf(select_msu_pk, MAX_REQ_LEN,
-                 "select pk from Msus where msu_id = (%d)", msu->id);
+                 "select pk from Msus where msu_id = (%d)", msu_id);
 
         snprintf(check_query, MAX_REQ_LEN,
                  "select * from Timeseries where "
@@ -285,7 +285,7 @@ int db_register_msu_timeseries(struct dfg_msu *msu) {
                  "values ((%d), (%s))",
                  reported_msu_stat_types[i].id, select_msu_pk);
 
-        if (db_check_and_register(check_query, insert_query, element, msu->id) != 0) {
+        if (db_check_and_register(check_query, insert_query, element, msu_id) != 0) {
             return -1;
         }
     }
@@ -334,13 +334,13 @@ int db_register_thread_stats(int thread_id, int runtime_id) {
     return 0;
 }
 
-int db_register_msu_stats(struct dfg_msu *msu, int thread_id, int runtime_id) {
+int db_register_msu_stats(int msu_id, int msu_type_id, int thread_id, int runtime_id) {
     CHECK_SQL_INIT;
 
-    if (db_register_msu(msu, thread_id, runtime_id) != 0) {
+    if (db_register_msu(msu_id, msu_type_id, thread_id, runtime_id) != 0) {
         return -1;
     }
-    if (db_register_msu_timeseries(msu) != 0) {
+    if (db_register_msu_timeseries(msu_id) != 0) {
         return -1;
     }
     return 0;
@@ -434,7 +434,7 @@ int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr
         char insert_query[MAX_REQ_LEN];
         query_len = snprintf(insert_query, MAX_REQ_LEN,
                              "insert into Points (timeseries_pk, ts, val) values "
-                             "((%s), %lu, %f)",
+                             "((%s), %lu, %Lf)",
                              ts_query,
                              (unsigned long) input[i].time.tv_sec * (unsigned long)1e9 + (unsigned long)input[i].time.tv_nsec,
                              input[i].value);

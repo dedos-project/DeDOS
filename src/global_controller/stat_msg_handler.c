@@ -30,7 +30,8 @@ static int process_stat_sample(int runtime_id, struct stat_sample *sample) {
     }
 
     if (stat == NULL) {
-        log_error("Error getting stat sample %d.%u", sample->hdr.stat_id, sample->hdr.item_id);
+        log(LOG_PROCESS_STATS, "Error getting stat sample %d.%u",
+            sample->hdr.stat_id, sample->hdr.item_id);
         return -1;
     }
     rtn = append_to_timeseries(sample->stats, sample->hdr.n_stats, stat);
