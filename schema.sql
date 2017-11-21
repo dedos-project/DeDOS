@@ -60,12 +60,10 @@ CREATE TABLE Timeseries (
 );
 
 CREATE TABLE Points (
-    id            int NOT NULL AUTO_INCREMENT,
     timeseries_pk int NOT NULL,
-    FOREIGN KEY (timeseries_pk) REFERENCES Timeseries(pk),
-    ts BIGINT,
+    ts BIGINT NOT NULL,
     val DECIMAL(18,9),
-    PRIMARY KEY (id),
+    PRIMARY KEY (timeseries_pk, ts),
     INDEX time_index (ts),
-    INDEX timeseries_index (timeseries_pk)
+    FOREIGN KEY (timeseries_pk) REFERENCES Timeseries(pk)
 );
