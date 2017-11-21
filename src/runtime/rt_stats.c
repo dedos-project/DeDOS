@@ -15,7 +15,8 @@
 #include <stdbool.h>
 
 /** The clock used to mark the time at which events take place */
-#define CLOCK_ID CLOCK_MONOTONIC
+#define CLOCK_ID CLOCK_REALTIME_COARSE
+#define DURATION_CLOCK_ID CLOCK_MONOTONIC
 
 /** The time at which the runtime started */
 static struct timespec stats_start_time;
@@ -62,7 +63,6 @@ struct stat_type {
 /** If set to 0, will disable all gathering of statistics */
 #define GATHER_STATS 1
 
-#define GATHER_CTX_SWITCHES 1 & GATHER_STATS
 #define GATHER_MSU_QUEUE_LEN 1 & GATHER_STATS
 #define GATHER_MSU_EXEC_TIME 1 & GATHER_STATS
 #define GATHER_MSU_IDLE_TIME 1 & GATHER_STATS
@@ -70,6 +70,7 @@ struct stat_type {
 #define GATHER_MSU_ITEMS_PROC 1 & GATHER_STATS
 #define GATHER_MSU_NUM_STATES 1 & GATHER_STATS
 #define GATHER_CUSTOM_STATS 1 & GATHER_STATS
+#define GATHER_THREAD_STATS 1 & GATHER_STATS
 
 #ifdef DEDOS_PROFILER
 #define GATHER_PROFILING 1
@@ -85,7 +86,13 @@ struct stat_type stat_types[] = {
     {MSU_IDLE_TIME,       GATHER_MSU_IDLE_TIME,   MAX_STATS, "%0.9f",  "MSU_IDLE_TIME"},
     {MSU_MEM_ALLOC,       GATHER_MSU_MEM_ALLOC,   MAX_STATS, "%09.0f", "MSU_MEM_ALLOC"},
     {MSU_NUM_STATES,      GATHER_MSU_NUM_STATES,  MAX_STATS, "%09.0f", "MSU_NUM_STATES"},
-    {THREAD_CTX_SWITCHES, GATHER_CTX_SWITCHES,    MAX_STATS, "%03.0f", "CTX_SWITCHES"},
+    {THREAD_UCPUTIME,     GATHER_THREAD_STATS,    MAX_STATS, "%09.9f", "THREAD_USER_TIME"},
+    {THREAD_SCPUTIME,     GATHER_THREAD_STATS,    MAX_STATS, "%09.9f", "THREAD_KERNEL_TIME"},
+    {THREAD_MAXRSS,       GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_MAX_RSS"},
+    {THREAD_MINFLT,       GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_MINOR_PG_FAULTS"},
+    {THREAD_MAJFLT,       GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_MAJOR_PG_FAULTS"},
+    {THREAD_VCSW,         GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_VOL_CTX_SW"},
+    {THREAD_IVCSW,        GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_INVOL_CTX_SW"},
     {MSU_STAT1,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT1"},
     {MSU_STAT2,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT2"},
     {MSU_STAT3,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT3"},
@@ -171,7 +178,7 @@ static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat
         }
 
         //fwrite(label, 1, label_size, out_file);
-        if ((rtn = fprintf(out_file, "%05ld.%09ld:",
+        if ((rtn = fprintf(out_file, "%010ld.%09ld:",
                 (long int)item->stats[i].time.tv_sec,
                 (long int)item->stats[i].time.tv_nsec)) > 30 || rtn < 0)  {
             log_warn("Printed out %d characters outputting value %d",rtn,  i);
@@ -192,7 +199,7 @@ static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat
 */
 static void get_elapsed_time(struct timespec *t) {
    clock_gettime(CLOCK_ID, t);
-   t->tv_sec -= stats_start_time.tv_sec;
+   //t->tv_sec -= stats_start_time.tv_sec;
 }
 
 /** Locks a stat type for writing */
@@ -247,7 +254,7 @@ static inline int unlock_item(struct stat_item *item) {
 }
 
 /** Writes all statistics to the provided log file */
-static void flush_all_stats_to_log(FILE *file) {
+static void UNUSED flush_all_stats_to_log(FILE *file) {
     for (int i=0; i<N_STAT_TYPES; i++) {
         if (!stat_types[i].enabled) {
             continue;
@@ -283,6 +290,11 @@ static struct stat_item *get_item_stat(struct stat_type *type, unsigned int item
     return &type->items[id_index];
 }
 
+static inline long double current_double_time() {
+    struct timespec t;
+    clock_gettime(DURATION_CLOCK_ID, &t);
+    return (long double)t.tv_sec + (long double)t.tv_nsec / 1e9;
+}
 
 int record_start_time(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INITIALIZATION;
@@ -304,6 +316,7 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
     get_elapsed_time(&item->stats[item->write_index].time);
+    item->stats[item->write_index].value = current_double_time();
     unlock_item(item);
 
     return 0;
@@ -321,6 +334,8 @@ int record_start_time(enum stat_id stat_id, unsigned int item_id) {
 int record_end_time(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INITIALIZATION;
 
+    long double new_time = current_double_time();
+
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {
         return 0;
@@ -334,16 +349,11 @@ int record_end_time(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
 
-    struct timespec new_time;
-    get_elapsed_time(&new_time);
-
     if (lock_item(item)) {
         return -1;
     }
-    time_t timediff_s = new_time.tv_sec - item->stats[item->write_index].time.tv_sec;
-    long timediff_ns = new_time.tv_nsec - item->stats[item->write_index].time.tv_nsec;
-    item->stats[item->write_index].value  =
-            (double)timediff_s + ((double)timediff_ns/(1e9));
+
+    item->stats[item->write_index].value = new_time - item->stats[item->write_index].value;
     item->write_index++;
 
     if (item->write_index == type->max_stats) {
@@ -436,7 +446,7 @@ double get_last_stat(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INITIALIZATION;
 
     struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) { 
+    if (!type->enabled) {
         return 0;
     }
     if (rlock_type(type)) {
@@ -741,7 +751,7 @@ int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
 
-    log(LOG_STAT_INITS, "Initialized stat item %s.%d (idx: %d)", 
+    log(LOG_STAT_INITS, "Initialized stat item %s.%d (idx: %d)",
             stat_types[stat_id].label, item_id, index);
     return 0;
 }

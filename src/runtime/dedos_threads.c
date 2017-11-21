@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sched.h>
+#include <sys/resource.h>
 
 /** The maximum identifier that can be used for a dedos_thread */
 #define MAX_DEDOS_THREAD_ID 32
@@ -29,6 +30,25 @@
 static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID + 2];
 /** Keep track of which cores have been assigned to threads */
 static int pinned_cores[MAX_CORES];
+
+enum stat_id thread_stat_items[] = {
+    THREAD_UCPUTIME,
+    THREAD_SCPUTIME,
+    THREAD_MAXRSS,
+    THREAD_MINFLT,
+    THREAD_MAJFLT,
+    THREAD_VCSW,
+    THREAD_IVCSW
+};
+
+#define N_THREAD_STAT_ITEMS sizeof(thread_stat_items) / sizeof(*thread_stat_items)
+
+/** Initilizes the stat items associated with a thread */
+static inline void init_thread_stat_items(int id) {
+    for (int i=0; i < N_THREAD_STAT_ITEMS; i++) {
+        init_stat_item(thread_stat_items[i], id);
+    }
+}
 
 struct dedos_thread *get_dedos_thread(int id) {
     if (id == OUTPUT_THREAD_ID) {
@@ -47,16 +67,6 @@ struct dedos_thread *get_dedos_thread(int id) {
     return dedos_threads[id];
 }
 
-/** Initilizes the stat items associated with a thread */
-static int init_thread_stat_items(int id) {
-    int rtn = init_stat_item(THREAD_CTX_SWITCHES, (unsigned int)id);
-    if (rtn < 0) {
-        log_error("Error initializing CTX_SWITCHES");
-        return -1;
-    }
-    return 0;
-}
-
 /**
  * Initializes a dedos_thread structure to contain the appropriate fields
  */
@@ -69,9 +79,7 @@ static int init_dedos_thread(struct dedos_thread *thread,
     pthread_mutex_init(&thread->exit_lock, NULL);
     thread->exit_signal = 0;
 
-    if (init_thread_stat_items(thread->id) != 0) {
-        log_warn("Error initializing thread statistics");
-    }
+    init_thread_stat_items(thread->id);
 
 
     if (init_msg_queue(&thread->queue, &thread->sem) != 0) {
@@ -180,16 +188,54 @@ static void *dedos_thread_starter(void *thread_init_v) {
     return (void*)(intptr_t)rtn;
 }
 
+static inline void gather_thread_metrics(struct dedos_thread *thread) {
+    struct rusage usage;
+    int rtn = getrusage(RUSAGE_THREAD, &usage);
+    if (rtn < 0) {
+        log_error("Error getting thread %d rusage", thread->id);
+        return;
+    }
+    int id = thread->id;
+    record_stat(THREAD_UCPUTIME, id, (double)usage.ru_utime.tv_sec * 1e6 + usage.ru_utime.tv_usec, 1);
+    record_stat(THREAD_SCPUTIME, id, (double)usage.ru_stime.tv_sec * 1e6 + usage.ru_stime.tv_usec, 1);
+    record_stat(THREAD_MAXRSS, id, usage.ru_maxrss, 0);
+    record_stat(THREAD_MINFLT, id, usage.ru_minflt, 0);
+    record_stat(THREAD_MAJFLT, id, usage.ru_majflt, 0);
+    record_stat(THREAD_VCSW, id, usage.ru_nvcsw, 1);
+    record_stat(THREAD_IVCSW, id, usage.ru_nivcsw, 1);
+}
+
+
+
 /** The amount of time that ::thread_wait should wait for if no timeout is provided */
 #define DEFAULT_WAIT_TIMEOUT_S 1
 
+#define MAX_METRIC_INTERVAL_MS 500
+
 int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout) {
-    int rtn;
+
+    int rtn = sem_trywait(&thread->sem);
+
+    if (rtn == 0) {
+        struct timespec cur_time;
+        clock_gettime(CLOCK_REALTIME_COARSE, &cur_time);
+        if (cur_time.tv_sec * 1e3 + cur_time.tv_nsec / 1e6 > \
+                thread->last_metric.tv_sec * 1e3 + thread->last_metric.tv_nsec / 1e6 + \
+                MAX_METRIC_INTERVAL_MS) {
+            gather_thread_metrics(thread);
+            thread->last_metric = cur_time;
+        }
+        return 0;
+    } else if (rtn == -1 && errno == EAGAIN) {
+        gather_thread_metrics(thread);
+        clock_gettime(CLOCK_REALTIME_COARSE, &thread->last_metric);
+    }
+
     if (abs_timeout == NULL) {
-        struct timespec timeout_abs;
-        clock_gettime(CLOCK_REALTIME_COARSE, &timeout_abs);
-        timeout_abs.tv_sec += DEFAULT_WAIT_TIMEOUT_S;
-        rtn = sem_timedwait(&thread->sem, &timeout_abs);
+        struct timespec cur_time;
+        clock_gettime(CLOCK_REALTIME_COARSE, &cur_time);
+        cur_time.tv_sec += DEFAULT_WAIT_TIMEOUT_S;
+        rtn = sem_timedwait(&thread->sem, &cur_time);
     } else {
         rtn = sem_timedwait(&thread->sem, abs_timeout);
     }

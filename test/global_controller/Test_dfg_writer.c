@@ -1,13 +1,16 @@
-#define REPORTED_STAT_TYPES \
+#define REPORTED_MSU_STAT_TYPES \
     {MSU_QUEUE_LEN, "TEST_QUEUE_LEN"}, \
     {MSU_MEM_ALLOC, "TEST_MEM_ALLOC"}
+
+#define REPORTED_THREAD_STAT_TYPES
 
 #define JSMN_STRICT
 
 #include "dedos_testing.h"
 
+#include "controller_dfg.c"
 #include "dfg_writer.c"
-#include "msu_stats.c"
+#include "controller_stats.c"
 #include "jsmn.c"
 
 struct dfg_msu_type type_a = {
@@ -81,8 +84,9 @@ struct dfg_runtime rt1 = {
     .ip = 0,
     .port = 1234,
     .n_cores = 10,
-    .n_pinned_threads = 2,
-    .n_unpinned_threads = 5,
+    .n_pinned_threads = 1,
+    .n_unpinned_threads = 0,
+    .threads = {&thread1},
     .routes = {&route1, &route2},
     .n_routes = 2
 };
@@ -145,6 +149,7 @@ struct dedos_dfg dfg = {
     .n_runtimes = 2
 };
 
+
 struct timed_rrdb stats = {
     .data = {1.23, 4.56, 7.89, 10.1112},
     .time = {{1}, {2}, {3}, {4}},
@@ -190,7 +195,7 @@ START_DEDOS_TEST(test_stat_to_json) {
 
 START_DEDOS_TEST(test_msu_stats_to_json) {
     init_statistics();
-    register_stat_item(msu1.id);
+    //register_msu_stats(msu1.id, msu1.scheduling.thread->id, msu1.scheduling.runtime->id);
 
     stat_types[0].items[0].stats = stats;
     stat_types[1].items[0].stats = stats;
@@ -199,8 +204,8 @@ START_DEDOS_TEST(test_msu_stats_to_json) {
 
 START_DEDOS_TEST(test_dfg_to_json__stats) {
     init_statistics();
-    register_stat_item(msu1.id);
-    register_stat_item(msu2.id);
+    //register_msu_stats(msu1.id, msu1.scheduling.thread->id, msu1.scheduling.runtime->id);
+    //register_msu_stats(msu2.id, msu2.scheduling.thread->id, msu2.scheduling.runtime->id);
 
     stat_types[0].items[0].stats = stats;
     stat_types[1].items[0].stats = stats;
@@ -212,6 +217,8 @@ START_DEDOS_TEST(test_dfg_to_json__stats) {
 } END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("dfg_writer");
+// From controller_dfg.c
+DFG = &dfg;
 DEDOS_ADD_TEST_FN(test_meta_routing_to_json)
 DEDOS_ADD_TEST_FN(test_msu_type_to_json)
 DEDOS_ADD_TEST_FN(test_msu_to_json)

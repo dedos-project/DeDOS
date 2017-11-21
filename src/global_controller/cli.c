@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <strings.h>
 
-#include "msu_stats.h"
+#include "controller_stats.h"
 #include "scheduling.h"
 #include "logging.h"
 #include "communication.h"

@@ -17,7 +17,13 @@ enum stat_id {
     MSU_IDLE_TIME,
     MSU_MEM_ALLOC,
     MSU_NUM_STATES,
-    THREAD_CTX_SWITCHES,
+    THREAD_UCPUTIME,
+    THREAD_SCPUTIME,
+    THREAD_MAXRSS,
+    THREAD_MINFLT,
+    THREAD_MAJFLT,
+    THREAD_VCSW,
+    THREAD_IVCSW,
     MSU_STAT1, /**< For custom MSU statistics */
     MSU_STAT2, /**< For custom MSU statistics */
     MSU_STAT3, /**< For custom MSU statistics */

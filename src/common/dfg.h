@@ -60,7 +60,7 @@ struct dfg_runtime {
     struct dfg_thread *threads[MAX_THREADS]; /**< Threads located on the runtime */
     int n_pinned_threads;   /**< Number of the above-threads which are pinned */
     int n_unpinned_threads; /**< Number of the above-threads which are unpinned */
- 
+
     struct dfg_route *routes[MAX_ROUTES]; /**< Routes located on this runtime */
     int n_routes; /**< Number of routes above */
     // todo: uint64_t dram;
@@ -207,11 +207,23 @@ struct dfg_msu {
     // todo: struct dfg_profiling profiling;
 };
 
+/** Info to connect and use database */
+struct db_info {
+    uint32_t ip;
+    int port;
+    char name[16];
+    char user[16];
+    char pwd[16];
+};
+
 /** Top-level structure holding the data-flow graph */
 struct dedos_dfg {
     char application_name[64]; /**< Description of the whole application */
     uint32_t global_ctl_ip;    /**< IP address of the global controller */
     int global_ctl_port;       /**< Port of the global controller */
+
+    /** DB information */
+    struct db_info db;
 
     /** MSU types which may be present in the application */
     struct dfg_msu_type *msu_types[MAX_MSU_TYPES];
@@ -237,6 +249,10 @@ struct dedos_dfg {
  */
 void set_dfg(struct dedos_dfg *dfg);
 
+/** Returns DB info */
+struct db_info *get_db_info();
+/** Returns the number of registered runtime */
+int get_dfg_n_runtimes();
 /** Returns the runtime with the given ID */
 struct dfg_runtime *get_dfg_runtime(unsigned int id);
 /** Returns the MSU type with the given ID */

@@ -17,7 +17,7 @@
  */
 struct timed_stat {
     struct timespec time;
-    double value;
+    long double value;
 };
 
 /** Header for a single stat sample for a single item */
@@ -34,7 +34,7 @@ struct stat_sample_hdr {
 struct stat_sample {
     struct stat_sample_hdr hdr;
     /** The allocated size of the stat_sample::stats structure */
-    int max_stats; 
+    int max_stats;
     /** The statistics in question*/
     struct timed_stat *stats;
 };
@@ -45,22 +45,56 @@ struct stat_type_label {
     char *name;
 };
 
-#ifndef REPORTED_STAT_TYPES
-/** The statistics reported from runtime to global controller. */
-#define REPORTED_STAT_TYPES \
+#ifndef REPORTED_MSU_STAT_TYPES 
+#define REPORTED_MSU_STAT_TYPES \
     {MSU_QUEUE_LEN, "QUEUE_LEN"}, \
     {MSU_ITEMS_PROCESSED, "ITEMS_PROCESSED"}, \
     {MSU_MEM_ALLOC, "MEMORY_ALLOCATED"}, \
-    {MSU_NUM_STATES, "NUM_STATES"}
+    {MSU_NUM_STATES, "NUM_STATES"}, \
+    {MSU_EXEC_TIME, "EXEC_TIME"}, \
+    {MSU_IDLE_TIME, "IDLE_TIME"}
+#endif 
+
+#ifndef REPORTED_THREAD_STAT_TYPES 
+#define REPORTED_THREAD_STAT_TYPES \
+    {THREAD_UCPUTIME, "USER_TIME"}, \
+    {THREAD_SCPUTIME, "KERNAL_TIME"}, \
+    {THREAD_MAXRSS, "MAX_RSS"}, \
+    {THREAD_MINFLT, "MINOR_FAULTS"}, \
+    {THREAD_MAJFLT, "MAJOR_FAULTS"}, \
+    {THREAD_VCSW, "VOL_CTX_SW"}, \
+    {THREAD_IVCSW, "INVOL_CTX_SW"}
+#endif 
+
+#ifndef REPORTED_STAT_TYPES
+#define REPORTED_STAT_TYPES \
+    REPORTED_MSU_STAT_TYPES, \
+    REPORTED_THREAD_STAT_TYPES 
 #endif
+
+int is_thread_stat(enum stat_id id);
+int is_msu_stat(enum stat_id id);
 
 /** Static structure so the reported stat types can be referenced as an array */
 static struct stat_type_label UNUSED reported_stat_types[] = {
     REPORTED_STAT_TYPES
 };
-
 /** Number of reported stat types */
 #define N_REPORTED_STAT_TYPES sizeof(reported_stat_types) / sizeof(*reported_stat_types)
+
+static struct stat_type_label UNUSED reported_msu_stat_types[] = {
+    REPORTED_MSU_STAT_TYPES
+};
+#define N_REPORTED_MSU_STAT_TYPES \
+    sizeof(reported_msu_stat_types) / sizeof(*reported_msu_stat_types)
+
+static struct stat_type_label UNUSED reported_thread_stat_types[] = {
+    REPORTED_THREAD_STAT_TYPES
+};
+#define N_REPORTED_THREAD_STAT_TYPES \
+    sizeof(reported_thread_stat_types) / sizeof(*reported_thread_stat_types)
+
+
 
 /** Maxmimum identifier that can be assigned to a stat item */
 #define MAX_STAT_ITEM_ID 4192

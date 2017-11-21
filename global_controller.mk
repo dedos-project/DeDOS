@@ -1,4 +1,4 @@
-DYNAMIC_SCHEDULING=1
+DYNAMIC_SCHEDULING=0
 DEBUG = 1
 
 LOGS = \
@@ -8,7 +8,7 @@ LOGS = \
 	   CRITICAL \
 	   CUSTOM \
 	   SCHEDULING_DECISIONS \
-	   RUNTIME_MESSAGES \
+	   #RUNTIME_MESSAGES \
 	   EPOLL_OPS
 	   #RUNTIME_MESSAGES \
 	   SCHEDULING \
@@ -23,6 +23,7 @@ SRC_DIR = src/
 GLC_DIR = $(SRC_DIR)global_controller/
 COM_DIR = $(SRC_DIR)common/
 TST_DIR = test/
+MYSQL_DIR = /usr/local/share/mysql/
 
 SRC_DIRS = $(GLC_DIR) $(COM_DIR)
 
@@ -77,7 +78,7 @@ endif
 
 RESOURCE_EXTS=.txt .json
 
-TST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS))
+TST_DIRS = $(subst $(COM_DIR),,$(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS)))
 
 
 TSTS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.c))
@@ -114,9 +115,10 @@ OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), 
 TST_BLD_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_BLD_DIR)%/, $(SRC_DIRS))
 RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
 
-INCS=$(GLC_DIR) $(COM_DIR)
+INCS=$(GLC_DIR) $(COM_DIR) $(MYSQL_DIR)include
 
-CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
+CFLAGS += $(foreach inc, $(INCS), -I$(inc))
+CFLAGS += -L$(MYSQL_DIR)lib -lmysqlclient
 
 define test_dep_name
 $(notdir $(subst Test_,,$1))_DEPS
@@ -138,7 +140,6 @@ DIRS=$(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIRS)
 all: dirs ${TARGET}
 
 dirs: $(DIRS)
-	echo $(TST_OBJS)
 
 depends: $(DEP_DIRS) ${DEP_SRC}
 
@@ -162,7 +163,6 @@ $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
 test unit: all $(TST_BLD_RSCS) test-results
-	echo $(TSTS)
 
 memcheck: test $(MEM_RESULTS) 
 	@for FILE in $(filter-out test, $^); do \
