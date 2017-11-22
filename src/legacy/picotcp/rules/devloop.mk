@@ -1,2 +1,0 @@
-OPTIONS+=-DPICO_SUPPORT_DEVLOOP
-MOD_OBJ+=$(LIBBASE)/pico_dev_loop.o

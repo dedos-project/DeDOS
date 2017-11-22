@@ -1,3 +1,0 @@
-OPTIONS+=-DPICO_SUPPORT_PPP
-MOD_OBJ+=$(LIBBASE)/pico_dev_ppp.o
-
