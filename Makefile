@@ -25,13 +25,16 @@ clean: $(CLEANS)
 # A version of make test which runs only unit tests, not integration tests
 unit: $(UNITS)
 
+cov: $(COVERAGE)
+	genhtml --show-details --keep-descriptions -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
+
 coverage: $(COVERAGE)
 	genhtml --show-details --keep-descriptions -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
 	cd $(COV_DIR) && python2 -m SimpleHTTPServer 8081
 
 docs:
 	doxygen Doxyfile
-	cd html && python -m SimpleHTTPServer
+	mv html docs
 
 runtime-%::
 	make -f $(patsubst %-$*, %.mk, $@) $*

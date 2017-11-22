@@ -1,0 +1,15 @@
+language: c
+
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq doxygen check libssl-dev libpcre3-dev libgmp-dev socat haproxy lcov
+
+script: make docs && make runtime-cov
+
+deploy:
+    provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    on:
+        branch: master
+

@@ -1,6 +1,12 @@
-# Dedos
+# DeDOS: Declarative Dispersion-Oriented Software
+
+[![Build Status](https://travis-ci.org/dedos-project/DeDOS.svg?branch=master)](https://travis-ci.org/dedos-project/DeDOS)
 
 This repository contains the codebase for the DeDOS runtime and global controller
+
+[Documentation](https://dedos-project.github.io/DeDOS/docs/)
+
+[Code coverage](https://dedos-project.github.io/DeDOS/coverage/)
 
 ## Description
 
@@ -35,7 +41,7 @@ automatically discovered, compiled, and linked by the makefiles.
 
 Tests are placed in the `test/` folder, and should match the subdirectory and file of the
 file under test. For example, the code testing `src/common/dfg.c` should be placed in the file
-`src/common/Test_dfg.c`. This ensures that linking is performed properly. More details are 
+`src/common/Test_dfg.c`. This ensures that linking is performed properly. More details are
 available on the wiki.
 
 ## Contributing
@@ -55,9 +61,9 @@ In brief, when contributing a new feature, use the following protocol:
 * Delete the feature branch
 * Push back to `origin dev`
 
-*Note: --no-ff ensures that the history of a branch remains consistant, 
-and that it does not simply overwrite the history of the merged branch. 
-See [here](http://nvie.com/img/merge-without-ff@2x.png) for a consise 
+*Note: --no-ff ensures that the history of a branch remains consistant,
+and that it does not simply overwrite the history of the merged branch.
+See [here](http://nvie.com/img/merge-without-ff@2x.png) for a concise
 explanation*
 
 That would look like:
