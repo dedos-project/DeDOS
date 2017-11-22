@@ -167,7 +167,7 @@ $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $1)) \
 endef
 
 TEST_CFLAGS= $(CFLAGS) $(CC_EXTRAFLAGS) -I$(TST_DIR) -O0 -lcheck_pic 
-ifeq ($(MAKECMDGOALS),$(filter $(MAKECMDGOALS),coverage init_cov cov-site))
+ifeq ($(MAKECMDGOALS),$(filter $(MAKECMDGOALS),coverage init_cov cov-site cov))
   CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
   OPTIM=0
   INIT_COV=init_cov
@@ -192,6 +192,10 @@ depends: $(DEP_DIRS) ${DEP_SRC}
 
 coverage: $(DIRS) $(OBJECTS) $(COV_INIT_INFOS)  test $(TST_COV) $(COV_INFOS)
 
+cov: coverage
+	genhtml --show-details -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
+	mv $(COV_DIR) coverage
+
 cov-site: coverage
 	genhtml --show-details -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
 	cd $(COV_DIR) && python2 -m SimpleHTTPServer 8081
@@ -213,7 +217,7 @@ $(COV_DIR)%.info: $(TST_BLD_DIR)%/ test-results
 	else \
 		lcov --external -a $(subst .info,.raw_info,$@) -o $(subst .info,.all_info,$@) --test-name $(notdir $(subst .info,,$@)); \
 	fi
-	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@  --test-name $(notdir $(subst .info,,$@))
+	-lcov --remove $(subst .info,.all_info,$@) '/test/*' '/usr/*' 'src/legacy/*' -o $@  --test-name $(notdir $(subst .info,,$@))
 
 $(LEG_OBJ): $(LEG_BLD_DIR)
 	@echo ___________ $< ___________
