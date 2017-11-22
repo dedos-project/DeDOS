@@ -20,7 +20,7 @@ int schedule_msg(struct msg_queue *q, struct dedos_msg *msg, struct timespec *in
     if (interval->tv_sec == 0 && interval->tv_nsec == 0) {
         msg->delivery_time = *interval;
     } else {
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &msg->delivery_time);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &msg->delivery_time);
         msg->delivery_time.tv_sec += interval->tv_sec;
         msg->delivery_time.tv_nsec += interval->tv_nsec;
         if (msg->delivery_time.tv_nsec > 1e9) {
@@ -86,7 +86,7 @@ struct dedos_msg *dequeue_msg(struct msg_queue *q) {
             break;
         }
         struct timespec cur_time;
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &cur_time);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
         double diff = timediff_s(&msg->delivery_time, &cur_time);
         if (diff >= 0) {
             break;
