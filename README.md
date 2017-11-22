@@ -25,8 +25,12 @@ Available build commands are:
 make runtime            # Builds the rt executable
 make global_controller  # Builds the global_controller executable
 make                    # Bulds both rt and global_controller
-make test               # Runs both global_controller and runtime test scripts
-make clean              # Executes both global_controller and runtime's "clean"
+make test               # Runs controller and runtime tests, including integration tests
+make unit               # Runs only unit tests (faster than make test)
+make memcheck           # Runs tests against valgrind (VERY slow)
+make clean              # Removes build files and executables
+make docs               # Creates Doxygen documentation
+make coverage           # Creates coverage report
 ```
 
 ## Code layout
