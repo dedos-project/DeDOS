@@ -1,15 +1,19 @@
-ADDRESS_SANITIZER?=0
-DEBUG = 0
-DUMP_STATS = 1
-DO_PROFILE = 0
+ADDRESS_SANITIZER?=0  # Turn on/off ASAN
+DEBUG = 0 		# GDB support
+DUMP_STATS = 1  # Detailed stat-dump to file
+DO_PROFILE = 0  # Profiling using dedos statistics
+OPTIM = 3       # -O level for gcc
 
+# List of log levels to be printed to stderr
 LOGS = \
 	   INFO \
 	   ERROR \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
+	   # ADD CUSTOM LOG LEVELS HERE
 
+# List of subdirectories under msus/ to compile
 MSU_APPLICATIONS = webserver baremetal
 
 SRC_DIR = src/
@@ -42,7 +46,6 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=3
 
 CC:=gcc
 CXX:=g++
@@ -69,6 +72,7 @@ CFLAGS=-Wall -pthread -lssl -lrt -lcrypto -lm -O$(OPTIM) \
 	   $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
+# If your MSU application requires additional cflags, include them here
 ifneq (,$(findstring webserver,$(MSU_APPLICATIONS)))
 CFLAGS+=-lssl -lpcre
 endif
@@ -78,11 +82,10 @@ CFLAGS+=-lvdeplug
 endif
 
 ifneq (,$(findstring pico_tcp,$(MSU_APPLICATIONS)))
+# Add folders to be compiled under src/legacy/ to the LEGACY_LIBS variable
 LEGACY_LIBS+= picotcp
 CFLAGS+=-lpcap
 endif
-
-
 
 ifeq ($(DEBUG), 1)
   CFLAGS+=-ggdb
@@ -108,44 +111,56 @@ ifneq (,$(findstring ndlog,$(MSU_APPLICATIONS)))
   CFLAGS+=-lgmp
 endif
 
+# Legacy code to be built
 LEG_MAKE=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_DIR)$(LEG_LIB)/Makefile)
 LEG_INC=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_DIR)$(LEG_LIB)/build/include)
 LEG_SRC=$(foreach LEG_LIB, $(LEGACY_LIBS), $(wildcard $(LEG_DIR)$(LEG_LIB)/src/*))
 LEG_OBJ=$(foreach LEG_LIB, $(LEGACY_LIBS), $(LEG_BLD_DIR)$(LEG_LIB).o)
 
+# Resources to be copied from test/ to build/
 RESOURCE_EXTS=.txt .json
 
+# Directories for unit tests
 UTST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS))
+# Test directories, including integration tests
 TST_DIRS = $(UTST_DIRS) $(TST_DIR)integration_tests/
 
+# Unit tests, Tests, and associated resources and objects
 UTSTS = $(foreach TST_D, $(UTST_DIRS), $(wildcard $(TST_D)*.c))
 TSTS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.c))
 TST_MKS = $(foreach TST_D, $(TST_DIRS), $(wildcard $(TST_D)*.mk))
 TST_RSCS = $(foreach TST_D, $(TST_DIRS), $(foreach EXT, $(RESOURCE_EXTS), $(wildcard $(TST_D)*$(EXT))))
 TST_OBJS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.o, $(TSTS))
 
+# C/C++ sources
 SRCS = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.c))
 SRCS_PP = $(foreach src_dir, $(SRC_DIRS), $(wildcard $(src_dir)*.cc))
 
+# Test executables and coverage files
 TST_BLDS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.out, $(TSTS))
 TST_COV = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcda, $(TSTS)) \
 		  $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcno, $(TSTS))
 TST_COV_INFOS = $(patsubst $(TST_DIR)%.c, $(TST_BLD_DIR)%.gcno, $(TSTS))
 
+# Coverage information
 COV_DIRS = $(sort $(dir $(patsubst $(TST_DIR)%/, $(COV_DIR)%, $(TST_DIRS)) $(COV_DIR)))
 COV_INFOS = $(patsubst $(TST_DIR)%/, $(COV_DIR)%.info, $(TST_DIRS))
 COV_INIT_INFOS = $(patsubst $(TST_DIR)%/, $(COV_DIR)%.init_info, $(TST_DIRS))
 COV_INDEX = $(COV_DIR)index.html
 
+# Test output
 RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(TSTS))
 UNIT_RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%.txt, $(UTSTS))
 MEM_RESULTS = $(patsubst $(TST_DIR)%.c, $(RES_DIR)%_memcheck.txt, $(TSTS))
 TST_BLD_RSCS = $(patsubst $(TST_DIR)%, $(TST_BLD_DIR)%, $(TST_RSCS))
 
+# Build dependency files for automatic change detection
 DEP_DIRS = $(patsubst $(TST_DIR)%/, $(DEP_DIR)%/, $(TST_DIRS))
 DEP_TST = $(patsubst $(TST_DIR)%.c, $(DEP_DIR)%.d, $(TSTS))
 DEP_SRC = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(SRCS)) \
 		  $(patsubst $(SRC_DIR)%.cc, $(DEP_DIR)%.d, $(SRCS_PP))
+
+# Object files with/without the main executable
 OBJECTS = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS)) \
 		  $(patsubst $(SRC_DIR)%.cc, $(OBJ_DIR)%.o, $(SRCS_PP))
 OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), $(SRCS))) \
@@ -154,19 +169,23 @@ OBJECTS_NOMAIN = $(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(filter-out $(MAIN), 
 TST_BLD_DIRS = $(patsubst $(TST_DIR)%/, $(TST_BLD_DIR)%/, $(TST_DIRS))
 RES_DIRS = $(patsubst $(TST_DIR)%/, $(RES_DIR)%/, $(TST_DIRS))
 
+# Include folders (-I)
 INCS=$(LEG_INC) $(RNT_DIR) $(COM_DIR) $(MSU_DIR)
 CFLAGS+= $(foreach inc, $(INCS), -I$(inc))
 
+# Gets the corresponding dependency variable for testing
 define test_dep_name
 $(notdir $(subst Test_,,$1))_DEPS
 endef
 
+# Filters out files included in the test from those included in the build
 define test_filters
 $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $1)) \
 	$(foreach dep, $($(call test_dep_name, $1)), $(OBJ_DIR)$(dep:.c=.o))
 endef
 
-TEST_CFLAGS= $(CFLAGS) $(CC_EXTRAFLAGS) -I$(TST_DIR) -O0 -lcheck_pic 
+# Flags specifically for testing
+TEST_CFLAGS= $(CFLAGS) $(CC_EXTRAFLAGS) -I$(TST_DIR) -O0 -lcheck_pic
 ifeq ($(MAKECMDGOALS),$(filter $(MAKECMDGOALS),coverage init_cov cov-site cov))
   CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
   OPTIM=0
@@ -177,29 +196,34 @@ endif
 CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
+# Build directories to create
 DIRS = $(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIRS)
-
 
 all: dirs legacy ${TARGET}
 
+# Makes the build directories
 dirs: $(DIRS)
-	echo $(LEG_DIR)
-	echo $(LEG_BLD_DIR)
 
+# Makes legacy code
 legacy: $(LEG_OBJ)
 
+# Builds the dependency files for change detection
 depends: $(DEP_DIRS) ${DEP_SRC}
 
+# Makes the coverage files without the html
 coverage: $(DIRS) $(OBJECTS) $(COV_INIT_INFOS)  test $(TST_COV) $(COV_INFOS)
 
+# Makes coverage files including html
 cov: coverage
 	genhtml --show-details -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
 	mv $(COV_DIR) coverage
 
+# Makes coverage files, html, then starts up webserver
 cov-site: coverage
 	genhtml --show-details -o $(COV_DIR) $(shell find $(COV_DIR) -name '*.info' ! -empty)
 	cd $(COV_DIR) && python2 -m SimpleHTTPServer 8081
 
+# Coverage intermediate file
 $(TST_BLD_DIR)%.gcda: $(TST_BLD_DIR)%.out $(DIRS)
 
 init_cov: $(DIRS) $(OBJECTS) $(COV_INIT_INFOS)
@@ -219,18 +243,23 @@ $(COV_DIR)%.info: $(TST_BLD_DIR)%/ test-results
 	fi
 	-lcov --remove $(subst .info,.all_info,$@) '/test/*' '/usr/*' 'src/legacy/*' -o $@  --test-name $(notdir $(subst .info,,$@))
 
+# Builds a single legacy object for each legacy directory
 $(LEG_OBJ): $(LEG_BLD_DIR)
 	@echo ___________ $< ___________
 	@filename=$$(basename "$@"); filename="$${filename%.*}"; echo $$filename; cd $(LEG_DIR)/$$filename && make;
 	$(LINK) -o $@ src/legacy/$(patsubst %.o,%,$(notdir $(LEG_OBJ)))/build/*.o
 
+# Final build of the runtime target
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
 	$(FINAL) -o $@ $^ $(CFLAGS)
 
+# Run only unit tests
 unit: all ${INIT_COV} test-blds utest-results
 
+# Run all tests
 test: all ${INIT_COV} test-blds test-results
 
+# Run all tests, check for memory leaks (VERY SLOW!)
 memcheck: test $(MEM_RESULTS)
 	@export CK_DEFAULT_TIMEOUT=30; \
 	for FILE in $(filter-out test, $^); do \
