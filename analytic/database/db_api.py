@@ -70,7 +70,7 @@ class db_api:
         self.db_connect()
 
         points = []
-        for point in Points.select().where(Points.timeseries_pk == timeserie.pk & Points.ts > timestamp):
+        for point in Points.select().where((Points.timeseries_pk == timeserie.pk) & (Points.ts > timestamp)):
             points.append(point)
 
         self.db.close()
@@ -85,7 +85,7 @@ class db_api:
         cols['TIME'] = [datapoint.ts for datapoint in self.get_ts_points(timeseries[0], timestamp)]
 
         for ts in timeseries:
-            datapoints = self.get_ts_points(ts)
+            datapoints = self.get_ts_points(ts, timestamp)
             cols[ts.statistic.name] = [datapoint.val for datapoint in datapoints]
 
         return pd.DataFrame(cols)
