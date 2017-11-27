@@ -37,7 +37,6 @@ make coverage           # Creates coverage report
 
 ## Running
 To start the runtime with the webserver application, execute
-
 ```shell
 ./global_controller -j dfg/webserver/webserver_1rt.json
 ```
@@ -77,42 +76,14 @@ available on the wiki.
 
 ## Contributing
 
-We will be using the git-flow model for code contributions.
+We will be using a fork/pull-request workflow for managing contributions.
 
-See
-[here](http://nvie.com/posts/a-successful-git-branching-model/)
-for a thorough description, and
-[here](https://datasift.github.io/gitflow/IntroducingGitFlow.html)
-for a brief overview.
+To contribute, please fork this repository and create a pull request through github
+to merge the changes.
 
-In brief, when contributing a new feature, use the following protocol:
-* Branch from dev into a branch for your feature
-* Make changes and commit within feature branch
-* Merge (**with --no-ff**) back into dev
-* Delete the feature branch
-* Push back to `origin dev`
+See the tutorial [here](https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow)
+for a more detailed explanation.
 
-*Note: --no-ff ensures that the history of a branch remains consistant,
-and that it does not simply overwrite the history of the merged branch.
-See [here](http://nvie.com/img/merge-without-ff@2x.png) for a concise
-explanation*
-
-That would look like:
-```bash
-$ git checkout -b myfeature dev
-$ # Make your changes here
-$ git commit
-$ git checkout dev
-$ git merge --no-ff myfeature
-$ git push origin dev
-```
-
-In addition, please make small commits --
-the commit message should be able to summarize all
-changes made in a single message.
-
-Prior to releases, the dev branch will be merged back into `origin master` and
-tagged appropriately.
 
 ## Code style
 
