@@ -31,6 +31,7 @@ END OF LICENSE STUB
 #include "controller_dfg.h"
 #include "runtime_communication.h"
 #include "cli.h"
+#include "socket_interface.h"
 #include "scheduling.h"
 #include "dfg.h"
 #include "dfg_reader.h"
@@ -39,6 +40,7 @@ END OF LICENSE STUB
 #define FILENAME_LEN 32
 
 pthread_t cli_thread;
+pthread_t sock_thread;
 
 static void print_usage() {
     printf("Usage: global_controller -j /path/to/json [-o json_file] [ -p json_port ]\n");
@@ -127,6 +129,7 @@ int main(int argc, char *argv[]) {
     //init_scheduler(policy);
 
     start_cli_thread(&cli_thread);
+    start_socket_interface_thread(&sock_thread);
     runtime_communication_loop(port, output_filename, output_port);
     //start_communication(tcp_control_listen_port, output_filename);
 

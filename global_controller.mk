@@ -118,7 +118,7 @@ RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
 INCS=$(GLC_DIR) $(COM_DIR) $(MYSQL_DIR)include
 
 CFLAGS += $(foreach inc, $(INCS), -I$(inc))
-CFLAGS += -L$(MYSQL_DIR)lib -lmysqlclient
+CFLAGS += -L$(MYSQL_DIR)lib -lmysqlclient -lzmq
 
 define test_dep_name
 $(notdir $(subst Test_,,$1))_DEPS
