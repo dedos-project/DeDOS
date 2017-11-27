@@ -1,0 +1,132 @@
+machines:
+    - &local
+      ip: 0.0.0.0
+    - &dedos01
+      ip: 192.168.0.2
+    - &dedos02
+      ip: 192.168.0.3
+    - &dedos03
+      ip: 192.168.0.4
+    - &dedos04
+      ip: 192.168.0.5
+    - &gc
+      <<: *local
+    - &rt1
+      <<: *local
+    - &db
+      <<: *local
+
+application:
+    name: app_name
+
+database:
+    <<: *db
+    port: 3306
+    user: root
+    password: root
+    name: dedos
+
+global_ctl:
+    <<: *gc
+    port: 8090
+
+msu_types:
+    baremetal_socket:
+        id: 110
+    baremetal_msu:
+        id: 100
+
+default_runtime: &default_rt
+    port: 4444
+    n_cores: 8
+    n_pinned_threads: 8
+    n_unpinned_threads: 0
+
+
+runtimes:
+    1:
+        <<: *rt1
+        <<: *default_rt
+
+default_msus:
+    - &default_msu
+      vertex_type: nop
+      blocking_mode: non-blocking
+
+msus:
+    - <<: *default_msu
+      name: sock
+      type: baremetal_msu
+      runtime: 1
+      thread: 1
+      init_data: "8081 7"
+
+      # Baremetal MSUs must be listed separately so we can route properly
+
+    - <<: *default_msu
+      name: bm1
+      type: baremetal_msu
+      runtime: 1
+      thread: 2
+
+    - <<: *default_msu
+      name: bm2
+      type: baremetal_msu
+      runtime: 1
+      thread: 3
+
+    - <<: *default_msu
+      name: bm3
+      type: baremetal_msu
+      runtime: 1
+      thread: 4
+
+    - <<: *default_msu
+      name: bm4
+      type: baremetal_msu
+      runtime: 1
+      thread: 5
+
+    - <<: *default_msu
+      name: bm5
+      type: baremetal_msu
+      runtime: 1
+      thread: 6
+
+    - <<: *default_msu
+      name: bm6
+      type: baremetal_msu
+      runtime: 1
+      thread: 7
+
+    - <<: *default_msu
+      name: bm7
+      type: baremetal_msu
+      runtime: 1
+      thread: 8
+
+
+routes:
+    - from: sock
+      to: bm1
+
+    - from: bm1
+      to: bm2
+
+    - from: bm2
+      to: bm3
+
+    - from: bm3
+      to: bm4
+
+    - from: bm4
+      to: bm5
+
+    - from: bm5
+      to: bm6
+
+    - from: bm6
+      to: bm7
+
+    - from: bm7
+      to: bm1

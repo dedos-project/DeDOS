@@ -1,0 +1,93 @@
+machines:
+    - &local
+      ip: 0.0.0.0
+    - &dedos01
+      ip: 192.168.0.2
+    - &dedos02
+      ip: 192.168.0.3
+    - &dedos03
+      ip: 192.168.0.4
+    - &dedos04
+      ip: 192.168.0.5
+    - &gc
+      <<: *dedos01
+    - &rt1
+      <<: *dedos01
+    - &db
+      <<: *dedos01
+    - &rt2
+      <<: *dedos02
+
+application:
+    name: app_name
+
+database:
+    <<: *db
+    port: 3306
+    user: root
+    password: root
+    name: dedos
+
+
+global_ctl:
+    <<: *dedos01
+    port: 8090
+
+msu_types:
+    baremetal_socket:
+        id: 110
+    baremetal_msu:
+        id: 100
+
+default_runtime: &default_rt
+    port: 4444
+    n_cores: 8
+    n_pinned_threads: 8
+    n_unpinned_threads: 0
+
+
+runtimes:
+    1:
+        <<: *rt1
+        <<: *default_rt
+    2:
+        <<: *rt2
+        <<: *default_rt
+
+default_msus:
+    - &default_msu
+      vertex_type: nop
+      blocking_mode: non-blocking
+
+msus:
+    - <<: *default_msu
+      name: sock
+      type: baremetal_msu
+      runtime: 1
+      thread: 1
+      init_data: "8081 3"
+
+    - <<: *default_msu
+      name: bm_rt1
+      type: baremetal_msu
+      runtime: 1
+      thread: 2
+      reps: 8
+
+    - <<: *default_msu
+      name: bm_rt2
+      type: baremetal_msu
+      runtime: 2
+      thread: 1
+      reps: 8
+
+routes:
+    - from: sock
+      to: bm_rt1
+
+    - from: bm_rt1
+      to: bm_rt2
+
+    - from: bm_rt2
+      to: bm_rt1
+
