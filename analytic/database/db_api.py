@@ -66,23 +66,23 @@ class db_api:
 
         return timeseries
 
-    def get_ts_points(self, timeserie):
+    def get_ts_points(self, timeserie, timestamp = 0):
         self.db_connect()
 
         points = []
-        for point in Points.select().where(Points.timeseries_pk == timeserie.pk):
+        for point in Points.select().where(Points.timeseries_pk == timeserie.pk & Points.ts > timestamp):
             points.append(point)
 
         self.db.close()
 
         return points
 
-    def get_msu_full_df(self, msu):
+    def get_msu_full_df(self, msu, timestamp = 0):
         cols = {}
         timeseries = self.get_msu_timeseries(msu)
 
         #we assume that times are equal across metrics
-        cols['TIME'] = [datapoint.ts for datapoint in self.get_ts_points(timeseries[0])]
+        cols['TIME'] = [datapoint.ts for datapoint in self.get_ts_points(timeseries[0], timestamp)]
 
         for ts in timeseries:
             datapoints = self.get_ts_points(ts)
