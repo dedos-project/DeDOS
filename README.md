@@ -1,6 +1,14 @@
-# Dedos
+# DeDOS: Declarative Dispersion-Oriented Software
+
+[![Build Status](https://travis-ci.org/dedos-project/DeDOS.svg?branch=master)](https://travis-ci.org/dedos-project/DeDOS)
 
 This repository contains the codebase for the DeDOS runtime and global controller
+
+[Documentation](https://dedos-project.github.io/DeDOS/docs/)
+
+[Code coverage](https://dedos-project.github.io/DeDOS/coverage/)
+
+[Wiki](https://github.com/dedos-project/DeDOS/wiki)
 
 ## Description
 
@@ -19,8 +27,12 @@ Available build commands are:
 make runtime            # Builds the rt executable
 make global_controller  # Builds the global_controller executable
 make                    # Bulds both rt and global_controller
-make test               # Runs both global_controller and runtime test scripts
-make clean              # Executes both global_controller and runtime's "clean"
+make test               # Runs controller and runtime tests, including integration tests
+make unit               # Runs only unit tests (faster than make test)
+make memcheck           # Runs tests against valgrind (VERY slow)
+make clean              # Removes build files and executables
+make docs               # Creates Doxygen documentation
+make coverage           # Creates coverage report
 ```
 
 ## Code layout
@@ -35,7 +47,7 @@ automatically discovered, compiled, and linked by the makefiles.
 
 Tests are placed in the `test/` folder, and should match the subdirectory and file of the
 file under test. For example, the code testing `src/common/dfg.c` should be placed in the file
-`src/common/Test_dfg.c`. This ensures that linking is performed properly. More details are 
+`src/common/Test_dfg.c`. This ensures that linking is performed properly. More details are
 available on the wiki.
 
 ## Contributing
@@ -55,9 +67,9 @@ In brief, when contributing a new feature, use the following protocol:
 * Delete the feature branch
 * Push back to `origin dev`
 
-*Note: --no-ff ensures that the history of a branch remains consistant, 
-and that it does not simply overwrite the history of the merged branch. 
-See [here](http://nvie.com/img/merge-without-ff@2x.png) for a consise 
+*Note: --no-ff ensures that the history of a branch remains consistant,
+and that it does not simply overwrite the history of the merged branch.
+See [here](http://nvie.com/img/merge-without-ff@2x.png) for a concise
 explanation*
 
 That would look like:

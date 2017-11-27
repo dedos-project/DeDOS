@@ -1,3 +1,22 @@
+/*
+START OF LICENSE STUB
+    DeDOS: Declarative Dispersion-Oriented Software
+    Copyright (C) 2017 University of Pennsylvania
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+END OF LICENSE STUB
+*/
 /**
  * @file message_queue.c
  *
@@ -20,7 +39,7 @@ int schedule_msg(struct msg_queue *q, struct dedos_msg *msg, struct timespec *in
     if (interval->tv_sec == 0 && interval->tv_nsec == 0) {
         msg->delivery_time = *interval;
     } else {
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &msg->delivery_time);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &msg->delivery_time);
         msg->delivery_time.tv_sec += interval->tv_sec;
         msg->delivery_time.tv_nsec += interval->tv_nsec;
         if (msg->delivery_time.tv_nsec > 1e9) {
@@ -86,7 +105,7 @@ struct dedos_msg *dequeue_msg(struct msg_queue *q) {
             break;
         }
         struct timespec cur_time;
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &cur_time);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time);
         double diff = timediff_s(&msg->delivery_time, &cur_time);
         if (diff >= 0) {
             break;
