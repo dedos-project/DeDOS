@@ -8,6 +8,8 @@ This repository contains the codebase for the DeDOS runtime and global controlle
 
 [Code coverage](https://dedos-project.github.io/DeDOS/coverage/)
 
+[Wiki](https://github.com/dedos-project/DeDOS/wiki)
+
 ## Description
 
 The goal of this project is to create fundamentally new defenses against distributed
