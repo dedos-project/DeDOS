@@ -39,10 +39,7 @@ int init_msu_msg_hdr(struct msu_msg_hdr *hdr, struct msu_msg_key *key) {
 }
 
 unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
-    int idx = (prov->path_len - 1) % MAX_PATH_LEN;
-    log(LOG_GET_PROVINANCE, "Sender of %p (idx %d) was type %d",
-               prov, idx, prov->path[idx].type_id);
-    return prov->path[idx].type_id;
+    return prov->sender.type_id;
 }
 
 int set_msg_key(int32_t id, struct msu_msg_key *key) {
@@ -66,21 +63,25 @@ int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
 }
 
 int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
+    prov->sender.type_id = sender->type->id;
+    prov->sender.msu_id = sender->id;
+    prov->sender.runtime_id = local_runtime_id();
     if (prov->path_len == 0) {
-        prov->origin.type_id = sender->type->id;
-        prov->origin.msu_id = sender->id;
-        prov->origin.runtime_id = local_runtime_id();
+        prov->origin = prov->sender;
     }
-    int idx = prov->path_len % MAX_PATH_LEN;
-    log(LOG_ADD_PROVINANCE, "Adding provinance: %d.%d to idx %d, prov %p ",
-               sender->type->id, sender->id, idx, prov);
-    prov->path[idx].type_id = sender->type->id;
-    prov->path[idx].msu_id = sender->id;
-    prov->path[idx].runtime_id = local_runtime_id();
-    if (prov->path[idx].runtime_id == -1) {
-        log_error("Error getting local runtime ip address");
-        return -1;
+
+    int i;
+    for (i = 0; i < MAX_PATH_LEN && i < prov->path_len; i++) {
+        if (prov->path[i].type_id == sender->type->id) {
+            break;
+        }
     }
+    if (i >= MAX_PATH_LEN) {
+        log_warn("Cannot record provinance in path: Path too short");
+        return 1;
+    }
+
+    prov->path[i] = prov->sender;
     prov->path_len++;
     log(LOG_ADD_PROVINANCE, "Path len of prov %p is now %d", prov, prov->path_len);
     return 0;

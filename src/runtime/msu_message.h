@@ -69,7 +69,10 @@ struct msu_provinance_item {
 struct msg_provinance {
     /** The first MSU to see this message */
     struct msu_provinance_item origin;
-    /** The path of MSUs this message has traversed */
+    /** The last MSU to see this message */
+    struct msu_provinance_item sender;
+    /** A list of each MSU that has seen this message 
+     * TODO: For now, one MSU of each type */
     struct msu_provinance_item path[MAX_PATH_LEN];
     /** The current length of msg_provinance::path */
     int path_len;
