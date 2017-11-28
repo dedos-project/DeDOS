@@ -14,7 +14,6 @@ notifications:
   email:
     recipients:
     - iped@seas.upenn.edu
-    - maxdml@seas.upenn.edu
     on_success: always
   slack:
     rooms:
