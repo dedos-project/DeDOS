@@ -2,7 +2,7 @@ ADDRESS_SANITIZER?=0  # Turn on/off ASAN
 DEBUG = 0 		# GDB support
 DUMP_STATS = 1  # Detailed stat-dump to file
 DO_PROFILE = 0  # Profiling using dedos statistics
-OPTIM = 3       # -O level for gcc
+OPTIM = 3 # -O level for gcc
 
 # List of log levels to be printed to stderr
 LOGS = \
@@ -68,8 +68,7 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 MSU_DEFINES=$(foreach MSU_APP, $(MSU_APPLICATIONS), -DCOMPILE_$(call upper, $(MSU_APP))_MSUS)
 
-CFLAGS=-Wall -pthread -lssl -lrt -lcrypto -lm -O$(OPTIM) \
-	   $(LOG_DEFINES) $(MSU_DEFINES)
+CFLAGS=-Wall -pthread -lssl -lrt -lcrypto -lm -O$(OPTIM) $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
 # If your MSU application requires additional cflags, include them here
@@ -186,11 +185,14 @@ endef
 
 # Flags specifically for testing
 TEST_CFLAGS= $(CFLAGS) $(CC_EXTRAFLAGS) -I$(TST_DIR) -O0 -lcheck_pic
-ifeq ($(MAKECMDGOALS),$(filter $(MAKECMDGOALS),coverage init_cov cov-site cov))
+ifneq ($(MAKECMDGOALS),)
+# If goals are present, and they're for coverage
+ifeq ($(MAKECMDGOALS), $(filter $(MAKECMDGOALS), coverage init_cov cov-site cov))
   CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
   OPTIM=0
   INIT_COV=init_cov
   TEST_CFLAGS+=-fprofile-arcs -ftest-coverage --coverage
+endif
 endif
 
 CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
@@ -203,6 +205,7 @@ all: dirs legacy ${TARGET}
 
 # Makes the build directories
 dirs: $(DIRS)
+	echo $(MAKECMDGOALS)
 
 # Makes legacy code
 legacy: $(LEG_OBJ)
