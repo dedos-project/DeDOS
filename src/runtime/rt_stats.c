@@ -604,9 +604,11 @@ static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timesp
     return type->num_items;
 }
 
-/** Samples `sample_size` most recent stats in `interval` intervals */
-static int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
-                               int sample_size, struct stat_sample *sample, int n_samples) {
+/** Samples `sample_size` most recent stats in `interval` intervals.
+ * Note: Not used at the moment, deferring to sample_stat instead
+ * */
+static int UNUSED sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
+                                      int sample_size, struct stat_sample *sample, int n_samples) {
     CHECK_INITIALIZATION;
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {
@@ -627,7 +629,8 @@ static struct timespec stat_sample_interval = {
     .tv_nsec = (int)(STAT_SAMPLE_PERIOD_MS * 1e6 / STAT_SAMPLE_SIZE) % (int)1e9
 };
 
-struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
+struct stat_sample *get_stat_samples(enum stat_id stat_id, struct timespec *sample_time,
+                                     int *n_samples_out) {
     if (!stats_initialized) {
         log_error("Stats not initialized");
         return NULL;
@@ -652,8 +655,8 @@ struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
     if (rlock_type(type)) {
         return NULL;
     }
-    int rtn = sample_recent_stats(stat_id, &stat_sample_interval, STAT_SAMPLE_SIZE,
-                                  stat_samples[i], type->num_items);
+    int rtn = sample_stat(stat_id, sample_time, &stat_sample_interval, STAT_SAMPLE_SIZE,
+                          stat_samples[i], type->num_items);
     unlock_type(type);
     if (rtn < 0) {
         log_error("Error sampling recent stats");

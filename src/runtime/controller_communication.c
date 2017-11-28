@@ -466,10 +466,12 @@ int send_stats_to_controller() {
     }
     int rtn = 0;
     int total_items = 0;
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME_COARSE, &now);
     for (int i=0; i<N_REPORTED_STAT_TYPES; i++) {
         enum stat_id stat_id = reported_stat_types[i].id;
         int n_items;
-        struct stat_sample *samples = get_stat_samples(stat_id, &n_items);
+        struct stat_sample *samples = get_stat_samples(stat_id, &now,  &n_items);
         total_items += n_items;
         if (samples == NULL) {
             log(LOG_STAT_SEND, "Error getting stat sample for send to controller");

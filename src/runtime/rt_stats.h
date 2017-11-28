@@ -93,9 +93,11 @@ double get_last_stat(enum stat_id stat_id, unsigned int item_id);
 /**
  * Samples the statistic with the provided stat_id.
  * @param stat_id the ID of the stat_type to sample
+ * @param time The time at which the samples should be taken
  * @param n_samples_out Output argument, stores the number of samples acquired
  * @return The statically-allocated stat sample (does not need to be freed)
  */
-struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_sample_out);
+struct stat_sample *get_stat_samples(enum stat_id stat_id, struct timespec *time,
+                                     int *n_sample_out);
 #endif
 
