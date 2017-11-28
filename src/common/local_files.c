@@ -1,7 +1,7 @@
 /*
 START OF LICENSE STUB
     DeDOS: Declarative Dispersion-Oriented Software
-    Copyright (C) 2017 University of Pennsylvania
+    Copyright (C) 2017 University of Pennsylvania, Georgetown University
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
