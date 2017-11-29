@@ -22,7 +22,7 @@ MSU_DIR = $(SRC_DIR)msus/
 COM_DIR = $(SRC_DIR)common/
 LEG_DIR = $(SRC_DIR)legacy/
 TST_DIR = test/
-ITST_DIR = $(TST_DIR)/integration_tests
+ITST_DIR = $(TST_DIR)/integration_tests/
 
 MSU_DIRS = $(MSU_DIR) $(foreach APP, $(MSU_APPLICATIONS), $(MSU_DIR)$(APP)/)
 
@@ -122,7 +122,7 @@ RESOURCE_EXTS=.txt .json
 # Directories for unit tests
 UTST_DIRS = $(patsubst $(SRC_DIR)%/, $(TST_DIR)%/, $(SRC_DIRS))
 # Test directories, including integration tests
-TST_DIRS = $(UTST_DIRS) $(TST_DIR)integration_tests/
+TST_DIRS = $(UTST_DIRS) $(foreach APP, $(MSU_APPLICATIONS), $(ITST_DIR)$(APP)/)
 
 # Unit tests, Tests, and associated resources and objects
 UTSTS = $(foreach TST_D, $(UTST_DIRS), $(wildcard $(TST_D)*.c))
