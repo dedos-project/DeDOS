@@ -160,20 +160,19 @@ static int ws_cache_lookup(struct local_msu *self,
         } else {
             // File cached, generate response including http headers and send to write msu
             int code = 404;
-            int body_len = 0;
             char *mime_type = NULL;
             if (file->contents != NULL && file->byte_size > 0) {
                 code = 200;
-                body_len = file->byte_size;
+                resp->body_len = file->byte_size;
                 mime_type = path_to_mimetype(resp->path);
-                strncpy(resp->body, file->contents, MAX_BODY_LEN);
+                memcpy(resp->body, file->contents, resp->body_len);
             }
-            resp->header_len = generate_header(resp->header, code, resp->header_len, body_len,
+            resp->header_len = generate_header(resp->header, code, MAX_HEADER_LEN, resp->body_len,
                                                mime_type);
             if (resp->header_len > MAX_HEADER_LEN) {
                 resp->header_len = MAX_HEADER_LEN;
             }
-            call_msu_type(self, &WEBSERVER_FILEIO_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
+            call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         }
     } else {
         // Received a response to save to the cache
