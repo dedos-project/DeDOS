@@ -104,13 +104,11 @@ int msu_remove_fd_monitor(int fd) {
     return 0;
 }
 
-
 struct msu_msg_key self_key = {
     .key = {0},
     .key_len = 0,
     .id = 0
 };
-
 
 static int process_connection(int fd, void *v_state) {
     struct sock_msu_state *state = v_state;

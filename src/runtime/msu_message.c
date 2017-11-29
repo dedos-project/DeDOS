@@ -204,9 +204,12 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
 
 void *serialize_msu_msg(struct msu_msg *msg, struct msu_type *dst_type, size_t *size_out) {
 
-    if (dst_type->serialize != NULL) {
+    serialization_fn serializer = (msg->hdr.error_flag == 0 ? 
+                                   dst_type->serialize : dst_type->serialize_error);
+
+    if (serializer != NULL) {
         void *payload = NULL;
-        ssize_t payload_size = dst_type->serialize(dst_type, msg, &payload);
+        ssize_t payload_size = serializer(dst_type, msg, &payload);
         log(LOG_SERIALIZE,
                    "Serialized message into payload of size %d using %s serialization",
                    (int)payload_size, dst_type->name);

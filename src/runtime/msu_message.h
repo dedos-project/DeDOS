@@ -87,6 +87,8 @@ struct msu_msg_hdr {
     struct msu_msg_key key;
     /** Message history */
     struct msg_provinance provinance;
+    /** 0 if no error has been encountered */
+    int error_flag;
 #ifdef DEDOS_PROFILER
     /** Whether this message is to be profiled */
     bool do_profile;
