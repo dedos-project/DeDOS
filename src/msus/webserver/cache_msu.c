@@ -12,6 +12,7 @@
 #include "webserver/connection-handler.h"
 #include "webserver/httpops.h"
 #include "connection-handler.h"
+#include "../../common/dfg.h"
 
 #include <string.h>
 
@@ -19,6 +20,7 @@
 #define DEFAULT_OCCUPANCY_RATE 0.2
 #define DEFAULT_MAX_KB_SIZE UINT_MAX
 #define DEFAULT_MAX_FILES UINT_MAX
+#define INIT_SYNTAX "<www_dir>, <max_cache_size_in_kb>, <max_cached_files>, <max_cache_occupancy_rate>"
 
 struct cached_file {
     long byte_size;
@@ -67,7 +69,56 @@ struct cached_file *check_cache(struct ws_cache_state *fc, char *path) {
     return NULL;
 }
 
-int cache_file(struct ws_cache_state *fc, char *path, char *contents, long length) {
+static int parse_init_payload (char *to_parse, struct ws_cache_state *cache_state) {
+
+    cache_state->www_dir = DEFAULT_WWW_DIR;
+    cache_state->max_kb_size = DEFAULT_MAX_KB_SIZE;
+    cache_state->max_files = DEFAULT_MAX_FILES;
+    cache_state->max_occupancy_rate = DEFAULT_OCCUPANCY_RATE;
+
+    if (to_parse == NULL) {
+        log_warn("Initializing socket handler MSU with default parameters. "
+                         "(FYI: init syntax is [" INIT_SYNTAX "])");
+    } else {
+        char *saveptr, *tok;
+        if ( (tok = strtok_r(to_parse, " ,", &saveptr)) == NULL) {
+            log_warn("Couldn't get wwW_dir from initialization string");
+            return 0;
+        }
+        cache_state->www_dir = tok;
+
+        if ( (tok = strtok_r(NULL, " ,", &saveptr)) == NULL) {
+            log_warn("Couldn't get max cache size in kb from initialization string");
+            return 0;
+        }
+        int max_kb_size = atoi(tok);
+        if (max_kb_size >= 0)
+            cache_state->max_kb_size = (unsigned int) max_kb_size;
+
+        if ( (tok = strtok_r(NULL, " ,", &saveptr)) == NULL) {
+            log_warn("Couldn't get max cached files from initialization string");
+            return 0;
+        }
+        int max_files = atoi(tok);
+        if (max_files >= 0)
+            cache_state->max_files = (unsigned int) max_files;
+
+        if ( (tok = strtok_r(NULL, " ,", &saveptr)) == NULL) {
+            log_warn("Couldn't get max occupancy rate in kb from initialization string");
+            return 0;
+        }
+        float max_occupancy_rate = atof(tok);
+        if (max_occupancy_rate >= 0.0)
+            cache_state->max_occupancy_rate = max_occupancy_rate;
+
+        if ( (tok = strtok_r(NULL, " ,", &saveptr)) != NULL) {
+            log_warn("Discarding extra tokens from socket initialization: %s", tok);
+        }
+    }
+    return 0;
+}
+
+static int cache_file(struct ws_cache_state *fc, char *path, char *contents, long length) {
     // Only cache the file if it isn't too large
     float kbytes = (float) length / 1024;
     if (kbytes > fc->max_kb_size || kbytes / fc->max_kb_size > fc->max_occupancy_rate) {
@@ -182,15 +233,13 @@ static int ws_cache_lookup(struct local_msu *self,
     return 0;
 }
 
-static int ws_cache_init(struct local_msu *self, struct msu_init_data *data) {
+static int ws_cache_init(struct local_msu *self, struct msu_init_data *init_data) {
     struct ws_cache_state *cache_state = malloc(sizeof(*cache_state));
 
-    cache_state->max_kb_size = DEFAULT_MAX_KB_SIZE;
-    cache_state->max_files = DEFAULT_MAX_FILES;
-    cache_state->max_occupancy_rate = DEFAULT_OCCUPANCY_RATE;
+    parse_init_payload(init_data->init_data, cache_state);
+
     cache_state->byte_size = 0;
     cache_state->file_count = 0;
-    cache_state->www_dir = DEFAULT_WWW_DIR;
     cache_state->cache = NULL;
     cache_state->lru_head = NULL;
     cache_state->lru_tail = NULL;
