@@ -152,4 +152,9 @@ int schedule_local_msu_call(struct local_msu *sender, struct local_msu *dest, st
  */
 int schedule_local_msu_init_call(struct local_msu *sender, struct local_msu *dest, struct timespec *interval,
                       struct msu_msg_key *key, size_t data_size, void *data);
+
+
+int call_msu_error(struct local_msu *sender, struct msu_endpoint *endpoint,
+                   struct msu_type *endpoint_type,
+                   struct msu_msg_hdr *hdr, size_t data_size, void *data);
 #endif

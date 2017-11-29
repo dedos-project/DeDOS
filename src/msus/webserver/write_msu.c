@@ -24,6 +24,7 @@ END OF LICENSE STUB
 #include "logging.h"
 #include "routing_strategies.h"
 #include "profiler.h"
+#include "local_msu.h"
 
 static int write_http_response(struct local_msu *self,
                                struct msu_msg *msg) {
@@ -36,18 +37,13 @@ static int write_http_response(struct local_msu *self,
         memcpy(resp, resp_in, sizeof(*resp_in));
     }
 
-    if (resp->conn.status == CON_ERROR) {
-        msu_remove_fd_monitor(resp->conn.fd);
-        close_connection(&resp->conn);
-        msu_free_state(self, &msg->hdr.key);
-        free(resp_in);
-        return 0;
-    }
-
     int rtn = write_response(resp);
     if (rtn & WS_ERROR) {
+        msu_error(self, NULL, 0);
         msu_remove_fd_monitor(resp->conn.fd);
-        close_connection(&resp->conn);
+        if (close_connection(&resp->conn) == WS_ERROR) {
+            msu_error(self, NULL, 0);
+        }
         msu_free_state(self, &msg->hdr.key);
         free(resp_in);
         return -1;
@@ -58,7 +54,9 @@ static int write_http_response(struct local_msu *self,
     } else {
         PROFILE_EVENT(msg->hdr, PROF_DEDOS_EXIT);
         msu_remove_fd_monitor(resp->conn.fd);
-        close_connection(&resp->conn);
+        if (close_connection(&resp->conn) == WS_ERROR) {
+            msu_error(self, NULL, 0);
+        }
         log(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
                    resp->conn.fd);
         log(LOG_WEBSERVER_WRITE, "Wrote request: %s", resp->resp);

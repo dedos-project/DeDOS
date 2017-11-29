@@ -88,7 +88,7 @@ struct msu_type{
      */
     int (*receive)(struct local_msu *self, struct msu_msg *msg);
 
-    int (*handle_failure)(struct local_msu *self, struct msu_msg_hdr *hdr);
+    int (*receive_error)(struct local_msu *self, struct msu_msg *msg);
 
     /** Choose which MSU of **this** type the **previous** MSU will route to.
      * If NULL, defaults to `default_routing()` in runtime/routing_strategies.c

@@ -67,6 +67,7 @@ int access_database(char *url, struct db_state *state);
 
 int has_regex(char *url);
 
+int craft_error_response(char *url, char *response);
 int craft_nonregex_response(char *url, char *response);
 int craft_regex_response(char *url, char *response);
 

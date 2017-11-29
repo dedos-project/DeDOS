@@ -219,6 +219,8 @@ int call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
                       struct msu_msg_hdr *hdr, size_t data_size, void *data) {
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
 
+    log_critical("HERE");
+
     int rtn = add_provinance(&msg->hdr.provinance, sender);
     if (rtn < 0) {
         log_warn("Could not add provinance to message %p", msg);
@@ -267,25 +269,12 @@ int init_call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoi
     return call_msu_endpoint(sender, endpoint, endpoint_type, &hdr, data_size, data);
 }
 
-int msu_return_error(struct local_msu *receiver, struct msu_msg_hdr *hdr,
-                     size_t data_size, void *data) {
-
-    struct msu_endpoint rtn_to;
-    struct msu_provinance_item *sender = &hdr->provinance.sender;
-    int rtn = init_msu_endpoint(sender->msu_id, sender->runtime_id, &rtn_to);
-    if (rtn < 0) {
-        log_error("Error initializing MSU endpoint for error report");
-        return -1;
-    }
-    struct msu_type *sender_type = get_msu_type(sender->type_id);
-    if (sender_type == NULL) {
-        log_error("Error getting sender type %d for error report", sender->type_id);
-        return -1;
-    }
-    rtn = call_msu_endpoint(receiver, &rtn_to, sender_type, hdr, data_size, data);
-    if (rtn < 0) {
-        log_error("Error calling MSU endpoint for error report");
-        return -1;
-    }
-    return 0;
+int call_msu_error(struct local_msu *sender, struct msu_endpoint *endpoint,
+                   struct msu_type *endpoint_type,
+                   struct msu_msg_hdr *hdr, size_t data_size, void *data) {
+    hdr->error_flag = -1;
+    return call_msu_endpoint(sender, endpoint, endpoint_type, hdr, data_size, data);
 }
+
+
+

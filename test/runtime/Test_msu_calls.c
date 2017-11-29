@@ -51,29 +51,9 @@ START_DEDOS_TEST(test_schedule_local_msu_init_call) {
     free(msg);
 } END_DEDOS_TEST
 
-START_DEDOS_TEST(test_msu_return_error) {
-
-    set_local_runtime(&rt);
-    add_to_local_registry(&msu);
-    register_msu_type(&type);
-
-    struct msu_msg msg = {};
-    int rtn = add_provinance(&msg.hdr.provinance, &msu);
-    ck_assert_int_eq(rtn, 0);
-
-    rtn = msu_return_error(&msu2, &msg.hdr, 0, NULL);
-    ck_assert_int_eq(rtn, 0);
-
-    struct msu_msg *msg_out = dequeue_msu_msg(&msu.queue);
-    ck_assert_ptr_ne(msg_out, NULL);
-    free(msg_out);
-} END_DEDOS_TEST
-
-
 DEDOS_START_TEST_LIST("MSU calls");
 
 DEDOS_ADD_TEST_FN(test_schedule_local_msu_init_call)
-DEDOS_ADD_TEST_FN(test_msu_return_error)
 
 DEDOS_END_TEST_LIST()
 

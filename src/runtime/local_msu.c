@@ -30,6 +30,7 @@ END OF LICENSE STUB
 #include "inter_runtime_messages.h"
 #include "thread_message.h"
 #include "msu_state.h"
+#include "msu_calls.h"
 
 #include <stdlib.h>
 
@@ -155,7 +156,8 @@ static enum stat_id MSU_STAT_IDS[] = {
     MSU_EXEC_TIME,
     MSU_IDLE_TIME,
     MSU_MEM_ALLOC,
-    MSU_NUM_STATES
+    MSU_NUM_STATES,
+    MSU_ERROR_CNT
 };
 
 #define NUM_MSU_STAT_IDS sizeof(MSU_STAT_IDS) / sizeof(enum stat_id)
@@ -281,13 +283,57 @@ static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
 int msu_dequeue(struct local_msu *msu) {
     struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
     if (msg) {
-        log(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
-        record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
-        int rtn = msu_receive(msu, msg);
-        increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
-        free(msg);
-        return rtn;
+        if (msg->hdr.error_flag) {
+            if (msu->type->receive_error == NULL) {
+                log_error("MSU %d received error with no handler", msu->id);
+                return -1;
+            }
+            int rtn = msu->type->receive_error(msu, msg);
+            if (rtn < 0) {
+                log_error("Error executing MSU error receive function");
+                return -1;
+            }
+        } else {
+            log(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
+            record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
+            int rtn = msu_receive(msu, msg);
+            increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
+            free(msg);
+            return rtn;
+        }
     }
     return 1;
 }
 
+int msu_error(struct local_msu *msu, struct msu_msg_hdr *hdr, int broadcast) {
+
+    increment_stat(MSU_ERROR_CNT, msu->id, 1);
+
+    if (!broadcast) {
+        return 0;
+    }
+
+    for (int i=0; i < hdr->provinance.path_len; i++) {
+        struct msu_provinance_item *upstream = &hdr->provinance.path[i];
+        struct msu_type *up_type = get_msu_type(upstream->type_id);
+        if (up_type == NULL) {
+            log_error("Cannot get type %d", upstream->type_id);
+            continue;
+        }
+        if (up_type->receive_error == NULL) {
+            continue;
+        }
+        struct msu_endpoint receiver;
+        int rtn = init_msu_endpoint(upstream->msu_id, upstream->runtime_id, &receiver);
+        if (rtn < 0) {
+            log_error("Error initializing msu endpoint");
+            continue;
+        }
+        rtn = call_msu_error(msu, &receiver, up_type, hdr, 0, NULL);
+        if (rtn < 0) {
+            log_error("Error calling MSU endpoint for error report");
+            continue;
+        }
+    }
+    return 0;
+}

@@ -42,6 +42,15 @@ unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
     return prov->sender.type_id;
 }
 
+struct msu_provinance_item *get_provinance_item(struct msg_provinance *p, struct msu_type *type) {
+    for (int i=0; i < p->path_len && i < MAX_PATH_LEN; i++) {
+        if (p->path[i].type_id == type->id) {
+            return &p->path[i];
+        }
+    }
+    return NULL;
+}
+
 int set_msg_key(int32_t id, struct msu_msg_key *key) {
     memcpy(&key->key, &id, sizeof(id));
     key->key_len = sizeof(id);
@@ -82,7 +91,9 @@ int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
     }
 
     prov->path[i] = prov->sender;
-    prov->path_len++;
+    if (i == prov->path_len) {
+        prov->path_len++;
+    }
     log(LOG_ADD_PROVINANCE, "Path len of prov %p is now %d", prov, prov->path_len);
     return 0;
 }

@@ -110,6 +110,11 @@ struct msu_msg {
 unsigned int msu_msg_sender_type(struct msg_provinance *prov);
 
 /**
+ * @returns The provinance item with the specified type or NULL if none exists
+ */
+struct msu_provinance_item *get_provinance_item(struct msg_provinance *p, struct msu_type *type);
+
+/**
  * Adds a new item to the path of MSUs taken within the mesasge provinance in the header.
  * @param prov Existing provinance structure
  * @param sender The sending MSU, to be added to the provinance
