@@ -35,7 +35,6 @@ static int process_stat_sample(int runtime_id, struct stat_sample *sample) {
     if (rtn < 0) {
         log(LOG_MYSQL,"Error inserting stats %d.%u into DB",
             sample->hdr.stat_id, sample->hdr.item_id);
-        return -1;
     }
 
     struct timed_rrdb *stat;

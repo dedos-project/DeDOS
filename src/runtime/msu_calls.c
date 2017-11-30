@@ -219,7 +219,6 @@ int call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
                       struct msu_msg_hdr *hdr, size_t data_size, void *data) {
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
 
-    log_critical("HERE");
 
     int rtn = add_provinance(&msg->hdr.provinance, sender);
     if (rtn < 0) {
