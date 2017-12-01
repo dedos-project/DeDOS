@@ -1,7 +1,6 @@
 from peewee import *
 
-#FIXME: update to use db_api() self.db var?
-database = MySQLDatabase('dedos', **{'host': '192.168.122.252', 'password': 'root', 'user': 'root'})
+database = MySQLDatabase('dedos', **{'host': '192.168.122.252', 'password': 'root', 'port': 3306, 'user': 'root'})
 
 class UnknownField(object):
     def __init__(self, *_, **__): pass
@@ -11,7 +10,7 @@ class BaseModel(Model):
         database = database
 
 class Msutypes(BaseModel):
-    name = CharField(null=True)
+    name = CharField()
 
     class Meta:
         db_table = 'MsuTypes'
@@ -57,14 +56,20 @@ class Timeseries(BaseModel):
     class Meta:
         db_table = 'Timeseries'
         indexes = (
-            (('runtime', 'thread_pk', 'msu_pk', 'statistic'), True),
+            (('msu_pk', 'statistic'), True),
+            (('runtime', 'statistic'), True),
+            (('thread_pk', 'statistic'), True),
         )
 
 class Points(BaseModel):
     timeseries_pk = ForeignKeyField(db_column='timeseries_pk', rel_model=Timeseries, to_field='pk')
-    ts = BigIntegerField(null=True)
+    ts = BigIntegerField(index=True)
     val = DecimalField(null=True)
 
     class Meta:
         db_table = 'Points'
+        indexes = (
+            (('timeseries_pk', 'ts'), True),
+        )
+        primary_key = CompositeKey('timeseries_pk', 'ts')
 
