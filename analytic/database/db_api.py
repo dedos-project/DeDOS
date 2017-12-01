@@ -1,8 +1,9 @@
 import sys
 import os
-from peewee import *
+import peewee
 from models import *
 import pandas as pd
+import itertools as it
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
 from utils import *
@@ -79,13 +80,37 @@ class db_api:
 
     def get_msu_full_df(self, msu, timestamp = 0):
         cols = {}
+        cols['TIME'] = []
         timeseries = self.get_msu_timeseries(msu)
 
-        #we assume that times are equal across metrics
-        cols['TIME'] = [datapoint.ts for datapoint in self.get_ts_points(timeseries[0], timestamp)]
+        self.db_connect()
 
-        for ts in timeseries:
-            datapoints = self.get_ts_points(ts, timestamp)
-            cols[ts.statistic.name] = [datapoint.val for datapoint in datapoints]
+        query = None
+        aliases = [Points.alias() for _ in timeseries]
+        for i, (ts, alias) in enumerate(zip(timeseries, aliases)):
+            stat_name = ts.statistic.name
+            if stat_name not in cols:
+               cols[stat_name] = []
+
+            subquery = alias.select().where(
+                (alias.timeseries_pk == ts.pk) & (alias.ts > timestamp)).alias(stat_name
+            )
+            if query is not None:
+                query = query.join(subquery, on=SQL(stat_name + '.ts') == aliases[0].ts)
+            else:
+                query = subquery
+
+        query = query.select(
+            aliases[0].ts, aliases[0].val, *[SQL(ts.statistic.name + '.val') for ts in timeseries[1:]]
+        ).tuples()
+
+        self.db.close()
+
+        for row in query:
+            for i, cell in enumerate(row):
+                if (i == 0):
+                    cols['TIME'].append(cell)
+                else:
+                    cols[timeseries[i - 1].statistic.name].append(cell)
 
         return pd.DataFrame(cols)
