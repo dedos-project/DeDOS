@@ -4,6 +4,7 @@
 #include "msu_calls.h"
 #include "logging.h"
 #include "routing_strategies.h"
+#include "rt_stats.h"
 
 #include "webserver/uthash.h"
 #include "webserver/write_msu.h"
@@ -20,7 +21,16 @@
 #define DEFAULT_OCCUPANCY_RATE 0.2
 #define DEFAULT_MAX_KB_SIZE UINT_MAX
 #define DEFAULT_MAX_FILES UINT_MAX
-#define INIT_SYNTAX "<www_dir>, <max_cache_size_in_kb>, <max_cached_files>, <max_cache_occupancy_rate>"
+#define CACHE_INIT_SYNTAX "<www_dir>, <max_cache_size_in_kb>, <max_cached_files>, " \
+                          "<max_cache_occupancy_rate>"
+
+#define MONITOR_CACHE_STATS
+#define CACHE_HIT_STAT MSU_STAT1
+#define CACHE_MISS_STAT MSU_STAT2
+#define CACHE_EVICT_STAT MSU_STAT3
+
+
+static struct local_msu *cache_instance;
 
 struct cached_file {
     long byte_size;
@@ -69,7 +79,7 @@ struct cached_file *check_cache(struct ws_cache_state *fc, char *path) {
     return NULL;
 }
 
-static int parse_init_payload (char *to_parse, struct ws_cache_state *cache_state) {
+static int parse_init_cache_payload(char *to_parse, struct ws_cache_state *cache_state) {
 
     cache_state->www_dir = DEFAULT_WWW_DIR;
     cache_state->max_kb_size = DEFAULT_MAX_KB_SIZE;
@@ -77,8 +87,8 @@ static int parse_init_payload (char *to_parse, struct ws_cache_state *cache_stat
     cache_state->max_occupancy_rate = DEFAULT_OCCUPANCY_RATE;
 
     if (to_parse == NULL) {
-        log_warn("Initializing socket handler MSU with default parameters. "
-                         "(FYI: init syntax is [" INIT_SYNTAX "])");
+        log_warn("Initializing cache MSU with default parameters. "
+                         "(FYI: init syntax is [" CACHE_INIT_SYNTAX "])");
     } else {
         char *saveptr, *tok;
         if ( (tok = strtok_r(to_parse, " ,", &saveptr)) == NULL) {
@@ -112,7 +122,7 @@ static int parse_init_payload (char *to_parse, struct ws_cache_state *cache_stat
             cache_state->max_occupancy_rate = max_occupancy_rate;
 
         if ( (tok = strtok_r(NULL, " ,", &saveptr)) != NULL) {
-            log_warn("Discarding extra tokens from socket initialization: %s", tok);
+            log_warn("Discarding extra tokens from cache initialization: %s", tok);
         }
     }
     return 0;
@@ -136,6 +146,9 @@ static int cache_file(struct ws_cache_state *fc, char *path, char *contents, lon
         }
 
         log_info("Evicting %s from cache", cached->path);
+#ifdef MONITOR_CACHE_STATS
+        increment_stat(CACHE_EVICT_STAT, cache_instance->id, 1);
+#endif
 
         HASH_DEL(fc->cache, cached);
         fc->lru_head = cached->lru_next;
@@ -196,7 +209,6 @@ static int cache_file(struct ws_cache_state *fc, char *path, char *contents, lon
 
 static int ws_cache_lookup(struct local_msu *self,
                            struct msu_msg *msg) {
-    // TODO: Remove headers from resp and just set the code and mimetype?
     struct response_state *resp = msg->data;
     struct ws_cache_state *fc = self->msu_state;
 
@@ -207,6 +219,9 @@ static int ws_cache_lookup(struct local_msu *self,
         struct cached_file *file = check_cache(fc, resp->path);
         if (file == NULL) {
             // File not cached, send to file IO msu
+#ifdef MONITOR_CACHE_STATS
+            increment_stat(CACHE_MISS_STAT, cache_instance->id, 1);
+#endif
             call_msu_type(self, &WEBSERVER_FILEIO_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         } else {
             // File cached, generate response including http headers and send to write msu
@@ -223,11 +238,15 @@ static int ws_cache_lookup(struct local_msu *self,
             if (resp->header_len > MAX_HEADER_LEN) {
                 resp->header_len = MAX_HEADER_LEN;
             }
+#ifdef MONITOR_CACHE_STATS
+            increment_stat(CACHE_HIT_STAT, cache_instance->id, 1);
+#endif
             call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         }
     } else {
         // Received a response to save to the cache
-        cache_file((struct ws_cache_state *)self->msu_state, resp->path, resp->body, resp->body_len);
+        cache_file((struct ws_cache_state *)self->msu_state, resp->path, resp->body,
+                   resp->body_len);
     }
 
     return 0;
@@ -236,7 +255,7 @@ static int ws_cache_lookup(struct local_msu *self,
 static int ws_cache_init(struct local_msu *self, struct msu_init_data *init_data) {
     struct ws_cache_state *cache_state = malloc(sizeof(*cache_state));
 
-    parse_init_payload(init_data->init_data, cache_state);
+    parse_init_cache_payload(init_data->init_data, cache_state);
 
     cache_state->byte_size = 0;
     cache_state->file_count = 0;
@@ -245,6 +264,16 @@ static int ws_cache_init(struct local_msu *self, struct msu_init_data *init_data
     cache_state->lru_tail = NULL;
 
     self->msu_state = (void*)cache_state;
+
+    cache_instance = self;
+
+#ifdef MONITOR_CACHE_STATS
+    log_info("INITING STATS FOR ID: %d", self->id);
+    init_stat_item(CACHE_HIT_STAT, self->id);
+    init_stat_item(CACHE_MISS_STAT, self->id);
+    init_stat_item(CACHE_EVICT_STAT, self->id);
+#endif
+
     return 0;
 }
 
