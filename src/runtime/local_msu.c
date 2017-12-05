@@ -33,7 +33,9 @@ END OF LICENSE STUB
 #include "msu_calls.h"
 
 #include <stdlib.h>
-
+#define __USE_GNU // For some reason, necessary for RUSAGE_THREAD
+#include <sys/resource.h>
+#include <sys/time.h>
 /**
  * MOVEME: MAX_MSU_ID
  * Defines the maximum ID that can be assigned to an MSU.
@@ -280,6 +282,38 @@ static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
     return 0;
 }
 
+static inline int gather_metrics_before(struct rusage *before) {
+    int rtn = getrusage(RUSAGE_THREAD, before);
+    if (rtn < 0) {
+        log_error("Error getting MSU rusage");
+    }
+    return rtn;
+}
+
+#define RECORD_DIFF(dstat, rstat, id) \
+    increment_stat(dstat, id, after.rstat - before->rstat)
+
+#define RECORD_TIMEDIFF(dstat, rstat, id) \
+    increment_stat(dstat, id, ((double)after.rstat.tv_sec * 1e6 + after.rstat.tv_usec) - \
+                              ((double)before->rstat.tv_sec * 1e6 + before->rstat.tv_usec))
+
+static inline void record_metrics(struct rusage *before, int msu_id) {
+    struct rusage after;
+    int rtn = getrusage(RUSAGE_THREAD, &after);
+    if (rtn < 0) {
+        log_error("Error getting MSU rusage");
+        return;
+    }
+
+    RECORD_TIMEDIFF(MSU_UCPUTIME, ru_utime, msu_id);
+    RECORD_TIMEDIFF(MSU_SCPUTIME, ru_stime, msu_id);
+    RECORD_DIFF(MSU_MINFLT, ru_minflt, msu_id);
+    RECORD_DIFF(MSU_MAJFLT, ru_majflt, msu_id);
+    RECORD_DIFF(MSU_VCSW, ru_nvcsw, msu_id);
+    RECORD_DIFF(MSU_IVCSW, ru_nivcsw, msu_id);
+}
+
+
 int msu_dequeue(struct local_msu *msu) {
     struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
     if (msg) {
@@ -295,8 +329,13 @@ int msu_dequeue(struct local_msu *msu) {
             }
         } else {
             log(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
+            struct rusage before;
             record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
+            int gather_err = gather_metrics_before(&before);
             int rtn = msu_receive(msu, msg);
+            if (gather_err == 0) {
+                record_metrics(&before, msu->id);
+            }
             increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
             free(msg);
             return rtn;
