@@ -159,7 +159,13 @@ static enum stat_id MSU_STAT_IDS[] = {
     MSU_IDLE_TIME,
     MSU_MEM_ALLOC,
     MSU_NUM_STATES,
-    MSU_ERROR_CNT
+    MSU_ERROR_CNT,
+    MSU_UCPUTIME,
+    MSU_SCPUTIME,
+    MSU_MINFLT,
+    MSU_MAJFLT,
+    MSU_VCSW,
+    MSU_IVCSW
 };
 
 #define NUM_MSU_STAT_IDS sizeof(MSU_STAT_IDS) / sizeof(enum stat_id)
