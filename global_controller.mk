@@ -133,7 +133,7 @@ CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
 TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lm -O0 \
-			 -fprofile-arcs -ftest-coverage --coverage
+			 -fprofile-arcs -ftest-coverage --coverage -lsubunit
 
 DIRS=$(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIRS)
 
