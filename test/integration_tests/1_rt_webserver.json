@@ -4,35 +4,18 @@
   "global_ctl_port": 8090, 
   "MSU_types": [
     {
-      "id": 554, 
+      "id": 556, 
       "meta_routing": {
         "source_types": [
-          553
-        ]
-      }, 
-      "cloneable": 1, 
-      "name": "ws_write", 
-      "colocation_group": 0, 
-      "dependencies": [
-        {
-          "type": 500, 
-          "locality": "local"
-        }, 
-        {
-          "type": 10, 
-          "locality": "local"
-        }
-      ]
-    }, 
-    {
-      "id": 10, 
-      "meta_routing": {
+          555
+        ], 
         "dst_types": [
-          500
+          554, 
+          555
         ]
       }, 
       "cloneable": 2, 
-      "name": "socket", 
+      "name": "ws_fileio", 
       "colocation_group": 0
     }, 
     {
@@ -56,6 +39,61 @@
       ]
     }, 
     {
+      "id": 555, 
+      "meta_routing": {
+        "source_types": [
+          552
+        ], 
+        "dst_types": [
+          556, 
+          554
+        ]
+      }, 
+      "cloneable": 1, 
+      "name": "ws_cache", 
+      "colocation_group": 0
+    }, 
+    {
+      "id": 554, 
+      "meta_routing": {
+        "source_types": [
+          552, 
+          553, 
+          555, 
+          556
+        ]
+      }, 
+      "cloneable": 1, 
+      "name": "ws_write", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 500, 
+          "locality": "local"
+        }, 
+        {
+          "type": 10, 
+          "locality": "local"
+        }
+      ]
+    }, 
+    {
+      "id": 552, 
+      "meta_routing": {
+        "source_types": [
+          500
+        ], 
+        "dst_types": [
+          560, 
+          555, 
+          554
+        ]
+      }, 
+      "cloneable": 1, 
+      "name": "ws_http", 
+      "colocation_group": 0
+    }, 
+    {
       "id": 553, 
       "meta_routing": {
         "source_types": [
@@ -76,20 +114,6 @@
       ]
     }, 
     {
-      "id": 552, 
-      "meta_routing": {
-        "source_types": [
-          500
-        ], 
-        "dst_types": [
-          560
-        ]
-      }, 
-      "cloneable": 1, 
-      "name": "ws_http", 
-      "colocation_group": 0
-    }, 
-    {
       "id": 500, 
       "meta_routing": {
         "source_types": [
@@ -108,6 +132,17 @@
           "locality": "local"
         }
       ]
+    }, 
+    {
+      "id": 10, 
+      "meta_routing": {
+        "dst_types": [
+          500
+        ]
+      }, 
+      "cloneable": 2, 
+      "name": "socket", 
+      "colocation_group": 0
     }
   ], 
   "MSUs": [
@@ -128,7 +163,6 @@
     {
       "id": 11, 
       "vertex_type": "nop", 
-      "init_data": "ssl", 
       "type": 500, 
       "blocking_mode": "non-blocking", 
       "scheduling": {
@@ -142,7 +176,6 @@
     {
       "id": 12, 
       "vertex_type": "nop", 
-      "init_data": "ssl", 
       "type": 500, 
       "blocking_mode": "non-blocking", 
       "scheduling": {
@@ -163,21 +196,24 @@
         "thread_id": 4, 
         "runtime": 1, 
         "routes": [
+          1004, 
           1003, 
           1002, 
-          1005
+          1010
         ]
       }
     }, 
     {
       "id": 14, 
       "vertex_type": "nop", 
-      "type": 553, 
+      "init_data": "www/ 5 2 0.75", 
+      "type": 555, 
       "blocking_mode": "non-blocking", 
       "scheduling": {
-        "thread_id": 5, 
+        "thread_id": 6, 
         "runtime": 1, 
         "routes": [
+          1006, 
           1005
         ]
       }
@@ -185,18 +221,45 @@
     {
       "id": 15, 
       "vertex_type": "nop", 
+      "type": 556, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 7, 
+        "runtime": 1, 
+        "routes": [
+          1008, 
+          1007
+        ]
+      }
+    }, 
+    {
+      "id": 16, 
+      "vertex_type": "nop", 
+      "type": 553, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 5, 
+        "runtime": 1, 
+        "routes": [
+          1010
+        ]
+      }
+    }, 
+    {
+      "id": 17, 
+      "vertex_type": "nop", 
       "type": 560, 
       "blocking_mode": "non-blocking", 
       "scheduling": {
         "thread_id": 8, 
         "runtime": 1, 
         "routes": [
-          1004
+          1009
         ]
       }
     }, 
     {
-      "id": 16, 
+      "id": 18, 
       "vertex_type": "nop", 
       "type": 554, 
       "blocking_mode": "non-blocking", 
@@ -234,18 +297,28 @@
           "type": 552, 
           "endpoints": [
             {
-              "key": 4, 
+              "key": 5, 
               "msu": 13
             }
           ]
         }, 
         {
-          "id": 1003, 
+          "id": 1004, 
           "type": 560, 
           "endpoints": [
             {
               "key": 1, 
-              "msu": 15
+              "msu": 17
+            }
+          ]
+        }, 
+        {
+          "id": 1003, 
+          "type": 555, 
+          "endpoints": [
+            {
+              "key": 2, 
+              "msu": 14
             }
           ]
         }, 
@@ -264,22 +337,62 @@
           ]
         }, 
         {
-          "id": 1004, 
-          "type": 553, 
+          "id": 1006, 
+          "type": 554, 
           "endpoints": [
             {
               "key": 1, 
-              "msu": 14
+              "msu": 18
             }
           ]
         }, 
         {
           "id": 1005, 
+          "type": 556, 
+          "endpoints": [
+            {
+              "key": 2, 
+              "msu": 15
+            }
+          ]
+        }, 
+        {
+          "id": 1008, 
           "type": 554, 
           "endpoints": [
             {
               "key": 1, 
+              "msu": 18
+            }
+          ]
+        }, 
+        {
+          "id": 1007, 
+          "type": 555, 
+          "endpoints": [
+            {
+              "key": 2, 
+              "msu": 14
+            }
+          ]
+        }, 
+        {
+          "id": 1009, 
+          "type": 553, 
+          "endpoints": [
+            {
+              "key": 1, 
               "msu": 16
+            }
+          ]
+        }, 
+        {
+          "id": 1010, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 18
             }
           ]
         }
