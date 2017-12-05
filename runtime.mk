@@ -185,7 +185,7 @@ $(subst Test_,, $(patsubst $(TST_BLD_DIR)%, $(OBJ_DIR)%.o, $1)) \
 endef
 
 # Flags specifically for testing
-TEST_CFLAGS= $(CFLAGS) $(CC_EXTRAFLAGS) -I$(TST_DIR) -O0 -lcheck_pic
+TEST_CFLAGS= $(CFLAGS) $(CC_EXTRAFLAGS) -I$(TST_DIR) -O0 -lcheck_pic -lsubunit
 ifeq ($(MAKECMDGOALS),$(filter $(MAKECMDGOALS),coverage init_cov cov-site cov))
   CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
   OPTIM=0
