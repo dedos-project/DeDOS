@@ -2,7 +2,7 @@
 
 #include "webserver/httpops.h"
 
-#define DEFAULT_HTTP_HEADER\
+#define BASE_HTTP_HEADER\
     "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n"
 
 #define NOT_FOUND_HEADER\
@@ -68,7 +68,7 @@ int url_to_path(char *url, char *dir, char *path, int capacity) {
 
 int generate_header(char *dest, int code, int capacity, int body_len, char *mime_type) {
     if (code == 200) {
-        return snprintf(dest, capacity, DEFAULT_HTTP_HEADER, mime_type, body_len);
+        return snprintf(dest, capacity, BASE_HTTP_HEADER, mime_type, body_len);
     } else if (code == 404) {
         return snprintf(dest, capacity, NOT_FOUND_HEADER);
     } else {

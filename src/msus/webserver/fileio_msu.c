@@ -36,7 +36,9 @@ static int ws_fileio_load(struct local_msu *self,
         // Allocate memory for file contents and populate it
         resp->body_len = fread(resp->body, sizeof(char), size, file);
         if (resp->body_len != size) {
-            log_error("Only read %d of %d bytes from file %s", read, size, resp->path);
+            log_error("Only read %d of %d bytes from file %s", resp->body_len, size, resp->path);
+        } else {
+            log_info("FileIO read %d byte from file %s", resp->body_len, resp->path);
         }
 
         fclose(file);

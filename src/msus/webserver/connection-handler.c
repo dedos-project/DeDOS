@@ -279,6 +279,8 @@ int write_response(struct response_state *state) {
                 log_error("Unknown return %d from call to write (fd: %d)", rtn, state->conn.fd);
                 return WS_ERROR;
         }
+    } else {
+        return rtn;
     }
 }
 

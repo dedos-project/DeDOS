@@ -27,6 +27,7 @@ END OF LICENSE STUB
 #include "webserver/write_msu.h"
 #include "webserver/regex_msu.h"
 #include "webserver/connection-handler.h"
+#include "webserver/httpops.h"
 
 static int craft_ws_regex_response(struct local_msu *self,
                                    struct msu_msg *msg) {
@@ -38,7 +39,8 @@ static int craft_ws_regex_response(struct local_msu *self,
     }
 
     resp->body_len = craft_regex_response(resp->url, resp->body);
-    resp->header_len = generate_header(resp->header, 200, "text/html", resp->body_len);
+    resp->header_len = generate_header(resp->header, 200, MAX_HEADER_LEN,
+                                       resp->body_len, "text/html");
     call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
     return 0;
 }

@@ -268,7 +268,6 @@ static int ws_cache_init(struct local_msu *self, struct msu_init_data *init_data
     cache_instance = self;
 
 #ifdef MONITOR_CACHE_STATS
-    log_info("INITING STATS FOR ID: %d", self->id);
     init_stat_item(CACHE_HIT_STAT, self->id);
     init_stat_item(CACHE_MISS_STAT, self->id);
     init_stat_item(CACHE_EVICT_STAT, self->id);
