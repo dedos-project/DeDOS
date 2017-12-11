@@ -51,9 +51,15 @@ static int handle_read(struct read_state *read_state,
         free(msg->data);
         return 0;
     } else if (rtn & WS_ERROR) {
-        close_connection(&read_state->conn);
-        read_state->req_len = -1;
-        // Send the failure message (req_len = -1) to http
+        struct connection conn = read_state->conn;
+        msu_free_state(self, &msg->hdr.key);
+        log(LOG_WEBSERVER_READ, "Error when reading from socket!");
+        msu_error(self, &msg->hdr, 1);
+        log(LOG_WEBSERVER_READ, "Error when reading from socket!");
+        msu_remove_fd_monitor(conn.fd);
+        log(LOG_WEBSERVER_READ, "Error when reading from socket!");
+        close_connection(&conn);
+        return 0;
     } else {
         log(LOG_WEBSERVER_READ, "Read %s", read_state->req);
     }
@@ -74,6 +80,8 @@ static int handle_accept(struct read_state *read_state,
         rtn = handle_read(read_state, msu_state, self, msg);
         return rtn;
     } else if (rtn & WS_ERROR) {
+        msu_error(self, NULL, 0);
+        msu_remove_fd_monitor(read_state->conn.fd);
         close_connection(&read_state->conn);
         msu_free_state(self, &msg->hdr.key);
         free(msg->data);

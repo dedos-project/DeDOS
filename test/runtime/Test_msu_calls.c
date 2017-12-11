@@ -2,11 +2,23 @@
 
 #include "msu_calls.c"
 #include "worker_thread.c"
+#include "local_msu.c"
+#include "msu_type.c"
+
+#include "runtime_dfg.h"
 
 struct dedos_thread dthread = {};
 struct worker_thread wthread = { .thread = &dthread };
 struct msu_type type = {};
+
+struct dfg_runtime rt = {};
+
 struct local_msu msu = {
+    .type = &type,
+    .thread = &wthread
+};
+
+struct local_msu msu2 = {
     .type = &type,
     .thread = &wthread
 };

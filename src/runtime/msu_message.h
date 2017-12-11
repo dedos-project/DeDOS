@@ -69,7 +69,10 @@ struct msu_provinance_item {
 struct msg_provinance {
     /** The first MSU to see this message */
     struct msu_provinance_item origin;
-    /** The path of MSUs this message has traversed */
+    /** The last MSU to see this message */
+    struct msu_provinance_item sender;
+    /** A list of each MSU that has seen this message 
+     * TODO: For now, one MSU of each type */
     struct msu_provinance_item path[MAX_PATH_LEN];
     /** The current length of msg_provinance::path */
     int path_len;
@@ -84,6 +87,8 @@ struct msu_msg_hdr {
     struct msu_msg_key key;
     /** Message history */
     struct msg_provinance provinance;
+    /** 0 if no error has been encountered */
+    int error_flag;
 #ifdef DEDOS_PROFILER
     /** Whether this message is to be profiled */
     bool do_profile;
@@ -103,6 +108,11 @@ struct msu_msg {
  * @returns the type of the MSU which last sent this message header
  */
 unsigned int msu_msg_sender_type(struct msg_provinance *prov);
+
+/**
+ * @returns The provinance item with the specified type or NULL if none exists
+ */
+struct msu_provinance_item *get_provinance_item(struct msg_provinance *p, struct msu_type *type);
 
 /**
  * Adds a new item to the path of MSUs taken within the mesasge provinance in the header.

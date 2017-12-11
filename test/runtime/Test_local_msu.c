@@ -1,3 +1,9 @@
+#define MSU_TYPE_LIST \
+{ \
+    &test_type_custom, \
+    &test_type_default, \
+}
+
 #include "dedos_testing.h"
 #include "stats.h"
 #include "msu_calls.h"
@@ -6,12 +12,14 @@
 // Include the file under test
 #include "local_msu.c"
 
+
 struct dfg_runtime local_runtime = {
     .id = 1
 };
 
 #define msu_id_custom  5
 #define msu_id_default 6
+#define msu_id_custom2 7
 
 static int initted = 0;
 static int test_init(struct local_msu *self, struct msu_init_data *init_data) {
@@ -31,7 +39,7 @@ static int test_receive(struct local_msu *self, struct msu_msg *data) {
 }
 
 static int routed = 0;
-static int test_route(struct msu_type *type, struct local_msu *sender, 
+static int test_route(struct msu_type *type, struct local_msu *sender,
                       struct msu_msg *data, struct msu_endpoint *output) {
     routed = 1;
     init_msu_endpoint(msu_id_custom, 1, output);
@@ -56,6 +64,7 @@ struct msu_type test_type_custom = {
     .init = test_init,
     .destroy = test_destroy,
     .receive = test_receive,
+    .receive_error = test_receive,
     .route = test_route,
     .serialize = test_serialize,
     .deserialize = test_deserialize,
@@ -66,6 +75,8 @@ struct msu_type test_type_default = {
     .id = 102,
     .receive = test_receive
 };
+
+#include "msu_type.c"
 
 struct dedos_thread dthread = {};
 struct worker_thread wthread = { .thread = &dthread} ;
@@ -202,6 +213,37 @@ START_DEDOS_TEST(test_msu_enqueue__local) {
     ck_assert_int_eq(msu2->queue.num_msgs, 1);
 } END_DEDOS_TEST
 
+START_DEDOS_TEST(test_msu_error__broadcast) {
+    init_msu_type_id(test_type_custom.id);
+    init_msu_type_id(test_type_default.id);
+
+    struct local_msu *msu = init_msu(msu_id_default, &test_type_default, &wthread, NULL);
+    struct local_msu *msu2 = init_msu(msu_id_custom, &test_type_custom, &wthread, NULL);
+    struct local_msu *msu3 = init_msu(msu_id_custom2, &test_type_custom, &wthread, NULL);
+
+    struct msu_msg_hdr hdr = {};
+
+    int rtn = add_provinance(&hdr.provinance, msu);
+    ck_assert_int_eq(rtn, 0);
+    rtn = add_provinance(&hdr.provinance, msu2);
+    ck_assert_int_eq(rtn, 0);
+
+    rtn = msu_error(msu3, &hdr, 1);
+
+    ck_assert_int_eq(rtn, 0);
+
+    struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
+    ck_assert_ptr_eq(msg, NULL);
+
+    msg = dequeue_msu_msg(&msu2->queue);
+    ck_assert_ptr_ne(msg, NULL);
+
+    double n_failures = get_last_stat(MSU_ERROR_CNT, msu3->id);
+    ck_assert_int_eq(n_failures, 1);
+
+} END_DEDOS_TEST
+
+
 // TODO: test_msu_enqueue__remote
 
 DEDOS_START_TEST_LIST("local_msu")
@@ -224,5 +266,5 @@ DEDOS_ADD_TEST_FN(test_msu_receive)
 DEDOS_ADD_TEST_FN(test_msu_dequeue__message)
 DEDOS_ADD_TEST_FN(test_msu_dequeue__empty)
 DEDOS_ADD_TEST_FN(test_msu_enqueue__local)
-
+DEDOS_ADD_TEST_FN(test_msu_error__broadcast);
 DEDOS_END_TEST_LIST()

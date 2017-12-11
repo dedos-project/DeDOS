@@ -685,8 +685,8 @@ struct dfg_msu *clone_msu(int msu_id) {
         unlock_dfg();
         return NULL;
     } else {
-        debug("Cloned msu %d of type %d into msu %d on runtime %d",
-              msu->msu_id, msu->msu_type, clone->msu_id, clone->scheduling.runtime->id);
+        log_info("Cloned msu %d of type %d into msu %d on runtime %d",
+              msu->id, msu->type->id, clone->id, clone->scheduling.runtime->id);
 
         int rtn = fix_all_route_ranges(dfg);
         if (rtn < 0) {

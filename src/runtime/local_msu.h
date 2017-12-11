@@ -103,4 +103,5 @@ int msu_dequeue(struct local_msu *msu);
  */
 struct local_msu *get_local_msu(unsigned int id);
 
+int msu_error(struct local_msu *msu, struct msu_msg_hdr *hdr, int broadcast);
 #endif

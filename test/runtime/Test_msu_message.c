@@ -105,9 +105,19 @@ struct msu_type custom_type = {
     .deserialize = custom_deserialize
 };
 
+struct msu_type custom_type2 = {
+    .id = 145,
+    .name = "CUSTOM2"
+};
+
 struct local_msu custom_msu = {
     .id = 42,
     .type = &custom_type
+};
+
+struct local_msu custom_msu2 = {
+    .id = 43,
+    .type = &custom_type2
 };
 
 START_DEDOS_TEST(test_serialize_and_read_msu_msg__custom) {
@@ -172,10 +182,29 @@ START_DEDOS_TEST(test_add_provinance) {
     ck_assert_int_eq(hdr.provinance.path[0].msu_id, custom_msu.id);
     ck_assert_int_eq(hdr.provinance.path[0].runtime_id, rt.id);
 
-    ck_assert_int_eq(add_provinance(&hdr.provinance, &custom_msu),0);
+    ck_assert_int_eq(add_provinance(&hdr.provinance, &custom_msu2),0);
     ck_assert_int_eq(hdr.provinance.path_len, 2);
-    ck_assert_int_eq(hdr.provinance.path[1].type_id, custom_type.id);
+    ck_assert_int_eq(hdr.provinance.path[1].type_id, custom_type2.id);
     ck_assert_int_eq(hdr.provinance.path[1].runtime_id, rt.id);
+} END_DEDOS_TEST
+
+START_DEDOS_TEST(test_get_provinance_item) {
+    struct msg_provinance p = {
+        .path = {
+            {
+                .type_id = custom_type.id,
+            },
+            {
+                .type_id = custom_type2.id,
+            }
+        },
+        .path_len = 2,
+    };
+
+    struct msu_provinance_item *pi = get_provinance_item(&p, &custom_type);
+    ck_assert_ptr_eq(pi, &p.path[0]);
+    pi = get_provinance_item(&p, &custom_type2);
+    ck_assert_ptr_eq(pi, &p.path[1]);
 } END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("MSU_message")
@@ -184,5 +213,6 @@ DEDOS_ADD_TEST_FN(test_enqueue_and_dequeue_msu_msg)
 DEDOS_ADD_TEST_FN(test_serialize_and_read_msu_msg__default)
 DEDOS_ADD_TEST_FN(test_serialize_and_read_msu_msg__custom)
 DEDOS_ADD_TEST_FN(test_add_provinance)
+DEDOS_ADD_TEST_FN(test_get_provinance_item)
 
 DEDOS_END_TEST_LIST()

@@ -104,13 +104,11 @@ int msu_remove_fd_monitor(int fd) {
     return 0;
 }
 
-
 struct msu_msg_key self_key = {
     .key = {0},
     .key_len = 0,
     .id = 0
 };
-
 
 static int process_connection(int fd, void *v_state) {
     struct sock_msu_state *state = v_state;
@@ -131,6 +129,7 @@ static int process_connection(int fd, void *v_state) {
         int rtn = getpeername(fd, (struct sockaddr*)&seed.sockaddr, &addrlen);
         if (rtn < 0) {
             log_perror("Could not getpeername() on fd %d", fd);
+            msu_error(instance, NULL, 0);
             return -1;
         }
         seed.local_ip = local_runtime_ip();
@@ -142,6 +141,7 @@ static int process_connection(int fd, void *v_state) {
         if (rtn < 0) {
             log_error("Error enqueing to destination");
             free(msg);
+            msu_error(instance, NULL, 0);
             msu_monitor_fd(fd, EPOLLIN | EPOLLOUT, NULL, &blank_hdr);
             return -1;
         }
@@ -156,6 +156,7 @@ static int process_connection(int fd, void *v_state) {
         int rtn = call_local_msu(state->self, destination, hdr, sizeof(*msg), msg);
         if (rtn < 0) {
             log_error("Error enqueueing to next MSU");
+            msu_error(instance, NULL, 0);
             msu_monitor_fd(fd, EPOLLIN | EPOLLOUT, destination, hdr);
             return -1;
         }

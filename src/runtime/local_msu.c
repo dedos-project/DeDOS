@@ -30,9 +30,12 @@ END OF LICENSE STUB
 #include "inter_runtime_messages.h"
 #include "thread_message.h"
 #include "msu_state.h"
+#include "msu_calls.h"
 
 #include <stdlib.h>
-
+#define __USE_GNU // For some reason, necessary for RUSAGE_THREAD
+#include <sys/resource.h>
+#include <sys/time.h>
 /**
  * MOVEME: MAX_MSU_ID
  * Defines the maximum ID that can be assigned to an MSU.
@@ -155,7 +158,14 @@ static enum stat_id MSU_STAT_IDS[] = {
     MSU_EXEC_TIME,
     MSU_IDLE_TIME,
     MSU_MEM_ALLOC,
-    MSU_NUM_STATES
+    MSU_NUM_STATES,
+    MSU_ERROR_CNT,
+    MSU_UCPUTIME,
+    MSU_SCPUTIME,
+    MSU_MINFLT,
+    MSU_MAJFLT,
+    MSU_VCSW,
+    MSU_IVCSW
 };
 
 #define NUM_MSU_STAT_IDS sizeof(MSU_STAT_IDS) / sizeof(enum stat_id)
@@ -278,16 +288,97 @@ static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
     return 0;
 }
 
+static inline int gather_metrics_before(struct rusage *before) {
+    int rtn = getrusage(RUSAGE_THREAD, before);
+    if (rtn < 0) {
+        log_error("Error getting MSU rusage");
+    }
+    return rtn;
+}
+
+#define RECORD_DIFF(dstat, rstat, id) \
+    increment_stat(dstat, id, after.rstat - before->rstat)
+
+#define RECORD_TIMEDIFF(dstat, rstat, id) \
+    increment_stat(dstat, id, ((double)after.rstat.tv_sec + after.rstat.tv_usec * 1e-6) - \
+                              ((double)before->rstat.tv_sec + before->rstat.tv_usec * 1e-6))
+
+static inline void record_metrics(struct rusage *before, int msu_id) {
+    struct rusage after;
+    int rtn = getrusage(RUSAGE_THREAD, &after);
+    if (rtn < 0) {
+        log_error("Error getting MSU rusage");
+        return;
+    }
+
+    RECORD_TIMEDIFF(MSU_UCPUTIME, ru_utime, msu_id);
+    RECORD_TIMEDIFF(MSU_SCPUTIME, ru_stime, msu_id);
+    RECORD_DIFF(MSU_MINFLT, ru_minflt, msu_id);
+    RECORD_DIFF(MSU_MAJFLT, ru_majflt, msu_id);
+    RECORD_DIFF(MSU_VCSW, ru_nvcsw, msu_id);
+    RECORD_DIFF(MSU_IVCSW, ru_nivcsw, msu_id);
+}
+
+
 int msu_dequeue(struct local_msu *msu) {
     struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
     if (msg) {
-        log(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
-        record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
-        int rtn = msu_receive(msu, msg);
-        increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
-        free(msg);
-        return rtn;
+        if (msg->hdr.error_flag) {
+            if (msu->type->receive_error == NULL) {
+                log_error("MSU %d received error with no handler", msu->id);
+                return -1;
+            }
+            int rtn = msu->type->receive_error(msu, msg);
+            if (rtn < 0) {
+                log_error("Error executing MSU error receive function");
+                return -1;
+            }
+        } else {
+            log(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
+            struct rusage before;
+            record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
+            int gather_err = gather_metrics_before(&before);
+            int rtn = msu_receive(msu, msg);
+            if (gather_err == 0) {
+                record_metrics(&before, msu->id);
+            }
+            increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
+            free(msg);
+            return rtn;
+        }
     }
     return 1;
 }
 
+int msu_error(struct local_msu *msu, struct msu_msg_hdr *hdr, int broadcast) {
+
+    increment_stat(MSU_ERROR_CNT, msu->id, 1);
+
+    if (!broadcast) {
+        return 0;
+    }
+
+    for (int i=0; i < hdr->provinance.path_len; i++) {
+        struct msu_provinance_item *upstream = &hdr->provinance.path[i];
+        struct msu_type *up_type = get_msu_type(upstream->type_id);
+        if (up_type == NULL) {
+            log_error("Cannot get type %d", upstream->type_id);
+            continue;
+        }
+        if (up_type->receive_error == NULL) {
+            continue;
+        }
+        struct msu_endpoint receiver;
+        int rtn = init_msu_endpoint(upstream->msu_id, upstream->runtime_id, &receiver);
+        if (rtn < 0) {
+            log_error("Error initializing msu endpoint");
+            continue;
+        }
+        rtn = call_msu_error(msu, &receiver, up_type, hdr, 0, NULL);
+        if (rtn < 0) {
+            log_error("Error calling MSU endpoint for error report");
+            continue;
+        }
+    }
+    return 0;
+}

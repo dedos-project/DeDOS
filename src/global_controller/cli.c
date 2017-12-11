@@ -60,7 +60,6 @@ struct cmd_action {
     char help[256];
 };
 
-static void parse_cmd_action(char *cmd);
 
 static int parse_show_runtimes(char *args) {
     struct dedos_dfg *dfg = get_dfg();
@@ -375,6 +374,27 @@ static int parse_clone_msu(char *args) {
     return 0;
 }
 
+static int parse_unclone_msu(char *args) {
+    char *msu_c;
+    NEXT_ARG(msu_c, args);
+
+    int id = atoi(msu_c);
+
+    struct dfg_msu *msu = get_dfg_msu(id);
+
+    if (msu == NULL) {
+        log_error("Msu %d does not exist", id);
+        return -1;
+    }
+
+    int rtn = unclone_msu(id);
+    if (rtn < 0) {
+        log_error("Could not unclone msu %d", id);
+        return -1;
+    }
+    return 0;
+}
+
 static int parse_show_routes(char *args) {
     char *msu_c;
     NEXT_ARG(msu_c, args);
@@ -435,6 +455,9 @@ struct cmd_action cmd_actions[] = {
     {"clone msu", parse_clone_msu, {"MSU-ID"},
         "clones and schedules the clone of an MSU"},
 
+    {"unclone msu", parse_unclone_msu, {"MSU-ID"},
+        "Removes an MSU and dependencies"},
+
     {"add msu", parse_add_msu,
         {"RUNTIME-ID", "MSU_TYPE", "MSU-ID", "MSU_MODE", "THREAD-ID", "[VERTEX_TYPE]",
             "[ | INIT_DATA]"},
@@ -480,7 +503,7 @@ struct cmd_action cmd_actions[] = {
 };
 
 //TODO: need to check whether an msu or a route are already present in the CFG before proceeding to action
-static void parse_cmd_action(char *cmd) {
+int parse_cmd_action(char *cmd) {
     size_t ln = strlen(cmd) - 1;
     if (*cmd && cmd[ln] == '\n') {
         cmd[ln] = '\0';
@@ -504,7 +527,7 @@ static void parse_cmd_action(char *cmd) {
         log_error("Error parsing command: %s", cmd_cpy);
     }
 
-    return;
+    return rtn;
 }
 
 

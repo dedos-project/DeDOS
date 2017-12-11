@@ -215,9 +215,10 @@ int init_call_msu_type(struct local_msu *sender, struct msu_type *dst_type,
 }
 
 int call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoint,
-                      struct msu_type *endpoint_type, 
+                      struct msu_type *endpoint_type,
                       struct msu_msg_hdr *hdr, size_t data_size, void *data) {
     struct msu_msg *msg = create_msu_msg(hdr, data_size, data);
+
 
     int rtn = add_provinance(&msg->hdr.provinance, sender);
     if (rtn < 0) {
@@ -266,3 +267,13 @@ int init_call_msu_endpoint(struct local_msu *sender, struct msu_endpoint *endpoi
     PROFILE_EVENT(hdr, PROF_DEDOS_ENTRY);
     return call_msu_endpoint(sender, endpoint, endpoint_type, &hdr, data_size, data);
 }
+
+int call_msu_error(struct local_msu *sender, struct msu_endpoint *endpoint,
+                   struct msu_type *endpoint_type,
+                   struct msu_msg_hdr *hdr, size_t data_size, void *data) {
+    hdr->error_flag = -1;
+    return call_msu_endpoint(sender, endpoint, endpoint_type, hdr, data_size, data);
+}
+
+
+

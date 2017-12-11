@@ -118,7 +118,7 @@ RES_DIRS = $(patsubst $(SRC_DIR)%/, $(RES_DIR)%/, $(SRC_DIRS))
 INCS=$(GLC_DIR) $(COM_DIR) $(MYSQL_DIR)include
 
 CFLAGS += $(foreach inc, $(INCS), -I$(inc))
-CFLAGS += -L$(MYSQL_DIR)lib -lmysqlclient
+CFLAGS += -L$(MYSQL_DIR)lib -lmysqlclient -lzmq
 
 define test_dep_name
 $(notdir $(subst Test_,,$1))_DEPS
@@ -132,8 +132,14 @@ endef
 CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
-TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lm -O0 \
-			 -fprofile-arcs -ftest-coverage --coverage
+TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lm -O0
+
+ifneq ($(MAKECMDGOALS),)
+# If goals are present, and they include coverage
+ifeq ($(MAKECMDGOALS), $(filter $(MAKECMDGOALS), coverage init_cov cov-site cov))
+  TEST_CFLAGS+=-fprofile-arcs -ftest-coverage --coverage
+endif
+endif
 
 DIRS=$(BLD_DIRS) $(OBJ_DIRS) $(DEP_DIRS) $(TST_BLD_DIRS) $(RES_DIRS) $(COV_DIRS)
 

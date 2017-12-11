@@ -32,6 +32,12 @@ END OF LICENSE STUB
 // Need forward declarations due to circular dependency
 struct local_msu;
 struct msu_msg;
+struct msu_msg_hdr;
+struct msu_type;
+
+typedef ssize_t (*serialization_fn)(struct msu_type *, struct msu_msg *, void **output);
+typedef void *(*deserialization_fn)(struct local_msu *self, size_t input_size, void *input,
+                                    size_t *out_size);
 
 /**
  * Defines a type of MSU. This information (mostly callbacks)
@@ -82,6 +88,8 @@ struct msu_type{
      */
     int (*receive)(struct local_msu *self, struct msu_msg *msg);
 
+    int (*receive_error)(struct local_msu *self, struct msu_msg *msg);
+
     /** Choose which MSU of **this** type the **previous** MSU will route to.
      * If NULL, defaults to `default_routing()` in runtime/routing_strategies.c
      * @param type MSU type of endpoint
@@ -101,7 +109,13 @@ struct msu_type{
      * @param output To be allocated and filled with the serialized MSU message
      * @return Size of the serialized message
      */
-    ssize_t (*serialize)(struct msu_type *type, struct msu_msg *input, void **output);
+    serialization_fn serialize;
+
+    /** Defines serialization protocol for errors returned to this MSU type
+     * If NULL, assumes no pointers in the msu message and simply serializes the input
+     * for the provided length
+     */
+    serialization_fn serialize_error;
 
     /** Defines deserialization protocl for data received by this MSU type
      * If NULL, assumes no pointers in the msu message, and simply assigns `input` as the message
@@ -111,7 +125,9 @@ struct msu_type{
      * @param out_size To be filled with the size of the struct deserialized off of the buffer
      * @return The deserialized buffer
      */
-    void *(*deserialize)(struct local_msu *self, size_t input_size, void *input, size_t *out_size);
+    deserialization_fn deserialize;
+
+    deserialization_fn deserialize_error;
 };
 
 /**

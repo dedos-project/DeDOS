@@ -39,10 +39,16 @@ int init_msu_msg_hdr(struct msu_msg_hdr *hdr, struct msu_msg_key *key) {
 }
 
 unsigned int msu_msg_sender_type(struct msg_provinance *prov) {
-    int idx = (prov->path_len - 1) % MAX_PATH_LEN;
-    log(LOG_GET_PROVINANCE, "Sender of %p (idx %d) was type %d",
-               prov, idx, prov->path[idx].type_id);
-    return prov->path[idx].type_id;
+    return prov->sender.type_id;
+}
+
+struct msu_provinance_item *get_provinance_item(struct msg_provinance *p, struct msu_type *type) {
+    for (int i=0; i < p->path_len && i < MAX_PATH_LEN; i++) {
+        if (p->path[i].type_id == type->id) {
+            return &p->path[i];
+        }
+    }
+    return NULL;
 }
 
 int set_msg_key(int32_t id, struct msu_msg_key *key) {
@@ -66,22 +72,28 @@ int seed_msg_key(void *seed, size_t seed_size, struct msu_msg_key *key) {
 }
 
 int add_provinance(struct msg_provinance *prov, struct local_msu *sender) {
+    prov->sender.type_id = sender->type->id;
+    prov->sender.msu_id = sender->id;
+    prov->sender.runtime_id = local_runtime_id();
     if (prov->path_len == 0) {
-        prov->origin.type_id = sender->type->id;
-        prov->origin.msu_id = sender->id;
-        prov->origin.runtime_id = local_runtime_id();
+        prov->origin = prov->sender;
     }
-    int idx = prov->path_len % MAX_PATH_LEN;
-    log(LOG_ADD_PROVINANCE, "Adding provinance: %d.%d to idx %d, prov %p ",
-               sender->type->id, sender->id, idx, prov);
-    prov->path[idx].type_id = sender->type->id;
-    prov->path[idx].msu_id = sender->id;
-    prov->path[idx].runtime_id = local_runtime_id();
-    if (prov->path[idx].runtime_id == -1) {
-        log_error("Error getting local runtime ip address");
-        return -1;
+
+    int i;
+    for (i = 0; i < MAX_PATH_LEN && i < prov->path_len; i++) {
+        if (prov->path[i].type_id == sender->type->id) {
+            break;
+        }
     }
-    prov->path_len++;
+    if (i >= MAX_PATH_LEN) {
+        log_warn("Cannot record provinance in path: Path too short");
+        return 1;
+    }
+
+    prov->path[i] = prov->sender;
+    if (i == prov->path_len) {
+        prov->path_len++;
+    }
     log(LOG_ADD_PROVINANCE, "Path len of prov %p is now %d", prov, prov->path_len);
     return 0;
 }
@@ -203,9 +215,12 @@ struct msu_msg *read_msu_msg(struct local_msu *msu, int fd, size_t size) {
 
 void *serialize_msu_msg(struct msu_msg *msg, struct msu_type *dst_type, size_t *size_out) {
 
-    if (dst_type->serialize != NULL) {
+    serialization_fn serializer = (msg->hdr.error_flag == 0 ? 
+                                   dst_type->serialize : dst_type->serialize_error);
+
+    if (serializer != NULL) {
         void *payload = NULL;
-        ssize_t payload_size = dst_type->serialize(dst_type, msg, &payload);
+        ssize_t payload_size = serializer(dst_type, msg, &payload);
         log(LOG_SERIALIZE,
                    "Serialized message into payload of size %d using %s serialization",
                    (int)payload_size, dst_type->name);

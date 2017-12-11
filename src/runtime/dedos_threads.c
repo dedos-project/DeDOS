@@ -215,8 +215,8 @@ static inline void gather_thread_metrics(struct dedos_thread *thread) {
         return;
     }
     int id = thread->id;
-    record_stat(THREAD_UCPUTIME, id, (double)usage.ru_utime.tv_sec * 1e6 + usage.ru_utime.tv_usec, 1);
-    record_stat(THREAD_SCPUTIME, id, (double)usage.ru_stime.tv_sec * 1e6 + usage.ru_stime.tv_usec, 1);
+    record_stat(THREAD_UCPUTIME, id, (double)usage.ru_utime.tv_sec + usage.ru_utime.tv_usec * 1e-6, 1);
+    record_stat(THREAD_SCPUTIME, id, (double)usage.ru_stime.tv_sec + usage.ru_stime.tv_usec * 1e-6, 1);
     record_stat(THREAD_MAXRSS, id, usage.ru_maxrss, 0);
     record_stat(THREAD_MINFLT, id, usage.ru_minflt, 0);
     record_stat(THREAD_MAJFLT, id, usage.ru_majflt, 0);

@@ -33,9 +33,8 @@ struct stat_sample *incoming_samples;
 static int process_stat_sample(int runtime_id, struct stat_sample *sample) {
     int rtn = db_insert_sample(sample->stats, &sample->hdr, runtime_id);
     if (rtn < 0) {
-        log_error("Error inserting stats %d.%u into DB",
-                  sample->hdr.stat_id, sample->hdr.item_id);
-        return -1;
+        log(LOG_MYSQL,"Error inserting stats %d.%u into DB",
+            sample->hdr.stat_id, sample->hdr.item_id);
     }
 
     struct timed_rrdb *stat;

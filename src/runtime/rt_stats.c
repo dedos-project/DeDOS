@@ -82,12 +82,7 @@ struct stat_type {
 /** If set to 0, will disable all gathering of statistics */
 #define GATHER_STATS 1
 
-#define GATHER_MSU_QUEUE_LEN 1 & GATHER_STATS
-#define GATHER_MSU_EXEC_TIME 1 & GATHER_STATS
-#define GATHER_MSU_IDLE_TIME 1 & GATHER_STATS
-#define GATHER_MSU_MEM_ALLOC 1 & GATHER_STATS
-#define GATHER_MSU_ITEMS_PROC 1 & GATHER_STATS
-#define GATHER_MSU_NUM_STATES 1 & GATHER_STATS
+#define GATHER_MSU_STATS 1 & GATHER_STATS
 #define GATHER_CUSTOM_STATS 1 & GATHER_STATS
 #define GATHER_THREAD_STATS 1 & GATHER_STATS
 
@@ -99,12 +94,19 @@ struct stat_type {
 
 /** The list of all statistics that can be gathered in the system */
 struct stat_type stat_types[] = {
-    {MSU_QUEUE_LEN,       GATHER_MSU_QUEUE_LEN,   MAX_STATS, "%02.0f", "MSU_Q_LEN"},
-    {MSU_ITEMS_PROCESSED, GATHER_MSU_ITEMS_PROC,  MAX_STATS, "%03.0f", "ITEMS_PROCESSED"},
-    {MSU_EXEC_TIME,       GATHER_MSU_EXEC_TIME,   MAX_STATS, "%0.9f",  "MSU_EXEC_TIME"},
-    {MSU_IDLE_TIME,       GATHER_MSU_IDLE_TIME,   MAX_STATS, "%0.9f",  "MSU_IDLE_TIME"},
-    {MSU_MEM_ALLOC,       GATHER_MSU_MEM_ALLOC,   MAX_STATS, "%09.0f", "MSU_MEM_ALLOC"},
-    {MSU_NUM_STATES,      GATHER_MSU_NUM_STATES,  MAX_STATS, "%09.0f", "MSU_NUM_STATES"},
+    {MSU_QUEUE_LEN,       GATHER_MSU_STATS,   MAX_STATS, "%02.0f", "MSU_Q_LEN"},
+    {MSU_ITEMS_PROCESSED, GATHER_MSU_STATS,   MAX_STATS, "%03.0f", "ITEMS_PROCESSED"},
+    {MSU_EXEC_TIME,       GATHER_MSU_STATS,   MAX_STATS, "%0.9f",  "MSU_EXEC_TIME"},
+    {MSU_IDLE_TIME,       GATHER_MSU_STATS,   MAX_STATS, "%0.9f",  "MSU_IDLE_TIME"},
+    {MSU_MEM_ALLOC,       GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_MEM_ALLOC"},
+    {MSU_NUM_STATES,      GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_NUM_STATES"},
+    {MSU_ERROR_CNT,       GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_ERROR_CNT"},
+    {MSU_UCPUTIME,        GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_USER_TIME"},
+    {MSU_SCPUTIME,        GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_KERNEL_TIME"},
+    {MSU_MINFLT,          GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_MINOR_FAULTS"},
+    {MSU_MAJFLT,          GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_MAJOR_FAULTS"},
+    {MSU_VCSW,            GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_VOL_CTX_SW"},
+    {MSU_IVCSW,           GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_INVOL_CTX_SW"},
     {THREAD_UCPUTIME,     GATHER_THREAD_STATS,    MAX_STATS, "%09.9f", "THREAD_USER_TIME"},
     {THREAD_SCPUTIME,     GATHER_THREAD_STATS,    MAX_STATS, "%09.9f", "THREAD_KERNEL_TIME"},
     {THREAD_MAXRSS,       GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_MAX_RSS"},
@@ -604,9 +606,11 @@ static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timesp
     return type->num_items;
 }
 
-/** Samples `sample_size` most recent stats in `interval` intervals */
-static int sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
-                               int sample_size, struct stat_sample *sample, int n_samples) {
+/** Samples `sample_size` most recent stats in `interval` intervals.
+ * Note: Not used at the moment, deferring to sample_stat instead
+ * */
+static int UNUSED sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
+                                      int sample_size, struct stat_sample *sample, int n_samples) {
     CHECK_INITIALIZATION;
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {
@@ -627,7 +631,8 @@ static struct timespec stat_sample_interval = {
     .tv_nsec = (int)(STAT_SAMPLE_PERIOD_MS * 1e6 / STAT_SAMPLE_SIZE) % (int)1e9
 };
 
-struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
+struct stat_sample *get_stat_samples(enum stat_id stat_id, struct timespec *sample_time,
+                                     int *n_samples_out) {
     if (!stats_initialized) {
         log_error("Stats not initialized");
         return NULL;
@@ -652,8 +657,8 @@ struct stat_sample *get_stat_samples(enum stat_id stat_id, int *n_samples_out) {
     if (rlock_type(type)) {
         return NULL;
     }
-    int rtn = sample_recent_stats(stat_id, &stat_sample_interval, STAT_SAMPLE_SIZE,
-                                  stat_samples[i], type->num_items);
+    int rtn = sample_stat(stat_id, sample_time, &stat_sample_interval, STAT_SAMPLE_SIZE,
+                          stat_samples[i], type->num_items);
     unlock_type(type);
     if (rtn < 0) {
         log_error("Error sampling recent stats");
