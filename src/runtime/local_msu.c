@@ -300,8 +300,8 @@ static inline int gather_metrics_before(struct rusage *before) {
     increment_stat(dstat, id, after.rstat - before->rstat)
 
 #define RECORD_TIMEDIFF(dstat, rstat, id) \
-    increment_stat(dstat, id, ((double)after.rstat.tv_sec * 1e6 + after.rstat.tv_usec) - \
-                              ((double)before->rstat.tv_sec * 1e6 + before->rstat.tv_usec))
+    increment_stat(dstat, id, ((double)after.rstat.tv_sec + after.rstat.tv_usec * 1e-6) - \
+                              ((double)before->rstat.tv_sec + before->rstat.tv_usec * 1e-6))
 
 static inline void record_metrics(struct rusage *before, int msu_id) {
     struct rusage after;
