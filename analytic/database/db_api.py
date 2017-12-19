@@ -18,6 +18,7 @@ class db_api:
         self.json = json.load(fp)
         fp.close()
 
+        print("Setting database to ip: %s, port %d" % (self.json['db_ip'], self.json['db_port']))
         self.db = MySQLDatabase(self.json['db_name'],
                                 host = self.json['db_ip'],
                                 port = self.json['db_port'],
@@ -27,6 +28,7 @@ class db_api:
     def db_connect(self):
         try:
             self.db.connect()
+            print("Connected to database")
         except Exception as e:
             print(e)
             raise

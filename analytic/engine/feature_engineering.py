@@ -20,3 +20,14 @@ def gen_mem_per_state(df):
     mem_ratio = non_zero.MEMORY_ALLOCATED / non_zero.NUM_STATES
     df.loc[(df.NUM_STATES > 0) & (df.MEMORY_ALLOCATED > 0), 'MEM_PER_STATE'] = mem_ratio
     df.MEM_PER_STATE = df.MEM_PER_STATE.fillna(0)
+
+AGGREGATE_STAT_TYPES = (
+ "QUEUE_LEN", "ERROR_COUNT",
+ "MSU_USER_TIME", "MSU_KERNEL_TIME",
+ "MSU_MINOR_FAULTS", "MSU_MAJOR_FAULTS",
+ "MSU_VOL_CTX_SW","MSU_INVOL_CTX_SW",
+)
+
+def gen_stat_change_rate(df):
+    for type in AGGREGATE_STAT_TYPES:
+        df[type] = pd.to_numeric(df[type].diff()) / pd.to_numeric(df['TIME'].diff())
