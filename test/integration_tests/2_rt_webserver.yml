@@ -39,8 +39,22 @@ msu_types:
         id: 552
         meta_routing:
             source_types: [ws_read]
-            dst_types: [ws_regex_route]
+            dst_types: [ws_regex_route, ws_cache, ws_write]
         cloneable: 1
+
+    ws_cache:
+        id: 555
+        meta_routing:
+            source_types: [ws_http]
+            dst_types: [ws_fileio, ws_write]
+        cloneable: 1
+
+    ws_fileio:
+        id: 556
+        meta_routing:
+            source_types: [ws_cache]
+            dst_types: [ws_write, ws_cache]
+        cloneable: 2
 
     ws_regex_route:
         id: 560
@@ -65,7 +79,7 @@ msu_types:
     ws_write:
         id: 554
         meta_routing:
-            source_types: [553]
+            source_types: [ws_http, ws_regex, ws_cache, ws_fileio]
         dependencies:
             - type: ws_read
               locality: local
@@ -84,7 +98,7 @@ runtimes:
         <<: *local
         port: 4446
         n_cores: 8
-        n_pinned_threads: 3
+        n_pinned_threads: 5
         n_unpinned_threads: 0
 
 default_msus:
@@ -118,6 +132,17 @@ msus:
       thread: 1
       init_data: "0.0.0.0 8081 1024"
 
+    - name: cache-2
+      <<: *rt2-msu
+      type: ws_cache
+      thread: 4
+      init_data: "www/ 5 2 0.75"
+
+    - name: fileio-2
+      <<: *rt2-msu
+      type: ws_fileio
+      thread: 5
+
     - name: regex-2
       <<: *rt2-msu
       type: ws_regex
@@ -141,7 +166,13 @@ routes:
       to: http
 
     - from: http
-      to: [read-1, reg-route-2]
+      to: [read-1, reg-route-2, cache-2, write-1]
+
+    - from: cache-2
+      to: [write-1, fileio-2]
+
+    - from: fileio-2
+      to: [cache-2, write-1]
 
     - from: reg-route-2
       to: regex-2

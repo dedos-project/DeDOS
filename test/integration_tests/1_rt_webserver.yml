@@ -161,7 +161,7 @@ routes:
       to: http
 
     - from: http
-      to: [read-1, reg-route-1, cache-1]
+      to: [read-1, reg-route-1, cache-1, write-1]
 
     - from: cache-1
       to: [write-1, fileio-1]

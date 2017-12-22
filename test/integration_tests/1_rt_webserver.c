@@ -277,7 +277,7 @@ START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
     ck_assert_int_eq(n_states, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(ssl_start_connect_to_webserver) {
+START_DEDOS_INTEGRATION_TEST(ssl_start_connect_to_webserver) {
     int n_fds = get_last_stat(MSU_STAT1, 10);
     ck_assert_int_eq(n_fds, 1);
 
@@ -285,7 +285,7 @@ START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
     ck_assert_int_eq(n_states, 1);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(ssl_fully_connect_to_webserver) {
+START_DEDOS_INTEGRATION_TEST(ssl_fully_connect_to_webserver) {
     int n_fds = get_last_stat(MSU_STAT1, 10);
     ck_assert_int_eq(n_fds, 1);
 
@@ -293,7 +293,7 @@ START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
     ck_assert_int_eq(n_states, 1);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(write_full_http_request) {
+START_DEDOS_INTEGRATION_TEST(write_full_http_request) {
     int n_fds = get_last_stat(MSU_STAT1, 10);
     ck_assert_int_eq(n_fds, 0);
 
@@ -301,7 +301,7 @@ START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
     ck_assert_int_eq(n_states, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(write_partial_http_request) {
+START_DEDOS_INTEGRATION_TEST(write_partial_http_request) {
     int n_fds = get_last_stat(MSU_STAT1, 10);
     ck_assert_int_eq(n_fds, 1);
 
@@ -309,12 +309,12 @@ START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
     ck_assert_int_eq(n_states, 1);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(write_and_read_regex_request) {
+START_DEDOS_INTEGRATION_TEST(write_and_read_regex_request) {
     int n_fds = get_last_stat(MSU_STAT1, 10);
     ck_assert_int_eq(n_fds, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(write_and_read_http) {
+START_DEDOS_INTEGRATION_TEST(write_and_read_http) {
     int n_fds = get_last_stat(MSU_STAT1, 10);
     ck_assert_int_eq(n_fds, 0);
 
@@ -324,7 +324,7 @@ START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
     ck_assert_int_eq(n_states, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(send_many_requests) {
+START_DEDOS_INTEGRATION_TEST(send_many_requests) {
     int n_fds = get_last_stat(MSU_STAT1, 10);
     ck_assert_int_eq(n_fds, 0);
 
@@ -334,64 +334,69 @@ START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
     ck_assert_int_eq(n_states, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(one_file_cache_test) {
+START_DEDOS_INTEGRATION_TEST(one_file_cache_test) {
     int hits = get_last_stat(CACHE_HIT_STAT, 14);
     int misses = get_last_stat(CACHE_MISS_STAT, 14);
     int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
     ck_assert_int_eq(hits, 1);
     ck_assert_int_eq(misses, 1);
     ck_assert_int_eq(evicts, 0);
-    // files in cache = 1
-    // cache size = 3654
 
+    struct ws_cache_state *cache = (struct ws_cache_state *) cache_instance->msu_state;
+    ck_assert_int_eq(cache->file_count, 1);
+    ck_assert_int_eq(cache->byte_size, 3654);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(two_file_cache_test) {
+START_DEDOS_INTEGRATION_TEST(two_file_cache_test) {
     int hits = get_last_stat(CACHE_HIT_STAT, 14);
     int misses = get_last_stat(CACHE_MISS_STAT, 14);
     int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
     ck_assert_int_eq(hits, 2);
     ck_assert_int_eq(misses, 2);
     ck_assert_int_eq(evicts, 0);
-    // files in cache = 2
-    // cache size = 1595 + 2166
 
+    struct ws_cache_state *cache = (struct ws_cache_state *) cache_instance->msu_state;
+    ck_assert_int_eq(cache->file_count, 2);
+    ck_assert_int_eq(cache->byte_size, 3761);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(occupancy_limit_cache_test) {
+START_DEDOS_INTEGRATION_TEST(occupancy_limit_cache_test) {
     int hits = get_last_stat(CACHE_HIT_STAT, 14);
     int misses = get_last_stat(CACHE_MISS_STAT, 14);
     int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
     ck_assert_int_eq(hits, 0);
     ck_assert_int_eq(misses, 2);
     ck_assert_int_eq(evicts, 0);
-    // files in cache = 0
-    // cache size = 0
 
+    struct ws_cache_state *cache = (struct ws_cache_state *) cache_instance->msu_state;
+    ck_assert_int_eq(cache->file_count, 0);
+    ck_assert_int_eq(cache->byte_size, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(size_eviction_cache_test) {
+START_DEDOS_INTEGRATION_TEST(size_eviction_cache_test) {
     int hits = get_last_stat(CACHE_HIT_STAT, 14);
     int misses = get_last_stat(CACHE_MISS_STAT, 14);
     int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
     ck_assert_int_eq(hits, 1);
     ck_assert_int_eq(misses, 3);
     ck_assert_int_eq(evicts, 2);
-    // files in cache = 1
-    // cache size = 3654
 
+    struct ws_cache_state *cache = (struct ws_cache_state *) cache_instance->msu_state;
+    ck_assert_int_eq(cache->file_count, 1);
+    ck_assert_int_eq(cache->byte_size, 3654);
 } END_DEDOS_INTEGRATION_TEST()
 
-        START_DEDOS_INTEGRATION_TEST(file_count_eviction_cache_test) {
+START_DEDOS_INTEGRATION_TEST(file_count_eviction_cache_test) {
     int hits = get_last_stat(CACHE_HIT_STAT, 14);
     int misses = get_last_stat(CACHE_MISS_STAT, 14);
     int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
     ck_assert_int_eq(hits, 1);
     ck_assert_int_eq(misses, 4);
     ck_assert_int_eq(evicts, 2);
-    // files in cache = 2
-    // cache size = 2166 + 94
 
+    struct ws_cache_state *cache = (struct ws_cache_state *) cache_instance->msu_state;
+    ck_assert_int_eq(cache->file_count, 2);
+    ck_assert_int_eq(cache->byte_size, 2260);
 } END_DEDOS_INTEGRATION_TEST()
 
 

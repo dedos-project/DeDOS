@@ -1,5 +1,7 @@
 2_rt_webserver_DEPS:=msus/webserver/connection-handler.c \
+                            msus/webserver/cache_msu.c \
 							msus/webserver/dbops.c \
+							msus/webserver/fileio_msu.c \
 							msus/webserver/http_msu.c \
 							msus/webserver/http_parser.c \
 							msus/webserver/read_msu.c \
