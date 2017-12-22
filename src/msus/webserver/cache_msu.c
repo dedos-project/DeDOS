@@ -1,8 +1,10 @@
+#include "connection-handler.h"
+#include "dfg.h"
 #include "local_msu.h"
-#include "msu_type.h"
-#include "msu_message.h"
-#include "msu_calls.h"
 #include "logging.h"
+#include "msu_calls.h"
+#include "msu_message.h"
+#include "msu_type.h"
 #include "routing_strategies.h"
 #include "rt_stats.h"
 
@@ -12,8 +14,6 @@
 #include "webserver/fileio_msu.h"
 #include "webserver/connection-handler.h"
 #include "webserver/httpops.h"
-#include "connection-handler.h"
-#include "../../common/dfg.h"
 
 #include <string.h>
 
