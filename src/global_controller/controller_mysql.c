@@ -31,6 +31,7 @@ END OF LICENSE STUB
 #include <sys/stat.h>
 #include <unistd.h>
 
+static pthread_mutex_t lock;
 static MYSQL mysql;
 bool mysql_initialized = false;
 
@@ -40,6 +41,12 @@ bool mysql_initialized = false;
         return -1; \
     }
 
+
+#define SQL_LOCK \
+    pthread_mutex_lock(&lock)
+
+#define SQL_UNLOCK \
+    pthread_mutex_unlock(&lock)
 
 #define MAX_REQ_LEN 1024
 
@@ -107,6 +114,7 @@ static int db_clear() {
  * @return: 0 on success
  */
 int db_init(int clear) {
+    pthread_mutex_init(&lock, 0);
     struct db_info *db = get_db_info();
 
     if (mysql_library_init(0, NULL, NULL)) {
@@ -146,6 +154,7 @@ int db_init(int clear) {
         if (db_register_msu_type(type->id, type->name) != 0) {
             return -1;
         }
+
     }
 
     int r;
@@ -376,16 +385,19 @@ int db_register_msu_stats(int msu_id, int msu_type_id, int thread_id, int runtim
 int db_check_and_register(const char *check_query, const char *insert_query,
                           const char *element, int element_id) {
     CHECK_SQL_INIT;
+    SQL_LOCK;
     int query_len;
 
     query_len = strlen(check_query);
     if (mysql_real_query(&mysql, check_query, query_len)) {
         log_error("MySQL query failed: %s\n %s", mysql_error(&mysql), check_query);
+        SQL_UNLOCK;
         return -1;
     } else {
         MYSQL_RES *result = mysql_store_result(&mysql);
         if (!result) {
             log_error("Could not get result from MySQL query %s", mysql_error(&mysql));
+            SQL_UNLOCK;
             return -1;
         } else {
             if (mysql_num_rows(result) == 0) {
@@ -394,14 +406,17 @@ int db_check_and_register(const char *check_query, const char *insert_query,
                 query_len = strlen(insert_query);
                 if (mysql_real_query(&mysql, insert_query, query_len)) {
                     log_error("MySQL query (%s) failed: %s", insert_query, mysql_error(&mysql));
+                    SQL_UNLOCK;
                     return -1;
                 } else {
                     log(LOG_SQL, "registered element %s (id: %d) in DB", element, element_id);
+                    SQL_UNLOCK;
                     return 0;
                 }
             } else {
                 log(LOG_SQL, "element %s (id: %d) is already registered in DB", element, element_id);
                 mysql_free_result(result);
+                SQL_UNLOCK;
                 return 0;
             }
         }
@@ -439,9 +454,11 @@ static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id, int item_
  */
 int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr, int runtime_id) {
     CHECK_SQL_INIT;
+    SQL_LOCK;
     /* Find timeserie to insert data point first */
     char ts_query[MAX_REQ_LEN];
     if (get_ts_query(ts_query, input_hdr->stat_id, input_hdr->item_id, runtime_id) != 0) {
+        SQL_UNLOCK;
         return -1;
     }
     int i;
@@ -460,10 +477,12 @@ int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr
 
         if (mysql_real_query(&mysql, insert_query, query_len)) {
             log_error("MySQL query (%s) failed: %s", insert_query, mysql_error(&mysql));
+            SQL_UNLOCK;
             return -1;
         } else {
             log(LOG_SQL, "inserted data point for msu %d and stat %d",
                 input_hdr->item_id, input_hdr->stat_id);
+            SQL_UNLOCK;
             return 0;
         }
     }
