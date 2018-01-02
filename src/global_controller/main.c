@@ -43,7 +43,7 @@ pthread_t cli_thread;
 pthread_t sock_thread;
 
 static void print_usage() {
-    printf("Usage: global_controller -j /path/to/json [-o json_file] [ -p json_port ]\n");
+    printf("Usage: global_controller -j /path/to/json [-o json_file] [-p dfg_out_port] [-c control_port]\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -54,6 +54,7 @@ int main(int argc, char *argv[]) {
     memset(filename, '\0', FILENAME_LEN);
     char *output_filename = NULL;
     int output_port = -1;
+    int control_port = -1;
     bool db = false;
     bool init_db = false;
 
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
     };
 
     int opt_index;
-    while ((option = getopt_long(argc, argv,"j:o:p:", longopts, &opt_index)) != -1) {
+    while ((option = getopt_long(argc, argv,"j:o:p:c:", longopts, &opt_index)) != -1) {
         switch (option) {
             case 0:
                 if (strcmp(longopts[opt_index].name, "db") == 0) {
@@ -84,6 +85,8 @@ int main(int argc, char *argv[]) {
             case 'p' : output_port = atoi(optarg);
                 break;
             case 'd' : init_db = true;
+                break;
+            case 'c' : control_port = atoi(optarg);
                 break;
             default:
                 print_usage();
@@ -129,7 +132,7 @@ int main(int argc, char *argv[]) {
     //init_scheduler(policy);
 
     start_cli_thread(&cli_thread);
-    start_socket_interface_thread(&sock_thread);
+    start_socket_interface_thread(&sock_thread, control_port);
     runtime_communication_loop(port, output_filename, output_port);
     //start_communication(tcp_control_listen_port, output_filename);
 
