@@ -24,6 +24,7 @@ GLC_DIR = $(SRC_DIR)global_controller/
 COM_DIR = $(SRC_DIR)common/
 TST_DIR = test/
 MYSQL_DIR = /usr/local/share/mysql/
+LD_RUN_PATH:=${MYSQL_DIR}/lib/
 
 SRC_DIRS = $(GLC_DIR) $(COM_DIR)
 
@@ -166,7 +167,7 @@ $(COV_DIR)%.info: $(TST_BLD_DIR)%/ $(TST_BLDS)
 	-lcov --remove $(subst .info,.all_info,$@) 'test/*' '/usr/*' 'src/legacy/*' -o $@ --test-name $(subst .info,,$@)
 
 $(TARGET): ${OBJECTS} ${LEG_OBJ}
-	$(FINAL) -o $@ $^ $(CFLAGS)
+	$(FINAL) -o $@ $^ $(CFLAGS) -Wl,-rpath,${LD_RUN_PATH}
 
 test unit: all $(TST_BLD_RSCS) test-results
 
