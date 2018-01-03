@@ -63,7 +63,10 @@ def nested_dict_getter(a_dict, keys):
     :return: the value retrieved from a_dict[key_0][key_1]...[key_n-1]
     """
     for k in keys:
-        a_dict = a_dict[k]
+        if k in a_dict:
+            a_dict = a_dict[k]
+        else:
+            return None
     return a_dict
 
 
@@ -85,7 +88,9 @@ def dict_from_mapping(a_dict, mapping, output=None):
         if isinstance(value, dict):
             output[key] = dict_from_mapping(a_dict, value)
         elif isinstance(value, list):
-            output[key] = nested_dict_getter(a_dict, value)
+            item = nested_dict_getter(a_dict, value)
+            if item is not None:
+                output[key] = item
         else:
             if value in a_dict:
                 output[key] = a_dict[value]

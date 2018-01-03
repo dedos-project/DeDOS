@@ -1,6 +1,6 @@
 machines:
     - &local
-      ip: 0.0.0.0
+      ip: 127.0.0.1
     - &dedos01
       ip: 192.168.0.2
     - &dedos02
@@ -9,15 +9,11 @@ machines:
       ip: 192.168.0.4
     - &dedos04
       ip: 192.168.0.5
-    - &gc
-      <<: *local
-    - &rt1
-      <<: *local
     - &db
       <<: *local
 
 application:
-    name: app_name
+    name: "1_runtime_webserver"
 
 database:
     <<: *db
@@ -27,7 +23,7 @@ database:
     name: dedos
 
 global_ctl:
-    <<: *gc
+    <<: *local
     port: 8090
 
 msu_types:
@@ -52,8 +48,22 @@ msu_types:
         id: 552
         meta_routing:
             source_types: [ws_read]
-            dst_types: [ws_regex_route]
+            dst_types: [ws_regex_route, ws_cache, ws_write]
         cloneable: 1
+        
+    ws_cache:
+        id: 555
+        meta_routing:
+            source_types: [ws_http]
+            dst_types: [ws_fileio, ws_write]
+        cloneable: 1
+
+    ws_fileio:
+        id: 556
+        meta_routing:
+            source_types: [ws_cache]
+            dst_types: [ws_write, ws_cache]
+        cloneable: 2
 
     ws_regex_route:
         id: 560
@@ -78,7 +88,7 @@ msu_types:
     ws_write:
         id: 554
         meta_routing:
-            source_types: [553]
+            source_types: [ws_http, ws_regex, ws_cache, ws_fileio]
         dependencies:
             - type: ws_read
               locality: local
@@ -86,16 +96,13 @@ msu_types:
               locality: local
         cloneable: 1
 
-default_runtime: &default_rt
-    port: 4444
-    n_cores: 8
-    n_pinned_threads: 8
-    n_unpinned_threads: 1
-
 runtimes:
     1:
-        <<: *rt1
-        <<: *default_rt
+        <<: *local
+        port: 4445
+        n_cores: 8
+        n_pinned_threads: 8
+        n_unpinned_threads: 1
 
 default_msus:
     - &default_msu
@@ -104,6 +111,9 @@ default_msus:
     - &rt1-msu
       <<: *default_msu
       runtime: 1
+    - &rt2-msu
+      <<: *default_msu
+      runtime: 2
 
 msus:
     - name: socket-1
@@ -118,7 +128,6 @@ msus:
       type: ws_read
       thread: 2
       reps: 2
-      init_data: "ssl"
 
     - name: http
       <<: *rt1-msu
@@ -126,11 +135,22 @@ msus:
       thread: 4
       init_data: "0.0.0.0 8081 1024"
 
+    - name: cache-1
+      <<: *rt1-msu
+      type: ws_cache
+      thread: 6
+      init_data: "www/ 5 2 0.75"
+
+    - name: fileio-1
+      <<: *rt1-msu
+      type: ws_fileio
+      thread: 7
+
     - name: regex-1
       <<: *rt1-msu
       type: ws_regex
       thread: 5
-      reps: 3
+      reps: 1
 
     - name: reg-route-1
       <<: *rt1-msu
@@ -150,7 +170,13 @@ routes:
       to: http
 
     - from: http
-      to: [read-1, reg-route-1]
+      to: [read-1, reg-route-1, cache-1, write-1]
+
+    - from: cache-1
+      to: [write-1, fileio-1]
+
+    - from: fileio-1
+      to: [cache-1, write-1]
 
     - from: reg-route-1
       to: regex-1
