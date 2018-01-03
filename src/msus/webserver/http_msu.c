@@ -20,6 +20,7 @@ END OF LICENSE STUB
 #include "webserver/http_msu.h"
 #include "webserver/connection-handler.h"
 #include "webserver/dbops.h"
+#include "webserver/cache_msu.h"
 #include "webserver/write_msu.h"
 #include "webserver/read_msu.h"
 #include "socket_msu.h"
@@ -35,7 +36,7 @@ static int send_error(struct local_msu *self, struct http_state *http_state,
                       struct msu_msg_hdr *hdr) {
     struct response_state *resp = malloc(sizeof(*resp));
     init_response_state(resp, &http_state->conn);
-    resp->resp_len = craft_error_response(resp->url, resp->resp);
+    resp->body_len = craft_error_response(resp->url, resp->body);
     return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, hdr, sizeof(*resp), resp);
 }
 
@@ -66,8 +67,7 @@ static int handle_db(struct http_state *http_state,
 
         if (!has_regex(resp->url)) {
             log(LOG_HTTP_MSU, "Crafting response for url %s", resp->url);
-            resp->resp_len = craft_nonregex_response(resp->url, resp->resp);
-            return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
+            return call_msu_type(self, &WEBSERVER_CACHE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         }
 
         return call_msu_type(self, &WEBSERVER_REGEX_ROUTING_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);

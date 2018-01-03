@@ -59,7 +59,7 @@ static int write_http_response(struct local_msu *self,
         }
         log(LOG_WEBSERVER_WRITE, "Successful connection to fd %d closed",
                    resp->conn.fd);
-        log(LOG_WEBSERVER_WRITE, "Wrote request: %s", resp->resp);
+        log(LOG_WEBSERVER_WRITE, "Wrote request: %s", resp->body);
         msu_free_state(self, &msg->hdr.key);
         free(resp_in);
         return 0;

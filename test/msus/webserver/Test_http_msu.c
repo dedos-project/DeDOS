@@ -9,6 +9,8 @@
 #define MAX_FILE_SIZE 16384
 #include "webserver/dbops.c"
 #include "socket_msu.c"
+#include "webserver/cache_msu.h"
+#include "webserver/fileio_msu.h"
 
 #define DB_PORT 9876
 #define DB_REQUEST "/database"
@@ -17,6 +19,7 @@
 #define READ_MSU_ID 3
 #define SOCKET_MSU_ID 5
 #define WRITE_MSU_ID 4
+#define CACHE_MSU_ID 6
 #define LOCAL_RT_ID 1
 #define READ_ROUTE_ID 123
 
@@ -126,13 +129,18 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__no_db_no_regex) {
         .id = HTTP_MSU_ID
     };
 
+    struct local_msu cache_msu = {
+            .type = &WEBSERVER_CACHE_MSU_TYPE,
+            .id = CACHE_MSU_ID
+    };
+
     INIT_LOCAL_RUNTIME(LOCAL_RT_ID);
 
-    ADD_ROUTE_TO_MSU(http_msu, write_msu, LOCAL_RT_ID, 13);
+    ADD_ROUTE_TO_MSU(http_msu, cache_msu, LOCAL_RT_ID, 20);
 
     struct read_state *read_state = malloc(sizeof(*read_state));
 
-    sprintf(read_state->req, REQ_STR, "/", "localhost");
+    sprintf(read_state->req, REQ_STR, "/index.html", "localhost");
     read_state->req_len = strlen(read_state->req);
 
     struct msu_msg msg = {
@@ -145,7 +153,7 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__no_db_no_regex) {
     int rtn = craft_http_response(&http_msu, &msg);
 
     ck_assert_int_eq(rtn, 0);
-    ck_assert_int_eq(write_msu.queue.num_msgs, 1);
+    ck_assert_int_eq(cache_msu.queue.num_msgs, 1);
 
     FREE_MSU_ROUTES(http_msu);
 } END_DEDOS_TEST
@@ -224,12 +232,18 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access) {
         .type = &WEBSERVER_HTTP_MSU_TYPE,
         .id = HTTP_MSU_ID
     };
+
     int rtn = http_init(&http_msu, &init_data);
     ck_assert_int_eq(rtn, 0);
 
+    struct local_msu cache_msu = {
+            .type = &WEBSERVER_CACHE_MSU_TYPE,
+            .id = CACHE_MSU_ID
+    };
+
     INIT_LOCAL_RUNTIME(LOCAL_RT_ID);
 
-    ADD_ROUTE_TO_MSU(http_msu, write_msu, LOCAL_RT_ID, 13);
+    ADD_ROUTE_TO_MSU(http_msu, cache_msu, LOCAL_RT_ID, 13);
 
     struct read_state *read_state = malloc(sizeof(*read_state));
 
@@ -248,7 +262,7 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access) {
     ck_assert_int_eq(rtn, 0);
     int n_fds = (int)get_last_stat(MSU_STAT1, socket_msu.id);
     ck_assert_int_eq(n_fds, 1);
-    ck_assert_int_eq(write_msu.queue.num_msgs, 0);
+    ck_assert_int_eq(cache_msu.queue.num_msgs, 0);
 
     ck_assert_int_eq(msu_num_states(&http_msu), 1);
 
@@ -267,8 +281,8 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access) {
     rtn = craft_http_response(&http_msu, &msg);
 
     ck_assert_int_eq(rtn, 0);
-    ck_assert_int_eq(write_msu.queue.num_msgs, 1);
-    struct msu_msg *msg_out = dequeue_msu_msg(&write_msu.queue);
+    ck_assert_int_eq(cache_msu.queue.num_msgs, 1);
+    struct msu_msg *msg_out = dequeue_msu_msg(&cache_msu.queue);
     struct response_state *resp = msg_out->data;
     ck_assert_int_ne(resp->conn.status, CON_ERROR);
     free(msg_out);
