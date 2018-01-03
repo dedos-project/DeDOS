@@ -7,6 +7,7 @@
 #include "msu_type.h"
 #include "routing_strategies.h"
 #include "rt_stats.h"
+#include "local_files.h"
 
 #include "webserver/uthash.h"
 #include "webserver/write_msu.h"
@@ -95,7 +96,8 @@ static int parse_init_cache_payload(char *to_parse, struct ws_cache_state *cache
             log_warn("Couldn't get wwW_dir from initialization string");
             return 0;
         }
-        cache_state->www_dir = tok;
+        cache_state->www_dir = malloc(32 + strlen(tok));
+        get_local_file(cache_state->www_dir, tok);
 
         if ( (tok = strtok_r(NULL, " ,", &saveptr)) == NULL) {
             log_warn("Couldn't get max cache size in kb from initialization string");
