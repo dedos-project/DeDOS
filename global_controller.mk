@@ -133,12 +133,12 @@ endef
 CCFLAGS=$(CFLAGS) $(CC_EXTRAFLAGS)
 CPPFLAGS=$(CFLAGS) $(CPP_EXTRAFLAGS)
 
-TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) -lcheck_pic -lrt -lc -lm -O0
+TEST_CFLAGS= $(CCFLAGS) -I$(TST_DIR) `pkg-config --libs check` -lrt -lc -lm -O0
 
 ifneq ($(MAKECMDGOALS),)
 # If goals are present, and they include coverage
 ifeq ($(MAKECMDGOALS), $(filter $(MAKECMDGOALS), coverage init_cov cov-site cov))
-  TEST_CFLAGS+=-fprofile-arcs -ftest-coverage --coverage 
+  TEST_CFLAGS+=-fprofile-arcs -ftest-coverage --coverage
 endif
 endif
 
