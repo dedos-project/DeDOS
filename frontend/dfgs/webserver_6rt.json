@@ -1,0 +1,1311 @@
+{
+  "application_name": "6 RT Webserver", 
+  "global_ctl_ip": "192.168.0.3", 
+  "global_ctl_port": 8090, 
+  "db_ip": "127.0.0.1", 
+  "db_port": 3306, 
+  "db_user": "root", 
+  "db_pwd": "root", 
+  "db_name": "dedos", 
+  "MSU_types": [
+    {
+      "id": 556, 
+      "meta_routing": {
+        "source_types": [
+          555
+        ], 
+        "dst_types": [
+          554, 
+          555
+        ]
+      }, 
+      "cloneable": 6, 
+      "name": "fileio", 
+      "colocation_group": 0
+    }, 
+    {
+      "id": 560, 
+      "meta_routing": {
+        "source_types": [
+          552
+        ], 
+        "dst_types": [
+          553
+        ]
+      }, 
+      "cloneable": 6, 
+      "name": "regex route", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 553, 
+          "locality": "local"
+        }
+      ]
+    }, 
+    {
+      "id": 555, 
+      "meta_routing": {
+        "source_types": [
+          552
+        ], 
+        "dst_types": [
+          556, 
+          554
+        ]
+      }, 
+      "cloneable": 6, 
+      "name": "cache", 
+      "colocation_group": 0
+    }, 
+    {
+      "id": 554, 
+      "meta_routing": {
+        "source_types": [
+          552, 
+          553, 
+          555, 
+          556
+        ]
+      }, 
+      "cloneable": 6, 
+      "name": "write", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 500, 
+          "locality": "local"
+        }, 
+        {
+          "type": 10, 
+          "locality": "local"
+        }
+      ]
+    }, 
+    {
+      "id": 552, 
+      "meta_routing": {
+        "source_types": [
+          500
+        ], 
+        "dst_types": [
+          560, 
+          555, 
+          554
+        ]
+      }, 
+      "cloneable": 6, 
+      "name": "http", 
+      "colocation_group": 0
+    }, 
+    {
+      "id": 553, 
+      "meta_routing": {
+        "source_types": [
+          560
+        ], 
+        "dst_types": [
+          554
+        ]
+      }, 
+      "cloneable": 6, 
+      "name": "regex", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 560, 
+          "locality": "local"
+        }
+      ]
+    }, 
+    {
+      "id": 500, 
+      "meta_routing": {
+        "source_types": [
+          10
+        ], 
+        "dst_types": [
+          552
+        ]
+      }, 
+      "cloneable": 6, 
+      "name": "read", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 10, 
+          "locality": "local"
+        }, 
+        {
+          "type": 554, 
+          "locality": "local"
+        }
+      ]
+    }, 
+    {
+      "id": 10, 
+      "meta_routing": {
+        "dst_types": [
+          500
+        ]
+      }, 
+      "cloneable": 6, 
+      "name": "socket", 
+      "colocation_group": 0, 
+      "dependencies": [
+        {
+          "type": 500, 
+          "locality": "local"
+        }, 
+        {
+          "type": 554, 
+          "locality": "local"
+        }
+      ]
+    }
+  ], 
+  "MSUs": [
+    {
+      "id": 10, 
+      "vertex_type": "nop", 
+      "init_data": "8081, 500", 
+      "type": 10, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 16, 
+        "runtime": 1, 
+        "routes": [
+          1000
+        ]
+      }
+    }, 
+    {
+      "id": 11, 
+      "vertex_type": "nop", 
+      "init_data": "8081, 500", 
+      "type": 10, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 16, 
+        "runtime": 2, 
+        "routes": [
+          1011
+        ]
+      }
+    }, 
+    {
+      "id": 12, 
+      "vertex_type": "nop", 
+      "init_data": "8081, 500", 
+      "type": 10, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 16, 
+        "runtime": 3, 
+        "routes": [
+          1022
+        ]
+      }
+    }, 
+    {
+      "id": 13, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 1, 
+        "runtime": 1, 
+        "routes": [
+          1001
+        ]
+      }
+    }, 
+    {
+      "id": 14, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 2, 
+        "runtime": 1, 
+        "routes": [
+          1001
+        ]
+      }
+    }, 
+    {
+      "id": 15, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 3, 
+        "runtime": 1, 
+        "routes": [
+          1001
+        ]
+      }
+    }, 
+    {
+      "id": 16, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 1, 
+        "runtime": 2, 
+        "routes": [
+          1012
+        ]
+      }
+    }, 
+    {
+      "id": 17, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 2, 
+        "runtime": 2, 
+        "routes": [
+          1012
+        ]
+      }
+    }, 
+    {
+      "id": 18, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 3, 
+        "runtime": 2, 
+        "routes": [
+          1012
+        ]
+      }
+    }, 
+    {
+      "id": 19, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 1, 
+        "runtime": 3, 
+        "routes": [
+          1023
+        ]
+      }
+    }, 
+    {
+      "id": 20, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 2, 
+        "runtime": 3, 
+        "routes": [
+          1023
+        ]
+      }
+    }, 
+    {
+      "id": 21, 
+      "vertex_type": "nop", 
+      "init_data": "ssl", 
+      "type": 500, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 3, 
+        "runtime": 3, 
+        "routes": [
+          1023
+        ]
+      }
+    }, 
+    {
+      "id": 22, 
+      "vertex_type": "nop", 
+      "init_data": "0.0.0.0 8081 1024", 
+      "type": 552, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 4, 
+        "runtime": 1, 
+        "routes": [
+          1000, 
+          1003, 
+          1004, 
+          1002, 
+          1010
+        ]
+      }
+    }, 
+    {
+      "id": 23, 
+      "vertex_type": "nop", 
+      "init_data": "0.0.0.0 8081 1024", 
+      "type": 552, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 4, 
+        "runtime": 2, 
+        "routes": [
+          1011, 
+          1014, 
+          1015, 
+          1013, 
+          1021
+        ]
+      }
+    }, 
+    {
+      "id": 24, 
+      "vertex_type": "nop", 
+      "init_data": "0.0.0.0 8081 1024", 
+      "type": 552, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 4, 
+        "runtime": 3, 
+        "routes": [
+          1022, 
+          1025, 
+          1026, 
+          1024, 
+          1032
+        ]
+      }
+    }, 
+    {
+      "id": 25, 
+      "vertex_type": "nop", 
+      "init_data": "www/ 5 2 0.75", 
+      "type": 555, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 15, 
+        "runtime": 1, 
+        "routes": [
+          1006, 
+          1005
+        ]
+      }
+    }, 
+    {
+      "id": 26, 
+      "vertex_type": "nop", 
+      "init_data": "www/ 5 2 0.75", 
+      "type": 555, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 15, 
+        "runtime": 2, 
+        "routes": [
+          1017, 
+          1016
+        ]
+      }
+    }, 
+    {
+      "id": 27, 
+      "vertex_type": "nop", 
+      "init_data": "www/ 5 2 0.75", 
+      "type": 555, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 15, 
+        "runtime": 3, 
+        "routes": [
+          1028, 
+          1027
+        ]
+      }
+    }, 
+    {
+      "id": 28, 
+      "vertex_type": "nop", 
+      "type": 556, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 14, 
+        "runtime": 1, 
+        "routes": [
+          1008, 
+          1007
+        ]
+      }
+    }, 
+    {
+      "id": 29, 
+      "vertex_type": "nop", 
+      "type": 556, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 14, 
+        "runtime": 2, 
+        "routes": [
+          1019, 
+          1018
+        ]
+      }
+    }, 
+    {
+      "id": 30, 
+      "vertex_type": "nop", 
+      "type": 556, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 14, 
+        "runtime": 3, 
+        "routes": [
+          1030, 
+          1029
+        ]
+      }
+    }, 
+    {
+      "id": 31, 
+      "vertex_type": "nop", 
+      "type": 553, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 5, 
+        "runtime": 1, 
+        "routes": [
+          1010
+        ]
+      }
+    }, 
+    {
+      "id": 32, 
+      "vertex_type": "nop", 
+      "type": 553, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 5, 
+        "runtime": 2, 
+        "routes": [
+          1021
+        ]
+      }
+    }, 
+    {
+      "id": 33, 
+      "vertex_type": "nop", 
+      "type": 553, 
+      "blocking_mode": "non-blocking", 
+      "scheduling": {
+        "thread_id": 5, 
+        "runtime": 3, 
+        "routes": [
+          1032
+        ]
+      }
+    }, 
+    {
+      "id": 34, 
+      "vertex_type": "nop", 
+      "type": 560, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 13, 
+        "runtime": 1, 
+        "routes": [
+          1009
+        ]
+      }
+    }, 
+    {
+      "id": 35, 
+      "vertex_type": "nop", 
+      "type": 560, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 13, 
+        "runtime": 2, 
+        "routes": [
+          1020
+        ]
+      }
+    }, 
+    {
+      "id": 36, 
+      "vertex_type": "nop", 
+      "type": 560, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 13, 
+        "runtime": 3, 
+        "routes": [
+          1031
+        ]
+      }
+    }, 
+    {
+      "id": 37, 
+      "vertex_type": "nop", 
+      "type": 554, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 12, 
+        "runtime": 1
+      }
+    }, 
+    {
+      "id": 38, 
+      "vertex_type": "nop", 
+      "type": 554, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 12, 
+        "runtime": 2
+      }
+    }, 
+    {
+      "id": 39, 
+      "vertex_type": "nop", 
+      "type": 554, 
+      "blocking_mode": "blocking", 
+      "scheduling": {
+        "thread_id": 12, 
+        "runtime": 3
+      }
+    }
+  ], 
+  "runtimes": [
+    {
+      "id": 1, 
+      "ip": "192.168.0.4", 
+      "port": 4444, 
+      "num_cores": 8, 
+      "num_unpinned_threads": 8, 
+      "num_pinned_threads": 8, 
+      "routes": [
+        {
+          "id": 1000, 
+          "type": 500, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 13
+            }, 
+            {
+              "key": 6, 
+              "msu": 14
+            }, 
+            {
+              "key": 9, 
+              "msu": 15
+            }, 
+            {
+              "key": 12, 
+              "msu": 16
+            }, 
+            {
+              "key": 15, 
+              "msu": 17
+            }, 
+            {
+              "key": 18, 
+              "msu": 18
+            }, 
+            {
+              "key": 21, 
+              "msu": 19
+            }, 
+            {
+              "key": 24, 
+              "msu": 20
+            }, 
+            {
+              "key": 27, 
+              "msu": 21
+            }
+          ]
+        }, 
+        {
+          "id": 1001, 
+          "type": 552, 
+          "endpoints": [
+            {
+              "key": 21, 
+              "msu": 22
+            }, 
+            {
+              "key": 42, 
+              "msu": 23
+            }, 
+            {
+              "key": 63, 
+              "msu": 24
+            }
+          ]
+        }, 
+        {
+          "id": 1003, 
+          "type": 560, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 34
+            }, 
+            {
+              "key": 6, 
+              "msu": 35
+            }, 
+            {
+              "key": 9, 
+              "msu": 36
+            }
+          ]
+        }, 
+        {
+          "id": 1004, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1002, 
+          "type": 555, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 25
+            }, 
+            {
+              "key": 12, 
+              "msu": 26
+            }, 
+            {
+              "key": 18, 
+              "msu": 27
+            }
+          ]
+        }, 
+        {
+          "id": 1006, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1005, 
+          "type": 556, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 28
+            }, 
+            {
+              "key": 12, 
+              "msu": 29
+            }, 
+            {
+              "key": 18, 
+              "msu": 30
+            }
+          ]
+        }, 
+        {
+          "id": 1008, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1007, 
+          "type": 555, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 25
+            }, 
+            {
+              "key": 12, 
+              "msu": 26
+            }, 
+            {
+              "key": 18, 
+              "msu": 27
+            }
+          ]
+        }, 
+        {
+          "id": 1009, 
+          "type": 553, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 31
+            }, 
+            {
+              "key": 6, 
+              "msu": 32
+            }, 
+            {
+              "key": 9, 
+              "msu": 33
+            }
+          ]
+        }, 
+        {
+          "id": 1010, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }
+      ]
+    }, 
+    {
+      "id": 2, 
+      "ip": "192.168.0.5", 
+      "port": 4444, 
+      "num_cores": 8, 
+      "num_unpinned_threads": 8, 
+      "num_pinned_threads": 8, 
+      "routes": [
+        {
+          "id": 1011, 
+          "type": 500, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 13
+            }, 
+            {
+              "key": 6, 
+              "msu": 14
+            }, 
+            {
+              "key": 9, 
+              "msu": 15
+            }, 
+            {
+              "key": 12, 
+              "msu": 16
+            }, 
+            {
+              "key": 15, 
+              "msu": 17
+            }, 
+            {
+              "key": 18, 
+              "msu": 18
+            }, 
+            {
+              "key": 21, 
+              "msu": 19
+            }, 
+            {
+              "key": 24, 
+              "msu": 20
+            }, 
+            {
+              "key": 27, 
+              "msu": 21
+            }
+          ]
+        }, 
+        {
+          "id": 1012, 
+          "type": 552, 
+          "endpoints": [
+            {
+              "key": 21, 
+              "msu": 22
+            }, 
+            {
+              "key": 42, 
+              "msu": 23
+            }, 
+            {
+              "key": 63, 
+              "msu": 24
+            }
+          ]
+        }, 
+        {
+          "id": 1014, 
+          "type": 560, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 34
+            }, 
+            {
+              "key": 6, 
+              "msu": 35
+            }, 
+            {
+              "key": 9, 
+              "msu": 36
+            }
+          ]
+        }, 
+        {
+          "id": 1015, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1013, 
+          "type": 555, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 25
+            }, 
+            {
+              "key": 12, 
+              "msu": 26
+            }, 
+            {
+              "key": 18, 
+              "msu": 27
+            }
+          ]
+        }, 
+        {
+          "id": 1017, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1016, 
+          "type": 556, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 28
+            }, 
+            {
+              "key": 12, 
+              "msu": 29
+            }, 
+            {
+              "key": 18, 
+              "msu": 30
+            }
+          ]
+        }, 
+        {
+          "id": 1019, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1018, 
+          "type": 555, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 25
+            }, 
+            {
+              "key": 12, 
+              "msu": 26
+            }, 
+            {
+              "key": 18, 
+              "msu": 27
+            }
+          ]
+        }, 
+        {
+          "id": 1020, 
+          "type": 553, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 31
+            }, 
+            {
+              "key": 6, 
+              "msu": 32
+            }, 
+            {
+              "key": 9, 
+              "msu": 33
+            }
+          ]
+        }, 
+        {
+          "id": 1021, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }
+      ]
+    }, 
+    {
+      "id": 3, 
+      "ip": "192.168.0.6", 
+      "port": 4444, 
+      "num_cores": 8, 
+      "num_unpinned_threads": 8, 
+      "num_pinned_threads": 8, 
+      "routes": [
+        {
+          "id": 1022, 
+          "type": 500, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 13
+            }, 
+            {
+              "key": 6, 
+              "msu": 14
+            }, 
+            {
+              "key": 9, 
+              "msu": 15
+            }, 
+            {
+              "key": 12, 
+              "msu": 16
+            }, 
+            {
+              "key": 15, 
+              "msu": 17
+            }, 
+            {
+              "key": 18, 
+              "msu": 18
+            }, 
+            {
+              "key": 21, 
+              "msu": 19
+            }, 
+            {
+              "key": 24, 
+              "msu": 20
+            }, 
+            {
+              "key": 27, 
+              "msu": 21
+            }
+          ]
+        }, 
+        {
+          "id": 1023, 
+          "type": 552, 
+          "endpoints": [
+            {
+              "key": 21, 
+              "msu": 22
+            }, 
+            {
+              "key": 42, 
+              "msu": 23
+            }, 
+            {
+              "key": 63, 
+              "msu": 24
+            }
+          ]
+        }, 
+        {
+          "id": 1025, 
+          "type": 560, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 34
+            }, 
+            {
+              "key": 6, 
+              "msu": 35
+            }, 
+            {
+              "key": 9, 
+              "msu": 36
+            }
+          ]
+        }, 
+        {
+          "id": 1026, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1024, 
+          "type": 555, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 25
+            }, 
+            {
+              "key": 12, 
+              "msu": 26
+            }, 
+            {
+              "key": 18, 
+              "msu": 27
+            }
+          ]
+        }, 
+        {
+          "id": 1028, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1027, 
+          "type": 556, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 28
+            }, 
+            {
+              "key": 12, 
+              "msu": 29
+            }, 
+            {
+              "key": 18, 
+              "msu": 30
+            }
+          ]
+        }, 
+        {
+          "id": 1030, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }, 
+        {
+          "id": 1029, 
+          "type": 555, 
+          "endpoints": [
+            {
+              "key": 6, 
+              "msu": 25
+            }, 
+            {
+              "key": 12, 
+              "msu": 26
+            }, 
+            {
+              "key": 18, 
+              "msu": 27
+            }
+          ]
+        }, 
+        {
+          "id": 1031, 
+          "type": 553, 
+          "endpoints": [
+            {
+              "key": 3, 
+              "msu": 31
+            }, 
+            {
+              "key": 6, 
+              "msu": 32
+            }, 
+            {
+              "key": 9, 
+              "msu": 33
+            }
+          ]
+        }, 
+        {
+          "id": 1032, 
+          "type": 554, 
+          "endpoints": [
+            {
+              "key": 1, 
+              "msu": 37
+            }, 
+            {
+              "key": 2, 
+              "msu": 38
+            }, 
+            {
+              "key": 3, 
+              "msu": 39
+            }
+          ]
+        }
+      ]
+    }, 
+    {
+      "id": 4, 
+      "ip": "192.168.0.7", 
+      "port": 4444, 
+      "num_cores": 8, 
+      "num_unpinned_threads": 8, 
+      "num_pinned_threads": 8, 
+      "routes": []
+    }, 
+    {
+      "id": 5, 
+      "ip": "192.168.0.8", 
+      "port": 4444, 
+      "num_cores": 8, 
+      "num_unpinned_threads": 8, 
+      "num_pinned_threads": 8, 
+      "routes": []
+    }, 
+    {
+      "id": 6, 
+      "ip": "192.168.0.9", 
+      "port": 4444, 
+      "num_cores": 8, 
+      "num_unpinned_threads": 8, 
+      "num_pinned_threads": 8, 
+      "routes": []
+    }
+  ]
+}
