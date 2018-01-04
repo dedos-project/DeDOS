@@ -23,7 +23,7 @@ More details are available at [http://dedos.cis.upenn.edu/](http://dedos.cis.upe
 
 ## Building
 Available build commands are:
-```bash
+```shell
 make runtime            # Builds the rt executable
 make global_controller  # Builds the global_controller executable
 make                    # Bulds both rt and global_controller
@@ -34,6 +34,31 @@ make clean              # Removes build files and executables
 make docs               # Creates Doxygen documentation
 make coverage           # Creates coverage report
 ```
+
+## Running
+To start the runtime with the webserver application, execute
+
+```shell
+./global_controller -j dfg/webserver/webserver_1rt.json
+```
+and
+```shell
+./rt -j dfg/webserver/webserver_1rt.json -i 1
+```
+Then visit https://localhost:8081 from a web browser
+
+## Grafana installation
+DeDOS can be integrated with Grafana to produce visualizations of runtime and MSU statistics:
+![Grafana-Screenshot](https://raw.githubusercontent.com/wiki/dedos-project/DeDOS/grafana_screenshot.png)
+Follow the instructions [on the wiki](https://github.com/dedos-project/DeDOS/wiki/Database-Configuration)
+to set up the appropriate database and grafana configuration, then run
+the global controller with the `--init-db` flag.
+
+## DFG Visualizer
+Dedos comes with a web-based visualizer for viewing DFGs:
+![Frontend-Screenshot](https://raw.githubusercontent.com/wiki/dedos-project/DeDOS/frontend_screenshot.png)
+Follow the instructions [on the wiki](https://github.com/dedos-project/DeDOS/wiki/dedos-frontend)
+for installation and setup.
 
 ## Code layout
 The global controller and runtime are built off of a partially-shared codebase, though each
