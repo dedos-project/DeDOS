@@ -88,7 +88,7 @@ typedef void (*dedos_thread_destroy_fn)(struct dedos_thread *thread, void *init_
 int start_dedos_thread(dedos_thread_fn thread_fn,
                        dedos_thread_init_fn init_fn,
                        dedos_thread_destroy_fn destroy_fn,
-                       enum blocking_mode mode,
+                       enum thread_mode mode,
                        int id,
                        struct dedos_thread *thread);
 

@@ -269,7 +269,7 @@ int thread_wait(struct dedos_thread *thread, struct timespec *abs_timeout) {
 int start_dedos_thread(dedos_thread_fn thread_fn,
                        dedos_thread_init_fn init_fn,
                        dedos_thread_destroy_fn destroy_fn,
-                       enum blocking_mode mode,
+                       enum thread_mode mode,
                        int id,
                        struct dedos_thread *thread) {
     if (id == OUTPUT_THREAD_ID) {

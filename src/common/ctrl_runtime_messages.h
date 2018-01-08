@@ -83,9 +83,7 @@ struct ctrl_add_runtime_msg {
  */
 struct ctrl_create_thread_msg {
     int thread_id; /**< The ID to give to the created thread */
-    enum blocking_mode mode; /**< The mode of the thread.
-                               ::BLOCKING_MSU corresponds to ::PINNED_THREAD for now */
-    // TODO: Change blocking_mode to thread_mode
+    enum thread_mode mode; /**< ::PINNED_THREAD or ::UNPINNED THREAD */
 };
 
 /**
