@@ -10,6 +10,15 @@ import db_api
 from classifiers import *
 from feature_engineering import *
 
+#############################################################################
+# Python daemon:                                                            #
+# - On startup, train a new model per object type specified in conf file    #
+# - Use all data from the DB, or from the specificed time range             #
+# - Model for object types are also specific in conf file                   #
+# - Periodically pull new data from the DB. If none available do nothing (?)#
+# - else, use a model to classify the state of the object (normal/abnormal) #
+#############################################################################
+
 def pre_process(df):
     # Feature engineer
     gen_activity_ratio(df)
