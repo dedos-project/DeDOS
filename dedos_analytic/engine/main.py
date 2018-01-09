@@ -4,11 +4,11 @@ import sys
 import time
 import matplotlib.pyplot as plt
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/../database'))
-import db_api
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+import dedos_analytic.database.db_api as db_api
 
-from classifiers import *
-from feature_engineering import *
+from dedos_analytic.engine.classifiers import *
+from dedos_analytic.engine.feature_engineering import *
 
 #############################################################################
 # Python daemon:                                                            #
@@ -27,7 +27,7 @@ def pre_process(df):
     df = normalize_df(df, scale_fields, 'minmax')
 
 # Load system info
-db = db_api.db_api()
+db = db_api.DbApi()
 msus = db.get_items('msus')
 #FIXME: dirty length control to work with few msus first
 msus = [msus[1]]
