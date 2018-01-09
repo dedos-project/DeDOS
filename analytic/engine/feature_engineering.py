@@ -1,13 +1,35 @@
 import os
 import sys
+import copy
 import pandas as pd
 from sklearn import preprocessing
 
-def normalize_df(df, fields):
-    min_max_scaler = preprocessing.MinMaxScaler()
+def make_numeric(df):
+    for x in df.columns:
+        try:
+            df[x] = pd.to_numeric(df[x])
+        except:
+            pass
 
-    for field in fields:
-        df[field] = min_max_scaler.fit_transform(df[field].values.reshape(-1,1))
+    return df
+
+def normalize_df(df, fields, mode):
+    if (mode == 'minmax'):
+        scaler = preprocessing.MinMaxScaler()
+    elif (mode == "zscore"):
+        scaler = preprocessing.StandardScaler()
+    else:
+        print "invalid normalization mode"
+        return df
+
+    if not fields:
+        for col in df.columns:
+            df[col] = scaler.fit_transform(df[col].values.reshape(-1,1))
+    else:
+        for field in fields:
+            df[field] = scaler.fit_transform(df[field].values.reshape(-1,1))
+
+    return df
 
 def gen_activity_ratio(df):
     non_zero = df.loc[(df.EXEC_TIME > 0) & (df.IDLE_TIME > 0)]
