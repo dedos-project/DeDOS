@@ -1,19 +1,24 @@
 import sys
 import os
 import peewee
+import json
 from models import *
 import pandas as pd
 import itertools as it
+from dedos_analytic.engine.data_manipulation import resolution_round
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)) + '/../')
 from utils import *
 
-class db_api:
-    def __init__(self):
+class DbApi:
+    def __init__(self, config=None):
         self.utils = utils()
-        self.config = self.utils.load_config()
 
-        self.json_f = self.config['json']
+        if config is None:
+            self.config = self.utils.load_config()
+        else:
+            self.config = config
+
+        self.json_f = self.config['dedos_dfg']
         fp = open(self.json_f, 'r')
         self.json = json.load(fp)
         fp.close()
@@ -116,3 +121,26 @@ class db_api:
                     cols[timeseries[i - 1].statistic.name].append(cell)
 
         return pd.DataFrame(cols).set_index('TIME')
+
+
+    def get_msu_epoch_df(self,msu):
+        print "Getting dataframe for msu {msu.id} ({msu.msu_type.name})".format(msu=msu)
+        df = self.get_msu_full_df(msu)
+        df = df.assign(TIME = df.index)
+        trange = (max(df.TIME) - min(df.TIME)) * 1e-9
+        spp = round(trange / len(df), 2)
+        print "\n # Points: {}\n Time range: {} seconds\n Points / second: ~{}".format(
+            len(df), trange, 1/spp
+        )
+        rounded_time = resolution_round(df.TIME, spp * 1e9)
+
+        epoch = ((rounded_time - min(rounded_time)) / (spp * 1e9)).astype(int)
+        df = df.assign(msu_id = msu.id)
+        df = df.assign(msu_type = msu.msu_type.name)
+        df = df.assign(epoch = epoch)
+        df = df.set_index('TIME')
+        df = df.assign(TIME = df.index)
+        return df
+
+    def get_msus_epoch_df(self, msus):
+        return pd.concat([self.get_msu_epoch_df(msu) for msu in msus])

@@ -1,0 +1,5 @@
+dedos_dfg: 3-8db.json
+dataset: all_attacks_spaced
+event_log_dir: /home/iped/datasets
+dedos_module_dir: /home/iped/Dedos
+event_types: [client, tls_reneg, slowloris, redos]

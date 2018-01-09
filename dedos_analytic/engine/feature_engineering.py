@@ -2,6 +2,8 @@ import os
 import sys
 import copy
 import pandas as pd
+import numpy as np
+
 from sklearn import preprocessing
 
 def make_numeric(df):
@@ -44,12 +46,39 @@ def gen_mem_per_state(df):
     df.MEM_PER_STATE = df.MEM_PER_STATE.fillna(0)
 
 AGGREGATE_STAT_TYPES = (
- "QUEUE_LEN", "ERROR_COUNT",
+ "ERROR_COUNT",
  "MSU_USER_TIME", "MSU_KERNEL_TIME",
  "MSU_MINOR_FAULTS", "MSU_MAJOR_FAULTS",
  "MSU_VOL_CTX_SW","MSU_INVOL_CTX_SW",
 )
 
-def gen_stat_change_rate(df):
-    for type in AGGREGATE_STAT_TYPES:
-        df[type] = pd.to_numeric(df[type].diff()) / pd.to_numeric(df['TIME'].diff())
+def make_numeric(df):
+    for x in df.columns:
+        try:
+            df[x] = pd.to_numeric(df[x])
+        except ValueError:
+            pass
+
+def make_rate_df(df, types=AGGREGATE_STAT_TYPES):
+    print 'Converting dataframe to numeric form'
+    make_numeric(df)
+    print 'Converting to increase rate'
+    df_cp = copy.copy(df)
+    for t in types:
+        df_cp[t] = df[t].diff() / df.TIME.diff()
+    return df_cp
+
+
+def scale_data(X, columns_to_keep=None):
+    init_cols = X.columns
+
+    if columns_to_keep is None:
+        x1 = X[[c for c in init_cols if not c.startswith('traffic') and not c == 'msu_type']]
+    else:
+        x1 = X[[c for c in init_cols if any(c.startswith(c2) for c2 in columns_to_keep)]]
+
+    scaler = preprocessing.StandardScaler()
+
+    for field in x1.columns:
+        x1 = x1.assign(**{field: scaler.fit_transform(x1[field].values.reshape(-1,1))})
+    return x1
