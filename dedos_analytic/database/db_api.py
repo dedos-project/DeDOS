@@ -125,6 +125,7 @@ class DbApi:
     def get_msu_epoch_df(self,msu):
         print "Getting dataframe for msu {msu.id} ({msu.msu_type.name})".format(msu=msu)
         df = self.get_msu_full_df(msu)
+        df = df.assign(TIME = df.index)
         trange = (max(df.TIME) - min(df.TIME)) * 1e-9
         spp = round(trange / len(df), 2)
         print "\n # Points: {}\n Time range: {} seconds\n Points / second: ~{}".format(
