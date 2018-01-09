@@ -26,54 +26,59 @@ def pre_process(df):
     scale_fields = []
     df = normalize_df(df, scale_fields, 'minmax')
 
-# Load system info
-db = db_api.DbApi()
-msus = db.get_items('msus')
-#FIXME: dirty length control to work with few msus first
-msus = [msus[1]]
+def main():
+    # Load system info
+    db = db_api.DbApi()
+    msus = db.get_items('msus')
+    #FIXME: dirty length control to work with few msus first
+    msus = [msus[1]]
 
-# Features to operate on
-fields = ['MSU_USER_TIME', 'QUEUE_LEN']
+    # Features to operate on
+    fields = ['MSU_USER_TIME', 'QUEUE_LEN']
 
-# Get all data from beginning of time and generate model
-dataframes = {}
-models = {}
-for msu in msus:
-    df = db.get_msu_full_df(msu)
-
-    pre_process(df)
-
-    #dataframes[msu] = df[df.TIME <= 1.5119001064880338e+18]
-    dataframes[msu] = df.loc[:, fields]
-
-    # Fit one model for each object
-    models[msu] = do_dbscan(dataframes[msu], 2, 20)
-
-last_timestamp = dataframes[msus[0]].tail(1).index.values[0]
-
-while (True):
-    #TODO: check for new MSUs
-
-    # Get new data
+    # Get all data from beginning of time and generate model
+    dataframes = {}
+    models = {}
     for msu in msus:
-        print 'getting new data since: ' + str(last_timestamp)
-        df = db.get_msu_full_df(msu, last_timestamp)
+        df = db.get_msu_full_df(msu)
 
-        if df.empty:
-            print 'nothing new, sleeping...'
-            time.sleep(1)
-            next
-        else:
-            pre_process(df)
+        pre_process(df)
 
-            print 'processing new data...'
-            X_new = df.loc[:, fields]
+        #dataframes[msu] = df[df.TIME <= 1.5119001064880338e+18]
+        dataframes[msu] = df.loc[:, fields]
 
-            for row in X_new.iterrows():
-                y_hat = dbscan_predict(models[msu], row)
-                if y_hat == -1:
-                    print "we have an outlier"
+        # Fit one model for each object
+        models[msu] = do_dbscan(dataframes[msu], 2, 20)
+
+    last_timestamp = dataframes[msus[0]].tail(1).index.values[0]
+
+    while (True):
+        #TODO: check for new MSUs
+
+        # Get new data
+        for msu in msus:
+            print 'getting new data since: ' + str(last_timestamp)
+            df = db.get_msu_full_df(msu, last_timestamp)
+
+            if df.empty:
+                print 'nothing new, sleeping...'
+                time.sleep(1)
+                next
+            else:
+                pre_process(df)
+
+                print 'processing new data...'
+                X_new = df.loc[:, fields]
+
+                for row in X_new.iterrows():
+                    y_hat = dbscan_predict(models[msu], row)
+                    if y_hat == -1:
+                        print "we have an outlier"
 
 
-            last_timestamp = df.tail(1).index.values[0]
-            print 'updated timestamp:' + str(last_timestamp)
+                last_timestamp = df.tail(1).index.values[0]
+                print 'updated timestamp:' + str(last_timestamp)
+
+
+if __name__ == '__main__':
+    main()
