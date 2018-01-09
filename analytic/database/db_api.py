@@ -28,7 +28,7 @@ class db_api:
     def db_connect(self):
         try:
             self.db.connect()
-            print("Connected to database")
+            #print("Connected to database")
         except Exception as e:
             print(e)
             raise
@@ -115,4 +115,4 @@ class db_api:
                 else:
                     cols[timeseries[i - 1].statistic.name].append(cell)
 
-        return pd.DataFrame(cols)
+        return pd.DataFrame(cols).set_index('TIME')
