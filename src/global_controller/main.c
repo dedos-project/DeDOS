@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 'p' : output_port = atoi(optarg);
                 break;
-            case 'd' : init_db = true;
+            case 'd' : db = true; init_db = true;
                 break;
             case 'c' : control_port = atoi(optarg);
                 break;
