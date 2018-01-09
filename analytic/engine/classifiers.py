@@ -6,12 +6,13 @@ from sklearn.cluster import DBSCAN
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.ensemble import IsolationForest
 import scipy as sp
+import numpy as np
 
 def do_kmeans(X, k):
     return KMeans(n_clusters = k).fit(X)
 
 def do_dbscan(X, e, m):
-    return DBSCAN(eps = e, min_samples = m).fit(X)
+    return DBSCAN(eps = e, min_samples = m, n_jobs = -1).fit(X)
 
 def do_lof(k):
     return LocalOutlierFactor(n_neighbors = k)
