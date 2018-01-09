@@ -115,4 +115,4 @@ class db_api:
                 else:
                     cols[timeseries[i - 1].statistic.name].append(cell)
 
-        return pd.DataFrame(cols)
+        return pd.DataFrame(cols).set_index('TIME')
