@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     };
 
     int opt_index;
-    while ((option = getopt_long(argc, argv,"j:o:p:c:", longopts, &opt_index)) != -1) {
+    while ((option = getopt_long(argc, argv,"j:o:p:c:d", longopts, &opt_index)) != -1) {
         switch (option) {
             case 0:
                 if (strcmp(longopts[opt_index].name, "db") == 0) {
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 'p' : output_port = atoi(optarg);
                 break;
-            case 'd' : init_db = true;
+            case 'd' : db = true; init_db = true;
                 break;
             case 'c' : control_port = atoi(optarg);
                 break;
