@@ -28,7 +28,7 @@ class db_api:
     def db_connect(self):
         try:
             self.db.connect()
-            print("Connected to database")
+            #print("Connected to database")
         except Exception as e:
             print(e)
             raise
