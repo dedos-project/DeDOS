@@ -20,6 +20,7 @@ class DaemonApi():
 
     def start_daemon(self):
         daemon.init_dbscanner(self.config)
+        daemon.set_config(self.config)
         daemon.run()
 
     def connect_to_daemon(self):

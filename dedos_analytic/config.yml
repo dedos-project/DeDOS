@@ -4,6 +4,8 @@ event_log_dir: /home/iped/datasets
 dedos_module_dir: /home/iped/Dedos
 event_types: [client, tls_reneg, slowloris, redos]
 
+dedos_control_port: 4321
+
 msu_metrics:
     regex: [MSU_USER_TIME, QUEUE_LEN]
     read: [MSU_USER_TIME, QUEUE_LEN]
