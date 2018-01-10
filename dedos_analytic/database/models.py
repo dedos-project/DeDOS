@@ -1,8 +1,12 @@
 from peewee import *
 from json import JSONEncoder
+import json
 from collections import OrderedDict
 
 database = MySQLDatabase('dedos', **{'host': '127.0.0.1', 'password': 'root', 'port': 3306, 'user': 'root'})
+
+def dedos_json_dumps(*args, **kwargs):
+    return json.dumps(*args, cls=DedosEncoder, **kwargs)
 
 class DedosEncoder(JSONEncoder):
     def default(self, o):

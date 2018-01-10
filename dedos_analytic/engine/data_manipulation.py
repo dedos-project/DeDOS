@@ -1,6 +1,8 @@
 import copy
 import pandas as pd
 import numpy as np
+from ..logger import *
+
 
 AGGREGATE_STAT_TYPES = (
  "ERROR_COUNT",
@@ -25,16 +27,16 @@ def average_within_type_epoch(df):
 def label_with_traffic(df, traffic):
     mask = (df.TIME > min(traffic.start)) & (df.TIME < max(traffic.end))
 
-    print "Filtering out {} pre/post-traffic points".format(np.sum(~mask))
-    print "{} points remaining".format(np.sum(mask))
+    log_debug("Filtering out {} pre/post-traffic points".format(np.sum(~mask)))
+    log_debug("{} points remaining".format(np.sum(mask)))
     df = df[mask]
-    print "Range of time: {} seconds ".format((max(df.TIME) - min(df.TIME))*1e-9)
+    log_debug("Range of time: {} seconds ".format((max(df.TIME) - min(df.TIME))*1e-9))
 
     ordered = traffic.sort_values(by='start')
     df = df.assign(traffic='')
     for i, attack in ordered.iterrows():
         mask = (df.TIME > attack.start) & (df.TIME < attack.end)
-        print "Marking %d points as type %s" % (mask.sum(), attack['name'])
+        log_debug("Marking %d points as type %s" % (mask.sum(), attack['name']))
         df.loc[(df.TIME > attack.start) & (df.TIME < attack.end), 'traffic'] = attack['name']
     return df
 

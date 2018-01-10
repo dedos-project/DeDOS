@@ -3,6 +3,7 @@ import sys
 import copy
 import pandas as pd
 import numpy as np
+from ..logger import *
 
 from sklearn import preprocessing
 
@@ -60,16 +61,18 @@ def make_numeric(df):
             pass
 
 def make_rate_df(df, types=AGGREGATE_STAT_TYPES):
-    print 'Converting dataframe to numeric form'
+    log_debug('Converting dataframe to numeric form')
     make_numeric(df)
-    print 'Converting to increase rate'
+    log_debug('Converting to increase rate')
     df_cp = copy.copy(df)
     for t in types:
         df_cp[t] = df[t].diff() / df.TIME.diff()
+        df = df[~np.isnan(df_cp[t])]
+        df_cp = df_cp[~np.isnan(df_cp[t])]
     return df_cp
 
 
-def scale_data(X, columns_to_keep=None):
+def scale_data(X, columns_to_keep=None, scalers=None, return_scalers=False):
     init_cols = X.columns
 
     if columns_to_keep is None:
@@ -79,6 +82,16 @@ def scale_data(X, columns_to_keep=None):
 
     scaler = preprocessing.StandardScaler()
 
+    if scalers is None:
+        scalers = {}
+
     for field in x1.columns:
-        x1 = x1.assign(**{field: scaler.fit_transform(x1[field].values.reshape(-1,1))})
+        if field not in scalers:
+            scalers[field] = preprocessing.StandardScaler()
+            scalers[field].fit(x1[field].values.reshape(-1,1))
+        x1 = x1.assign(**{field: scalers[field].transform(x1[field].values.reshape(-1,1))})
+
+    if return_scalers:
+        return x1, scalers
+
     return x1

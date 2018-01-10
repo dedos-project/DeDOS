@@ -3,3 +3,19 @@ dataset: all_attacks_spaced
 event_log_dir: /home/iped/datasets
 dedos_module_dir: /home/iped/Dedos
 event_types: [client, tls_reneg, slowloris, redos]
+
+msu_metrics:
+    regex: [MSU_USER_TIME, QUEUE_LEN]
+    read: [MSU_USER_TIME, QUEUE_LEN]
+    http: [NUM_STATES]
+
+dbscan_params:
+    regex:
+        eps: .1
+        min_samples: 150
+    read:
+        eps: .5
+        min_samples: 150
+    http:
+        eps: .1
+        min_samples: 150

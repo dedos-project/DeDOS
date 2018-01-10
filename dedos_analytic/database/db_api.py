@@ -1,13 +1,15 @@
+import numpy as np
 import sys
 import os
 import peewee
 import json
 from models import *
+from ..logger import *
 import pandas as pd
 import itertools as it
 from dedos_analytic.engine.data_manipulation import resolution_round
 
-from utils import *
+from dedos_analytic.utils import *
 
 class DbApi:
     def __init__(self, config=None):
@@ -23,7 +25,7 @@ class DbApi:
         self.json = json.load(fp)
         fp.close()
 
-        print("Setting database to ip: %s, port %d" % (self.json['db_ip'], self.json['db_port']))
+        log_info("Setting database to ip: %s, port %d" % (self.json['db_ip'], self.json['db_port']))
         self.db = MySQLDatabase(self.json['db_name'],
                                 host = self.json['db_ip'],
                                 port = self.json['db_port'],
@@ -33,9 +35,8 @@ class DbApi:
     def db_connect(self):
         try:
             self.db.connect()
-            #print("Connected to database")
         except Exception as e:
-            print(e)
+            log_error(e)
             raise
 
     def get_items(self, item):
@@ -85,7 +86,7 @@ class DbApi:
 
         return points
 
-    def get_msu_full_df(self, msu, timestamp = 0):
+    def get_msu_full_df(self, msu, timestamp = 0, end_timestamp = None):
         cols = {}
         cols['TIME'] = []
         timeseries = self.get_msu_timeseries(msu)
@@ -99,9 +100,16 @@ class DbApi:
             if stat_name not in cols:
                cols[stat_name] = []
 
-            subquery = alias.select().where(
-                (alias.timeseries_pk == ts.pk) & (alias.ts > timestamp)).alias(stat_name
-            )
+            if end_timestamp is None:
+                subquery = alias.select().where(
+                    (alias.timeseries_pk == ts.pk) & (alias.ts > timestamp)).alias(stat_name
+                )
+            else:
+                subquery = alias.select().where(
+                    (alias.timeseries_pk == ts.pk) 
+                    & (alias.ts > timestamp) 
+                    & (alias.ts < end_timestamp)).alias(stat_name)
+
             if query is not None:
                 query = query.join(subquery, on=SQL(stat_name + '.ts') == aliases[0].ts)
             else:
@@ -120,18 +128,26 @@ class DbApi:
                 else:
                     cols[timeseries[i - 1].statistic.name].append(cell)
 
-        return pd.DataFrame(cols).set_index('TIME')
+
+        rtn = pd.DataFrame(cols).set_index('TIME')
+        log_debug("Got df with {} points trange {}:{}".format(len(rtn), timestamp, end_timestamp))
+        return rtn
 
 
-    def get_msu_epoch_df(self,msu):
-        print "Getting dataframe for msu {msu.id} ({msu.msu_type.name})".format(msu=msu)
-        df = self.get_msu_full_df(msu)
+
+    def get_msu_epoch_df(self, msu, timestamp=0, end_timestamp=None):
+        '''Creates a dataframe for the given MSU with time epochs included'''
+
+        log_debug("Getting dataframe for msu {msu.id} ({msu.msu_type.name})".format(msu=msu))
+        df = self.get_msu_full_df(msu, timestamp, end_timestamp)
         df = df.assign(TIME = df.index)
+        if len(df) == 0:
+            return df
         trange = (max(df.TIME) - min(df.TIME)) * 1e-9
         spp = round(trange / len(df), 2)
-        print "\n # Points: {}\n Time range: {} seconds\n Points / second: ~{}".format(
-            len(df), trange, 1/spp
-        )
+        log_debug(" # Points: {}".format(len(df)))
+        log_debug(" Time range: {} seconds".format(trange))
+        log_debug(" Points / second: ~{}".format(1/spp))
         rounded_time = resolution_round(df.TIME, spp * 1e9)
 
         epoch = ((rounded_time - min(rounded_time)) / (spp * 1e9)).astype(int)
@@ -142,5 +158,17 @@ class DbApi:
         df = df.assign(TIME = df.index)
         return df
 
-    def get_msus_epoch_df(self, msus):
-        return pd.concat([self.get_msu_epoch_df(msu) for msu in msus])
+    def get_msus_epoch_df(self, msus, start=0, end=None):
+        return pd.concat([self.get_msu_epoch_df(msu, start, end) for msu in msus])
+
+    def get_start_time(self):
+        self.db_connect()
+        m = Points.select(peewee.fn.MIN(Points.ts)).get().ts
+        self.db.close()
+        return m
+
+    def get_end_time(self):
+        self.db_connect()
+        m = Points.select(peewee.fn.MAX(Points.ts)).get().ts
+        self.db.close()
+        return m
