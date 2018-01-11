@@ -1,0 +1,211 @@
+\hypertarget{controller__mysql_8h}{\section{src/global\-\_\-controller/controller\-\_\-mysql.h File Reference}
+\label{controller__mysql_8h}\index{src/global\-\_\-controller/controller\-\_\-mysql.\-h@{src/global\-\_\-controller/controller\-\_\-mysql.\-h}}
+}
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{controller__mysql_8h_ab703488e42a7d6ecb714ac3d5e4a14dc}{db\-\_\-init} (int clear)
+\begin{DoxyCompactList}\small\item\em Initialize the My\-S\-Q\-L client library, and connect to the server Also init tables for running system. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8h_ab4e9528a716181c1d312729a1e93b769}{db\-\_\-terminate} ()
+\begin{DoxyCompactList}\small\item\em Destroy the My\-S\-Q\-L client environment. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8h_a7374d5eef77bb47af899b68ad569ba6e}{db\-\_\-check\-\_\-and\-\_\-register} (const char $\ast$check\-\_\-query, const char $\ast$insert\-\_\-query, const char $\ast$element, int thread\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Register an element in the D\-B. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8h_a9dbdbea2de06686ec42e5d3922c5b6ce}{db\-\_\-register\-\_\-runtime} (int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Register a runtime in the D\-B. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8h_a0537cbbd370e7051f31c83fb1a5a54ad}{db\-\_\-register\-\_\-thread\-\_\-stats} (int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__mysql_8h_a54e0a800786eb51d47b4dd9e70a4e44d}{db\-\_\-register\-\_\-msu\-\_\-stats} (int msu\-\_\-id, int msu\-\_\-type\-\_\-id, int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__mysql_8h_a88a1d2246fd645e9900bd952a46aeec6}{db\-\_\-register\-\_\-msu} (int msu\-\_\-id, int msu\-\_\-type\-\_\-id, int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Register an M\-S\-U in the D\-B. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8h_a1b247acba7cfab4564065f8a9035efaf}{db\-\_\-insert\-\_\-sample} (struct \hyperlink{structtimed__stat}{timed\-\_\-stat} $\ast$input, struct \hyperlink{structstat__sample__hdr}{stat\-\_\-sample\-\_\-hdr} $\ast$input\-\_\-hdr, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Insert datapoint for a timseries in the D\-B. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{controller__mysql_8h_a7374d5eef77bb47af899b68ad569ba6e}{\index{controller\-\_\-mysql.\-h@{controller\-\_\-mysql.\-h}!db\-\_\-check\-\_\-and\-\_\-register@{db\-\_\-check\-\_\-and\-\_\-register}}
+\index{db\-\_\-check\-\_\-and\-\_\-register@{db\-\_\-check\-\_\-and\-\_\-register}!controller_mysql.h@{controller\-\_\-mysql.\-h}}
+\subsubsection[{db\-\_\-check\-\_\-and\-\_\-register}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-check\-\_\-and\-\_\-register (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{check\-\_\-query, }
+\item[{const char $\ast$}]{insert\-\_\-query, }
+\item[{const char $\ast$}]{element, }
+\item[{int}]{element\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8h_a7374d5eef77bb47af899b68ad569ba6e}
+
+
+Register an element in the D\-B. 
+
+Does nothing if element already exists 
+\begin{DoxyParams}{Parameters}
+{\em const} & char $\ast$check\-\_\-query\-: query to check existence of element \\
+\hline
+{\em const} & char $\ast$insert\-\_\-query\-: query to insert element \\
+\hline
+{\em const} & char $\ast$element\-: element's type \\
+\hline
+{\em int} & element\-\_\-id \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 385 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8h_ab703488e42a7d6ecb714ac3d5e4a14dc}{\index{controller\-\_\-mysql.\-h@{controller\-\_\-mysql.\-h}!db\-\_\-init@{db\-\_\-init}}
+\index{db\-\_\-init@{db\-\_\-init}!controller_mysql.h@{controller\-\_\-mysql.\-h}}
+\subsubsection[{db\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{int}]{clear}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8h_ab703488e42a7d6ecb714ac3d5e4a14dc}
+
+
+Initialize the My\-S\-Q\-L client library, and connect to the server Also init tables for running system. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em } & none \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 116 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8h_a1b247acba7cfab4564065f8a9035efaf}{\index{controller\-\_\-mysql.\-h@{controller\-\_\-mysql.\-h}!db\-\_\-insert\-\_\-sample@{db\-\_\-insert\-\_\-sample}}
+\index{db\-\_\-insert\-\_\-sample@{db\-\_\-insert\-\_\-sample}!controller_mysql.h@{controller\-\_\-mysql.\-h}}
+\subsubsection[{db\-\_\-insert\-\_\-sample}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-insert\-\_\-sample (
+\begin{DoxyParamCaption}
+\item[{struct {\bf timed\-\_\-stat} $\ast$}]{input, }
+\item[{struct {\bf stat\-\_\-sample\-\_\-hdr} $\ast$}]{input\-\_\-hdr, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8h_a1b247acba7cfab4564065f8a9035efaf}
+
+
+Insert datapoint for a timseries in the D\-B. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em input} & pointer to \hyperlink{structtimed__stat}{timed\-\_\-stat} object \\
+\hline
+{\em input\-\_\-hdr} & header of stat sample \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 455 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8h_a88a1d2246fd645e9900bd952a46aeec6}{\index{controller\-\_\-mysql.\-h@{controller\-\_\-mysql.\-h}!db\-\_\-register\-\_\-msu@{db\-\_\-register\-\_\-msu}}
+\index{db\-\_\-register\-\_\-msu@{db\-\_\-register\-\_\-msu}!controller_mysql.h@{controller\-\_\-mysql.\-h}}
+\subsubsection[{db\-\_\-register\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id, }
+\item[{int}]{msu\-\_\-type\-\_\-id, }
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8h_a88a1d2246fd645e9900bd952a46aeec6}
+
+
+Register an M\-S\-U in the D\-B. 
+
+Does nothing if M\-S\-U already exists 
+\begin{DoxyParams}{Parameters}
+{\em struct} & \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu \\
+\hline
+{\em int} & thread\-\_\-id \\
+\hline
+{\em int} & runtime\-\_\-id \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 266 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8h_a54e0a800786eb51d47b4dd9e70a4e44d}{\index{controller\-\_\-mysql.\-h@{controller\-\_\-mysql.\-h}!db\-\_\-register\-\_\-msu\-\_\-stats@{db\-\_\-register\-\_\-msu\-\_\-stats}}
+\index{db\-\_\-register\-\_\-msu\-\_\-stats@{db\-\_\-register\-\_\-msu\-\_\-stats}!controller_mysql.h@{controller\-\_\-mysql.\-h}}
+\subsubsection[{db\-\_\-register\-\_\-msu\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-msu\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id, }
+\item[{int}]{msu\-\_\-type\-\_\-id, }
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8h_a54e0a800786eb51d47b4dd9e70a4e44d}
+
+
+Definition at line 365 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8h_a9dbdbea2de06686ec42e5d3922c5b6ce}{\index{controller\-\_\-mysql.\-h@{controller\-\_\-mysql.\-h}!db\-\_\-register\-\_\-runtime@{db\-\_\-register\-\_\-runtime}}
+\index{db\-\_\-register\-\_\-runtime@{db\-\_\-register\-\_\-runtime}!controller_mysql.h@{controller\-\_\-mysql.\-h}}
+\subsubsection[{db\-\_\-register\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8h_a9dbdbea2de06686ec42e5d3922c5b6ce}
+
+
+Register a runtime in the D\-B. 
+
+Does nothing if runtime id already exists 
+\begin{DoxyParams}{Parameters}
+{\em int} & runtime\-\_\-id\-: the runtime I\-D \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 218 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8h_a0537cbbd370e7051f31c83fb1a5a54ad}{\index{controller\-\_\-mysql.\-h@{controller\-\_\-mysql.\-h}!db\-\_\-register\-\_\-thread\-\_\-stats@{db\-\_\-register\-\_\-thread\-\_\-stats}}
+\index{db\-\_\-register\-\_\-thread\-\_\-stats@{db\-\_\-register\-\_\-thread\-\_\-stats}!controller_mysql.h@{controller\-\_\-mysql.\-h}}
+\subsubsection[{db\-\_\-register\-\_\-thread\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-thread\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8h_a0537cbbd370e7051f31c83fb1a5a54ad}
+
+
+Definition at line 354 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8h_ab4e9528a716181c1d312729a1e93b769}{\index{controller\-\_\-mysql.\-h@{controller\-\_\-mysql.\-h}!db\-\_\-terminate@{db\-\_\-terminate}}
+\index{db\-\_\-terminate@{db\-\_\-terminate}!controller_mysql.h@{controller\-\_\-mysql.\-h}}
+\subsubsection[{db\-\_\-terminate}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-terminate (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8h_ab4e9528a716181c1d312729a1e93b769}
+
+
+Destroy the My\-S\-Q\-L client environment. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em } & none \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 176 of file controller\-\_\-mysql.\-c.
+

@@ -1,0 +1,1121 @@
+\hypertarget{dfg__reader_8c}{\section{src/common/dfg\-\_\-reader.c File Reference}
+\label{dfg__reader_8c}\index{src/common/dfg\-\_\-reader.\-c@{src/common/dfg\-\_\-reader.\-c}}
+}
+
+
+Defines conversion of J\-S\-O\-N strings to \hyperlink{structdedos__dfg}{dedos\-\_\-dfg}.  
+
+
+{\ttfamily \#include \char`\"{}dfg\-\_\-reader.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}jsmn\-\_\-parser.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}jsmn.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$strings.\-h$>$}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623}{object\-\_\-type} \{ \\*
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T} =0, 
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S} =1, 
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S} =2, 
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a6bdb9588ec1c3d458adeadf971a55ee6}{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S} =3, 
+\\*
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S} =4, 
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623aedcbf1c3015676f9e665a248e6533956}{P\-R\-O\-F\-I\-L\-I\-N\-G} =5, 
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a06be603577eb2d74381410ab94b41d60}{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G} =6, 
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623af041f85f4a331fc6646fbea192a1b8eb}{S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E\-S} =7, 
+\\*
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}{S\-C\-H\-E\-D\-U\-L\-I\-N\-G} =8, 
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623abba31fb578257e5ac987c11385ee3a98}{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S} =9, 
+\hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S} = 10
+ \}
+\begin{DoxyCompactList}\small\item\em The objects types which can be located in the json D\-F\-G See \hyperlink{dfg__reader_8c_a91f5b55b94eccdfc0647ba6f38863dd1}{key\-\_\-map} for usage. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{dfg__reader_8c_add8378cdc081adece2375dce48470553}{fix\-\_\-num\-\_\-threads} (struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$\hyperlink{dfg_8c_a7e47c8351eb11d990fbe315642762ddd}{dfg})
+\begin{DoxyCompactList}\small\item\em Fixes the thread assignment within the D\-F\-G such that the pinned and unpinned threads are accurate. \end{DoxyCompactList}\item 
+struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$ \hyperlink{dfg__reader_8c_a98d23a2e881a150cc003ffdb6700309b}{parse\-\_\-dfg\-\_\-json\-\_\-file} (const char $\ast$filename)
+\begin{DoxyCompactList}\small\item\em Converts a json file to a dfg structure. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a106573ae95078bb4238460c8ef4cfb15}{set\-\_\-app\-\_\-name} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}application\-\_\-name\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_afb604094613c96b5d3f263b92cc3cad3}{set\-\_\-ctl\-\_\-ip} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}global\-\_\-ctl\-\_\-ip\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a7f24bd8e5bea2bb94a6edc230043e856}{set\-\_\-ctl\-\_\-port} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}global\-\_\-ctl\-\_\-port\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a5b612d443b9e881918267a88fe73e590}{set\-\_\-db\-\_\-ip} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}db\-\_\-ip\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a8ac28a435e57e57ca918e4f636fb98f2}{set\-\_\-db\-\_\-port} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}global\-\_\-ctl\-\_\-port\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a13fca0ea75b7b9c43915105030e4bce2}{set\-\_\-db\-\_\-user} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}db\-\_\-user\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a7a7179a3a943515a84622b66d5e39e97}{set\-\_\-db\-\_\-pwd} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}db\-\_\-pwd\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a7330d410d72a9f3c6dd336311913d3c6}{set\-\_\-db\-\_\-name} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}db\-\_\-name\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static struct \hyperlink{structjson__state}{json\-\_\-state} \hyperlink{dfg__reader_8c_a911de7b114a233d04c21421fcddcd98c}{init\-\_\-runtime} (struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, int index\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: element in \char`\"{}runtimes\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a6aee4d9bed673cbbd07f271da4529897}{set\-\_\-runtimes} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}runtimes\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static struct \hyperlink{structjson__state}{json\-\_\-state} \hyperlink{dfg__reader_8c_ab7db2015e5bf3ef64f2cdad7ef34d733}{init\-\_\-dfg\-\_\-msu\-\_\-from\-\_\-json} (struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, int index\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: element in \char`\"{}\-M\-S\-Us\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_ac2b5b6be0e01ef88aa2bad608b2c8f45}{set\-\_\-msus} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}\-M\-S\-Us\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static struct \hyperlink{structjson__state}{json\-\_\-state} \hyperlink{dfg__reader_8c_afd8803e3df09a6ad503c9e84f37a8d81}{init\-\_\-dfg\-\_\-msu\-\_\-type} (struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, int index\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: element in \char`\"{}\-M\-S\-U\-\_\-types\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_aaf3ff24917fee728c7b5d1e73d0f5ed4}{set\-\_\-msu\-\_\-types} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}\-M\-S\-U\-\_\-types\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a00b53315f9624e304b4c251c1854f028}{set\-\_\-msu\-\_\-type\-\_\-id} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}id\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a9c3fa9179ed1dca01b7c12cc473dc14d}{set\-\_\-msu\-\_\-type\-\_\-name} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}name\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_af7582ebc47a1e0de82ff65f31b331cd3}{set\-\_\-meta\-\_\-routing} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}meta\-\_\-routing\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. \end{DoxyCompactList}\item 
+static struct \hyperlink{structjson__state}{json\-\_\-state} \hyperlink{dfg__reader_8c_a91b43fc2a773c019e94f478dfaff108c}{init\-\_\-dependencies} (struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, int index\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: Element in \char`\"{}dependencies\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_ab51b621ff652ef55407cd255858bd76c}{set\-\_\-dependencies} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}dependencies\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_adc7e1e41e941b6073918a02dbb44c44a}{set\-\_\-cloneable} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}cloneable\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_ac5b96ba90a3c412763d9876ef1212732}{set\-\_\-colocation\-\_\-group} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}colocation\-\_\-group\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a05842c9b5ec392fc1132b22c2c66fe86}{set\-\_\-msu\-\_\-init\-\_\-data} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}init\-\_\-data\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a0f60dd584dc740df06305f39c629877e}{set\-\_\-msu\-\_\-id} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}id\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a3ec1896011a0ecc73d1a9848625089d5}{set\-\_\-msu\-\_\-vertex\-\_\-type} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}vertex\-\_\-type\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_afee581712c6f91d98062cd846f38561e}{set\-\_\-msu\-\_\-type} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key \char`\"{}type\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_ace7e08b22d36e86bb54cbb484e10b9b8}{set\-\_\-blocking\-\_\-mode} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em key\-: \char`\"{}blocking\-\_\-mode\char`\"{}, object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S} \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a91087d9f023df7cb71346c75477a0e9b}{set\-\_\-scheduling} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}scheduling\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_af5b0234f769bc0b4836b472703b8db67}{set\-\_\-rt\-\_\-id} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: id, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_aeafd472ac763c4def773bfe9df7de7fa}{set\-\_\-rt\-\_\-ip} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: ip, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a3f9cd11537c85274b2350c2d53bc51ec}{set\-\_\-rt\-\_\-port} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: port, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a47d9ec11bf68da9324acc45eccec3af7}{set\-\_\-rt\-\_\-n\-\_\-cores} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: num\-\_\-cores, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a936073702e7f87f3525c5ded75160be6}{set\-\_\-num\-\_\-pinned\-\_\-threads} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: num\-\_\-pinned\-\_\-threads, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a3efd9dcef353b978fdbaa63a910d6913}{set\-\_\-num\-\_\-unpinned\-\_\-threads} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: num\-\_\-unpinned\-\_\-threads, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. \end{DoxyCompactList}\item 
+static struct \hyperlink{structjson__state}{json\-\_\-state} \hyperlink{dfg__reader_8c_a2830445e50cafad3bd7e1e784a3055c5}{init\-\_\-route} (struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, int index\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: Element in \char`\"{}routes\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a6ed0050a30adf10d511b7cb67c1d37c6}{set\-\_\-rt\-\_\-routes} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}routes\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_adaca5be5316334767ac1e5cee76ed365}{set\-\_\-route\-\_\-id} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}id\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a37c12ba06dfc5bf8a84102809e6c1978}{set\-\_\-route\-\_\-type} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}type\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}. \end{DoxyCompactList}\item 
+static struct \hyperlink{structjson__state}{json\-\_\-state} \hyperlink{dfg__reader_8c_a27a1b36f311a5ee98e9ddf96455e382f}{init\-\_\-endpoint} (struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, int index\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: Element in \char`\"{}endpoints\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_ae4befcd20b053e6a0c53c967196d1836}{set\-\_\-route\-\_\-endpoints} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}endpoints\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_afa8226ab5489c0d074427b7f6f438242}{set\-\_\-dest\-\_\-key} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}key\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a6bdb9588ec1c3d458adeadf971a55ee6}{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_ab515fc1436c518958f0562f32ecc9cf6}{set\-\_\-dest\-\_\-msu} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}msu\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a6bdb9588ec1c3d458adeadf971a55ee6}{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_afb634c48d0be783f23fb7b348dd6d88c}{set\-\_\-source\-\_\-types} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}source\-\_\-types\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a06be603577eb2d74381410ab94b41d60}{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_aab406e6f7c69a0fde5945b50632e9ab3}{set\-\_\-dst\-\_\-types} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}dst\-\_\-types\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a06be603577eb2d74381410ab94b41d60}{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_ad81b458094ef130e8c4a2459e1de26f9}{set\-\_\-dep\-\_\-type} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em key\-: \char`\"{}type\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623abba31fb578257e5ac987c11385ee3a98}{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S} \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_ad2c0753caa71040766aa68114f1637d1}{set\-\_\-dep\-\_\-locality} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}locality\char`\"{}, object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623abba31fb578257e5ac987c11385ee3a98}{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a2519166e53f7185e3d5c23d6852abdc9}{set\-\_\-msu\-\_\-runtime} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}runtime\char`\"{}, object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}{S\-C\-H\-E\-D\-U\-L\-I\-N\-G}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a70a45d47b7eefd7060ce5c8e9f747c0d}{set\-\_\-msu\-\_\-thread} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Key\-: \char`\"{}thread\-\_\-id\char`\"{}, object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}{S\-C\-H\-E\-D\-U\-L\-I\-N\-G}. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_af257b31c992cbd20e282fa0beb55d983}{set\-\_\-msu\-\_\-routes} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok\-\_\-\-\_\-, char $\ast$j\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em key\-: \char`\"{}routes\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}{S\-C\-H\-E\-D\-U\-L\-I\-N\-G} \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__reader_8c_a0f67d8fc8978946aa1f0a2863778bc0e}{not\-\_\-implemented} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok, char $\ast$j, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved)
+\begin{DoxyCompactList}\small\item\em To be used to raise an error when a J\-S\-O\-N key is deprecated. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structkey__mapping}{key\-\_\-mapping} \hyperlink{dfg__reader_8c_a91f5b55b94eccdfc0647ba6f38863dd1}{key\-\_\-map} \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em Provides the mapping between the keys in the J\-S\-O\-N and the functions which are called when those keys are encountered. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Defines conversion of J\-S\-O\-N strings to \hyperlink{structdedos__dfg}{dedos\-\_\-dfg}. 
+
+Definition in file \hyperlink{dfg__reader_8c_source}{dfg\-\_\-reader.\-c}.
+
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!object\-\_\-type@{object\-\_\-type}}
+\index{object\-\_\-type@{object\-\_\-type}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{object\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf object\-\_\-type}}}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623}
+
+
+The objects types which can be located in the json D\-F\-G See \hyperlink{dfg__reader_8c_a91f5b55b94eccdfc0647ba6f38863dd1}{key\-\_\-map} for usage. 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{R\-O\-O\-T@{R\-O\-O\-T}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!R\-O\-O\-T@{R\-O\-O\-T}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}
+}]\index{R\-U\-N\-T\-I\-M\-E\-S@{R\-U\-N\-T\-I\-M\-E\-S}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!R\-U\-N\-T\-I\-M\-E\-S@{R\-U\-N\-T\-I\-M\-E\-S}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}
+}]\index{R\-O\-U\-T\-E\-S@{R\-O\-U\-T\-E\-S}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!R\-O\-U\-T\-E\-S@{R\-O\-U\-T\-E\-S}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}
+}]\index{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S@{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S@{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a6bdb9588ec1c3d458adeadf971a55ee6}{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a6bdb9588ec1c3d458adeadf971a55ee6}
+}]\index{M\-S\-U\-S@{M\-S\-U\-S}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!M\-S\-U\-S@{M\-S\-U\-S}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}
+}]\index{P\-R\-O\-F\-I\-L\-I\-N\-G@{P\-R\-O\-F\-I\-L\-I\-N\-G}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!P\-R\-O\-F\-I\-L\-I\-N\-G@{P\-R\-O\-F\-I\-L\-I\-N\-G}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623aedcbf1c3015676f9e665a248e6533956}{P\-R\-O\-F\-I\-L\-I\-N\-G}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623aedcbf1c3015676f9e665a248e6533956}
+}]\index{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G@{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G@{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a06be603577eb2d74381410ab94b41d60}{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a06be603577eb2d74381410ab94b41d60}
+}]\index{S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E\-S@{S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E\-S}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E\-S@{S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E\-S}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623af041f85f4a331fc6646fbea192a1b8eb}{S\-O\-U\-R\-C\-E\-\_\-\-T\-Y\-P\-E\-S}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623af041f85f4a331fc6646fbea192a1b8eb}
+}]\index{S\-C\-H\-E\-D\-U\-L\-I\-N\-G@{S\-C\-H\-E\-D\-U\-L\-I\-N\-G}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!S\-C\-H\-E\-D\-U\-L\-I\-N\-G@{S\-C\-H\-E\-D\-U\-L\-I\-N\-G}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}{S\-C\-H\-E\-D\-U\-L\-I\-N\-G}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}
+}]\index{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S@{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S@{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623abba31fb578257e5ac987c11385ee3a98}{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623abba31fb578257e5ac987c11385ee3a98}
+}]\index{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S@{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}!dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}}\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!M\-S\-U\-\_\-\-T\-Y\-P\-E\-S@{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}}\item[{\em 
+\hypertarget{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}\label{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}
+}]\end{description}
+\end{Desc}
+
+
+Definition at line 39 of file dfg\-\_\-reader.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dfg__reader_8c_add8378cdc081adece2375dce48470553}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!fix\-\_\-num\-\_\-threads@{fix\-\_\-num\-\_\-threads}}
+\index{fix\-\_\-num\-\_\-threads@{fix\-\_\-num\-\_\-threads}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{fix\-\_\-num\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}static int fix\-\_\-num\-\_\-threads (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-dfg} $\ast$}]{dfg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_add8378cdc081adece2375dce48470553}
+
+
+Fixes the thread assignment within the D\-F\-G such that the pinned and unpinned threads are accurate. 
+
+Must be run, because during execution the only hint of pinned/unpinned is msu blocking mode. To be run after D\-F\-G is fully parsed. \begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 52 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a91b43fc2a773c019e94f478dfaff108c}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!init\-\_\-dependencies@{init\-\_\-dependencies}}
+\index{init\-\_\-dependencies@{init\-\_\-dependencies}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{init\-\_\-dependencies}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf json\-\_\-state} init\-\_\-dependencies (
+\begin{DoxyParamCaption}
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{int}]{index\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a91b43fc2a773c019e94f478dfaff108c}
+
+
+Key\-: Element in \char`\"{}dependencies\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. 
+
+
+
+Definition at line 266 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ab7db2015e5bf3ef64f2cdad7ef34d733}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!init\-\_\-dfg\-\_\-msu\-\_\-from\-\_\-json@{init\-\_\-dfg\-\_\-msu\-\_\-from\-\_\-json}}
+\index{init\-\_\-dfg\-\_\-msu\-\_\-from\-\_\-json@{init\-\_\-dfg\-\_\-msu\-\_\-from\-\_\-json}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{init\-\_\-dfg\-\_\-msu\-\_\-from\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf json\-\_\-state} init\-\_\-dfg\-\_\-msu\-\_\-from\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{int}]{index\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ab7db2015e5bf3ef64f2cdad7ef34d733}
+
+
+Key\-: element in \char`\"{}\-M\-S\-Us\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 214 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_afd8803e3df09a6ad503c9e84f37a8d81}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!init\-\_\-dfg\-\_\-msu\-\_\-type@{init\-\_\-dfg\-\_\-msu\-\_\-type}}
+\index{init\-\_\-dfg\-\_\-msu\-\_\-type@{init\-\_\-dfg\-\_\-msu\-\_\-type}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{init\-\_\-dfg\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf json\-\_\-state} init\-\_\-dfg\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{int}]{index\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_afd8803e3df09a6ad503c9e84f37a8d81}
+
+
+Key\-: element in \char`\"{}\-M\-S\-U\-\_\-types\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 228 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a27a1b36f311a5ee98e9ddf96455e382f}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!init\-\_\-endpoint@{init\-\_\-endpoint}}
+\index{init\-\_\-endpoint@{init\-\_\-endpoint}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{init\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf json\-\_\-state} init\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{int}]{index\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a27a1b36f311a5ee98e9ddf96455e382f}
+
+
+Key\-: Element in \char`\"{}endpoints\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}. 
+
+
+
+Definition at line 481 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a2830445e50cafad3bd7e1e784a3055c5}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!init\-\_\-route@{init\-\_\-route}}
+\index{init\-\_\-route@{init\-\_\-route}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{init\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf json\-\_\-state} init\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{int}]{index\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a2830445e50cafad3bd7e1e784a3055c5}
+
+
+Key\-: Element in \char`\"{}routes\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. 
+
+
+
+Definition at line 440 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a911de7b114a233d04c21421fcddcd98c}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!init\-\_\-runtime@{init\-\_\-runtime}}
+\index{init\-\_\-runtime@{init\-\_\-runtime}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{init\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf json\-\_\-state} init\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{int}]{index\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a911de7b114a233d04c21421fcddcd98c}
+
+
+Key\-: element in \char`\"{}runtimes\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 200 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a0f67d8fc8978946aa1f0a2863778bc0e}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!not\-\_\-implemented@{not\-\_\-implemented}}
+\index{not\-\_\-implemented@{not\-\_\-implemented}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{not\-\_\-implemented}]{\setlength{\rightskip}{0pt plus 5cm}static int not\-\_\-implemented (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok, }
+\item[{char $\ast$}]{j, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a0f67d8fc8978946aa1f0a2863778bc0e}
+
+
+To be used to raise an error when a J\-S\-O\-N key is deprecated. 
+
+
+
+Definition at line 673 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a98d23a2e881a150cc003ffdb6700309b}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!parse\-\_\-dfg\-\_\-json\-\_\-file@{parse\-\_\-dfg\-\_\-json\-\_\-file}}
+\index{parse\-\_\-dfg\-\_\-json\-\_\-file@{parse\-\_\-dfg\-\_\-json\-\_\-file}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{parse\-\_\-dfg\-\_\-json\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-dfg}$\ast$ parse\-\_\-dfg\-\_\-json\-\_\-file (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{dfg__reader_8c_a98d23a2e881a150cc003ffdb6700309b}
+
+
+Converts a json file to a dfg structure. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & The json file to parse \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A copy of the newly-\/allocated D\-F\-G, or N\-U\-L\-L if error 
+\end{DoxyReturn}
+
+
+Definition at line 96 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a106573ae95078bb4238460c8ef4cfb15}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-app\-\_\-name@{set\-\_\-app\-\_\-name}}
+\index{set\-\_\-app\-\_\-name@{set\-\_\-app\-\_\-name}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-app\-\_\-name}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-app\-\_\-name (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a106573ae95078bb4238460c8ef4cfb15}
+
+
+Key\-: \char`\"{}application\-\_\-name\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 117 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ace7e08b22d36e86bb54cbb484e10b9b8}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-blocking\-\_\-mode@{set\-\_\-blocking\-\_\-mode}}
+\index{set\-\_\-blocking\-\_\-mode@{set\-\_\-blocking\-\_\-mode}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-blocking\-\_\-mode}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-blocking\-\_\-mode (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ace7e08b22d36e86bb54cbb484e10b9b8}
+
+
+key\-: \char`\"{}blocking\-\_\-mode\char`\"{}, object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S} 
+
+
+
+Definition at line 338 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_adc7e1e41e941b6073918a02dbb44c44a}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-cloneable@{set\-\_\-cloneable}}
+\index{set\-\_\-cloneable@{set\-\_\-cloneable}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-cloneable}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-cloneable (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_adc7e1e41e941b6073918a02dbb44c44a}
+
+
+Key\-: \char`\"{}cloneable\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. 
+
+
+
+Definition at line 280 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ac5b96ba90a3c412763d9876ef1212732}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-colocation\-\_\-group@{set\-\_\-colocation\-\_\-group}}
+\index{set\-\_\-colocation\-\_\-group@{set\-\_\-colocation\-\_\-group}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-colocation\-\_\-group}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-colocation\-\_\-group (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ac5b96ba90a3c412763d9876ef1212732}
+
+
+Key\-: \char`\"{}colocation\-\_\-group\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. 
+
+
+
+Definition at line 287 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_afb604094613c96b5d3f263b92cc3cad3}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-ctl\-\_\-ip@{set\-\_\-ctl\-\_\-ip}}
+\index{set\-\_\-ctl\-\_\-ip@{set\-\_\-ctl\-\_\-ip}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-ctl\-\_\-ip}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-ctl\-\_\-ip (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_afb604094613c96b5d3f263b92cc3cad3}
+
+
+Key\-: \char`\"{}global\-\_\-ctl\-\_\-ip\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 129 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a7f24bd8e5bea2bb94a6edc230043e856}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-ctl\-\_\-port@{set\-\_\-ctl\-\_\-port}}
+\index{set\-\_\-ctl\-\_\-port@{set\-\_\-ctl\-\_\-port}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-ctl\-\_\-port}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-ctl\-\_\-port (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a7f24bd8e5bea2bb94a6edc230043e856}
+
+
+Key\-: \char`\"{}global\-\_\-ctl\-\_\-port\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 143 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a5b612d443b9e881918267a88fe73e590}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-db\-\_\-ip@{set\-\_\-db\-\_\-ip}}
+\index{set\-\_\-db\-\_\-ip@{set\-\_\-db\-\_\-ip}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-db\-\_\-ip}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-db\-\_\-ip (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a5b612d443b9e881918267a88fe73e590}
+
+
+Key\-: \char`\"{}db\-\_\-ip\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 150 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a7330d410d72a9f3c6dd336311913d3c6}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-db\-\_\-name@{set\-\_\-db\-\_\-name}}
+\index{set\-\_\-db\-\_\-name@{set\-\_\-db\-\_\-name}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-db\-\_\-name}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-db\-\_\-name (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a7330d410d72a9f3c6dd336311913d3c6}
+
+
+Key\-: \char`\"{}db\-\_\-name\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 191 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a8ac28a435e57e57ca918e4f636fb98f2}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-db\-\_\-port@{set\-\_\-db\-\_\-port}}
+\index{set\-\_\-db\-\_\-port@{set\-\_\-db\-\_\-port}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-db\-\_\-port}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-db\-\_\-port (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a8ac28a435e57e57ca918e4f636fb98f2}
+
+
+Key\-: \char`\"{}global\-\_\-ctl\-\_\-port\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 165 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a7a7179a3a943515a84622b66d5e39e97}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-db\-\_\-pwd@{set\-\_\-db\-\_\-pwd}}
+\index{set\-\_\-db\-\_\-pwd@{set\-\_\-db\-\_\-pwd}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-db\-\_\-pwd}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-db\-\_\-pwd (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a7a7179a3a943515a84622b66d5e39e97}
+
+
+Key\-: \char`\"{}db\-\_\-pwd\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 182 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a13fca0ea75b7b9c43915105030e4bce2}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-db\-\_\-user@{set\-\_\-db\-\_\-user}}
+\index{set\-\_\-db\-\_\-user@{set\-\_\-db\-\_\-user}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-db\-\_\-user}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-db\-\_\-user (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a13fca0ea75b7b9c43915105030e4bce2}
+
+
+Key\-: \char`\"{}db\-\_\-user\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 173 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ad2c0753caa71040766aa68114f1637d1}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-dep\-\_\-locality@{set\-\_\-dep\-\_\-locality}}
+\index{set\-\_\-dep\-\_\-locality@{set\-\_\-dep\-\_\-locality}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-dep\-\_\-locality}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-dep\-\_\-locality (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ad2c0753caa71040766aa68114f1637d1}
+
+
+Key\-: \char`\"{}locality\char`\"{}, object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623abba31fb578257e5ac987c11385ee3a98}{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S}. 
+
+
+
+Definition at line 578 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ad81b458094ef130e8c4a2459e1de26f9}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-dep\-\_\-type@{set\-\_\-dep\-\_\-type}}
+\index{set\-\_\-dep\-\_\-type@{set\-\_\-dep\-\_\-type}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-dep\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-dep\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ad81b458094ef130e8c4a2459e1de26f9}
+
+
+key\-: \char`\"{}type\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623abba31fb578257e5ac987c11385ee3a98}{D\-E\-P\-E\-N\-D\-E\-N\-C\-I\-E\-S} 
+
+
+
+Definition at line 562 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ab51b621ff652ef55407cd255858bd76c}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-dependencies@{set\-\_\-dependencies}}
+\index{set\-\_\-dependencies@{set\-\_\-dependencies}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-dependencies}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-dependencies (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ab51b621ff652ef55407cd255858bd76c}
+
+
+Key\-: \char`\"{}dependencies\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. 
+
+
+
+Definition at line 277 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_afa8226ab5489c0d074427b7f6f438242}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-dest\-\_\-key@{set\-\_\-dest\-\_\-key}}
+\index{set\-\_\-dest\-\_\-key@{set\-\_\-dest\-\_\-key}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-dest\-\_\-key}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-dest\-\_\-key (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_afa8226ab5489c0d074427b7f6f438242}
+
+
+Key\-: \char`\"{}key\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a6bdb9588ec1c3d458adeadf971a55ee6}{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}. 
+
+
+
+Definition at line 495 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ab515fc1436c518958f0562f32ecc9cf6}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-dest\-\_\-msu@{set\-\_\-dest\-\_\-msu}}
+\index{set\-\_\-dest\-\_\-msu@{set\-\_\-dest\-\_\-msu}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-dest\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-dest\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ab515fc1436c518958f0562f32ecc9cf6}
+
+
+Key\-: \char`\"{}msu\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a6bdb9588ec1c3d458adeadf971a55ee6}{D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}. 
+
+
+
+Definition at line 502 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_aab406e6f7c69a0fde5945b50632e9ab3}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-dst\-\_\-types@{set\-\_\-dst\-\_\-types}}
+\index{set\-\_\-dst\-\_\-types@{set\-\_\-dst\-\_\-types}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-dst\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-dst\-\_\-types (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_aab406e6f7c69a0fde5945b50632e9ab3}
+
+
+Key\-: \char`\"{}dst\-\_\-types\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a06be603577eb2d74381410ab94b41d60}{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G}. 
+
+
+
+Definition at line 539 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_af7582ebc47a1e0de82ff65f31b331cd3}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-meta\-\_\-routing@{set\-\_\-meta\-\_\-routing}}
+\index{set\-\_\-meta\-\_\-routing@{set\-\_\-meta\-\_\-routing}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-meta\-\_\-routing}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-meta\-\_\-routing (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_af7582ebc47a1e0de82ff65f31b331cd3}
+
+
+Key\-: \char`\"{}meta\-\_\-routing\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. 
+
+
+
+Definition at line 263 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a0f60dd584dc740df06305f39c629877e}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-id@{set\-\_\-msu\-\_\-id}}
+\index{set\-\_\-msu\-\_\-id@{set\-\_\-msu\-\_\-id}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a0f60dd584dc740df06305f39c629877e}
+
+
+Key\-: \char`\"{}id\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. 
+
+
+
+Definition at line 307 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a05842c9b5ec392fc1132b22c2c66fe86}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-init\-\_\-data@{set\-\_\-msu\-\_\-init\-\_\-data}}
+\index{set\-\_\-msu\-\_\-init\-\_\-data@{set\-\_\-msu\-\_\-init\-\_\-data}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-init\-\_\-data}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-init\-\_\-data (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a05842c9b5ec392fc1132b22c2c66fe86}
+
+
+Key\-: \char`\"{}init\-\_\-data\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. 
+
+
+
+Definition at line 294 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_af257b31c992cbd20e282fa0beb55d983}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-routes@{set\-\_\-msu\-\_\-routes}}
+\index{set\-\_\-msu\-\_\-routes@{set\-\_\-msu\-\_\-routes}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-routes}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-routes (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_af257b31c992cbd20e282fa0beb55d983}
+
+
+key\-: \char`\"{}routes\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}{S\-C\-H\-E\-D\-U\-L\-I\-N\-G} 
+
+
+
+Definition at line 647 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a2519166e53f7185e3d5c23d6852abdc9}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-runtime@{set\-\_\-msu\-\_\-runtime}}
+\index{set\-\_\-msu\-\_\-runtime@{set\-\_\-msu\-\_\-runtime}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a2519166e53f7185e3d5c23d6852abdc9}
+
+
+Key\-: \char`\"{}runtime\char`\"{}, object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}{S\-C\-H\-E\-D\-U\-L\-I\-N\-G}. 
+
+
+
+Definition at line 593 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a70a45d47b7eefd7060ce5c8e9f747c0d}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-thread@{set\-\_\-msu\-\_\-thread}}
+\index{set\-\_\-msu\-\_\-thread@{set\-\_\-msu\-\_\-thread}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a70a45d47b7eefd7060ce5c8e9f747c0d}
+
+
+Key\-: \char`\"{}thread\-\_\-id\char`\"{}, object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a672327d99e4bcfe941ba55ceb328b563}{S\-C\-H\-E\-D\-U\-L\-I\-N\-G}. 
+
+
+
+Definition at line 607 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_afee581712c6f91d98062cd846f38561e}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-type@{set\-\_\-msu\-\_\-type}}
+\index{set\-\_\-msu\-\_\-type@{set\-\_\-msu\-\_\-type}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_afee581712c6f91d98062cd846f38561e}
+
+
+Key \char`\"{}type\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. 
+
+
+
+Definition at line 322 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a00b53315f9624e304b4c251c1854f028}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-type\-\_\-id@{set\-\_\-msu\-\_\-type\-\_\-id}}
+\index{set\-\_\-msu\-\_\-type\-\_\-id@{set\-\_\-msu\-\_\-type\-\_\-id}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-type\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-type\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a00b53315f9624e304b4c251c1854f028}
+
+
+Key\-: \char`\"{}id\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. 
+
+
+
+Definition at line 243 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a9c3fa9179ed1dca01b7c12cc473dc14d}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-type\-\_\-name@{set\-\_\-msu\-\_\-type\-\_\-name}}
+\index{set\-\_\-msu\-\_\-type\-\_\-name@{set\-\_\-msu\-\_\-type\-\_\-name}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-type\-\_\-name}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-type\-\_\-name (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a9c3fa9179ed1dca01b7c12cc473dc14d}
+
+
+Key\-: \char`\"{}name\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a8a905ff01e59c9ee6ad323340021ca6c}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}. 
+
+
+
+Definition at line 250 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_aaf3ff24917fee728c7b5d1e73d0f5ed4}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-types@{set\-\_\-msu\-\_\-types}}
+\index{set\-\_\-msu\-\_\-types@{set\-\_\-msu\-\_\-types}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-types (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_aaf3ff24917fee728c7b5d1e73d0f5ed4}
+
+
+Key\-: \char`\"{}\-M\-S\-U\-\_\-types\char`\"{}, Object\-: \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 240 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a3ec1896011a0ecc73d1a9848625089d5}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msu\-\_\-vertex\-\_\-type@{set\-\_\-msu\-\_\-vertex\-\_\-type}}
+\index{set\-\_\-msu\-\_\-vertex\-\_\-type@{set\-\_\-msu\-\_\-vertex\-\_\-type}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-vertex\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msu\-\_\-vertex\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a3ec1896011a0ecc73d1a9848625089d5}
+
+
+Key\-: \char`\"{}vertex\-\_\-type\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. 
+
+
+
+Definition at line 314 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ac2b5b6be0e01ef88aa2bad608b2c8f45}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-msus@{set\-\_\-msus}}
+\index{set\-\_\-msus@{set\-\_\-msus}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-msus}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-msus (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ac2b5b6be0e01ef88aa2bad608b2c8f45}
+
+
+Key\-: \char`\"{}\-M\-S\-Us\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 225 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a936073702e7f87f3525c5ded75160be6}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-num\-\_\-pinned\-\_\-threads@{set\-\_\-num\-\_\-pinned\-\_\-threads}}
+\index{set\-\_\-num\-\_\-pinned\-\_\-threads@{set\-\_\-num\-\_\-pinned\-\_\-threads}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-num\-\_\-pinned\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-num\-\_\-pinned\-\_\-threads (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a936073702e7f87f3525c5ded75160be6}
+
+
+Key\-: num\-\_\-pinned\-\_\-threads, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. 
+
+
+
+Definition at line 410 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a3efd9dcef353b978fdbaa63a910d6913}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-num\-\_\-unpinned\-\_\-threads@{set\-\_\-num\-\_\-unpinned\-\_\-threads}}
+\index{set\-\_\-num\-\_\-unpinned\-\_\-threads@{set\-\_\-num\-\_\-unpinned\-\_\-threads}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-num\-\_\-unpinned\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-num\-\_\-unpinned\-\_\-threads (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a3efd9dcef353b978fdbaa63a910d6913}
+
+
+Key\-: num\-\_\-unpinned\-\_\-threads, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. 
+
+
+
+Definition at line 425 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_ae4befcd20b053e6a0c53c967196d1836}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-route\-\_\-endpoints@{set\-\_\-route\-\_\-endpoints}}
+\index{set\-\_\-route\-\_\-endpoints@{set\-\_\-route\-\_\-endpoints}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-route\-\_\-endpoints}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-route\-\_\-endpoints (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_ae4befcd20b053e6a0c53c967196d1836}
+
+
+Key\-: \char`\"{}endpoints\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}. 
+
+
+
+Definition at line 492 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_adaca5be5316334767ac1e5cee76ed365}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-route\-\_\-id@{set\-\_\-route\-\_\-id}}
+\index{set\-\_\-route\-\_\-id@{set\-\_\-route\-\_\-id}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-route\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-route\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_adaca5be5316334767ac1e5cee76ed365}
+
+
+Key\-: \char`\"{}id\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}. 
+
+
+
+Definition at line 454 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a37c12ba06dfc5bf8a84102809e6c1978}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-route\-\_\-type@{set\-\_\-route\-\_\-type}}
+\index{set\-\_\-route\-\_\-type@{set\-\_\-route\-\_\-type}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-route\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-route\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a37c12ba06dfc5bf8a84102809e6c1978}
+
+
+Key\-: \char`\"{}type\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad62443e56dd2a44b2408424bcf90b695}{R\-O\-U\-T\-E\-S}. 
+
+
+
+Definition at line 468 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_af5b0234f769bc0b4836b472703b8db67}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-rt\-\_\-id@{set\-\_\-rt\-\_\-id}}
+\index{set\-\_\-rt\-\_\-id@{set\-\_\-rt\-\_\-id}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-rt\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-rt\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_af5b0234f769bc0b4836b472703b8db67}
+
+
+Key\-: id, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. 
+
+
+
+Definition at line 375 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_aeafd472ac763c4def773bfe9df7de7fa}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-rt\-\_\-ip@{set\-\_\-rt\-\_\-ip}}
+\index{set\-\_\-rt\-\_\-ip@{set\-\_\-rt\-\_\-ip}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-rt\-\_\-ip}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-rt\-\_\-ip (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_aeafd472ac763c4def773bfe9df7de7fa}
+
+
+Key\-: ip, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. 
+
+
+
+Definition at line 382 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a47d9ec11bf68da9324acc45eccec3af7}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-rt\-\_\-n\-\_\-cores@{set\-\_\-rt\-\_\-n\-\_\-cores}}
+\index{set\-\_\-rt\-\_\-n\-\_\-cores@{set\-\_\-rt\-\_\-n\-\_\-cores}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-rt\-\_\-n\-\_\-cores}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-rt\-\_\-n\-\_\-cores (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a47d9ec11bf68da9324acc45eccec3af7}
+
+
+Key\-: num\-\_\-cores, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. 
+
+
+
+Definition at line 403 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a3f9cd11537c85274b2350c2d53bc51ec}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-rt\-\_\-port@{set\-\_\-rt\-\_\-port}}
+\index{set\-\_\-rt\-\_\-port@{set\-\_\-rt\-\_\-port}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-rt\-\_\-port}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-rt\-\_\-port (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a3f9cd11537c85274b2350c2d53bc51ec}
+
+
+Key\-: port, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. 
+
+
+
+Definition at line 396 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a6ed0050a30adf10d511b7cb67c1d37c6}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-rt\-\_\-routes@{set\-\_\-rt\-\_\-routes}}
+\index{set\-\_\-rt\-\_\-routes@{set\-\_\-rt\-\_\-routes}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-rt\-\_\-routes}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-rt\-\_\-routes (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a6ed0050a30adf10d511b7cb67c1d37c6}
+
+
+Key\-: \char`\"{}routes\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a98edcff9a8aea5b5ddfbf6cfc486c7f1}{R\-U\-N\-T\-I\-M\-E\-S}. 
+
+
+
+Definition at line 451 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a6aee4d9bed673cbbd07f271da4529897}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-runtimes@{set\-\_\-runtimes}}
+\index{set\-\_\-runtimes@{set\-\_\-runtimes}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-runtimes}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-runtimes (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a6aee4d9bed673cbbd07f271da4529897}
+
+
+Key\-: \char`\"{}runtimes\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623ad41208b99e347d1726824779b11ea11b}{R\-O\-O\-T}. 
+
+
+
+Definition at line 211 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_a91087d9f023df7cb71346c75477a0e9b}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-scheduling@{set\-\_\-scheduling}}
+\index{set\-\_\-scheduling@{set\-\_\-scheduling}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-scheduling}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-scheduling (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a91087d9f023df7cb71346c75477a0e9b}
+
+
+Key\-: \char`\"{}scheduling\char`\"{}, Object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a1cea451c47ff9fca1869d7173303d3c0}{M\-S\-U\-S}. 
+
+
+
+Definition at line 372 of file dfg\-\_\-reader.\-c.
+
+\hypertarget{dfg__reader_8c_afb634c48d0be783f23fb7b348dd6d88c}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!set\-\_\-source\-\_\-types@{set\-\_\-source\-\_\-types}}
+\index{set\-\_\-source\-\_\-types@{set\-\_\-source\-\_\-types}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{set\-\_\-source\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}static int set\-\_\-source\-\_\-types (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok\-\_\-\-\_\-, }
+\item[{char $\ast$}]{j\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in\-\_\-\-\_\-, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_afb634c48d0be783f23fb7b348dd6d88c}
+
+
+Key\-: \char`\"{}source\-\_\-types\char`\"{}, object \hyperlink{dfg__reader_8c_af54461b7c3322b2256322f7b545bd623a06be603577eb2d74381410ab94b41d60}{M\-E\-T\-A\-\_\-\-R\-O\-U\-T\-I\-N\-G}. 
+
+
+
+Definition at line 517 of file dfg\-\_\-reader.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{dfg__reader_8c_a91f5b55b94eccdfc0647ba6f38863dd1}{\index{dfg\-\_\-reader.\-c@{dfg\-\_\-reader.\-c}!key\-\_\-map@{key\-\_\-map}}
+\index{key\-\_\-map@{key\-\_\-map}!dfg_reader.c@{dfg\-\_\-reader.\-c}}
+\subsubsection[{key\-\_\-map}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf key\-\_\-mapping} key\-\_\-map\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__reader_8c_a91f5b55b94eccdfc0647ba6f38863dd1}
+
+
+Provides the mapping between the keys in the J\-S\-O\-N and the functions which are called when those keys are encountered. 
+
+(See \hyperlink{jsmn__parser_8h}{jsmn\-\_\-parser.\-h} for details of \hyperlink{structkey__mapping}{key\-\_\-mapping} structure) 
+
+Definition at line 94 of file dfg\-\_\-reader.\-c.
+

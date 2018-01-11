@@ -1,0 +1,134 @@
+\hypertarget{profiler_8h}{\section{src/runtime/profiler.h File Reference}
+\label{profiler_8h}\index{src/runtime/profiler.\-h@{src/runtime/profiler.\-h}}
+}
+
+
+For profiling the path of M\-S\-U messages through De\-D\-O\-S.  
+
+
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stat\-\_\-ids.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-stats.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{profiler_8h_a7a803a81eef6236ddce9dc17f2f0067b}{P\-R\-O\-F\-I\-L\-E\-R\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}~101
+\begin{DoxyCompactList}\small\item\em The I\-D with which all profiled messages are tagged in the stats module. \end{DoxyCompactList}\item 
+\#define \hyperlink{profiler_8h_a9149842d0fd4c91a2de0919b30c6cf0d}{S\-E\-T\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G}(hdr)
+\begin{DoxyCompactList}\small\item\em Sets whether the header should be profiled. \end{DoxyCompactList}\item 
+\#define \hyperlink{profiler_8h_a28c8adc811706d4eb9b4f494657b3d39}{I\-N\-I\-T\-\_\-\-P\-R\-O\-F\-I\-L\-E\-R}(tprof)
+\begin{DoxyCompactList}\small\item\em Initializes the profiler with the provided probability of profiling. \end{DoxyCompactList}\item 
+\#define \hyperlink{profiler_8h_a81d18918497ac7939446fcbe909eb6ff}{P\-R\-O\-F\-I\-L\-E\-\_\-\-E\-V\-E\-N\-T}(hdr, \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id})
+\begin{DoxyCompactList}\small\item\em If the header is marked for profiling, profiles the given event. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{profiler_8h_a3337b2cc27606b07f298d17a8047b77b}{set\-\_\-profiling} (struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr)
+\begin{DoxyCompactList}\small\item\em Sets the profiling flag in the header based on the tag\-\_\-probability provided to \hyperlink{profiler_8h_ad922034c356fe3b28a8f23a18a2ef2df}{init\-\_\-profiler}. \end{DoxyCompactList}\item 
+void \hyperlink{profiler_8h_ad922034c356fe3b28a8f23a18a2ef2df}{init\-\_\-profiler} (float \hyperlink{profiler_8c_af6dedd7a9c18062c6b1a19915b5202fb}{tag\-\_\-probability})
+\begin{DoxyCompactList}\small\item\em Sets the probability of profiling an M\-S\-U message. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+For profiling the path of M\-S\-U messages through De\-D\-O\-S. Note\-: \#\-D\-E\-D\-O\-S\-\_\-\-P\-R\-O\-F\-I\-L\-E\-R must be defined for profiling to do anything! 
+
+Definition in file \hyperlink{profiler_8h_source}{profiler.\-h}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{profiler_8h_a28c8adc811706d4eb9b4f494657b3d39}{\index{profiler.\-h@{profiler.\-h}!I\-N\-I\-T\-\_\-\-P\-R\-O\-F\-I\-L\-E\-R@{I\-N\-I\-T\-\_\-\-P\-R\-O\-F\-I\-L\-E\-R}}
+\index{I\-N\-I\-T\-\_\-\-P\-R\-O\-F\-I\-L\-E\-R@{I\-N\-I\-T\-\_\-\-P\-R\-O\-F\-I\-L\-E\-R}!profiler.h@{profiler.\-h}}
+\subsubsection[{I\-N\-I\-T\-\_\-\-P\-R\-O\-F\-I\-L\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\-N\-I\-T\-\_\-\-P\-R\-O\-F\-I\-L\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{tprof}
+\end{DoxyParamCaption}
+)}}\label{profiler_8h_a28c8adc811706d4eb9b4f494657b3d39}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} (tprof > 0) \hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{\(\backslash\)}
+\hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{        log\_warn}(\textcolor{stringliteral}{"Profiling probability set to %f but profiling is disabled"}, tprof)
+\end{DoxyCode}
+
+
+Initializes the profiler with the provided probability of profiling. 
+
+Ignored if \#\-D\-E\-D\-O\-S\-\_\-\-P\-R\-O\-F\-I\-L\-E is not defined 
+
+Definition at line 69 of file profiler.\-h.
+
+\hypertarget{profiler_8h_a81d18918497ac7939446fcbe909eb6ff}{\index{profiler.\-h@{profiler.\-h}!P\-R\-O\-F\-I\-L\-E\-\_\-\-E\-V\-E\-N\-T@{P\-R\-O\-F\-I\-L\-E\-\_\-\-E\-V\-E\-N\-T}}
+\index{P\-R\-O\-F\-I\-L\-E\-\_\-\-E\-V\-E\-N\-T@{P\-R\-O\-F\-I\-L\-E\-\_\-\-E\-V\-E\-N\-T}!profiler.h@{profiler.\-h}}
+\subsubsection[{P\-R\-O\-F\-I\-L\-E\-\_\-\-E\-V\-E\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-R\-O\-F\-I\-L\-E\-\_\-\-E\-V\-E\-N\-T(
+\begin{DoxyParamCaption}
+\item[{}]{hdr, }
+\item[{}]{{\bf stat\-\_\-id}}
+\end{DoxyParamCaption}
+)}}\label{profiler_8h_a81d18918497ac7939446fcbe909eb6ff}
+
+
+If the header is marked for profiling, profiles the given event. 
+
+Ignored if \#\-D\-E\-D\-O\-S\-\_\-\-P\-R\-O\-F\-I\-L\-E is not defined. 
+
+Definition at line 77 of file profiler.\-h.
+
+\hypertarget{profiler_8h_a7a803a81eef6236ddce9dc17f2f0067b}{\index{profiler.\-h@{profiler.\-h}!P\-R\-O\-F\-I\-L\-E\-R\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D@{P\-R\-O\-F\-I\-L\-E\-R\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}}
+\index{P\-R\-O\-F\-I\-L\-E\-R\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D@{P\-R\-O\-F\-I\-L\-E\-R\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}!profiler.h@{profiler.\-h}}
+\subsubsection[{P\-R\-O\-F\-I\-L\-E\-R\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-R\-O\-F\-I\-L\-E\-R\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D~101}}\label{profiler_8h_a7a803a81eef6236ddce9dc17f2f0067b}
+
+
+The I\-D with which all profiled messages are tagged in the stats module. 
+
+
+
+Definition at line 34 of file profiler.\-h.
+
+\hypertarget{profiler_8h_a9149842d0fd4c91a2de0919b30c6cf0d}{\index{profiler.\-h@{profiler.\-h}!S\-E\-T\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G@{S\-E\-T\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G}}
+\index{S\-E\-T\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G@{S\-E\-T\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G}!profiler.h@{profiler.\-h}}
+\subsubsection[{S\-E\-T\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-E\-T\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G(
+\begin{DoxyParamCaption}
+\item[{}]{hdr}
+\end{DoxyParamCaption}
+)}}\label{profiler_8h_a9149842d0fd4c91a2de0919b30c6cf0d}
+
+
+Sets whether the header should be profiled. 
+
+Ignored if \#\-D\-E\-D\-O\-S\-\_\-\-P\-R\-O\-F\-I\-L\-E is not defined 
+
+Definition at line 65 of file profiler.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{profiler_8h_ad922034c356fe3b28a8f23a18a2ef2df}{\index{profiler.\-h@{profiler.\-h}!init\-\_\-profiler@{init\-\_\-profiler}}
+\index{init\-\_\-profiler@{init\-\_\-profiler}!profiler.h@{profiler.\-h}}
+\subsubsection[{init\-\_\-profiler}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-profiler (
+\begin{DoxyParamCaption}
+\item[{float}]{tag\-\_\-prob}
+\end{DoxyParamCaption}
+)}}\label{profiler_8h_ad922034c356fe3b28a8f23a18a2ef2df}
+
+
+Sets the probability of profiling an M\-S\-U message. 
+
+Sets the probability of profiling an M\-S\-U message. 
+
+Definition at line 58 of file profiler.\-c.
+
+\hypertarget{profiler_8h_a3337b2cc27606b07f298d17a8047b77b}{\index{profiler.\-h@{profiler.\-h}!set\-\_\-profiling@{set\-\_\-profiling}}
+\index{set\-\_\-profiling@{set\-\_\-profiling}!profiler.h@{profiler.\-h}}
+\subsubsection[{set\-\_\-profiling}]{\setlength{\rightskip}{0pt plus 5cm}void set\-\_\-profiling (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr}
+\end{DoxyParamCaption}
+)}}\label{profiler_8h_a3337b2cc27606b07f298d17a8047b77b}
+
+
+Sets the profiling flag in the header based on the tag\-\_\-probability provided to \hyperlink{profiler_8h_ad922034c356fe3b28a8f23a18a2ef2df}{init\-\_\-profiler}. 
+
+Sets the profiling flag in the header based on the tag\-\_\-probability provided to \hyperlink{profiler_8h_ad922034c356fe3b28a8f23a18a2ef2df}{init\-\_\-profiler}. 
+
+Definition at line 45 of file profiler.\-c.
+

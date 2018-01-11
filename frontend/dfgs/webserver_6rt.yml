@@ -1,0 +1,233 @@
+machines:
+    - &local
+      ip: 127.0.0.1
+    - &dedos01
+      ip: 192.168.0.2
+    - &dedos02
+      ip: 192.168.0.3
+    - &dedos03
+      ip: 192.168.0.4
+    - &dedos04
+      ip: 192.168.0.5
+    - &dedos05
+      ip: 192.168.0.6
+    - &dedos06
+      ip: 192.168.0.7
+    - &dedos07
+      ip: 192.168.0.8
+    - &dedos08
+      ip: 192.168.0.9
+    - &gc
+      <<: *dedos02
+    - &rt1
+      <<: *dedos03
+    - &rt2
+      <<: *dedos04
+    - &rt3
+      <<: *dedos05
+    - &rt4
+      <<: *dedos06
+    - &rt5
+      <<: *dedos07
+    - &rt6
+      <<: *dedos08
+    - &db
+      <<: *local
+
+application:
+    name: "6 RT Webserver"
+
+database:
+    <<: *db
+    port: 3306
+    user: root
+    password: root
+    name: dedos
+
+global_ctl:
+    <<: *gc
+    port: 8090
+
+msu_types:
+    socket:
+        id: 10
+        cloneable: 6
+        meta_routing:
+            dst_types: [read]
+        dependencies:
+            - type: read
+              locality: local
+            - type: write
+              locality: local
+
+    read:
+        id: 500
+        meta_routing:
+            source_types: [socket]
+            dst_types: [http]
+        dependencies:
+            - type: socket
+              locality: local
+            - type: write
+              locality: local
+        cloneable: 6
+        colocation_group: 0
+
+    http:
+        id: 552
+        meta_routing:
+            source_types: [read]
+            dst_types: [regex_route, cache, write]
+        cloneable: 6
+
+    cache:
+        id: 555
+        meta_routing:
+            source_types: [http]
+            dst_types: [fileio, write]
+        cloneable: 6
+
+    fileio:
+        id: 556
+        meta_routing:
+            source_types: [cache]
+            dst_types: [write, cache]
+        cloneable: 6
+
+    regex_route:
+        id: 560
+        meta_routing:
+            source_types: [http]
+            dst_types: [regex]
+        cloneable: 6
+        dependencies:
+            - type: regex
+              locality: local
+
+    regex:
+        id: 553
+        meta_routing:
+            source_types: [regex_route]
+            dst_types: [write]
+        cloneable: 6
+        dependencies:
+            - type: regex_route
+              locality: local
+
+    write:
+        id: 554
+        meta_routing:
+            source_types: [http, regex, cache, fileio]
+        dependencies:
+            - type: read
+              locality: local
+            - type: socket
+              locality: local
+        cloneable: 6
+
+default_runtime: &default_rt
+    port: 4444
+    n_cores: 8
+    n_pinned_threads: 8
+    n_unpinned_threads: 8
+
+runtimes:
+    1:
+        <<: *rt1
+        <<: *default_rt
+    2:
+        <<: *rt2
+        <<: *default_rt
+    3:
+        <<: *rt3
+        <<: *default_rt
+    4:
+        <<: *rt4
+        <<: *default_rt
+    5:
+        <<: *rt5
+        <<: *default_rt
+    6:
+        <<: *rt6
+        <<: *default_rt
+
+default_msus:
+    - &default_msu
+      vertex_type: nop
+      blocking_mode: non-blocking
+      runtime: [1,2,3]
+
+msus:
+    - name: socket-1
+      <<: *default_msu
+      type: socket
+      blocking_mode: blocking
+      thread: 16
+      init_data: "8081, 500"
+
+    - name: read-1
+      <<: *default_msu
+      type: read
+      thread: 1
+      init_data: "ssl"
+      reps: 3
+
+    - name: http
+      <<: *default_msu
+      type: http
+      thread: 4
+      init_data: "0.0.0.0 8081 1024"
+
+    - name: cache-2
+      <<: *default_msu
+      type: cache
+      thread: 15
+      init_data: "www/ 5 2 0.75"
+      blocking_mode: blocking
+
+    - name: fileio-2
+      <<: *default_msu
+      type: fileio
+      thread: 14
+      blocking_mode: blocking
+
+    - name: regex-2
+      <<: *default_msu
+      type: regex
+      thread: 5
+
+    - name: reg-route-2
+      <<: *default_msu
+      type: regex_route
+      blocking_mode: blocking
+      thread: 13
+
+    - name: write-1
+      <<: *default_msu
+      type: write
+      blocking_mode: blocking
+      thread: 12
+
+routes:
+    - from: [socket-1, http]
+      to: read-1
+      runtime-match: true
+
+    - from: read-1
+      to: http
+
+    - from: http
+      to: [reg-route-2, cache-2, write-1]
+
+    - from: cache-2
+      to: [write-1, fileio-2]
+
+    - from: fileio-2
+      to: [cache-2, write-1]
+
+    - from: reg-route-2
+      to: regex-2
+      runtime-match: true
+
+    - from: [regex-2, http]
+      to: write-1

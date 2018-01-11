@@ -1,0 +1,98 @@
+\hypertarget{stat__msg__handler_8c}{\section{src/global\-\_\-controller/stat\-\_\-msg\-\_\-handler.c File Reference}
+\label{stat__msg__handler_8c}\index{src/global\-\_\-controller/stat\-\_\-msg\-\_\-handler.\-c@{src/global\-\_\-controller/stat\-\_\-msg\-\_\-handler.\-c}}
+}
+{\ttfamily \#include \char`\"{}stat\-\_\-msg\-\_\-handler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}timeseries.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}scheduling\-\_\-decision.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}scheduling.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-mysql.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{stat__msg__handler_8c_a6deb1ded48b7bf62db25b3c4480621c3}{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-S}~128
+\item 
+\#define \hyperlink{stat__msg__handler_8c_a9d8da3448b0f9523b653848eb9a0d2d3}{M\-A\-X\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E}~64
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{stat__msg__handler_8c_a40f693f1c23a785ad2adea6ed85f1b93}{process\-\_\-stat\-\_\-sample} (int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample)
+\item 
+int \hyperlink{stat__msg__handler_8c_a68674b1fb9b49d83a09f14b25695b6e6}{handle\-\_\-serialized\-\_\-stats\-\_\-buffer} (int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, void $\ast$buffer, size\-\_\-t buffer\-\_\-len)
+\item 
+int \hyperlink{stat__msg__handler_8c_a42ec862525b4f104f1db888f574b8ddf}{init\-\_\-stats\-\_\-msg\-\_\-handler} ()
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$ \hyperlink{stat__msg__handler_8c_a58c17ecd30c52fb4241557d0db026a25}{incoming\-\_\-samples}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{stat__msg__handler_8c_a9d8da3448b0f9523b653848eb9a0d2d3}{\index{stat\-\_\-msg\-\_\-handler.\-c@{stat\-\_\-msg\-\_\-handler.\-c}!M\-A\-X\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E@{M\-A\-X\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E}}
+\index{M\-A\-X\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E@{M\-A\-X\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E}!stat_msg_handler.c@{stat\-\_\-msg\-\_\-handler.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E~64}}\label{stat__msg__handler_8c_a9d8da3448b0f9523b653848eb9a0d2d3}
+
+
+Definition at line 30 of file stat\-\_\-msg\-\_\-handler.\-c.
+
+\hypertarget{stat__msg__handler_8c_a6deb1ded48b7bf62db25b3c4480621c3}{\index{stat\-\_\-msg\-\_\-handler.\-c@{stat\-\_\-msg\-\_\-handler.\-c}!M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-S@{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-S}}
+\index{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-S@{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-S}!stat_msg_handler.c@{stat\-\_\-msg\-\_\-handler.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-S~128}}\label{stat__msg__handler_8c_a6deb1ded48b7bf62db25b3c4480621c3}
+
+
+Definition at line 29 of file stat\-\_\-msg\-\_\-handler.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{stat__msg__handler_8c_a68674b1fb9b49d83a09f14b25695b6e6}{\index{stat\-\_\-msg\-\_\-handler.\-c@{stat\-\_\-msg\-\_\-handler.\-c}!handle\-\_\-serialized\-\_\-stats\-\_\-buffer@{handle\-\_\-serialized\-\_\-stats\-\_\-buffer}}
+\index{handle\-\_\-serialized\-\_\-stats\-\_\-buffer@{handle\-\_\-serialized\-\_\-stats\-\_\-buffer}!stat_msg_handler.c@{stat\-\_\-msg\-\_\-handler.\-c}}
+\subsubsection[{handle\-\_\-serialized\-\_\-stats\-\_\-buffer}]{\setlength{\rightskip}{0pt plus 5cm}int handle\-\_\-serialized\-\_\-stats\-\_\-buffer (
+\begin{DoxyParamCaption}
+\item[{int}]{runtime\-\_\-id, }
+\item[{void $\ast$}]{buffer, }
+\item[{size\-\_\-t}]{buffer\-\_\-len}
+\end{DoxyParamCaption}
+)}}\label{stat__msg__handler_8c_a68674b1fb9b49d83a09f14b25695b6e6}
+
+
+Definition at line 66 of file stat\-\_\-msg\-\_\-handler.\-c.
+
+\hypertarget{stat__msg__handler_8c_a42ec862525b4f104f1db888f574b8ddf}{\index{stat\-\_\-msg\-\_\-handler.\-c@{stat\-\_\-msg\-\_\-handler.\-c}!init\-\_\-stats\-\_\-msg\-\_\-handler@{init\-\_\-stats\-\_\-msg\-\_\-handler}}
+\index{init\-\_\-stats\-\_\-msg\-\_\-handler@{init\-\_\-stats\-\_\-msg\-\_\-handler}!stat_msg_handler.c@{stat\-\_\-msg\-\_\-handler.\-c}}
+\subsubsection[{init\-\_\-stats\-\_\-msg\-\_\-handler}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-stats\-\_\-msg\-\_\-handler (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{stat__msg__handler_8c_a42ec862525b4f104f1db888f574b8ddf}
+
+
+Definition at line 93 of file stat\-\_\-msg\-\_\-handler.\-c.
+
+\hypertarget{stat__msg__handler_8c_a40f693f1c23a785ad2adea6ed85f1b93}{\index{stat\-\_\-msg\-\_\-handler.\-c@{stat\-\_\-msg\-\_\-handler.\-c}!process\-\_\-stat\-\_\-sample@{process\-\_\-stat\-\_\-sample}}
+\index{process\-\_\-stat\-\_\-sample@{process\-\_\-stat\-\_\-sample}!stat_msg_handler.c@{stat\-\_\-msg\-\_\-handler.\-c}}
+\subsubsection[{process\-\_\-stat\-\_\-sample}]{\setlength{\rightskip}{0pt plus 5cm}static int process\-\_\-stat\-\_\-sample (
+\begin{DoxyParamCaption}
+\item[{int}]{runtime\-\_\-id, }
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{stat__msg__handler_8c_a40f693f1c23a785ad2adea6ed85f1b93}
+
+
+Definition at line 33 of file stat\-\_\-msg\-\_\-handler.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{stat__msg__handler_8c_a58c17ecd30c52fb4241557d0db026a25}{\index{stat\-\_\-msg\-\_\-handler.\-c@{stat\-\_\-msg\-\_\-handler.\-c}!incoming\-\_\-samples@{incoming\-\_\-samples}}
+\index{incoming\-\_\-samples@{incoming\-\_\-samples}!stat_msg_handler.c@{stat\-\_\-msg\-\_\-handler.\-c}}
+\subsubsection[{incoming\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-sample}$\ast$ incoming\-\_\-samples}}\label{stat__msg__handler_8c_a58c17ecd30c52fb4241557d0db026a25}
+
+
+Definition at line 31 of file stat\-\_\-msg\-\_\-handler.\-c.
+

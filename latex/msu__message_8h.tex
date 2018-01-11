@@ -1,0 +1,360 @@
+\hypertarget{msu__message_8h}{\section{src/runtime/msu\-\_\-message.h File Reference}
+\label{msu__message_8h}\index{src/runtime/msu\-\_\-message.\-h@{src/runtime/msu\-\_\-message.\-h}}
+}
+
+
+Messages passed to M\-S\-Us.  
+
+
+{\ttfamily \#include \char`\"{}message\-\_\-queue.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structcomposite__key}{composite\-\_\-key}
+\begin{DoxyCompactList}\small\item\em The composite key is used to store a key of arbitrary length (up to 192 bytes). \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key}
+\begin{DoxyCompactList}\small\item\em Used to uniquely identify the source of a message, used in state storage as well as routing. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__provinance__item}{msu\-\_\-provinance\-\_\-item}
+\begin{DoxyCompactList}\small\item\em Item in the chain of history kept track of in each M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsg__provinance}{msg\-\_\-provinance}
+\begin{DoxyCompactList}\small\item\em Keeps track of which M\-S\-Us have seen a given message header. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr}
+\begin{DoxyCompactList}\small\item\em Header for messages passed to M\-S\-Us. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__msg}{msu\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em A message that is to be delivered to an instance of an M\-S\-U. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{msu__message_8h_abdd33f362ae3bbdacb5de76473aa8a2f}{M\-A\-X\-\_\-\-P\-A\-T\-H\-\_\-\-L\-E\-N}~8
+\begin{DoxyCompactList}\small\item\em The maximum path length recorded for a messages path through M\-S\-Us. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+unsigned int \hyperlink{msu__message_8h_afd0dc4f832701e66e79f0a3ad14d45d0}{msu\-\_\-msg\-\_\-sender\-\_\-type} (struct \hyperlink{structmsg__provinance}{msg\-\_\-provinance} $\ast$prov)
+\item 
+struct \hyperlink{structmsu__provinance__item}{msu\-\_\-provinance\-\_\-item} $\ast$ \hyperlink{msu__message_8h_a96ff75992a3c7cdf45d5488cf2a1a85e}{get\-\_\-provinance\-\_\-item} (struct \hyperlink{structmsg__provinance}{msg\-\_\-provinance} $\ast$p, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type)
+\item 
+int \hyperlink{msu__message_8h_a5f005b2ccc0cd6ed497f5f36a036c452}{add\-\_\-provinance} (struct \hyperlink{structmsg__provinance}{msg\-\_\-provinance} $\ast$prov, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender)
+\begin{DoxyCompactList}\small\item\em Adds a new item to the path of M\-S\-Us taken within the mesasge provinance in the header. \end{DoxyCompactList}\item 
+int \hyperlink{msu__message_8h_a10929400b4e0bf5ad4ab662c5f971c36}{init\-\_\-msu\-\_\-msg\-\_\-hdr} (struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key)
+\begin{DoxyCompactList}\small\item\em Initializes and resets a message header, storing a copy of the provided key. \end{DoxyCompactList}\item 
+int \hyperlink{msu__message_8h_a5f50ab06135ddf6ae2fce9e3a94406e5}{set\-\_\-msg\-\_\-key} (int32\-\_\-t id, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key)
+\begin{DoxyCompactList}\small\item\em Sets the key's I\-D and composite-\/\-I\-D to be equal to the provided id. \end{DoxyCompactList}\item 
+int \hyperlink{msu__message_8h_acc87213f55c3ced021c2ed2a3918d81f}{seed\-\_\-msg\-\_\-key} (void $\ast$seed, size\-\_\-t seed\-\_\-size, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key)
+\begin{DoxyCompactList}\small\item\em Sets the key's composite-\/\-I\-D to the provided value, and sets the key's I\-D to a hash of the value. \end{DoxyCompactList}\item 
+void \hyperlink{msu__message_8h_a69ee355c36ed847b24e637786f3aa7e3}{destroy\-\_\-msu\-\_\-msg\-\_\-and\-\_\-contents} (struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Frees both the message and message data. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$ \hyperlink{msu__message_8h_abe34d5a1aace571d1916f6546dd4c981}{read\-\_\-msu\-\_\-msg} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu, int fd, size\-\_\-t size)
+\begin{DoxyCompactList}\small\item\em Reads an M\-S\-U message of the given size from the provided file descriptor. \end{DoxyCompactList}\item 
+int \hyperlink{msu__message_8h_a466eacd65a2a0c2d99dab6cfe085b0c8}{schedule\-\_\-msu\-\_\-msg} (struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$q, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$data, struct timespec $\ast$interval)
+\begin{DoxyCompactList}\small\item\em Schedules an M\-S\-U message to be delivered after {\ttfamily interval} time has passed. \end{DoxyCompactList}\item 
+int \hyperlink{msu__message_8h_ae9c35484ebaf8fdf1a40ceee05968493}{enqueue\-\_\-msu\-\_\-msg} (struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$q, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$data)
+\begin{DoxyCompactList}\small\item\em Enqueues a message for immediate delivery. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$ \hyperlink{msu__message_8h_ad158d41d4fd0a76a552bd60f5d4c4281}{dequeue\-\_\-msu\-\_\-msg} (struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$q)
+\begin{DoxyCompactList}\small\item\em Dequeues an M\-S\-U message from the provided message queue. \end{DoxyCompactList}\item 
+void $\ast$ \hyperlink{msu__message_8h_afe18223e884ab9c4be0b112ed0b772df}{serialize\-\_\-msu\-\_\-msg} (struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$dst\-\_\-type, size\-\_\-t $\ast$size\-\_\-out)
+\begin{DoxyCompactList}\small\item\em Converts an M\-S\-U message into a serializes stream of bytes. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$ \hyperlink{msu__message_8h_a84d5590dca5c0f21420d17b7c15e377b}{create\-\_\-msu\-\_\-msg} (struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Creates an M\-S\-U message with the appropriate header, data size, and data. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Messages passed to M\-S\-Us. 
+
+Definition in file \hyperlink{msu__message_8h_source}{msu\-\_\-message.\-h}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{msu__message_8h_abdd33f362ae3bbdacb5de76473aa8a2f}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!M\-A\-X\-\_\-\-P\-A\-T\-H\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-P\-A\-T\-H\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-P\-A\-T\-H\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-P\-A\-T\-H\-\_\-\-L\-E\-N}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{M\-A\-X\-\_\-\-P\-A\-T\-H\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-P\-A\-T\-H\-\_\-\-L\-E\-N~8}}\label{msu__message_8h_abdd33f362ae3bbdacb5de76473aa8a2f}
+
+
+The maximum path length recorded for a messages path through M\-S\-Us. 
+
+
+
+Definition at line 66 of file msu\-\_\-message.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{msu__message_8h_a5f005b2ccc0cd6ed497f5f36a036c452}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!add\-\_\-provinance@{add\-\_\-provinance}}
+\index{add\-\_\-provinance@{add\-\_\-provinance}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{add\-\_\-provinance}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-provinance (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-provinance} $\ast$}]{prov, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_a5f005b2ccc0cd6ed497f5f36a036c452}
+
+
+Adds a new item to the path of M\-S\-Us taken within the mesasge provinance in the header. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em prov} & Existing provinance structure \\
+\hline
+{\em sender} & The sending M\-S\-U, to be added to the provinance \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 74 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_a84d5590dca5c0f21420d17b7c15e377b}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!create\-\_\-msu\-\_\-msg@{create\-\_\-msu\-\_\-msg}}
+\index{create\-\_\-msu\-\_\-msg@{create\-\_\-msu\-\_\-msg}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{create\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-msg}$\ast$ create\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_a84d5590dca5c0f21420d17b7c15e377b}
+
+
+Creates an M\-S\-U message with the appropriate header, data size, and data. 
+
+\begin{DoxyReturn}{Returns}
+The newly-\/allocated M\-S\-U message 
+\end{DoxyReturn}
+
+
+Definition at line 161 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_ad158d41d4fd0a76a552bd60f5d4c4281}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!dequeue\-\_\-msu\-\_\-msg@{dequeue\-\_\-msu\-\_\-msg}}
+\index{dequeue\-\_\-msu\-\_\-msg@{dequeue\-\_\-msu\-\_\-msg}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{dequeue\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-msg}$\ast$ dequeue\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{q}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_ad158d41d4fd0a76a552bd60f5d4c4281}
+
+
+Dequeues an M\-S\-U message from the provided message queue. 
+
+\begin{DoxyReturn}{Returns}
+the dequeued message on success, N\-U\-L\-L if the message is not available, or is not an M\-S\-U\-\_\-\-M\-S\-G 
+\end{DoxyReturn}
+
+
+Definition at line 124 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_a69ee355c36ed847b24e637786f3aa7e3}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!destroy\-\_\-msu\-\_\-msg\-\_\-and\-\_\-contents@{destroy\-\_\-msu\-\_\-msg\-\_\-and\-\_\-contents}}
+\index{destroy\-\_\-msu\-\_\-msg\-\_\-and\-\_\-contents@{destroy\-\_\-msu\-\_\-msg\-\_\-and\-\_\-contents}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{destroy\-\_\-msu\-\_\-msg\-\_\-and\-\_\-contents}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\-\_\-msu\-\_\-msg\-\_\-and\-\_\-contents (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_a69ee355c36ed847b24e637786f3aa7e3}
+
+
+Frees both the message and message data. 
+
+
+
+Definition at line 156 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_ae9c35484ebaf8fdf1a40ceee05968493}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!enqueue\-\_\-msu\-\_\-msg@{enqueue\-\_\-msu\-\_\-msg}}
+\index{enqueue\-\_\-msu\-\_\-msg@{enqueue\-\_\-msu\-\_\-msg}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{enqueue\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int enqueue\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{q, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_ae9c35484ebaf8fdf1a40ceee05968493}
+
+
+Enqueues a message for immediate delivery. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & The queue into which the message is to be placed \\
+\hline
+{\em data} & The message to be delivered \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 101 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_a96ff75992a3c7cdf45d5488cf2a1a85e}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!get\-\_\-provinance\-\_\-item@{get\-\_\-provinance\-\_\-item}}
+\index{get\-\_\-provinance\-\_\-item@{get\-\_\-provinance\-\_\-item}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{get\-\_\-provinance\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-provinance\-\_\-item}$\ast$ get\-\_\-provinance\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-provinance} $\ast$}]{p, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_a96ff75992a3c7cdf45d5488cf2a1a85e}
+\begin{DoxyReturn}{Returns}
+The provinance item with the specified type or N\-U\-L\-L if none exists 
+\end{DoxyReturn}
+
+
+Definition at line 45 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_a10929400b4e0bf5ad4ab662c5f971c36}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!init\-\_\-msu\-\_\-msg\-\_\-hdr@{init\-\_\-msu\-\_\-msg\-\_\-hdr}}
+\index{init\-\_\-msu\-\_\-msg\-\_\-hdr@{init\-\_\-msu\-\_\-msg\-\_\-hdr}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{init\-\_\-msu\-\_\-msg\-\_\-hdr}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-msu\-\_\-msg\-\_\-hdr (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_a10929400b4e0bf5ad4ab662c5f971c36}
+
+
+Initializes and resets a message header, storing a copy of the provided key. 
+
+Note\-: key can be a local variable. Its value is copied. 
+\begin{DoxyParams}{Parameters}
+{\em hdr} & The header to reset \\
+\hline
+{\em key} & The key to set a copy of in the header \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 35 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_afd0dc4f832701e66e79f0a3ad14d45d0}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!msu\-\_\-msg\-\_\-sender\-\_\-type@{msu\-\_\-msg\-\_\-sender\-\_\-type}}
+\index{msu\-\_\-msg\-\_\-sender\-\_\-type@{msu\-\_\-msg\-\_\-sender\-\_\-type}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{msu\-\_\-msg\-\_\-sender\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int msu\-\_\-msg\-\_\-sender\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-provinance} $\ast$}]{prov}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_afd0dc4f832701e66e79f0a3ad14d45d0}
+\begin{DoxyReturn}{Returns}
+the type of the M\-S\-U which last sent this message header 
+\end{DoxyReturn}
+
+
+Definition at line 41 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_abe34d5a1aace571d1916f6546dd4c981}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!read\-\_\-msu\-\_\-msg@{read\-\_\-msu\-\_\-msg}}
+\index{read\-\_\-msu\-\_\-msg@{read\-\_\-msu\-\_\-msg}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{read\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-msg}$\ast$ read\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu, }
+\item[{int}]{fd, }
+\item[{size\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_abe34d5a1aace571d1916f6546dd4c981}
+
+
+Reads an M\-S\-U message of the given size from the provided file descriptor. 
+
+Utilizes the \hyperlink{structmsu__type_ad8ac9a913eb05ae392f3eed04f323a5d}{msu\-\_\-type\-::deserialize} function of the provided M\-S\-U if applicable, otherwise just reads the provided payload. 
+\begin{DoxyParams}{Parameters}
+{\em msu} & The msu from which to take the deserialization function \\
+\hline
+{\em fd} & The file descriptor from which to read the message \\
+\hline
+{\em size} & The size of the message available in the file descriptor \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 171 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_a466eacd65a2a0c2d99dab6cfe085b0c8}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!schedule\-\_\-msu\-\_\-msg@{schedule\-\_\-msu\-\_\-msg}}
+\index{schedule\-\_\-msu\-\_\-msg@{schedule\-\_\-msu\-\_\-msg}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{schedule\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int schedule\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{q, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{data, }
+\item[{struct timespec $\ast$}]{interval}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_a466eacd65a2a0c2d99dab6cfe085b0c8}
+
+
+Schedules an M\-S\-U message to be delivered after {\ttfamily interval} time has passed. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & The queue into which the message is to be placed \\
+\hline
+{\em data} & The message to be delivered \\
+\hline
+{\em interval} & The amount of time which must elapse before the message is to be delivered \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 106 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_acc87213f55c3ced021c2ed2a3918d81f}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!seed\-\_\-msg\-\_\-key@{seed\-\_\-msg\-\_\-key}}
+\index{seed\-\_\-msg\-\_\-key@{seed\-\_\-msg\-\_\-key}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{seed\-\_\-msg\-\_\-key}]{\setlength{\rightskip}{0pt plus 5cm}int seed\-\_\-msg\-\_\-key (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{seed, }
+\item[{size\-\_\-t}]{seed\-\_\-size, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_acc87213f55c3ced021c2ed2a3918d81f}
+
+
+Sets the key's composite-\/\-I\-D to the provided value, and sets the key's I\-D to a hash of the value. 
+
+
+
+Definition at line 62 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_afe18223e884ab9c4be0b112ed0b772df}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!serialize\-\_\-msu\-\_\-msg@{serialize\-\_\-msu\-\_\-msg}}
+\index{serialize\-\_\-msu\-\_\-msg@{serialize\-\_\-msu\-\_\-msg}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{serialize\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ serialize\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{dst\-\_\-type, }
+\item[{size\-\_\-t $\ast$}]{size\-\_\-out}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_afe18223e884ab9c4be0b112ed0b772df}
+
+
+Converts an M\-S\-U message into a serializes stream of bytes. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msg} & The message to be serialized \\
+\hline
+{\em dst\-\_\-type} & The M\-S\-U type to which the message is to be delivered. Serialization utilizes \hyperlink{structmsu__type_a47b8e5d5beb28f531665d60c6156ff39}{msu\-\_\-type\-::serialize} if non-\/\-N\-U\-L\-L. \\
+\hline
+{\em size\-\_\-out} & An output argument, set to the size of the newly serialized message \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A newly-\/allocated (must be freed externally) serialized copy of {\ttfamily msg} 
+\end{DoxyReturn}
+
+
+Definition at line 216 of file msu\-\_\-message.\-c.
+
+\hypertarget{msu__message_8h_a5f50ab06135ddf6ae2fce9e3a94406e5}{\index{msu\-\_\-message.\-h@{msu\-\_\-message.\-h}!set\-\_\-msg\-\_\-key@{set\-\_\-msg\-\_\-key}}
+\index{set\-\_\-msg\-\_\-key@{set\-\_\-msg\-\_\-key}!msu_message.h@{msu\-\_\-message.\-h}}
+\subsubsection[{set\-\_\-msg\-\_\-key}]{\setlength{\rightskip}{0pt plus 5cm}int set\-\_\-msg\-\_\-key (
+\begin{DoxyParamCaption}
+\item[{int32\-\_\-t}]{id, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key}
+\end{DoxyParamCaption}
+)}}\label{msu__message_8h_a5f50ab06135ddf6ae2fce9e3a94406e5}
+
+
+Sets the key's I\-D and composite-\/\-I\-D to be equal to the provided id. 
+
+
+
+Definition at line 54 of file msu\-\_\-message.\-c.
+

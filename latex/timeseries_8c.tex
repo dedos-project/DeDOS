@@ -1,0 +1,105 @@
+\hypertarget{timeseries_8c}{\section{src/global\-\_\-controller/timeseries.c File Reference}
+\label{timeseries_8c}\index{src/global\-\_\-controller/timeseries.\-c@{src/global\-\_\-controller/timeseries.\-c}}
+}
+{\ttfamily \#include \char`\"{}timeseries.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{timeseries_8c_a96f131ab347a0c4a2b97abecc1329102}{P\-R\-I\-N\-T\-\_\-\-L\-E\-N}~6
+\begin{DoxyCompactList}\small\item\em The length of the begnning and end of the timeseries that's printed when \hyperlink{timeseries_8c_a255d6bce90f4f3f7b7674819e5e2efc8}{print\-\_\-timeseries()} is called. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \hyperlink{timeseries_8c_a200ec8b8ae2a8fe39e3d75a9bcf453bb}{average\-\_\-n} (struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$timeseries, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em \hyperlink{timeseries_8c}{timeseries.\-c} \end{DoxyCompactList}\item 
+int \hyperlink{timeseries_8c_a8a9446acc612bdfa77551eaeaa60a38a}{append\-\_\-to\-\_\-timeseries} (struct \hyperlink{structtimed__stat}{timed\-\_\-stat} $\ast$input, int input\-\_\-size, struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$timeseries)
+\begin{DoxyCompactList}\small\item\em Appends a number of timed statistics to a timeseries. \end{DoxyCompactList}\item 
+void \hyperlink{timeseries_8c_a255d6bce90f4f3f7b7674819e5e2efc8}{print\-\_\-timeseries} (struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$timeseries)
+\begin{DoxyCompactList}\small\item\em Prints the beginning and end of a timeseries. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{timeseries_8c_a96f131ab347a0c4a2b97abecc1329102}{\index{timeseries.\-c@{timeseries.\-c}!P\-R\-I\-N\-T\-\_\-\-L\-E\-N@{P\-R\-I\-N\-T\-\_\-\-L\-E\-N}}
+\index{P\-R\-I\-N\-T\-\_\-\-L\-E\-N@{P\-R\-I\-N\-T\-\_\-\-L\-E\-N}!timeseries.c@{timeseries.\-c}}
+\subsubsection[{P\-R\-I\-N\-T\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-R\-I\-N\-T\-\_\-\-L\-E\-N~6}}\label{timeseries_8c_a96f131ab347a0c4a2b97abecc1329102}
+
+
+The length of the begnning and end of the timeseries that's printed when \hyperlink{timeseries_8c_a255d6bce90f4f3f7b7674819e5e2efc8}{print\-\_\-timeseries()} is called. 
+
+
+
+Definition at line 77 of file timeseries.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{timeseries_8c_a8a9446acc612bdfa77551eaeaa60a38a}{\index{timeseries.\-c@{timeseries.\-c}!append\-\_\-to\-\_\-timeseries@{append\-\_\-to\-\_\-timeseries}}
+\index{append\-\_\-to\-\_\-timeseries@{append\-\_\-to\-\_\-timeseries}!timeseries.c@{timeseries.\-c}}
+\subsubsection[{append\-\_\-to\-\_\-timeseries}]{\setlength{\rightskip}{0pt plus 5cm}int append\-\_\-to\-\_\-timeseries (
+\begin{DoxyParamCaption}
+\item[{struct {\bf timed\-\_\-stat} $\ast$}]{input, }
+\item[{int}]{input\-\_\-size, }
+\item[{struct {\bf timed\-\_\-rrdb} $\ast$}]{timeseries}
+\end{DoxyParamCaption}
+)}}\label{timeseries_8c_a8a9446acc612bdfa77551eaeaa60a38a}
+
+
+Appends a number of timed statistics to a timeseries. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em input} & The timed statistics to append to the timeseries \\
+\hline
+{\em input\-\_\-size} & The length of $\ast$input \\
+\hline
+{\em timeseries} & The timeseries to which the data is to be appended \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 58 of file timeseries.\-c.
+
+\hypertarget{timeseries_8c_a200ec8b8ae2a8fe39e3d75a9bcf453bb}{\index{timeseries.\-c@{timeseries.\-c}!average\-\_\-n@{average\-\_\-n}}
+\index{average\-\_\-n@{average\-\_\-n}!timeseries.c@{timeseries.\-c}}
+\subsubsection[{average\-\_\-n}]{\setlength{\rightskip}{0pt plus 5cm}double average\-\_\-n (
+\begin{DoxyParamCaption}
+\item[{struct {\bf timed\-\_\-rrdb} $\ast$}]{timeseries, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{timeseries_8c_a200ec8b8ae2a8fe39e3d75a9bcf453bb}
+
+
+\hyperlink{timeseries_8c}{timeseries.\-c} 
+
+Calculates the average of the last n stats for a given M\-S\-U.
+
+Contains code relevant to storing and processing a round-\/robin database of timeseries 
+
+Definition at line 31 of file timeseries.\-c.
+
+\hypertarget{timeseries_8c_a255d6bce90f4f3f7b7674819e5e2efc8}{\index{timeseries.\-c@{timeseries.\-c}!print\-\_\-timeseries@{print\-\_\-timeseries}}
+\index{print\-\_\-timeseries@{print\-\_\-timeseries}!timeseries.c@{timeseries.\-c}}
+\subsubsection[{print\-\_\-timeseries}]{\setlength{\rightskip}{0pt plus 5cm}void print\-\_\-timeseries (
+\begin{DoxyParamCaption}
+\item[{struct {\bf timed\-\_\-rrdb} $\ast$}]{timeseries}
+\end{DoxyParamCaption}
+)}}\label{timeseries_8c_a255d6bce90f4f3f7b7674819e5e2efc8}
+
+
+Prints the beginning and end of a timeseries. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em timeseries} & The timeseries to print \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 82 of file timeseries.\-c.
+

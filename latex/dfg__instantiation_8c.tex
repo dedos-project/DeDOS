@@ -1,0 +1,181 @@
+\hypertarget{dfg__instantiation_8c}{\section{src/runtime/dfg\-\_\-instantiation.c File Reference}
+\label{dfg__instantiation_8c}\index{src/runtime/dfg\-\_\-instantiation.\-c@{src/runtime/dfg\-\_\-instantiation.\-c}}
+}
+
+
+Instantiation of a dfg on a runtime.  
+
+
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{dfg__instantiation_8c_ae5558b4738037908f1d721ac71e4d9a0}{add\-\_\-dfg\-\_\-route\-\_\-endpoints} (int route\-\_\-id, struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$$\ast$endpoints, int n\-\_\-endpoints)
+\begin{DoxyCompactList}\small\item\em Adds the provided endpoints to the route with the provided {\ttfamily route\-\_\-id} \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__instantiation_8c_ae0780c16115ec19a16ee9c2462b7700d}{spawn\-\_\-dfg\-\_\-routes} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$$\ast$routes, int n\-\_\-routes)
+\begin{DoxyCompactList}\small\item\em Creates the given routes on the runtime. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__instantiation_8c_a94225ceb203f592dd64f4435a02de5c7}{add\-\_\-all\-\_\-dfg\-\_\-route\-\_\-endpoints} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$$\ast$routes, int n\-\_\-routes)
+\begin{DoxyCompactList}\small\item\em Adds all of the endpoints for the provided routes to the provided routes. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__instantiation_8c_a97d0dc9967e0b7689f2b37ec2dfb1359}{add\-\_\-dfg\-\_\-routes\-\_\-to\-\_\-msu} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu, struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$$\ast$routes, int n\-\_\-routes)
+\begin{DoxyCompactList}\small\item\em Subscribes the M\-S\-U to the provided routes. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__instantiation_8c_a8597df4cc38500437670bed1ea14f2f6}{spawn\-\_\-dfg\-\_\-msus} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$$\ast$msus, int n\-\_\-msus)
+\begin{DoxyCompactList}\small\item\em Creates all of the M\-S\-Us on the provided worker thread. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg__instantiation_8c_a28f36560344890331f1727aa84205db8}{spawn\-\_\-dfg\-\_\-threads} (struct \hyperlink{structdfg__thread}{dfg\-\_\-thread} $\ast$$\ast$threads, int n\-\_\-threads)
+\begin{DoxyCompactList}\small\item\em Creates all of the provided threads (including M\-S\-Us) on the current runtime. \end{DoxyCompactList}\item 
+int \hyperlink{dfg__instantiation_8c_a91b7262a30da463465594eb826994eca}{init\-\_\-dfg\-\_\-msu\-\_\-types} (struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$$\ast$\hyperlink{msu__type_8c_ab0aef54bc608cc3b2f051d2d99d5ac2a}{msu\-\_\-types}, int n\-\_\-msu\-\_\-types)
+\begin{DoxyCompactList}\small\item\em Runs the runtime initilization function for the given M\-S\-U types. \end{DoxyCompactList}\item 
+int \hyperlink{dfg__instantiation_8c_af4b002f6d94e9f410eefc7b9d0350c10}{instantiate\-\_\-dfg\-\_\-runtime} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt)
+\begin{DoxyCompactList}\small\item\em Instantiates the M\-S\-Us, routes, and threads on the specified runtime. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Instantiation of a dfg on a runtime. 
+
+Definition in file \hyperlink{dfg__instantiation_8c_source}{dfg\-\_\-instantiation.\-c}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dfg__instantiation_8c_a94225ceb203f592dd64f4435a02de5c7}{\index{dfg\-\_\-instantiation.\-c@{dfg\-\_\-instantiation.\-c}!add\-\_\-all\-\_\-dfg\-\_\-route\-\_\-endpoints@{add\-\_\-all\-\_\-dfg\-\_\-route\-\_\-endpoints}}
+\index{add\-\_\-all\-\_\-dfg\-\_\-route\-\_\-endpoints@{add\-\_\-all\-\_\-dfg\-\_\-route\-\_\-endpoints}!dfg_instantiation.c@{dfg\-\_\-instantiation.\-c}}
+\subsubsection[{add\-\_\-all\-\_\-dfg\-\_\-route\-\_\-endpoints}]{\setlength{\rightskip}{0pt plus 5cm}static int add\-\_\-all\-\_\-dfg\-\_\-route\-\_\-endpoints (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$$\ast$}]{routes, }
+\item[{int}]{n\-\_\-routes}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__instantiation_8c_a94225ceb203f592dd64f4435a02de5c7}
+
+
+Adds all of the endpoints for the provided routes to the provided routes. 
+
+
+
+Definition at line 79 of file dfg\-\_\-instantiation.\-c.
+
+\hypertarget{dfg__instantiation_8c_ae5558b4738037908f1d721ac71e4d9a0}{\index{dfg\-\_\-instantiation.\-c@{dfg\-\_\-instantiation.\-c}!add\-\_\-dfg\-\_\-route\-\_\-endpoints@{add\-\_\-dfg\-\_\-route\-\_\-endpoints}}
+\index{add\-\_\-dfg\-\_\-route\-\_\-endpoints@{add\-\_\-dfg\-\_\-route\-\_\-endpoints}!dfg_instantiation.c@{dfg\-\_\-instantiation.\-c}}
+\subsubsection[{add\-\_\-dfg\-\_\-route\-\_\-endpoints}]{\setlength{\rightskip}{0pt plus 5cm}static int add\-\_\-dfg\-\_\-route\-\_\-endpoints (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{struct {\bf dfg\-\_\-route\-\_\-endpoint} $\ast$$\ast$}]{endpoints, }
+\item[{int}]{n\-\_\-endpoints}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__instantiation_8c_ae5558b4738037908f1d721ac71e4d9a0}
+
+
+Adds the provided endpoints to the route with the provided {\ttfamily route\-\_\-id} 
+
+
+
+Definition at line 33 of file dfg\-\_\-instantiation.\-c.
+
+\hypertarget{dfg__instantiation_8c_a97d0dc9967e0b7689f2b37ec2dfb1359}{\index{dfg\-\_\-instantiation.\-c@{dfg\-\_\-instantiation.\-c}!add\-\_\-dfg\-\_\-routes\-\_\-to\-\_\-msu@{add\-\_\-dfg\-\_\-routes\-\_\-to\-\_\-msu}}
+\index{add\-\_\-dfg\-\_\-routes\-\_\-to\-\_\-msu@{add\-\_\-dfg\-\_\-routes\-\_\-to\-\_\-msu}!dfg_instantiation.c@{dfg\-\_\-instantiation.\-c}}
+\subsubsection[{add\-\_\-dfg\-\_\-routes\-\_\-to\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}static int add\-\_\-dfg\-\_\-routes\-\_\-to\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf dfg\-\_\-route} $\ast$$\ast$}]{routes, }
+\item[{int}]{n\-\_\-routes}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__instantiation_8c_a97d0dc9967e0b7689f2b37ec2dfb1359}
+
+
+Subscribes the M\-S\-U to the provided routes. 
+
+
+
+Definition at line 95 of file dfg\-\_\-instantiation.\-c.
+
+\hypertarget{dfg__instantiation_8c_a91b7262a30da463465594eb826994eca}{\index{dfg\-\_\-instantiation.\-c@{dfg\-\_\-instantiation.\-c}!init\-\_\-dfg\-\_\-msu\-\_\-types@{init\-\_\-dfg\-\_\-msu\-\_\-types}}
+\index{init\-\_\-dfg\-\_\-msu\-\_\-types@{init\-\_\-dfg\-\_\-msu\-\_\-types}!dfg_instantiation.c@{dfg\-\_\-instantiation.\-c}}
+\subsubsection[{init\-\_\-dfg\-\_\-msu\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-dfg\-\_\-msu\-\_\-types (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$$\ast$}]{msu\-\_\-types, }
+\item[{int}]{n\-\_\-msu\-\_\-types}
+\end{DoxyParamCaption}
+)}}\label{dfg__instantiation_8c_a91b7262a30da463465594eb826994eca}
+
+
+Runs the runtime initilization function for the given M\-S\-U types. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu\-\_\-types} & list of pointers to M\-S\-U types \\
+\hline
+{\em n\-\_\-msu\-\_\-types} & Size of {\ttfamily msu\-\_\-types} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 160 of file dfg\-\_\-instantiation.\-c.
+
+\hypertarget{dfg__instantiation_8c_af4b002f6d94e9f410eefc7b9d0350c10}{\index{dfg\-\_\-instantiation.\-c@{dfg\-\_\-instantiation.\-c}!instantiate\-\_\-dfg\-\_\-runtime@{instantiate\-\_\-dfg\-\_\-runtime}}
+\index{instantiate\-\_\-dfg\-\_\-runtime@{instantiate\-\_\-dfg\-\_\-runtime}!dfg_instantiation.c@{dfg\-\_\-instantiation.\-c}}
+\subsubsection[{instantiate\-\_\-dfg\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}int instantiate\-\_\-dfg\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt}
+\end{DoxyParamCaption}
+)}}\label{dfg__instantiation_8c_af4b002f6d94e9f410eefc7b9d0350c10}
+
+
+Instantiates the M\-S\-Us, routes, and threads on the specified runtime. 
+
+
+
+Definition at line 174 of file dfg\-\_\-instantiation.\-c.
+
+\hypertarget{dfg__instantiation_8c_a8597df4cc38500437670bed1ea14f2f6}{\index{dfg\-\_\-instantiation.\-c@{dfg\-\_\-instantiation.\-c}!spawn\-\_\-dfg\-\_\-msus@{spawn\-\_\-dfg\-\_\-msus}}
+\index{spawn\-\_\-dfg\-\_\-msus@{spawn\-\_\-dfg\-\_\-msus}!dfg_instantiation.c@{dfg\-\_\-instantiation.\-c}}
+\subsubsection[{spawn\-\_\-dfg\-\_\-msus}]{\setlength{\rightskip}{0pt plus 5cm}static int spawn\-\_\-dfg\-\_\-msus (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf dfg\-\_\-msu} $\ast$$\ast$}]{msus, }
+\item[{int}]{n\-\_\-msus}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__instantiation_8c_a8597df4cc38500437670bed1ea14f2f6}
+
+
+Creates all of the M\-S\-Us on the provided worker thread. 
+
+
+
+Definition at line 111 of file dfg\-\_\-instantiation.\-c.
+
+\hypertarget{dfg__instantiation_8c_ae0780c16115ec19a16ee9c2462b7700d}{\index{dfg\-\_\-instantiation.\-c@{dfg\-\_\-instantiation.\-c}!spawn\-\_\-dfg\-\_\-routes@{spawn\-\_\-dfg\-\_\-routes}}
+\index{spawn\-\_\-dfg\-\_\-routes@{spawn\-\_\-dfg\-\_\-routes}!dfg_instantiation.c@{dfg\-\_\-instantiation.\-c}}
+\subsubsection[{spawn\-\_\-dfg\-\_\-routes}]{\setlength{\rightskip}{0pt plus 5cm}static int spawn\-\_\-dfg\-\_\-routes (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$$\ast$}]{routes, }
+\item[{int}]{n\-\_\-routes}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__instantiation_8c_ae0780c16115ec19a16ee9c2462b7700d}
+
+
+Creates the given routes on the runtime. 
+
+
+
+Definition at line 63 of file dfg\-\_\-instantiation.\-c.
+
+\hypertarget{dfg__instantiation_8c_a28f36560344890331f1727aa84205db8}{\index{dfg\-\_\-instantiation.\-c@{dfg\-\_\-instantiation.\-c}!spawn\-\_\-dfg\-\_\-threads@{spawn\-\_\-dfg\-\_\-threads}}
+\index{spawn\-\_\-dfg\-\_\-threads@{spawn\-\_\-dfg\-\_\-threads}!dfg_instantiation.c@{dfg\-\_\-instantiation.\-c}}
+\subsubsection[{spawn\-\_\-dfg\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}static int spawn\-\_\-dfg\-\_\-threads (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-thread} $\ast$$\ast$}]{threads, }
+\item[{int}]{n\-\_\-threads}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__instantiation_8c_a28f36560344890331f1727aa84205db8}
+
+
+Creates all of the provided threads (including M\-S\-Us) on the current runtime. 
+
+
+
+Definition at line 138 of file dfg\-\_\-instantiation.\-c.
+

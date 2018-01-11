@@ -1,0 +1,435 @@
+\hypertarget{cli_8c}{\section{src/global\-\_\-controller/cli.c File Reference}
+\label{cli_8c}\index{src/global\-\_\-controller/cli.\-c@{src/global\-\_\-controller/cli.\-c}}
+}
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$pthread.\-h$>$}\\*
+{\ttfamily \#include $<$sys/types.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$arpa/inet.\-h$>$}\\*
+{\ttfamily \#include $<$strings.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}scheduling.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cli.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dedos\-\_\-msu\-\_\-msg\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}api.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structcmd__action}{cmd\-\_\-action}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{cli_8c_aa42cb3dc677df39a62375ffdcdae425e}{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-L\-O\-C\-A\-L}~1
+\item 
+\#define \hyperlink{cli_8c_a4f7e8902d1cae3b44bef0710060cf56e}{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-R\-E\-M\-O\-T\-E}~2
+\item 
+\#define \hyperlink{cli_8c_a6773bd84b2bf2a4f2118fc787f3a53fb}{B\-L\-D}~\char`\"{}\textbackslash{}e\mbox{[}1m\char`\"{}
+\item 
+\#define \hyperlink{cli_8c_a77401f6b813b95031813338afa9221e3}{U\-L}~\char`\"{}\textbackslash{}e\mbox{[}4m\char`\"{}
+\item 
+\#define \hyperlink{cli_8c_a0d58b40b7f71b4e2edc72a0e17cd4faf}{N\-O\-S\-T\-Y\-L\-E}~\char`\"{}\textbackslash{}e\mbox{[}0m\char`\"{}
+\item 
+\#define \hyperlink{cli_8c_a3d8ce073a1f5c8aeff459e8987b362a5}{H\-E\-L\-P\-\_\-\-P\-R\-E\-A\-M\-B\-L\-E}
+\item 
+\#define \hyperlink{cli_8c_a6ee689ca8eee20282f83286bf025126e}{N\-E\-X\-T\-\_\-\-A\-R\-G}(arg, args)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{cli_8c_ab2e1ddc90858fb1e08b591d026362688}{parse\-\_\-show\-\_\-runtimes} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a4fdd32865c6e1eda3eb5bf9b97db0c8f}{parse\-\_\-allocate} ()
+\begin{DoxyCompactList}\small\item\em //\-F\-I\-X\-M\-E\-: broken behavior since dfg\-\_\-vertex members are not pointers anymore Get a list of all M\-S\-U not possessing a \char`\"{}scheduling\char`\"{} object, and ask for an allocation plan \end{DoxyCompactList}\item 
+static int \hyperlink{cli_8c_a61bedb700318e8adf124722e022249e6}{parse\-\_\-show\-\_\-stats} (char $\ast$args)
+\begin{DoxyCompactList}\small\item\em Display controller's time series for a given msu. \end{DoxyCompactList}\item 
+static int \hyperlink{cli_8c_af4a057389724386b6badb4a058e27128}{parse\-\_\-show\-\_\-msus} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_ac80f931e50affcca42ee60b56cad03fc}{parse\-\_\-add\-\_\-msu} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a3b2ec3abdb9f8e75481b4cc0ef1cba93}{parse\-\_\-del\-\_\-msu} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_aa52ceb868a606f8c36fbd99cfd0f6926}{parse\-\_\-add\-\_\-route} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_af2939442b355663e86a6efbb75e3c978}{parse\-\_\-del\-\_\-route} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a2ad6fb817f4123beb9f425774fb8d727}{parse\-\_\-add\-\_\-endpoint} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a1a0a1db0e0dbd72038934f1d68d42f80}{parse\-\_\-del\-\_\-endpoint} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a038dbfc1da100d70ef3cde537c49a897}{parse\-\_\-mod\-\_\-endpoint} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_af83db06dcf0551e433593ffede55e02f}{parse\-\_\-create\-\_\-thread} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_af6bba0ccd4e6913c53a0efc179807fdf}{parse\-\_\-load\-\_\-cfg} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a92e25d63b8c1dbf1f2ef9565ce1fbb04}{parse\-\_\-clone\-\_\-msu} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a94de042dac207e10626cca498d113b3f}{parse\-\_\-unclone\-\_\-msu} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a5a0aced8e98d3cddb25a52dddeadcc46}{parse\-\_\-show\-\_\-routes} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_ac8ca931e8b668f4dfc70510f4c0b9d93}{parse\-\_\-show\-\_\-route} (char $\ast$args)
+\item 
+static int \hyperlink{cli_8c_a8f05a68675e01285a8f9080043569d2e}{parse\-\_\-help} (char $\ast$cmd)
+\item 
+int \hyperlink{cli_8c_a6a7cd1e080de8ffe8c698573d6045ea3}{parse\-\_\-cmd\-\_\-action} (char $\ast$cmd)
+\item 
+static void $\ast$ \hyperlink{cli_8c_acf0f5607e499a78db4e200507405dfa8}{cli\-\_\-loop} ()
+\item 
+int \hyperlink{cli_8c_adfb41a94831eec2e6a652d7023e8ff4f}{start\-\_\-cli\-\_\-thread} (pthread\-\_\-t $\ast$\hyperlink{global__controller_2main_8c_abdd8e128346048e8802581476eed5707}{cli\-\_\-thread})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structcmd__action}{cmd\-\_\-action} \hyperlink{cli_8c_a21c6fd55f5912a558f05863538c06a32}{cmd\-\_\-actions} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{cli_8c_a6773bd84b2bf2a4f2118fc787f3a53fb}{\index{cli.\-c@{cli.\-c}!B\-L\-D@{B\-L\-D}}
+\index{B\-L\-D@{B\-L\-D}!cli.c@{cli.\-c}}
+\subsubsection[{B\-L\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\-L\-D~\char`\"{}\textbackslash{}e\mbox{[}1m\char`\"{}}}\label{cli_8c_a6773bd84b2bf2a4f2118fc787f3a53fb}
+
+
+Definition at line 44 of file cli.\-c.
+
+\hypertarget{cli_8c_a3d8ce073a1f5c8aeff459e8987b362a5}{\index{cli.\-c@{cli.\-c}!H\-E\-L\-P\-\_\-\-P\-R\-E\-A\-M\-B\-L\-E@{H\-E\-L\-P\-\_\-\-P\-R\-E\-A\-M\-B\-L\-E}}
+\index{H\-E\-L\-P\-\_\-\-P\-R\-E\-A\-M\-B\-L\-E@{H\-E\-L\-P\-\_\-\-P\-R\-E\-A\-M\-B\-L\-E}!cli.c@{cli.\-c}}
+\subsubsection[{H\-E\-L\-P\-\_\-\-P\-R\-E\-A\-M\-B\-L\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-E\-L\-P\-\_\-\-P\-R\-E\-A\-M\-B\-L\-E}}\label{cli_8c_a3d8ce073a1f5c8aeff459e8987b362a5}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{stringliteral}{"\(\backslash\)nList of available commands : \(\backslash\)n"} \(\backslash\)
+    \textcolor{stringliteral}{"\(\backslash\)n"} \(\backslash\)
+    \textcolor{stringliteral}{"\(\backslash\)t******* Note: "} \hyperlink{cli_8c_a77401f6b813b95031813338afa9221e3}{UL} \textcolor{stringliteral}{"ARGUMENTS"} \hyperlink{cli_8c_a0d58b40b7f71b4e2edc72a0e17cd4faf}{NOSTYLE} \textcolor{stringliteral}{" fields are required, excluding "} 
+      \hyperlink{cli_8c_a77401f6b813b95031813338afa9221e3}{\(\backslash\)}
+\hyperlink{cli_8c_a77401f6b813b95031813338afa9221e3}{        UL} \textcolor{stringliteral}{"[BRACKETED]"} \hyperlink{cli_8c_a0d58b40b7f71b4e2edc72a0e17cd4faf}{NOSTYLE} \textcolor{stringliteral}{"  ****\(\backslash\)n"} \(\backslash\)
+    \textcolor{stringliteral}{"\(\backslash\)n"}
+\end{DoxyCode}
+
+
+Definition at line 48 of file cli.\-c.
+
+\hypertarget{cli_8c_a6ee689ca8eee20282f83286bf025126e}{\index{cli.\-c@{cli.\-c}!N\-E\-X\-T\-\_\-\-A\-R\-G@{N\-E\-X\-T\-\_\-\-A\-R\-G}}
+\index{N\-E\-X\-T\-\_\-\-A\-R\-G@{N\-E\-X\-T\-\_\-\-A\-R\-G}!cli.c@{cli.\-c}}
+\subsubsection[{N\-E\-X\-T\-\_\-\-A\-R\-G}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-E\-X\-T\-\_\-\-A\-R\-G(
+\begin{DoxyParamCaption}
+\item[{}]{arg, }
+\item[{}]{args}
+\end{DoxyParamCaption}
+)}}\label{cli_8c_a6ee689ca8eee20282f83286bf025126e}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} ( ( arg = strtok(args, \textcolor{stringliteral}{" \(\backslash\)r\(\backslash\)n"}) ) == NULL)\{ \hyperlink{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}{\(\backslash\)}
+\hyperlink{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}{        log\_error}(\textcolor{stringliteral}{"Missing required argument"}); \(\backslash\)
+        return -1; \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Definition at line 78 of file cli.\-c.
+
+\hypertarget{cli_8c_aa42cb3dc677df39a62375ffdcdae425e}{\index{cli.\-c@{cli.\-c}!N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-L\-O\-C\-A\-L@{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-L\-O\-C\-A\-L}}
+\index{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-L\-O\-C\-A\-L@{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-L\-O\-C\-A\-L}!cli.c@{cli.\-c}}
+\subsubsection[{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-L\-O\-C\-A\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-L\-O\-C\-A\-L~1}}\label{cli_8c_aa42cb3dc677df39a62375ffdcdae425e}
+
+
+Definition at line 41 of file cli.\-c.
+
+\hypertarget{cli_8c_a4f7e8902d1cae3b44bef0710060cf56e}{\index{cli.\-c@{cli.\-c}!N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-R\-E\-M\-O\-T\-E@{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-R\-E\-M\-O\-T\-E}}
+\index{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-R\-E\-M\-O\-T\-E@{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-R\-E\-M\-O\-T\-E}!cli.c@{cli.\-c}}
+\subsubsection[{N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-R\-E\-M\-O\-T\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-E\-X\-T\-\_\-\-M\-S\-U\-\_\-\-R\-E\-M\-O\-T\-E~2}}\label{cli_8c_a4f7e8902d1cae3b44bef0710060cf56e}
+
+
+Definition at line 42 of file cli.\-c.
+
+\hypertarget{cli_8c_a0d58b40b7f71b4e2edc72a0e17cd4faf}{\index{cli.\-c@{cli.\-c}!N\-O\-S\-T\-Y\-L\-E@{N\-O\-S\-T\-Y\-L\-E}}
+\index{N\-O\-S\-T\-Y\-L\-E@{N\-O\-S\-T\-Y\-L\-E}!cli.c@{cli.\-c}}
+\subsubsection[{N\-O\-S\-T\-Y\-L\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-O\-S\-T\-Y\-L\-E~\char`\"{}\textbackslash{}e\mbox{[}0m\char`\"{}}}\label{cli_8c_a0d58b40b7f71b4e2edc72a0e17cd4faf}
+
+
+Definition at line 46 of file cli.\-c.
+
+\hypertarget{cli_8c_a77401f6b813b95031813338afa9221e3}{\index{cli.\-c@{cli.\-c}!U\-L@{U\-L}}
+\index{U\-L@{U\-L}!cli.c@{cli.\-c}}
+\subsubsection[{U\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\-L~\char`\"{}\textbackslash{}e\mbox{[}4m\char`\"{}}}\label{cli_8c_a77401f6b813b95031813338afa9221e3}
+
+
+Definition at line 45 of file cli.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{cli_8c_acf0f5607e499a78db4e200507405dfa8}{\index{cli.\-c@{cli.\-c}!cli\-\_\-loop@{cli\-\_\-loop}}
+\index{cli\-\_\-loop@{cli\-\_\-loop}!cli.c@{cli.\-c}}
+\subsubsection[{cli\-\_\-loop}]{\setlength{\rightskip}{0pt plus 5cm}static void$\ast$ cli\-\_\-loop (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_acf0f5607e499a78db4e200507405dfa8}
+
+
+Definition at line 546 of file cli.\-c.
+
+\hypertarget{cli_8c_a2ad6fb817f4123beb9f425774fb8d727}{\index{cli.\-c@{cli.\-c}!parse\-\_\-add\-\_\-endpoint@{parse\-\_\-add\-\_\-endpoint}}
+\index{parse\-\_\-add\-\_\-endpoint@{parse\-\_\-add\-\_\-endpoint}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-add\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-add\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a2ad6fb817f4123beb9f425774fb8d727}
+
+
+Definition at line 260 of file cli.\-c.
+
+\hypertarget{cli_8c_ac80f931e50affcca42ee60b56cad03fc}{\index{cli.\-c@{cli.\-c}!parse\-\_\-add\-\_\-msu@{parse\-\_\-add\-\_\-msu}}
+\index{parse\-\_\-add\-\_\-msu@{parse\-\_\-add\-\_\-msu}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-add\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-add\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_ac80f931e50affcca42ee60b56cad03fc}
+
+
+Definition at line 175 of file cli.\-c.
+
+\hypertarget{cli_8c_aa52ceb868a606f8c36fbd99cfd0f6926}{\index{cli.\-c@{cli.\-c}!parse\-\_\-add\-\_\-route@{parse\-\_\-add\-\_\-route}}
+\index{parse\-\_\-add\-\_\-route@{parse\-\_\-add\-\_\-route}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-add\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-add\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_aa52ceb868a606f8c36fbd99cfd0f6926}
+
+
+Definition at line 229 of file cli.\-c.
+
+\hypertarget{cli_8c_a4fdd32865c6e1eda3eb5bf9b97db0c8f}{\index{cli.\-c@{cli.\-c}!parse\-\_\-allocate@{parse\-\_\-allocate}}
+\index{parse\-\_\-allocate@{parse\-\_\-allocate}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-allocate}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-allocate (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a4fdd32865c6e1eda3eb5bf9b97db0c8f}
+
+
+//\-F\-I\-X\-M\-E\-: broken behavior since dfg\-\_\-vertex members are not pointers anymore Get a list of all M\-S\-U not possessing a \char`\"{}scheduling\char`\"{} object, and ask for an allocation plan 
+
+
+\begin{DoxyParams}{Parameters}
+{\em none} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+none 
+\end{DoxyReturn}
+
+
+Definition at line 90 of file cli.\-c.
+
+\hypertarget{cli_8c_a92e25d63b8c1dbf1f2ef9565ce1fbb04}{\index{cli.\-c@{cli.\-c}!parse\-\_\-clone\-\_\-msu@{parse\-\_\-clone\-\_\-msu}}
+\index{parse\-\_\-clone\-\_\-msu@{parse\-\_\-clone\-\_\-msu}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-clone\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-clone\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a92e25d63b8c1dbf1f2ef9565ce1fbb04}
+
+
+Definition at line 358 of file cli.\-c.
+
+\hypertarget{cli_8c_a6a7cd1e080de8ffe8c698573d6045ea3}{\index{cli.\-c@{cli.\-c}!parse\-\_\-cmd\-\_\-action@{parse\-\_\-cmd\-\_\-action}}
+\index{parse\-\_\-cmd\-\_\-action@{parse\-\_\-cmd\-\_\-action}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-cmd\-\_\-action}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-\_\-cmd\-\_\-action (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{cmd}
+\end{DoxyParamCaption}
+)}}\label{cli_8c_a6a7cd1e080de8ffe8c698573d6045ea3}
+
+
+Definition at line 506 of file cli.\-c.
+
+\hypertarget{cli_8c_af83db06dcf0551e433593ffede55e02f}{\index{cli.\-c@{cli.\-c}!parse\-\_\-create\-\_\-thread@{parse\-\_\-create\-\_\-thread}}
+\index{parse\-\_\-create\-\_\-thread@{parse\-\_\-create\-\_\-thread}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-create\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-create\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_af83db06dcf0551e433593ffede55e02f}
+
+
+Definition at line 313 of file cli.\-c.
+
+\hypertarget{cli_8c_a1a0a1db0e0dbd72038934f1d68d42f80}{\index{cli.\-c@{cli.\-c}!parse\-\_\-del\-\_\-endpoint@{parse\-\_\-del\-\_\-endpoint}}
+\index{parse\-\_\-del\-\_\-endpoint@{parse\-\_\-del\-\_\-endpoint}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-del\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-del\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a1a0a1db0e0dbd72038934f1d68d42f80}
+
+
+Definition at line 278 of file cli.\-c.
+
+\hypertarget{cli_8c_a3b2ec3abdb9f8e75481b4cc0ef1cba93}{\index{cli.\-c@{cli.\-c}!parse\-\_\-del\-\_\-msu@{parse\-\_\-del\-\_\-msu}}
+\index{parse\-\_\-del\-\_\-msu@{parse\-\_\-del\-\_\-msu}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-del\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-del\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a3b2ec3abdb9f8e75481b4cc0ef1cba93}
+
+
+Definition at line 216 of file cli.\-c.
+
+\hypertarget{cli_8c_af2939442b355663e86a6efbb75e3c978}{\index{cli.\-c@{cli.\-c}!parse\-\_\-del\-\_\-route@{parse\-\_\-del\-\_\-route}}
+\index{parse\-\_\-del\-\_\-route@{parse\-\_\-del\-\_\-route}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-del\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-del\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_af2939442b355663e86a6efbb75e3c978}
+
+
+Definition at line 244 of file cli.\-c.
+
+\hypertarget{cli_8c_a8f05a68675e01285a8f9080043569d2e}{\index{cli.\-c@{cli.\-c}!parse\-\_\-help@{parse\-\_\-help}}
+\index{parse\-\_\-help@{parse\-\_\-help}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-help}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-help (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{cmd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a8f05a68675e01285a8f9080043569d2e}
+
+
+Definition at line 534 of file cli.\-c.
+
+\hypertarget{cli_8c_af6bba0ccd4e6913c53a0efc179807fdf}{\index{cli.\-c@{cli.\-c}!parse\-\_\-load\-\_\-cfg@{parse\-\_\-load\-\_\-cfg}}
+\index{parse\-\_\-load\-\_\-cfg@{parse\-\_\-load\-\_\-cfg}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-load\-\_\-cfg}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-load\-\_\-cfg (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_af6bba0ccd4e6913c53a0efc179807fdf}
+
+
+Definition at line 333 of file cli.\-c.
+
+\hypertarget{cli_8c_a038dbfc1da100d70ef3cde537c49a897}{\index{cli.\-c@{cli.\-c}!parse\-\_\-mod\-\_\-endpoint@{parse\-\_\-mod\-\_\-endpoint}}
+\index{parse\-\_\-mod\-\_\-endpoint@{parse\-\_\-mod\-\_\-endpoint}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-mod\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-mod\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a038dbfc1da100d70ef3cde537c49a897}
+
+
+Definition at line 293 of file cli.\-c.
+
+\hypertarget{cli_8c_af4a057389724386b6badb4a058e27128}{\index{cli.\-c@{cli.\-c}!parse\-\_\-show\-\_\-msus@{parse\-\_\-show\-\_\-msus}}
+\index{parse\-\_\-show\-\_\-msus@{parse\-\_\-show\-\_\-msus}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-show\-\_\-msus}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-show\-\_\-msus (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_af4a057389724386b6badb4a058e27128}
+
+
+Definition at line 142 of file cli.\-c.
+
+\hypertarget{cli_8c_ac8ca931e8b668f4dfc70510f4c0b9d93}{\index{cli.\-c@{cli.\-c}!parse\-\_\-show\-\_\-route@{parse\-\_\-show\-\_\-route}}
+\index{parse\-\_\-show\-\_\-route@{parse\-\_\-show\-\_\-route}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-show\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-show\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_ac8ca931e8b668f4dfc70510f4c0b9d93}
+
+
+Definition at line 417 of file cli.\-c.
+
+\hypertarget{cli_8c_a5a0aced8e98d3cddb25a52dddeadcc46}{\index{cli.\-c@{cli.\-c}!parse\-\_\-show\-\_\-routes@{parse\-\_\-show\-\_\-routes}}
+\index{parse\-\_\-show\-\_\-routes@{parse\-\_\-show\-\_\-routes}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-show\-\_\-routes}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-show\-\_\-routes (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a5a0aced8e98d3cddb25a52dddeadcc46}
+
+
+Definition at line 398 of file cli.\-c.
+
+\hypertarget{cli_8c_ab2e1ddc90858fb1e08b591d026362688}{\index{cli.\-c@{cli.\-c}!parse\-\_\-show\-\_\-runtimes@{parse\-\_\-show\-\_\-runtimes}}
+\index{parse\-\_\-show\-\_\-runtimes@{parse\-\_\-show\-\_\-runtimes}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-show\-\_\-runtimes}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-show\-\_\-runtimes (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_ab2e1ddc90858fb1e08b591d026362688}
+
+
+Definition at line 64 of file cli.\-c.
+
+\hypertarget{cli_8c_a61bedb700318e8adf124722e022249e6}{\index{cli.\-c@{cli.\-c}!parse\-\_\-show\-\_\-stats@{parse\-\_\-show\-\_\-stats}}
+\index{parse\-\_\-show\-\_\-stats@{parse\-\_\-show\-\_\-stats}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-show\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-show\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a61bedb700318e8adf124722e022249e6}
+
+
+Display controller's time series for a given msu. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em $\ast$args} & string received from the C\-L\-I \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+none 
+\end{DoxyReturn}
+
+
+Definition at line 127 of file cli.\-c.
+
+\hypertarget{cli_8c_a94de042dac207e10626cca498d113b3f}{\index{cli.\-c@{cli.\-c}!parse\-\_\-unclone\-\_\-msu@{parse\-\_\-unclone\-\_\-msu}}
+\index{parse\-\_\-unclone\-\_\-msu@{parse\-\_\-unclone\-\_\-msu}!cli.c@{cli.\-c}}
+\subsubsection[{parse\-\_\-unclone\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-unclone\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{args}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cli_8c_a94de042dac207e10626cca498d113b3f}
+
+
+Definition at line 377 of file cli.\-c.
+
+\hypertarget{cli_8c_adfb41a94831eec2e6a652d7023e8ff4f}{\index{cli.\-c@{cli.\-c}!start\-\_\-cli\-\_\-thread@{start\-\_\-cli\-\_\-thread}}
+\index{start\-\_\-cli\-\_\-thread@{start\-\_\-cli\-\_\-thread}!cli.c@{cli.\-c}}
+\subsubsection[{start\-\_\-cli\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int start\-\_\-cli\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{pthread\-\_\-t $\ast$}]{cli\-\_\-thread}
+\end{DoxyParamCaption}
+)}}\label{cli_8c_adfb41a94831eec2e6a652d7023e8ff4f}
+
+
+Definition at line 568 of file cli.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{cli_8c_a21c6fd55f5912a558f05863538c06a32}{\index{cli.\-c@{cli.\-c}!cmd\-\_\-actions@{cmd\-\_\-actions}}
+\index{cmd\-\_\-actions@{cmd\-\_\-actions}!cli.c@{cli.\-c}}
+\subsubsection[{cmd\-\_\-actions}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf cmd\-\_\-action} cmd\-\_\-actions\mbox{[}$\,$\mbox{]}}}\label{cli_8c_a21c6fd55f5912a558f05863538c06a32}
+
+
+Definition at line 439 of file cli.\-c.
+

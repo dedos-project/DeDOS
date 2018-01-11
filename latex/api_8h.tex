@@ -1,0 +1,168 @@
+\hypertarget{api_8h}{\section{src/global\-\_\-controller/api.h File Reference}
+\label{api_8h}\index{src/global\-\_\-controller/api.\-h@{src/global\-\_\-controller/api.\-h}}
+}
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{api_8h_a30cd205d2de618b2cc4202cb1e8fae37}{A\-P\-I\-P\-\_\-\-H\-\_\-}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{api_8h_a22118b6b9a36e12bbfe0aefee0c73a3b}{add\-\_\-msu} (unsigned int msu\-\_\-id, unsigned int type\-\_\-id, char $\ast$init\-\_\-data\-\_\-c, char $\ast$msu\-\_\-mode, char $\ast$vertex\-\_\-type, unsigned int thread\-\_\-id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{api_8h_a41241112e941d0c2250ed7643f111e4c}{remove\-\_\-msu} (unsigned int id)
+\item 
+int \hyperlink{api_8h_aafd712b2e96a06202cf01582929f0e00}{create\-\_\-route} (unsigned int route\-\_\-id, unsigned int type\-\_\-id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{api_8h_a484bab2db212c41a03a43e51c76ea469}{delete\-\_\-route} (unsigned int route\-\_\-id)
+\item 
+int \hyperlink{api_8h_ab09248f4d50eed1a04f34eb6c0cb642f}{add\-\_\-route\-\_\-to\-\_\-msu} (unsigned int msu\-\_\-id, unsigned int route\-\_\-id)
+\item 
+int \hyperlink{api_8h_a184cde836b70afbc994c4b0ead45a692}{del\-\_\-route\-\_\-from\-\_\-msu} (unsigned int msu\-\_\-id, unsigned int route\-\_\-id)
+\item 
+int \hyperlink{api_8h_add7a87583fa50c26136589cbe2a28967}{add\-\_\-endpoint} (unsigned int msu\-\_\-id, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key, unsigned int route\-\_\-id)
+\item 
+int \hyperlink{api_8h_a53e349529f71e988426aafbda6996aba}{del\-\_\-endpoint} (unsigned int msu\-\_\-id, unsigned int route\-\_\-id)
+\item 
+int \hyperlink{api_8h_ace19e4d033ae02f27e366f76d45bfb47}{mod\-\_\-endpoint} (unsigned int msu\-\_\-id, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key, unsigned int route\-\_\-id)
+\item 
+int \hyperlink{api_8h_ade09fe4d3c4001e12bcc090dea5880a7}{create\-\_\-worker\-\_\-thread} (unsigned int thread\-\_\-id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, char $\ast$mode)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{api_8h_a30cd205d2de618b2cc4202cb1e8fae37}{\index{api.\-h@{api.\-h}!A\-P\-I\-P\-\_\-\-H\-\_\-@{A\-P\-I\-P\-\_\-\-H\-\_\-}}
+\index{A\-P\-I\-P\-\_\-\-H\-\_\-@{A\-P\-I\-P\-\_\-\-H\-\_\-}!api.h@{api.\-h}}
+\subsubsection[{A\-P\-I\-P\-\_\-\-H\-\_\-}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\-P\-I\-P\-\_\-\-H\-\_\-}}\label{api_8h_a30cd205d2de618b2cc4202cb1e8fae37}
+
+
+Definition at line 21 of file api.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{api_8h_add7a87583fa50c26136589cbe2a28967}{\index{api.\-h@{api.\-h}!add\-\_\-endpoint@{add\-\_\-endpoint}}
+\index{add\-\_\-endpoint@{add\-\_\-endpoint}!api.h@{api.\-h}}
+\subsubsection[{add\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id, }
+\item[{{\bf uint32\-\_\-t}}]{key, }
+\item[{unsigned int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_add7a87583fa50c26136589cbe2a28967}
+
+
+Definition at line 177 of file api.\-c.
+
+\hypertarget{api_8h_a22118b6b9a36e12bbfe0aefee0c73a3b}{\index{api.\-h@{api.\-h}!add\-\_\-msu@{add\-\_\-msu}}
+\index{add\-\_\-msu@{add\-\_\-msu}!api.h@{api.\-h}}
+\subsubsection[{add\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id, }
+\item[{unsigned int}]{type\-\_\-id, }
+\item[{char $\ast$}]{init\-\_\-data\-\_\-c, }
+\item[{char $\ast$}]{msu\-\_\-mode, }
+\item[{char $\ast$}]{vertex\-\_\-type, }
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_a22118b6b9a36e12bbfe0aefee0c73a3b}
+
+
+Definition at line 35 of file api.\-c.
+
+\hypertarget{api_8h_ab09248f4d50eed1a04f34eb6c0cb642f}{\index{api.\-h@{api.\-h}!add\-\_\-route\-\_\-to\-\_\-msu@{add\-\_\-route\-\_\-to\-\_\-msu}}
+\index{add\-\_\-route\-\_\-to\-\_\-msu@{add\-\_\-route\-\_\-to\-\_\-msu}!api.h@{api.\-h}}
+\subsubsection[{add\-\_\-route\-\_\-to\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-route\-\_\-to\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id, }
+\item[{unsigned int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_ab09248f4d50eed1a04f34eb6c0cb642f}
+
+
+Definition at line 147 of file api.\-c.
+
+\hypertarget{api_8h_aafd712b2e96a06202cf01582929f0e00}{\index{api.\-h@{api.\-h}!create\-\_\-route@{create\-\_\-route}}
+\index{create\-\_\-route@{create\-\_\-route}!api.h@{api.\-h}}
+\subsubsection[{create\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}int create\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{route\-\_\-id, }
+\item[{unsigned int}]{type\-\_\-id, }
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_aafd712b2e96a06202cf01582929f0e00}
+
+
+Definition at line 104 of file api.\-c.
+
+\hypertarget{api_8h_ade09fe4d3c4001e12bcc090dea5880a7}{\index{api.\-h@{api.\-h}!create\-\_\-worker\-\_\-thread@{create\-\_\-worker\-\_\-thread}}
+\index{create\-\_\-worker\-\_\-thread@{create\-\_\-worker\-\_\-thread}!api.h@{api.\-h}}
+\subsubsection[{create\-\_\-worker\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int create\-\_\-worker\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{unsigned int}]{runtime\-\_\-id, }
+\item[{char $\ast$}]{mode}
+\end{DoxyParamCaption}
+)}}\label{api_8h_ade09fe4d3c4001e12bcc090dea5880a7}
+
+
+Definition at line 261 of file api.\-c.
+
+\hypertarget{api_8h_a53e349529f71e988426aafbda6996aba}{\index{api.\-h@{api.\-h}!del\-\_\-endpoint@{del\-\_\-endpoint}}
+\index{del\-\_\-endpoint@{del\-\_\-endpoint}!api.h@{api.\-h}}
+\subsubsection[{del\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int del\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id, }
+\item[{unsigned int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_a53e349529f71e988426aafbda6996aba}
+
+
+Definition at line 206 of file api.\-c.
+
+\hypertarget{api_8h_a184cde836b70afbc994c4b0ead45a692}{\index{api.\-h@{api.\-h}!del\-\_\-route\-\_\-from\-\_\-msu@{del\-\_\-route\-\_\-from\-\_\-msu}}
+\index{del\-\_\-route\-\_\-from\-\_\-msu@{del\-\_\-route\-\_\-from\-\_\-msu}!api.h@{api.\-h}}
+\subsubsection[{del\-\_\-route\-\_\-from\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int del\-\_\-route\-\_\-from\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id, }
+\item[{unsigned int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_a184cde836b70afbc994c4b0ead45a692}
+\hypertarget{api_8h_a484bab2db212c41a03a43e51c76ea469}{\index{api.\-h@{api.\-h}!delete\-\_\-route@{delete\-\_\-route}}
+\index{delete\-\_\-route@{delete\-\_\-route}!api.h@{api.\-h}}
+\subsubsection[{delete\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}int delete\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_a484bab2db212c41a03a43e51c76ea469}
+
+
+Definition at line 126 of file api.\-c.
+
+\hypertarget{api_8h_ace19e4d033ae02f27e366f76d45bfb47}{\index{api.\-h@{api.\-h}!mod\-\_\-endpoint@{mod\-\_\-endpoint}}
+\index{mod\-\_\-endpoint@{mod\-\_\-endpoint}!api.h@{api.\-h}}
+\subsubsection[{mod\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int mod\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id, }
+\item[{{\bf uint32\-\_\-t}}]{key, }
+\item[{unsigned int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_ace19e4d033ae02f27e366f76d45bfb47}
+
+
+Definition at line 234 of file api.\-c.
+
+\hypertarget{api_8h_a41241112e941d0c2250ed7643f111e4c}{\index{api.\-h@{api.\-h}!remove\-\_\-msu@{remove\-\_\-msu}}
+\index{remove\-\_\-msu@{remove\-\_\-msu}!api.h@{api.\-h}}
+\subsubsection[{remove\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int remove\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id}
+\end{DoxyParamCaption}
+)}}\label{api_8h_a41241112e941d0c2250ed7643f111e4c}
+
+
+Definition at line 79 of file api.\-c.
+

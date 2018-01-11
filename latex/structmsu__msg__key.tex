@@ -1,0 +1,82 @@
+\hypertarget{structmsu__msg__key}{\section{msu\-\_\-msg\-\_\-key Struct Reference}
+\label{structmsu__msg__key}\index{msu\-\_\-msg\-\_\-key@{msu\-\_\-msg\-\_\-key}}
+}
+
+
+Used to uniquely identify the source of a message, used in state storage as well as routing.  
+
+
+
+
+{\ttfamily \#include $<$msu\-\_\-message.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structcomposite__key}{composite\-\_\-key} \hyperlink{structmsu__msg__key_ad443ba50619f77048500191f4296571e}{key}
+\begin{DoxyCompactList}\small\item\em The full, arbitrary-\/length, unique key (used in state) \end{DoxyCompactList}\item 
+size\-\_\-t \hyperlink{structmsu__msg__key_ac144c1faa26d9e6701acb2ef3282e7d5}{key\-\_\-len}
+\begin{DoxyCompactList}\small\item\em The length of the composite key. \end{DoxyCompactList}\item 
+int32\-\_\-t \hyperlink{structmsu__msg__key_afb9b6ad4c4a66b7c984e54e508073976}{id}
+\begin{DoxyCompactList}\small\item\em A shorter, often hashed id for the key of fixed length (used in routing) \end{DoxyCompactList}\item 
+int \hyperlink{structmsu__msg__key_abd3cdf7b3585111dd56ca9ceba361dba}{group\-\_\-id}
+\begin{DoxyCompactList}\small\item\em Used to mark a route I\-D when storing state. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Used to uniquely identify the source of a message, used in state storage as well as routing. 
+
+Definition at line 46 of file msu\-\_\-message.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structmsu__msg__key_abd3cdf7b3585111dd56ca9ceba361dba}{\index{msu\-\_\-msg\-\_\-key@{msu\-\_\-msg\-\_\-key}!group\-\_\-id@{group\-\_\-id}}
+\index{group\-\_\-id@{group\-\_\-id}!msu_msg_key@{msu\-\_\-msg\-\_\-key}}
+\subsubsection[{group\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-msg\-\_\-key\-::group\-\_\-id}}\label{structmsu__msg__key_abd3cdf7b3585111dd56ca9ceba361dba}
+
+
+Used to mark a route I\-D when storing state. 
+
+(will help to enable state migration within a specific group at a later time) 
+
+Definition at line 55 of file msu\-\_\-message.\-h.
+
+\hypertarget{structmsu__msg__key_afb9b6ad4c4a66b7c984e54e508073976}{\index{msu\-\_\-msg\-\_\-key@{msu\-\_\-msg\-\_\-key}!id@{id}}
+\index{id@{id}!msu_msg_key@{msu\-\_\-msg\-\_\-key}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int32\-\_\-t msu\-\_\-msg\-\_\-key\-::id}}\label{structmsu__msg__key_afb9b6ad4c4a66b7c984e54e508073976}
+
+
+A shorter, often hashed id for the key of fixed length (used in routing) 
+
+
+
+Definition at line 52 of file msu\-\_\-message.\-h.
+
+\hypertarget{structmsu__msg__key_ad443ba50619f77048500191f4296571e}{\index{msu\-\_\-msg\-\_\-key@{msu\-\_\-msg\-\_\-key}!key@{key}}
+\index{key@{key}!msu_msg_key@{msu\-\_\-msg\-\_\-key}}
+\subsubsection[{key}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf composite\-\_\-key} msu\-\_\-msg\-\_\-key\-::key}}\label{structmsu__msg__key_ad443ba50619f77048500191f4296571e}
+
+
+The full, arbitrary-\/length, unique key (used in state) 
+
+
+
+Definition at line 48 of file msu\-\_\-message.\-h.
+
+\hypertarget{structmsu__msg__key_ac144c1faa26d9e6701acb2ef3282e7d5}{\index{msu\-\_\-msg\-\_\-key@{msu\-\_\-msg\-\_\-key}!key\-\_\-len@{key\-\_\-len}}
+\index{key\-\_\-len@{key\-\_\-len}!msu_msg_key@{msu\-\_\-msg\-\_\-key}}
+\subsubsection[{key\-\_\-len}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t msu\-\_\-msg\-\_\-key\-::key\-\_\-len}}\label{structmsu__msg__key_ac144c1faa26d9e6701acb2ef3282e7d5}
+
+
+The length of the composite key. 
+
+
+
+Definition at line 50 of file msu\-\_\-message.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{msu__message_8h}{msu\-\_\-message.\-h}\end{DoxyCompactItemize}

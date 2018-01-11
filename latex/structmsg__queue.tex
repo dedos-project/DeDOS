@@ -1,0 +1,108 @@
+\hypertarget{structmsg__queue}{\section{msg\-\_\-queue Struct Reference}
+\label{structmsg__queue}\index{msg\-\_\-queue@{msg\-\_\-queue}}
+}
+
+
+Container for linked list message queue.  
+
+
+
+
+{\ttfamily \#include $<$message\-\_\-queue.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} \hyperlink{structmsg__queue_a91a341ed44388ff02304c1165b698372}{num\-\_\-msgs}
+\begin{DoxyCompactList}\small\item\em Number of messages currently in the queue. \end{DoxyCompactList}\item 
+struct \hyperlink{structdedos__msg}{dedos\-\_\-msg} $\ast$ \hyperlink{structmsg__queue_a66440959ccc8955eae8594a9674511cc}{head}
+\begin{DoxyCompactList}\small\item\em First entry in the queue. \end{DoxyCompactList}\item 
+struct \hyperlink{structdedos__msg}{dedos\-\_\-msg} $\ast$ \hyperlink{structmsg__queue_a2f86574faae863bc2bf58d3aaa235e23}{tail}
+\begin{DoxyCompactList}\small\item\em Last entry in the queue. \end{DoxyCompactList}\item 
+pthread\-\_\-mutex\-\_\-t \hyperlink{structmsg__queue_a5218b92f916543130a579ecf1523ad82}{mutex}
+\begin{DoxyCompactList}\small\item\em Mutex if the queue is shared. \end{DoxyCompactList}\item 
+bool \hyperlink{structmsg__queue_a3cc4b1124f85c79730b77b54ca562d14}{shared}
+\begin{DoxyCompactList}\small\item\em Whether the queue needs to be locked (always true at the moment) \end{DoxyCompactList}\item 
+sem\-\_\-t $\ast$ \hyperlink{structmsg__queue_a0f479c0b10867953149ee7906b4e9cd5}{sem}
+\begin{DoxyCompactList}\small\item\em Post to this semaphore on each new enqueue. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Container for linked list message queue. 
+
+Definition at line 56 of file message\-\_\-queue.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structmsg__queue_a66440959ccc8955eae8594a9674511cc}{\index{msg\-\_\-queue@{msg\-\_\-queue}!head@{head}}
+\index{head@{head}!msg_queue@{msg\-\_\-queue}}
+\subsubsection[{head}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-msg}$\ast$ msg\-\_\-queue\-::head}}\label{structmsg__queue_a66440959ccc8955eae8594a9674511cc}
+
+
+First entry in the queue. 
+
+
+
+Definition at line 58 of file message\-\_\-queue.\-h.
+
+\hypertarget{structmsg__queue_a5218b92f916543130a579ecf1523ad82}{\index{msg\-\_\-queue@{msg\-\_\-queue}!mutex@{mutex}}
+\index{mutex@{mutex}!msg_queue@{msg\-\_\-queue}}
+\subsubsection[{mutex}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-mutex\-\_\-t msg\-\_\-queue\-::mutex}}\label{structmsg__queue_a5218b92f916543130a579ecf1523ad82}
+
+
+Mutex if the queue is shared. 
+
+
+
+Definition at line 60 of file message\-\_\-queue.\-h.
+
+\hypertarget{structmsg__queue_a91a341ed44388ff02304c1165b698372}{\index{msg\-\_\-queue@{msg\-\_\-queue}!num\-\_\-msgs@{num\-\_\-msgs}}
+\index{num\-\_\-msgs@{num\-\_\-msgs}!msg_queue@{msg\-\_\-queue}}
+\subsubsection[{num\-\_\-msgs}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint32\-\_\-t} msg\-\_\-queue\-::num\-\_\-msgs}}\label{structmsg__queue_a91a341ed44388ff02304c1165b698372}
+
+
+Number of messages currently in the queue. 
+
+
+
+Definition at line 57 of file message\-\_\-queue.\-h.
+
+\hypertarget{structmsg__queue_a0f479c0b10867953149ee7906b4e9cd5}{\index{msg\-\_\-queue@{msg\-\_\-queue}!sem@{sem}}
+\index{sem@{sem}!msg_queue@{msg\-\_\-queue}}
+\subsubsection[{sem}]{\setlength{\rightskip}{0pt plus 5cm}sem\-\_\-t$\ast$ msg\-\_\-queue\-::sem}}\label{structmsg__queue_a0f479c0b10867953149ee7906b4e9cd5}
+
+
+Post to this semaphore on each new enqueue. 
+
+
+
+Definition at line 62 of file message\-\_\-queue.\-h.
+
+\hypertarget{structmsg__queue_a3cc4b1124f85c79730b77b54ca562d14}{\index{msg\-\_\-queue@{msg\-\_\-queue}!shared@{shared}}
+\index{shared@{shared}!msg_queue@{msg\-\_\-queue}}
+\subsubsection[{shared}]{\setlength{\rightskip}{0pt plus 5cm}bool msg\-\_\-queue\-::shared}}\label{structmsg__queue_a3cc4b1124f85c79730b77b54ca562d14}
+
+
+Whether the queue needs to be locked (always true at the moment) 
+
+
+
+Definition at line 61 of file message\-\_\-queue.\-h.
+
+\hypertarget{structmsg__queue_a2f86574faae863bc2bf58d3aaa235e23}{\index{msg\-\_\-queue@{msg\-\_\-queue}!tail@{tail}}
+\index{tail@{tail}!msg_queue@{msg\-\_\-queue}}
+\subsubsection[{tail}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-msg}$\ast$ msg\-\_\-queue\-::tail}}\label{structmsg__queue_a2f86574faae863bc2bf58d3aaa235e23}
+
+
+Last entry in the queue. 
+
+
+
+Definition at line 59 of file message\-\_\-queue.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{message__queue_8h}{message\-\_\-queue.\-h}\end{DoxyCompactItemize}

@@ -1,0 +1,150 @@
+\hypertarget{message__queue_8h}{\section{src/runtime/message\-\_\-queue.h File Reference}
+\label{message__queue_8h}\index{src/runtime/message\-\_\-queue.\-h@{src/runtime/message\-\_\-queue.\-h}}
+}
+
+
+Structures and functions for enqueueing and dequeuing general-\/purpose messages from a queue.  
+
+
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+{\ttfamily \#include $<$inttypes.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$pthread.\-h$>$}\\*
+{\ttfamily \#include $<$semaphore.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structdedos__msg}{dedos\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em A linked-\/list entry containing a message. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsg__queue}{msg\-\_\-queue}
+\begin{DoxyCompactList}\small\item\em Container for linked list message queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{message__queue_8h_ade4286e2189401663d8ce0287895570a}{dedos\-\_\-msg\-\_\-type} \{ \hyperlink{message__queue_8h_ade4286e2189401663d8ce0287895570aa68f5c8bb2157b87a27fa13f45fa71a60}{R\-U\-N\-T\-I\-M\-E\-\_\-\-M\-S\-G}, 
+\hyperlink{message__queue_8h_ade4286e2189401663d8ce0287895570aa66d4c5004f5b57a4a1d8a522b2a1eaf8}{T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G}, 
+\hyperlink{message__queue_8h_ade4286e2189401663d8ce0287895570aaca8cec328296e0224236cbe0af15211a}{M\-S\-U\-\_\-\-M\-S\-G}
+ \}
+\begin{DoxyCompactList}\small\item\em Messages can either be for delivery to runtime, thread, or M\-S\-U. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structdedos__msg}{dedos\-\_\-msg} $\ast$ \hyperlink{message__queue_8h_a8fe020bd7b0beb4881bc21f35ebd288c}{dequeue\-\_\-msg} (struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$q)
+\begin{DoxyCompactList}\small\item\em Dequeues the first available message from {\ttfamily q}. \end{DoxyCompactList}\item 
+int \hyperlink{message__queue_8h_a3cb1d2ec4005512fec77eab1a717b459}{enqueue\-\_\-msg} (struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$q, struct \hyperlink{structdedos__msg}{dedos\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Enqueues a message to be delivered as soon as possible. \end{DoxyCompactList}\item 
+int \hyperlink{message__queue_8h_a45248549a7063010db087fe9b3b68765}{schedule\-\_\-msg} (struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$q, struct \hyperlink{structdedos__msg}{dedos\-\_\-msg} $\ast$msg, struct timespec $\ast$interval)
+\begin{DoxyCompactList}\small\item\em Schedules a message to be delivered once {\ttfamily interval} time has passed. \end{DoxyCompactList}\item 
+int \hyperlink{message__queue_8h_a475676d4d62424d511cd2ebb12919f37}{init\-\_\-msg\-\_\-queue} (struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$q, sem\-\_\-t $\ast$sem)
+\begin{DoxyCompactList}\small\item\em Initilializes a mesasge queue to have no messages in it, and sets up the mutex and semaphore. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Structures and functions for enqueueing and dequeuing general-\/purpose messages from a queue. 
+
+Definition in file \hyperlink{message__queue_8h_source}{message\-\_\-queue.\-h}.
+
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{message__queue_8h_ade4286e2189401663d8ce0287895570a}{\index{message\-\_\-queue.\-h@{message\-\_\-queue.\-h}!dedos\-\_\-msg\-\_\-type@{dedos\-\_\-msg\-\_\-type}}
+\index{dedos\-\_\-msg\-\_\-type@{dedos\-\_\-msg\-\_\-type}!message_queue.h@{message\-\_\-queue.\-h}}
+\subsubsection[{dedos\-\_\-msg\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf dedos\-\_\-msg\-\_\-type}}}\label{message__queue_8h_ade4286e2189401663d8ce0287895570a}
+
+
+Messages can either be for delivery to runtime, thread, or M\-S\-U. 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{R\-U\-N\-T\-I\-M\-E\-\_\-\-M\-S\-G@{R\-U\-N\-T\-I\-M\-E\-\_\-\-M\-S\-G}!message\-\_\-queue.\-h@{message\-\_\-queue.\-h}}\index{message\-\_\-queue.\-h@{message\-\_\-queue.\-h}!R\-U\-N\-T\-I\-M\-E\-\_\-\-M\-S\-G@{R\-U\-N\-T\-I\-M\-E\-\_\-\-M\-S\-G}}\item[{\em 
+\hypertarget{message__queue_8h_ade4286e2189401663d8ce0287895570aa68f5c8bb2157b87a27fa13f45fa71a60}{R\-U\-N\-T\-I\-M\-E\-\_\-\-M\-S\-G}\label{message__queue_8h_ade4286e2189401663d8ce0287895570aa68f5c8bb2157b87a27fa13f45fa71a60}
+}]\index{T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G@{T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G}!message\-\_\-queue.\-h@{message\-\_\-queue.\-h}}\index{message\-\_\-queue.\-h@{message\-\_\-queue.\-h}!T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G@{T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G}}\item[{\em 
+\hypertarget{message__queue_8h_ade4286e2189401663d8ce0287895570aa66d4c5004f5b57a4a1d8a522b2a1eaf8}{T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G}\label{message__queue_8h_ade4286e2189401663d8ce0287895570aa66d4c5004f5b57a4a1d8a522b2a1eaf8}
+}]\index{M\-S\-U\-\_\-\-M\-S\-G@{M\-S\-U\-\_\-\-M\-S\-G}!message\-\_\-queue.\-h@{message\-\_\-queue.\-h}}\index{message\-\_\-queue.\-h@{message\-\_\-queue.\-h}!M\-S\-U\-\_\-\-M\-S\-G@{M\-S\-U\-\_\-\-M\-S\-G}}\item[{\em 
+\hypertarget{message__queue_8h_ade4286e2189401663d8ce0287895570aaca8cec328296e0224236cbe0af15211a}{M\-S\-U\-\_\-\-M\-S\-G}\label{message__queue_8h_ade4286e2189401663d8ce0287895570aaca8cec328296e0224236cbe0af15211a}
+}]\end{description}
+\end{Desc}
+
+
+Definition at line 35 of file message\-\_\-queue.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{message__queue_8h_a8fe020bd7b0beb4881bc21f35ebd288c}{\index{message\-\_\-queue.\-h@{message\-\_\-queue.\-h}!dequeue\-\_\-msg@{dequeue\-\_\-msg}}
+\index{dequeue\-\_\-msg@{dequeue\-\_\-msg}!message_queue.h@{message\-\_\-queue.\-h}}
+\subsubsection[{dequeue\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-msg}$\ast$ dequeue\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{q}
+\end{DoxyParamCaption}
+)}}\label{message__queue_8h_a8fe020bd7b0beb4881bc21f35ebd288c}
+
+
+Dequeues the first available message from {\ttfamily q}. 
+
+If there are no messages, or no messages with a suitable delivery time, returns N\-U\-L\-L. \begin{DoxyReturn}{Returns}
+\hyperlink{structdedos__msg}{dedos\-\_\-msg} dequeued, or N\-U\-L\-L 
+\end{DoxyReturn}
+
+
+Definition at line 87 of file message\-\_\-queue.\-c.
+
+\hypertarget{message__queue_8h_a3cb1d2ec4005512fec77eab1a717b459}{\index{message\-\_\-queue.\-h@{message\-\_\-queue.\-h}!enqueue\-\_\-msg@{enqueue\-\_\-msg}}
+\index{enqueue\-\_\-msg@{enqueue\-\_\-msg}!message_queue.h@{message\-\_\-queue.\-h}}
+\subsubsection[{enqueue\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int enqueue\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{q, }
+\item[{struct {\bf dedos\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)}}\label{message__queue_8h_a3cb1d2ec4005512fec77eab1a717b459}
+
+
+Enqueues a message to be delivered as soon as possible. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 34 of file message\-\_\-queue.\-c.
+
+\hypertarget{message__queue_8h_a475676d4d62424d511cd2ebb12919f37}{\index{message\-\_\-queue.\-h@{message\-\_\-queue.\-h}!init\-\_\-msg\-\_\-queue@{init\-\_\-msg\-\_\-queue}}
+\index{init\-\_\-msg\-\_\-queue@{init\-\_\-msg\-\_\-queue}!message_queue.h@{message\-\_\-queue.\-h}}
+\subsubsection[{init\-\_\-msg\-\_\-queue}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-msg\-\_\-queue (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{q, }
+\item[{sem\-\_\-t $\ast$}]{sem}
+\end{DoxyParamCaption}
+)}}\label{message__queue_8h_a475676d4d62424d511cd2ebb12919f37}
+
+
+Initilializes a mesasge queue to have no messages in it, and sets up the mutex and semaphore. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 153 of file message\-\_\-queue.\-c.
+
+\hypertarget{message__queue_8h_a45248549a7063010db087fe9b3b68765}{\index{message\-\_\-queue.\-h@{message\-\_\-queue.\-h}!schedule\-\_\-msg@{schedule\-\_\-msg}}
+\index{schedule\-\_\-msg@{schedule\-\_\-msg}!message_queue.h@{message\-\_\-queue.\-h}}
+\subsubsection[{schedule\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int schedule\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{q, }
+\item[{struct {\bf dedos\-\_\-msg} $\ast$}]{msg, }
+\item[{struct timespec $\ast$}]{interval}
+\end{DoxyParamCaption}
+)}}\label{message__queue_8h_a45248549a7063010db087fe9b3b68765}
+
+
+Schedules a message to be delivered once {\ttfamily interval} time has passed. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 38 of file message\-\_\-queue.\-c.
+

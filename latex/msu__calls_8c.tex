@@ -1,0 +1,388 @@
+\hypertarget{msu__calls_8c}{\section{src/runtime/msu\-\_\-calls.c File Reference}
+\label{msu__calls_8c}\index{src/runtime/msu\-\_\-calls.\-c@{src/runtime/msu\-\_\-calls.\-c}}
+}
+
+
+Defines methods used for calling M\-S\-Us from other M\-S\-Us.  
+
+
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}thread\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}output\-\_\-thread.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing\-\_\-strategies.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}profiler.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{msu__calls_8c_ab2f90d3fca6b078821621c8db75c9dd7}{enqueue\-\_\-for\-\_\-remote\-\_\-send} (struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$dst\-\_\-type, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$dst)
+\begin{DoxyCompactList}\small\item\em Calls type-\/specific M\-S\-U serialization function and enqueues data into main thread queue so it can be forwarded to remote M\-S\-U. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_a7c3637860498f50232de906d947e9ea5}{call\-\_\-local\-\_\-msu} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$dest, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Enqueues a message in the queue of a local M\-S\-U. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_ac3f7836a45ce403bbe885f0f05e8268b}{schedule\-\_\-local\-\_\-msu\-\_\-call} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$dest, struct timespec $\ast$interval, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Schedules a call to a local M\-S\-U to occur at some point in the future. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_ac584d04fb3e91b3327a3a1dc7b355acc}{schedule\-\_\-local\-\_\-msu\-\_\-init\-\_\-call} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$dest, struct timespec $\ast$interval, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Schedules a call to a local M\-S\-U to occur at some point in the future. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_a164f22e6f1fbc36a6ae0076ad2f5510e}{init\-\_\-call\-\_\-local\-\_\-msu} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$dest, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Enqueues a new message in the queue of a local M\-S\-U. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_a9ccc84ea297fb39ad94ab9b123707bca}{call\-\_\-msu\-\_\-type} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$dst\-\_\-type, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Sends an M\-S\-U message to a destination of the given type, utilizing the sending M\-S\-U's routing function. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_a36b93bdd128efaa184fd8ea72e81281d}{init\-\_\-call\-\_\-msu\-\_\-type} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$dst\-\_\-type, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Sends an M\-S\-U message to a destination of the specified type. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_a29854e126b4449f2cdee9640f6d95403}{call\-\_\-msu\-\_\-endpoint} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$endpoint\-\_\-type, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Sends an M\-S\-U message to a speicific destination, either local or remote. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_a5aed804144b3c163880b4331564b345a}{init\-\_\-call\-\_\-msu\-\_\-endpoint} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$endpoint\-\_\-type, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key, size\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Sends an M\-S\-U message to a specific destination, either local or remote. \end{DoxyCompactList}\item 
+int \hyperlink{msu__calls_8c_a4283a29b7a985052f6192deb133bd3fc}{call\-\_\-msu\-\_\-error} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$endpoint\-\_\-type, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, size\-\_\-t data\-\_\-size, void $\ast$data)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Defines methods used for calling M\-S\-Us from other M\-S\-Us. 
+
+Definition in file \hyperlink{msu__calls_8c_source}{msu\-\_\-calls.\-c}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{msu__calls_8c_a7c3637860498f50232de906d947e9ea5}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!call\-\_\-local\-\_\-msu@{call\-\_\-local\-\_\-msu}}
+\index{call\-\_\-local\-\_\-msu@{call\-\_\-local\-\_\-msu}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{call\-\_\-local\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int call\-\_\-local\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{dest, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_a7c3637860498f50232de906d947e9ea5}
+
+
+Enqueues a message in the queue of a local M\-S\-U. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em dest} & The M\-S\-U to receive the message \\
+\hline
+{\em hdr} & The header of the message received by the sender. To be modified with provinance and used in routing decisions \\
+\hline
+{\em data\-\_\-size} & Size of the data to be enqueued to the next M\-S\-U \\
+\hline
+{\em data} & The data to be enqueued to the next M\-S\-U \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 77 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_a29854e126b4449f2cdee9640f6d95403}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!call\-\_\-msu\-\_\-endpoint@{call\-\_\-msu\-\_\-endpoint}}
+\index{call\-\_\-msu\-\_\-endpoint@{call\-\_\-msu\-\_\-endpoint}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{call\-\_\-msu\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int call\-\_\-msu\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{endpoint\-\_\-type, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_a29854e126b4449f2cdee9640f6d95403}
+
+
+Sends an M\-S\-U message to a speicific destination, either local or remote. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em endpoint} & The endpoint to which the message is to be delivered \\
+\hline
+{\em endpoint\-\_\-type} & The M\-S\-U type of the endpoint to receive the message \\
+\hline
+{\em hdr} & The header of the M\-S\-U message received by the sender \\
+\hline
+{\em data\-\_\-size} & The size of the sending data \\
+\hline
+{\em data} & The data sent \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 217 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_a4283a29b7a985052f6192deb133bd3fc}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!call\-\_\-msu\-\_\-error@{call\-\_\-msu\-\_\-error}}
+\index{call\-\_\-msu\-\_\-error@{call\-\_\-msu\-\_\-error}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{call\-\_\-msu\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}int call\-\_\-msu\-\_\-error (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{endpoint\-\_\-type, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_a4283a29b7a985052f6192deb133bd3fc}
+
+
+Definition at line 271 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_a9ccc84ea297fb39ad94ab9b123707bca}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!call\-\_\-msu\-\_\-type@{call\-\_\-msu\-\_\-type}}
+\index{call\-\_\-msu\-\_\-type@{call\-\_\-msu\-\_\-type}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{call\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}int call\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{dst\-\_\-type, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_a9ccc84ea297fb39ad94ab9b123707bca}
+
+
+Sends an M\-S\-U message to a destination of the given type, utilizing the sending M\-S\-U's routing function. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em dst\-\_\-type} & The M\-S\-U type to receive the message \\
+\hline
+{\em hdr} & The header to be used in routing, passed on from the sender's received message \\
+\hline
+{\em data\-\_\-size} & Size of the data to be enqueued \\
+\hline
+{\em data} & The data to be enqueued \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 146 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_ab2f90d3fca6b078821621c8db75c9dd7}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!enqueue\-\_\-for\-\_\-remote\-\_\-send@{enqueue\-\_\-for\-\_\-remote\-\_\-send}}
+\index{enqueue\-\_\-for\-\_\-remote\-\_\-send@{enqueue\-\_\-for\-\_\-remote\-\_\-send}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{enqueue\-\_\-for\-\_\-remote\-\_\-send}]{\setlength{\rightskip}{0pt plus 5cm}static int enqueue\-\_\-for\-\_\-remote\-\_\-send (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{dst\-\_\-type, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{dst}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{msu__calls_8c_ab2f90d3fca6b078821621c8db75c9dd7}
+
+
+Calls type-\/specific M\-S\-U serialization function and enqueues data into main thread queue so it can be forwarded to remote M\-S\-U. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msg} & Message to be enqueued to the remote M\-S\-U \\
+\hline
+{\em dst\-\_\-type} & M\-S\-U type of the destination \\
+\hline
+{\em dst} & The specific M\-S\-U destination \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 40 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_a164f22e6f1fbc36a6ae0076ad2f5510e}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!init\-\_\-call\-\_\-local\-\_\-msu@{init\-\_\-call\-\_\-local\-\_\-msu}}
+\index{init\-\_\-call\-\_\-local\-\_\-msu@{init\-\_\-call\-\_\-local\-\_\-msu}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{init\-\_\-call\-\_\-local\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-call\-\_\-local\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{dest, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_a164f22e6f1fbc36a6ae0076ad2f5510e}
+
+
+Enqueues a new message in the queue of a local M\-S\-U. 
+
+This function is identical to {\ttfamily \hyperlink{msu__calls_8h_a7c3637860498f50232de906d947e9ea5}{call\-\_\-local\-\_\-msu()}} with the exception that it creates the required header from the specified message key. It is to be used for initial enqueueing rather than existing message passsing
+
+
+\begin{DoxyParams}{Parameters}
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em dest} & The M\-S\-U to receive the message \\
+\hline
+{\em key} & The key to assign to the header of the new M\-S\-U message \\
+\hline
+{\em data\-\_\-size} & Size of the data to be enqueued to the next M\-S\-U \\
+\hline
+{\em data} & the data to be enqueued to the next M\-S\-U \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 134 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_a5aed804144b3c163880b4331564b345a}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!init\-\_\-call\-\_\-msu\-\_\-endpoint@{init\-\_\-call\-\_\-msu\-\_\-endpoint}}
+\index{init\-\_\-call\-\_\-msu\-\_\-endpoint@{init\-\_\-call\-\_\-msu\-\_\-endpoint}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{init\-\_\-call\-\_\-msu\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-call\-\_\-msu\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{endpoint\-\_\-type, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_a5aed804144b3c163880b4331564b345a}
+
+
+Sends an M\-S\-U message to a specific destination, either local or remote. 
+
+This function is identical to \hyperlink{msu__calls_8h_a29854e126b4449f2cdee9640f6d95403}{call\-\_\-msu\-\_\-endpoint} with the exception that it constructs the header for the message and is to be used for initial enqueues. 
+\begin{DoxyParams}{Parameters}
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em endpoint} & The endpoint to which the message is to be delivered \\
+\hline
+{\em endpoint\-\_\-type} & The M\-S\-U type of the endpoint to receive the message \\
+\hline
+{\em hdr} & The header of the M\-S\-U message received by the sender \\
+\hline
+{\em data\-\_\-size} & The size of the sending data \\
+\hline
+{\em data} & The data sent \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 258 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_a36b93bdd128efaa184fd8ea72e81281d}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!init\-\_\-call\-\_\-msu\-\_\-type@{init\-\_\-call\-\_\-msu\-\_\-type}}
+\index{init\-\_\-call\-\_\-msu\-\_\-type@{init\-\_\-call\-\_\-msu\-\_\-type}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{init\-\_\-call\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-call\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{dst\-\_\-type, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_a36b93bdd128efaa184fd8ea72e81281d}
+
+
+Sends an M\-S\-U message to a destination of the specified type. 
+
+This function is identical to \hyperlink{msu__calls_8h_a9ccc84ea297fb39ad94ab9b123707bca}{call\-\_\-msu\-\_\-type} with the exception that it performs header initialization. To be used when performing an initial enqueue, rather than continuing a chain of enqueues. 
+\begin{DoxyParams}{Parameters}
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em dst\-\_\-type} & The M\-S\-U type to receive the message \\
+\hline
+{\em key} & The key to assign to the message header \\
+\hline
+{\em data\-\_\-size} & The size of the data to be enqueued \\
+\hline
+{\em data} & The data to be enqueued \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 205 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_ac3f7836a45ce403bbe885f0f05e8268b}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!schedule\-\_\-local\-\_\-msu\-\_\-call@{schedule\-\_\-local\-\_\-msu\-\_\-call}}
+\index{schedule\-\_\-local\-\_\-msu\-\_\-call@{schedule\-\_\-local\-\_\-msu\-\_\-call}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{schedule\-\_\-local\-\_\-msu\-\_\-call}]{\setlength{\rightskip}{0pt plus 5cm}int schedule\-\_\-local\-\_\-msu\-\_\-call (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{dest, }
+\item[{struct timespec $\ast$}]{interval, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_ac3f7836a45ce403bbe885f0f05e8268b}
+
+
+Schedules a call to a local M\-S\-U to occur at some point in the future. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em dest} & The M\-S\-U to which the message should be delivered \\
+\hline
+{\em interval} & The amount of time later at which the M\-S\-U should be called \\
+\hline
+{\em hdr} & The header of the M\-S\-U messge received by the sender \\
+\hline
+{\em data\-\_\-size} & The size of the sending data \\
+\hline
+{\em data} & the data sent \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 97 of file msu\-\_\-calls.\-c.
+
+\hypertarget{msu__calls_8c_ac584d04fb3e91b3327a3a1dc7b355acc}{\index{msu\-\_\-calls.\-c@{msu\-\_\-calls.\-c}!schedule\-\_\-local\-\_\-msu\-\_\-init\-\_\-call@{schedule\-\_\-local\-\_\-msu\-\_\-init\-\_\-call}}
+\index{schedule\-\_\-local\-\_\-msu\-\_\-init\-\_\-call@{schedule\-\_\-local\-\_\-msu\-\_\-init\-\_\-call}!msu_calls.c@{msu\-\_\-calls.\-c}}
+\subsubsection[{schedule\-\_\-local\-\_\-msu\-\_\-init\-\_\-call}]{\setlength{\rightskip}{0pt plus 5cm}int schedule\-\_\-local\-\_\-msu\-\_\-init\-\_\-call (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{dest, }
+\item[{struct timespec $\ast$}]{interval, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key, }
+\item[{size\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{msu__calls_8c_ac584d04fb3e91b3327a3a1dc7b355acc}
+
+
+Schedules a call to a local M\-S\-U to occur at some point in the future. 
+
+Note\-: This function is identical to \hyperlink{msu__calls_8h_ac3f7836a45ce403bbe885f0f05e8268b}{schedule\-\_\-local\-\_\-msu\-\_\-call}, but is meant for times when the message flow is just beginning, and is to be used for initial enqueues.
+
+
+\begin{DoxyParams}{Parameters}
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em dest} & The M\-S\-U to which the message should be delivered \\
+\hline
+{\em interval} & The amount of time later at which the M\-S\-U should be called \\
+\hline
+{\em hdr} & The header of the M\-S\-U messge received by the sender \\
+\hline
+{\em data\-\_\-size} & The size of the sending data \\
+\hline
+{\em data} & the data sent \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 121 of file msu\-\_\-calls.\-c.
+

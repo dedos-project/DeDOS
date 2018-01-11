@@ -1,0 +1,75 @@
+\hypertarget{structsock__msu__state}{\section{sock\-\_\-msu\-\_\-state Struct Reference}
+\label{structsock__msu__state}\index{sock\-\_\-msu\-\_\-state@{sock\-\_\-msu\-\_\-state}}
+}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structsock__msu__state_a7621ea37a55e4419bd2e35da3be10ae3}{sock\-\_\-fd}
+\item 
+int \hyperlink{structsock__msu__state_ad759ccb29fb3de7b6dda139dbde0e825}{epoll\-\_\-fd}
+\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{structsock__msu__state_a041ff140d8b0451b98418ea68dc4f62c}{self}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$ \hyperlink{structsock__msu__state_a89ea075e5eae4953216654fa556522cb}{default\-\_\-target}
+\item 
+struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} \hyperlink{structsock__msu__state_ab195dc5130a98fdf868543dc6e153fcb}{hdr\-\_\-mask} \mbox{[}65536\mbox{]}
+\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{structsock__msu__state_a316dd9a4f75911daa33496088766b3da}{destinations} \mbox{[}65536\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 38 of file socket\-\_\-msu.\-c.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structsock__msu__state_a89ea075e5eae4953216654fa556522cb}{\index{sock\-\_\-msu\-\_\-state@{sock\-\_\-msu\-\_\-state}!default\-\_\-target@{default\-\_\-target}}
+\index{default\-\_\-target@{default\-\_\-target}!sock_msu_state@{sock\-\_\-msu\-\_\-state}}
+\subsubsection[{default\-\_\-target}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type}$\ast$ sock\-\_\-msu\-\_\-state\-::default\-\_\-target}}\label{structsock__msu__state_a89ea075e5eae4953216654fa556522cb}
+
+
+Definition at line 42 of file socket\-\_\-msu.\-c.
+
+\hypertarget{structsock__msu__state_a316dd9a4f75911daa33496088766b3da}{\index{sock\-\_\-msu\-\_\-state@{sock\-\_\-msu\-\_\-state}!destinations@{destinations}}
+\index{destinations@{destinations}!sock_msu_state@{sock\-\_\-msu\-\_\-state}}
+\subsubsection[{destinations}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ sock\-\_\-msu\-\_\-state\-::destinations\mbox{[}65536\mbox{]}}}\label{structsock__msu__state_a316dd9a4f75911daa33496088766b3da}
+
+
+Definition at line 44 of file socket\-\_\-msu.\-c.
+
+\hypertarget{structsock__msu__state_ad759ccb29fb3de7b6dda139dbde0e825}{\index{sock\-\_\-msu\-\_\-state@{sock\-\_\-msu\-\_\-state}!epoll\-\_\-fd@{epoll\-\_\-fd}}
+\index{epoll\-\_\-fd@{epoll\-\_\-fd}!sock_msu_state@{sock\-\_\-msu\-\_\-state}}
+\subsubsection[{epoll\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int sock\-\_\-msu\-\_\-state\-::epoll\-\_\-fd}}\label{structsock__msu__state_ad759ccb29fb3de7b6dda139dbde0e825}
+
+
+Definition at line 40 of file socket\-\_\-msu.\-c.
+
+\hypertarget{structsock__msu__state_ab195dc5130a98fdf868543dc6e153fcb}{\index{sock\-\_\-msu\-\_\-state@{sock\-\_\-msu\-\_\-state}!hdr\-\_\-mask@{hdr\-\_\-mask}}
+\index{hdr\-\_\-mask@{hdr\-\_\-mask}!sock_msu_state@{sock\-\_\-msu\-\_\-state}}
+\subsubsection[{hdr\-\_\-mask}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-msg\-\_\-hdr} sock\-\_\-msu\-\_\-state\-::hdr\-\_\-mask\mbox{[}65536\mbox{]}}}\label{structsock__msu__state_ab195dc5130a98fdf868543dc6e153fcb}
+
+
+Definition at line 43 of file socket\-\_\-msu.\-c.
+
+\hypertarget{structsock__msu__state_a041ff140d8b0451b98418ea68dc4f62c}{\index{sock\-\_\-msu\-\_\-state@{sock\-\_\-msu\-\_\-state}!self@{self}}
+\index{self@{self}!sock_msu_state@{sock\-\_\-msu\-\_\-state}}
+\subsubsection[{self}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ sock\-\_\-msu\-\_\-state\-::self}}\label{structsock__msu__state_a041ff140d8b0451b98418ea68dc4f62c}
+
+
+Definition at line 41 of file socket\-\_\-msu.\-c.
+
+\hypertarget{structsock__msu__state_a7621ea37a55e4419bd2e35da3be10ae3}{\index{sock\-\_\-msu\-\_\-state@{sock\-\_\-msu\-\_\-state}!sock\-\_\-fd@{sock\-\_\-fd}}
+\index{sock\-\_\-fd@{sock\-\_\-fd}!sock_msu_state@{sock\-\_\-msu\-\_\-state}}
+\subsubsection[{sock\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int sock\-\_\-msu\-\_\-state\-::sock\-\_\-fd}}\label{structsock__msu__state_a7621ea37a55e4419bd2e35da3be10ae3}
+
+
+Definition at line 39 of file socket\-\_\-msu.\-c.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/msus/\hyperlink{socket__msu_8c}{socket\-\_\-msu.\-c}\end{DoxyCompactItemize}

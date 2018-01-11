@@ -1,0 +1,129 @@
+\hypertarget{runtime_2runtime__communication_8h}{\section{src/runtime/runtime\-\_\-communication.h File Reference}
+\label{runtime_2runtime__communication_8h}\index{src/runtime/runtime\-\_\-communication.\-h@{src/runtime/runtime\-\_\-communication.\-h}}
+}
+
+
+Socket-\/handling between runtimes.  
+
+
+{\ttfamily \#include \char`\"{}inter\-\_\-runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+{\ttfamily \#include $<$netinet/ip.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{runtime_2runtime__communication_8h_abf20b8eeba309eb0b39ac354013b3cea}{send\-\_\-to\-\_\-peer} (unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, struct \hyperlink{structinter__runtime__msg__hdr}{inter\-\_\-runtime\-\_\-msg\-\_\-hdr} $\ast$hdr, void $\ast$payload)
+\begin{DoxyCompactList}\small\item\em Sends a message to the peer runtime with the provided id. \end{DoxyCompactList}\item 
+int \hyperlink{runtime_2runtime__communication_8h_aff19ef73d79753399712ec868d32083b}{connect\-\_\-to\-\_\-runtime\-\_\-peer} (unsigned int id, struct sockaddr\-\_\-in $\ast$addr)
+\begin{DoxyCompactList}\small\item\em Innitiates a connection to a runtime peer with the given I\-D at the given address. \end{DoxyCompactList}\item 
+int \hyperlink{runtime_2runtime__communication_8h_a996a8409f641888af096783de477971d}{add\-\_\-runtime\-\_\-peer} (unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, int fd)
+\begin{DoxyCompactList}\small\item\em Adds the file descriptor to the list of current runtime peers. \end{DoxyCompactList}\item 
+int \hyperlink{runtime_2runtime__communication_8h_a9356e109ee4ffc14e9998bad7f354625}{init\-\_\-runtime\-\_\-socket} (int listen\-\_\-port)
+\begin{DoxyCompactList}\small\item\em Initializes the socket listening for incoming connections. \end{DoxyCompactList}\item 
+int \hyperlink{runtime_2runtime__communication_8h_aca961198c98444757434b21f1d5aeab0}{handle\-\_\-runtime\-\_\-communication} (int fd)
+\begin{DoxyCompactList}\small\item\em Reads a message off of the provided file descriptor as if it is coming from a runtime peer. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Socket-\/handling between runtimes. 
+
+Definition in file \hyperlink{runtime_2runtime__communication_8h_source}{runtime\-\_\-communication.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{runtime_2runtime__communication_8h_a996a8409f641888af096783de477971d}{\index{runtime/runtime\-\_\-communication.\-h@{runtime/runtime\-\_\-communication.\-h}!add\-\_\-runtime\-\_\-peer@{add\-\_\-runtime\-\_\-peer}}
+\index{add\-\_\-runtime\-\_\-peer@{add\-\_\-runtime\-\_\-peer}!runtime/runtime_communication.h@{runtime/runtime\-\_\-communication.\-h}}
+\subsubsection[{add\-\_\-runtime\-\_\-peer}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-runtime\-\_\-peer (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{runtime\-\_\-id, }
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{runtime_2runtime__communication_8h_a996a8409f641888af096783de477971d}
+
+
+Adds the file descriptor to the list of current runtime peers. 
+
+
+
+Definition at line 97 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{runtime_2runtime__communication_8h_aff19ef73d79753399712ec868d32083b}{\index{runtime/runtime\-\_\-communication.\-h@{runtime/runtime\-\_\-communication.\-h}!connect\-\_\-to\-\_\-runtime\-\_\-peer@{connect\-\_\-to\-\_\-runtime\-\_\-peer}}
+\index{connect\-\_\-to\-\_\-runtime\-\_\-peer@{connect\-\_\-to\-\_\-runtime\-\_\-peer}!runtime/runtime_communication.h@{runtime/runtime\-\_\-communication.\-h}}
+\subsubsection[{connect\-\_\-to\-\_\-runtime\-\_\-peer}]{\setlength{\rightskip}{0pt plus 5cm}int connect\-\_\-to\-\_\-runtime\-\_\-peer (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id, }
+\item[{struct sockaddr\-\_\-in $\ast$}]{addr}
+\end{DoxyParamCaption}
+)}}\label{runtime_2runtime__communication_8h_aff19ef73d79753399712ec868d32083b}
+
+
+Innitiates a connection to a runtime peer with the given I\-D at the given address. 
+
+Only to be called from the output thread \begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 150 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{runtime_2runtime__communication_8h_aca961198c98444757434b21f1d5aeab0}{\index{runtime/runtime\-\_\-communication.\-h@{runtime/runtime\-\_\-communication.\-h}!handle\-\_\-runtime\-\_\-communication@{handle\-\_\-runtime\-\_\-communication}}
+\index{handle\-\_\-runtime\-\_\-communication@{handle\-\_\-runtime\-\_\-communication}!runtime/runtime_communication.h@{runtime/runtime\-\_\-communication.\-h}}
+\subsubsection[{handle\-\_\-runtime\-\_\-communication}]{\setlength{\rightskip}{0pt plus 5cm}int handle\-\_\-runtime\-\_\-communication (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{runtime_2runtime__communication_8h_aca961198c98444757434b21f1d5aeab0}
+
+
+Reads a message off of the provided file descriptor as if it is coming from a runtime peer. 
+
+
+
+Definition at line 286 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{runtime_2runtime__communication_8h_a9356e109ee4ffc14e9998bad7f354625}{\index{runtime/runtime\-\_\-communication.\-h@{runtime/runtime\-\_\-communication.\-h}!init\-\_\-runtime\-\_\-socket@{init\-\_\-runtime\-\_\-socket}}
+\index{init\-\_\-runtime\-\_\-socket@{init\-\_\-runtime\-\_\-socket}!runtime/runtime_communication.h@{runtime/runtime\-\_\-communication.\-h}}
+\subsubsection[{init\-\_\-runtime\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-runtime\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{listen\-\_\-port}
+\end{DoxyParamCaption}
+)}}\label{runtime_2runtime__communication_8h_a9356e109ee4ffc14e9998bad7f354625}
+
+
+Initializes the socket listening for incoming connections. 
+
+
+
+Definition at line 177 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{runtime_2runtime__communication_8h_abf20b8eeba309eb0b39ac354013b3cea}{\index{runtime/runtime\-\_\-communication.\-h@{runtime/runtime\-\_\-communication.\-h}!send\-\_\-to\-\_\-peer@{send\-\_\-to\-\_\-peer}}
+\index{send\-\_\-to\-\_\-peer@{send\-\_\-to\-\_\-peer}!runtime/runtime_communication.h@{runtime/runtime\-\_\-communication.\-h}}
+\subsubsection[{send\-\_\-to\-\_\-peer}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-to\-\_\-peer (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{runtime\-\_\-id, }
+\item[{struct {\bf inter\-\_\-runtime\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{void $\ast$}]{payload}
+\end{DoxyParamCaption}
+)}}\label{runtime_2runtime__communication_8h_abf20b8eeba309eb0b39ac354013b3cea}
+
+
+Sends a message to the peer runtime with the provided id. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em runtime\-\_\-id} & The I\-D of the runtime to which the message is to be sent \\
+\hline
+{\em hdr} & The header of the inter-\/runtime message \\
+\hline
+{\em payload} & The message to be sent \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 64 of file runtime\-\_\-communication.\-c.
+

@@ -1,0 +1,75 @@
+\hypertarget{socket__msu_8h}{\section{src/msus/socket\-\_\-msu.h File Reference}
+\label{socket__msu_8h}\index{src/msus/socket\-\_\-msu.\-h@{src/msus/socket\-\_\-msu.\-h}}
+}
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structsocket__msg}{socket\-\_\-msg}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{socket__msu_8h_a43eb46325a50ebfccaf52f73ed518868}{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D}~10
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{socket__msu_8h_a413a391f9bd69cb9c0a0a6fa042e9e6f}{msu\-\_\-monitor\-\_\-fd} (int fd, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} events, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$destination, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr)
+\item 
+int \hyperlink{socket__msu_8h_aed7b227570383ccc2e33c48eb9ccde4e}{msu\-\_\-remove\-\_\-fd\-\_\-monitor} (int fd)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{socket__msu_8h_a2eb4f0d50be9c696f83dba63e13be2e1}{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{socket__msu_8h_a43eb46325a50ebfccaf52f73ed518868}{\index{socket\-\_\-msu.\-h@{socket\-\_\-msu.\-h}!S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D@{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D}}
+\index{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D@{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D}!socket_msu.h@{socket\-\_\-msu.\-h}}
+\subsubsection[{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D~10}}\label{socket__msu_8h_a43eb46325a50ebfccaf52f73ed518868}
+
+
+Definition at line 33 of file socket\-\_\-msu.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{socket__msu_8h_a413a391f9bd69cb9c0a0a6fa042e9e6f}{\index{socket\-\_\-msu.\-h@{socket\-\_\-msu.\-h}!msu\-\_\-monitor\-\_\-fd@{msu\-\_\-monitor\-\_\-fd}}
+\index{msu\-\_\-monitor\-\_\-fd@{msu\-\_\-monitor\-\_\-fd}!socket_msu.h@{socket\-\_\-msu.\-h}}
+\subsubsection[{msu\-\_\-monitor\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-monitor\-\_\-fd (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{{\bf uint32\-\_\-t}}]{events, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{destination, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr}
+\end{DoxyParamCaption}
+)}}\label{socket__msu_8h_a413a391f9bd69cb9c0a0a6fa042e9e6f}
+
+
+Definition at line 58 of file socket\-\_\-msu.\-c.
+
+\hypertarget{socket__msu_8h_aed7b227570383ccc2e33c48eb9ccde4e}{\index{socket\-\_\-msu.\-h@{socket\-\_\-msu.\-h}!msu\-\_\-remove\-\_\-fd\-\_\-monitor@{msu\-\_\-remove\-\_\-fd\-\_\-monitor}}
+\index{msu\-\_\-remove\-\_\-fd\-\_\-monitor@{msu\-\_\-remove\-\_\-fd\-\_\-monitor}!socket_msu.h@{socket\-\_\-msu.\-h}}
+\subsubsection[{msu\-\_\-remove\-\_\-fd\-\_\-monitor}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-remove\-\_\-fd\-\_\-monitor (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{socket__msu_8h_aed7b227570383ccc2e33c48eb9ccde4e}
+
+
+Definition at line 87 of file socket\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{socket__msu_8h_a2eb4f0d50be9c696f83dba63e13be2e1}{\index{socket\-\_\-msu.\-h@{socket\-\_\-msu.\-h}!S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!socket_msu.h@{socket\-\_\-msu.\-h}}
+\subsubsection[{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{socket__msu_8h_a2eb4f0d50be9c696f83dba63e13be2e1}
+
+
+Definition at line 34 of file socket\-\_\-msu.\-h.
+

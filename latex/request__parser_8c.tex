@@ -1,0 +1,97 @@
+\hypertarget{request__parser_8c}{\section{src/msus/webserver/request\-\_\-parser.c File Reference}
+\label{request__parser_8c}\index{src/msus/webserver/request\-\_\-parser.\-c@{src/msus/webserver/request\-\_\-parser.\-c}}
+}
+{\ttfamily \#include \char`\"{}webserver/connection-\/handler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{request__parser_8c_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{request__parser_8c_a1b444ab0c70b741fc28ca88638efaf94}{url\-\_\-callback} (\hyperlink{structhttp__parser}{http\-\_\-parser} $\ast$parser, const char $\ast$at, size\-\_\-t length)
+\item 
+static int \hyperlink{request__parser_8c_a3b503baab1f58d0e2d65bdb31623d5d8}{headers\-\_\-complete\-\_\-callback} (\hyperlink{structhttp__parser}{http\-\_\-parser} $\ast$parser)
+\item 
+static int \hyperlink{request__parser_8c_a311172f9ed5f5898b47182cab2396b0b}{header\-\_\-field\-\_\-or\-\_\-value\-\_\-callback} (\hyperlink{structhttp__parser}{http\-\_\-parser} $\ast$parser, const char $\ast$at, size\-\_\-t length)
+\item 
+void \hyperlink{request__parser_8c_ad0013d12e7a5aec1b3e7d9680f63d70a}{init\-\_\-parser\-\_\-state} (struct \hyperlink{structparser__state}{parser\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{request__parser_8c_a304bab171246bd43b18b85fb833a0c57}{parse\-\_\-http} (struct \hyperlink{structparser__state}{parser\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state}, char $\ast$buf, ssize\-\_\-t bytes)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{request__parser_8c_addf5ec070e9499d36b7f2009ce736076}{\index{request\-\_\-parser.\-c@{request\-\_\-parser.\-c}!U\-N\-U\-S\-E\-D@{U\-N\-U\-S\-E\-D}}
+\index{U\-N\-U\-S\-E\-D@{U\-N\-U\-S\-E\-D}!request_parser.c@{request\-\_\-parser.\-c}}
+\subsubsection[{U\-N\-U\-S\-E\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\-N\-U\-S\-E\-D}}\label{request__parser_8c_addf5ec070e9499d36b7f2009ce736076}
+
+
+Definition at line 26 of file request\-\_\-parser.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{request__parser_8c_a311172f9ed5f5898b47182cab2396b0b}{\index{request\-\_\-parser.\-c@{request\-\_\-parser.\-c}!header\-\_\-field\-\_\-or\-\_\-value\-\_\-callback@{header\-\_\-field\-\_\-or\-\_\-value\-\_\-callback}}
+\index{header\-\_\-field\-\_\-or\-\_\-value\-\_\-callback@{header\-\_\-field\-\_\-or\-\_\-value\-\_\-callback}!request_parser.c@{request\-\_\-parser.\-c}}
+\subsubsection[{header\-\_\-field\-\_\-or\-\_\-value\-\_\-callback}]{\setlength{\rightskip}{0pt plus 5cm}static int header\-\_\-field\-\_\-or\-\_\-value\-\_\-callback (
+\begin{DoxyParamCaption}
+\item[{{\bf http\-\_\-parser} $\ast$}]{parser, }
+\item[{const char $\ast$}]{at, }
+\item[{size\-\_\-t}]{length}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{request__parser_8c_a311172f9ed5f5898b47182cab2396b0b}
+
+
+Definition at line 45 of file request\-\_\-parser.\-c.
+
+\hypertarget{request__parser_8c_a3b503baab1f58d0e2d65bdb31623d5d8}{\index{request\-\_\-parser.\-c@{request\-\_\-parser.\-c}!headers\-\_\-complete\-\_\-callback@{headers\-\_\-complete\-\_\-callback}}
+\index{headers\-\_\-complete\-\_\-callback@{headers\-\_\-complete\-\_\-callback}!request_parser.c@{request\-\_\-parser.\-c}}
+\subsubsection[{headers\-\_\-complete\-\_\-callback}]{\setlength{\rightskip}{0pt plus 5cm}static int headers\-\_\-complete\-\_\-callback (
+\begin{DoxyParamCaption}
+\item[{{\bf http\-\_\-parser} $\ast$}]{parser}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{request__parser_8c_a3b503baab1f58d0e2d65bdb31623d5d8}
+
+
+Definition at line 38 of file request\-\_\-parser.\-c.
+
+\hypertarget{request__parser_8c_ad0013d12e7a5aec1b3e7d9680f63d70a}{\index{request\-\_\-parser.\-c@{request\-\_\-parser.\-c}!init\-\_\-parser\-\_\-state@{init\-\_\-parser\-\_\-state}}
+\index{init\-\_\-parser\-\_\-state@{init\-\_\-parser\-\_\-state}!request_parser.c@{request\-\_\-parser.\-c}}
+\subsubsection[{init\-\_\-parser\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-parser\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf parser\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{request__parser_8c_ad0013d12e7a5aec1b3e7d9680f63d70a}
+
+
+Definition at line 58 of file request\-\_\-parser.\-c.
+
+\hypertarget{request__parser_8c_a304bab171246bd43b18b85fb833a0c57}{\index{request\-\_\-parser.\-c@{request\-\_\-parser.\-c}!parse\-\_\-http@{parse\-\_\-http}}
+\index{parse\-\_\-http@{parse\-\_\-http}!request_parser.c@{request\-\_\-parser.\-c}}
+\subsubsection[{parse\-\_\-http}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-\_\-http (
+\begin{DoxyParamCaption}
+\item[{struct {\bf parser\-\_\-state} $\ast$}]{state, }
+\item[{char $\ast$}]{buf, }
+\item[{ssize\-\_\-t}]{bytes}
+\end{DoxyParamCaption}
+)}}\label{request__parser_8c_a304bab171246bd43b18b85fb833a0c57}
+
+
+Definition at line 68 of file request\-\_\-parser.\-c.
+
+\hypertarget{request__parser_8c_a1b444ab0c70b741fc28ca88638efaf94}{\index{request\-\_\-parser.\-c@{request\-\_\-parser.\-c}!url\-\_\-callback@{url\-\_\-callback}}
+\index{url\-\_\-callback@{url\-\_\-callback}!request_parser.c@{request\-\_\-parser.\-c}}
+\subsubsection[{url\-\_\-callback}]{\setlength{\rightskip}{0pt plus 5cm}static int url\-\_\-callback (
+\begin{DoxyParamCaption}
+\item[{{\bf http\-\_\-parser} $\ast$}]{parser, }
+\item[{const char $\ast$}]{at, }
+\item[{size\-\_\-t}]{length}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{request__parser_8c_a1b444ab0c70b741fc28ca88638efaf94}
+
+
+Definition at line 29 of file request\-\_\-parser.\-c.
+

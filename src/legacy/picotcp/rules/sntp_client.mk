@@ -1,0 +1,2 @@
+OPTIONS+=-DPICO_SUPPORT_SNTP_CLIENT
+MOD_OBJ+=$(LIBBASE)/pico_sntp_client.o

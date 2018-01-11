@@ -1,0 +1,145 @@
+\hypertarget{structdfg__msu__type}{\section{dfg\-\_\-msu\-\_\-type Struct Reference}
+\label{structdfg__msu__type}\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}}
+}
+
+
+A type of M\-S\-U.  
+
+
+
+
+{\ttfamily \#include $<$dfg.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structdfg__msu__type_a25713ab319d35972ecb502b8c998d5c2}{id}
+\begin{DoxyCompactList}\small\item\em A unique identifier for the M\-S\-U type. \end{DoxyCompactList}\item 
+char \hyperlink{structdfg__msu__type_a59f34013c4d7464817de4fd3c9bebec9}{name} \mbox{[}32\mbox{]}
+\begin{DoxyCompactList}\small\item\em A name describing the function of the M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__meta__routing}{dfg\-\_\-meta\-\_\-routing} \hyperlink{structdfg__msu__type_ac9778638f0dc0bd6e0139f2181ea5f13}{meta\-\_\-routing}
+\begin{DoxyCompactList}\small\item\em Which types of msus route to/from this M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__dependency}{dfg\-\_\-dependency} $\ast$ \hyperlink{structdfg__msu__type_ae99af1194aeded6b89928e96dfb054d4}{dependencies} \mbox{[}32\mbox{]}
+\begin{DoxyCompactList}\small\item\em These M\-S\-U types must be present in order for this M\-S\-U type to be cloned. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__msu__type_a7415469cbf6b8a856375aa211c4732c2}{n\-\_\-dependencies}
+\begin{DoxyCompactList}\small\item\em The number of elements in \hyperlink{structdfg__msu__type_ae99af1194aeded6b89928e96dfb054d4}{dfg\-\_\-msu\-\_\-type\-::dependencies}. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$ \hyperlink{structdfg__msu__type_aac780324344ec376a3dc3d18704ca7c6}{instances} \mbox{[}512\mbox{]}
+\begin{DoxyCompactList}\small\item\em Each instance of this M\-S\-U type. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__msu__type_ae98668b711040cd8cb5d537bb9a3f0cd}{n\-\_\-instances}
+\begin{DoxyCompactList}\small\item\em The number of instances of this M\-S\-U type. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__msu__type_a21fd4fb5929221c5420e32f54507b33c}{cloneable}
+\begin{DoxyCompactList}\small\item\em If cloneable == N, this M\-S\-U can be cloned on runtimes numbered up to and including N. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__msu__type_ac40772c8600420c05ee16ff9ea527c95}{colocation\-\_\-group}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A type of M\-S\-U. 
+
+Shared across all instances of that M\-S\-U type 
+
+Definition at line 176 of file dfg.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structdfg__msu__type_a21fd4fb5929221c5420e32f54507b33c}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!cloneable@{cloneable}}
+\index{cloneable@{cloneable}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{cloneable}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-msu\-\_\-type\-::cloneable}}\label{structdfg__msu__type_a21fd4fb5929221c5420e32f54507b33c}
+
+
+If cloneable == N, this M\-S\-U can be cloned on runtimes numbered up to and including N. 
+
+
+
+Definition at line 189 of file dfg.\-h.
+
+\hypertarget{structdfg__msu__type_ac40772c8600420c05ee16ff9ea527c95}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!colocation\-\_\-group@{colocation\-\_\-group}}
+\index{colocation\-\_\-group@{colocation\-\_\-group}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{colocation\-\_\-group}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-msu\-\_\-type\-::colocation\-\_\-group}}\label{structdfg__msu__type_ac40772c8600420c05ee16ff9ea527c95}
+
+
+Definition at line 191 of file dfg.\-h.
+
+\hypertarget{structdfg__msu__type_ae99af1194aeded6b89928e96dfb054d4}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!dependencies@{dependencies}}
+\index{dependencies@{dependencies}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{dependencies}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-dependency}$\ast$ dfg\-\_\-msu\-\_\-type\-::dependencies\mbox{[}32\mbox{]}}}\label{structdfg__msu__type_ae99af1194aeded6b89928e96dfb054d4}
+
+
+These M\-S\-U types must be present in order for this M\-S\-U type to be cloned. 
+
+
+
+Definition at line 183 of file dfg.\-h.
+
+\hypertarget{structdfg__msu__type_a25713ab319d35972ecb502b8c998d5c2}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!id@{id}}
+\index{id@{id}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-msu\-\_\-type\-::id}}\label{structdfg__msu__type_a25713ab319d35972ecb502b8c998d5c2}
+
+
+A unique identifier for the M\-S\-U type. 
+
+Should match that defined in the M\-S\-U's header 
+
+Definition at line 177 of file dfg.\-h.
+
+\hypertarget{structdfg__msu__type_aac780324344ec376a3dc3d18704ca7c6}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!instances@{instances}}
+\index{instances@{instances}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{instances}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu}$\ast$ dfg\-\_\-msu\-\_\-type\-::instances\mbox{[}512\mbox{]}}}\label{structdfg__msu__type_aac780324344ec376a3dc3d18704ca7c6}
+
+
+Each instance of this M\-S\-U type. 
+
+
+
+Definition at line 186 of file dfg.\-h.
+
+\hypertarget{structdfg__msu__type_ac9778638f0dc0bd6e0139f2181ea5f13}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!meta\-\_\-routing@{meta\-\_\-routing}}
+\index{meta\-\_\-routing@{meta\-\_\-routing}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{meta\-\_\-routing}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-meta\-\_\-routing} dfg\-\_\-msu\-\_\-type\-::meta\-\_\-routing}}\label{structdfg__msu__type_ac9778638f0dc0bd6e0139f2181ea5f13}
+
+
+Which types of msus route to/from this M\-S\-U. 
+
+
+
+Definition at line 180 of file dfg.\-h.
+
+\hypertarget{structdfg__msu__type_a7415469cbf6b8a856375aa211c4732c2}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!n\-\_\-dependencies@{n\-\_\-dependencies}}
+\index{n\-\_\-dependencies@{n\-\_\-dependencies}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{n\-\_\-dependencies}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-msu\-\_\-type\-::n\-\_\-dependencies}}\label{structdfg__msu__type_a7415469cbf6b8a856375aa211c4732c2}
+
+
+The number of elements in \hyperlink{structdfg__msu__type_ae99af1194aeded6b89928e96dfb054d4}{dfg\-\_\-msu\-\_\-type\-::dependencies}. 
+
+
+
+Definition at line 184 of file dfg.\-h.
+
+\hypertarget{structdfg__msu__type_ae98668b711040cd8cb5d537bb9a3f0cd}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!n\-\_\-instances@{n\-\_\-instances}}
+\index{n\-\_\-instances@{n\-\_\-instances}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{n\-\_\-instances}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-msu\-\_\-type\-::n\-\_\-instances}}\label{structdfg__msu__type_ae98668b711040cd8cb5d537bb9a3f0cd}
+
+
+The number of instances of this M\-S\-U type. 
+
+
+
+Definition at line 187 of file dfg.\-h.
+
+\hypertarget{structdfg__msu__type_a59f34013c4d7464817de4fd3c9bebec9}{\index{dfg\-\_\-msu\-\_\-type@{dfg\-\_\-msu\-\_\-type}!name@{name}}
+\index{name@{name}!dfg_msu_type@{dfg\-\_\-msu\-\_\-type}}
+\subsubsection[{name}]{\setlength{\rightskip}{0pt plus 5cm}char dfg\-\_\-msu\-\_\-type\-::name\mbox{[}32\mbox{]}}}\label{structdfg__msu__type_a59f34013c4d7464817de4fd3c9bebec9}
+
+
+A name describing the function of the M\-S\-U. 
+
+
+
+Definition at line 179 of file dfg.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{dfg_8h}{dfg.\-h}\end{DoxyCompactItemize}

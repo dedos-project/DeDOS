@@ -1,0 +1,762 @@
+\hypertarget{routing_8c}{\section{src/runtime/routing.c File Reference}
+\label{routing_8c}\index{src/runtime/routing.\-c@{src/runtime/routing.\-c}}
+}
+
+
+Functions for routing M\-S\-U messages between M\-S\-Us.  
+
+
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unused\-\_\-def.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$limits.\-h$>$}\\*
+{\ttfamily \#include $<$pthread.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structrouting__table}{routing\-\_\-table}
+\begin{DoxyCompactList}\small\item\em The core of the routing system, the routing table lists a route's destinations. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{routing_8c_a8d1d021149476c6b7c66b33fff927fa6}{M\-A\-X\-\_\-\-D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}~128
+\begin{DoxyCompactList}\small\item\em The maximum number of destinations a route can have. \end{DoxyCompactList}\item 
+\#define \hyperlink{routing_8c_af487533eb383a2ccfda6764026d48c33}{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D}~10000
+\begin{DoxyCompactList}\small\item\em The maximum I\-D that may be assigned to a route. \end{DoxyCompactList}\item 
+\#define \hyperlink{routing_8c_a3746a44fd099241ef57cf1e40ebe683e}{print\-\_\-routing\-\_\-table}(t)
+\item 
+\#define \hyperlink{routing_8c_abb54f6d2bf2ad98a945347b96cc78b65}{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-Q\-\_\-\-S\-I\-Z\-E}~I\-N\-T\-\_\-\-M\-A\-X
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{routing_8c_a96f72b1504f9446cc46224f105421949}{read\-\_\-lock} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table)
+\begin{DoxyCompactList}\small\item\em Simple wrapper to lock a routing table for reading. \end{DoxyCompactList}\item 
+static int \hyperlink{routing_8c_a82e032426cfd02c4fc1627faa7d5c4c9}{write\-\_\-lock} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table)
+\begin{DoxyCompactList}\small\item\em Simple wrapper to lock a routing table for writing. \end{DoxyCompactList}\item 
+static int \hyperlink{routing_8c_ac187523d34ad15b482f79ec50210917b}{unlock} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table)
+\begin{DoxyCompactList}\small\item\em Simple wrapper to unlock a locked routing table. \end{DoxyCompactList}\item 
+static int \hyperlink{routing_8c_a1c43f19f42d6c51046cbaaef49504bb3}{find\-\_\-value\-\_\-index} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} value)
+\begin{DoxyCompactList}\small\item\em Searches through the entries in the routing table, returning the index of the first key which surpasses the provided value. \end{DoxyCompactList}\item 
+static int \hyperlink{routing_8c_a10703df57aa86b4fcd91911dc820af20}{find\-\_\-id\-\_\-index} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Finds the index of the entry in the routing table with the destination that has the provided msu id. \end{DoxyCompactList}\item 
+static int \hyperlink{routing_8c_af7deb89e25231768d36bd08989371848}{rm\-\_\-routing\-\_\-table\-\_\-entry} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Removes a destination from the routing table. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_a8be9448e3f9893aa70b722a8ea4e583a}{add\-\_\-routing\-\_\-table\-\_\-entry} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$dest, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key)
+\begin{DoxyCompactList}\small\item\em Adds a (copy of the) destination to a routing table. \end{DoxyCompactList}\item 
+static int \hyperlink{routing_8c_a219e3bf1f5e6d902dc0637892d2fa09d}{alter\-\_\-routing\-\_\-table\-\_\-entry} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int msu\-\_\-id, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} new\-\_\-key)
+\begin{DoxyCompactList}\small\item\em Modifies the key associated with an existing destination in a routing table. \end{DoxyCompactList}\item 
+struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$ \hyperlink{routing_8c_a29686db424c14047472b8af884bb1d12}{init\-\_\-routing\-\_\-table} (int route\-\_\-id, int type\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Initializes and returns a new routing table. \end{DoxyCompactList}\item 
+static struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$ \hyperlink{routing_8c_ac80286801d95ba7a850f6782081c32d4}{get\-\_\-routing\-\_\-table} (int route\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Gets the routing table associated with the route\-\_\-id. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_a1e0801e863d8b098cf254722055a87c9}{init\-\_\-route} (int route\-\_\-id, int type\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Initializes a new route with the given route\-\_\-id and type\-\_\-id. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_ab38d138296385e8072c91e6dcb40d0c7}{get\-\_\-shortest\-\_\-queue\-\_\-endpoint} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Gets the local endpoint from a route with the shortest queue length. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_a902dc65f11a09acdb584ae4fd4826674}{get\-\_\-endpoint\-\_\-by\-\_\-index} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int index, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Gets endpoint witih given index in route set. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_add72ff42f980c871753d8b98215aab4d}{get\-\_\-endpoint\-\_\-by\-\_\-id} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int msu\-\_\-id, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Gets endpoint with the given M\-S\-U I\-D in the provided route. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_a9cb0da845b542a9affb9075927af100d}{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoints, int n\-\_\-endpoints)
+\begin{DoxyCompactList}\small\item\em Gets all of the endpoints in the provided routing table with the right runtime id. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_a419c38e56683f27d1406d71e2e697ddc}{get\-\_\-n\-\_\-endpoints} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table)
+\item 
+int \hyperlink{routing_8c_a99f6378f65fffa352c3998bb3f97dbfb}{get\-\_\-route\-\_\-endpoint} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Gets the endpoint associated with the given key in the provided route. \end{DoxyCompactList}\item 
+struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$ \hyperlink{routing_8c_a86494b03a26bfb46fdc070b6961b47de}{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set} (struct \hyperlink{structroute__set}{route\-\_\-set} $\ast$set, int type\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Gets the route from the provided array of routes which has the correct type I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_a13b3cd8ef49074daf5b4d453c17348ac}{add\-\_\-route\-\_\-endpoint} (int route\-\_\-id, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} endpoint, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key)
+\begin{DoxyCompactList}\small\item\em Adds an endpoint to the route with the given I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_ac411d3a1f72933be63db7d3c01fd6181}{remove\-\_\-route\-\_\-endpoint} (int route\-\_\-id, int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Removes destination from route with given I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_ab1718cec32cc293750b298a178075174}{modify\-\_\-route\-\_\-endpoint} (int route\-\_\-id, int msu\-\_\-id, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} new\-\_\-key)
+\begin{DoxyCompactList}\small\item\em Modifies key associated with M\-S\-U in route. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_af28581c955d70183c6dd6327b71784b7}{add\-\_\-route\-\_\-to\-\_\-set} (struct \hyperlink{structroute__set}{route\-\_\-set} $\ast$set, int route\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Adds a route to a set of routes. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_a7bfa5c057f831fb87630be184d8332a4}{rm\-\_\-route\-\_\-from\-\_\-set} (struct \hyperlink{structroute__set}{route\-\_\-set} $\ast$set, int route\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Removes a route from a set of routes. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8c_aedf8a035a80203c23ef060a497c1b90f}{init\-\_\-msu\-\_\-endpoint} (int msu\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Initializes an endpoint structure to point to the relevant msu. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$ \hyperlink{routing_8c_a8f09a68e3338171389d90fb939b293da}{all\-\_\-routes} \mbox{[}10000\mbox{]}
+\begin{DoxyCompactList}\small\item\em All of the created routes in this runtime. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Functions for routing M\-S\-U messages between M\-S\-Us. 
+
+Definition in file \hyperlink{routing_8c_source}{routing.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{routing_8c_a8d1d021149476c6b7c66b33fff927fa6}{\index{routing.\-c@{routing.\-c}!M\-A\-X\-\_\-\-D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S@{M\-A\-X\-\_\-\-D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}}
+\index{M\-A\-X\-\_\-\-D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S@{M\-A\-X\-\_\-\-D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}!routing.c@{routing.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-D\-E\-S\-T\-I\-N\-A\-T\-I\-O\-N\-S~128}}\label{routing_8c_a8d1d021149476c6b7c66b33fff927fa6}
+
+
+The maximum number of destinations a route can have. 
+
+
+
+Definition at line 37 of file routing.\-c.
+
+\hypertarget{routing_8c_abb54f6d2bf2ad98a945347b96cc78b65}{\index{routing.\-c@{routing.\-c}!M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-Q\-\_\-\-S\-I\-Z\-E@{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-Q\-\_\-\-S\-I\-Z\-E}}
+\index{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-Q\-\_\-\-S\-I\-Z\-E@{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-Q\-\_\-\-S\-I\-Z\-E}!routing.c@{routing.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-Q\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-Q\-\_\-\-S\-I\-Z\-E~I\-N\-T\-\_\-\-M\-A\-X}}\label{routing_8c_abb54f6d2bf2ad98a945347b96cc78b65}
+
+
+Definition at line 297 of file routing.\-c.
+
+\hypertarget{routing_8c_af487533eb383a2ccfda6764026d48c33}{\index{routing.\-c@{routing.\-c}!M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D@{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D}}
+\index{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D@{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D}!routing.c@{routing.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D~10000}}\label{routing_8c_af487533eb383a2ccfda6764026d48c33}
+
+
+The maximum I\-D that may be assigned to a route. 
+
+
+
+Definition at line 40 of file routing.\-c.
+
+\hypertarget{routing_8c_a3746a44fd099241ef57cf1e40ebe683e}{\index{routing.\-c@{routing.\-c}!print\-\_\-routing\-\_\-table@{print\-\_\-routing\-\_\-table}}
+\index{print\-\_\-routing\-\_\-table@{print\-\_\-routing\-\_\-table}!routing.c@{routing.\-c}}
+\subsubsection[{print\-\_\-routing\-\_\-table}]{\setlength{\rightskip}{0pt plus 5cm}\#define print\-\_\-routing\-\_\-table(
+\begin{DoxyParamCaption}
+\item[{}]{t}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a3746a44fd099241ef57cf1e40ebe683e}
+
+
+Definition at line 68 of file routing.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{routing_8c_a13b3cd8ef49074daf5b4d453c17348ac}{\index{routing.\-c@{routing.\-c}!add\-\_\-route\-\_\-endpoint@{add\-\_\-route\-\_\-endpoint}}
+\index{add\-\_\-route\-\_\-endpoint@{add\-\_\-route\-\_\-endpoint}!routing.c@{routing.\-c}}
+\subsubsection[{add\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint}}]{endpoint, }
+\item[{{\bf uint32\-\_\-t}}]{key}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a13b3cd8ef49074daf5b4d453c17348ac}
+
+
+Adds an endpoint to the route with the given I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route\-\_\-id} & I\-D of the route to which the endpoint is added \\
+\hline
+{\em endpoint} & the endpoint to be added \\
+\hline
+{\em key} & Key to associate with endpoint \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 409 of file routing.\-c.
+
+\hypertarget{routing_8c_af28581c955d70183c6dd6327b71784b7}{\index{routing.\-c@{routing.\-c}!add\-\_\-route\-\_\-to\-\_\-set@{add\-\_\-route\-\_\-to\-\_\-set}}
+\index{add\-\_\-route\-\_\-to\-\_\-set@{add\-\_\-route\-\_\-to\-\_\-set}!routing.c@{routing.\-c}}
+\subsubsection[{add\-\_\-route\-\_\-to\-\_\-set}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-route\-\_\-to\-\_\-set (
+\begin{DoxyParamCaption}
+\item[{struct {\bf route\-\_\-set} $\ast$}]{set, }
+\item[{int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_af28581c955d70183c6dd6327b71784b7}
+
+
+Adds a route to a set of routes. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \hyperlink{structroute__set}{route\-\_\-set}} & Set to add the route to \\
+\hline
+{\em route\-\_\-id} & I\-D of the route to add \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 450 of file routing.\-c.
+
+\hypertarget{routing_8c_a8be9448e3f9893aa70b722a8ea4e583a}{\index{routing.\-c@{routing.\-c}!add\-\_\-routing\-\_\-table\-\_\-entry@{add\-\_\-routing\-\_\-table\-\_\-entry}}
+\index{add\-\_\-routing\-\_\-table\-\_\-entry@{add\-\_\-routing\-\_\-table\-\_\-entry}!routing.c@{routing.\-c}}
+\subsubsection[{add\-\_\-routing\-\_\-table\-\_\-entry}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-routing\-\_\-table\-\_\-entry (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{dest, }
+\item[{{\bf uint32\-\_\-t}}]{key}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a8be9448e3f9893aa70b722a8ea4e583a}
+
+
+Adds a (copy of the) destination to a routing table. 
+
+Note\-: Kept non-\/static but excluded from header so it can be used for testing 
+\begin{DoxyParams}{Parameters}
+{\em table} & The table to which the destination is to be added \\
+\hline
+{\em destination} & The endpoint to add (a copy is made) \\
+\hline
+{\em key} & The key to be associated with this destination \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 174 of file routing.\-c.
+
+\hypertarget{routing_8c_a219e3bf1f5e6d902dc0637892d2fa09d}{\index{routing.\-c@{routing.\-c}!alter\-\_\-routing\-\_\-table\-\_\-entry@{alter\-\_\-routing\-\_\-table\-\_\-entry}}
+\index{alter\-\_\-routing\-\_\-table\-\_\-entry@{alter\-\_\-routing\-\_\-table\-\_\-entry}!routing.c@{routing.\-c}}
+\subsubsection[{alter\-\_\-routing\-\_\-table\-\_\-entry}]{\setlength{\rightskip}{0pt plus 5cm}static int alter\-\_\-routing\-\_\-table\-\_\-entry (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{msu\-\_\-id, }
+\item[{{\bf uint32\-\_\-t}}]{new\-\_\-key}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_a219e3bf1f5e6d902dc0637892d2fa09d}
+
+
+Modifies the key associated with an existing destination in a routing table. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & The routing table to modify \\
+\hline
+{\em msu\-\_\-id} & The I\-D of the destination to modify \\
+\hline
+{\em new\-\_\-key} & The new key that should be associated with this destination \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 209 of file routing.\-c.
+
+\hypertarget{routing_8c_a10703df57aa86b4fcd91911dc820af20}{\index{routing.\-c@{routing.\-c}!find\-\_\-id\-\_\-index@{find\-\_\-id\-\_\-index}}
+\index{find\-\_\-id\-\_\-index@{find\-\_\-id\-\_\-index}!routing.c@{routing.\-c}}
+\subsubsection[{find\-\_\-id\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}static int find\-\_\-id\-\_\-index (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_a10703df57aa86b4fcd91911dc820af20}
+
+
+Finds the index of the entry in the routing table with the destination that has the provided msu id. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & the table to search \\
+\hline
+{\em msu\-\_\-id} & the I\-D to search for in the table \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the index of the destination with the appropriate msu id 
+\end{DoxyReturn}
+
+
+Definition at line 130 of file routing.\-c.
+
+\hypertarget{routing_8c_a1c43f19f42d6c51046cbaaef49504bb3}{\index{routing.\-c@{routing.\-c}!find\-\_\-value\-\_\-index@{find\-\_\-value\-\_\-index}}
+\index{find\-\_\-value\-\_\-index@{find\-\_\-value\-\_\-index}!routing.c@{routing.\-c}}
+\subsubsection[{find\-\_\-value\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}static int find\-\_\-value\-\_\-index (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{{\bf uint32\-\_\-t}}]{value}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_a1c43f19f42d6c51046cbaaef49504bb3}
+
+
+Searches through the entries in the routing table, returning the index of the first key which surpasses the provided value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & the table to search \\
+\hline
+{\em value} & the value to use in the search \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the index of the destination with the appropriate value 
+\end{DoxyReturn}
+
+
+Definition at line 110 of file routing.\-c.
+
+\hypertarget{routing_8c_add72ff42f980c871753d8b98215aab4d}{\index{routing.\-c@{routing.\-c}!get\-\_\-endpoint\-\_\-by\-\_\-id@{get\-\_\-endpoint\-\_\-by\-\_\-id}}
+\index{get\-\_\-endpoint\-\_\-by\-\_\-id@{get\-\_\-endpoint\-\_\-by\-\_\-id}!routing.c@{routing.\-c}}
+\subsubsection[{get\-\_\-endpoint\-\_\-by\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-endpoint\-\_\-by\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{msu\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_add72ff42f980c871753d8b98215aab4d}
+
+
+Gets endpoint with the given M\-S\-U I\-D in the provided route. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & Route to get the endpoint from \\
+\hline
+{\em msu\-\_\-id} & M\-S\-U I\-D to search for in the route set \\
+\hline
+{\em endpoint} & Points to appropriate endpoint on success \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 344 of file routing.\-c.
+
+\hypertarget{routing_8c_a902dc65f11a09acdb584ae4fd4826674}{\index{routing.\-c@{routing.\-c}!get\-\_\-endpoint\-\_\-by\-\_\-index@{get\-\_\-endpoint\-\_\-by\-\_\-index}}
+\index{get\-\_\-endpoint\-\_\-by\-\_\-index@{get\-\_\-endpoint\-\_\-by\-\_\-index}!routing.c@{routing.\-c}}
+\subsubsection[{get\-\_\-endpoint\-\_\-by\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-endpoint\-\_\-by\-\_\-index (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{index, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a902dc65f11a09acdb584ae4fd4826674}
+
+
+Gets endpoint witih given index in route set. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & the route to get the endpoint from \\
+\hline
+{\em index} & Index of the endpoint to retrieve \\
+\hline
+{\em endpoint} & Points to appropriate endpoint on success \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 332 of file routing.\-c.
+
+\hypertarget{routing_8c_a9cb0da845b542a9affb9075927af100d}{\index{routing.\-c@{routing.\-c}!get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id@{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id}}
+\index{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id@{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id}!routing.c@{routing.\-c}}
+\subsubsection[{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{runtime\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoints, }
+\item[{int}]{n\-\_\-endpoints}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a9cb0da845b542a9affb9075927af100d}
+
+
+Gets all of the endpoints in the provided routing table with the right runtime id. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & The table to search for endpoints \\
+\hline
+{\em runtime\-\_\-id} & The I\-D of the runtime on which endpoints must reside \\
+\hline
+{\em endpoints} & An array of endpoints to be filled. \\
+\hline
+{\em n\-\_\-endpoints} & The amount of endpoints allocated in {\ttfamily endpoints} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The number of endpoints stored in {\ttfamily endpoints}, or -\/1 if n\-\_\-endpoints is too low 
+\end{DoxyReturn}
+
+
+Definition at line 359 of file routing.\-c.
+
+\hypertarget{routing_8c_a419c38e56683f27d1406d71e2e697ddc}{\index{routing.\-c@{routing.\-c}!get\-\_\-n\-\_\-endpoints@{get\-\_\-n\-\_\-endpoints}}
+\index{get\-\_\-n\-\_\-endpoints@{get\-\_\-n\-\_\-endpoints}!routing.c@{routing.\-c}}
+\subsubsection[{get\-\_\-n\-\_\-endpoints}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-n\-\_\-endpoints (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a419c38e56683f27d1406d71e2e697ddc}
+
+
+Definition at line 378 of file routing.\-c.
+
+\hypertarget{routing_8c_a99f6378f65fffa352c3998bb3f97dbfb}{\index{routing.\-c@{routing.\-c}!get\-\_\-route\-\_\-endpoint@{get\-\_\-route\-\_\-endpoint}}
+\index{get\-\_\-route\-\_\-endpoint@{get\-\_\-route\-\_\-endpoint}!routing.c@{routing.\-c}}
+\subsubsection[{get\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{{\bf uint32\-\_\-t}}]{key, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a99f6378f65fffa352c3998bb3f97dbfb}
+
+
+Gets the endpoint associated with the given key in the provided route. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route} & Route to search for key \\
+\hline
+{\em key} & The key with which to search the route set  endpoint Points to the appropraite endpoint on success \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 385 of file routing.\-c.
+
+\hypertarget{routing_8c_ac80286801d95ba7a850f6782081c32d4}{\index{routing.\-c@{routing.\-c}!get\-\_\-routing\-\_\-table@{get\-\_\-routing\-\_\-table}}
+\index{get\-\_\-routing\-\_\-table@{get\-\_\-routing\-\_\-table}!routing.c@{routing.\-c}}
+\subsubsection[{get\-\_\-routing\-\_\-table}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf routing\-\_\-table}$\ast$ get\-\_\-routing\-\_\-table (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_ac80286801d95ba7a850f6782081c32d4}
+
+
+Gets the routing table associated with the route\-\_\-id. 
+
+\begin{DoxyReturn}{Returns}
+A pointer to the routing table if it exists, or N\-U\-L\-L 
+\end{DoxyReturn}
+
+
+Definition at line 267 of file routing.\-c.
+
+\hypertarget{routing_8c_ab38d138296385e8072c91e6dcb40d0c7}{\index{routing.\-c@{routing.\-c}!get\-\_\-shortest\-\_\-queue\-\_\-endpoint@{get\-\_\-shortest\-\_\-queue\-\_\-endpoint}}
+\index{get\-\_\-shortest\-\_\-queue\-\_\-endpoint@{get\-\_\-shortest\-\_\-queue\-\_\-endpoint}!routing.c@{routing.\-c}}
+\subsubsection[{get\-\_\-shortest\-\_\-queue\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-shortest\-\_\-queue\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{{\bf uint32\-\_\-t}}]{key, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_ab38d138296385e8072c91e6dcb40d0c7}
+
+
+Gets the local endpoint from a route with the shortest queue length. 
+
+Ignores enpoints on remote runtimes. 
+\begin{DoxyParams}{Parameters}
+{\em table} & The route to search for the shortest queue length \\
+\hline
+{\em key} & Used as a tiebreaker in the case of multiple M\-S\-Us with same queue length \\
+\hline
+{\em endpoint} & Points to appropriate endpoint on success \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 299 of file routing.\-c.
+
+\hypertarget{routing_8c_a86494b03a26bfb46fdc070b6961b47de}{\index{routing.\-c@{routing.\-c}!get\-\_\-type\-\_\-from\-\_\-route\-\_\-set@{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set}}
+\index{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set@{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set}!routing.c@{routing.\-c}}
+\subsubsection[{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf routing\-\_\-table}$\ast$ get\-\_\-type\-\_\-from\-\_\-route\-\_\-set (
+\begin{DoxyParamCaption}
+\item[{struct {\bf route\-\_\-set} $\ast$}]{routes, }
+\item[{int}]{type\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a86494b03a26bfb46fdc070b6961b47de}
+
+
+Gets the route from the provided array of routes which has the correct type I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em routes} & Pointer to array of routes to search \\
+\hline
+{\em n\-\_\-routes} & Number of routes in route array \\
+\hline
+{\em type\-\_\-id} & Type I\-D to search for \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+pointer to the routing table with correct type I\-D on success, else N\-U\-L\-L 
+\end{DoxyReturn}
+
+
+Definition at line 399 of file routing.\-c.
+
+\hypertarget{routing_8c_aedf8a035a80203c23ef060a497c1b90f}{\index{routing.\-c@{routing.\-c}!init\-\_\-msu\-\_\-endpoint@{init\-\_\-msu\-\_\-endpoint}}
+\index{init\-\_\-msu\-\_\-endpoint@{init\-\_\-msu\-\_\-endpoint}!routing.c@{routing.\-c}}
+\subsubsection[{init\-\_\-msu\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-msu\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id, }
+\item[{int}]{runtime\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_aedf8a035a80203c23ef060a497c1b90f}
+
+
+Initializes an endpoint structure to point to the relevant msu. 
+
+
+
+Definition at line 483 of file routing.\-c.
+
+\hypertarget{routing_8c_a1e0801e863d8b098cf254722055a87c9}{\index{routing.\-c@{routing.\-c}!init\-\_\-route@{init\-\_\-route}}
+\index{init\-\_\-route@{init\-\_\-route}!routing.c@{routing.\-c}}
+\subsubsection[{init\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{int}]{type\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a1e0801e863d8b098cf254722055a87c9}
+
+
+Initializes a new route with the given route\-\_\-id and type\-\_\-id. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route\-\_\-id} & The I\-D to assign to the new route \\
+\hline
+{\em type\-\_\-id} & The Type I\-D to assign to the new route \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 276 of file routing.\-c.
+
+\hypertarget{routing_8c_a29686db424c14047472b8af884bb1d12}{\index{routing.\-c@{routing.\-c}!init\-\_\-routing\-\_\-table@{init\-\_\-routing\-\_\-table}}
+\index{init\-\_\-routing\-\_\-table@{init\-\_\-routing\-\_\-table}!routing.c@{routing.\-c}}
+\subsubsection[{init\-\_\-routing\-\_\-table}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf routing\-\_\-table}$\ast$ init\-\_\-routing\-\_\-table (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{int}]{type\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a29686db424c14047472b8af884bb1d12}
+
+
+Initializes and returns a new routing table. 
+
+Note\-: Not for external access! Use \hyperlink{routing_8c_a1e0801e863d8b098cf254722055a87c9}{init\-\_\-route()} Note\-: Kept non-\/static (but exclued from header) so it can be accessed during testing \begin{DoxyReturn}{Returns}
+The new routing table 
+\end{DoxyReturn}
+
+
+Definition at line 250 of file routing.\-c.
+
+\hypertarget{routing_8c_ab1718cec32cc293750b298a178075174}{\index{routing.\-c@{routing.\-c}!modify\-\_\-route\-\_\-endpoint@{modify\-\_\-route\-\_\-endpoint}}
+\index{modify\-\_\-route\-\_\-endpoint@{modify\-\_\-route\-\_\-endpoint}!routing.c@{routing.\-c}}
+\subsubsection[{modify\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int modify\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{int}]{msu\-\_\-id, }
+\item[{{\bf uint32\-\_\-t}}]{new\-\_\-key}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_ab1718cec32cc293750b298a178075174}
+
+
+Modifies key associated with M\-S\-U in route. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route\-\_\-id} & The I\-D of the route to modify \\
+\hline
+{\em msu\-\_\-id} & I\-D of M\-S\-U to modify \\
+\hline
+{\em new\-\_\-key} & New key to associate with M\-S\-U in route \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 434 of file routing.\-c.
+
+\hypertarget{routing_8c_a96f72b1504f9446cc46224f105421949}{\index{routing.\-c@{routing.\-c}!read\-\_\-lock@{read\-\_\-lock}}
+\index{read\-\_\-lock@{read\-\_\-lock}!routing.c@{routing.\-c}}
+\subsubsection[{read\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}static int read\-\_\-lock (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_a96f72b1504f9446cc46224f105421949}
+
+
+Simple wrapper to lock a routing table for reading. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & the routing table to be locked for reading \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 81 of file routing.\-c.
+
+\hypertarget{routing_8c_ac411d3a1f72933be63db7d3c01fd6181}{\index{routing.\-c@{routing.\-c}!remove\-\_\-route\-\_\-endpoint@{remove\-\_\-route\-\_\-endpoint}}
+\index{remove\-\_\-route\-\_\-endpoint@{remove\-\_\-route\-\_\-endpoint}!routing.c@{routing.\-c}}
+\subsubsection[{remove\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int remove\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_ac411d3a1f72933be63db7d3c01fd6181}
+
+
+Removes destination from route with given I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route\-\_\-id} & I\-D of the route from which the endpoint is removed \\
+\hline
+{\em msu\-\_\-id} & I\-D of the msu to remove \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 419 of file routing.\-c.
+
+\hypertarget{routing_8c_a7bfa5c057f831fb87630be184d8332a4}{\index{routing.\-c@{routing.\-c}!rm\-\_\-route\-\_\-from\-\_\-set@{rm\-\_\-route\-\_\-from\-\_\-set}}
+\index{rm\-\_\-route\-\_\-from\-\_\-set@{rm\-\_\-route\-\_\-from\-\_\-set}!routing.c@{routing.\-c}}
+\subsubsection[{rm\-\_\-route\-\_\-from\-\_\-set}]{\setlength{\rightskip}{0pt plus 5cm}int rm\-\_\-route\-\_\-from\-\_\-set (
+\begin{DoxyParamCaption}
+\item[{struct {\bf route\-\_\-set} $\ast$}]{set, }
+\item[{int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8c_a7bfa5c057f831fb87630be184d8332a4}
+
+
+Removes a route from a set of routes. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \hyperlink{structroute__set}{route\-\_\-set}} & Set to remove the route from \\
+\hline
+{\em route\-\_\-id} & I\-D of the route to remove \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 465 of file routing.\-c.
+
+\hypertarget{routing_8c_af7deb89e25231768d36bd08989371848}{\index{routing.\-c@{routing.\-c}!rm\-\_\-routing\-\_\-table\-\_\-entry@{rm\-\_\-routing\-\_\-table\-\_\-entry}}
+\index{rm\-\_\-routing\-\_\-table\-\_\-entry@{rm\-\_\-routing\-\_\-table\-\_\-entry}!routing.c@{routing.\-c}}
+\subsubsection[{rm\-\_\-routing\-\_\-table\-\_\-entry}]{\setlength{\rightskip}{0pt plus 5cm}static int rm\-\_\-routing\-\_\-table\-\_\-entry (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_af7deb89e25231768d36bd08989371848}
+
+
+Removes a destination from the routing table. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & The table from which to remove the entry \\
+\hline
+{\em msu\-\_\-id} & The I\-D of the msu to remove from the table \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 144 of file routing.\-c.
+
+\hypertarget{routing_8c_ac187523d34ad15b482f79ec50210917b}{\index{routing.\-c@{routing.\-c}!unlock@{unlock}}
+\index{unlock@{unlock}!routing.c@{routing.\-c}}
+\subsubsection[{unlock}]{\setlength{\rightskip}{0pt plus 5cm}static int unlock (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_ac187523d34ad15b482f79ec50210917b}
+
+
+Simple wrapper to unlock a locked routing table. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & the routing table to be unlocked \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 99 of file routing.\-c.
+
+\hypertarget{routing_8c_a82e032426cfd02c4fc1627faa7d5c4c9}{\index{routing.\-c@{routing.\-c}!write\-\_\-lock@{write\-\_\-lock}}
+\index{write\-\_\-lock@{write\-\_\-lock}!routing.c@{routing.\-c}}
+\subsubsection[{write\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}static int write\-\_\-lock (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_a82e032426cfd02c4fc1627faa7d5c4c9}
+
+
+Simple wrapper to lock a routing table for writing. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & the routing table to be locked for writing \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 90 of file routing.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{routing_8c_a8f09a68e3338171389d90fb939b293da}{\index{routing.\-c@{routing.\-c}!all\-\_\-routes@{all\-\_\-routes}}
+\index{all\-\_\-routes@{all\-\_\-routes}!routing.c@{routing.\-c}}
+\subsubsection[{all\-\_\-routes}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf routing\-\_\-table}$\ast$ all\-\_\-routes\mbox{[}10000\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{routing_8c_a8f09a68e3338171389d90fb939b293da}
+
+
+All of the created routes in this runtime. 
+
+
+
+Definition at line 74 of file routing.\-c.
+

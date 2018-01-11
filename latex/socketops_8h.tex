@@ -1,0 +1,70 @@
+\hypertarget{socketops_8h}{\section{src/msus/webserver/socketops.h File Reference}
+\label{socketops_8h}\index{src/msus/webserver/socketops.\-h@{src/msus/webserver/socketops.\-h}}
+}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structsock__settings}{sock\-\_\-settings}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structsock__settings}{sock\-\_\-settings} $\ast$ \hyperlink{socketops_8h_a2dbee6277dea568b6574c9dc170fda11}{webserver\-\_\-sock\-\_\-settings} (int port)
+\item 
+int \hyperlink{socketops_8h_a1bacd7649200cdb61741f65c58f22480}{init\-\_\-socket} (struct \hyperlink{structsock__settings}{sock\-\_\-settings} $\ast$settings)
+\item 
+int \hyperlink{socketops_8h_ae422aa01cfa198e152e63563279c623f}{read\-\_\-socket} (int fd, char $\ast$buf, int $\ast$buf\-\_\-size)
+\item 
+int \hyperlink{socketops_8h_a8adf6d1493e431e295e644b6673be1f6}{write\-\_\-socket} (int fd, char $\ast$buf, int $\ast$buf\-\_\-size)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{socketops_8h_a1bacd7649200cdb61741f65c58f22480}{\index{socketops.\-h@{socketops.\-h}!init\-\_\-socket@{init\-\_\-socket}}
+\index{init\-\_\-socket@{init\-\_\-socket}!socketops.h@{socketops.\-h}}
+\subsubsection[{init\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{struct {\bf sock\-\_\-settings} $\ast$}]{settings}
+\end{DoxyParamCaption}
+)}}\label{socketops_8h_a1bacd7649200cdb61741f65c58f22480}
+
+
+Definition at line 43 of file socketops.\-c.
+
+\hypertarget{socketops_8h_ae422aa01cfa198e152e63563279c623f}{\index{socketops.\-h@{socketops.\-h}!read\-\_\-socket@{read\-\_\-socket}}
+\index{read\-\_\-socket@{read\-\_\-socket}!socketops.h@{socketops.\-h}}
+\subsubsection[{read\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int read\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{char $\ast$}]{buf, }
+\item[{int $\ast$}]{buf\-\_\-size}
+\end{DoxyParamCaption}
+)}}\label{socketops_8h_ae422aa01cfa198e152e63563279c623f}
+
+
+Definition at line 84 of file socketops.\-c.
+
+\hypertarget{socketops_8h_a2dbee6277dea568b6574c9dc170fda11}{\index{socketops.\-h@{socketops.\-h}!webserver\-\_\-sock\-\_\-settings@{webserver\-\_\-sock\-\_\-settings}}
+\index{webserver\-\_\-sock\-\_\-settings@{webserver\-\_\-sock\-\_\-settings}!socketops.h@{socketops.\-h}}
+\subsubsection[{webserver\-\_\-sock\-\_\-settings}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf sock\-\_\-settings}$\ast$ webserver\-\_\-sock\-\_\-settings (
+\begin{DoxyParamCaption}
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)}}\label{socketops_8h_a2dbee6277dea568b6574c9dc170fda11}
+
+
+Definition at line 36 of file socketops.\-c.
+
+\hypertarget{socketops_8h_a8adf6d1493e431e295e644b6673be1f6}{\index{socketops.\-h@{socketops.\-h}!write\-\_\-socket@{write\-\_\-socket}}
+\index{write\-\_\-socket@{write\-\_\-socket}!socketops.h@{socketops.\-h}}
+\subsubsection[{write\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int write\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{char $\ast$}]{buf, }
+\item[{int $\ast$}]{buf\-\_\-size}
+\end{DoxyParamCaption}
+)}}\label{socketops_8h_a8adf6d1493e431e295e644b6673be1f6}
+
+
+Definition at line 99 of file socketops.\-c.
+

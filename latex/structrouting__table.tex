@@ -1,0 +1,102 @@
+\hypertarget{structrouting__table}{\section{routing\-\_\-table Struct Reference}
+\label{structrouting__table}\index{routing\-\_\-table@{routing\-\_\-table}}
+}
+
+
+The core of the routing system, the routing table lists a route's destinations.  
+
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structrouting__table_a162359f4da0f31c95df59e2b51670d83}{id}
+\item 
+int \hyperlink{structrouting__table_a439ad2d1ec8a9d942bc3db95b02ea1a0}{type\-\_\-id}
+\begin{DoxyCompactList}\small\item\em The type-\/id associated with the destinations in this table. \end{DoxyCompactList}\item 
+pthread\-\_\-rwlock\-\_\-t \hyperlink{structrouting__table_acbdb86bbcf769654f18ad6b2bb6c61c4}{rwlock}
+\begin{DoxyCompactList}\small\item\em Protects access to the destinations so they cannot be changed while they are being read. \end{DoxyCompactList}\item 
+int \hyperlink{structrouting__table_a7d9a6d626a79a44bb58533c97ac9e7ce}{n\-\_\-endpoints}
+\begin{DoxyCompactList}\small\item\em The number of destinations this route contains. \end{DoxyCompactList}\item 
+\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} \hyperlink{structrouting__table_a488c5e77937df1e40c4b918093e50793}{keys} \mbox{[}128\mbox{]}
+\begin{DoxyCompactList}\small\item\em The keys associated with each of the destinations. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} \hyperlink{structrouting__table_a14e060336471c2720efcb502bdf0bce7}{endpoints} \mbox{[}128\mbox{]}
+\begin{DoxyCompactList}\small\item\em The destinations themselves. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The core of the routing system, the routing table lists a route's destinations. 
+
+The \hyperlink{structrouting__table}{routing\-\_\-table} is kept private so the rwlock can be enfoced. All destinations in a routing table must have the same type\-\_\-id. 
+
+Definition at line 47 of file routing.\-c.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structrouting__table_a14e060336471c2720efcb502bdf0bce7}{\index{routing\-\_\-table@{routing\-\_\-table}!endpoints@{endpoints}}
+\index{endpoints@{endpoints}!routing_table@{routing\-\_\-table}}
+\subsubsection[{endpoints}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-endpoint} routing\-\_\-table\-::endpoints\mbox{[}128\mbox{]}}}\label{structrouting__table_a14e060336471c2720efcb502bdf0bce7}
+
+
+The destinations themselves. 
+
+
+
+Definition at line 54 of file routing.\-c.
+
+\hypertarget{structrouting__table_a162359f4da0f31c95df59e2b51670d83}{\index{routing\-\_\-table@{routing\-\_\-table}!id@{id}}
+\index{id@{id}!routing_table@{routing\-\_\-table}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int routing\-\_\-table\-::id}}\label{structrouting__table_a162359f4da0f31c95df59e2b51670d83}
+
+
+Definition at line 48 of file routing.\-c.
+
+\hypertarget{structrouting__table_a488c5e77937df1e40c4b918093e50793}{\index{routing\-\_\-table@{routing\-\_\-table}!keys@{keys}}
+\index{keys@{keys}!routing_table@{routing\-\_\-table}}
+\subsubsection[{keys}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint32\-\_\-t} routing\-\_\-table\-::keys\mbox{[}128\mbox{]}}}\label{structrouting__table_a488c5e77937df1e40c4b918093e50793}
+
+
+The keys associated with each of the destinations. 
+
+
+
+Definition at line 53 of file routing.\-c.
+
+\hypertarget{structrouting__table_a7d9a6d626a79a44bb58533c97ac9e7ce}{\index{routing\-\_\-table@{routing\-\_\-table}!n\-\_\-endpoints@{n\-\_\-endpoints}}
+\index{n\-\_\-endpoints@{n\-\_\-endpoints}!routing_table@{routing\-\_\-table}}
+\subsubsection[{n\-\_\-endpoints}]{\setlength{\rightskip}{0pt plus 5cm}int routing\-\_\-table\-::n\-\_\-endpoints}}\label{structrouting__table_a7d9a6d626a79a44bb58533c97ac9e7ce}
+
+
+The number of destinations this route contains. 
+
+
+
+Definition at line 52 of file routing.\-c.
+
+\hypertarget{structrouting__table_acbdb86bbcf769654f18ad6b2bb6c61c4}{\index{routing\-\_\-table@{routing\-\_\-table}!rwlock@{rwlock}}
+\index{rwlock@{rwlock}!routing_table@{routing\-\_\-table}}
+\subsubsection[{rwlock}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-rwlock\-\_\-t routing\-\_\-table\-::rwlock}}\label{structrouting__table_acbdb86bbcf769654f18ad6b2bb6c61c4}
+
+
+Protects access to the destinations so they cannot be changed while they are being read. 
+
+
+
+Definition at line 50 of file routing.\-c.
+
+\hypertarget{structrouting__table_a439ad2d1ec8a9d942bc3db95b02ea1a0}{\index{routing\-\_\-table@{routing\-\_\-table}!type\-\_\-id@{type\-\_\-id}}
+\index{type\-\_\-id@{type\-\_\-id}!routing_table@{routing\-\_\-table}}
+\subsubsection[{type\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int routing\-\_\-table\-::type\-\_\-id}}\label{structrouting__table_a439ad2d1ec8a9d942bc3db95b02ea1a0}
+
+
+The type-\/id associated with the destinations in this table. 
+
+
+
+Definition at line 49 of file routing.\-c.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{routing_8c}{routing.\-c}\end{DoxyCompactItemize}

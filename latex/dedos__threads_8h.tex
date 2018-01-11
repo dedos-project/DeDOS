@@ -1,0 +1,229 @@
+\hypertarget{dedos__threads_8h}{\section{src/runtime/dedos\-\_\-threads.h File Reference}
+\label{dedos__threads_8h}\index{src/runtime/dedos\-\_\-threads.\-h@{src/runtime/dedos\-\_\-threads.\-h}}
+}
+
+
+Control spawned threads with message queue within De\-D\-O\-S.  
+
+
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$pthread.\-h$>$}\\*
+{\ttfamily \#include $<$semaphore.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}message\-\_\-queue.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structdedos__thread}{dedos\-\_\-thread}
+\begin{DoxyCompactList}\small\item\em Structure representing any thread within De\-D\-O\-S. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef void $\ast$($\ast$ \hyperlink{dedos__threads_8h_a05cf7cb0c2d44afe48767196d7554f55}{dedos\-\_\-thread\-\_\-init\-\_\-fn} )(struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread)
+\begin{DoxyCompactList}\small\item\em Typedef for an initialization function for a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. \end{DoxyCompactList}\item 
+typedef int($\ast$ \hyperlink{dedos__threads_8h_abc395397d24e50b8932e864465a17aa5}{dedos\-\_\-thread\-\_\-fn} )(struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread, void $\ast$init\-\_\-output)
+\begin{DoxyCompactList}\small\item\em Typedef for the function that should be called on a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. \end{DoxyCompactList}\item 
+typedef void($\ast$ \hyperlink{dedos__threads_8h_a8c7746e69f0ed91647b8d28e3e660c2a}{dedos\-\_\-thread\-\_\-destroy\-\_\-fn} )(struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread, void $\ast$init\-\_\-output)
+\begin{DoxyCompactList}\small\item\em Typedef for the destructor function for a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$ \hyperlink{dedos__threads_8h_ad2be2a452f4ee946b74f926d9b885af6}{get\-\_\-dedos\-\_\-thread} (int id)
+\begin{DoxyCompactList}\small\item\em Returns the \hyperlink{structdedos__thread}{dedos\-\_\-thread} with the given I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{dedos__threads_8h_aa336318af10f81d18bfd2ea9fb0ce45d}{start\-\_\-dedos\-\_\-thread} (\hyperlink{dedos__threads_8h_abc395397d24e50b8932e864465a17aa5}{dedos\-\_\-thread\-\_\-fn} thread\-\_\-fn, \hyperlink{dedos__threads_8h_a05cf7cb0c2d44afe48767196d7554f55}{dedos\-\_\-thread\-\_\-init\-\_\-fn} init\-\_\-fn, \hyperlink{dedos__threads_8h_a8c7746e69f0ed91647b8d28e3e660c2a}{dedos\-\_\-thread\-\_\-destroy\-\_\-fn} destroy\-\_\-fn, enum \hyperlink{dfg_8h_af31ca3002c5b769551da6f1183bafed5}{blocking\-\_\-mode} mode, int id, struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread)
+\begin{DoxyCompactList}\small\item\em Initilizes and starts execution of a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. \end{DoxyCompactList}\item 
+int \hyperlink{dedos__threads_8h_a84fe48f8c905bad9ee99509742472900}{dedos\-\_\-thread\-\_\-should\-\_\-exit} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread)
+\begin{DoxyCompactList}\small\item\em Returns 1 if the exit signal has been triggered, otherwise 0. \end{DoxyCompactList}\item 
+void \hyperlink{dedos__threads_8h_a97563d2c123c5d0c52088ae62c69dc7e}{dedos\-\_\-thread\-\_\-stop} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread)
+\begin{DoxyCompactList}\small\item\em Sets the exit signal for a thread, causing the main loop to quit. \end{DoxyCompactList}\item 
+void \hyperlink{dedos__threads_8h_a8149e98a49e985082afb18b9fe30e94d}{dedos\-\_\-thread\-\_\-join} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread)
+\begin{DoxyCompactList}\small\item\em Joins and destroys the \hyperlink{structdedos__thread}{dedos\-\_\-thread}. \end{DoxyCompactList}\item 
+int \hyperlink{dedos__threads_8h_a0e9f00b60e6fbcefadacb5f430abf8aa}{thread\-\_\-wait} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread, struct timespec $\ast$abs\-\_\-timeout)
+\begin{DoxyCompactList}\small\item\em To be called from the thread, causes it to wait until a message has been received or the timeout has been reached. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Control spawned threads with message queue within De\-D\-O\-S. 
+
+Definition in file \hyperlink{dedos__threads_8h_source}{dedos\-\_\-threads.\-h}.
+
+
+
+\subsection{Typedef Documentation}
+\hypertarget{dedos__threads_8h_a8c7746e69f0ed91647b8d28e3e660c2a}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!dedos\-\_\-thread\-\_\-destroy\-\_\-fn@{dedos\-\_\-thread\-\_\-destroy\-\_\-fn}}
+\index{dedos\-\_\-thread\-\_\-destroy\-\_\-fn@{dedos\-\_\-thread\-\_\-destroy\-\_\-fn}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{dedos\-\_\-thread\-\_\-destroy\-\_\-fn}]{\setlength{\rightskip}{0pt plus 5cm}typedef void($\ast$ dedos\-\_\-thread\-\_\-destroy\-\_\-fn)(struct {\bf dedos\-\_\-thread} $\ast$thread, void $\ast$init\-\_\-output)}}\label{dedos__threads_8h_a8c7746e69f0ed91647b8d28e3e660c2a}
+
+
+Typedef for the destructor function for a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em thread} & The thread bneing destroyed \\
+\hline
+{\em init\-\_\-output} & The output of the dedos\-\_\-thread\-\_\-init\-\_\-fn \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 77 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{dedos__threads_8h_abc395397d24e50b8932e864465a17aa5}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!dedos\-\_\-thread\-\_\-fn@{dedos\-\_\-thread\-\_\-fn}}
+\index{dedos\-\_\-thread\-\_\-fn@{dedos\-\_\-thread\-\_\-fn}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{dedos\-\_\-thread\-\_\-fn}]{\setlength{\rightskip}{0pt plus 5cm}typedef int($\ast$ dedos\-\_\-thread\-\_\-fn)(struct {\bf dedos\-\_\-thread} $\ast$thread, void $\ast$init\-\_\-output)}}\label{dedos__threads_8h_abc395397d24e50b8932e864465a17aa5}
+
+
+Typedef for the function that should be called on a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em thread} & The thread being executed \\
+\hline
+{\em init\-\_\-output} & The output of the dedos\-\_\-thread\-\_\-init\-\_\-fn \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+should return 0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 70 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{dedos__threads_8h_a05cf7cb0c2d44afe48767196d7554f55}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!dedos\-\_\-thread\-\_\-init\-\_\-fn@{dedos\-\_\-thread\-\_\-init\-\_\-fn}}
+\index{dedos\-\_\-thread\-\_\-init\-\_\-fn@{dedos\-\_\-thread\-\_\-init\-\_\-fn}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{dedos\-\_\-thread\-\_\-init\-\_\-fn}]{\setlength{\rightskip}{0pt plus 5cm}typedef void$\ast$($\ast$ dedos\-\_\-thread\-\_\-init\-\_\-fn)(struct {\bf dedos\-\_\-thread} $\ast$thread)}}\label{dedos__threads_8h_a05cf7cb0c2d44afe48767196d7554f55}
+
+
+Typedef for an initialization function for a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em thread} & The thread under initilization \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+An object which is passed into the thread\-\_\-fn and destroy\-\_\-fn 
+\end{DoxyReturn}
+
+
+Definition at line 62 of file dedos\-\_\-threads.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dedos__threads_8h_a8149e98a49e985082afb18b9fe30e94d}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!dedos\-\_\-thread\-\_\-join@{dedos\-\_\-thread\-\_\-join}}
+\index{dedos\-\_\-thread\-\_\-join@{dedos\-\_\-thread\-\_\-join}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{dedos\-\_\-thread\-\_\-join}]{\setlength{\rightskip}{0pt plus 5cm}void dedos\-\_\-thread\-\_\-join (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{thread}
+\end{DoxyParamCaption}
+)}}\label{dedos__threads_8h_a8149e98a49e985082afb18b9fe30e94d}
+
+
+Joins and destroys the \hyperlink{structdedos__thread}{dedos\-\_\-thread}. 
+
+
+
+Definition at line 158 of file dedos\-\_\-threads.\-c.
+
+\hypertarget{dedos__threads_8h_a84fe48f8c905bad9ee99509742472900}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!dedos\-\_\-thread\-\_\-should\-\_\-exit@{dedos\-\_\-thread\-\_\-should\-\_\-exit}}
+\index{dedos\-\_\-thread\-\_\-should\-\_\-exit@{dedos\-\_\-thread\-\_\-should\-\_\-exit}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{dedos\-\_\-thread\-\_\-should\-\_\-exit}]{\setlength{\rightskip}{0pt plus 5cm}int dedos\-\_\-thread\-\_\-should\-\_\-exit (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{thread}
+\end{DoxyParamCaption}
+)}}\label{dedos__threads_8h_a84fe48f8c905bad9ee99509742472900}
+
+
+Returns 1 if the exit signal has been triggered, otherwise 0. 
+
+
+
+Definition at line 163 of file dedos\-\_\-threads.\-c.
+
+\hypertarget{dedos__threads_8h_a97563d2c123c5d0c52088ae62c69dc7e}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!dedos\-\_\-thread\-\_\-stop@{dedos\-\_\-thread\-\_\-stop}}
+\index{dedos\-\_\-thread\-\_\-stop@{dedos\-\_\-thread\-\_\-stop}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{dedos\-\_\-thread\-\_\-stop}]{\setlength{\rightskip}{0pt plus 5cm}void dedos\-\_\-thread\-\_\-stop (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{thread}
+\end{DoxyParamCaption}
+)}}\label{dedos__threads_8h_a97563d2c123c5d0c52088ae62c69dc7e}
+
+
+Sets the exit signal for a thread, causing the main loop to quit. 
+
+
+
+Definition at line 149 of file dedos\-\_\-threads.\-c.
+
+\hypertarget{dedos__threads_8h_ad2be2a452f4ee946b74f926d9b885af6}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!get\-\_\-dedos\-\_\-thread@{get\-\_\-dedos\-\_\-thread}}
+\index{get\-\_\-dedos\-\_\-thread@{get\-\_\-dedos\-\_\-thread}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{get\-\_\-dedos\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-thread}$\ast$ get\-\_\-dedos\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{int}]{id}
+\end{DoxyParamCaption}
+)}}\label{dedos__threads_8h_ad2be2a452f4ee946b74f926d9b885af6}
+
+
+Returns the \hyperlink{structdedos__thread}{dedos\-\_\-thread} with the given I\-D. 
+
+
+
+Definition at line 72 of file dedos\-\_\-threads.\-c.
+
+\hypertarget{dedos__threads_8h_aa336318af10f81d18bfd2ea9fb0ce45d}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!start\-\_\-dedos\-\_\-thread@{start\-\_\-dedos\-\_\-thread}}
+\index{start\-\_\-dedos\-\_\-thread@{start\-\_\-dedos\-\_\-thread}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{start\-\_\-dedos\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int start\-\_\-dedos\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{{\bf dedos\-\_\-thread\-\_\-fn}}]{thread\-\_\-fn, }
+\item[{{\bf dedos\-\_\-thread\-\_\-init\-\_\-fn}}]{init\-\_\-fn, }
+\item[{{\bf dedos\-\_\-thread\-\_\-destroy\-\_\-fn}}]{destroy\-\_\-fn, }
+\item[{enum {\bf blocking\-\_\-mode}}]{mode, }
+\item[{int}]{id, }
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{thread}
+\end{DoxyParamCaption}
+)}}\label{dedos__threads_8h_aa336318af10f81d18bfd2ea9fb0ce45d}
+
+
+Initilizes and starts execution of a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. 
+
+Note\-: Blocks until the thread is started!  thread\-\_\-fn The function to execute once the thread starts. 
+\begin{DoxyParams}{Parameters}
+{\em init\-\_\-fn} & The function to execute once, at the start of the thread \\
+\hline
+{\em destroy\-\_\-fn} & The function to execute when the thread exits \\
+\hline
+{\em mode} & \mbox{[}un\mbox{]}pinned \\
+\hline
+{\em id} & Unique identifier for the thread \\
+\hline
+{\em thread} & The object into which to store the thread \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 269 of file dedos\-\_\-threads.\-c.
+
+\hypertarget{dedos__threads_8h_a0e9f00b60e6fbcefadacb5f430abf8aa}{\index{dedos\-\_\-threads.\-h@{dedos\-\_\-threads.\-h}!thread\-\_\-wait@{thread\-\_\-wait}}
+\index{thread\-\_\-wait@{thread\-\_\-wait}!dedos_threads.h@{dedos\-\_\-threads.\-h}}
+\subsubsection[{thread\-\_\-wait}]{\setlength{\rightskip}{0pt plus 5cm}int thread\-\_\-wait (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{thread, }
+\item[{struct timespec $\ast$}]{abs\-\_\-timeout}
+\end{DoxyParamCaption}
+)}}\label{dedos__threads_8h_a0e9f00b60e6fbcefadacb5f430abf8aa}
+
+
+To be called from the thread, causes it to wait until a message has been received or the timeout has been reached. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em thread} & The thread to block from \\
+\hline
+{\em abs\-\_\-timeout} & Time since epoch at which thread should block until \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 234 of file dedos\-\_\-threads.\-c.
+

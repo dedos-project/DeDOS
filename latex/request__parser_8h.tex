@@ -1,0 +1,87 @@
+\hypertarget{request__parser_8h}{\section{src/msus/webserver/request\-\_\-parser.h File Reference}
+\label{request__parser_8h}\index{src/msus/webserver/request\-\_\-parser.\-h@{src/msus/webserver/request\-\_\-parser.\-h}}
+}
+{\ttfamily \#include \char`\"{}webserver/http\-\_\-parser.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structparser__state}{parser\-\_\-state}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{request__parser_8h_a19983ae2cb60fa8a4e81aa9cbb8b9f29}{M\-A\-X\-\_\-\-U\-R\-L\-\_\-\-L\-E\-N}~256
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561}{parser\-\_\-status} \{ \hyperlink{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561ac19663be5c584b898abbccc75a1dfed7}{R\-E\-Q\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E}, 
+\hyperlink{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561a5018b6008cd3f54493a3eab0c3e29016}{R\-E\-Q\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E}, 
+\hyperlink{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561a17a7ef945802dab670f9c0ce8bd687e9}{R\-E\-Q\-\_\-\-E\-R\-R\-O\-R}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{request__parser_8h_ad0013d12e7a5aec1b3e7d9680f63d70a}{init\-\_\-parser\-\_\-state} (struct \hyperlink{structparser__state}{parser\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{request__parser_8h_a304bab171246bd43b18b85fb833a0c57}{parse\-\_\-http} (struct \hyperlink{structparser__state}{parser\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state}, char $\ast$buf, ssize\-\_\-t bytes)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{request__parser_8h_a19983ae2cb60fa8a4e81aa9cbb8b9f29}{\index{request\-\_\-parser.\-h@{request\-\_\-parser.\-h}!M\-A\-X\-\_\-\-U\-R\-L\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-U\-R\-L\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-U\-R\-L\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-U\-R\-L\-\_\-\-L\-E\-N}!request_parser.h@{request\-\_\-parser.\-h}}
+\subsubsection[{M\-A\-X\-\_\-\-U\-R\-L\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-U\-R\-L\-\_\-\-L\-E\-N~256}}\label{request__parser_8h_a19983ae2cb60fa8a4e81aa9cbb8b9f29}
+
+
+Definition at line 24 of file request\-\_\-parser.\-h.
+
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561}{\index{request\-\_\-parser.\-h@{request\-\_\-parser.\-h}!parser\-\_\-status@{parser\-\_\-status}}
+\index{parser\-\_\-status@{parser\-\_\-status}!request_parser.h@{request\-\_\-parser.\-h}}
+\subsubsection[{parser\-\_\-status}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf parser\-\_\-status}}}\label{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561}
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{R\-E\-Q\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E@{R\-E\-Q\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E}!request\-\_\-parser.\-h@{request\-\_\-parser.\-h}}\index{request\-\_\-parser.\-h@{request\-\_\-parser.\-h}!R\-E\-Q\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E@{R\-E\-Q\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E}}\item[{\em 
+\hypertarget{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561ac19663be5c584b898abbccc75a1dfed7}{R\-E\-Q\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E}\label{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561ac19663be5c584b898abbccc75a1dfed7}
+}]\index{R\-E\-Q\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E@{R\-E\-Q\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E}!request\-\_\-parser.\-h@{request\-\_\-parser.\-h}}\index{request\-\_\-parser.\-h@{request\-\_\-parser.\-h}!R\-E\-Q\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E@{R\-E\-Q\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E}}\item[{\em 
+\hypertarget{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561a5018b6008cd3f54493a3eab0c3e29016}{R\-E\-Q\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E}\label{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561a5018b6008cd3f54493a3eab0c3e29016}
+}]\index{R\-E\-Q\-\_\-\-E\-R\-R\-O\-R@{R\-E\-Q\-\_\-\-E\-R\-R\-O\-R}!request\-\_\-parser.\-h@{request\-\_\-parser.\-h}}\index{request\-\_\-parser.\-h@{request\-\_\-parser.\-h}!R\-E\-Q\-\_\-\-E\-R\-R\-O\-R@{R\-E\-Q\-\_\-\-E\-R\-R\-O\-R}}\item[{\em 
+\hypertarget{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561a17a7ef945802dab670f9c0ce8bd687e9}{R\-E\-Q\-\_\-\-E\-R\-R\-O\-R}\label{request__parser_8h_a3412ed36b048d3bcb3e94de7d4bac561a17a7ef945802dab670f9c0ce8bd687e9}
+}]\end{description}
+\end{Desc}
+
+
+Definition at line 37 of file request\-\_\-parser.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{request__parser_8h_ad0013d12e7a5aec1b3e7d9680f63d70a}{\index{request\-\_\-parser.\-h@{request\-\_\-parser.\-h}!init\-\_\-parser\-\_\-state@{init\-\_\-parser\-\_\-state}}
+\index{init\-\_\-parser\-\_\-state@{init\-\_\-parser\-\_\-state}!request_parser.h@{request\-\_\-parser.\-h}}
+\subsubsection[{init\-\_\-parser\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-parser\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf parser\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{request__parser_8h_ad0013d12e7a5aec1b3e7d9680f63d70a}
+
+
+Definition at line 58 of file request\-\_\-parser.\-c.
+
+\hypertarget{request__parser_8h_a304bab171246bd43b18b85fb833a0c57}{\index{request\-\_\-parser.\-h@{request\-\_\-parser.\-h}!parse\-\_\-http@{parse\-\_\-http}}
+\index{parse\-\_\-http@{parse\-\_\-http}!request_parser.h@{request\-\_\-parser.\-h}}
+\subsubsection[{parse\-\_\-http}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-\_\-http (
+\begin{DoxyParamCaption}
+\item[{struct {\bf parser\-\_\-state} $\ast$}]{state, }
+\item[{char $\ast$}]{buf, }
+\item[{ssize\-\_\-t}]{bytes}
+\end{DoxyParamCaption}
+)}}\label{request__parser_8h_a304bab171246bd43b18b85fb833a0c57}
+
+
+Definition at line 68 of file request\-\_\-parser.\-c.
+

@@ -1,0 +1,57 @@
+\hypertarget{regex__msu_8c}{\section{src/msus/webserver/regex\-\_\-msu.c File Reference}
+\label{regex__msu_8c}\index{src/msus/webserver/regex\-\_\-msu.\-c@{src/msus/webserver/regex\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing\-\_\-strategies.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/write\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/regex\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/connection-\/handler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/httpops.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{regex__msu_8c_ac2fab6a3a68f4d96908ba390d1ad7be7}{craft\-\_\-ws\-\_\-regex\-\_\-response} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{regex__msu_8c_a3545bd0e59f7133e5e006e1660f53f23}{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{regex__msu_8c_ac2fab6a3a68f4d96908ba390d1ad7be7}{\index{regex\-\_\-msu.\-c@{regex\-\_\-msu.\-c}!craft\-\_\-ws\-\_\-regex\-\_\-response@{craft\-\_\-ws\-\_\-regex\-\_\-response}}
+\index{craft\-\_\-ws\-\_\-regex\-\_\-response@{craft\-\_\-ws\-\_\-regex\-\_\-response}!regex_msu.c@{regex\-\_\-msu.\-c}}
+\subsubsection[{craft\-\_\-ws\-\_\-regex\-\_\-response}]{\setlength{\rightskip}{0pt plus 5cm}static int craft\-\_\-ws\-\_\-regex\-\_\-response (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{regex__msu_8c_ac2fab6a3a68f4d96908ba390d1ad7be7}
+
+
+Definition at line 32 of file regex\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{regex__msu_8c_a3545bd0e59f7133e5e006e1660f53f23}{\index{regex\-\_\-msu.\-c@{regex\-\_\-msu.\-c}!W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!regex_msu.c@{regex\-\_\-msu.\-c}}
+\subsubsection[{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{regex__msu_8c_a3545bd0e59f7133e5e006e1660f53f23}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    .name = \textcolor{stringliteral}{"Webserver\_regex\_msu"},
+    .id = \hyperlink{msu__ids_8h_adc929377eb71e4c30238bbf763d902dc}{WEBSERVER\_REGEX\_MSU\_TYPE\_ID},
+    .receive = \hyperlink{regex__msu_8c_ac2fab6a3a68f4d96908ba390d1ad7be7}{craft\_ws\_regex\_response},
+    .route = \hyperlink{routing__strategies_8c_a31ea29fa373e8daa760f9a66e4c43ead}{shortest\_queue\_route}
+\}
+\end{DoxyCode}
+
+
+Definition at line 48 of file regex\-\_\-msu.\-c.
+

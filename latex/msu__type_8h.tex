@@ -1,0 +1,115 @@
+\hypertarget{msu__type_8h}{\section{src/runtime/msu\-\_\-type.h File Reference}
+\label{msu__type_8h}\index{src/runtime/msu\-\_\-type.\-h@{src/runtime/msu\-\_\-type.\-h}}
+}
+
+
+Defines a type of M\-S\-U, including callback and accessor functions.  
+
+
+{\ttfamily \#include \char`\"{}routing.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}ctrl\-\_\-runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdint.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type}
+\begin{DoxyCompactList}\small\item\em Defines a type of M\-S\-U. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef ssize\-\_\-t($\ast$ \hyperlink{msu__type_8h_a17ed2199cfcb2244df8020d04c232a78}{serialization\-\_\-fn} )(struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$, void $\ast$$\ast$output)
+\item 
+typedef void $\ast$($\ast$ \hyperlink{msu__type_8h_aa99471a7e82985e3deaaa6fa5721a70a}{deserialization\-\_\-fn} )(struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, size\-\_\-t input\-\_\-size, void $\ast$input, size\-\_\-t $\ast$out\-\_\-size)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{msu__type_8h_a16f3c8063269b29f763b4f7541080a76}{destroy\-\_\-msu\-\_\-types} ()
+\begin{DoxyCompactList}\small\item\em Calls the type-\/sepecific constructor for each instantiated M\-S\-U type. \end{DoxyCompactList}\item 
+int \hyperlink{msu__type_8h_af52a284f44a3cb950c25872505bf1c1c}{init\-\_\-msu\-\_\-type\-\_\-id} (unsigned int type\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Initializes the M\-S\-U type with the given I\-D, calling the custom constructor if appropriate. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$ \hyperlink{msu__type_8h_a618818f65f55ee1e527aea69dd153cc6}{get\-\_\-msu\-\_\-type} (int id)
+\begin{DoxyCompactList}\small\item\em Gets the M\-S\-U type with the provided I\-D. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Defines a type of M\-S\-U, including callback and accessor functions. 
+
+Definition in file \hyperlink{msu__type_8h_source}{msu\-\_\-type.\-h}.
+
+
+
+\subsection{Typedef Documentation}
+\hypertarget{msu__type_8h_aa99471a7e82985e3deaaa6fa5721a70a}{\index{msu\-\_\-type.\-h@{msu\-\_\-type.\-h}!deserialization\-\_\-fn@{deserialization\-\_\-fn}}
+\index{deserialization\-\_\-fn@{deserialization\-\_\-fn}!msu_type.h@{msu\-\_\-type.\-h}}
+\subsubsection[{deserialization\-\_\-fn}]{\setlength{\rightskip}{0pt plus 5cm}typedef void$\ast$($\ast$ deserialization\-\_\-fn)(struct {\bf local\-\_\-msu} $\ast$self, size\-\_\-t input\-\_\-size, void $\ast$input, size\-\_\-t $\ast$out\-\_\-size)}}\label{msu__type_8h_aa99471a7e82985e3deaaa6fa5721a70a}
+
+
+Definition at line 39 of file msu\-\_\-type.\-h.
+
+\hypertarget{msu__type_8h_a17ed2199cfcb2244df8020d04c232a78}{\index{msu\-\_\-type.\-h@{msu\-\_\-type.\-h}!serialization\-\_\-fn@{serialization\-\_\-fn}}
+\index{serialization\-\_\-fn@{serialization\-\_\-fn}!msu_type.h@{msu\-\_\-type.\-h}}
+\subsubsection[{serialization\-\_\-fn}]{\setlength{\rightskip}{0pt plus 5cm}typedef ssize\-\_\-t($\ast$ serialization\-\_\-fn)(struct {\bf msu\-\_\-type} $\ast$, struct {\bf msu\-\_\-msg} $\ast$, void $\ast$$\ast$output)}}\label{msu__type_8h_a17ed2199cfcb2244df8020d04c232a78}
+
+
+Definition at line 38 of file msu\-\_\-type.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{msu__type_8h_a16f3c8063269b29f763b4f7541080a76}{\index{msu\-\_\-type.\-h@{msu\-\_\-type.\-h}!destroy\-\_\-msu\-\_\-types@{destroy\-\_\-msu\-\_\-types}}
+\index{destroy\-\_\-msu\-\_\-types@{destroy\-\_\-msu\-\_\-types}!msu_type.h@{msu\-\_\-type.\-h}}
+\subsubsection[{destroy\-\_\-msu\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\-\_\-msu\-\_\-types (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{msu__type_8h_a16f3c8063269b29f763b4f7541080a76}
+
+
+Calls the type-\/sepecific constructor for each instantiated M\-S\-U type. 
+
+
+
+Definition at line 69 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8h_a618818f65f55ee1e527aea69dd153cc6}{\index{msu\-\_\-type.\-h@{msu\-\_\-type.\-h}!get\-\_\-msu\-\_\-type@{get\-\_\-msu\-\_\-type}}
+\index{get\-\_\-msu\-\_\-type@{get\-\_\-msu\-\_\-type}!msu_type.h@{msu\-\_\-type.\-h}}
+\subsubsection[{get\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type}$\ast$ get\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{int}]{id}
+\end{DoxyParamCaption}
+)}}\label{msu__type_8h_a618818f65f55ee1e527aea69dd153cc6}
+
+
+Gets the M\-S\-U type with the provided I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & The type I\-D of the M\-S\-U type to retrieve \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The M\-S\-U Type with the given I\-D, N\-U\-L\-L in N/\-A 
+\end{DoxyReturn}
+
+
+Definition at line 80 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8h_af52a284f44a3cb950c25872505bf1c1c}{\index{msu\-\_\-type.\-h@{msu\-\_\-type.\-h}!init\-\_\-msu\-\_\-type\-\_\-id@{init\-\_\-msu\-\_\-type\-\_\-id}}
+\index{init\-\_\-msu\-\_\-type\-\_\-id@{init\-\_\-msu\-\_\-type\-\_\-id}!msu_type.h@{msu\-\_\-type.\-h}}
+\subsubsection[{init\-\_\-msu\-\_\-type\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-msu\-\_\-type\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{type\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{msu__type_8h_af52a284f44a3cb950c25872505bf1c1c}
+
+
+Initializes the M\-S\-U type with the given I\-D, calling the custom constructor if appropriate. 
+
+This function is meant to be called on each M\-S\-U type that is defined in the D\-F\-G used to initialize the runtime. \begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 132 of file msu\-\_\-type.\-c.
+

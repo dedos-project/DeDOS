@@ -1,0 +1,108 @@
+\hypertarget{structdfg__msu}{\section{dfg\-\_\-msu Struct Reference}
+\label{structdfg__msu}\index{dfg\-\_\-msu@{dfg\-\_\-msu}}
+}
+
+
+Representation of a single M\-S\-U in the dfg.  
+
+
+
+
+{\ttfamily \#include $<$dfg.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structdfg__msu_a6ff9496252821697e69b9802f8d96919}{id}
+\begin{DoxyCompactList}\small\item\em A unique identifier for the M\-S\-U. \end{DoxyCompactList}\item 
+\hyperlink{msus_2webserver_2uthash_8h_aba7bc1797add20fe3efdf37ced1182c5}{uint8\-\_\-t} \hyperlink{structdfg__msu_a2b64c45188762a61c6ab906f7f1fccdd}{vertex\-\_\-type}
+\begin{DoxyCompactList}\small\item\em Whether the M\-S\-U is \#\-E\-N\-T\-R\-Y, \#\-E\-X\-I\-T, or possible \#\-E\-N\-T\-R\-Y $\vert$ \#\-E\-X\-I\-T. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} \hyperlink{structdfg__msu_ae1af580efcec56f0840d058069f5a208}{init\-\_\-data}
+\begin{DoxyCompactList}\small\item\em Initial data passed to the M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$ \hyperlink{structdfg__msu_aecd16205ea67b3a51ad5df742ddc2778}{type}
+\begin{DoxyCompactList}\small\item\em The type of the M\-S\-U and meta-\/routing information. \end{DoxyCompactList}\item 
+enum \hyperlink{dfg_8h_af31ca3002c5b769551da6f1183bafed5}{blocking\-\_\-mode} \hyperlink{structdfg__msu_a9d0a919e5c719537d9d404f0e1de785a}{blocking\-\_\-mode}
+\begin{DoxyCompactList}\small\item\em Whether the M\-S\-U is blocking or not. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__scheduling}{dfg\-\_\-scheduling} \hyperlink{structdfg__msu_a4ca8d344a0d4c4cf72b8a045eb3d3d61}{scheduling}
+\begin{DoxyCompactList}\small\item\em Information about where an M\-S\-U is scheduled. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Representation of a single M\-S\-U in the dfg. 
+
+Definition at line 216 of file dfg.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structdfg__msu_a9d0a919e5c719537d9d404f0e1de785a}{\index{dfg\-\_\-msu@{dfg\-\_\-msu}!blocking\-\_\-mode@{blocking\-\_\-mode}}
+\index{blocking\-\_\-mode@{blocking\-\_\-mode}!dfg_msu@{dfg\-\_\-msu}}
+\subsubsection[{blocking\-\_\-mode}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf blocking\-\_\-mode} dfg\-\_\-msu\-::blocking\-\_\-mode}}\label{structdfg__msu_a9d0a919e5c719537d9d404f0e1de785a}
+
+
+Whether the M\-S\-U is blocking or not. 
+
+
+
+Definition at line 223 of file dfg.\-h.
+
+\hypertarget{structdfg__msu_a6ff9496252821697e69b9802f8d96919}{\index{dfg\-\_\-msu@{dfg\-\_\-msu}!id@{id}}
+\index{id@{id}!dfg_msu@{dfg\-\_\-msu}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-msu\-::id}}\label{structdfg__msu_a6ff9496252821697e69b9802f8d96919}
+
+
+A unique identifier for the M\-S\-U. 
+
+
+
+Definition at line 217 of file dfg.\-h.
+
+\hypertarget{structdfg__msu_ae1af580efcec56f0840d058069f5a208}{\index{dfg\-\_\-msu@{dfg\-\_\-msu}!init\-\_\-data@{init\-\_\-data}}
+\index{init\-\_\-data@{init\-\_\-data}!dfg_msu@{dfg\-\_\-msu}}
+\subsubsection[{init\-\_\-data}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-init\-\_\-data} dfg\-\_\-msu\-::init\-\_\-data}}\label{structdfg__msu_ae1af580efcec56f0840d058069f5a208}
+
+
+Initial data passed to the M\-S\-U. 
+
+
+
+Definition at line 219 of file dfg.\-h.
+
+\hypertarget{structdfg__msu_a4ca8d344a0d4c4cf72b8a045eb3d3d61}{\index{dfg\-\_\-msu@{dfg\-\_\-msu}!scheduling@{scheduling}}
+\index{scheduling@{scheduling}!dfg_msu@{dfg\-\_\-msu}}
+\subsubsection[{scheduling}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-scheduling} dfg\-\_\-msu\-::scheduling}}\label{structdfg__msu_a4ca8d344a0d4c4cf72b8a045eb3d3d61}
+
+
+Information about where an M\-S\-U is scheduled. 
+
+
+
+Definition at line 225 of file dfg.\-h.
+
+\hypertarget{structdfg__msu_aecd16205ea67b3a51ad5df742ddc2778}{\index{dfg\-\_\-msu@{dfg\-\_\-msu}!type@{type}}
+\index{type@{type}!dfg_msu@{dfg\-\_\-msu}}
+\subsubsection[{type}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu\-\_\-type}$\ast$ dfg\-\_\-msu\-::type}}\label{structdfg__msu_aecd16205ea67b3a51ad5df742ddc2778}
+
+
+The type of the M\-S\-U and meta-\/routing information. 
+
+
+
+Definition at line 221 of file dfg.\-h.
+
+\hypertarget{structdfg__msu_a2b64c45188762a61c6ab906f7f1fccdd}{\index{dfg\-\_\-msu@{dfg\-\_\-msu}!vertex\-\_\-type@{vertex\-\_\-type}}
+\index{vertex\-\_\-type@{vertex\-\_\-type}!dfg_msu@{dfg\-\_\-msu}}
+\subsubsection[{vertex\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint8\-\_\-t} dfg\-\_\-msu\-::vertex\-\_\-type}}\label{structdfg__msu_a2b64c45188762a61c6ab906f7f1fccdd}
+
+
+Whether the M\-S\-U is \#\-E\-N\-T\-R\-Y, \#\-E\-X\-I\-T, or possible \#\-E\-N\-T\-R\-Y $\vert$ \#\-E\-X\-I\-T. 
+
+
+
+Definition at line 218 of file dfg.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{dfg_8h}{dfg.\-h}\end{DoxyCompactItemize}

@@ -1,0 +1,252 @@
+\hypertarget{stats_8c}{\section{src/common/stats.c File Reference}
+\label{stats_8c}\index{src/common/stats.\-c@{src/common/stats.\-c}}
+}
+
+
+Functions for the sending and receiving of statsitics between ctrl and runtime.  
+
+
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structstat__msg__hdr}{stat\-\_\-msg\-\_\-hdr}
+\begin{DoxyCompactList}\small\item\em Header for a serialized stats message. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{stats_8c_a80131dba9e9b4036db53954517846734}{is\-\_\-thread\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id)
+\item 
+int \hyperlink{stats_8c_a7b298d79a63c3c056ea5ed5d55e7cc2d}{is\-\_\-msu\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id)
+\item 
+static int \hyperlink{stats_8c_a57186c4fb18bd863db6555b2717ecabe}{init\-\_\-stat\-\_\-sample} (int max\-\_\-stats, struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample)
+\begin{DoxyCompactList}\small\item\em Initializes a single stat sample with room to hold {\ttfamily max\-\_\-stats} statistics. \end{DoxyCompactList}\item 
+void \hyperlink{stats_8c_a8e7c759e3224e7aed3839883ff34a926}{free\-\_\-stat\-\_\-samples} (struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Frees a set of stat samples. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$ \hyperlink{stats_8c_a15767cac95ee8d9b2c967c8b4990f392}{init\-\_\-stat\-\_\-samples} (int max\-\_\-stats, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Initilizes {\ttfamily n} sets of samples of statistics, each of which contains {\ttfamily max\-\_\-stats} points. \end{DoxyCompactList}\item 
+size\-\_\-t \hyperlink{stats_8c_a6129fdec9d673634cdd96602c740f8ff}{serialized\-\_\-stat\-\_\-sample\-\_\-size} (struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Determines the size needed to hold the serialized version of {\ttfamily sample}. \end{DoxyCompactList}\item 
+static ssize\-\_\-t \hyperlink{stats_8c_a91bd37d0899d1224aa1e6ee6f95d61ad}{serialize\-\_\-stat\-\_\-sample} (struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample, void $\ast$buffer, size\-\_\-t buff\-\_\-len)
+\begin{DoxyCompactList}\small\item\em Serializes a single stat sample into a buffer of size {\ttfamily buff\-\_\-len}. \end{DoxyCompactList}\item 
+ssize\-\_\-t \hyperlink{stats_8c_aec7690b989cbd389c9614df7f81837d1}{serialize\-\_\-stat\-\_\-samples} (struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$samples, int n\-\_\-samples, void $\ast$buffer, size\-\_\-t buff\-\_\-len)
+\begin{DoxyCompactList}\small\item\em Serializes from the provided {\ttfamily samples} into the {\ttfamily buffer} \end{DoxyCompactList}\item 
+static ssize\-\_\-t \hyperlink{stats_8c_a0a31a5c0b0b2282b8ff83b637513bcc3}{deserialize\-\_\-stat\-\_\-sample} (void $\ast$buffer, size\-\_\-t buff\-\_\-len, struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample)
+\begin{DoxyCompactList}\small\item\em Deserializes a single stat sample from a buffer. \end{DoxyCompactList}\item 
+int \hyperlink{stats_8c_acb9a8fc9e7db1b910a43e765efc7b64e}{deserialize\-\_\-stat\-\_\-samples} (void $\ast$buffer, size\-\_\-t buff\-\_\-len, struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$samples, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Deserializes from the provided buffer into the {\ttfamily samples} structure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Functions for the sending and receiving of statsitics between ctrl and runtime. 
+
+Definition in file \hyperlink{stats_8c_source}{stats.\-c}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{stats_8c_a0a31a5c0b0b2282b8ff83b637513bcc3}{\index{stats.\-c@{stats.\-c}!deserialize\-\_\-stat\-\_\-sample@{deserialize\-\_\-stat\-\_\-sample}}
+\index{deserialize\-\_\-stat\-\_\-sample@{deserialize\-\_\-stat\-\_\-sample}!stats.c@{stats.\-c}}
+\subsubsection[{deserialize\-\_\-stat\-\_\-sample}]{\setlength{\rightskip}{0pt plus 5cm}static ssize\-\_\-t deserialize\-\_\-stat\-\_\-sample (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{buffer, }
+\item[{size\-\_\-t}]{buff\-\_\-len, }
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{stats_8c_a0a31a5c0b0b2282b8ff83b637513bcc3}
+
+
+Deserializes a single stat sample from a buffer. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 153 of file stats.\-c.
+
+\hypertarget{stats_8c_acb9a8fc9e7db1b910a43e765efc7b64e}{\index{stats.\-c@{stats.\-c}!deserialize\-\_\-stat\-\_\-samples@{deserialize\-\_\-stat\-\_\-samples}}
+\index{deserialize\-\_\-stat\-\_\-samples@{deserialize\-\_\-stat\-\_\-samples}!stats.c@{stats.\-c}}
+\subsubsection[{deserialize\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}int deserialize\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{buffer, }
+\item[{size\-\_\-t}]{buff\-\_\-len, }
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{samples, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{stats_8c_acb9a8fc9e7db1b910a43e765efc7b64e}
+
+
+Deserializes from the provided buffer into the {\ttfamily samples} structure. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em buffer} & The buffer to deserialize \\
+\hline
+{\em buff\-\_\-len} & The size of the serialized buffer \\
+\hline
+{\em samples} & The structure into which to deserialize \\
+\hline
+{\em n\-\_\-samples} & The number of items allocated in {\ttfamily samples} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 176 of file stats.\-c.
+
+\hypertarget{stats_8c_a8e7c759e3224e7aed3839883ff34a926}{\index{stats.\-c@{stats.\-c}!free\-\_\-stat\-\_\-samples@{free\-\_\-stat\-\_\-samples}}
+\index{free\-\_\-stat\-\_\-samples@{free\-\_\-stat\-\_\-samples}!stats.c@{stats.\-c}}
+\subsubsection[{free\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}void free\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{stats_8c_a8e7c759e3224e7aed3839883ff34a926}
+
+
+Frees a set of stat samples. 
+
+
+
+Definition at line 71 of file stats.\-c.
+
+\hypertarget{stats_8c_a57186c4fb18bd863db6555b2717ecabe}{\index{stats.\-c@{stats.\-c}!init\-\_\-stat\-\_\-sample@{init\-\_\-stat\-\_\-sample}}
+\index{init\-\_\-stat\-\_\-sample@{init\-\_\-stat\-\_\-sample}!stats.c@{stats.\-c}}
+\subsubsection[{init\-\_\-stat\-\_\-sample}]{\setlength{\rightskip}{0pt plus 5cm}static int init\-\_\-stat\-\_\-sample (
+\begin{DoxyParamCaption}
+\item[{int}]{max\-\_\-stats, }
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{stats_8c_a57186c4fb18bd863db6555b2717ecabe}
+
+
+Initializes a single stat sample with room to hold {\ttfamily max\-\_\-stats} statistics. 
+
+
+
+Definition at line 61 of file stats.\-c.
+
+\hypertarget{stats_8c_a15767cac95ee8d9b2c967c8b4990f392}{\index{stats.\-c@{stats.\-c}!init\-\_\-stat\-\_\-samples@{init\-\_\-stat\-\_\-samples}}
+\index{init\-\_\-stat\-\_\-samples@{init\-\_\-stat\-\_\-samples}!stats.c@{stats.\-c}}
+\subsubsection[{init\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-sample}$\ast$ init\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{int}]{max\-\_\-stats, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{stats_8c_a15767cac95ee8d9b2c967c8b4990f392}
+
+
+Initilizes {\ttfamily n} sets of samples of statistics, each of which contains {\ttfamily max\-\_\-stats} points. 
+
+\begin{DoxyReturn}{Returns}
+allocated structure on success, N\-U\-L\-L on error 
+\end{DoxyReturn}
+
+
+Definition at line 80 of file stats.\-c.
+
+\hypertarget{stats_8c_a7b298d79a63c3c056ea5ed5d55e7cc2d}{\index{stats.\-c@{stats.\-c}!is\-\_\-msu\-\_\-stat@{is\-\_\-msu\-\_\-stat}}
+\index{is\-\_\-msu\-\_\-stat@{is\-\_\-msu\-\_\-stat}!stats.c@{stats.\-c}}
+\subsubsection[{is\-\_\-msu\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int is\-\_\-msu\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id}
+\end{DoxyParamCaption}
+)}}\label{stats_8c_a7b298d79a63c3c056ea5ed5d55e7cc2d}
+
+
+Definition at line 49 of file stats.\-c.
+
+\hypertarget{stats_8c_a80131dba9e9b4036db53954517846734}{\index{stats.\-c@{stats.\-c}!is\-\_\-thread\-\_\-stat@{is\-\_\-thread\-\_\-stat}}
+\index{is\-\_\-thread\-\_\-stat@{is\-\_\-thread\-\_\-stat}!stats.c@{stats.\-c}}
+\subsubsection[{is\-\_\-thread\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int is\-\_\-thread\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id}
+\end{DoxyParamCaption}
+)}}\label{stats_8c_a80131dba9e9b4036db53954517846734}
+
+
+Definition at line 40 of file stats.\-c.
+
+\hypertarget{stats_8c_a91bd37d0899d1224aa1e6ee6f95d61ad}{\index{stats.\-c@{stats.\-c}!serialize\-\_\-stat\-\_\-sample@{serialize\-\_\-stat\-\_\-sample}}
+\index{serialize\-\_\-stat\-\_\-sample@{serialize\-\_\-stat\-\_\-sample}!stats.c@{stats.\-c}}
+\subsubsection[{serialize\-\_\-stat\-\_\-sample}]{\setlength{\rightskip}{0pt plus 5cm}static ssize\-\_\-t serialize\-\_\-stat\-\_\-sample (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample, }
+\item[{void $\ast$}]{buffer, }
+\item[{size\-\_\-t}]{buff\-\_\-len}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{stats_8c_a91bd37d0899d1224aa1e6ee6f95d61ad}
+
+
+Serializes a single stat sample into a buffer of size {\ttfamily buff\-\_\-len}. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 if buffer is not large enough to hold sample 
+\end{DoxyReturn}
+
+
+Definition at line 107 of file stats.\-c.
+
+\hypertarget{stats_8c_aec7690b989cbd389c9614df7f81837d1}{\index{stats.\-c@{stats.\-c}!serialize\-\_\-stat\-\_\-samples@{serialize\-\_\-stat\-\_\-samples}}
+\index{serialize\-\_\-stat\-\_\-samples@{serialize\-\_\-stat\-\_\-samples}!stats.c@{stats.\-c}}
+\subsubsection[{serialize\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}ssize\-\_\-t serialize\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{samples, }
+\item[{int}]{n\-\_\-samples, }
+\item[{void $\ast$}]{buffer, }
+\item[{size\-\_\-t}]{buff\-\_\-len}
+\end{DoxyParamCaption}
+)}}\label{stats_8c_aec7690b989cbd389c9614df7f81837d1}
+
+
+Serializes from the provided {\ttfamily samples} into the {\ttfamily buffer} 
+
+
+\begin{DoxyParams}{Parameters}
+{\em samples} & The samples to deserialize \\
+\hline
+{\em n\-\_\-samples} & size of {\ttfamily samples} \\
+\hline
+{\em buffer} & The buffer into which to serialize \\
+\hline
+{\em buff\-\_\-len} & The size of the allocated {\ttfamily buffer} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error (if buffer is too small) 
+\end{DoxyReturn}
+
+
+Definition at line 122 of file stats.\-c.
+
+\hypertarget{stats_8c_a6129fdec9d673634cdd96602c740f8ff}{\index{stats.\-c@{stats.\-c}!serialized\-\_\-stat\-\_\-sample\-\_\-size@{serialized\-\_\-stat\-\_\-sample\-\_\-size}}
+\index{serialized\-\_\-stat\-\_\-sample\-\_\-size@{serialized\-\_\-stat\-\_\-sample\-\_\-size}!stats.c@{stats.\-c}}
+\subsubsection[{serialized\-\_\-stat\-\_\-sample\-\_\-size}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t serialized\-\_\-stat\-\_\-sample\-\_\-size (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{stats_8c_a6129fdec9d673634cdd96602c740f8ff}
+
+
+Determines the size needed to hold the serialized version of {\ttfamily sample}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em sample} & The sample to serialize \\
+\hline
+{\em n\-\_\-samples} & The number of elements in {\ttfamily sample} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+size needed 
+\end{DoxyReturn}
+
+
+Definition at line 96 of file stats.\-c.
+

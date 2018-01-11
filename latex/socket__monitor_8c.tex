@@ -1,0 +1,229 @@
+\hypertarget{socket__monitor_8c}{\section{src/runtime/socket\-\_\-monitor.c File Reference}
+\label{socket__monitor_8c}\index{src/runtime/socket\-\_\-monitor.\-c@{src/runtime/socket\-\_\-monitor.\-c}}
+}
+
+
+Monitors an incoming port for messages from runtime or controller.  
+
+
+{\ttfamily \#include \char`\"{}epollops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$sys/epoll.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{socket__monitor_8c_aada9f43de95a1e838e5dce152fd8f5fd}{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-F\-D}~1024
+\begin{DoxyCompactList}\small\item\em The maximum file descriptor that can be associated with a runtime. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{socket__monitor_8c_ae466cd0e81967519826054cbfc192858}{init\-\_\-socket\-\_\-monitor} (int port)
+\begin{DoxyCompactList}\small\item\em Initializes the socket monitor on the given port. \end{DoxyCompactList}\item 
+static int \hyperlink{socket__monitor_8c_a806ee97b4bbbd7560e52672c9131c143}{handle\-\_\-connection} (int fd, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Checks if the file descriptor is a runtime or controller, and handles it appropraitely. \end{DoxyCompactList}\item 
+static int \hyperlink{socket__monitor_8c_aaaae8d1ef54ffbf66b52e2239825096a}{accept\-\_\-connection} (int fd, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Accepts a new connection. \end{DoxyCompactList}\item 
+static int \hyperlink{socket__monitor_8c_af03484b2eb0d34958d0e16cd7ddcdd9b}{socket\-\_\-monitor\-\_\-epoll\-\_\-loop} ()
+\begin{DoxyCompactList}\small\item\em The main loop for the socket monitor. \end{DoxyCompactList}\item 
+int \hyperlink{socket__monitor_8c_aa3e08c1f7d9f8f906eeab041c1d89ee3}{monitor\-\_\-controller\-\_\-socket} (int new\-\_\-fd)
+\begin{DoxyCompactList}\small\item\em Adds the global controller to be monitored by the socket monitor. \end{DoxyCompactList}\item 
+int \hyperlink{socket__monitor_8c_a73f68ff3a046c01f8244717daec4a0c7}{monitor\-\_\-runtime\-\_\-socket} (int new\-\_\-fd)
+\begin{DoxyCompactList}\small\item\em Adds a runtime to be monitored by the socket monitor. \end{DoxyCompactList}\item 
+int \hyperlink{socket__monitor_8c_a7caa1e5d245b8915e590649d449b6ab7}{run\-\_\-socket\-\_\-monitor} (int local\-\_\-port, struct sockaddr\-\_\-in $\ast$ctrl\-\_\-addr)
+\begin{DoxyCompactList}\small\item\em Starts (blocking) the socket monitor, listening on the provided port. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static bool \hyperlink{socket__monitor_8c_a11349832b6886717e8461a21da37bb3f}{runtime\-\_\-fds} \mbox{[}1024\mbox{]}
+\begin{DoxyCompactList}\small\item\em Whether the file descriptor has been associated with a runtime. \end{DoxyCompactList}\item 
+int \hyperlink{socket__monitor_8c_a4ca5fa222c1da541254cbe9ceffcc9a7}{runtime\-\_\-socket} = -\/1
+\begin{DoxyCompactList}\small\item\em The socket on which incoming connections are monitored. \end{DoxyCompactList}\item 
+int \hyperlink{socket__monitor_8c_ae4afe2171ee3ec9b9cce747171f0b20d}{epoll\-\_\-fd} = -\/1
+\begin{DoxyCompactList}\small\item\em The epoll file descriptor monitoring sockets. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Monitors an incoming port for messages from runtime or controller. 
+
+Definition in file \hyperlink{socket__monitor_8c_source}{socket\-\_\-monitor.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{socket__monitor_8c_aada9f43de95a1e838e5dce152fd8f5fd}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-F\-D@{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-F\-D}}
+\index{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-F\-D@{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-F\-D}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-F\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-F\-D~1024}}\label{socket__monitor_8c_aada9f43de95a1e838e5dce152fd8f5fd}
+
+
+The maximum file descriptor that can be associated with a runtime. 
+
+
+
+Definition at line 34 of file socket\-\_\-monitor.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{socket__monitor_8c_aaaae8d1ef54ffbf66b52e2239825096a}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!accept\-\_\-connection@{accept\-\_\-connection}}
+\index{accept\-\_\-connection@{accept\-\_\-connection}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{accept\-\_\-connection}]{\setlength{\rightskip}{0pt plus 5cm}static int accept\-\_\-connection (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{socket__monitor_8c_aaaae8d1ef54ffbf66b52e2239825096a}
+
+
+Accepts a new connection. 
+
+Assumes it is a runtime 
+
+Definition at line 89 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8c_a806ee97b4bbbd7560e52672c9131c143}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!handle\-\_\-connection@{handle\-\_\-connection}}
+\index{handle\-\_\-connection@{handle\-\_\-connection}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{handle\-\_\-connection}]{\setlength{\rightskip}{0pt plus 5cm}static int handle\-\_\-connection (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{socket__monitor_8c_a806ee97b4bbbd7560e52672c9131c143}
+
+
+Checks if the file descriptor is a runtime or controller, and handles it appropraitely. 
+
+
+
+Definition at line 69 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8c_ae466cd0e81967519826054cbfc192858}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!init\-\_\-socket\-\_\-monitor@{init\-\_\-socket\-\_\-monitor}}
+\index{init\-\_\-socket\-\_\-monitor@{init\-\_\-socket\-\_\-monitor}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{init\-\_\-socket\-\_\-monitor}]{\setlength{\rightskip}{0pt plus 5cm}static int init\-\_\-socket\-\_\-monitor (
+\begin{DoxyParamCaption}
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{socket__monitor_8c_ae466cd0e81967519826054cbfc192858}
+
+
+Initializes the socket monitor on the given port. 
+
+
+
+Definition at line 44 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8c_aa3e08c1f7d9f8f906eeab041c1d89ee3}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!monitor\-\_\-controller\-\_\-socket@{monitor\-\_\-controller\-\_\-socket}}
+\index{monitor\-\_\-controller\-\_\-socket@{monitor\-\_\-controller\-\_\-socket}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{monitor\-\_\-controller\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int monitor\-\_\-controller\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{socket__monitor_8c_aa3e08c1f7d9f8f906eeab041c1d89ee3}
+
+
+Adds the global controller to be monitored by the socket monitor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fd} & the file decriptor of the global controller \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 116 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8c_a73f68ff3a046c01f8244717daec4a0c7}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!monitor\-\_\-runtime\-\_\-socket@{monitor\-\_\-runtime\-\_\-socket}}
+\index{monitor\-\_\-runtime\-\_\-socket@{monitor\-\_\-runtime\-\_\-socket}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{monitor\-\_\-runtime\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int monitor\-\_\-runtime\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{socket__monitor_8c_a73f68ff3a046c01f8244717daec4a0c7}
+
+
+Adds a runtime to be monitored by the socket monitor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fd} & the file descriptor of the new runtime \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 130 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8c_a7caa1e5d245b8915e590649d449b6ab7}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!run\-\_\-socket\-\_\-monitor@{run\-\_\-socket\-\_\-monitor}}
+\index{run\-\_\-socket\-\_\-monitor@{run\-\_\-socket\-\_\-monitor}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{run\-\_\-socket\-\_\-monitor}]{\setlength{\rightskip}{0pt plus 5cm}int run\-\_\-socket\-\_\-monitor (
+\begin{DoxyParamCaption}
+\item[{int}]{local\-\_\-port, }
+\item[{struct sockaddr\-\_\-in $\ast$}]{ctrl\-\_\-addr}
+\end{DoxyParamCaption}
+)}}\label{socket__monitor_8c_a7caa1e5d245b8915e590649d449b6ab7}
+
+
+Starts (blocking) the socket monitor, listening on the provided port. 
+
+Also connects to the global controller at the provided address 
+
+Definition at line 145 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8c_af03484b2eb0d34958d0e16cd7ddcdd9b}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!socket\-\_\-monitor\-\_\-epoll\-\_\-loop@{socket\-\_\-monitor\-\_\-epoll\-\_\-loop}}
+\index{socket\-\_\-monitor\-\_\-epoll\-\_\-loop@{socket\-\_\-monitor\-\_\-epoll\-\_\-loop}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{socket\-\_\-monitor\-\_\-epoll\-\_\-loop}]{\setlength{\rightskip}{0pt plus 5cm}static int socket\-\_\-monitor\-\_\-epoll\-\_\-loop (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{socket__monitor_8c_af03484b2eb0d34958d0e16cd7ddcdd9b}
+
+
+The main loop for the socket monitor. 
+
+Simply calls epoll\-\_\-loop 
+
+Definition at line 101 of file socket\-\_\-monitor.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{socket__monitor_8c_ae4afe2171ee3ec9b9cce747171f0b20d}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!epoll\-\_\-fd@{epoll\-\_\-fd}}
+\index{epoll\-\_\-fd@{epoll\-\_\-fd}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{epoll\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int epoll\-\_\-fd = -\/1}}\label{socket__monitor_8c_ae4afe2171ee3ec9b9cce747171f0b20d}
+
+
+The epoll file descriptor monitoring sockets. 
+
+
+
+Definition at line 41 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8c_a11349832b6886717e8461a21da37bb3f}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!runtime\-\_\-fds@{runtime\-\_\-fds}}
+\index{runtime\-\_\-fds@{runtime\-\_\-fds}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{runtime\-\_\-fds}]{\setlength{\rightskip}{0pt plus 5cm}bool runtime\-\_\-fds\mbox{[}1024\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{socket__monitor_8c_a11349832b6886717e8461a21da37bb3f}
+
+
+Whether the file descriptor has been associated with a runtime. 
+
+
+
+Definition at line 36 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8c_a4ca5fa222c1da541254cbe9ceffcc9a7}{\index{socket\-\_\-monitor.\-c@{socket\-\_\-monitor.\-c}!runtime\-\_\-socket@{runtime\-\_\-socket}}
+\index{runtime\-\_\-socket@{runtime\-\_\-socket}!socket_monitor.c@{socket\-\_\-monitor.\-c}}
+\subsubsection[{runtime\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int runtime\-\_\-socket = -\/1}}\label{socket__monitor_8c_a4ca5fa222c1da541254cbe9ceffcc9a7}
+
+
+The socket on which incoming connections are monitored. 
+
+
+
+Definition at line 39 of file socket\-\_\-monitor.\-c.
+

@@ -1,0 +1,271 @@
+\hypertarget{structmsu__type}{\section{msu\-\_\-type Struct Reference}
+\label{structmsu__type}\index{msu\-\_\-type@{msu\-\_\-type}}
+}
+
+
+Defines a type of M\-S\-U.  
+
+
+
+
+{\ttfamily \#include $<$msu\-\_\-type.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+char $\ast$ \hyperlink{structmsu__type_ade4e1d9d98f0e22f3a54986919b07665}{name}
+\begin{DoxyCompactList}\small\item\em Name for the msu type. \end{DoxyCompactList}\item 
+unsigned int \hyperlink{structmsu__type_a0d626321555fed55c525a480dee99b83}{id}
+\begin{DoxyCompactList}\small\item\em Numerical identifier for the M\-S\-U. \end{DoxyCompactList}\item 
+int($\ast$ \hyperlink{structmsu__type_a5dd9b478727fefecff8cf16525003135}{init\-\_\-type} )(struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Constructor for an M\-S\-U\-\_\-type itself, should initialize whatever context all M\-S\-Us of this type might need to rely upon. \end{DoxyCompactList}\item 
+void($\ast$ \hyperlink{structmsu__type_a4386613c175f4fa42c1ae5b5027246ce}{destroy\-\_\-type} )(struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Destructor for an M\-S\-U type, should destroy context initialized in {\ttfamily init\-\_\-type}. \end{DoxyCompactList}\item 
+int($\ast$ \hyperlink{structmsu__type_af17ea5ed6d4071e62d80f545139fb425}{init} )(struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} $\ast$initial\-\_\-data)
+\begin{DoxyCompactList}\small\item\em Type-\/specific construction function. \end{DoxyCompactList}\item 
+void($\ast$ \hyperlink{structmsu__type_abfe698dd8e2d5ff6107f843c93927710}{destroy} )(struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self)
+\begin{DoxyCompactList}\small\item\em Type-\/specific destructor that frees any internal data or state. \end{DoxyCompactList}\item 
+int($\ast$ \hyperlink{structmsu__type_a8e80deeae69a39533061d4407fa7c53d}{receive} )(struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Handles the receiving of data sent from other M\-S\-Us. \end{DoxyCompactList}\item 
+int($\ast$ \hyperlink{structmsu__type_af38fab3cdee8b622e0bb3594c1d7414b}{receive\-\_\-error} )(struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+int($\ast$ \hyperlink{structmsu__type_ab076ecc00c1838c66351f51f9f2b684e}{route} )(struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$output)
+\begin{DoxyCompactList}\small\item\em Choose which M\-S\-U of {\bfseries this} type the {\bfseries previous} M\-S\-U will route to. \end{DoxyCompactList}\item 
+\hyperlink{msu__type_8h_a17ed2199cfcb2244df8020d04c232a78}{serialization\-\_\-fn} \hyperlink{structmsu__type_a47b8e5d5beb28f531665d60c6156ff39}{serialize}
+\begin{DoxyCompactList}\small\item\em Defines serialization protocol for data sent to this M\-S\-U type If N\-U\-L\-L, assumes no pointers in the msu message, and simply serializes the input for the length defined in the msu message header. \end{DoxyCompactList}\item 
+\hyperlink{msu__type_8h_a17ed2199cfcb2244df8020d04c232a78}{serialization\-\_\-fn} \hyperlink{structmsu__type_a765dacf40ac27344e2411e1c4e77a5a9}{serialize\-\_\-error}
+\begin{DoxyCompactList}\small\item\em Defines serialization protocol for errors returned to this M\-S\-U type If N\-U\-L\-L, assumes no pointers in the msu message and simply serializes the input for the provided length. \end{DoxyCompactList}\item 
+\hyperlink{msu__type_8h_aa99471a7e82985e3deaaa6fa5721a70a}{deserialization\-\_\-fn} \hyperlink{structmsu__type_ad8ac9a913eb05ae392f3eed04f323a5d}{deserialize}
+\begin{DoxyCompactList}\small\item\em Defines deserialization protocl for data received by this M\-S\-U type If N\-U\-L\-L, assumes no pointers in the msu message, and simply assigns {\ttfamily input} as the message. \end{DoxyCompactList}\item 
+\hyperlink{msu__type_8h_aa99471a7e82985e3deaaa6fa5721a70a}{deserialization\-\_\-fn} \hyperlink{structmsu__type_aef2ca86cf163e5ff1464a65cde717503}{deserialize\-\_\-error}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Defines a type of M\-S\-U. 
+
+This information (mostly callbacks) is shared across all M\-S\-Us of the same type. 
+
+Definition at line 46 of file msu\-\_\-type.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structmsu__type_ad8ac9a913eb05ae392f3eed04f323a5d}{\index{msu\-\_\-type@{msu\-\_\-type}!deserialize@{deserialize}}
+\index{deserialize@{deserialize}!msu_type@{msu\-\_\-type}}
+\subsubsection[{deserialize}]{\setlength{\rightskip}{0pt plus 5cm}{\bf deserialization\-\_\-fn} msu\-\_\-type\-::deserialize}}\label{structmsu__type_ad8ac9a913eb05ae392f3eed04f323a5d}
+
+
+Defines deserialization protocl for data received by this M\-S\-U type If N\-U\-L\-L, assumes no pointers in the msu message, and simply assigns {\ttfamily input} as the message. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em self} & The M\-S\-U to receive the deserialized buffer \\
+\hline
+{\em input\-\_\-size} & Size of the received buffer \\
+\hline
+{\em input} & Message to be deserialized \\
+\hline
+{\em out\-\_\-size} & To be filled with the size of the struct deserialized off of the buffer \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The deserialized buffer 
+\end{DoxyReturn}
+
+
+Definition at line 128 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_aef2ca86cf163e5ff1464a65cde717503}{\index{msu\-\_\-type@{msu\-\_\-type}!deserialize\-\_\-error@{deserialize\-\_\-error}}
+\index{deserialize\-\_\-error@{deserialize\-\_\-error}!msu_type@{msu\-\_\-type}}
+\subsubsection[{deserialize\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}{\bf deserialization\-\_\-fn} msu\-\_\-type\-::deserialize\-\_\-error}}\label{structmsu__type_aef2ca86cf163e5ff1464a65cde717503}
+
+
+Definition at line 130 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_abfe698dd8e2d5ff6107f843c93927710}{\index{msu\-\_\-type@{msu\-\_\-type}!destroy@{destroy}}
+\index{destroy@{destroy}!msu_type@{msu\-\_\-type}}
+\subsubsection[{destroy}]{\setlength{\rightskip}{0pt plus 5cm}void($\ast$ msu\-\_\-type\-::destroy)(struct {\bf local\-\_\-msu} $\ast$self)}}\label{structmsu__type_abfe698dd8e2d5ff6107f843c93927710}
+
+
+Type-\/specific destructor that frees any internal data or state. 
+
+Can be N\-U\-L\-L if no additional freeing must occur 
+\begin{DoxyParams}{Parameters}
+{\em self} & M\-S\-U to be destroyed \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 81 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_a4386613c175f4fa42c1ae5b5027246ce}{\index{msu\-\_\-type@{msu\-\_\-type}!destroy\-\_\-type@{destroy\-\_\-type}}
+\index{destroy\-\_\-type@{destroy\-\_\-type}!msu_type@{msu\-\_\-type}}
+\subsubsection[{destroy\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}void($\ast$ msu\-\_\-type\-::destroy\-\_\-type)(struct {\bf msu\-\_\-type} $\ast$type)}}\label{structmsu__type_a4386613c175f4fa42c1ae5b5027246ce}
+
+
+Destructor for an M\-S\-U type, should destroy context initialized in {\ttfamily init\-\_\-type}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em type} & The type to be destroyed \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 64 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_a0d626321555fed55c525a480dee99b83}{\index{msu\-\_\-type@{msu\-\_\-type}!id@{id}}
+\index{id@{id}!msu_type@{msu\-\_\-type}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int msu\-\_\-type\-::id}}\label{structmsu__type_a0d626321555fed55c525a480dee99b83}
+
+
+Numerical identifier for the M\-S\-U. 
+
+
+
+Definition at line 51 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_af17ea5ed6d4071e62d80f545139fb425}{\index{msu\-\_\-type@{msu\-\_\-type}!init@{init}}
+\index{init@{init}!msu_type@{msu\-\_\-type}}
+\subsubsection[{init}]{\setlength{\rightskip}{0pt plus 5cm}int($\ast$ msu\-\_\-type\-::init)(struct {\bf local\-\_\-msu} $\ast$self, struct {\bf msu\-\_\-init\-\_\-data} $\ast$initial\-\_\-data)}}\label{structmsu__type_af17ea5ed6d4071e62d80f545139fb425}
+
+
+Type-\/specific construction function. 
+
+Generic construction for an M\-S\-U is always handled by \hyperlink{structlocal__msu}{local\-\_\-msu}. Can be set to N\-U\-L\-L if no additional initialization must occur. If this is non-\/\-N\-U\-L\-L it provides {\itshape additional} initialization, such as construction of msu state. 
+\begin{DoxyParams}{Parameters}
+{\em self} & M\-S\-U to be initialized (structure is already allocated) \\
+\hline
+{\em initial\-\_\-data} & initial information passed to the runtime by the global controller \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 75 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_a5dd9b478727fefecff8cf16525003135}{\index{msu\-\_\-type@{msu\-\_\-type}!init\-\_\-type@{init\-\_\-type}}
+\index{init\-\_\-type@{init\-\_\-type}!msu_type@{msu\-\_\-type}}
+\subsubsection[{init\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}int($\ast$ msu\-\_\-type\-::init\-\_\-type)(struct {\bf msu\-\_\-type} $\ast$type)}}\label{structmsu__type_a5dd9b478727fefecff8cf16525003135}
+
+
+Constructor for an M\-S\-U\-\_\-type itself, should initialize whatever context all M\-S\-Us of this type might need to rely upon. 
+
+Can be set to N\-U\-L\-L if no additional init must occur. 
+\begin{DoxyParams}{Parameters}
+{\em type} & M\-S\-U type under construction \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 59 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_ade4e1d9d98f0e22f3a54986919b07665}{\index{msu\-\_\-type@{msu\-\_\-type}!name@{name}}
+\index{name@{name}!msu_type@{msu\-\_\-type}}
+\subsubsection[{name}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ msu\-\_\-type\-::name}}\label{structmsu__type_ade4e1d9d98f0e22f3a54986919b07665}
+
+
+Name for the msu type. 
+
+
+
+Definition at line 48 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_a8e80deeae69a39533061d4407fa7c53d}{\index{msu\-\_\-type@{msu\-\_\-type}!receive@{receive}}
+\index{receive@{receive}!msu_type@{msu\-\_\-type}}
+\subsubsection[{receive}]{\setlength{\rightskip}{0pt plus 5cm}int($\ast$ msu\-\_\-type\-::receive)(struct {\bf local\-\_\-msu} $\ast$self, struct {\bf msu\-\_\-msg} $\ast$msg)}}\label{structmsu__type_a8e80deeae69a39533061d4407fa7c53d}
+
+
+Handles the receiving of data sent from other M\-S\-Us. 
+
+This field can {\bfseries not} be set to N\-U\-L\-L, and must be defined for each \hyperlink{structmsu__type}{msu\-\_\-type}. 
+\begin{DoxyParams}{Parameters}
+{\em self} & M\-S\-U receieving data \\
+\hline
+{\em msg} & data to receive from previous M\-S\-U \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 89 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_af38fab3cdee8b622e0bb3594c1d7414b}{\index{msu\-\_\-type@{msu\-\_\-type}!receive\-\_\-error@{receive\-\_\-error}}
+\index{receive\-\_\-error@{receive\-\_\-error}!msu_type@{msu\-\_\-type}}
+\subsubsection[{receive\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}int($\ast$ msu\-\_\-type\-::receive\-\_\-error)(struct {\bf local\-\_\-msu} $\ast$self, struct {\bf msu\-\_\-msg} $\ast$msg)}}\label{structmsu__type_af38fab3cdee8b622e0bb3594c1d7414b}
+
+
+Definition at line 91 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_ab076ecc00c1838c66351f51f9f2b684e}{\index{msu\-\_\-type@{msu\-\_\-type}!route@{route}}
+\index{route@{route}!msu_type@{msu\-\_\-type}}
+\subsubsection[{route}]{\setlength{\rightskip}{0pt plus 5cm}int($\ast$ msu\-\_\-type\-::route)(struct {\bf msu\-\_\-type} $\ast$type, struct {\bf local\-\_\-msu} $\ast$sender, struct {\bf msu\-\_\-msg} $\ast$msg, struct {\bf msu\-\_\-endpoint} $\ast$output)}}\label{structmsu__type_ab076ecc00c1838c66351f51f9f2b684e}
+
+
+Choose which M\-S\-U of {\bfseries this} type the {\bfseries previous} M\-S\-U will route to. 
+
+If N\-U\-L\-L, defaults to {\ttfamily \hyperlink{routing__strategies_8c_a0d7c6823c1258452b364a98e536ebd0b}{default\-\_\-routing()}} in \hyperlink{routing__strategies_8c}{runtime/routing\-\_\-strategies.\-c} 
+\begin{DoxyParams}{Parameters}
+{\em type} & M\-S\-U type of endpoint \\
+\hline
+{\em sender} & M\-S\-U sending the message \\
+\hline
+{\em msg} & data to be sent, in case destination depends on specifics of data \\
+\hline
+{\em output} & Output argument to be filled with the appropriate destination \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on succes, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 101 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_a47b8e5d5beb28f531665d60c6156ff39}{\index{msu\-\_\-type@{msu\-\_\-type}!serialize@{serialize}}
+\index{serialize@{serialize}!msu_type@{msu\-\_\-type}}
+\subsubsection[{serialize}]{\setlength{\rightskip}{0pt plus 5cm}{\bf serialization\-\_\-fn} msu\-\_\-type\-::serialize}}\label{structmsu__type_a47b8e5d5beb28f531665d60c6156ff39}
+
+
+Defines serialization protocol for data sent to this M\-S\-U type If N\-U\-L\-L, assumes no pointers in the msu message, and simply serializes the input for the length defined in the msu message header. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em type} & The type of M\-S\-U to which the serialized message is to be delivered \\
+\hline
+{\em input} & The M\-S\-U message to be serialized \\
+\hline
+{\em output} & To be allocated and filled with the serialized M\-S\-U message \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Size of the serialized message 
+\end{DoxyReturn}
+
+
+Definition at line 112 of file msu\-\_\-type.\-h.
+
+\hypertarget{structmsu__type_a765dacf40ac27344e2411e1c4e77a5a9}{\index{msu\-\_\-type@{msu\-\_\-type}!serialize\-\_\-error@{serialize\-\_\-error}}
+\index{serialize\-\_\-error@{serialize\-\_\-error}!msu_type@{msu\-\_\-type}}
+\subsubsection[{serialize\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}{\bf serialization\-\_\-fn} msu\-\_\-type\-::serialize\-\_\-error}}\label{structmsu__type_a765dacf40ac27344e2411e1c4e77a5a9}
+
+
+Defines serialization protocol for errors returned to this M\-S\-U type If N\-U\-L\-L, assumes no pointers in the msu message and simply serializes the input for the provided length. 
+
+
+
+Definition at line 118 of file msu\-\_\-type.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{msu__type_8h}{msu\-\_\-type.\-h}\end{DoxyCompactItemize}

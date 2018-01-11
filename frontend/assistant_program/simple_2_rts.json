@@ -1,0 +1,486 @@
+{
+  "application_name": "dedos_webserver",
+  "application_deadline": "10",
+  "global_ctl_ip": "192.168.0.2",
+  "global_ctl_port": "8090",
+  "load_mode": "preload",
+  "runtimes": [
+    {
+      "io_network_bw": "10485760",
+      "dram": "67108864",
+      "ip": "192.168.0.2",
+      "id": "1",
+      "routes": [
+        {
+          "id": "5030",
+          "destinations": {
+            "5": "1",
+            "6": "2"
+          },
+          "type": "503"
+        },
+        {
+          "id": "5000",
+          "destinations": {
+            "1": "1"
+          },
+          "type": "500"
+        },
+        {
+          "id": "5010",
+          "destinations": {
+            "4": "1"
+          },
+          "type": "501"
+        }
+      ],
+      "num_cores": "8",
+      "port": "4444"
+    },
+    {
+      "io_network_bw": "10485760",
+      "dram": "67108864",
+      "ip": "192.168.0.3",
+      "id": "2",
+      "routes": [
+        {
+          "id": "5000",
+          "destinations": {
+            "3": "1"
+          },
+          "type": "500"
+        },
+        {
+          "id": "5010",
+          "destinations": {
+            "4": "1"
+          },
+          "type": "501"
+        }
+      ],
+      "num_cores": "8",
+      "port": "4444"
+    }
+  ],
+  "MSUs": [
+    {
+      "vertex_type": "entry",
+      "profiling": {
+        "dram": "500MB",
+        "tx_node_local": "1",
+        "tx_node_remote": "25",
+        "wcet": "10",
+        "tx_core_local": "0.5"
+      },
+      "meta_routing": {
+        "dst_types": [
+          "500"
+        ]
+      },
+      "working_mode": "non-blocking",
+      "scheduling": {
+        "thread_id": "1",
+        "deadline": "5",
+        "runtime_id": "1",
+        "routing": [
+          "5000"
+        ]
+      },
+      "type": "502",
+      "id": "0",
+      "name": "ssl-route-1",
+      "statistics": {
+        "queue_items_processed": {
+          "values": [
+            "75",
+            "76",
+            "5",
+            "58",
+            "73"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "memory_allocated": {
+          "values": [
+            "21",
+            "72",
+            "49",
+            "92",
+            "3"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "queue_length": {
+          "values": [
+            "34",
+            "73",
+            "12",
+            "75",
+            "53"
+          ],
+          "timestamps": "range(420, 425)"
+        }
+      }
+    },
+    {
+      "vertex_type": "nop",
+      "profiling": {
+        "dram": "500MB",
+        "tx_node_local": "1",
+        "tx_node_remote": "25",
+        "wcet": "10",
+        "tx_core_local": "0.5"
+      },
+      "meta_routing": {
+        "source_types": [
+          "502"
+        ],
+        "dst_types": [
+          "501"
+        ]
+      },
+      "working_mode": "non-blocking",
+      "scheduling": {
+        "thread_id": "2",
+        "deadline": "5",
+        "runtime_id": "1",
+        "routing": [
+          "5010"
+        ]
+      },
+      "type": "500",
+      "id": "1",
+      "name": "ssl-read-1",
+      "statistics": {
+        "queue_items_processed": {
+          "values": [
+            "24",
+            "46",
+            "87",
+            "23",
+            "47"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "memory_allocated": {
+          "values": [
+            "34",
+            "62",
+            "15",
+            "83",
+            "74"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "queue_length": {
+          "values": [
+            "14",
+            "99",
+            "15",
+            "27",
+            "33"
+          ],
+          "timestamps": "range(420, 425)"
+        }
+      }
+    },
+    {
+      "vertex_type": "entry",
+      "profiling": {
+        "dram": "500MB",
+        "tx_node_local": "1",
+        "tx_node_remote": "25",
+        "wcet": "10",
+        "tx_core_local": "0.5"
+      },
+      "meta_routing": {
+        "dst_types": [
+          "500"
+        ]
+      },
+      "working_mode": "non-blocking",
+      "scheduling": {
+        "thread_id": "1",
+        "deadline": "5",
+        "runtime_id": "2",
+        "routing": [
+          "5000"
+        ]
+      },
+      "type": "502",
+      "id": "2",
+      "name": "ssl-route-2",
+      "statistics": {
+        "queue_items_processed": {
+          "values": [
+            "9",
+            "35",
+            "38",
+            "47",
+            "15"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "memory_allocated": {
+          "values": [
+            "26",
+            "28",
+            "27",
+            "77",
+            "28"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "queue_length": {
+          "values": [
+            "6",
+            "64",
+            "31",
+            "57",
+            "38"
+          ],
+          "timestamps": "range(420, 425)"
+        }
+      }
+    },
+    {
+      "vertex_type": "nop",
+      "profiling": {
+        "dram": "500MB",
+        "tx_node_local": "1",
+        "tx_node_remote": "25",
+        "wcet": "10",
+        "tx_core_local": "0.5"
+      },
+      "meta_routing": {
+        "source_types": [
+          "502"
+        ],
+        "dst_types": [
+          "501"
+        ]
+      },
+      "working_mode": "non-blocking",
+      "scheduling": {
+        "thread_id": "2",
+        "deadline": "5",
+        "runtime_id": "2",
+        "routing": [
+          "5010"
+        ]
+      },
+      "type": "500",
+      "id": "3",
+      "name": "ssl-read-2",
+      "statistics": {
+        "queue_items_processed": {
+          "values": [
+            "73",
+            "73",
+            "47",
+            "92",
+            "97"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "memory_allocated": {
+          "values": [
+            "26",
+            "63",
+            "77",
+            "16",
+            "84"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "queue_length": {
+          "values": [
+            "39",
+            "13",
+            "76",
+            "56",
+            "22"
+          ],
+          "timestamps": "range(420, 425)"
+        }
+      }
+    },
+    {
+      "vertex_type": "nop",
+      "profiling": {
+        "dram": "500MB",
+        "tx_node_local": "1",
+        "tx_node_remote": "25",
+        "wcet": "10",
+        "tx_core_local": "0.5"
+      },
+      "meta_routing": {
+        "source_types": [
+          "500"
+        ],
+        "dst_types": [
+          "505",
+          "503"
+        ]
+      },
+      "working_mode": "non-blocking",
+      "scheduling": {
+        "thread_id": "3",
+        "deadline": "5",
+        "runtime_id": "1",
+        "routing": [
+          "5030"
+        ]
+      },
+      "type": "501",
+      "id": "4",
+      "name": "http",
+      "statistics": {
+        "queue_items_processed": {
+          "values": [
+            "83",
+            "73",
+            "98",
+            "85",
+            "7"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "memory_allocated": {
+          "values": [
+            "23",
+            "18",
+            "22",
+            "56",
+            "59"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "queue_length": {
+          "values": [
+            "91",
+            "4",
+            "61",
+            "21",
+            "11"
+          ],
+          "timestamps": "range(420, 425)"
+        }
+      }
+    },
+    {
+      "vertex_type": "exit",
+      "profiling": {
+        "dram": "500MB",
+        "tx_node_local": "1",
+        "tx_node_remote": "25",
+        "wcet": "10",
+        "tx_core_local": "0.5"
+      },
+      "meta_routing": {
+        "source_types": [
+          "505",
+          "501"
+        ]
+      },
+      "working_mode": "non-blocking",
+      "scheduling": {
+        "thread_id": "4",
+        "deadline": "5",
+        "runtime_id": "1"
+      },
+      "type": "503",
+      "id": "5",
+      "name": "ssl-write-1",
+      "statistics": {
+        "queue_items_processed": {
+          "values": [
+            "99",
+            "13",
+            "73",
+            "1",
+            "99"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "memory_allocated": {
+          "values": [
+            "21",
+            "60",
+            "38",
+            "64",
+            "93"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "queue_length": {
+          "values": [
+            "51",
+            "19",
+            "70",
+            "66",
+            "52"
+          ],
+          "timestamps": "range(420, 425)"
+        }
+      }
+    },
+    {
+      "vertex_type": "exit",
+      "profiling": {
+        "dram": "500MB",
+        "tx_node_local": "1",
+        "tx_node_remote": "25",
+        "wcet": "10",
+        "tx_core_local": "0.5"
+      },
+      "meta_routing": {
+        "source_types": [
+          "505",
+          "501"
+        ]
+      },
+      "working_mode": "non-blocking",
+      "scheduling": {
+        "thread_id": "4",
+        "deadline": "5",
+        "runtime_id": "2"
+      },
+      "type": "503",
+      "id": "6",
+      "name": "ssl-write-2",
+      "statistics": {
+        "queue_items_processed": {
+          "values": [
+            "84",
+            "48",
+            "6",
+            "19",
+            "71"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "memory_allocated": {
+          "values": [
+            "83",
+            "63",
+            "39",
+            "45",
+            "99"
+          ],
+          "timestamps": "range(420, 425)"
+        },
+        "queue_length": {
+          "values": [
+            "31",
+            "13",
+            "1",
+            "51",
+            "71"
+          ],
+          "timestamps": "range(420, 425)"
+        }
+      }
+    }
+  ]
+}

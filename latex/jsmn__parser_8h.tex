@@ -1,0 +1,690 @@
+\hypertarget{jsmn__parser_8h}{\section{src/common/jsmn\-\_\-parser.h File Reference}
+\label{jsmn__parser_8h}\index{src/common/jsmn\-\_\-parser.\-h@{src/common/jsmn\-\_\-parser.\-h}}
+}
+
+
+General-\/purpose function to interact with J\-S\-M\-N library, and create objects (potentially with circular references) from the parsed json.  
+
+
+{\ttfamily \#include \char`\"{}jsmn.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structjson__state}{json\-\_\-state}
+\begin{DoxyCompactList}\small\item\em Structure to hold state while parsing J\-S\-O\-N. \end{DoxyCompactList}\item 
+struct \hyperlink{structkey__mapping}{key\-\_\-mapping}
+\begin{DoxyCompactList}\small\item\em Structure to map a key + state to a function. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{jsmn__parser_8h_a47427ce9fd70d27372b80a9be1a2daa2}{A\-S\-S\-E\-R\-T\-\_\-\-J\-S\-M\-N\-\_\-\-T\-Y\-P\-E}(tok, toktype, j)
+\begin{DoxyCompactList}\small\item\em Asserts that the type of the current token is the provided type, and logs an error if that is not the case. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}(fn\-\_\-name)
+\begin{DoxyCompactList}\small\item\em Macro for defining a jsmn\-\_\-parsing\-\_\-fn. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_a5e57fabb1fc41781421b1ac92f935879}{G\-E\-T\-\_\-\-P\-A\-R\-S\-E\-\_\-\-O\-B\-J}()~(in\-\_\-\-\_\--\/$>$data)
+\begin{DoxyCompactList}\small\item\em Within a \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}, gets the object currently being constructed. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_ab00b2ab5cd0ec303f5ace6f7f443d15f}{G\-E\-T\-\_\-\-S\-T\-R\-\_\-\-T\-O\-K}()~\hyperlink{jsmn__parser_8h_a346b094fa8534f65c9c54027966cf7ed}{tok\-\_\-to\-\_\-str}($\ast$tok\-\_\-\-\_\-, j\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Within a \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}, gets the token being read as a string. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_adab7fe0d8944e429c782ae67bbe64551}{G\-E\-T\-\_\-\-I\-N\-T\-\_\-\-T\-O\-K}()~\hyperlink{jsmn__parser_8h_a738af552e666b43b3540453162d7749b}{tok\-\_\-to\-\_\-int}($\ast$tok\-\_\-\-\_\-, j\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Within a \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}, gets the token being read as an integer. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_afa9444e5159b46ce517ee604adb529a3}{G\-E\-T\-\_\-\-L\-O\-N\-G\-\_\-\-T\-O\-K}()~\hyperlink{jsmn__parser_8h_ad7217aed5244c7d09a651817e91df8f9}{tok\-\_\-to\-\_\-long}($\ast$tok\-\_\-\-\_\-, j\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Within a \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}, gets the token being read as a long. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_adf702a4fa48504ef921002daec3b8e01}{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-L\-I\-S\-T\-\_\-\-F\-N}(fn\-\_\-name, init\-\_\-fn)
+\begin{DoxyCompactList}\small\item\em Macro for parsing a list of objects in a json file. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_a961abd553ca04347da10f3e0722cf0d1}{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N}(fn\-\_\-name)~static struct \hyperlink{structjson__state}{json\-\_\-state} fn\-\_\-name(struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in\-\_\-\-\_\-, int index\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Macro for instantiating a new struct based on the appearance of a new J\-S\-O\-N object. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_a2bd3a2d1d6f199873f687c9e52b2b973}{G\-E\-T\-\_\-\-O\-B\-J\-\_\-\-I\-N\-D\-E\-X}()~index\-\_\-\-\_\-
+\begin{DoxyCompactList}\small\item\em In an \hyperlink{jsmn__parser_8h_a961abd553ca04347da10f3e0722cf0d1}{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N}, returns the index of the currently parsed object list. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_ad53af0bbfde3e43cdd918bfff45c0ee0}{R\-E\-T\-U\-R\-N\-\_\-\-O\-B\-J}(data\-\_\-\-\_\-, type\-\_\-\-\_\-)
+\begin{DoxyCompactList}\small\item\em Should be the last line in an \hyperlink{jsmn__parser_8h_a961abd553ca04347da10f3e0722cf0d1}{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N}. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_aa6ffface985f954a709f335403b4b879}{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-F\-N}(fn\-\_\-name, parent\-\_\-obj\-\_\-type, parent\-\_\-obj\-\_\-field, new\-\_\-type)
+\begin{DoxyCompactList}\small\item\em Macro to descend into a J\-S\-O\-N object and the corresponding C struct for parsing. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_a8ff3758551cfabfc34da941e66ac29e1}{S\-T\-A\-R\-T\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T}(i)
+\begin{DoxyCompactList}\small\item\em Macro to iterate over a list of tokens. \end{DoxyCompactList}\item 
+\#define \hyperlink{jsmn__parser_8h_a35736eafb840ce9873008b841955011b}{E\-N\-D\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T}(i)~$\ast$tok\-\_\-\-\_\- = ($\ast$tok\-\_\-\-\_\-) -\/ (tok\-\_\-size\-\_\-\-\_\- -\/ i + 1);
+\begin{DoxyCompactList}\small\item\em Macro that should appear at the end of the iteration of a list of tokens. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef int($\ast$ \hyperlink{jsmn__parser_8h_a21c1272bc8a1fb518bd46118b824870f}{jsmn\-\_\-parsing\-\_\-fn} )(\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok, char $\ast$j, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state}, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved)
+\begin{DoxyCompactList}\small\item\em Typedef for a jsmn parsing function. \end{DoxyCompactList}\item 
+typedef struct \hyperlink{structjson__state}{json\-\_\-state}($\ast$ \hyperlink{jsmn__parser_8h_a09fdf53eedea461e044bae56e496e39a}{jsmn\-\_\-initializer} )(struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state}, int index)
+\begin{DoxyCompactList}\small\item\em Typedef for a \hyperlink{structjson__state}{json\-\_\-state} initializer, used when iterating over lists of objects. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{jsmn__parser_8h_a02c0e45ff329ab0d9dad3040802c4ba5}{parse\-\_\-file\-\_\-into\-\_\-obj} (const char $\ast$filename, void $\ast$obj, struct \hyperlink{structkey__mapping}{key\-\_\-mapping} $\ast$km)
+\begin{DoxyCompactList}\small\item\em Using the provided functions, parses the J\-S\-O\-N present in 'filename' and stores the resulting object in 'obj'. \end{DoxyCompactList}\item 
+int \hyperlink{jsmn__parser_8h_acbd15c5c914b8e3affbe2b0d4beeda8e}{parse\-\_\-str\-\_\-into\-\_\-obj} (char $\ast$contents, void $\ast$obj, struct \hyperlink{structkey__mapping}{key\-\_\-mapping} $\ast$km)
+\begin{DoxyCompactList}\small\item\em Using the provided functions, parses the J\-S\-O\-N present in in the provided string and stores the resulting object in 'obj'. \end{DoxyCompactList}\item 
+int \hyperlink{jsmn__parser_8h_aca46dd8054b9058526d3b1bd77fc535e}{jsmn\-\_\-ignore} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok, char $\ast$j, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved)
+\begin{DoxyCompactList}\small\item\em Can be used as a jsmn\-\_\-parsing\-\_\-fn that ignores any value passed into it. \end{DoxyCompactList}\item 
+int \hyperlink{jsmn__parser_8h_a2167b132961037d288c9c8ae1c405101}{parse\-\_\-jsmn\-\_\-obj} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok, char $\ast$j, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved)
+\begin{DoxyCompactList}\small\item\em S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y. \end{DoxyCompactList}\item 
+int \hyperlink{jsmn__parser_8h_a55f5eda3727f31cbfffcc3db7bc8e0a6}{parse\-\_\-jsmn\-\_\-obj\-\_\-list} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$$\ast$tok, char $\ast$j, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$in, struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$$\ast$saved, \hyperlink{jsmn__parser_8h_a09fdf53eedea461e044bae56e496e39a}{jsmn\-\_\-initializer} init)
+\begin{DoxyCompactList}\small\item\em S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y. \end{DoxyCompactList}\item 
+void $\ast$ \hyperlink{jsmn__parser_8h_a4e8c7edea7092c6c71b382d76d568b06}{get\-\_\-root\-\_\-jsmn\-\_\-obj} ()
+\begin{DoxyCompactList}\small\item\em Returns the initial object passed into the J\-S\-O\-N parser. \end{DoxyCompactList}\item 
+char $\ast$ \hyperlink{jsmn__parser_8h_a346b094fa8534f65c9c54027966cf7ed}{tok\-\_\-to\-\_\-str} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$tok, char $\ast$j)
+\begin{DoxyCompactList}\small\item\em S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-T. \end{DoxyCompactList}\item 
+int \hyperlink{jsmn__parser_8h_a738af552e666b43b3540453162d7749b}{tok\-\_\-to\-\_\-int} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$tok, char $\ast$j)
+\begin{DoxyCompactList}\small\item\em S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y. \end{DoxyCompactList}\item 
+long \hyperlink{jsmn__parser_8h_ad7217aed5244c7d09a651817e91df8f9}{tok\-\_\-to\-\_\-long} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$tok, char $\ast$j)
+\begin{DoxyCompactList}\small\item\em S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+General-\/purpose function to interact with J\-S\-M\-N library, and create objects (potentially with circular references) from the parsed json. 
+
+Definition in file \hyperlink{jsmn__parser_8h_source}{jsmn\-\_\-parser.\-h}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{jsmn__parser_8h_a47427ce9fd70d27372b80a9be1a2daa2}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!A\-S\-S\-E\-R\-T\-\_\-\-J\-S\-M\-N\-\_\-\-T\-Y\-P\-E@{A\-S\-S\-E\-R\-T\-\_\-\-J\-S\-M\-N\-\_\-\-T\-Y\-P\-E}}
+\index{A\-S\-S\-E\-R\-T\-\_\-\-J\-S\-M\-N\-\_\-\-T\-Y\-P\-E@{A\-S\-S\-E\-R\-T\-\_\-\-J\-S\-M\-N\-\_\-\-T\-Y\-P\-E}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{A\-S\-S\-E\-R\-T\-\_\-\-J\-S\-M\-N\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\-S\-S\-E\-R\-T\-\_\-\-J\-S\-M\-N\-\_\-\-T\-Y\-P\-E(
+\begin{DoxyParamCaption}
+\item[{}]{tok, }
+\item[{}]{toktype, }
+\item[{}]{j}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a47427ce9fd70d27372b80a9be1a2daa2}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} ((tok)->type != toktype)\{ \hyperlink{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}{\(\backslash\)}
+\hyperlink{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}{        log\_error}(\textcolor{stringliteral}{"Got type %d, expected %d while parsing %.50s"}, \(\backslash\)
+                  (tok)->type, toktype, &j[(tok)->start]); \(\backslash\)
+        return -1; \(\backslash\)
+    \} \(\backslash\)
+\end{DoxyCode}
+
+
+Asserts that the type of the current token is the provided type, and logs an error if that is not the case. 
+
+
+
+Definition at line 39 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_a35736eafb840ce9873008b841955011b}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!E\-N\-D\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T@{E\-N\-D\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T}}
+\index{E\-N\-D\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T@{E\-N\-D\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{E\-N\-D\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define E\-N\-D\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T(
+\begin{DoxyParamCaption}
+\item[{}]{i}
+\end{DoxyParamCaption}
+)~$\ast$tok\-\_\-\-\_\- = ($\ast$tok\-\_\-\-\_\-) -\/ (tok\-\_\-size\-\_\-\-\_\- -\/ i + 1);}}\label{jsmn__parser_8h_a35736eafb840ce9873008b841955011b}
+
+
+Macro that should appear at the end of the iteration of a list of tokens. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em i} & The same integer which was passed into \hyperlink{jsmn__parser_8h_a8ff3758551cfabfc34da941e66ac29e1}{S\-T\-A\-R\-T\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T} \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 172 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_adab7fe0d8944e429c782ae67bbe64551}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!G\-E\-T\-\_\-\-I\-N\-T\-\_\-\-T\-O\-K@{G\-E\-T\-\_\-\-I\-N\-T\-\_\-\-T\-O\-K}}
+\index{G\-E\-T\-\_\-\-I\-N\-T\-\_\-\-T\-O\-K@{G\-E\-T\-\_\-\-I\-N\-T\-\_\-\-T\-O\-K}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{G\-E\-T\-\_\-\-I\-N\-T\-\_\-\-T\-O\-K}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-E\-T\-\_\-\-I\-N\-T\-\_\-\-T\-O\-K(
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)~{\bf tok\-\_\-to\-\_\-int}($\ast$tok\-\_\-\-\_\-, j\-\_\-\-\_\-)}}\label{jsmn__parser_8h_adab7fe0d8944e429c782ae67bbe64551}
+
+
+Within a \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}, gets the token being read as an integer. 
+
+
+
+Definition at line 89 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_afa9444e5159b46ce517ee604adb529a3}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!G\-E\-T\-\_\-\-L\-O\-N\-G\-\_\-\-T\-O\-K@{G\-E\-T\-\_\-\-L\-O\-N\-G\-\_\-\-T\-O\-K}}
+\index{G\-E\-T\-\_\-\-L\-O\-N\-G\-\_\-\-T\-O\-K@{G\-E\-T\-\_\-\-L\-O\-N\-G\-\_\-\-T\-O\-K}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{G\-E\-T\-\_\-\-L\-O\-N\-G\-\_\-\-T\-O\-K}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-E\-T\-\_\-\-L\-O\-N\-G\-\_\-\-T\-O\-K(
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)~{\bf tok\-\_\-to\-\_\-long}($\ast$tok\-\_\-\-\_\-, j\-\_\-\-\_\-)}}\label{jsmn__parser_8h_afa9444e5159b46ce517ee604adb529a3}
+
+
+Within a \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}, gets the token being read as a long. 
+
+
+
+Definition at line 93 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_a2bd3a2d1d6f199873f687c9e52b2b973}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!G\-E\-T\-\_\-\-O\-B\-J\-\_\-\-I\-N\-D\-E\-X@{G\-E\-T\-\_\-\-O\-B\-J\-\_\-\-I\-N\-D\-E\-X}}
+\index{G\-E\-T\-\_\-\-O\-B\-J\-\_\-\-I\-N\-D\-E\-X@{G\-E\-T\-\_\-\-O\-B\-J\-\_\-\-I\-N\-D\-E\-X}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{G\-E\-T\-\_\-\-O\-B\-J\-\_\-\-I\-N\-D\-E\-X}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-E\-T\-\_\-\-O\-B\-J\-\_\-\-I\-N\-D\-E\-X(
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)~index\-\_\-\-\_\-}}\label{jsmn__parser_8h_a2bd3a2d1d6f199873f687c9e52b2b973}
+
+
+In an \hyperlink{jsmn__parser_8h_a961abd553ca04347da10f3e0722cf0d1}{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N}, returns the index of the currently parsed object list. 
+
+
+
+Definition at line 120 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_a5e57fabb1fc41781421b1ac92f935879}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!G\-E\-T\-\_\-\-P\-A\-R\-S\-E\-\_\-\-O\-B\-J@{G\-E\-T\-\_\-\-P\-A\-R\-S\-E\-\_\-\-O\-B\-J}}
+\index{G\-E\-T\-\_\-\-P\-A\-R\-S\-E\-\_\-\-O\-B\-J@{G\-E\-T\-\_\-\-P\-A\-R\-S\-E\-\_\-\-O\-B\-J}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{G\-E\-T\-\_\-\-P\-A\-R\-S\-E\-\_\-\-O\-B\-J}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-E\-T\-\_\-\-P\-A\-R\-S\-E\-\_\-\-O\-B\-J(
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)~(in\-\_\-\-\_\--\/$>$data)}}\label{jsmn__parser_8h_a5e57fabb1fc41781421b1ac92f935879}
+
+
+Within a \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}, gets the object currently being constructed. 
+
+
+
+Definition at line 81 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_ab00b2ab5cd0ec303f5ace6f7f443d15f}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!G\-E\-T\-\_\-\-S\-T\-R\-\_\-\-T\-O\-K@{G\-E\-T\-\_\-\-S\-T\-R\-\_\-\-T\-O\-K}}
+\index{G\-E\-T\-\_\-\-S\-T\-R\-\_\-\-T\-O\-K@{G\-E\-T\-\_\-\-S\-T\-R\-\_\-\-T\-O\-K}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{G\-E\-T\-\_\-\-S\-T\-R\-\_\-\-T\-O\-K}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-E\-T\-\_\-\-S\-T\-R\-\_\-\-T\-O\-K(
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)~{\bf tok\-\_\-to\-\_\-str}($\ast$tok\-\_\-\-\_\-, j\-\_\-\-\_\-)}}\label{jsmn__parser_8h_ab00b2ab5cd0ec303f5ace6f7f443d15f}
+
+
+Within a \hyperlink{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{P\-A\-R\-S\-E\-\_\-\-F\-N}, gets the token being read as a string. 
+
+
+
+Definition at line 85 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_a961abd553ca04347da10f3e0722cf0d1}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N@{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N}}
+\index{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N@{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N(
+\begin{DoxyParamCaption}
+\item[{}]{fn\-\_\-name}
+\end{DoxyParamCaption}
+)~static struct {\bf json\-\_\-state} fn\-\_\-name(struct {\bf json\-\_\-state} $\ast$in\-\_\-\-\_\-, int index\-\_\-\-\_\-)}}\label{jsmn__parser_8h_a961abd553ca04347da10f3e0722cf0d1}
+
+
+Macro for instantiating a new struct based on the appearance of a new J\-S\-O\-N object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fn\-\_\-name} & Name for the function, which should subsequently be defined to create a new object, which should be returned with \hyperlink{jsmn__parser_8h_ad53af0bbfde3e43cdd918bfff45c0ee0}{R\-E\-T\-U\-R\-N\-\_\-\-O\-B\-J} \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 114 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!P\-A\-R\-S\-E\-\_\-\-F\-N@{P\-A\-R\-S\-E\-\_\-\-F\-N}}
+\index{P\-A\-R\-S\-E\-\_\-\-F\-N@{P\-A\-R\-S\-E\-\_\-\-F\-N}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{P\-A\-R\-S\-E\-\_\-\-F\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-A\-R\-S\-E\-\_\-\-F\-N(
+\begin{DoxyParamCaption}
+\item[{}]{fn\-\_\-name}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a0c839d4062853c0697e66d4c718cd418}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keyword}{static} \textcolor{keywordtype}{int} fn\_name(\hyperlink{structjsmntok__t}{jsmntok\_t} **tok\_\_, \textcolor{keywordtype}{char} *j\_\_, \(\backslash\)
+                     \textcolor{keyword}{struct} \hyperlink{structjson__state}{json\_state} *in\_\_, \textcolor{keyword}{struct} \hyperlink{structjson__state}{json\_state} **saved\_\_)
+\end{DoxyCode}
+
+
+Macro for defining a jsmn\-\_\-parsing\-\_\-fn. 
+
+Each key in the J\-S\-O\-N file should have an associated function defined using this macro. 
+\begin{DoxyParams}{Parameters}
+{\em fn\-\_\-name} & The name of the function to define, which should return 0 on success, -\/1 on error, 1 to defer (see \hyperlink{jsmn__parser_8h_a21c1272bc8a1fb518bd46118b824870f}{jsmn\-\_\-parsing\-\_\-fn}) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 76 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_aa6ffface985f954a709f335403b4b879}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-F\-N@{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-F\-N}}
+\index{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-F\-N@{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-F\-N}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-F\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-F\-N(
+\begin{DoxyParamCaption}
+\item[{}]{fn\-\_\-name, }
+\item[{}]{parent\-\_\-obj\-\_\-type, }
+\item[{}]{parent\-\_\-obj\-\_\-field, }
+\item[{}]{new\-\_\-type}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_aa6ffface985f954a709f335403b4b879}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keyword}{static} \textcolor{keywordtype}{int} fn\_name(\hyperlink{structjsmntok__t}{jsmntok\_t} **tok\_\_, \textcolor{keywordtype}{char} *j\_\_, \(\backslash\)
+                       \textcolor{keyword}{struct} \hyperlink{structjson__state}{json\_state} *in\_\_, \textcolor{keyword}{struct} \hyperlink{structjson__state}{json\_state} **saved\_\_) \{ \(\backslash\)
+        parent\_obj\_type *type\_out\_\_ = in\_\_->\hyperlink{structjson__state_acc079826c9aec290370460c6a5b0cdc8}{data}; \(\backslash\)
+        struct \hyperlink{structjson__state}{json\_state} state\_out\_\_ = \{ \(\backslash\)
+            .\hyperlink{structjson__state_acc079826c9aec290370460c6a5b0cdc8}{data} = &type\_out\_\_->parent\_obj\_field, \(\backslash\)
+            .parent\_type = new\_type, \(\backslash\)
+            .tok = *tok\_\_ \(\backslash\)
+        \}; \(\backslash\)
+        if (\hyperlink{jsmn__parser_8h_a2167b132961037d288c9c8ae1c405101}{parse\_jsmn\_obj}(tok\_\_, j\_\_, &state\_out\_\_, saved\_\_) < 0) \{ \(\backslash\)
+            return -1; \(\backslash\)
+        \} \(\backslash\)
+        return 0;  \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Macro to descend into a J\-S\-O\-N object and the corresponding C struct for parsing. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fn\-\_\-name} & The name of the function to later reference in the \hyperlink{structkey__mapping}{key\-\_\-mapping} \\
+\hline
+{\em parent\-\_\-obj\-\_\-type} & The typename of the parent C struct already being parsed \\
+\hline
+{\em parent\-\_\-obj\-\_\-field} & The field name of the parent C struct which should be descended into \\
+\hline
+{\em new\-\_\-type} & An identifier (enumerator) for the new type of object being created \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 143 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_adf702a4fa48504ef921002daec3b8e01}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-L\-I\-S\-T\-\_\-\-F\-N@{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-L\-I\-S\-T\-\_\-\-F\-N}}
+\index{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-L\-I\-S\-T\-\_\-\-F\-N@{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-L\-I\-S\-T\-\_\-\-F\-N}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-L\-I\-S\-T\-\_\-\-F\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-A\-R\-S\-E\-\_\-\-O\-B\-J\-\_\-\-L\-I\-S\-T\-\_\-\-F\-N(
+\begin{DoxyParamCaption}
+\item[{}]{fn\-\_\-name, }
+\item[{}]{init\-\_\-fn}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_adf702a4fa48504ef921002daec3b8e01}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keyword}{static} \textcolor{keywordtype}{int} fn\_name(\hyperlink{structjsmntok__t}{jsmntok\_t} **tok\_\_, \textcolor{keywordtype}{char} *j\_\_, \(\backslash\)
+                       \textcolor{keyword}{struct} \hyperlink{structjson__state}{json\_state} *in\_\_, \textcolor{keyword}{struct} \hyperlink{structjson__state}{json\_state} **saved\_\_) \{ \(\backslash\)
+        return \hyperlink{jsmn__parser_8h_a55f5eda3727f31cbfffcc3db7bc8e0a6}{parse\_jsmn\_obj\_list}(tok\_\_, j\_\_, in\_\_, saved\_\_, init\_fn); \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Macro for parsing a list of objects in a json file. 
+
+For each element that is encountered, {\ttfamily init\-\_\-fn} will be called to construct the object which is passed in to each of the keys within that object 
+\begin{DoxyParams}{Parameters}
+{\em fn\-\_\-name} & A name for the function to define \\
+\hline
+{\em init\-\_\-fn} & An \hyperlink{jsmn__parser_8h_a961abd553ca04347da10f3e0722cf0d1}{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N} to create the new object \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 103 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_ad53af0bbfde3e43cdd918bfff45c0ee0}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!R\-E\-T\-U\-R\-N\-\_\-\-O\-B\-J@{R\-E\-T\-U\-R\-N\-\_\-\-O\-B\-J}}
+\index{R\-E\-T\-U\-R\-N\-\_\-\-O\-B\-J@{R\-E\-T\-U\-R\-N\-\_\-\-O\-B\-J}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{R\-E\-T\-U\-R\-N\-\_\-\-O\-B\-J}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\-E\-T\-U\-R\-N\-\_\-\-O\-B\-J(
+\begin{DoxyParamCaption}
+\item[{}]{data\-\_\-\-\_\-, }
+\item[{}]{type\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_ad53af0bbfde3e43cdd918bfff45c0ee0}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keyword}{struct }\hyperlink{structjson__state}{json\_state} out\_obj\_\_ = \{ \(\backslash\)
+        .\hyperlink{structjson__state_acc079826c9aec290370460c6a5b0cdc8}{data} = data\_\_, \(\backslash\)
+        .parent\_type = type\_\_ \(\backslash\)
+    \}; \(\backslash\)
+    return out\_obj\_\_;
+\end{DoxyCode}
+
+
+Should be the last line in an \hyperlink{jsmn__parser_8h_a961abd553ca04347da10f3e0722cf0d1}{I\-N\-I\-T\-\_\-\-O\-B\-J\-\_\-\-F\-N}. 
+
+Returns the newly-\/created object. 
+\begin{DoxyParams}{Parameters}
+{\em data\-\_\-\-\_\-} & A pointer to the newly-\/created object which should be parsed into \\
+\hline
+{\em type\-\_\-\-\_\-} & The enumerator for the type of object which is new being parsed \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 128 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_a8ff3758551cfabfc34da941e66ac29e1}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!S\-T\-A\-R\-T\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T@{S\-T\-A\-R\-T\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T}}
+\index{S\-T\-A\-R\-T\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T@{S\-T\-A\-R\-T\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{S\-T\-A\-R\-T\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-T\-A\-R\-T\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T(
+\begin{DoxyParamCaption}
+\item[{}]{i}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a8ff3758551cfabfc34da941e66ac29e1}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordtype}{int} tok\_size\_\_ = (*tok\_\_)->size; \(\backslash\)
+    for (i = 0, ++(*tok\_\_); i< tok\_size\_\_;  ++(*tok\_\_), i++)
+\end{DoxyCode}
+
+
+Macro to iterate over a list of tokens. 
+
+Once inside the iteration, can get the current token with G\-E\-T\-\_\-$\ast$\-\_\-\-T\-O\-K(). Iteration should be ended with \hyperlink{jsmn__parser_8h_a35736eafb840ce9873008b841955011b}{E\-N\-D\-\_\-\-I\-T\-E\-R\-\_\-\-T\-O\-K\-\_\-\-L\-I\-S\-T} 
+\begin{DoxyParams}{Parameters}
+{\em i} & An integer into which to place the current index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 164 of file jsmn\-\_\-parser.\-h.
+
+
+
+\subsection{Typedef Documentation}
+\hypertarget{jsmn__parser_8h_a09fdf53eedea461e044bae56e496e39a}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!jsmn\-\_\-initializer@{jsmn\-\_\-initializer}}
+\index{jsmn\-\_\-initializer@{jsmn\-\_\-initializer}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{jsmn\-\_\-initializer}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct {\bf json\-\_\-state}($\ast$ jsmn\-\_\-initializer)(struct {\bf json\-\_\-state} $\ast${\bf state}, int index)}}\label{jsmn__parser_8h_a09fdf53eedea461e044bae56e496e39a}
+
+
+Typedef for a \hyperlink{structjson__state}{json\-\_\-state} initializer, used when iterating over lists of objects. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state} & -\/ current state being parsed \\
+\hline
+{\em index} & -\/ index into the current list \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a new struct with the new data item of interest 
+\end{DoxyReturn}
+
+
+Definition at line 223 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{jsmn__parser_8h_a21c1272bc8a1fb518bd46118b824870f}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!jsmn\-\_\-parsing\-\_\-fn@{jsmn\-\_\-parsing\-\_\-fn}}
+\index{jsmn\-\_\-parsing\-\_\-fn@{jsmn\-\_\-parsing\-\_\-fn}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{jsmn\-\_\-parsing\-\_\-fn}]{\setlength{\rightskip}{0pt plus 5cm}typedef int($\ast$ jsmn\-\_\-parsing\-\_\-fn)({\bf jsmntok\-\_\-t} $\ast$$\ast$tok, char $\ast$j, struct {\bf json\-\_\-state} $\ast${\bf state}, struct {\bf json\-\_\-state} $\ast$$\ast$saved)}}\label{jsmn__parser_8h_a21c1272bc8a1fb518bd46118b824870f}
+
+
+Typedef for a jsmn parsing function. 
+
+Each element in the key mapping should have one of these as the third element.
+
+
+\begin{DoxyParams}{Parameters}
+{\em tok} & -\/ current token to be parsed \\
+\hline
+{\em j} & -\/ entire J\-S\-O\-N string \\
+\hline
+{\em state} & -\/ current state being parsed \\
+\hline
+{\em saved} & -\/ items that have been deferred to parse until later are stored here \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error, 1 to defer parsing until a future pass 
+\end{DoxyReturn}
+
+
+Definition at line 66 of file jsmn\-\_\-parser.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{jsmn__parser_8h_a4e8c7edea7092c6c71b382d76d568b06}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!get\-\_\-root\-\_\-jsmn\-\_\-obj@{get\-\_\-root\-\_\-jsmn\-\_\-obj}}
+\index{get\-\_\-root\-\_\-jsmn\-\_\-obj@{get\-\_\-root\-\_\-jsmn\-\_\-obj}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{get\-\_\-root\-\_\-jsmn\-\_\-obj}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ get\-\_\-root\-\_\-jsmn\-\_\-obj (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a4e8c7edea7092c6c71b382d76d568b06}
+
+
+Returns the initial object passed into the J\-S\-O\-N parser. 
+
+
+
+Definition at line 92 of file jsmn\-\_\-parser.\-c.
+
+\hypertarget{jsmn__parser_8h_aca46dd8054b9058526d3b1bd77fc535e}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!jsmn\-\_\-ignore@{jsmn\-\_\-ignore}}
+\index{jsmn\-\_\-ignore@{jsmn\-\_\-ignore}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{jsmn\-\_\-ignore}]{\setlength{\rightskip}{0pt plus 5cm}int jsmn\-\_\-ignore (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok, }
+\item[{char $\ast$}]{j, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{in, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_aca46dd8054b9058526d3b1bd77fc535e}
+
+
+Can be used as a jsmn\-\_\-parsing\-\_\-fn that ignores any value passed into it. 
+
+Can be used as a jsmn\-\_\-parsing\-\_\-fn that ignores any value passed into it. 
+
+Definition at line 120 of file jsmn\-\_\-parser.\-c.
+
+\hypertarget{jsmn__parser_8h_a02c0e45ff329ab0d9dad3040802c4ba5}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!parse\-\_\-file\-\_\-into\-\_\-obj@{parse\-\_\-file\-\_\-into\-\_\-obj}}
+\index{parse\-\_\-file\-\_\-into\-\_\-obj@{parse\-\_\-file\-\_\-into\-\_\-obj}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{parse\-\_\-file\-\_\-into\-\_\-obj}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-\_\-file\-\_\-into\-\_\-obj (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{filename, }
+\item[{void $\ast$}]{obj, }
+\item[{struct {\bf key\-\_\-mapping} $\ast$}]{km}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a02c0e45ff329ab0d9dad3040802c4ba5}
+
+
+Using the provided functions, parses the J\-S\-O\-N present in 'filename' and stores the resulting object in 'obj'. 
+
+Can iterate multiple times on tokens which have dependencies.
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & -\/ J\-S\-O\-N file to be parsed \\
+\hline
+{\em obj} & -\/ object to be filled with the results of parsing \\
+\hline
+{\em keymap} & -\/ the mapping between the J\-S\-O\-N key and the function to be called \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 135 of file jsmn\-\_\-parser.\-c.
+
+\hypertarget{jsmn__parser_8h_a2167b132961037d288c9c8ae1c405101}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!parse\-\_\-jsmn\-\_\-obj@{parse\-\_\-jsmn\-\_\-obj}}
+\index{parse\-\_\-jsmn\-\_\-obj@{parse\-\_\-jsmn\-\_\-obj}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{parse\-\_\-jsmn\-\_\-obj}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-\_\-jsmn\-\_\-obj (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok, }
+\item[{char $\ast$}]{j, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{state, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a2167b132961037d288c9c8ae1c405101}
+
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y. 
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y.
+
+
+\begin{DoxyParams}{Parameters}
+{\em tok} & -\/ pointer to current token to be parsed (advances automatically) \\
+\hline
+{\em j} & -\/ entire json string being parsed \\
+\hline
+{\em state} & -\/ curernt state of parsing, including the data structure being parsed into \\
+\hline
+{\em saved} & -\/ J\-S\-O\-N entries on which parsing has been deferred for later \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 358 of file jsmn\-\_\-parser.\-c.
+
+\hypertarget{jsmn__parser_8h_a55f5eda3727f31cbfffcc3db7bc8e0a6}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!parse\-\_\-jsmn\-\_\-obj\-\_\-list@{parse\-\_\-jsmn\-\_\-obj\-\_\-list}}
+\index{parse\-\_\-jsmn\-\_\-obj\-\_\-list@{parse\-\_\-jsmn\-\_\-obj\-\_\-list}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{parse\-\_\-jsmn\-\_\-obj\-\_\-list}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-\_\-jsmn\-\_\-obj\-\_\-list (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$$\ast$}]{tok, }
+\item[{char $\ast$}]{j, }
+\item[{struct {\bf json\-\_\-state} $\ast$}]{state, }
+\item[{struct {\bf json\-\_\-state} $\ast$$\ast$}]{saved, }
+\item[{{\bf jsmn\-\_\-initializer}}]{init}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a55f5eda3727f31cbfffcc3db7bc8e0a6}
+
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y. 
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y.
+
+Calls init() for each new object, then passes the returned \hyperlink{structjson__state}{json\-\_\-state} to the next parsed object.
+
+
+\begin{DoxyParams}{Parameters}
+{\em tok} & -\/ the current jsmn token to parse \\
+\hline
+{\em j} & -\/ the entire json string \\
+\hline
+{\em state} & -\/ the current state of parsing \\
+\hline
+{\em saved} & -\/ list of states to be re-\/interpreted laster \\
+\hline
+{\em init} & -\/ initialization function, returning a {\ttfamily struct \hyperlink{structjson__state}{json\-\_\-state}} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on failure 
+\end{DoxyReturn}
+
+
+Definition at line 318 of file jsmn\-\_\-parser.\-c.
+
+\hypertarget{jsmn__parser_8h_acbd15c5c914b8e3affbe2b0d4beeda8e}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!parse\-\_\-str\-\_\-into\-\_\-obj@{parse\-\_\-str\-\_\-into\-\_\-obj}}
+\index{parse\-\_\-str\-\_\-into\-\_\-obj@{parse\-\_\-str\-\_\-into\-\_\-obj}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{parse\-\_\-str\-\_\-into\-\_\-obj}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-\_\-str\-\_\-into\-\_\-obj (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{contents, }
+\item[{void $\ast$}]{obj, }
+\item[{struct {\bf key\-\_\-mapping} $\ast$}]{km}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_acbd15c5c914b8e3affbe2b0d4beeda8e}
+
+
+Using the provided functions, parses the J\-S\-O\-N present in in the provided string and stores the resulting object in 'obj'. 
+
+Can iterate multiple times on tokens which have dependencies.
+
+
+\begin{DoxyParams}{Parameters}
+{\em contents} & -\/ Null-\/terminated string to be parsed \\
+\hline
+{\em obj} & -\/ object to be filled with the results of parsing \\
+\hline
+{\em keymap} & -\/ the mapping between the J\-S\-O\-N key and the function to be called \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 171 of file jsmn\-\_\-parser.\-c.
+
+\hypertarget{jsmn__parser_8h_a738af552e666b43b3540453162d7749b}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!tok\-\_\-to\-\_\-int@{tok\-\_\-to\-\_\-int}}
+\index{tok\-\_\-to\-\_\-int@{tok\-\_\-to\-\_\-int}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{tok\-\_\-to\-\_\-int}]{\setlength{\rightskip}{0pt plus 5cm}int tok\-\_\-to\-\_\-int (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{tok, }
+\item[{char $\ast$}]{j}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a738af552e666b43b3540453162d7749b}
+
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y. 
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y.
+
+Sets the \char`\"{}end\char`\"{} char to \textbackslash{}0, and converts converts the resulting string to an integer
+
+
+\begin{DoxyParams}{Parameters}
+{\em tok} & -\/ J\-S\-M\-N token to extract \\
+\hline
+{\em j} & -\/ original json string \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+-\/ integer 
+\end{DoxyReturn}
+
+
+Definition at line 42 of file jsmn\-\_\-parser.\-c.
+
+\hypertarget{jsmn__parser_8h_ad7217aed5244c7d09a651817e91df8f9}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!tok\-\_\-to\-\_\-long@{tok\-\_\-to\-\_\-long}}
+\index{tok\-\_\-to\-\_\-long@{tok\-\_\-to\-\_\-long}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{tok\-\_\-to\-\_\-long}]{\setlength{\rightskip}{0pt plus 5cm}long tok\-\_\-to\-\_\-long (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{tok, }
+\item[{char $\ast$}]{j}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_ad7217aed5244c7d09a651817e91df8f9}
+
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y. 
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-Y.
+
+Sets the \char`\"{}end\char`\"{} char to \textbackslash{}0, and converts converts the resulting string to a long integer
+
+
+\begin{DoxyParams}{Parameters}
+{\em tok} & -\/ J\-S\-M\-N token to extract \\
+\hline
+{\em j} & -\/ original json string \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+-\/ long 
+\end{DoxyReturn}
+
+
+Definition at line 55 of file jsmn\-\_\-parser.\-c.
+
+\hypertarget{jsmn__parser_8h_a346b094fa8534f65c9c54027966cf7ed}{\index{jsmn\-\_\-parser.\-h@{jsmn\-\_\-parser.\-h}!tok\-\_\-to\-\_\-str@{tok\-\_\-to\-\_\-str}}
+\index{tok\-\_\-to\-\_\-str@{tok\-\_\-to\-\_\-str}!jsmn_parser.h@{jsmn\-\_\-parser.\-h}}
+\subsubsection[{tok\-\_\-to\-\_\-str}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ tok\-\_\-to\-\_\-str (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{tok, }
+\item[{char $\ast$}]{j}
+\end{DoxyParamCaption}
+)}}\label{jsmn__parser_8h_a346b094fa8534f65c9c54027966cf7ed}
+
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-T. 
+
+S\-H\-O\-U\-L\-D N\-O\-T B\-E U\-S\-E\-D D\-I\-R\-E\-C\-T\-L\-T.
+
+Sets the \char`\"{}end\char`\"{} char to \textbackslash{}0, and returns a pointer to the start
+
+
+\begin{DoxyParams}{Parameters}
+{\em tok} & -\/ J\-S\-M\-N token to extract \\
+\hline
+{\em j} & -\/ original json string \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+-\/ null-\/terminated char $\ast$ 
+\end{DoxyReturn}
+
+
+Definition at line 69 of file jsmn\-\_\-parser.\-c.
+

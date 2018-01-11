@@ -1,0 +1,115 @@
+\hypertarget{output__thread_8h}{\section{src/runtime/output\-\_\-thread.h File Reference}
+\label{output__thread_8h}\index{src/runtime/output\-\_\-thread.\-h@{src/runtime/output\-\_\-thread.\-h}}
+}
+
+
+A \hyperlink{structdedos__thread}{dedos\-\_\-thread} which monitors a queue for output to be sent to other runtimes or the global controller.  
+
+
+{\ttfamily \#include \char`\"{}dedos\-\_\-threads.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}thread\-\_\-message.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{output__thread_8h_ae1a58cdf173436fc88c06c639f6e8cbb}{O\-U\-T\-P\-U\-T\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D}~-\/1
+\begin{DoxyCompactList}\small\item\em A \hyperlink{structthread__msg}{thread\-\_\-msg} marked for delivery to this thread I\-D will be enqueued to the output thread. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{output__thread_8h_aed64064965f0c39513f1eeb1d0cb4756}{enqueue\-\_\-for\-\_\-output} (struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$\hyperlink{structthread__msg}{thread\-\_\-msg})
+\begin{DoxyCompactList}\small\item\em Enqueues a \hyperlink{structthread__msg}{thread\-\_\-msg} for delivery to the output thread. \end{DoxyCompactList}\item 
+void \hyperlink{output__thread_8h_a29deb435fdb02d579ebaf9cd30413c42}{stop\-\_\-output\-\_\-monitor} ()
+\begin{DoxyCompactList}\small\item\em Triggers the output thread to stop execution. \end{DoxyCompactList}\item 
+void \hyperlink{output__thread_8h_a5b8feea98a512b16b376d3bd085270c2}{join\-\_\-output\-\_\-thread} ()
+\begin{DoxyCompactList}\small\item\em Joins the underlying pthread. \end{DoxyCompactList}\item 
+struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$ \hyperlink{output__thread_8h_afba788718b6582c8d3e59f7c4f2fc79b}{start\-\_\-output\-\_\-monitor\-\_\-thread} (void)
+\begin{DoxyCompactList}\small\item\em Starts the thread monitoring the queue for messages to be sent to other endpoints. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A \hyperlink{structdedos__thread}{dedos\-\_\-thread} which monitors a queue for output to be sent to other runtimes or the global controller. 
+
+Definition in file \hyperlink{output__thread_8h_source}{output\-\_\-thread.\-h}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{output__thread_8h_ae1a58cdf173436fc88c06c639f6e8cbb}{\index{output\-\_\-thread.\-h@{output\-\_\-thread.\-h}!O\-U\-T\-P\-U\-T\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D@{O\-U\-T\-P\-U\-T\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D}}
+\index{O\-U\-T\-P\-U\-T\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D@{O\-U\-T\-P\-U\-T\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D}!output_thread.h@{output\-\_\-thread.\-h}}
+\subsubsection[{O\-U\-T\-P\-U\-T\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define O\-U\-T\-P\-U\-T\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D~-\/1}}\label{output__thread_8h_ae1a58cdf173436fc88c06c639f6e8cbb}
+
+
+A \hyperlink{structthread__msg}{thread\-\_\-msg} marked for delivery to this thread I\-D will be enqueued to the output thread. 
+
+
+
+Definition at line 35 of file output\-\_\-thread.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{output__thread_8h_aed64064965f0c39513f1eeb1d0cb4756}{\index{output\-\_\-thread.\-h@{output\-\_\-thread.\-h}!enqueue\-\_\-for\-\_\-output@{enqueue\-\_\-for\-\_\-output}}
+\index{enqueue\-\_\-for\-\_\-output@{enqueue\-\_\-for\-\_\-output}!output_thread.h@{output\-\_\-thread.\-h}}
+\subsubsection[{enqueue\-\_\-for\-\_\-output}]{\setlength{\rightskip}{0pt plus 5cm}int enqueue\-\_\-for\-\_\-output (
+\begin{DoxyParamCaption}
+\item[{struct {\bf thread\-\_\-msg} $\ast$}]{thread\-\_\-msg}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8h_aed64064965f0c39513f1eeb1d0cb4756}
+
+
+Enqueues a \hyperlink{structthread__msg}{thread\-\_\-msg} for delivery to the output thread. 
+
+Message should be of type \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acde413fd81f842dfc555f97766f3aeab}{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}, \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R}, or \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a9abf78c296448ffc429d6c578f856b61}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L}.
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 213 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8h_a5b8feea98a512b16b376d3bd085270c2}{\index{output\-\_\-thread.\-h@{output\-\_\-thread.\-h}!join\-\_\-output\-\_\-thread@{join\-\_\-output\-\_\-thread}}
+\index{join\-\_\-output\-\_\-thread@{join\-\_\-output\-\_\-thread}!output_thread.h@{output\-\_\-thread.\-h}}
+\subsubsection[{join\-\_\-output\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}void join\-\_\-output\-\_\-thread (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8h_a5b8feea98a512b16b376d3bd085270c2}
+
+
+Joins the underlying pthread. 
+
+
+
+Definition at line 90 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8h_afba788718b6582c8d3e59f7c4f2fc79b}{\index{output\-\_\-thread.\-h@{output\-\_\-thread.\-h}!start\-\_\-output\-\_\-monitor\-\_\-thread@{start\-\_\-output\-\_\-monitor\-\_\-thread}}
+\index{start\-\_\-output\-\_\-monitor\-\_\-thread@{start\-\_\-output\-\_\-monitor\-\_\-thread}!output_thread.h@{output\-\_\-thread.\-h}}
+\subsubsection[{start\-\_\-output\-\_\-monitor\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-thread}$\ast$ start\-\_\-output\-\_\-monitor\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8h_afba788718b6582c8d3e59f7c4f2fc79b}
+
+
+Starts the thread monitoring the queue for messages to be sent to other endpoints. 
+
+
+
+Definition at line 223 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8h_a29deb435fdb02d579ebaf9cd30413c42}{\index{output\-\_\-thread.\-h@{output\-\_\-thread.\-h}!stop\-\_\-output\-\_\-monitor@{stop\-\_\-output\-\_\-monitor}}
+\index{stop\-\_\-output\-\_\-monitor@{stop\-\_\-output\-\_\-monitor}!output_thread.h@{output\-\_\-thread.\-h}}
+\subsubsection[{stop\-\_\-output\-\_\-monitor}]{\setlength{\rightskip}{0pt plus 5cm}void stop\-\_\-output\-\_\-monitor (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8h_a29deb435fdb02d579ebaf9cd30413c42}
+
+
+Triggers the output thread to stop execution. 
+
+
+
+Definition at line 86 of file output\-\_\-thread.\-c.
+

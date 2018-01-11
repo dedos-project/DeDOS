@@ -1,0 +1,274 @@
+\hypertarget{rt__stats_8h}{\section{src/runtime/rt\-\_\-stats.h File Reference}
+\label{rt__stats_8h}\index{src/runtime/rt\-\_\-stats.\-h@{src/runtime/rt\-\_\-stats.\-h}}
+}
+
+
+Collecting statistics within the runtime.  
+
+
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{rt__stats_8h_a8079b9382495fb3489600591651afc28}{remove\-\_\-stat\-\_\-item} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Un-\/registers an item so it can no longer have statistics registered, and will not be reported to the global controller. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8h_a75d06b36d94388ed944b67baeb24c1e9}{init\-\_\-stat\-\_\-item} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Initializes a new stat item so it can have stats registered and can be reported to the global controller. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8h_a987e4bed1652d7ebda191ee1f202addc}{init\-\_\-statistics} ()
+\begin{DoxyCompactList}\small\item\em Initializes the entire stats module. \end{DoxyCompactList}\item 
+void \hyperlink{rt__stats_8h_a214f5bec97705d204e566b59eb4fd3a4}{finalize\-\_\-statistics} (char $\ast$statlog)
+\begin{DoxyCompactList}\small\item\em Writes the statistics to statlog if provided, and frees assocated structure. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8h_ad884fea983aadeb07eace27335ed7f39}{record\-\_\-start\-\_\-time} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Starts a measurement of elapsed time. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8h_acb590970b6d8425e105608e8f32ffe0c}{record\-\_\-end\-\_\-time} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Records the elapsed time since the previous call to record\-\_\-start\-\_\-time. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8h_acff104aea41cb59659523c979b3d193d}{increment\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id, double value)
+\begin{DoxyCompactList}\small\item\em Increments the given statistic by the provided value. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8h_ab992698ed0b92b65824db71f24e09c29}{record\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id, double stat, bool relog)
+\begin{DoxyCompactList}\small\item\em Records a statistic in the statlog. \end{DoxyCompactList}\item 
+double \hyperlink{rt__stats_8h_af6d4566e62da1172c23a6b435c27dc73}{get\-\_\-last\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Returns the last statistic recorded. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$ \hyperlink{rt__stats_8h_ac2dfda0f4d74bf205e83f6b403764f34}{get\-\_\-stat\-\_\-samples} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, struct timespec $\ast$time, int $\ast$n\-\_\-sample\-\_\-out)
+\begin{DoxyCompactList}\small\item\em Samples the statistic with the provided stat\-\_\-id. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Collecting statistics within the runtime. 
+
+Definition in file \hyperlink{rt__stats_8h_source}{rt\-\_\-stats.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{rt__stats_8h_a214f5bec97705d204e566b59eb4fd3a4}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!finalize\-\_\-statistics@{finalize\-\_\-statistics}}
+\index{finalize\-\_\-statistics@{finalize\-\_\-statistics}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{finalize\-\_\-statistics}]{\setlength{\rightskip}{0pt plus 5cm}void finalize\-\_\-statistics (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{statlog}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_a214f5bec97705d204e566b59eb4fd3a4}
+
+
+Writes the statistics to statlog if provided, and frees assocated structure. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em statlog} & Log file to dump statistics to or N\-U\-L\-L if N/\-A \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 822 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_af6d4566e62da1172c23a6b435c27dc73}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!get\-\_\-last\-\_\-stat@{get\-\_\-last\-\_\-stat}}
+\index{get\-\_\-last\-\_\-stat@{get\-\_\-last\-\_\-stat}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{get\-\_\-last\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}double get\-\_\-last\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_af6d4566e62da1172c23a6b435c27dc73}
+
+
+Returns the last statistic recorded. 
+
+
+
+Definition at line 466 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_ac2dfda0f4d74bf205e83f6b403764f34}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!get\-\_\-stat\-\_\-samples@{get\-\_\-stat\-\_\-samples}}
+\index{get\-\_\-stat\-\_\-samples@{get\-\_\-stat\-\_\-samples}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{get\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-sample}$\ast$ get\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{struct timespec $\ast$}]{time, }
+\item[{int $\ast$}]{n\-\_\-sample\-\_\-out}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_ac2dfda0f4d74bf205e83f6b403764f34}
+
+
+Samples the statistic with the provided stat\-\_\-id. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & the I\-D of the \hyperlink{structstat__type}{stat\-\_\-type} to sample \\
+\hline
+{\em time} & The time at which the samples should be taken \\
+\hline
+{\em n\-\_\-samples\-\_\-out} & Output argument, stores the number of samples acquired \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The statically-\/allocated stat sample (does not need to be freed) 
+\end{DoxyReturn}
+
+
+Definition at line 634 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_acff104aea41cb59659523c979b3d193d}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!increment\-\_\-stat@{increment\-\_\-stat}}
+\index{increment\-\_\-stat@{increment\-\_\-stat}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{increment\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int increment\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id, }
+\item[{double}]{value}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_acff104aea41cb59659523c979b3d193d}
+
+
+Increments the given statistic by the provided value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D for the stat being logged \\
+\hline
+{\em item\-\_\-id} & I\-D for the item to which the stat refers (must be registered!) \\
+\hline
+{\em value} & The amount to add to the given stat \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 389 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_a75d06b36d94388ed944b67baeb24c1e9}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!init\-\_\-stat\-\_\-item@{init\-\_\-stat\-\_\-item}}
+\index{init\-\_\-stat\-\_\-item@{init\-\_\-stat\-\_\-item}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{init\-\_\-stat\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-stat\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id} {\bf stat\-\_\-id}}]{, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_a75d06b36d94388ed944b67baeb24c1e9}
+
+
+Initializes a new stat item so it can have stats registered and can be reported to the global controller. 
+
+Initializes a new stat item so it can have stats registered and can be reported to the global controller.
+
+(e.\-g. initializing M\-S\-U\-\_\-\-Q\-U\-E\-U\-E\-\_\-\-L\-E\-N for item N, corresponding to msu \# N) 
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D of the statistic type to be logged \\
+\hline
+{\em item\-\_\-id} & I\-D of the item to be logged \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 719 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_a987e4bed1652d7ebda191ee1f202addc}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!init\-\_\-statistics@{init\-\_\-statistics}}
+\index{init\-\_\-statistics@{init\-\_\-statistics}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{init\-\_\-statistics}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-statistics (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_a987e4bed1652d7ebda191ee1f202addc}
+
+
+Initializes the entire stats module. 
+
+M\-U\-S\-T B\-E C\-A\-L\-L\-E\-D before runtime starts 
+
+Definition at line 783 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_acb590970b6d8425e105608e8f32ffe0c}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!record\-\_\-end\-\_\-time@{record\-\_\-end\-\_\-time}}
+\index{record\-\_\-end\-\_\-time@{record\-\_\-end\-\_\-time}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{record\-\_\-end\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}int record\-\_\-end\-\_\-time (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_acb590970b6d8425e105608e8f32ffe0c}
+
+
+Records the elapsed time since the previous call to record\-\_\-start\-\_\-time. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D for stat being logged \\
+\hline
+{\em item\-\_\-id} & I\-D for item within the statistic \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 355 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_ad884fea983aadeb07eace27335ed7f39}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!record\-\_\-start\-\_\-time@{record\-\_\-start\-\_\-time}}
+\index{record\-\_\-start\-\_\-time@{record\-\_\-start\-\_\-time}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{record\-\_\-start\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}int record\-\_\-start\-\_\-time (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_ad884fea983aadeb07eace27335ed7f39}
+
+
+Starts a measurement of elapsed time. 
+
+Not added to the log until a call to record\-\_\-end\-\_\-time 
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D for stat type being logged \\
+\hline
+{\em item\-\_\-id} & I\-D for the item to which the stat refers \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 320 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_ab992698ed0b92b65824db71f24e09c29}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!record\-\_\-stat@{record\-\_\-stat}}
+\index{record\-\_\-stat@{record\-\_\-stat}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{record\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int record\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id, }
+\item[{double}]{stat, }
+\item[{bool}]{relog}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_ab992698ed0b92b65824db71f24e09c29}
+
+
+Records a statistic in the statlog. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D for stat being logged \\
+\hline
+{\em item\-\_\-id} & I\-D for item to which stat refers (must be registered!) \\
+\hline
+{\em stat} & Statistic to record \\
+\hline
+{\em relog} & Whether to log statistic if it matches the previously logged stat \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 426 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8h_a8079b9382495fb3489600591651afc28}{\index{rt\-\_\-stats.\-h@{rt\-\_\-stats.\-h}!remove\-\_\-stat\-\_\-item@{remove\-\_\-stat\-\_\-item}}
+\index{remove\-\_\-stat\-\_\-item@{remove\-\_\-stat\-\_\-item}!rt_stats.h@{rt\-\_\-stats.\-h}}
+\subsubsection[{remove\-\_\-stat\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}int remove\-\_\-stat\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8h_a8079b9382495fb3489600591651afc28}
+
+
+Un-\/registers an item so it can no longer have statistics registered, and will not be reported to the global controller. 
+
+
+
+Definition at line 683 of file rt\-\_\-stats.\-c.
+

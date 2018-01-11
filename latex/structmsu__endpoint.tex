@@ -1,0 +1,95 @@
+\hypertarget{structmsu__endpoint}{\section{msu\-\_\-endpoint Struct Reference}
+\label{structmsu__endpoint}\index{msu\-\_\-endpoint@{msu\-\_\-endpoint}}
+}
+
+
+An endpoint to which an \hyperlink{structmsu__msg}{msu\-\_\-msg} can be delivered.  
+
+
+
+
+{\ttfamily \#include $<$routing.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structmsu__endpoint_ac80e655dbd6368c00945caf7de8e5a4b}{id}
+\begin{DoxyCompactList}\small\item\em A unque identifier for the endpoint (msu I\-D) \end{DoxyCompactList}\item 
+enum \hyperlink{dfg_8h_a97b014aefcfb738ba60c39a3bbd44c31}{msu\-\_\-locality} \hyperlink{structmsu__endpoint_aa06a2a0cc4c7ba40109635371acc8249}{locality}
+\begin{DoxyCompactList}\small\item\em Whether the endpoint is on the local machine or remote. \end{DoxyCompactList}\item 
+unsigned int \hyperlink{structmsu__endpoint_a8ffa7bacf8556511dc2d4129107d4868}{route\-\_\-id}
+\begin{DoxyCompactList}\small\item\em The I\-D for the route used to get to the endpoint. \end{DoxyCompactList}\item 
+unsigned int \hyperlink{structmsu__endpoint_aa0f75c3179e67f5f6b0edc166ebd3119}{runtime\-\_\-id}
+\begin{DoxyCompactList}\small\item\em The I\-D for the runtime on which the endpoint resides. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$ \hyperlink{structmsu__endpoint_af1f7b343c89039de19431c0e620916b3}{queue}
+\begin{DoxyCompactList}\small\item\em if \hyperlink{structmsu__endpoint_aa06a2a0cc4c7ba40109635371acc8249}{msu\-\_\-endpoint\-::locality} == \hyperlink{dfg_8h_a97b014aefcfb738ba60c39a3bbd44c31a28350aae24171519a7e1f4811f157298}{M\-S\-U\-\_\-\-I\-S\-\_\-\-L\-O\-C\-A\-L}, the queue for the msu endpoint \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+An endpoint to which an \hyperlink{structmsu__msg}{msu\-\_\-msg} can be delivered. 
+
+Definition at line 32 of file routing.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structmsu__endpoint_ac80e655dbd6368c00945caf7de8e5a4b}{\index{msu\-\_\-endpoint@{msu\-\_\-endpoint}!id@{id}}
+\index{id@{id}!msu_endpoint@{msu\-\_\-endpoint}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-endpoint\-::id}}\label{structmsu__endpoint_ac80e655dbd6368c00945caf7de8e5a4b}
+
+
+A unque identifier for the endpoint (msu I\-D) 
+
+
+
+Definition at line 34 of file routing.\-h.
+
+\hypertarget{structmsu__endpoint_aa06a2a0cc4c7ba40109635371acc8249}{\index{msu\-\_\-endpoint@{msu\-\_\-endpoint}!locality@{locality}}
+\index{locality@{locality}!msu_endpoint@{msu\-\_\-endpoint}}
+\subsubsection[{locality}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf msu\-\_\-locality} msu\-\_\-endpoint\-::locality}}\label{structmsu__endpoint_aa06a2a0cc4c7ba40109635371acc8249}
+
+
+Whether the endpoint is on the local machine or remote. 
+
+
+
+Definition at line 36 of file routing.\-h.
+
+\hypertarget{structmsu__endpoint_af1f7b343c89039de19431c0e620916b3}{\index{msu\-\_\-endpoint@{msu\-\_\-endpoint}!queue@{queue}}
+\index{queue@{queue}!msu_endpoint@{msu\-\_\-endpoint}}
+\subsubsection[{queue}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msg\-\_\-queue}$\ast$ msu\-\_\-endpoint\-::queue}}\label{structmsu__endpoint_af1f7b343c89039de19431c0e620916b3}
+
+
+if \hyperlink{structmsu__endpoint_aa06a2a0cc4c7ba40109635371acc8249}{msu\-\_\-endpoint\-::locality} == \hyperlink{dfg_8h_a97b014aefcfb738ba60c39a3bbd44c31a28350aae24171519a7e1f4811f157298}{M\-S\-U\-\_\-\-I\-S\-\_\-\-L\-O\-C\-A\-L}, the queue for the msu endpoint 
+
+
+
+Definition at line 42 of file routing.\-h.
+
+\hypertarget{structmsu__endpoint_a8ffa7bacf8556511dc2d4129107d4868}{\index{msu\-\_\-endpoint@{msu\-\_\-endpoint}!route\-\_\-id@{route\-\_\-id}}
+\index{route\-\_\-id@{route\-\_\-id}!msu_endpoint@{msu\-\_\-endpoint}}
+\subsubsection[{route\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int msu\-\_\-endpoint\-::route\-\_\-id}}\label{structmsu__endpoint_a8ffa7bacf8556511dc2d4129107d4868}
+
+
+The I\-D for the route used to get to the endpoint. 
+
+
+
+Definition at line 38 of file routing.\-h.
+
+\hypertarget{structmsu__endpoint_aa0f75c3179e67f5f6b0edc166ebd3119}{\index{msu\-\_\-endpoint@{msu\-\_\-endpoint}!runtime\-\_\-id@{runtime\-\_\-id}}
+\index{runtime\-\_\-id@{runtime\-\_\-id}!msu_endpoint@{msu\-\_\-endpoint}}
+\subsubsection[{runtime\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int msu\-\_\-endpoint\-::runtime\-\_\-id}}\label{structmsu__endpoint_aa0f75c3179e67f5f6b0edc166ebd3119}
+
+
+The I\-D for the runtime on which the endpoint resides. 
+
+
+
+Definition at line 40 of file routing.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{routing_8h}{routing.\-h}\end{DoxyCompactItemize}

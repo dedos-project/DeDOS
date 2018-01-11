@@ -1,0 +1,74 @@
+\hypertarget{baremetal__msu_8c}{\section{src/msus/baremetal/baremetal\-\_\-msu.c File Reference}
+\label{baremetal__msu_8c}\index{src/msus/baremetal/baremetal\-\_\-msu.\-c@{src/msus/baremetal/baremetal\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}baremetal/baremetal\-\_\-socket\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}baremetal/baremetal\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}profiler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing\-\_\-strategies.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{baremetal__msu_8c_a7e49bd91bc5dd912112c7710d57e854f}{receive} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$\hyperlink{structmsu__msg}{msu\-\_\-msg})
+\item 
+static int \hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route} (struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$output)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{baremetal__msu_8c_a678561f717d6f69f0b36817f98cdfd04}{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{baremetal__msu_8c_a7e49bd91bc5dd912112c7710d57e854f}{\index{baremetal\-\_\-msu.\-c@{baremetal\-\_\-msu.\-c}!receive@{receive}}
+\index{receive@{receive}!baremetal_msu.c@{baremetal\-\_\-msu.\-c}}
+\subsubsection[{receive}]{\setlength{\rightskip}{0pt plus 5cm}static int receive (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msu\-\_\-msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__msu_8c_a7e49bd91bc5dd912112c7710d57e854f}
+
+
+Definition at line 13 of file baremetal\-\_\-msu.\-c.
+
+\hypertarget{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{\index{baremetal\-\_\-msu.\-c@{baremetal\-\_\-msu.\-c}!route@{route}}
+\index{route@{route}!baremetal_msu.c@{baremetal\-\_\-msu.\-c}}
+\subsubsection[{route}]{\setlength{\rightskip}{0pt plus 5cm}static int route (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{output}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}
+
+
+Definition at line 30 of file baremetal\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{baremetal__msu_8c_a678561f717d6f69f0b36817f98cdfd04}{\index{baremetal\-\_\-msu.\-c@{baremetal\-\_\-msu.\-c}!B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!baremetal_msu.c@{baremetal\-\_\-msu.\-c}}
+\subsubsection[{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{baremetal__msu_8c_a678561f717d6f69f0b36817f98cdfd04}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    .name = \textcolor{stringliteral}{"Baremetal\_Msu"},
+    .id = \hyperlink{baremetal__msu_8h_a7f126caf013bb766773320b894be0138}{BAREMETAL\_MSU\_TYPE\_ID},
+    .receive = \hyperlink{baremetal__msu_8c_a7e49bd91bc5dd912112c7710d57e854f}{receive},
+    .route = \hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}
+\}
+\end{DoxyCode}
+
+
+Definition at line 39 of file baremetal\-\_\-msu.\-c.
+

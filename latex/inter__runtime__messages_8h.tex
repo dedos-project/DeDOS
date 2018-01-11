@@ -1,0 +1,57 @@
+\hypertarget{inter__runtime__messages_8h}{\section{src/runtime/inter\-\_\-runtime\-\_\-messages.h File Reference}
+\label{inter__runtime__messages_8h}\index{src/runtime/inter\-\_\-runtime\-\_\-messages.\-h@{src/runtime/inter\-\_\-runtime\-\_\-messages.\-h}}
+}
+
+
+Definitions of the message types that can be passed between runtimes.  
+
+
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structinter__runtime__msg__hdr}{inter\-\_\-runtime\-\_\-msg\-\_\-hdr}
+\begin{DoxyCompactList}\small\item\em Header for messages to runtime from another runtime. \end{DoxyCompactList}\item 
+struct \hyperlink{structinter__runtime__init__msg}{inter\-\_\-runtime\-\_\-init\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Sent to a newly-\/connected runtime to establish I\-D. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63}{inter\-\_\-runtime\-\_\-msg\-\_\-type} \{ \hyperlink{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63a522848a91fd865656b121dfa26aa8a27}{U\-N\-K\-N\-O\-W\-N\-\_\-\-I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-M\-S\-G}, 
+\hyperlink{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63adccf1df9a2926a01793df41099416a9d}{I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-I\-N\-I\-T}, 
+\hyperlink{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63a5a6ffacb007ed4e7a89dcee56d512d32}{R\-T\-\_\-\-F\-W\-D\-\_\-\-T\-O\-\_\-\-M\-S\-U}
+ \}
+\begin{DoxyCompactList}\small\item\em These message types can be passed between runtimes. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Definitions of the message types that can be passed between runtimes. 
+
+Definition in file \hyperlink{inter__runtime__messages_8h_source}{inter\-\_\-runtime\-\_\-messages.\-h}.
+
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63}{\index{inter\-\_\-runtime\-\_\-messages.\-h@{inter\-\_\-runtime\-\_\-messages.\-h}!inter\-\_\-runtime\-\_\-msg\-\_\-type@{inter\-\_\-runtime\-\_\-msg\-\_\-type}}
+\index{inter\-\_\-runtime\-\_\-msg\-\_\-type@{inter\-\_\-runtime\-\_\-msg\-\_\-type}!inter_runtime_messages.h@{inter\-\_\-runtime\-\_\-messages.\-h}}
+\subsubsection[{inter\-\_\-runtime\-\_\-msg\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf inter\-\_\-runtime\-\_\-msg\-\_\-type}}}\label{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63}
+
+
+These message types can be passed between runtimes. 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{U\-N\-K\-N\-O\-W\-N\-\_\-\-I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-M\-S\-G@{U\-N\-K\-N\-O\-W\-N\-\_\-\-I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-M\-S\-G}!inter\-\_\-runtime\-\_\-messages.\-h@{inter\-\_\-runtime\-\_\-messages.\-h}}\index{inter\-\_\-runtime\-\_\-messages.\-h@{inter\-\_\-runtime\-\_\-messages.\-h}!U\-N\-K\-N\-O\-W\-N\-\_\-\-I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-M\-S\-G@{U\-N\-K\-N\-O\-W\-N\-\_\-\-I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-M\-S\-G}}\item[{\em 
+\hypertarget{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63a522848a91fd865656b121dfa26aa8a27}{U\-N\-K\-N\-O\-W\-N\-\_\-\-I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-M\-S\-G}\label{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63a522848a91fd865656b121dfa26aa8a27}
+}]Set to 0 to catch cases where message type has not been set. \index{I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-I\-N\-I\-T@{I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-I\-N\-I\-T}!inter\-\_\-runtime\-\_\-messages.\-h@{inter\-\_\-runtime\-\_\-messages.\-h}}\index{inter\-\_\-runtime\-\_\-messages.\-h@{inter\-\_\-runtime\-\_\-messages.\-h}!I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-I\-N\-I\-T@{I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-I\-N\-I\-T}}\item[{\em 
+\hypertarget{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63adccf1df9a2926a01793df41099416a9d}{I\-N\-T\-E\-R\-\_\-\-R\-T\-\_\-\-I\-N\-I\-T}\label{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63adccf1df9a2926a01793df41099416a9d}
+}]Payload type\-: \hyperlink{structinter__runtime__init__msg}{inter\-\_\-runtime\-\_\-init\-\_\-msg}. \index{R\-T\-\_\-\-F\-W\-D\-\_\-\-T\-O\-\_\-\-M\-S\-U@{R\-T\-\_\-\-F\-W\-D\-\_\-\-T\-O\-\_\-\-M\-S\-U}!inter\-\_\-runtime\-\_\-messages.\-h@{inter\-\_\-runtime\-\_\-messages.\-h}}\index{inter\-\_\-runtime\-\_\-messages.\-h@{inter\-\_\-runtime\-\_\-messages.\-h}!R\-T\-\_\-\-F\-W\-D\-\_\-\-T\-O\-\_\-\-M\-S\-U@{R\-T\-\_\-\-F\-W\-D\-\_\-\-T\-O\-\_\-\-M\-S\-U}}\item[{\em 
+\hypertarget{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63a5a6ffacb007ed4e7a89dcee56d512d32}{R\-T\-\_\-\-F\-W\-D\-\_\-\-T\-O\-\_\-\-M\-S\-U}\label{inter__runtime__messages_8h_af4d9db643346db669665f73f9e1b7b63a5a6ffacb007ed4e7a89dcee56d512d32}
+}]Paylaod type\-: output of \hyperlink{msu__message_8h_afe18223e884ab9c4be0b112ed0b772df}{serialize\-\_\-msu\-\_\-msg}. \end{description}
+\end{Desc}
+
+
+Definition at line 35 of file inter\-\_\-runtime\-\_\-messages.\-h.
+

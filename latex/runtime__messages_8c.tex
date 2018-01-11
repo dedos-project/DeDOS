@@ -1,0 +1,136 @@
+\hypertarget{runtime__messages_8c}{\section{src/global\-\_\-controller/runtime\-\_\-messages.c File Reference}
+\label{runtime__messages_8c}\index{src/global\-\_\-controller/runtime\-\_\-messages.\-c@{src/global\-\_\-controller/runtime\-\_\-messages.\-c}}
+}
+{\ttfamily \#include \char`\"{}runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}ctrl\-\_\-runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-communication.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{runtime__messages_8c_a98f9054ce92324e669a8934e577a4e47}{send\-\_\-create\-\_\-msu\-\_\-msg} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\item 
+int \hyperlink{runtime__messages_8c_a1a84cac7028f9e9a8264f0c2a699c2bb}{send\-\_\-delete\-\_\-msu\-\_\-msg} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\item 
+int \hyperlink{runtime__messages_8c_a15a16fb43a5dab288375247bee42b643}{send\-\_\-create\-\_\-route\-\_\-msg} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route})
+\item 
+int \hyperlink{runtime__messages_8c_a5be5a0c70782ff673e8a247f4d574a31}{send\-\_\-delete\-\_\-route\-\_\-msg} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route})
+\item 
+int \hyperlink{runtime__messages_8c_a49056f6e1c7be4c93d718218c8910952}{send\-\_\-add\-\_\-route\-\_\-to\-\_\-msu\-\_\-msg} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}, struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\item 
+int \hyperlink{runtime__messages_8c_a0565a4beb2d2d25ad73f04ed1f9fd306}{send\-\_\-add\-\_\-endpoint\-\_\-msg} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}, struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$endpoint)
+\item 
+int \hyperlink{runtime__messages_8c_a9a3dbb593ac00e376f2abdc76491ad13}{send\-\_\-del\-\_\-endpoint\-\_\-msg} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}, struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$endpoint)
+\item 
+int \hyperlink{runtime__messages_8c_a30c2ae85d82173dfff480f2dde75823d}{send\-\_\-mod\-\_\-endpoint\-\_\-msg} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}, struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$endpoint)
+\item 
+int \hyperlink{runtime__messages_8c_a7200fedc1e7911403950084475ebc0af}{send\-\_\-create\-\_\-thread\-\_\-msg} (struct \hyperlink{structdfg__thread}{dfg\-\_\-thread} $\ast$thread, struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{runtime__messages_8c_a0565a4beb2d2d25ad73f04ed1f9fd306}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-add\-\_\-endpoint\-\_\-msg@{send\-\_\-add\-\_\-endpoint\-\_\-msg}}
+\index{send\-\_\-add\-\_\-endpoint\-\_\-msg@{send\-\_\-add\-\_\-endpoint\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-add\-\_\-endpoint\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-add\-\_\-endpoint\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route, }
+\item[{struct {\bf dfg\-\_\-route\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a0565a4beb2d2d25ad73f04ed1f9fd306}
+
+
+Definition at line 150 of file runtime\-\_\-messages.\-c.
+
+\hypertarget{runtime__messages_8c_a49056f6e1c7be4c93d718218c8910952}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-add\-\_\-route\-\_\-to\-\_\-msu\-\_\-msg@{send\-\_\-add\-\_\-route\-\_\-to\-\_\-msu\-\_\-msg}}
+\index{send\-\_\-add\-\_\-route\-\_\-to\-\_\-msu\-\_\-msg@{send\-\_\-add\-\_\-route\-\_\-to\-\_\-msu\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-add\-\_\-route\-\_\-to\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-add\-\_\-route\-\_\-to\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route, }
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a49056f6e1c7be4c93d718218c8910952}
+
+
+Definition at line 127 of file runtime\-\_\-messages.\-c.
+
+\hypertarget{runtime__messages_8c_a98f9054ce92324e669a8934e577a4e47}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-create\-\_\-msu\-\_\-msg@{send\-\_\-create\-\_\-msu\-\_\-msg}}
+\index{send\-\_\-create\-\_\-msu\-\_\-msg@{send\-\_\-create\-\_\-msu\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-create\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-create\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a98f9054ce92324e669a8934e577a4e47}
+
+
+Definition at line 26 of file runtime\-\_\-messages.\-c.
+
+\hypertarget{runtime__messages_8c_a15a16fb43a5dab288375247bee42b643}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-create\-\_\-route\-\_\-msg@{send\-\_\-create\-\_\-route\-\_\-msg}}
+\index{send\-\_\-create\-\_\-route\-\_\-msg@{send\-\_\-create\-\_\-route\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-create\-\_\-route\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-create\-\_\-route\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a15a16fb43a5dab288375247bee42b643}
+
+
+Definition at line 85 of file runtime\-\_\-messages.\-c.
+
+\hypertarget{runtime__messages_8c_a7200fedc1e7911403950084475ebc0af}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-create\-\_\-thread\-\_\-msg@{send\-\_\-create\-\_\-thread\-\_\-msg}}
+\index{send\-\_\-create\-\_\-thread\-\_\-msg@{send\-\_\-create\-\_\-thread\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-create\-\_\-thread\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-create\-\_\-thread\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a7200fedc1e7911403950084475ebc0af}
+
+
+Definition at line 219 of file runtime\-\_\-messages.\-c.
+
+\hypertarget{runtime__messages_8c_a9a3dbb593ac00e376f2abdc76491ad13}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-del\-\_\-endpoint\-\_\-msg@{send\-\_\-del\-\_\-endpoint\-\_\-msg}}
+\index{send\-\_\-del\-\_\-endpoint\-\_\-msg@{send\-\_\-del\-\_\-endpoint\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-del\-\_\-endpoint\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-del\-\_\-endpoint\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route, }
+\item[{struct {\bf dfg\-\_\-route\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a9a3dbb593ac00e376f2abdc76491ad13}
+
+
+Definition at line 175 of file runtime\-\_\-messages.\-c.
+
+\hypertarget{runtime__messages_8c_a1a84cac7028f9e9a8264f0c2a699c2bb}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-delete\-\_\-msu\-\_\-msg@{send\-\_\-delete\-\_\-msu\-\_\-msg}}
+\index{send\-\_\-delete\-\_\-msu\-\_\-msg@{send\-\_\-delete\-\_\-msu\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-delete\-\_\-msu\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-delete\-\_\-msu\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a1a84cac7028f9e9a8264f0c2a699c2bb}
+
+
+Definition at line 56 of file runtime\-\_\-messages.\-c.
+
+\hypertarget{runtime__messages_8c_a5be5a0c70782ff673e8a247f4d574a31}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-delete\-\_\-route\-\_\-msg@{send\-\_\-delete\-\_\-route\-\_\-msg}}
+\index{send\-\_\-delete\-\_\-route\-\_\-msg@{send\-\_\-delete\-\_\-route\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-delete\-\_\-route\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-delete\-\_\-route\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a5be5a0c70782ff673e8a247f4d574a31}
+
+
+Definition at line 106 of file runtime\-\_\-messages.\-c.
+
+\hypertarget{runtime__messages_8c_a30c2ae85d82173dfff480f2dde75823d}{\index{runtime\-\_\-messages.\-c@{runtime\-\_\-messages.\-c}!send\-\_\-mod\-\_\-endpoint\-\_\-msg@{send\-\_\-mod\-\_\-endpoint\-\_\-msg}}
+\index{send\-\_\-mod\-\_\-endpoint\-\_\-msg@{send\-\_\-mod\-\_\-endpoint\-\_\-msg}!runtime_messages.c@{runtime\-\_\-messages.\-c}}
+\subsubsection[{send\-\_\-mod\-\_\-endpoint\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-mod\-\_\-endpoint\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route, }
+\item[{struct {\bf dfg\-\_\-route\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{runtime__messages_8c_a30c2ae85d82173dfff480f2dde75823d}
+
+
+Definition at line 197 of file runtime\-\_\-messages.\-c.
+

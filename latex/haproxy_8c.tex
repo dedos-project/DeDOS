@@ -1,0 +1,114 @@
+\hypertarget{haproxy_8c}{\section{src/global\-\_\-controller/haproxy.c File Reference}
+\label{haproxy_8c}\index{src/global\-\_\-controller/haproxy.\-c@{src/global\-\_\-controller/haproxy.\-c}}
+}
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$sys/wait.\-h$>$}\\*
+{\ttfamily \#include $<$sys/stat.\-h$>$}\\*
+{\ttfamily \#include $<$sys/types.\-h$>$}\\*
+{\ttfamily \#include $<$fcntl.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-ids.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{haproxy_8c_a0eed651358cc8872744edbcd6900666d}{S\-O\-C\-A\-T}~\char`\"{}/usr/bin/socat\char`\"{}
+\item 
+\#define \hyperlink{haproxy_8c_a3c5af3908a335076ccc210217af8c6e7}{S\-O\-C\-A\-T\-\_\-\-I\-N\-P\-U\-T}~\char`\"{}set weight https/s\%d \%d\textbackslash{}r\textbackslash{}n\char`\"{}
+\item 
+\#define \hyperlink{haproxy_8c_a2efd706d915e621e5e18b3f0803c4ed2}{W\-R\-I\-T\-E\-\_\-\-E\-N\-D}~1
+\item 
+\#define \hyperlink{haproxy_8c_a2469c53816dc077f9deefb187ffcabf3}{R\-E\-A\-D\-\_\-\-E\-N\-D}~0
+\item 
+\#define \hyperlink{haproxy_8c_a43ea5fd9a534ac6284db78945b68717e}{N\-\_\-\-Q\-L\-E\-N\-\_\-\-S\-A\-M\-P\-L\-E\-S}~10
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{haproxy_8c_acc24c3e66935a1f542123ab548af88bb}{reweight\-\_\-haproxy} (int server, int weight)
+\item 
+void \hyperlink{haproxy_8c_ae18a5b7ba0fefde90e2d92a0a5bb1487}{set\-\_\-haproxy\-\_\-weights} (int rt\-\_\-id, int offset)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+char $\ast$ \hyperlink{haproxy_8c_a7be318a9a227962712fbfe2000d7634e}{socat\-\_\-cmd} \mbox{[}$\,$\mbox{]} = \{ \char`\"{}/usr/bin/socat\char`\"{} , \char`\"{}stdio\char`\"{}, \char`\"{}/tmp/haproxy.\-socket\char`\"{}, N\-U\-L\-L\}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{haproxy_8c_a43ea5fd9a534ac6284db78945b68717e}{\index{haproxy.\-c@{haproxy.\-c}!N\-\_\-\-Q\-L\-E\-N\-\_\-\-S\-A\-M\-P\-L\-E\-S@{N\-\_\-\-Q\-L\-E\-N\-\_\-\-S\-A\-M\-P\-L\-E\-S}}
+\index{N\-\_\-\-Q\-L\-E\-N\-\_\-\-S\-A\-M\-P\-L\-E\-S@{N\-\_\-\-Q\-L\-E\-N\-\_\-\-S\-A\-M\-P\-L\-E\-S}!haproxy.c@{haproxy.\-c}}
+\subsubsection[{N\-\_\-\-Q\-L\-E\-N\-\_\-\-S\-A\-M\-P\-L\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-\_\-\-Q\-L\-E\-N\-\_\-\-S\-A\-M\-P\-L\-E\-S~10}}\label{haproxy_8c_a43ea5fd9a534ac6284db78945b68717e}
+
+
+Definition at line 77 of file haproxy.\-c.
+
+\hypertarget{haproxy_8c_a2469c53816dc077f9deefb187ffcabf3}{\index{haproxy.\-c@{haproxy.\-c}!R\-E\-A\-D\-\_\-\-E\-N\-D@{R\-E\-A\-D\-\_\-\-E\-N\-D}}
+\index{R\-E\-A\-D\-\_\-\-E\-N\-D@{R\-E\-A\-D\-\_\-\-E\-N\-D}!haproxy.c@{haproxy.\-c}}
+\subsubsection[{R\-E\-A\-D\-\_\-\-E\-N\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\-E\-A\-D\-\_\-\-E\-N\-D~0}}\label{haproxy_8c_a2469c53816dc077f9deefb187ffcabf3}
+
+
+Definition at line 38 of file haproxy.\-c.
+
+\hypertarget{haproxy_8c_a0eed651358cc8872744edbcd6900666d}{\index{haproxy.\-c@{haproxy.\-c}!S\-O\-C\-A\-T@{S\-O\-C\-A\-T}}
+\index{S\-O\-C\-A\-T@{S\-O\-C\-A\-T}!haproxy.c@{haproxy.\-c}}
+\subsubsection[{S\-O\-C\-A\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-O\-C\-A\-T~\char`\"{}/usr/bin/socat\char`\"{}}}\label{haproxy_8c_a0eed651358cc8872744edbcd6900666d}
+
+
+Definition at line 31 of file haproxy.\-c.
+
+\hypertarget{haproxy_8c_a3c5af3908a335076ccc210217af8c6e7}{\index{haproxy.\-c@{haproxy.\-c}!S\-O\-C\-A\-T\-\_\-\-I\-N\-P\-U\-T@{S\-O\-C\-A\-T\-\_\-\-I\-N\-P\-U\-T}}
+\index{S\-O\-C\-A\-T\-\_\-\-I\-N\-P\-U\-T@{S\-O\-C\-A\-T\-\_\-\-I\-N\-P\-U\-T}!haproxy.c@{haproxy.\-c}}
+\subsubsection[{S\-O\-C\-A\-T\-\_\-\-I\-N\-P\-U\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-O\-C\-A\-T\-\_\-\-I\-N\-P\-U\-T~\char`\"{}set weight https/s\%d \%d\textbackslash{}r\textbackslash{}n\char`\"{}}}\label{haproxy_8c_a3c5af3908a335076ccc210217af8c6e7}
+
+
+Definition at line 35 of file haproxy.\-c.
+
+\hypertarget{haproxy_8c_a2efd706d915e621e5e18b3f0803c4ed2}{\index{haproxy.\-c@{haproxy.\-c}!W\-R\-I\-T\-E\-\_\-\-E\-N\-D@{W\-R\-I\-T\-E\-\_\-\-E\-N\-D}}
+\index{W\-R\-I\-T\-E\-\_\-\-E\-N\-D@{W\-R\-I\-T\-E\-\_\-\-E\-N\-D}!haproxy.c@{haproxy.\-c}}
+\subsubsection[{W\-R\-I\-T\-E\-\_\-\-E\-N\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\-R\-I\-T\-E\-\_\-\-E\-N\-D~1}}\label{haproxy_8c_a2efd706d915e621e5e18b3f0803c4ed2}
+
+
+Definition at line 37 of file haproxy.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{haproxy_8c_acc24c3e66935a1f542123ab548af88bb}{\index{haproxy.\-c@{haproxy.\-c}!reweight\-\_\-haproxy@{reweight\-\_\-haproxy}}
+\index{reweight\-\_\-haproxy@{reweight\-\_\-haproxy}!haproxy.c@{haproxy.\-c}}
+\subsubsection[{reweight\-\_\-haproxy}]{\setlength{\rightskip}{0pt plus 5cm}int reweight\-\_\-haproxy (
+\begin{DoxyParamCaption}
+\item[{int}]{server, }
+\item[{int}]{weight}
+\end{DoxyParamCaption}
+)}}\label{haproxy_8c_acc24c3e66935a1f542123ab548af88bb}
+
+
+Definition at line 40 of file haproxy.\-c.
+
+\hypertarget{haproxy_8c_ae18a5b7ba0fefde90e2d92a0a5bb1487}{\index{haproxy.\-c@{haproxy.\-c}!set\-\_\-haproxy\-\_\-weights@{set\-\_\-haproxy\-\_\-weights}}
+\index{set\-\_\-haproxy\-\_\-weights@{set\-\_\-haproxy\-\_\-weights}!haproxy.c@{haproxy.\-c}}
+\subsubsection[{set\-\_\-haproxy\-\_\-weights}]{\setlength{\rightskip}{0pt plus 5cm}void set\-\_\-haproxy\-\_\-weights (
+\begin{DoxyParamCaption}
+\item[{int}]{rt\-\_\-id, }
+\item[{int}]{offset}
+\end{DoxyParamCaption}
+)}}\label{haproxy_8c_ae18a5b7ba0fefde90e2d92a0a5bb1487}
+
+
+Definition at line 102 of file haproxy.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{haproxy_8c_a7be318a9a227962712fbfe2000d7634e}{\index{haproxy.\-c@{haproxy.\-c}!socat\-\_\-cmd@{socat\-\_\-cmd}}
+\index{socat\-\_\-cmd@{socat\-\_\-cmd}!haproxy.c@{haproxy.\-c}}
+\subsubsection[{socat\-\_\-cmd}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ socat\-\_\-cmd\mbox{[}$\,$\mbox{]} = \{ \char`\"{}/usr/bin/socat\char`\"{} , \char`\"{}stdio\char`\"{}, \char`\"{}/tmp/haproxy.\-socket\char`\"{}, N\-U\-L\-L\}}}\label{haproxy_8c_a7be318a9a227962712fbfe2000d7634e}
+
+
+Definition at line 33 of file haproxy.\-c.
+

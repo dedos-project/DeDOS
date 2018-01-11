@@ -1,0 +1,444 @@
+\hypertarget{controller__mysql_8c}{\section{src/global\-\_\-controller/controller\-\_\-mysql.c File Reference}
+\label{controller__mysql_8c}\index{src/global\-\_\-controller/controller\-\_\-mysql.\-c@{src/global\-\_\-controller/controller\-\_\-mysql.\-c}}
+}
+{\ttfamily \#include \char`\"{}controller\-\_\-mysql.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stdlib.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-files.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$mysql.\-h$>$}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+{\ttfamily \#include $<$fcntl.\-h$>$}\\*
+{\ttfamily \#include $<$sys/stat.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{controller__mysql_8c_a23e04c944e4afabb71b604c946b1dce7}{C\-H\-E\-C\-K\-\_\-\-S\-Q\-L\-\_\-\-I\-N\-I\-T}
+\item 
+\#define \hyperlink{controller__mysql_8c_aabfb8de2855ff6616013647a9b5204a1}{S\-Q\-L\-\_\-\-L\-O\-C\-K}~pthread\-\_\-mutex\-\_\-lock(\&\hyperlink{controller__mysql_8c_a0abaf4b5d42c4e5d19190035fade3599}{lock})
+\item 
+\#define \hyperlink{controller__mysql_8c_adc5572716a22926f6f353e13f074afce}{S\-Q\-L\-\_\-\-U\-N\-L\-O\-C\-K}~pthread\-\_\-mutex\-\_\-unlock(\&\hyperlink{controller__mysql_8c_a0abaf4b5d42c4e5d19190035fade3599}{lock})
+\item 
+\#define \hyperlink{controller__mysql_8c_aa387ffb4d8b5cb964a932d75bd58fb42}{M\-A\-X\-\_\-\-R\-E\-Q\-\_\-\-L\-E\-N}~1024
+\item 
+\#define \hyperlink{controller__mysql_8c_a210c3a9e10c715c315d3bb3534ccc246}{M\-A\-X\-\_\-\-I\-N\-I\-T\-\_\-\-C\-O\-N\-T\-E\-N\-T\-S\-\_\-\-S\-I\-Z\-E}~8192
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{controller__mysql_8c_a234bf6a0b599f3d7d4e394521019b1d6}{db\-\_\-register\-\_\-msu\-\_\-type} (int msu\-\_\-type\-\_\-id, char $\ast$\hyperlink{http__parser_8c_a8f8f80d37794cde9472343e4487ba3eb}{name})
+\item 
+int \hyperlink{controller__mysql_8c_a1f853433662bf1e768d8e9f656ce56be}{db\-\_\-register\-\_\-statistic} (int \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, char $\ast$\hyperlink{http__parser_8c_a8f8f80d37794cde9472343e4487ba3eb}{name})
+\item 
+int \hyperlink{controller__mysql_8c_a0537cbbd370e7051f31c83fb1a5a54ad}{db\-\_\-register\-\_\-thread\-\_\-stats} (int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+static int \hyperlink{controller__mysql_8c_a7b23107fa4896dfe76e54c46a00f2871}{split\-\_\-exec\-\_\-cmd} (char $\ast$cmd)
+\item 
+static int \hyperlink{controller__mysql_8c_aa7a7e81e614e7cbfba171cea2f3ae4c3}{db\-\_\-clear} ()
+\item 
+int \hyperlink{controller__mysql_8c_ab703488e42a7d6ecb714ac3d5e4a14dc}{db\-\_\-init} (int clear)
+\begin{DoxyCompactList}\small\item\em Initialize the My\-S\-Q\-L client library, and connect to the server Also init tables for running system. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8c_ab4e9528a716181c1d312729a1e93b769}{db\-\_\-terminate} ()
+\begin{DoxyCompactList}\small\item\em Destroy the My\-S\-Q\-L client environment. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8c_a9dbdbea2de06686ec42e5d3922c5b6ce}{db\-\_\-register\-\_\-runtime} (int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Register a runtime in the D\-B. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8c_a4322f917e85ed1772e1c1b9ac457e913}{db\-\_\-register\-\_\-thread} (int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Register a runtime's thread in the D\-B. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8c_a88a1d2246fd645e9900bd952a46aeec6}{db\-\_\-register\-\_\-msu} (int msu\-\_\-id, int msu\-\_\-type\-\_\-id, int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Register an M\-S\-U in the D\-B. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8c_a8e836aecc80e558928db413b224cc9c7}{db\-\_\-register\-\_\-msu\-\_\-timeseries} (int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Register timseries for an M\-S\-U in the D\-B. \end{DoxyCompactList}\item 
+int \hyperlink{controller__mysql_8c_ade3d6de6455b8d9830e61d23b6e2d493}{db\-\_\-register\-\_\-thread\-\_\-timeseries} (int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__mysql_8c_a54e0a800786eb51d47b4dd9e70a4e44d}{db\-\_\-register\-\_\-msu\-\_\-stats} (int msu\-\_\-id, int msu\-\_\-type\-\_\-id, int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__mysql_8c_ac6625ec41ddea1829dd7c6c15e404352}{db\-\_\-check\-\_\-and\-\_\-register} (const char $\ast$check\-\_\-query, const char $\ast$insert\-\_\-query, const char $\ast$element, int element\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Register an element in the D\-B. \end{DoxyCompactList}\item 
+static int \hyperlink{controller__mysql_8c_a5836930c034473c95cde003191f08fc2}{get\-\_\-ts\-\_\-query} (char query\mbox{[}1024\mbox{]}, enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, int item\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__mysql_8c_a1b247acba7cfab4564065f8a9035efaf}{db\-\_\-insert\-\_\-sample} (struct \hyperlink{structtimed__stat}{timed\-\_\-stat} $\ast$input, struct \hyperlink{structstat__sample__hdr}{stat\-\_\-sample\-\_\-hdr} $\ast$input\-\_\-hdr, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Insert datapoint for a timseries in the D\-B. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static pthread\-\_\-mutex\-\_\-t \hyperlink{controller__mysql_8c_a0abaf4b5d42c4e5d19190035fade3599}{lock}
+\item 
+static M\-Y\-S\-Q\-L \hyperlink{controller__mysql_8c_a79ca285a0c0e720422fa6fb6a4bba330}{mysql}
+\item 
+bool \hyperlink{controller__mysql_8c_a74e226bc78a58536603b024394682de3}{mysql\-\_\-initialized} = false
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{controller__mysql_8c_a23e04c944e4afabb71b604c946b1dce7}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!C\-H\-E\-C\-K\-\_\-\-S\-Q\-L\-\_\-\-I\-N\-I\-T@{C\-H\-E\-C\-K\-\_\-\-S\-Q\-L\-\_\-\-I\-N\-I\-T}}
+\index{C\-H\-E\-C\-K\-\_\-\-S\-Q\-L\-\_\-\-I\-N\-I\-T@{C\-H\-E\-C\-K\-\_\-\-S\-Q\-L\-\_\-\-I\-N\-I\-T}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{C\-H\-E\-C\-K\-\_\-\-S\-Q\-L\-\_\-\-I\-N\-I\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-H\-E\-C\-K\-\_\-\-S\-Q\-L\-\_\-\-I\-N\-I\-T}}\label{controller__mysql_8c_a23e04c944e4afabb71b604c946b1dce7}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} (!\hyperlink{controller__mysql_8c_a74e226bc78a58536603b024394682de3}{mysql\_initialized}) \{ \hyperlink{logging_8h_a6688e6218820c9d155006dcab23eb611}{\(\backslash\)}
+\hyperlink{logging_8h_a6688e6218820c9d155006dcab23eb611}{        log}(LOG\_SQL,\textcolor{stringliteral}{"MYSQL not initialized"}); \(\backslash\)
+        return -1; \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Definition at line 38 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a210c3a9e10c715c315d3bb3534ccc246}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!M\-A\-X\-\_\-\-I\-N\-I\-T\-\_\-\-C\-O\-N\-T\-E\-N\-T\-S\-\_\-\-S\-I\-Z\-E@{M\-A\-X\-\_\-\-I\-N\-I\-T\-\_\-\-C\-O\-N\-T\-E\-N\-T\-S\-\_\-\-S\-I\-Z\-E}}
+\index{M\-A\-X\-\_\-\-I\-N\-I\-T\-\_\-\-C\-O\-N\-T\-E\-N\-T\-S\-\_\-\-S\-I\-Z\-E@{M\-A\-X\-\_\-\-I\-N\-I\-T\-\_\-\-C\-O\-N\-T\-E\-N\-T\-S\-\_\-\-S\-I\-Z\-E}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-I\-N\-I\-T\-\_\-\-C\-O\-N\-T\-E\-N\-T\-S\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-I\-N\-I\-T\-\_\-\-C\-O\-N\-T\-E\-N\-T\-S\-\_\-\-S\-I\-Z\-E~8192}}\label{controller__mysql_8c_a210c3a9e10c715c315d3bb3534ccc246}
+
+
+Definition at line 53 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_aa387ffb4d8b5cb964a932d75bd58fb42}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!M\-A\-X\-\_\-\-R\-E\-Q\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-R\-E\-Q\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-R\-E\-Q\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-R\-E\-Q\-\_\-\-L\-E\-N}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-E\-Q\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-E\-Q\-\_\-\-L\-E\-N~1024}}\label{controller__mysql_8c_aa387ffb4d8b5cb964a932d75bd58fb42}
+
+
+Definition at line 51 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_aabfb8de2855ff6616013647a9b5204a1}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!S\-Q\-L\-\_\-\-L\-O\-C\-K@{S\-Q\-L\-\_\-\-L\-O\-C\-K}}
+\index{S\-Q\-L\-\_\-\-L\-O\-C\-K@{S\-Q\-L\-\_\-\-L\-O\-C\-K}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{S\-Q\-L\-\_\-\-L\-O\-C\-K}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-Q\-L\-\_\-\-L\-O\-C\-K~pthread\-\_\-mutex\-\_\-lock(\&{\bf lock})}}\label{controller__mysql_8c_aabfb8de2855ff6616013647a9b5204a1}
+
+
+Definition at line 45 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_adc5572716a22926f6f353e13f074afce}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!S\-Q\-L\-\_\-\-U\-N\-L\-O\-C\-K@{S\-Q\-L\-\_\-\-U\-N\-L\-O\-C\-K}}
+\index{S\-Q\-L\-\_\-\-U\-N\-L\-O\-C\-K@{S\-Q\-L\-\_\-\-U\-N\-L\-O\-C\-K}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{S\-Q\-L\-\_\-\-U\-N\-L\-O\-C\-K}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-Q\-L\-\_\-\-U\-N\-L\-O\-C\-K~pthread\-\_\-mutex\-\_\-unlock(\&{\bf lock})}}\label{controller__mysql_8c_adc5572716a22926f6f353e13f074afce}
+
+
+Definition at line 48 of file controller\-\_\-mysql.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{controller__mysql_8c_ac6625ec41ddea1829dd7c6c15e404352}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-check\-\_\-and\-\_\-register@{db\-\_\-check\-\_\-and\-\_\-register}}
+\index{db\-\_\-check\-\_\-and\-\_\-register@{db\-\_\-check\-\_\-and\-\_\-register}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-check\-\_\-and\-\_\-register}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-check\-\_\-and\-\_\-register (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{check\-\_\-query, }
+\item[{const char $\ast$}]{insert\-\_\-query, }
+\item[{const char $\ast$}]{element, }
+\item[{int}]{element\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_ac6625ec41ddea1829dd7c6c15e404352}
+
+
+Register an element in the D\-B. 
+
+Does nothing if element already exists 
+\begin{DoxyParams}{Parameters}
+{\em const} & char $\ast$check\-\_\-query\-: query to check existence of element \\
+\hline
+{\em const} & char $\ast$insert\-\_\-query\-: query to insert element \\
+\hline
+{\em const} & char $\ast$element\-: element's type \\
+\hline
+{\em int} & element\-\_\-id \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 385 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_aa7a7e81e614e7cbfba171cea2f3ae4c3}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-clear@{db\-\_\-clear}}
+\index{db\-\_\-clear@{db\-\_\-clear}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-clear}]{\setlength{\rightskip}{0pt plus 5cm}static int db\-\_\-clear (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__mysql_8c_aa7a7e81e614e7cbfba171cea2f3ae4c3}
+
+
+Definition at line 81 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_ab703488e42a7d6ecb714ac3d5e4a14dc}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-init@{db\-\_\-init}}
+\index{db\-\_\-init@{db\-\_\-init}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{int}]{clear}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_ab703488e42a7d6ecb714ac3d5e4a14dc}
+
+
+Initialize the My\-S\-Q\-L client library, and connect to the server Also init tables for running system. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em } & none \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 116 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a1b247acba7cfab4564065f8a9035efaf}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-insert\-\_\-sample@{db\-\_\-insert\-\_\-sample}}
+\index{db\-\_\-insert\-\_\-sample@{db\-\_\-insert\-\_\-sample}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-insert\-\_\-sample}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-insert\-\_\-sample (
+\begin{DoxyParamCaption}
+\item[{struct {\bf timed\-\_\-stat} $\ast$}]{input, }
+\item[{struct {\bf stat\-\_\-sample\-\_\-hdr} $\ast$}]{input\-\_\-hdr, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a1b247acba7cfab4564065f8a9035efaf}
+
+
+Insert datapoint for a timseries in the D\-B. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em input} & pointer to \hyperlink{structtimed__stat}{timed\-\_\-stat} object \\
+\hline
+{\em input\-\_\-hdr} & header of stat sample \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 455 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a88a1d2246fd645e9900bd952a46aeec6}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-msu@{db\-\_\-register\-\_\-msu}}
+\index{db\-\_\-register\-\_\-msu@{db\-\_\-register\-\_\-msu}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id, }
+\item[{int}]{msu\-\_\-type\-\_\-id, }
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a88a1d2246fd645e9900bd952a46aeec6}
+
+
+Register an M\-S\-U in the D\-B. 
+
+Does nothing if M\-S\-U already exists 
+\begin{DoxyParams}{Parameters}
+{\em struct} & \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu \\
+\hline
+{\em int} & thread\-\_\-id \\
+\hline
+{\em int} & runtime\-\_\-id \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 266 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a54e0a800786eb51d47b4dd9e70a4e44d}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-msu\-\_\-stats@{db\-\_\-register\-\_\-msu\-\_\-stats}}
+\index{db\-\_\-register\-\_\-msu\-\_\-stats@{db\-\_\-register\-\_\-msu\-\_\-stats}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-msu\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-msu\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id, }
+\item[{int}]{msu\-\_\-type\-\_\-id, }
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a54e0a800786eb51d47b4dd9e70a4e44d}
+
+
+Definition at line 365 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a8e836aecc80e558928db413b224cc9c7}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-msu\-\_\-timeseries@{db\-\_\-register\-\_\-msu\-\_\-timeseries}}
+\index{db\-\_\-register\-\_\-msu\-\_\-timeseries@{db\-\_\-register\-\_\-msu\-\_\-timeseries}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-msu\-\_\-timeseries}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-msu\-\_\-timeseries (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a8e836aecc80e558928db413b224cc9c7}
+
+
+Register timseries for an M\-S\-U in the D\-B. 
+
+Does nothing if timeserie already exists \begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 292 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a234bf6a0b599f3d7d4e394521019b1d6}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-msu\-\_\-type@{db\-\_\-register\-\_\-msu\-\_\-type}}
+\index{db\-\_\-register\-\_\-msu\-\_\-type@{db\-\_\-register\-\_\-msu\-\_\-type}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-type\-\_\-id, }
+\item[{char $\ast$}]{name}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a234bf6a0b599f3d7d4e394521019b1d6}
+
+
+Definition at line 198 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a9dbdbea2de06686ec42e5d3922c5b6ce}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-runtime@{db\-\_\-register\-\_\-runtime}}
+\index{db\-\_\-register\-\_\-runtime@{db\-\_\-register\-\_\-runtime}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a9dbdbea2de06686ec42e5d3922c5b6ce}
+
+
+Register a runtime in the D\-B. 
+
+Does nothing if runtime id already exists 
+\begin{DoxyParams}{Parameters}
+{\em int} & runtime\-\_\-id\-: the runtime I\-D \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 218 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a1f853433662bf1e768d8e9f656ce56be}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-statistic@{db\-\_\-register\-\_\-statistic}}
+\index{db\-\_\-register\-\_\-statistic@{db\-\_\-register\-\_\-statistic}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-statistic}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-statistic (
+\begin{DoxyParamCaption}
+\item[{int}]{stat\-\_\-id, }
+\item[{char $\ast$}]{name}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a1f853433662bf1e768d8e9f656ce56be}
+
+
+Definition at line 182 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a4322f917e85ed1772e1c1b9ac457e913}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-thread@{db\-\_\-register\-\_\-thread}}
+\index{db\-\_\-register\-\_\-thread@{db\-\_\-register\-\_\-thread}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a4322f917e85ed1772e1c1b9ac457e913}
+
+
+Register a runtime's thread in the D\-B. 
+
+Does nothing if thread already exists 
+\begin{DoxyParams}{Parameters}
+{\em int} & thread\-\_\-id \\
+\hline
+{\em int} & runtime\-\_\-id \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 241 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a0537cbbd370e7051f31c83fb1a5a54ad}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-thread\-\_\-stats@{db\-\_\-register\-\_\-thread\-\_\-stats}}
+\index{db\-\_\-register\-\_\-thread\-\_\-stats@{db\-\_\-register\-\_\-thread\-\_\-stats}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-thread\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-thread\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_a0537cbbd370e7051f31c83fb1a5a54ad}
+
+
+Definition at line 354 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_ade3d6de6455b8d9830e61d23b6e2d493}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-register\-\_\-thread\-\_\-timeseries@{db\-\_\-register\-\_\-thread\-\_\-timeseries}}
+\index{db\-\_\-register\-\_\-thread\-\_\-timeseries@{db\-\_\-register\-\_\-thread\-\_\-timeseries}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-register\-\_\-thread\-\_\-timeseries}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-register\-\_\-thread\-\_\-timeseries (
+\begin{DoxyParamCaption}
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_ade3d6de6455b8d9830e61d23b6e2d493}
+
+
+Definition at line 323 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_ab4e9528a716181c1d312729a1e93b769}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!db\-\_\-terminate@{db\-\_\-terminate}}
+\index{db\-\_\-terminate@{db\-\_\-terminate}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{db\-\_\-terminate}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-terminate (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__mysql_8c_ab4e9528a716181c1d312729a1e93b769}
+
+
+Destroy the My\-S\-Q\-L client environment. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em } & none \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 176 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a5836930c034473c95cde003191f08fc2}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!get\-\_\-ts\-\_\-query@{get\-\_\-ts\-\_\-query}}
+\index{get\-\_\-ts\-\_\-query@{get\-\_\-ts\-\_\-query}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{get\-\_\-ts\-\_\-query}]{\setlength{\rightskip}{0pt plus 5cm}static int get\-\_\-ts\-\_\-query (
+\begin{DoxyParamCaption}
+\item[{char}]{query\mbox{[}1024\mbox{]}, }
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{int}]{item\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__mysql_8c_a5836930c034473c95cde003191f08fc2}
+
+
+Definition at line 426 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a7b23107fa4896dfe76e54c46a00f2871}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!split\-\_\-exec\-\_\-cmd@{split\-\_\-exec\-\_\-cmd}}
+\index{split\-\_\-exec\-\_\-cmd@{split\-\_\-exec\-\_\-cmd}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{split\-\_\-exec\-\_\-cmd}]{\setlength{\rightskip}{0pt plus 5cm}static int split\-\_\-exec\-\_\-cmd (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{cmd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__mysql_8c_a7b23107fa4896dfe76e54c46a00f2871}
+
+
+Definition at line 59 of file controller\-\_\-mysql.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{controller__mysql_8c_a0abaf4b5d42c4e5d19190035fade3599}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!lock@{lock}}
+\index{lock@{lock}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{lock}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-mutex\-\_\-t lock\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__mysql_8c_a0abaf4b5d42c4e5d19190035fade3599}
+
+
+Definition at line 34 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a79ca285a0c0e720422fa6fb6a4bba330}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!mysql@{mysql}}
+\index{mysql@{mysql}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{mysql}]{\setlength{\rightskip}{0pt plus 5cm}M\-Y\-S\-Q\-L mysql\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__mysql_8c_a79ca285a0c0e720422fa6fb6a4bba330}
+
+
+Definition at line 35 of file controller\-\_\-mysql.\-c.
+
+\hypertarget{controller__mysql_8c_a74e226bc78a58536603b024394682de3}{\index{controller\-\_\-mysql.\-c@{controller\-\_\-mysql.\-c}!mysql\-\_\-initialized@{mysql\-\_\-initialized}}
+\index{mysql\-\_\-initialized@{mysql\-\_\-initialized}!controller_mysql.c@{controller\-\_\-mysql.\-c}}
+\subsubsection[{mysql\-\_\-initialized}]{\setlength{\rightskip}{0pt plus 5cm}bool mysql\-\_\-initialized = false}}\label{controller__mysql_8c_a74e226bc78a58536603b024394682de3}
+
+
+Definition at line 36 of file controller\-\_\-mysql.\-c.
+

@@ -1,0 +1,160 @@
+\hypertarget{structdedos__dfg}{\section{dedos\-\_\-dfg Struct Reference}
+\label{structdedos__dfg}\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}}
+}
+
+
+Top-\/level structure holding the data-\/flow graph.  
+
+
+
+
+{\ttfamily \#include $<$dfg.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+char \hyperlink{structdedos__dfg_a0eceb9cb1a7d21b3ed8f9be508522780}{application\-\_\-name} \mbox{[}64\mbox{]}
+\begin{DoxyCompactList}\small\item\em Description of the whole application. \end{DoxyCompactList}\item 
+\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} \hyperlink{structdedos__dfg_acab1dc92b08936f48e02d5f1eb1a4f51}{global\-\_\-ctl\-\_\-ip}
+\begin{DoxyCompactList}\small\item\em I\-P address of the global controller. \end{DoxyCompactList}\item 
+int \hyperlink{structdedos__dfg_ab0e37e7cbde75494f9f9dc509ff06faa}{global\-\_\-ctl\-\_\-port}
+\begin{DoxyCompactList}\small\item\em Port of the global controller. \end{DoxyCompactList}\item 
+struct \hyperlink{structdb__info}{db\-\_\-info} \hyperlink{structdedos__dfg_ad8621d636821cbbe634b07738898a17e}{db}
+\begin{DoxyCompactList}\small\item\em D\-B information. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$ \hyperlink{structdedos__dfg_a6413c359339136a9acaf77df3b897305}{msu\-\_\-types} \mbox{[}32\mbox{]}
+\begin{DoxyCompactList}\small\item\em M\-S\-U types which may be present in the application. \end{DoxyCompactList}\item 
+int \hyperlink{structdedos__dfg_ac78a52257324eec0ccf425530c84e91a}{n\-\_\-msu\-\_\-types}
+\begin{DoxyCompactList}\small\item\em The number of elements in \hyperlink{structdedos__dfg_a6413c359339136a9acaf77df3b897305}{dedos\-\_\-dfg\-::msu\-\_\-types}. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$ \hyperlink{structdedos__dfg_a5177dba1dea7f8f2fb383c5839c5f5f7}{msus} \mbox{[}512\mbox{]}
+\begin{DoxyCompactList}\small\item\em The M\-S\-Us present in the application. \end{DoxyCompactList}\item 
+int \hyperlink{structdedos__dfg_ad2f0a4385c8adcb46e74c872fdbed428}{n\-\_\-msus}
+\begin{DoxyCompactList}\small\item\em The number of M\-S\-Us in \hyperlink{structdedos__dfg_a5177dba1dea7f8f2fb383c5839c5f5f7}{dedos\-\_\-dfg\-::msus}. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$ \hyperlink{structdedos__dfg_a90ca69ed86b7f3d3286e4cdd4ddcae7f}{runtimes} \mbox{[}16\mbox{]}
+\begin{DoxyCompactList}\small\item\em The runtimes present in the application. \end{DoxyCompactList}\item 
+int \hyperlink{structdedos__dfg_ad222786891e1415cff70c46f083992df}{n\-\_\-runtimes}
+\begin{DoxyCompactList}\small\item\em The number of elements in \hyperlink{structdedos__dfg_a90ca69ed86b7f3d3286e4cdd4ddcae7f}{dedos\-\_\-dfg\-::runtimes}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Top-\/level structure holding the data-\/flow graph. 
+
+Definition at line 239 of file dfg.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structdedos__dfg_a0eceb9cb1a7d21b3ed8f9be508522780}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!application\-\_\-name@{application\-\_\-name}}
+\index{application\-\_\-name@{application\-\_\-name}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{application\-\_\-name}]{\setlength{\rightskip}{0pt plus 5cm}char dedos\-\_\-dfg\-::application\-\_\-name\mbox{[}64\mbox{]}}}\label{structdedos__dfg_a0eceb9cb1a7d21b3ed8f9be508522780}
+
+
+Description of the whole application. 
+
+
+
+Definition at line 240 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_ad8621d636821cbbe634b07738898a17e}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!db@{db}}
+\index{db@{db}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{db}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf db\-\_\-info} dedos\-\_\-dfg\-::db}}\label{structdedos__dfg_ad8621d636821cbbe634b07738898a17e}
+
+
+D\-B information. 
+
+
+
+Definition at line 245 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_acab1dc92b08936f48e02d5f1eb1a4f51}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!global\-\_\-ctl\-\_\-ip@{global\-\_\-ctl\-\_\-ip}}
+\index{global\-\_\-ctl\-\_\-ip@{global\-\_\-ctl\-\_\-ip}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{global\-\_\-ctl\-\_\-ip}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint32\-\_\-t} dedos\-\_\-dfg\-::global\-\_\-ctl\-\_\-ip}}\label{structdedos__dfg_acab1dc92b08936f48e02d5f1eb1a4f51}
+
+
+I\-P address of the global controller. 
+
+
+
+Definition at line 241 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_ab0e37e7cbde75494f9f9dc509ff06faa}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!global\-\_\-ctl\-\_\-port@{global\-\_\-ctl\-\_\-port}}
+\index{global\-\_\-ctl\-\_\-port@{global\-\_\-ctl\-\_\-port}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{global\-\_\-ctl\-\_\-port}]{\setlength{\rightskip}{0pt plus 5cm}int dedos\-\_\-dfg\-::global\-\_\-ctl\-\_\-port}}\label{structdedos__dfg_ab0e37e7cbde75494f9f9dc509ff06faa}
+
+
+Port of the global controller. 
+
+
+
+Definition at line 242 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_a6413c359339136a9acaf77df3b897305}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!msu\-\_\-types@{msu\-\_\-types}}
+\index{msu\-\_\-types@{msu\-\_\-types}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{msu\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu\-\_\-type}$\ast$ dedos\-\_\-dfg\-::msu\-\_\-types\mbox{[}32\mbox{]}}}\label{structdedos__dfg_a6413c359339136a9acaf77df3b897305}
+
+
+M\-S\-U types which may be present in the application. 
+
+
+
+Definition at line 248 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_a5177dba1dea7f8f2fb383c5839c5f5f7}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!msus@{msus}}
+\index{msus@{msus}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{msus}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu}$\ast$ dedos\-\_\-dfg\-::msus\mbox{[}512\mbox{]}}}\label{structdedos__dfg_a5177dba1dea7f8f2fb383c5839c5f5f7}
+
+
+The M\-S\-Us present in the application. 
+
+
+
+Definition at line 253 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_ac78a52257324eec0ccf425530c84e91a}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!n\-\_\-msu\-\_\-types@{n\-\_\-msu\-\_\-types}}
+\index{n\-\_\-msu\-\_\-types@{n\-\_\-msu\-\_\-types}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{n\-\_\-msu\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}int dedos\-\_\-dfg\-::n\-\_\-msu\-\_\-types}}\label{structdedos__dfg_ac78a52257324eec0ccf425530c84e91a}
+
+
+The number of elements in \hyperlink{structdedos__dfg_a6413c359339136a9acaf77df3b897305}{dedos\-\_\-dfg\-::msu\-\_\-types}. 
+
+
+
+Definition at line 250 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_ad2f0a4385c8adcb46e74c872fdbed428}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!n\-\_\-msus@{n\-\_\-msus}}
+\index{n\-\_\-msus@{n\-\_\-msus}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{n\-\_\-msus}]{\setlength{\rightskip}{0pt plus 5cm}int dedos\-\_\-dfg\-::n\-\_\-msus}}\label{structdedos__dfg_ad2f0a4385c8adcb46e74c872fdbed428}
+
+
+The number of M\-S\-Us in \hyperlink{structdedos__dfg_a5177dba1dea7f8f2fb383c5839c5f5f7}{dedos\-\_\-dfg\-::msus}. 
+
+
+
+Definition at line 255 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_ad222786891e1415cff70c46f083992df}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!n\-\_\-runtimes@{n\-\_\-runtimes}}
+\index{n\-\_\-runtimes@{n\-\_\-runtimes}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{n\-\_\-runtimes}]{\setlength{\rightskip}{0pt plus 5cm}int dedos\-\_\-dfg\-::n\-\_\-runtimes}}\label{structdedos__dfg_ad222786891e1415cff70c46f083992df}
+
+
+The number of elements in \hyperlink{structdedos__dfg_a90ca69ed86b7f3d3286e4cdd4ddcae7f}{dedos\-\_\-dfg\-::runtimes}. 
+
+
+
+Definition at line 260 of file dfg.\-h.
+
+\hypertarget{structdedos__dfg_a90ca69ed86b7f3d3286e4cdd4ddcae7f}{\index{dedos\-\_\-dfg@{dedos\-\_\-dfg}!runtimes@{runtimes}}
+\index{runtimes@{runtimes}!dedos_dfg@{dedos\-\_\-dfg}}
+\subsubsection[{runtimes}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-runtime}$\ast$ dedos\-\_\-dfg\-::runtimes\mbox{[}16\mbox{]}}}\label{structdedos__dfg_a90ca69ed86b7f3d3286e4cdd4ddcae7f}
+
+
+The runtimes present in the application. 
+
+
+
+Definition at line 258 of file dfg.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{dfg_8h}{dfg.\-h}\end{DoxyCompactItemize}

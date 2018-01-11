@@ -1,0 +1,213 @@
+\hypertarget{dbops_8c}{\section{src/msus/webserver/dbops.c File Reference}
+\label{dbops_8c}\index{src/msus/webserver/dbops.\-c@{src/msus/webserver/dbops.\-c}}
+}
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$sys/socket.\-h$>$}\\*
+{\ttfamily \#include $<$netinet/in.\-h$>$}\\*
+{\ttfamily \#include $<$strings.\-h$>$}\\*
+{\ttfamily \#include $<$arpa/inet.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}webserver/connection-\/handler.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmock__file}{mock\-\_\-file}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{dbops_8c_a649ad5274d988d17a275a3cead056746}{M\-A\-X\-\_\-\-F\-I\-L\-E\-\_\-\-S\-I\-Z\-E}~(long)(1 $\ast$ (1 $<$$<$ 29))
+\item 
+\#define \hyperlink{dbops_8c_a81ad47119f7620135daaf8e23483df7a}{J\-U\-M\-P\-\_\-\-S\-I\-Z\-E}~(1 $<$$<$ 14)
+\item 
+\#define \hyperlink{dbops_8c_af53dca752c4c5277c03f675d0319e359}{M\-A\-X\-\_\-\-D\-B\-\_\-\-R\-C\-V\-\_\-\-L\-E\-N}~64
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+long \hyperlink{dbops_8c_a56b209a8b9dfe2114734473fcd4e206f}{allocate\-\_\-file} (struct \hyperlink{structmock__file}{mock\-\_\-file} $\ast$file, long file\-\_\-size)
+\item 
+long \hyperlink{dbops_8c_ac2fc99a2b297c424060105fcb2f8395d}{access\-\_\-file} (struct \hyperlink{structmock__file}{mock\-\_\-file} $\ast$file, long total\-\_\-size)
+\item 
+void \hyperlink{dbops_8c_a8c438a1a4d024285731b90d203fcc386}{init\-\_\-db} (char $\ast$ip, int port, int n\-\_\-files)
+\item 
+void $\ast$ \hyperlink{dbops_8c_aeddf21f54409959642231e2257615fb3}{allocate\-\_\-db\-\_\-memory} ()
+\item 
+void \hyperlink{dbops_8c_a5d41a4e6f46237cf891618fb7fb22349}{free\-\_\-db\-\_\-memory} (void $\ast$memory)
+\item 
+int \hyperlink{dbops_8c_ac0170367528fc36750156df67026472c}{init\-\_\-db\-\_\-socket} ()
+\item 
+int \hyperlink{dbops_8c_a3127499742ae683f7a05055867a237a6}{connect\-\_\-to\-\_\-db} (struct \hyperlink{structdb__state}{db\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{dbops_8c_a149ad5df999c6353b582e632862f2c9f}{send\-\_\-to\-\_\-db} (struct \hyperlink{structdb__state}{db\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{dbops_8c_a635331b6cb2ee225cd03eab107013949}{recv\-\_\-from\-\_\-db} (struct \hyperlink{structdb__state}{db\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{dbops_8c_a17fc0181bcc2ffb776a0af22d793cdb4}{query\-\_\-db} (struct \hyperlink{structdb__state}{db\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{dbops_8c_aafb5be8373993a101cfb8b0d80daeb63}{db\-\_\-num\-\_\-files} = -\/1
+\item 
+struct sockaddr\-\_\-in \hyperlink{dbops_8c_a2318b45084ba202d3d422bc96944301f}{db\-\_\-addr}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{dbops_8c_a81ad47119f7620135daaf8e23483df7a}{\index{dbops.\-c@{dbops.\-c}!J\-U\-M\-P\-\_\-\-S\-I\-Z\-E@{J\-U\-M\-P\-\_\-\-S\-I\-Z\-E}}
+\index{J\-U\-M\-P\-\_\-\-S\-I\-Z\-E@{J\-U\-M\-P\-\_\-\-S\-I\-Z\-E}!dbops.c@{dbops.\-c}}
+\subsubsection[{J\-U\-M\-P\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define J\-U\-M\-P\-\_\-\-S\-I\-Z\-E~(1 $<$$<$ 14)}}\label{dbops_8c_a81ad47119f7620135daaf8e23483df7a}
+
+
+Definition at line 32 of file dbops.\-c.
+
+\hypertarget{dbops_8c_af53dca752c4c5277c03f675d0319e359}{\index{dbops.\-c@{dbops.\-c}!M\-A\-X\-\_\-\-D\-B\-\_\-\-R\-C\-V\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-D\-B\-\_\-\-R\-C\-V\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-D\-B\-\_\-\-R\-C\-V\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-D\-B\-\_\-\-R\-C\-V\-\_\-\-L\-E\-N}!dbops.c@{dbops.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-D\-B\-\_\-\-R\-C\-V\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-D\-B\-\_\-\-R\-C\-V\-\_\-\-L\-E\-N~64}}\label{dbops_8c_af53dca752c4c5277c03f675d0319e359}
+
+
+Definition at line 156 of file dbops.\-c.
+
+\hypertarget{dbops_8c_a649ad5274d988d17a275a3cead056746}{\index{dbops.\-c@{dbops.\-c}!M\-A\-X\-\_\-\-F\-I\-L\-E\-\_\-\-S\-I\-Z\-E@{M\-A\-X\-\_\-\-F\-I\-L\-E\-\_\-\-S\-I\-Z\-E}}
+\index{M\-A\-X\-\_\-\-F\-I\-L\-E\-\_\-\-S\-I\-Z\-E@{M\-A\-X\-\_\-\-F\-I\-L\-E\-\_\-\-S\-I\-Z\-E}!dbops.c@{dbops.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-F\-I\-L\-E\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-F\-I\-L\-E\-\_\-\-S\-I\-Z\-E~(long)(1 $\ast$ (1 $<$$<$ 29))}}\label{dbops_8c_a649ad5274d988d17a275a3cead056746}
+
+
+Definition at line 30 of file dbops.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dbops_8c_ac2fc99a2b297c424060105fcb2f8395d}{\index{dbops.\-c@{dbops.\-c}!access\-\_\-file@{access\-\_\-file}}
+\index{access\-\_\-file@{access\-\_\-file}!dbops.c@{dbops.\-c}}
+\subsubsection[{access\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}long access\-\_\-file (
+\begin{DoxyParamCaption}
+\item[{struct {\bf mock\-\_\-file} $\ast$}]{file, }
+\item[{long}]{total\-\_\-size}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_ac2fc99a2b297c424060105fcb2f8395d}
+
+
+Definition at line 66 of file dbops.\-c.
+
+\hypertarget{dbops_8c_aeddf21f54409959642231e2257615fb3}{\index{dbops.\-c@{dbops.\-c}!allocate\-\_\-db\-\_\-memory@{allocate\-\_\-db\-\_\-memory}}
+\index{allocate\-\_\-db\-\_\-memory@{allocate\-\_\-db\-\_\-memory}!dbops.c@{dbops.\-c}}
+\subsubsection[{allocate\-\_\-db\-\_\-memory}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ allocate\-\_\-db\-\_\-memory (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_aeddf21f54409959642231e2257615fb3}
+
+
+Definition at line 87 of file dbops.\-c.
+
+\hypertarget{dbops_8c_a56b209a8b9dfe2114734473fcd4e206f}{\index{dbops.\-c@{dbops.\-c}!allocate\-\_\-file@{allocate\-\_\-file}}
+\index{allocate\-\_\-file@{allocate\-\_\-file}!dbops.c@{dbops.\-c}}
+\subsubsection[{allocate\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}long allocate\-\_\-file (
+\begin{DoxyParamCaption}
+\item[{struct {\bf mock\-\_\-file} $\ast$}]{file, }
+\item[{long}]{file\-\_\-size}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_a56b209a8b9dfe2114734473fcd4e206f}
+
+
+Definition at line 43 of file dbops.\-c.
+
+\hypertarget{dbops_8c_a3127499742ae683f7a05055867a237a6}{\index{dbops.\-c@{dbops.\-c}!connect\-\_\-to\-\_\-db@{connect\-\_\-to\-\_\-db}}
+\index{connect\-\_\-to\-\_\-db@{connect\-\_\-to\-\_\-db}!dbops.c@{dbops.\-c}}
+\subsubsection[{connect\-\_\-to\-\_\-db}]{\setlength{\rightskip}{0pt plus 5cm}int connect\-\_\-to\-\_\-db (
+\begin{DoxyParamCaption}
+\item[{struct {\bf db\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_a3127499742ae683f7a05055867a237a6}
+
+
+Definition at line 121 of file dbops.\-c.
+
+\hypertarget{dbops_8c_a5d41a4e6f46237cf891618fb7fb22349}{\index{dbops.\-c@{dbops.\-c}!free\-\_\-db\-\_\-memory@{free\-\_\-db\-\_\-memory}}
+\index{free\-\_\-db\-\_\-memory@{free\-\_\-db\-\_\-memory}!dbops.c@{dbops.\-c}}
+\subsubsection[{free\-\_\-db\-\_\-memory}]{\setlength{\rightskip}{0pt plus 5cm}void free\-\_\-db\-\_\-memory (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{memory}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_a5d41a4e6f46237cf891618fb7fb22349}
+
+
+Definition at line 93 of file dbops.\-c.
+
+\hypertarget{dbops_8c_a8c438a1a4d024285731b90d203fcc386}{\index{dbops.\-c@{dbops.\-c}!init\-\_\-db@{init\-\_\-db}}
+\index{init\-\_\-db@{init\-\_\-db}!dbops.c@{dbops.\-c}}
+\subsubsection[{init\-\_\-db}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-db (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{ip, }
+\item[{int}]{port, }
+\item[{int}]{n\-\_\-files}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_a8c438a1a4d024285731b90d203fcc386}
+
+
+Definition at line 79 of file dbops.\-c.
+
+\hypertarget{dbops_8c_ac0170367528fc36750156df67026472c}{\index{dbops.\-c@{dbops.\-c}!init\-\_\-db\-\_\-socket@{init\-\_\-db\-\_\-socket}}
+\index{init\-\_\-db\-\_\-socket@{init\-\_\-db\-\_\-socket}!dbops.c@{dbops.\-c}}
+\subsubsection[{init\-\_\-db\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-db\-\_\-socket (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_ac0170367528fc36750156df67026472c}
+
+
+Definition at line 104 of file dbops.\-c.
+
+\hypertarget{dbops_8c_a17fc0181bcc2ffb776a0af22d793cdb4}{\index{dbops.\-c@{dbops.\-c}!query\-\_\-db@{query\-\_\-db}}
+\index{query\-\_\-db@{query\-\_\-db}!dbops.c@{dbops.\-c}}
+\subsubsection[{query\-\_\-db}]{\setlength{\rightskip}{0pt plus 5cm}int query\-\_\-db (
+\begin{DoxyParamCaption}
+\item[{struct {\bf db\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_a17fc0181bcc2ffb776a0af22d793cdb4}
+
+
+Definition at line 182 of file dbops.\-c.
+
+\hypertarget{dbops_8c_a635331b6cb2ee225cd03eab107013949}{\index{dbops.\-c@{dbops.\-c}!recv\-\_\-from\-\_\-db@{recv\-\_\-from\-\_\-db}}
+\index{recv\-\_\-from\-\_\-db@{recv\-\_\-from\-\_\-db}!dbops.c@{dbops.\-c}}
+\subsubsection[{recv\-\_\-from\-\_\-db}]{\setlength{\rightskip}{0pt plus 5cm}int recv\-\_\-from\-\_\-db (
+\begin{DoxyParamCaption}
+\item[{struct {\bf db\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_a635331b6cb2ee225cd03eab107013949}
+
+
+Definition at line 158 of file dbops.\-c.
+
+\hypertarget{dbops_8c_a149ad5df999c6353b582e632862f2c9f}{\index{dbops.\-c@{dbops.\-c}!send\-\_\-to\-\_\-db@{send\-\_\-to\-\_\-db}}
+\index{send\-\_\-to\-\_\-db@{send\-\_\-to\-\_\-db}!dbops.c@{dbops.\-c}}
+\subsubsection[{send\-\_\-to\-\_\-db}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-to\-\_\-db (
+\begin{DoxyParamCaption}
+\item[{struct {\bf db\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{dbops_8c_a149ad5df999c6353b582e632862f2c9f}
+
+
+Definition at line 144 of file dbops.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{dbops_8c_a2318b45084ba202d3d422bc96944301f}{\index{dbops.\-c@{dbops.\-c}!db\-\_\-addr@{db\-\_\-addr}}
+\index{db\-\_\-addr@{db\-\_\-addr}!dbops.c@{dbops.\-c}}
+\subsubsection[{db\-\_\-addr}]{\setlength{\rightskip}{0pt plus 5cm}struct sockaddr\-\_\-in db\-\_\-addr}}\label{dbops_8c_a2318b45084ba202d3d422bc96944301f}
+
+
+Definition at line 35 of file dbops.\-c.
+
+\hypertarget{dbops_8c_aafb5be8373993a101cfb8b0d80daeb63}{\index{dbops.\-c@{dbops.\-c}!db\-\_\-num\-\_\-files@{db\-\_\-num\-\_\-files}}
+\index{db\-\_\-num\-\_\-files@{db\-\_\-num\-\_\-files}!dbops.c@{dbops.\-c}}
+\subsubsection[{db\-\_\-num\-\_\-files}]{\setlength{\rightskip}{0pt plus 5cm}int db\-\_\-num\-\_\-files = -\/1}}\label{dbops_8c_aafb5be8373993a101cfb8b0d80daeb63}
+
+
+Definition at line 34 of file dbops.\-c.
+

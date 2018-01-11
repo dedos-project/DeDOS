@@ -1,0 +1,102 @@
+\hypertarget{structctrl__route__msg}{\section{ctrl\-\_\-route\-\_\-msg Struct Reference}
+\label{structctrl__route__msg}\index{ctrl\-\_\-route\-\_\-msg@{ctrl\-\_\-route\-\_\-msg}}
+}
+
+
+Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a79d3d73ddfdd3bc9813806c4ca56a6e1}{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}.  
+
+
+
+
+{\ttfamily \#include $<$ctrl\-\_\-runtime\-\_\-messages.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8}{ctrl\-\_\-route\-\_\-msg\-\_\-type} \hyperlink{structctrl__route__msg_aa809d7c9ee772df20d285e8da7d71849}{type}
+\begin{DoxyCompactList}\small\item\em sub-\/type of message \end{DoxyCompactList}\item 
+int \hyperlink{structctrl__route__msg_ace2981a09919332eb535700c18e4ab19}{route\-\_\-id}
+\begin{DoxyCompactList}\small\item\em Route to which the message applies. \end{DoxyCompactList}\item 
+int \hyperlink{structctrl__route__msg_a3b818d3acb7a45f6e32a70d0ebfe0449}{type\-\_\-id}
+\begin{DoxyCompactList}\small\item\em M\-S\-U Type of the route. \end{DoxyCompactList}\item 
+int \hyperlink{structctrl__route__msg_a4b7d60f38753213c8377e9a04c6c02d4}{msu\-\_\-id}
+\begin{DoxyCompactList}\small\item\em I\-D of M\-S\-U to add/delete/modify. \end{DoxyCompactList}\item 
+int \hyperlink{structctrl__route__msg_a7451a70a3fb1930e1d8746b136d786e2}{key}
+\item 
+unsigned int \hyperlink{structctrl__route__msg_a87e6c3090932650f56352dd97b5089b3}{runtime\-\_\-id}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a79d3d73ddfdd3bc9813806c4ca56a6e1}{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}. 
+
+For creating routes or adding endpoints {\itshape to} routes (not for adding routes to M\-S\-Us). 
+
+Definition at line 116 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structctrl__route__msg_a7451a70a3fb1930e1d8746b136d786e2}{\index{ctrl\-\_\-route\-\_\-msg@{ctrl\-\_\-route\-\_\-msg}!key@{key}}
+\index{key@{key}!ctrl_route_msg@{ctrl\-\_\-route\-\_\-msg}}
+\subsubsection[{key}]{\setlength{\rightskip}{0pt plus 5cm}int ctrl\-\_\-route\-\_\-msg\-::key}}\label{structctrl__route__msg_a7451a70a3fb1930e1d8746b136d786e2}
+
+
+Definition at line 122 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__route__msg_a4b7d60f38753213c8377e9a04c6c02d4}{\index{ctrl\-\_\-route\-\_\-msg@{ctrl\-\_\-route\-\_\-msg}!msu\-\_\-id@{msu\-\_\-id}}
+\index{msu\-\_\-id@{msu\-\_\-id}!ctrl_route_msg@{ctrl\-\_\-route\-\_\-msg}}
+\subsubsection[{msu\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int ctrl\-\_\-route\-\_\-msg\-::msu\-\_\-id}}\label{structctrl__route__msg_a4b7d60f38753213c8377e9a04c6c02d4}
+
+
+I\-D of M\-S\-U to add/delete/modify. 
+
+Neccessary for subtypes \hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8af26dd4724e2cbba74770d1a47cf90339}{A\-D\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}, \hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8a809144b90957c455b0cd5c6563203731}{D\-E\-L\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}, \hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8aeedf1ecfee1e3618cb919b4448498723}{M\-O\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T} 
+
+Definition at line 120 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__route__msg_ace2981a09919332eb535700c18e4ab19}{\index{ctrl\-\_\-route\-\_\-msg@{ctrl\-\_\-route\-\_\-msg}!route\-\_\-id@{route\-\_\-id}}
+\index{route\-\_\-id@{route\-\_\-id}!ctrl_route_msg@{ctrl\-\_\-route\-\_\-msg}}
+\subsubsection[{route\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int ctrl\-\_\-route\-\_\-msg\-::route\-\_\-id}}\label{structctrl__route__msg_ace2981a09919332eb535700c18e4ab19}
+
+
+Route to which the message applies. 
+
+
+
+Definition at line 118 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__route__msg_a87e6c3090932650f56352dd97b5089b3}{\index{ctrl\-\_\-route\-\_\-msg@{ctrl\-\_\-route\-\_\-msg}!runtime\-\_\-id@{runtime\-\_\-id}}
+\index{runtime\-\_\-id@{runtime\-\_\-id}!ctrl_route_msg@{ctrl\-\_\-route\-\_\-msg}}
+\subsubsection[{runtime\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int ctrl\-\_\-route\-\_\-msg\-::runtime\-\_\-id}}\label{structctrl__route__msg_a87e6c3090932650f56352dd97b5089b3}
+
+
+Definition at line 124 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__route__msg_aa809d7c9ee772df20d285e8da7d71849}{\index{ctrl\-\_\-route\-\_\-msg@{ctrl\-\_\-route\-\_\-msg}!type@{type}}
+\index{type@{type}!ctrl_route_msg@{ctrl\-\_\-route\-\_\-msg}}
+\subsubsection[{type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf ctrl\-\_\-route\-\_\-msg\-\_\-type} ctrl\-\_\-route\-\_\-msg\-::type}}\label{structctrl__route__msg_aa809d7c9ee772df20d285e8da7d71849}
+
+
+sub-\/type of message 
+
+
+
+Definition at line 117 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__route__msg_a3b818d3acb7a45f6e32a70d0ebfe0449}{\index{ctrl\-\_\-route\-\_\-msg@{ctrl\-\_\-route\-\_\-msg}!type\-\_\-id@{type\-\_\-id}}
+\index{type\-\_\-id@{type\-\_\-id}!ctrl_route_msg@{ctrl\-\_\-route\-\_\-msg}}
+\subsubsection[{type\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int ctrl\-\_\-route\-\_\-msg\-::type\-\_\-id}}\label{structctrl__route__msg_a3b818d3acb7a45f6e32a70d0ebfe0449}
+
+
+M\-S\-U Type of the route. 
+
+Only needed if subtype is \hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8af3b7ba89a90883322a996a4955044b0a}{C\-R\-E\-A\-T\-E\-\_\-\-R\-O\-U\-T\-E} 
+
+Definition at line 119 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{ctrl__runtime__messages_8h}{ctrl\-\_\-runtime\-\_\-messages.\-h}\end{DoxyCompactItemize}

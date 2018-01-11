@@ -1,0 +1,578 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - unnamed - runtime/controller_communication.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">runtime</a> - controller_communication.c<span style="font-size: 80%;"> (source / <a href="controller_communication.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">unnamed</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">82</td>
+            <td class="headerCovTableEntry">235</td>
+            <td class="headerCovTableEntryLo">34.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-01-11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryLo">58.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            : START OF LICENSE STUB
+<span class="lineNum">       3 </span>            :     DeDOS: Declarative Dispersion-Oriented Software
+<span class="lineNum">       4 </span>            :     Copyright (C) 2017 University of Pennsylvania, Georgetown University
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       7 </span>            :     it under the terms of the GNU General Public License as published by
+<span class="lineNum">       8 </span>            :     the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       9 </span>            :     (at your option) any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            :     GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            :     You should have received a copy of the GNU General Public License
+<span class="lineNum">      17 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      18 </span>            : END OF LICENSE STUB
+<span class="lineNum">      19 </span>            : */
+<span class="lineNum">      20 </span>            : /**
+<span class="lineNum">      21 </span>            :  * @file: controller_communication.c
+<span class="lineNum">      22 </span>            :  * Communication with global controller from runtime
+<span class="lineNum">      23 </span>            :  */
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &quot;controller_communication.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;communication.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;logging.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;socket_monitor.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;dedos_threads.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;thread_message.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;runtime_dfg.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;rt_stats.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;worker_thread.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;output_thread.h&quot;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;arpa/inet.h&gt;
+<span class="lineNum">      38 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : /**
+<span class="lineNum">      41 </span>            :  * Static (global) variable to hold the socket
+<span class="lineNum">      42 </span>            :  * connecting to the global controller
+<span class="lineNum">      43 </span>            :  */
+<span class="lineNum">      44 </span>            : static int controller_sock = -1;
+<a name="45"><span class="lineNum">      45 </span>            : </a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">          2 : int send_to_controller(struct rt_controller_msg_hdr *hdr, void *payload) {</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">          2 :     if (controller_sock &lt; 0) {</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :         log_error(&quot;Controller socket not initialized&quot;);</span>
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">      52 </span>            :     }
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span><span class="lineCov">          2 :     int rtn = send_to_endpoint(controller_sock, hdr, sizeof(*hdr));</span>
+<span class="lineNum">      55 </span><span class="lineCov">          2 :     if (rtn &lt;= 0) {</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :         log_error(&quot;Error sending header to controller&quot;);</span>
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">      58 </span>            :     }
+<span class="lineNum">      59 </span><span class="lineCov">          2 :     if (hdr-&gt;payload_size &lt;= 0) {</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">      61 </span>            :     }
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">          2 :     rtn = send_to_endpoint(controller_sock, payload, hdr-&gt;payload_size);</span>
+<span class="lineNum">      64 </span><span class="lineCov">          2 :     if (rtn &lt;= 0) {</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :         log_error(&quot;Error sending payload to controller&quot;);</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">      67 </span>            :     }
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">          2 :     log(LOG_CONTROLLER_COMMUNICATION, &quot;Sent payload of size %d type %d to controller&quot;,</span>
+<span class="lineNum">      70 </span>            :                (int)hdr-&gt;payload_size, hdr-&gt;type);
+<span class="lineNum">      71 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">      72 </span>            : }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : /**
+<span class="lineNum">      75 </span>            :  * Sends the initilization message containing runtime ID, ip and port to
+<a name="76"><span class="lineNum">      76 </span>            :  * global controller</a>
+<span class="lineNum">      77 </span>            :  */
+<span class="lineNum">      78 </span><span class="lineCov">          2 : static int send_ctl_init_msg() {</span>
+<span class="lineNum">      79 </span><span class="lineCov">          2 :     int local_id = local_runtime_id();</span>
+<span class="lineNum">      80 </span><span class="lineCov">          2 :     if (local_id &lt; 0) {</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         log_error(&quot;Could not get local runtime ID to send to controller&quot;);</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">      83 </span>            :     }
+<span class="lineNum">      84 </span><span class="lineCov">          2 :     uint32_t ip = local_runtime_ip();</span>
+<span class="lineNum">      85 </span><span class="lineCov">          2 :     int port = local_runtime_port();</span>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">          2 :     struct rt_controller_init_msg msg = {</span>
+<span class="lineNum">      88 </span>            :         .runtime_id = local_id,
+<span class="lineNum">      89 </span>            :         .ip = ip,
+<span class="lineNum">      90 </span>            :         .port = port
+<span class="lineNum">      91 </span>            :     };
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">          2 :     struct rt_controller_msg_hdr hdr = {</span>
+<span class="lineNum">      94 </span>            :         .type = RT_CTL_INIT,
+<span class="lineNum">      95 </span>            :         .payload_size = sizeof(msg)
+<span class="lineNum">      96 </span>            :     };
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">          2 :     return send_to_controller(&amp;hdr, &amp;msg);</span>
+<span class="lineNum">      99 </span>            : }
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : /**
+<span class="lineNum">     102 </span>            :  * Initializes a connection to the global controller
+<a name="103"><span class="lineNum">     103 </span>            :  * @returns 0 on success, -1 on error</a>
+<span class="lineNum">     104 </span>            :  */
+<span class="lineNum">     105 </span><span class="lineCov">          1 : static int connect_to_controller(struct sockaddr_in *addr) {</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">          1 :     if (controller_sock != -1) {</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :         log_error(&quot;Controller socket already initialized&quot;);</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     110 </span>            :     }
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">          1 :     controller_sock = init_connected_socket(addr);</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">          1 :     if (controller_sock &lt; 0) {</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :         log_error(&quot;Error connecting to global controller!&quot;);</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     117 </span>            :     }
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :     char ip[INET_ADDRSTRLEN];
+<span class="lineNum">     120 </span><span class="lineCov">          1 :     inet_ntop(AF_INET, &amp;addr-&gt;sin_addr, ip, INET_ADDRSTRLEN);</span>
+<span class="lineNum">     121 </span><span class="lineCov">          1 :     int port = ntohs(addr-&gt;sin_port);</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineCov">          1 :     log_info(&quot;Connected to global controller at %s:%d&quot;, ip, port);</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">          1 :     int rtn = send_ctl_init_msg();</span>
+<span class="lineNum">     126 </span><span class="lineCov">          1 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :         log_error(&quot;Error sending initialization message to controller&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     129 </span>            :     }
+<span class="lineNum">     130 </span><span class="lineCov">          1 :     return controller_sock;</span>
+<span class="lineNum">     131 </span>            : }
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : /**
+<span class="lineNum">     134 </span>            :  * Macro to check whether the size of a message matches the size
+<span class="lineNum">     135 </span>            :  * of the struct it's supposed to be
+<span class="lineNum">     136 </span>            :  */
+<span class="lineNum">     137 </span>            : #define CHECK_MSG_SIZE(msg, target) \
+<span class="lineNum">     138 </span>            :     if (msg-&gt;payload_size != sizeof(target)) { \
+<span class="lineNum">     139 </span>            :         log_warn(&quot;Message data size (%d) does not match size&quot; \
+<span class="lineNum">     140 </span>            :                  &quot;of target type (%d)&quot; #target, (int)msg-&gt;payload_size , \
+<span class="lineNum">     141 </span>            :                  (int)sizeof(target)); \
+<span class="lineNum">     142 </span>            :         return -1; \
+<span class="lineNum">     143 </span>            :     } \
+<span class="lineNum">     144 </span>            :     return 0;
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : /**
+<a name="147"><span class="lineNum">     147 </span>            :  * Checks whether the size of a message matches the size of its target struct</a>
+<span class="lineNum">     148 </span>            :  */
+<span class="lineNum">     149 </span><span class="lineCov">          2 : static int verify_msg_size(struct ctrl_runtime_msg_hdr *msg) {</span>
+<span class="lineNum">     150 </span><span class="lineCov">          2 :     switch (msg-&gt;type) {</span>
+<span class="lineNum">     151 </span>            :         case CTRL_CONNECT_TO_RUNTIME:
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct ctrl_add_runtime_msg);</span>
+<span class="lineNum">     153 </span>            :         case CTRL_CREATE_THREAD:
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct ctrl_create_thread_msg);</span>
+<span class="lineNum">     155 </span>            :         case CTRL_DELETE_THREAD:
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct ctrl_create_thread_msg);</span>
+<span class="lineNum">     157 </span>            :         case CTRL_MODIFY_ROUTE:
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct ctrl_route_msg);</span>
+<span class="lineNum">     159 </span>            :         case CTRL_CREATE_MSU:
+<span class="lineNum">     160 </span><span class="lineCov">          2 :             CHECK_MSG_SIZE(msg, struct ctrl_create_msu_msg);</span>
+<span class="lineNum">     161 </span>            :         case CTRL_DELETE_MSU:
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct ctrl_delete_msu_msg);</span>
+<span class="lineNum">     163 </span>            :         case CTRL_MSU_ROUTES:
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct ctrl_msu_route_msg);</span>
+<span class="lineNum">     165 </span>            :         default:
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :             log_error(&quot;Received unknown message type: %d&quot;, msg-&gt;type);</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :             return -1;</span>
+<span class="lineNum">     168 </span>            :     }
+<span class="lineNum">     169 </span>            : }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : /**
+<a name="172"><span class="lineNum">     172 </span>            :  * Processes a received ctrl_add_runtime_msg</a>
+<span class="lineNum">     173 </span>            :  */
+<span class="lineNum">     174 </span><span class="lineCov">          1 : static int process_connect_to_runtime(struct ctrl_add_runtime_msg *msg) {</span>
+<span class="lineNum">     175 </span><span class="lineCov">          1 :     struct sockaddr_in addr = {};</span>
+<span class="lineNum">     176 </span><span class="lineCov">          1 :     addr.sin_family = AF_INET;</span>
+<span class="lineNum">     177 </span><span class="lineCov">          1 :     addr.sin_addr.s_addr = msg-&gt;ip;</span>
+<span class="lineNum">     178 </span><span class="lineCov">          1 :     addr.sin_port = htons(msg-&gt;port);</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">          1 :     int rtn = connect_to_runtime_peer(msg-&gt;runtime_id, &amp;addr);</span>
+<span class="lineNum">     181 </span><span class="lineCov">          1 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :         log_error(&quot;Could not add runtime peer&quot;);</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     184 </span>            :     }
+<span class="lineNum">     185 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     186 </span>            : }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            : /**
+<a name="189"><span class="lineNum">     189 </span>            :  * Processes a received ctrl_create_thread_msg</a>
+<span class="lineNum">     190 </span>            :  */
+<span class="lineNum">     191 </span><span class="lineCov">          2 : static int process_create_thread_msg(struct ctrl_create_thread_msg *msg) {</span>
+<span class="lineNum">     192 </span><span class="lineCov">          2 :     int id = msg-&gt;thread_id;</span>
+<span class="lineNum">     193 </span><span class="lineCov">          2 :     int rtn = create_worker_thread(id, msg-&gt;mode);</span>
+<span class="lineNum">     194 </span><span class="lineCov">          2 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     195 </span><span class="lineCov">          1 :         log_error(&quot;Error creating worker thread %d&quot;, id);</span>
+<span class="lineNum">     196 </span><span class="lineCov">          1 :         return -1;</span>
+<span class="lineNum">     197 </span>            :     }
+<span class="lineNum">     198 </span><span class="lineCov">          1 :     log(LOG_THREAD_CREATION, &quot;Created worker thread %d&quot;, id);</span>
+<span class="lineNum">     199 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     200 </span>            : }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : /**
+<a name="203"><span class="lineNum">     203 </span>            :  * Processes a received ctrl_route_msg</a>
+<span class="lineNum">     204 </span>            :  */
+<span class="lineNum">     205 </span><span class="lineCov">          4 : static int process_ctrl_route_msg(struct ctrl_route_msg *msg) {</span>
+<span class="lineNum">     206 </span>            :     int rtn;
+<span class="lineNum">     207 </span><span class="lineCov">          4 :     log(LOG_CONTROLLER_COMMUNICATION, &quot;Got control route message of type %d&quot;, msg-&gt;type);</span>
+<span class="lineNum">     208 </span><span class="lineCov">          4 :     switch (msg-&gt;type) {</span>
+<span class="lineNum">     209 </span>            :         case CREATE_ROUTE:
+<span class="lineNum">     210 </span><span class="lineCov">          2 :             rtn = init_route(msg-&gt;route_id, msg-&gt;type_id);</span>
+<span class="lineNum">     211 </span><span class="lineCov">          2 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     212 </span><span class="lineCov">          1 :                 log_error(&quot;Error creating new route of id %d, type %d&quot;,</span>
+<span class="lineNum">     213 </span>            :                           msg-&gt;route_id, msg-&gt;type_id);
+<span class="lineNum">     214 </span><span class="lineCov">          1 :                 return 1;</span>
+<span class="lineNum">     215 </span>            :             }
+<span class="lineNum">     216 </span><span class="lineCov">          1 :             return 0;</span>
+<span class="lineNum">     217 </span>            :         case ADD_ENDPOINT:;
+<span class="lineNum">     218 </span>            :             struct msu_endpoint endpoint;
+<span class="lineNum">     219 </span><span class="lineCov">          2 :             int rtn = init_msu_endpoint(msg-&gt;msu_id, msg-&gt;runtime_id, &amp;endpoint);</span>
+<span class="lineNum">     220 </span><span class="lineCov">          2 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     221 </span><span class="lineCov">          1 :                 log_error(&quot;Cannot initilize runtime endpoint for adding &quot;</span>
+<span class="lineNum">     222 </span>            :                           &quot;endpoint %d to route %d&quot;, msg-&gt;msu_id, msg-&gt;route_id);
+<span class="lineNum">     223 </span><span class="lineCov">          1 :                 return 1;</span>
+<span class="lineNum">     224 </span>            :             }
+<span class="lineNum">     225 </span><span class="lineCov">          1 :             rtn = add_route_endpoint(msg-&gt;route_id, endpoint, msg-&gt;key);</span>
+<span class="lineNum">     226 </span><span class="lineCov">          1 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :                 log_error(&quot;Error adding endpoint %d to route %d with key %d&quot;,</span>
+<span class="lineNum">     228 </span>            :                           msg-&gt;msu_id, msg-&gt;route_id, msg-&gt;key);
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :                 return 1;</span>
+<span class="lineNum">     230 </span>            :             }
+<span class="lineNum">     231 </span><span class="lineCov">          1 :             return 0;</span>
+<span class="lineNum">     232 </span>            :         case DEL_ENDPOINT:
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :             rtn = remove_route_endpoint(msg-&gt;route_id, msg-&gt;msu_id);</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :                 log_error(&quot;Error removing endpoint %d from route %d&quot;,</span>
+<span class="lineNum">     236 </span>            :                           msg-&gt;msu_id, msg-&gt;route_id);
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :                 return 1;</span>
+<span class="lineNum">     238 </span>            :             }
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :             return 0;</span>
+<span class="lineNum">     240 </span>            :         case MOD_ENDPOINT:
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :             rtn = modify_route_endpoint(msg-&gt;route_id, msg-&gt;msu_id, msg-&gt;key);</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                 log_error(&quot;Error modifying endpoint %d on route %d to have key %d&quot;,</span>
+<span class="lineNum">     244 </span>            :                           msg-&gt;msu_id, msg-&gt;route_id, msg-&gt;key);
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :                 return 1;</span>
+<span class="lineNum">     246 </span>            :             }
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :             return 0;</span>
+<span class="lineNum">     248 </span>            :         default:
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :             log_error(&quot;Unknown route control message type received: %d&quot;, msg-&gt;type);</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :             return -1;</span>
+<span class="lineNum">     251 </span>            :     }
+<span class="lineNum">     252 </span>            : }
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : /**
+<a name="255"><span class="lineNum">     255 </span>            :  * Gets the corresponding thread_msg_type for a ctrl_runtime_msg_type</a>
+<span class="lineNum">     256 </span>            :  */
+<span class="lineNum">     257 </span><span class="lineCov">          2 : static enum thread_msg_type get_thread_msg_type(enum ctrl_runtime_msg_type type) {</span>
+<span class="lineNum">     258 </span><span class="lineCov">          2 :     switch (type) {</span>
+<span class="lineNum">     259 </span>            :         case CTRL_CREATE_MSU:
+<span class="lineNum">     260 </span><span class="lineCov">          2 :             return CREATE_MSU;</span>
+<span class="lineNum">     261 </span>            :         case CTRL_DELETE_MSU:
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :             return DELETE_MSU;</span>
+<span class="lineNum">     263 </span>            :         case CTRL_MSU_ROUTES:
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :             return MSU_ROUTE;</span>
+<span class="lineNum">     265 </span>            :         default:
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :             log_error(&quot;Unknown thread message type %d&quot;, type);</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :             return UNKNOWN_THREAD_MSG;</span>
+<span class="lineNum">     268 </span>            :     }
+<span class="lineNum">     269 </span>            : }
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : /**
+<span class="lineNum">     272 </span>            :  * Constructs a thread message from a ctrl_runtime_msg_hdr, reading any additional
+<span class="lineNum">     273 </span>            :  * information it needs off of the associated socket
+<span class="lineNum">     274 </span>            :  * @param hdr Header describing the information available to read
+<span class="lineNum">     275 </span>            :  * @param fd The file descriptor off of which to read the remainder of the control message
+<a name="276"><span class="lineNum">     276 </span>            :  * @return Created thread_msg on success, NULL on error</a>
+<span class="lineNum">     277 </span>            :  */
+<span class="lineNum">     278 </span><span class="lineCov">          2 : static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {</span>
+<span class="lineNum">     279 </span><span class="lineCov">          2 :     if (verify_msg_size(hdr) != 0) {</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :         log_warn(&quot;May not process message. Incorrect payload size for type.&quot;);</span>
+<span class="lineNum">     281 </span>            :     }
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineCov">          2 :     void *msg_data = malloc(hdr-&gt;payload_size);</span>
+<span class="lineNum">     284 </span><span class="lineCov">          2 :     int rtn = read_payload(fd, hdr-&gt;payload_size, msg_data);</span>
+<span class="lineNum">     285 </span><span class="lineCov">          2 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :         log_error(&quot;Error reading control payload. Cannot process message&quot;);</span>
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :         free(msg_data);</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :         return NULL;</span>
+<span class="lineNum">     289 </span>            :     }
+<span class="lineNum">     290 </span><span class="lineCov">          2 :     log(LOG_CONTROLLER_COMMUNICATION, &quot;Read control payload %p of size %d&quot;,</span>
+<span class="lineNum">     291 </span>            :                msg_data, (int)hdr-&gt;payload_size);
+<span class="lineNum">     292 </span><span class="lineCov">          2 :     enum thread_msg_type type = get_thread_msg_type(hdr-&gt;type);</span>
+<span class="lineNum">     293 </span><span class="lineCov">          2 :     struct thread_msg *thread_msg = construct_thread_msg(type, hdr-&gt;payload_size, msg_data);</span>
+<span class="lineNum">     294 </span><span class="lineCov">          2 :     thread_msg-&gt;ack_id = hdr-&gt;id;</span>
+<span class="lineNum">     295 </span><span class="lineCov">          2 :     return thread_msg;</span>
+<span class="lineNum">     296 </span>            : }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : /**
+<span class="lineNum">     299 </span>            :  * Constructs a thread_msg from a control-runtime message and passes it to the relevant thread.
+<span class="lineNum">     300 </span>            :  * @param hdr Header describing info available to read
+<span class="lineNum">     301 </span>            :  * @param fd File descriptor to read message from
+<a name="302"><span class="lineNum">     302 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">     303 </span>            :  */
+<span class="lineNum">     304 </span><span class="lineCov">          1 : static int pass_ctrl_msg_to_thread(struct ctrl_runtime_msg_hdr *hdr, int fd) {</span>
+<span class="lineNum">     305 </span><span class="lineCov">          1 :     struct thread_msg *thread_msg = thread_msg_from_ctrl_hdr(hdr, fd);</span>
+<span class="lineNum">     306 </span><span class="lineCov">          1 :     if (thread_msg == NULL) {</span>
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :         log_error(&quot;Error constructing thread msg from control hdr&quot;);</span>
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     309 </span>            :     }
+<span class="lineNum">     310 </span><span class="lineCov">          1 :     struct dedos_thread *thread = get_dedos_thread(hdr-&gt;thread_id);</span>
+<span class="lineNum">     311 </span><span class="lineCov">          1 :     if (thread == NULL) {</span>
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :         log_error(&quot;Error getting dedos thread %d to deliver control message&quot;,</span>
+<span class="lineNum">     313 </span>            :                   hdr-&gt;thread_id);
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :         destroy_thread_msg(thread_msg);</span>
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     316 </span>            :     }
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span><span class="lineCov">          1 :     int rtn = enqueue_thread_msg(thread_msg, &amp;thread-&gt;queue);</span>
+<span class="lineNum">     319 </span><span class="lineCov">          1 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :         log_error(&quot;Error enquing control message on thread %d&quot;, hdr-&gt;thread_id);</span>
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     322 </span>            :     }
+<span class="lineNum">     323 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     324 </span>            : }
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            : /**
+<span class="lineNum">     327 </span>            :  * Processes a received control message that is due for delivery to this thread.
+<span class="lineNum">     328 </span>            :  * @param hdr The header for the control message
+<span class="lineNum">     329 </span>            :  * @param fd File descriptor off of which to read the control message
+<a name="330"><span class="lineNum">     330 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">     331 </span>            :  */
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 : static int process_ctrl_message(struct ctrl_runtime_msg_hdr *hdr, int fd) {</span>
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :     if (verify_msg_size(hdr) != 0) {</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :         log_warn(&quot;May not process message. Incorrect payload size for type&quot;);</span>
+<span class="lineNum">     335 </span>            :     }
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :     char msg_data[hdr-&gt;payload_size];</span>
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :     int rtn = read_payload(fd, hdr-&gt;payload_size, (void*)msg_data);</span>
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :         log_error(&quot;Error reading control payload. Cannot process message&quot;);</span>
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     343 </span>            :     }
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :     log(LOG_CONTROLLER_COMMUNICATION, &quot;Read control payload %p of size %d&quot;,</span>
+<span class="lineNum">     345 </span>            :                msg_data, (int)hdr-&gt;payload_size);
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 :     switch (hdr-&gt;type) {</span>
+<span class="lineNum">     348 </span>            :         case CTRL_CONNECT_TO_RUNTIME:
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :             rtn = process_connect_to_runtime((struct ctrl_add_runtime_msg*) msg_data);</span>
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :                 log_error(&quot;Error processing connect to runtime message&quot;);</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     353 </span>            :             }
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     355 </span>            :         case CTRL_CREATE_THREAD:
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :             rtn = process_create_thread_msg((struct ctrl_create_thread_msg*) msg_data);</span>
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :                 log_error(&quot;Error processing create thread message&quot;);</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     360 </span>            :             }
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     362 </span>            :         case CTRL_DELETE_THREAD:
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :             log_critical(&quot;TODO!&quot;);</span>
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     365 </span>            :         case CTRL_MODIFY_ROUTE:
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :             rtn = process_ctrl_route_msg((struct ctrl_route_msg*) msg_data);</span>
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :                 log_error(&quot;Error processing control route message&quot;);</span>
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     370 </span>            :             }
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     372 </span>            :         default:
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :             log_error(&quot;Unknown message type delivered to input thread: %d&quot;, hdr-&gt;type);</span>
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :             return -1;</span>
+<span class="lineNum">     375 </span>            :     }
+<span class="lineNum">     376 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     377 </span>            : }
+<a name="378"><span class="lineNum">     378 </span>            : </a>
+<span class="lineNum">     379 </span>            : //TODO: send_ack_message()
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 : int send_ack_message(int id, bool success) {</span>
+<span class="lineNum">     381 </span>            :     // Not implemented yet
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     383 </span>            : }
+<a name="384"><span class="lineNum">     384 </span>            : </a>
+<span class="lineNum">     385 </span>            : /** Processes any received control message. */
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 : static int process_ctrl_message_hdr(struct ctrl_runtime_msg_hdr *hdr, int fd) {</span>
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            :     int rtn;
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :     switch (hdr-&gt;type) {</span>
+<span class="lineNum">     390 </span>            :         case CTRL_CREATE_MSU:
+<span class="lineNum">     391 </span>            :         case CTRL_DELETE_MSU:
+<span class="lineNum">     392 </span>            :         case CTRL_MSU_ROUTES:
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :             rtn = pass_ctrl_msg_to_thread(hdr, fd);</span>
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :                 log_error(&quot;Error passing control message to thread&quot;);</span>
+<span class="lineNum">     396 </span><span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     397 </span>            :             }
+<span class="lineNum">     398 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     399 </span>            :         case CTRL_CONNECT_TO_RUNTIME:
+<span class="lineNum">     400 </span>            :         case CTRL_CREATE_THREAD:
+<span class="lineNum">     401 </span>            :         case CTRL_DELETE_THREAD:
+<span class="lineNum">     402 </span>            :         case CTRL_MODIFY_ROUTE:
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :             rtn = process_ctrl_message(hdr, fd);</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :                 log_error(&quot;Error processing control message&quot;);</span>
+<span class="lineNum">     406 </span><span class="lineNoCov">          0 :                 send_ack_message(hdr-&gt;id, false);</span>
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     408 </span>            :             }
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :             send_ack_message(hdr-&gt;id, true);</span>
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     411 </span>            :         default:
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :             log_error(&quot;Unknown header type %d in receiving thread&quot;, hdr-&gt;type);</span>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :             return -1;</span>
+<span class="lineNum">     414 </span>            :     }
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span><span class="lineNoCov">          0 :     return 0;</span>
+<a name="417"><span class="lineNum">     417 </span>            : }</a>
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 : int handle_controller_communication(int fd) {</span>
+<span class="lineNum">     420 </span>            :     struct ctrl_runtime_msg_hdr hdr;
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :     int rtn = read_payload(fd, sizeof(hdr), &amp;hdr);</span>
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :     if (rtn&lt; 0) {</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :         log_error(&quot;Error reading control message&quot;);</span>
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :     } else if (rtn == 1) {</span>
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :         log_critical(&quot;Disconnected from global controller&quot;);</span>
+<span class="lineNum">     427 </span><span class="lineNoCov">          0 :         close(fd);</span>
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     429 </span>            :     } else {
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :         log(LOG_CONTROLLER_COMMUNICATION,</span>
+<span class="lineNum">     431 </span>            :                    &quot;Read header (type %d) from controller&quot;, hdr.type);
+<span class="lineNum">     432 </span>            :     }
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span><span class="lineNoCov">          0 :     rtn = process_ctrl_message_hdr(&amp;hdr, fd);</span>
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     436 </span><span class="lineNoCov">          0 :         log_error(&quot;Error processing control message&quot;);</span>
+<span class="lineNum">     437 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     438 </span>            :     }
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :     return 0;</span>
+<a name="441"><span class="lineNum">     441 </span>            : }</a>
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 : bool is_controller_fd(int fd) {</span>
+<span class="lineNum">     444 </span><span class="lineNoCov">          0 :     return fd == controller_sock;</span>
+<span class="lineNum">     445 </span>            : }
+<a name="446"><span class="lineNum">     446 </span>            : </a>
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span><span class="lineNoCov">          0 : int init_controller_socket(struct sockaddr_in *addr) {</span>
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 :     int sock = connect_to_controller(addr);</span>
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :     if (sock &lt; 0) {</span>
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 :         log_error(&quot;Error connecting to global controller&quot;);</span>
+<span class="lineNum">     452 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     453 </span>            :     }
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :     if (monitor_controller_socket(sock) != 0) {</span>
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :         log_error(&quot;Attempted to initialize controller socket &quot;</span>
+<span class="lineNum">     456 </span>            :                   &quot;before initializing runtime epoll&quot;);
+<span class="lineNum">     457 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     458 </span>            :     }
+<span class="lineNum">     459 </span><span class="lineNoCov">          0 :     return sock;</span>
+<a name="460"><span class="lineNum">     460 </span>            : }</a>
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 : int send_stats_to_controller() {</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :     if (controller_sock &lt; 0) {</span>
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :         log(LOG_STAT_SEND, &quot;Skipping sending statistics: controller not initialized&quot;);</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     466 </span>            :     }
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 :     int rtn = 0;</span>
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :     int total_items = 0;</span>
+<span class="lineNum">     469 </span>            :     struct timespec now;
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :     clock_gettime(CLOCK_REALTIME_COARSE, &amp;now);</span>
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :     for (int i=0; i&lt;N_REPORTED_STAT_TYPES; i++) {</span>
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :         enum stat_id stat_id = reported_stat_types[i].id;</span>
+<span class="lineNum">     473 </span>            :         int n_items;
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :         struct stat_sample *samples = get_stat_samples(stat_id, &amp;now,  &amp;n_items);</span>
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :         total_items += n_items;</span>
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :         if (samples == NULL) {</span>
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :             log(LOG_STAT_SEND, &quot;Error getting stat sample for send to controller&quot;);</span>
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     479 </span>            :         }
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 :         size_t serial_size = serialized_stat_sample_size(samples, n_items);</span>
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span><span class="lineNoCov">          0 :         char buffer[serial_size];</span>
+<span class="lineNum">     483 </span><span class="lineNoCov">          0 :         size_t ser_rtn = serialize_stat_samples(samples, n_items, buffer, serial_size);</span>
+<span class="lineNum">     484 </span>            :         if (ser_rtn &lt; 0) {
+<span class="lineNum">     485 </span>            :             log_error(&quot;Error serializing stat sample&quot;);
+<span class="lineNum">     486 </span>            :             rtn = -1;
+<span class="lineNum">     487 </span>            :         }
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span><span class="lineNoCov">          0 :         struct rt_controller_msg_hdr hdr = {</span>
+<span class="lineNum">     490 </span>            :             .type = RT_STATS,
+<span class="lineNum">     491 </span>            :             .payload_size = ser_rtn
+<span class="lineNum">     492 </span>            :         };
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :         int rtn = send_to_controller(&amp;hdr, buffer);</span>
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :         if (rtn &lt; 0) {</span>
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 :             log_error(&quot;Error sending statistics to controller&quot;);</span>
+<span class="lineNum">     497 </span><span class="lineNoCov">          0 :             rtn = -1;</span>
+<span class="lineNum">     498 </span>            :         }
+<span class="lineNum">     499 </span>            :     }
+<span class="lineNum">     500 </span><span class="lineNoCov">          0 :     log(LOG_STAT_SEND, &quot;Sending %d statistics to controller&quot;, total_items);</span>
+<span class="lineNum">     501 </span><span class="lineNoCov">          0 :     return rtn;</span>
+<span class="lineNum">     502 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

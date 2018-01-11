@@ -1,0 +1,828 @@
+\hypertarget{rt__stats_8c}{\section{src/runtime/rt\-\_\-stats.c File Reference}
+\label{rt__stats_8c}\index{src/runtime/rt\-\_\-stats.\-c@{src/runtime/rt\-\_\-stats.\-c}}
+}
+
+
+Collecting statistics within the runtime.  
+
+
+{\ttfamily \#include \char`\"{}rt\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$stdio\-\_\-ext.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$pthread.\-h$>$}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structstat__item}{stat\-\_\-item}
+\begin{DoxyCompactList}\small\item\em The internal statistics structure where stats are aggregated One per statistic-\/item. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__type}{stat\-\_\-type}
+\begin{DoxyCompactList}\small\item\em The structure holding all items of a type of stats. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{rt__stats_8c_ade4c06414722e68d0198b151bac6439d}{C\-L\-O\-C\-K\-\_\-\-I\-D}~C\-L\-O\-C\-K\-\_\-\-R\-E\-A\-L\-T\-I\-M\-E\-\_\-\-C\-O\-A\-R\-S\-E
+\begin{DoxyCompactList}\small\item\em The clock used to mark the time at which events take place. \end{DoxyCompactList}\item 
+\#define \hyperlink{rt__stats_8c_ad5c99d1b55ad6b6c60b7b24cfc2e1c70}{D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-C\-L\-O\-C\-K\-\_\-\-I\-D}~C\-L\-O\-C\-K\-\_\-\-M\-O\-N\-O\-T\-O\-N\-I\-C
+\item 
+\#define \hyperlink{rt__stats_8c_a0f8923f02eb7dfba43a426b8320354da}{M\-A\-X\-\_\-\-S\-T\-A\-T\-S}~8192
+\begin{DoxyCompactList}\small\item\em The maximum number of statistics that can be held in the rrdb. \end{DoxyCompactList}\item 
+\#define \hyperlink{rt__stats_8c_a1c029dcc783c39bf434d8209e1955a15}{G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}~1
+\begin{DoxyCompactList}\small\item\em If set to 0, will disable all gathering of statistics. \end{DoxyCompactList}\item 
+\#define \hyperlink{rt__stats_8c_ac5a152504ea5537bced64a03d1bfe766}{G\-A\-T\-H\-E\-R\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-S}~1 \& \hyperlink{rt__stats_8c_a1c029dcc783c39bf434d8209e1955a15}{G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}
+\item 
+\#define \hyperlink{rt__stats_8c_a525d02d366a7a16a9b33ac9d1dd31b4e}{G\-A\-T\-H\-E\-R\-\_\-\-C\-U\-S\-T\-O\-M\-\_\-\-S\-T\-A\-T\-S}~1 \& \hyperlink{rt__stats_8c_a1c029dcc783c39bf434d8209e1955a15}{G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}
+\item 
+\#define \hyperlink{rt__stats_8c_ad861b63dad38014de624510e6211c84d}{G\-A\-T\-H\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-S}~1 \& \hyperlink{rt__stats_8c_a1c029dcc783c39bf434d8209e1955a15}{G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}
+\item 
+\#define \hyperlink{rt__stats_8c_a6c0f9bcea8f2b5cd4a08a7d4b76548f7}{G\-A\-T\-H\-E\-R\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G}~0
+\item 
+\#define \hyperlink{rt__stats_8c_aaa8af8a5fe5beb6d2b7209d056d79ef2}{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}~(sizeof(\hyperlink{controller__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}{stat\-\_\-types}) / sizeof($\ast$\hyperlink{controller__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}{stat\-\_\-types}))
+\begin{DoxyCompactList}\small\item\em The number of types of statistics. \end{DoxyCompactList}\item 
+\#define \hyperlink{rt__stats_8c_a42d9f9c2d23c20df602e49b990f0b35f}{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T\-I\-A\-L\-I\-Z\-A\-T\-I\-O\-N}
+\item 
+\#define \hyperlink{rt__stats_8c_ab774f01c84ab0258822e84f50c55c31e}{W\-A\-R\-N\-\_\-\-R\-O\-L\-L\-O\-V\-E\-R}(label, item\-\_\-id)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{rt__stats_8c_a1a247d3104510651156010e436331a51}{write\-\_\-item\-\_\-to\-\_\-log} (F\-I\-L\-E $\ast$out\-\_\-file, struct \hyperlink{structstat__type}{stat\-\_\-type} $\ast$type, struct \hyperlink{structstat__item}{stat\-\_\-item} $\ast$item)
+\begin{DoxyCompactList}\small\item\em Writes a single stat item to the log file. \end{DoxyCompactList}\item 
+static void \hyperlink{rt__stats_8c_a962ab14270a8ff454212d1dc31a2b272}{get\-\_\-elapsed\-\_\-time} (struct timespec $\ast$t)
+\begin{DoxyCompactList}\small\item\em Gets the amount of time that has elapsed since logging started. \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_af73b43b52edc5ef1295f88a474feb5a5}{wrlock\-\_\-type} (struct \hyperlink{structstat__type}{stat\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Locks a stat type for writing. \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_ab1123286c48a6f646108d22d975e4ce6}{unlock\-\_\-type} (struct \hyperlink{structstat__type}{stat\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Unlocks a stat type. \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_ae5ba8f15e0132953dc421a6320debc19}{rlock\-\_\-type} (struct \hyperlink{structstat__type}{stat\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Locks a stat type for reading. \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_ab0810533bb8602d4909080e6764a25be}{lock\-\_\-item} (struct \hyperlink{structstat__item}{stat\-\_\-item} $\ast$item)
+\begin{DoxyCompactList}\small\item\em Locks an item\-\_\-stats structure, printing an error message on failure. \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_ac5f4d13ef3967b5d3b7890089cebaf8f}{unlock\-\_\-item} (struct \hyperlink{structstat__item}{stat\-\_\-item} $\ast$item)
+\begin{DoxyCompactList}\small\item\em Unlocks an item\-\_\-stats structure, printing an error message on failure. \end{DoxyCompactList}\item 
+static void \hyperlink{unused__def_8h_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D} \hyperlink{rt__stats_8c_ae157ee19e45d7f91c3dbf7a061190795}{flush\-\_\-all\-\_\-stats\-\_\-to\-\_\-log} (F\-I\-L\-E $\ast$file)
+\begin{DoxyCompactList}\small\item\em Writes all statistics to the provided log file. \end{DoxyCompactList}\item 
+static void \hyperlink{rt__stats_8c_a81c3f80dc55b738b8e93e1049b3b9378}{destroy\-\_\-stat\-\_\-item} (struct \hyperlink{structstat__item}{stat\-\_\-item} $\ast$item)
+\begin{DoxyCompactList}\small\item\em Frees the memory associated with an individual stat item. \end{DoxyCompactList}\item 
+static struct \hyperlink{structstat__item}{stat\-\_\-item} $\ast$ \hyperlink{rt__stats_8c_a81b88f931c29008e7e0b4e4c4901b876}{get\-\_\-item\-\_\-stat} (struct \hyperlink{structstat__type}{stat\-\_\-type} $\ast$type, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Gets the stat item associated with the given item\-\_\-id in the given type. \end{DoxyCompactList}\item 
+static long double \hyperlink{rt__stats_8c_ac94c43a4265632fb601fa6f12bd35410}{current\-\_\-double\-\_\-time} ()
+\item 
+int \hyperlink{rt__stats_8c_ad884fea983aadeb07eace27335ed7f39}{record\-\_\-start\-\_\-time} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Starts a measurement of elapsed time. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8c_acb590970b6d8425e105608e8f32ffe0c}{record\-\_\-end\-\_\-time} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Records the elapsed time since the previous call to record\-\_\-start\-\_\-time. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8c_acff104aea41cb59659523c979b3d193d}{increment\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id, double value)
+\begin{DoxyCompactList}\small\item\em Increments the given statistic by the provided value. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8c_ab992698ed0b92b65824db71f24e09c29}{record\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id, double stat, bool relog)
+\begin{DoxyCompactList}\small\item\em Records a statistic in the statlog. \end{DoxyCompactList}\item 
+double \hyperlink{rt__stats_8c_af6d4566e62da1172c23a6b435c27dc73}{get\-\_\-last\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Returns the last statistic recorded. \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_afd7dde54c9c6c35e6c3fd56003f76946}{time\-\_\-cmp} (struct timespec $\ast$t1, struct timespec $\ast$t2)
+\begin{DoxyCompactList}\small\item\em Returns 1 if t1 $>$ t2, -\/1 if t2 $>$ t1, 0 otherwise. \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_ac1c8263aa03ba689b06e2cf9561d3821}{find\-\_\-time\-\_\-index} (struct \hyperlink{structtimed__stat}{timed\-\_\-stat} $\ast$stats, struct timespec $\ast$time, int start\-\_\-index, int stat\-\_\-size)
+\begin{DoxyCompactList}\small\item\em Finds the index at which the given time occurred in the stats. \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_a602037be515c3e6d60b1fd4914edbb5b}{sample\-\_\-stat\-\_\-item} (struct \hyperlink{structstat__item}{stat\-\_\-item} $\ast$item, int stat\-\_\-size, struct timespec $\ast$sample\-\_\-end, struct timespec $\ast$interval, int sample\-\_\-size, struct \hyperlink{structtimed__stat}{timed\-\_\-stat} $\ast$sample)
+\begin{DoxyCompactList}\small\item\em Takes a sample of the provided stat item and stores it in {\ttfamily sample} \end{DoxyCompactList}\item 
+static int \hyperlink{rt__stats_8c_ae042ae408c37f8bccfe835d3a4d7c649}{sample\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, struct timespec $\ast$end, struct timespec $\ast$interval, int sample\-\_\-size, struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Takes a sample of the provided stat type (stat\-\_\-id) and places it in {\ttfamily sample} \end{DoxyCompactList}\item 
+static int \hyperlink{unused__def_8h_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D} \hyperlink{rt__stats_8c_adb06fb1e42d197434d2daad9ea3297cd}{sample\-\_\-recent\-\_\-stats} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, struct timespec $\ast$interval, int sample\-\_\-size, struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Samples {\ttfamily sample\-\_\-size} most recent stats in {\ttfamily interval} intervals. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$ \hyperlink{rt__stats_8c_a41175d7860a1561e0625432e8b3d255a}{get\-\_\-stat\-\_\-samples} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, struct timespec $\ast$sample\-\_\-time, int $\ast$n\-\_\-samples\-\_\-out)
+\begin{DoxyCompactList}\small\item\em Samples the statistic with the provided stat\-\_\-id. \end{DoxyCompactList}\item 
+static void \hyperlink{rt__stats_8c_a23576a14e890526ab2d96e4aa3556e0e}{realloc\-\_\-stat\-\_\-samples} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Reallocates the existing stats structure to store the provided number of samples. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8c_a8079b9382495fb3489600591651afc28}{remove\-\_\-stat\-\_\-item} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Un-\/registers an item so it can no longer have statistics registered, and will not be reported to the global controller. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8c_a75d06b36d94388ed944b67baeb24c1e9}{init\-\_\-stat\-\_\-item} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Initializes a stat item so that statistics can be logged to it. \end{DoxyCompactList}\item 
+int \hyperlink{rt__stats_8c_a987e4bed1652d7ebda191ee1f202addc}{init\-\_\-statistics} ()
+\begin{DoxyCompactList}\small\item\em Initializes the entire stats module. \end{DoxyCompactList}\item 
+void \hyperlink{rt__stats_8c_a214f5bec97705d204e566b59eb4fd3a4}{finalize\-\_\-statistics} (char $\ast$statlog)
+\begin{DoxyCompactList}\small\item\em Writes the statistics to statlog if provided, and frees assocated structure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct timespec \hyperlink{rt__stats_8c_aa42dd6cab7ce22529b5bc68011d1d21a}{stats\-\_\-start\-\_\-time}
+\begin{DoxyCompactList}\small\item\em The time at which the runtime started. \end{DoxyCompactList}\item 
+static bool \hyperlink{rt__stats_8c_a1b7740196a8b8beb4d29cd7da7e65a7e}{stats\-\_\-initialized} = false
+\begin{DoxyCompactList}\small\item\em Whether \hyperlink{rt__stats_8c_a987e4bed1652d7ebda191ee1f202addc}{init\-\_\-statistics} has been called. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__type}{stat\-\_\-type} \hyperlink{rt__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}{stat\-\_\-types} \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em The list of all statistics that can be gathered in the system. \end{DoxyCompactList}\item 
+static struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$ \hyperlink{rt__stats_8c_a56bfcaf6466b92d93b69b6dcc9e65d2c}{stat\-\_\-samples} \mbox{[}\hyperlink{stats_8h_aba80bf65b75f471ebcb80e11b6143067}{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}\mbox{]}
+\begin{DoxyCompactList}\small\item\em A statically allocated \hyperlink{structstat__sample}{stat\-\_\-sample} structure which is pre-\/allocated to store samples from each stat type. \end{DoxyCompactList}\item 
+static struct timespec \hyperlink{rt__stats_8c_a48b3791fe76f800b747a7c2c35adbdbd}{stat\-\_\-sample\-\_\-interval}
+\begin{DoxyCompactList}\small\item\em The interval at which stats should be sampled. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Collecting statistics within the runtime. 
+
+Definition in file \hyperlink{rt__stats_8c_source}{rt\-\_\-stats.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{rt__stats_8c_a42d9f9c2d23c20df602e49b990f0b35f}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T\-I\-A\-L\-I\-Z\-A\-T\-I\-O\-N@{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T\-I\-A\-L\-I\-Z\-A\-T\-I\-O\-N}}
+\index{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T\-I\-A\-L\-I\-Z\-A\-T\-I\-O\-N@{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T\-I\-A\-L\-I\-Z\-A\-T\-I\-O\-N}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T\-I\-A\-L\-I\-Z\-A\-T\-I\-O\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T\-I\-A\-L\-I\-Z\-A\-T\-I\-O\-N}}\label{rt__stats_8c_a42d9f9c2d23c20df602e49b990f0b35f}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} (!\hyperlink{rt__stats_8c_a1b7740196a8b8beb4d29cd7da7e65a7e}{stats\_initialized}) \{ \hyperlink{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}{\(\backslash\)}
+\hyperlink{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}{        log\_error}(\textcolor{stringliteral}{"Statistics not initialized!"}); \(\backslash\)
+        return -1; \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Definition at line 131 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ade4c06414722e68d0198b151bac6439d}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!C\-L\-O\-C\-K\-\_\-\-I\-D@{C\-L\-O\-C\-K\-\_\-\-I\-D}}
+\index{C\-L\-O\-C\-K\-\_\-\-I\-D@{C\-L\-O\-C\-K\-\_\-\-I\-D}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{C\-L\-O\-C\-K\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-L\-O\-C\-K\-\_\-\-I\-D~C\-L\-O\-C\-K\-\_\-\-R\-E\-A\-L\-T\-I\-M\-E\-\_\-\-C\-O\-A\-R\-S\-E}}\label{rt__stats_8c_ade4c06414722e68d0198b151bac6439d}
+
+
+The clock used to mark the time at which events take place. 
+
+
+
+Definition at line 37 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ad5c99d1b55ad6b6c60b7b24cfc2e1c70}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-C\-L\-O\-C\-K\-\_\-\-I\-D@{D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-C\-L\-O\-C\-K\-\_\-\-I\-D}}
+\index{D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-C\-L\-O\-C\-K\-\_\-\-I\-D@{D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-C\-L\-O\-C\-K\-\_\-\-I\-D}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-C\-L\-O\-C\-K\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-C\-L\-O\-C\-K\-\_\-\-I\-D~C\-L\-O\-C\-K\-\_\-\-M\-O\-N\-O\-T\-O\-N\-I\-C}}\label{rt__stats_8c_ad5c99d1b55ad6b6c60b7b24cfc2e1c70}
+
+
+Definition at line 38 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a525d02d366a7a16a9b33ac9d1dd31b4e}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!G\-A\-T\-H\-E\-R\-\_\-\-C\-U\-S\-T\-O\-M\-\_\-\-S\-T\-A\-T\-S@{G\-A\-T\-H\-E\-R\-\_\-\-C\-U\-S\-T\-O\-M\-\_\-\-S\-T\-A\-T\-S}}
+\index{G\-A\-T\-H\-E\-R\-\_\-\-C\-U\-S\-T\-O\-M\-\_\-\-S\-T\-A\-T\-S@{G\-A\-T\-H\-E\-R\-\_\-\-C\-U\-S\-T\-O\-M\-\_\-\-S\-T\-A\-T\-S}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{G\-A\-T\-H\-E\-R\-\_\-\-C\-U\-S\-T\-O\-M\-\_\-\-S\-T\-A\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-A\-T\-H\-E\-R\-\_\-\-C\-U\-S\-T\-O\-M\-\_\-\-S\-T\-A\-T\-S~1 \& {\bf G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}}}\label{rt__stats_8c_a525d02d366a7a16a9b33ac9d1dd31b4e}
+
+
+Definition at line 86 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ac5a152504ea5537bced64a03d1bfe766}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!G\-A\-T\-H\-E\-R\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-S@{G\-A\-T\-H\-E\-R\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-S}}
+\index{G\-A\-T\-H\-E\-R\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-S@{G\-A\-T\-H\-E\-R\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-S}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{G\-A\-T\-H\-E\-R\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-A\-T\-H\-E\-R\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-S~1 \& {\bf G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}}}\label{rt__stats_8c_ac5a152504ea5537bced64a03d1bfe766}
+
+
+Definition at line 85 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a6c0f9bcea8f2b5cd4a08a7d4b76548f7}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!G\-A\-T\-H\-E\-R\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G@{G\-A\-T\-H\-E\-R\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G}}
+\index{G\-A\-T\-H\-E\-R\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G@{G\-A\-T\-H\-E\-R\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{G\-A\-T\-H\-E\-R\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-A\-T\-H\-E\-R\-\_\-\-P\-R\-O\-F\-I\-L\-I\-N\-G~0}}\label{rt__stats_8c_a6c0f9bcea8f2b5cd4a08a7d4b76548f7}
+
+
+Definition at line 92 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a1c029dcc783c39bf434d8209e1955a15}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S@{G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}}
+\index{G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S@{G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S~1}}\label{rt__stats_8c_a1c029dcc783c39bf434d8209e1955a15}
+
+
+If set to 0, will disable all gathering of statistics. 
+
+
+
+Definition at line 83 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ad861b63dad38014de624510e6211c84d}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!G\-A\-T\-H\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-S@{G\-A\-T\-H\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-S}}
+\index{G\-A\-T\-H\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-S@{G\-A\-T\-H\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-S}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{G\-A\-T\-H\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\-A\-T\-H\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-S~1 \& {\bf G\-A\-T\-H\-E\-R\-\_\-\-S\-T\-A\-T\-S}}}\label{rt__stats_8c_ad861b63dad38014de624510e6211c84d}
+
+
+Definition at line 87 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a0f8923f02eb7dfba43a426b8320354da}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!M\-A\-X\-\_\-\-S\-T\-A\-T\-S@{M\-A\-X\-\_\-\-S\-T\-A\-T\-S}}
+\index{M\-A\-X\-\_\-\-S\-T\-A\-T\-S@{M\-A\-X\-\_\-\-S\-T\-A\-T\-S}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-S\-T\-A\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-S\-T\-A\-T\-S~8192}}\label{rt__stats_8c_a0f8923f02eb7dfba43a426b8320354da}
+
+
+The maximum number of statistics that can be held in the rrdb. 
+
+
+
+Definition at line 79 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_aaa8af8a5fe5beb6d2b7209d056d79ef2}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}
+\index{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S~(sizeof({\bf stat\-\_\-types}) / sizeof($\ast${\bf stat\-\_\-types}))}}\label{rt__stats_8c_aaa8af8a5fe5beb6d2b7209d056d79ef2}
+
+
+The number of types of statistics. 
+
+
+
+Definition at line 129 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ab774f01c84ab0258822e84f50c55c31e}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!W\-A\-R\-N\-\_\-\-R\-O\-L\-L\-O\-V\-E\-R@{W\-A\-R\-N\-\_\-\-R\-O\-L\-L\-O\-V\-E\-R}}
+\index{W\-A\-R\-N\-\_\-\-R\-O\-L\-L\-O\-V\-E\-R@{W\-A\-R\-N\-\_\-\-R\-O\-L\-L\-O\-V\-E\-R}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{W\-A\-R\-N\-\_\-\-R\-O\-L\-L\-O\-V\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\-A\-R\-N\-\_\-\-R\-O\-L\-L\-O\-V\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{label, }
+\item[{}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_ab774f01c84ab0258822e84f50c55c31e}
+
+
+Definition at line 351 of file rt\-\_\-stats.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{rt__stats_8c_ac94c43a4265632fb601fa6f12bd35410}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!current\-\_\-double\-\_\-time@{current\-\_\-double\-\_\-time}}
+\index{current\-\_\-double\-\_\-time@{current\-\_\-double\-\_\-time}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{current\-\_\-double\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}static long double current\-\_\-double\-\_\-time (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{rt__stats_8c_ac94c43a4265632fb601fa6f12bd35410}
+
+
+Definition at line 314 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a81c3f80dc55b738b8e93e1049b3b9378}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!destroy\-\_\-stat\-\_\-item@{destroy\-\_\-stat\-\_\-item}}
+\index{destroy\-\_\-stat\-\_\-item@{destroy\-\_\-stat\-\_\-item}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{destroy\-\_\-stat\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}static void destroy\-\_\-stat\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-item} $\ast$}]{item}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a81c3f80dc55b738b8e93e1049b3b9378}
+
+
+Frees the memory associated with an individual stat item. 
+
+
+
+Definition at line 294 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a214f5bec97705d204e566b59eb4fd3a4}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!finalize\-\_\-statistics@{finalize\-\_\-statistics}}
+\index{finalize\-\_\-statistics@{finalize\-\_\-statistics}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{finalize\-\_\-statistics}]{\setlength{\rightskip}{0pt plus 5cm}void finalize\-\_\-statistics (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{statlog}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_a214f5bec97705d204e566b59eb4fd3a4}
+
+
+Writes the statistics to statlog if provided, and frees assocated structure. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em statlog} & Log file to dump statistics to or N\-U\-L\-L if N/\-A \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 822 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ac1c8263aa03ba689b06e2cf9561d3821}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!find\-\_\-time\-\_\-index@{find\-\_\-time\-\_\-index}}
+\index{find\-\_\-time\-\_\-index@{find\-\_\-time\-\_\-index}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{find\-\_\-time\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}static int find\-\_\-time\-\_\-index (
+\begin{DoxyParamCaption}
+\item[{struct {\bf timed\-\_\-stat} $\ast$}]{stats, }
+\item[{struct timespec $\ast$}]{time, }
+\item[{int}]{start\-\_\-index, }
+\item[{int}]{stat\-\_\-size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_ac1c8263aa03ba689b06e2cf9561d3821}
+
+
+Finds the index at which the given time occurred in the stats. 
+
+
+
+Definition at line 505 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ae157ee19e45d7f91c3dbf7a061190795}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!flush\-\_\-all\-\_\-stats\-\_\-to\-\_\-log@{flush\-\_\-all\-\_\-stats\-\_\-to\-\_\-log}}
+\index{flush\-\_\-all\-\_\-stats\-\_\-to\-\_\-log@{flush\-\_\-all\-\_\-stats\-\_\-to\-\_\-log}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{flush\-\_\-all\-\_\-stats\-\_\-to\-\_\-log}]{\setlength{\rightskip}{0pt plus 5cm}static void {\bf U\-N\-U\-S\-E\-D} flush\-\_\-all\-\_\-stats\-\_\-to\-\_\-log (
+\begin{DoxyParamCaption}
+\item[{F\-I\-L\-E $\ast$}]{file}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_ae157ee19e45d7f91c3dbf7a061190795}
+
+
+Writes all statistics to the provided log file. 
+
+
+
+Definition at line 278 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a962ab14270a8ff454212d1dc31a2b272}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!get\-\_\-elapsed\-\_\-time@{get\-\_\-elapsed\-\_\-time}}
+\index{get\-\_\-elapsed\-\_\-time@{get\-\_\-elapsed\-\_\-time}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{get\-\_\-elapsed\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}static void get\-\_\-elapsed\-\_\-time (
+\begin{DoxyParamCaption}
+\item[{struct timespec $\ast$}]{t}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a962ab14270a8ff454212d1dc31a2b272}
+
+
+Gets the amount of time that has elapsed since logging started. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em $\ast$t} & the elapsed time is output into this variable \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 221 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a81b88f931c29008e7e0b4e4c4901b876}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!get\-\_\-item\-\_\-stat@{get\-\_\-item\-\_\-stat}}
+\index{get\-\_\-item\-\_\-stat@{get\-\_\-item\-\_\-stat}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{get\-\_\-item\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf stat\-\_\-item}$\ast$ get\-\_\-item\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-type} $\ast$}]{type, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a81b88f931c29008e7e0b4e4c4901b876}
+
+
+Gets the stat item associated with the given item\-\_\-id in the given type. 
+
+
+
+Definition at line 300 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_af6d4566e62da1172c23a6b435c27dc73}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!get\-\_\-last\-\_\-stat@{get\-\_\-last\-\_\-stat}}
+\index{get\-\_\-last\-\_\-stat@{get\-\_\-last\-\_\-stat}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{get\-\_\-last\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}double get\-\_\-last\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id} {\bf stat\-\_\-id}}]{, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_af6d4566e62da1172c23a6b435c27dc73}
+
+
+Returns the last statistic recorded. 
+
+
+
+Definition at line 466 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a41175d7860a1561e0625432e8b3d255a}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!get\-\_\-stat\-\_\-samples@{get\-\_\-stat\-\_\-samples}}
+\index{get\-\_\-stat\-\_\-samples@{get\-\_\-stat\-\_\-samples}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{get\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-sample}$\ast$ get\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{struct timespec $\ast$}]{time, }
+\item[{int $\ast$}]{n\-\_\-sample\-\_\-out}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_a41175d7860a1561e0625432e8b3d255a}
+
+
+Samples the statistic with the provided stat\-\_\-id. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & the I\-D of the \hyperlink{structstat__type}{stat\-\_\-type} to sample \\
+\hline
+{\em time} & The time at which the samples should be taken \\
+\hline
+{\em n\-\_\-samples\-\_\-out} & Output argument, stores the number of samples acquired \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The statically-\/allocated stat sample (does not need to be freed) 
+\end{DoxyReturn}
+
+
+Definition at line 634 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_acff104aea41cb59659523c979b3d193d}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!increment\-\_\-stat@{increment\-\_\-stat}}
+\index{increment\-\_\-stat@{increment\-\_\-stat}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{increment\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int increment\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id, }
+\item[{double}]{value}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_acff104aea41cb59659523c979b3d193d}
+
+
+Increments the given statistic by the provided value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D for the stat being logged \\
+\hline
+{\em item\-\_\-id} & I\-D for the item to which the stat refers (must be registered!) \\
+\hline
+{\em value} & The amount to add to the given stat \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 389 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a75d06b36d94388ed944b67baeb24c1e9}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!init\-\_\-stat\-\_\-item@{init\-\_\-stat\-\_\-item}}
+\index{init\-\_\-stat\-\_\-item@{init\-\_\-stat\-\_\-item}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{init\-\_\-stat\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-stat\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id} {\bf stat\-\_\-id}}]{, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_a75d06b36d94388ed944b67baeb24c1e9}
+
+
+Initializes a stat item so that statistics can be logged to it. 
+
+Initializes a new stat item so it can have stats registered and can be reported to the global controller.
+
+(e.\-g. initializing M\-S\-U\-\_\-\-Q\-U\-E\-U\-E\-\_\-\-L\-E\-N for item N, corresponding to msu \# N) 
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D of the statistic type to be logged \\
+\hline
+{\em item\-\_\-id} & I\-D of the item to be logged \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 719 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a987e4bed1652d7ebda191ee1f202addc}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!init\-\_\-statistics@{init\-\_\-statistics}}
+\index{init\-\_\-statistics@{init\-\_\-statistics}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{init\-\_\-statistics}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-statistics (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_a987e4bed1652d7ebda191ee1f202addc}
+
+
+Initializes the entire stats module. 
+
+M\-U\-S\-T B\-E C\-A\-L\-L\-E\-D before runtime starts 
+
+Definition at line 783 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ab0810533bb8602d4909080e6764a25be}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!lock\-\_\-item@{lock\-\_\-item}}
+\index{lock\-\_\-item@{lock\-\_\-item}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{lock\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}static int lock\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-item} $\ast$}]{item}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{rt__stats_8c_ab0810533bb8602d4909080e6764a25be}
+
+
+Locks an item\-\_\-stats structure, printing an error message on failure. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em $\ast$item} & the item\-\_\-stats structure to lock \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 257 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a23576a14e890526ab2d96e4aa3556e0e}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!realloc\-\_\-stat\-\_\-samples@{realloc\-\_\-stat\-\_\-samples}}
+\index{realloc\-\_\-stat\-\_\-samples@{realloc\-\_\-stat\-\_\-samples}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{realloc\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}static void realloc\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a23576a14e890526ab2d96e4aa3556e0e}
+
+
+Reallocates the existing stats structure to store the provided number of samples. 
+
+
+
+Definition at line 672 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_acb590970b6d8425e105608e8f32ffe0c}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!record\-\_\-end\-\_\-time@{record\-\_\-end\-\_\-time}}
+\index{record\-\_\-end\-\_\-time@{record\-\_\-end\-\_\-time}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{record\-\_\-end\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}int record\-\_\-end\-\_\-time (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_acb590970b6d8425e105608e8f32ffe0c}
+
+
+Records the elapsed time since the previous call to record\-\_\-start\-\_\-time. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D for stat being logged \\
+\hline
+{\em item\-\_\-id} & I\-D for item within the statistic \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 355 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ad884fea983aadeb07eace27335ed7f39}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!record\-\_\-start\-\_\-time@{record\-\_\-start\-\_\-time}}
+\index{record\-\_\-start\-\_\-time@{record\-\_\-start\-\_\-time}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{record\-\_\-start\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}int record\-\_\-start\-\_\-time (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_ad884fea983aadeb07eace27335ed7f39}
+
+
+Starts a measurement of elapsed time. 
+
+Not added to the log until a call to record\-\_\-end\-\_\-time 
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D for stat type being logged \\
+\hline
+{\em item\-\_\-id} & I\-D for the item to which the stat refers \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 320 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ab992698ed0b92b65824db71f24e09c29}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!record\-\_\-stat@{record\-\_\-stat}}
+\index{record\-\_\-stat@{record\-\_\-stat}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{record\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int record\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id, }
+\item[{double}]{stat, }
+\item[{bool}]{relog}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_ab992698ed0b92b65824db71f24e09c29}
+
+
+Records a statistic in the statlog. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stat\-\_\-id} & I\-D for stat being logged \\
+\hline
+{\em item\-\_\-id} & I\-D for item to which stat refers (must be registered!) \\
+\hline
+{\em stat} & Statistic to record \\
+\hline
+{\em relog} & Whether to log statistic if it matches the previously logged stat \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 426 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a8079b9382495fb3489600591651afc28}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!remove\-\_\-stat\-\_\-item@{remove\-\_\-stat\-\_\-item}}
+\index{remove\-\_\-stat\-\_\-item@{remove\-\_\-stat\-\_\-item}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{remove\-\_\-stat\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}int remove\-\_\-stat\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id} {\bf stat\-\_\-id}}]{, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{rt__stats_8c_a8079b9382495fb3489600591651afc28}
+
+
+Un-\/registers an item so it can no longer have statistics registered, and will not be reported to the global controller. 
+
+
+
+Definition at line 683 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ae5ba8f15e0132953dc421a6320debc19}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!rlock\-\_\-type@{rlock\-\_\-type}}
+\index{rlock\-\_\-type@{rlock\-\_\-type}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{rlock\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int rlock\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{rt__stats_8c_ae5ba8f15e0132953dc421a6320debc19}
+
+
+Locks a stat type for reading. 
+
+
+
+Definition at line 245 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_adb06fb1e42d197434d2daad9ea3297cd}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!sample\-\_\-recent\-\_\-stats@{sample\-\_\-recent\-\_\-stats}}
+\index{sample\-\_\-recent\-\_\-stats@{sample\-\_\-recent\-\_\-stats}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{sample\-\_\-recent\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf U\-N\-U\-S\-E\-D} sample\-\_\-recent\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{struct timespec $\ast$}]{interval, }
+\item[{int}]{sample\-\_\-size, }
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_adb06fb1e42d197434d2daad9ea3297cd}
+
+
+Samples {\ttfamily sample\-\_\-size} most recent stats in {\ttfamily interval} intervals. 
+
+Note\-: Not used at the moment, deferring to sample\-\_\-stat instead 
+
+Definition at line 612 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ae042ae408c37f8bccfe835d3a4d7c649}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!sample\-\_\-stat@{sample\-\_\-stat}}
+\index{sample\-\_\-stat@{sample\-\_\-stat}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{sample\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}static int sample\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{struct timespec $\ast$}]{end, }
+\item[{struct timespec $\ast$}]{interval, }
+\item[{int}]{sample\-\_\-size, }
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_ae042ae408c37f8bccfe835d3a4d7c649}
+
+
+Takes a sample of the provided stat type (stat\-\_\-id) and places it in {\ttfamily sample} 
+
+
+
+Definition at line 565 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a602037be515c3e6d60b1fd4914edbb5b}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!sample\-\_\-stat\-\_\-item@{sample\-\_\-stat\-\_\-item}}
+\index{sample\-\_\-stat\-\_\-item@{sample\-\_\-stat\-\_\-item}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{sample\-\_\-stat\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}static int sample\-\_\-stat\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-item} $\ast$}]{item, }
+\item[{int}]{stat\-\_\-size, }
+\item[{struct timespec $\ast$}]{sample\-\_\-end, }
+\item[{struct timespec $\ast$}]{interval, }
+\item[{int}]{sample\-\_\-size, }
+\item[{struct {\bf timed\-\_\-stat} $\ast$}]{sample}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a602037be515c3e6d60b1fd4914edbb5b}
+
+
+Takes a sample of the provided stat item and stores it in {\ttfamily sample} 
+
+
+
+Definition at line 527 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_afd7dde54c9c6c35e6c3fd56003f76946}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!time\-\_\-cmp@{time\-\_\-cmp}}
+\index{time\-\_\-cmp@{time\-\_\-cmp}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{time\-\_\-cmp}]{\setlength{\rightskip}{0pt plus 5cm}static int time\-\_\-cmp (
+\begin{DoxyParamCaption}
+\item[{struct timespec $\ast$}]{t1, }
+\item[{struct timespec $\ast$}]{t2}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{rt__stats_8c_afd7dde54c9c6c35e6c3fd56003f76946}
+
+
+Returns 1 if t1 $>$ t2, -\/1 if t2 $>$ t1, 0 otherwise. 
+
+
+
+Definition at line 497 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ac5f4d13ef3967b5d3b7890089cebaf8f}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!unlock\-\_\-item@{unlock\-\_\-item}}
+\index{unlock\-\_\-item@{unlock\-\_\-item}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{unlock\-\_\-item}]{\setlength{\rightskip}{0pt plus 5cm}static int unlock\-\_\-item (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-item} $\ast$}]{item}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{rt__stats_8c_ac5f4d13ef3967b5d3b7890089cebaf8f}
+
+
+Unlocks an item\-\_\-stats structure, printing an error message on failure. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em $\ast$item} & the item\-\_\-stats structure to unlock \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 269 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_ab1123286c48a6f646108d22d975e4ce6}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!unlock\-\_\-type@{unlock\-\_\-type}}
+\index{unlock\-\_\-type@{unlock\-\_\-type}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{unlock\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int unlock\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{rt__stats_8c_ab1123286c48a6f646108d22d975e4ce6}
+
+
+Unlocks a stat type. 
+
+
+
+Definition at line 236 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a1a247d3104510651156010e436331a51}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!write\-\_\-item\-\_\-to\-\_\-log@{write\-\_\-item\-\_\-to\-\_\-log}}
+\index{write\-\_\-item\-\_\-to\-\_\-log@{write\-\_\-item\-\_\-to\-\_\-log}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{write\-\_\-item\-\_\-to\-\_\-log}]{\setlength{\rightskip}{0pt plus 5cm}static int write\-\_\-item\-\_\-to\-\_\-log (
+\begin{DoxyParamCaption}
+\item[{F\-I\-L\-E $\ast$}]{out\-\_\-file, }
+\item[{struct {\bf stat\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf stat\-\_\-item} $\ast$}]{item}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a1a247d3104510651156010e436331a51}
+
+
+Writes a single stat item to the log file. 
+
+
+
+Definition at line 187 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_af73b43b52edc5ef1295f88a474feb5a5}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!wrlock\-\_\-type@{wrlock\-\_\-type}}
+\index{wrlock\-\_\-type@{wrlock\-\_\-type}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{wrlock\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int wrlock\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{rt__stats_8c_af73b43b52edc5ef1295f88a474feb5a5}
+
+
+Locks a stat type for writing. 
+
+
+
+Definition at line 227 of file rt\-\_\-stats.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{rt__stats_8c_a48b3791fe76f800b747a7c2c35adbdbd}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!stat\-\_\-sample\-\_\-interval@{stat\-\_\-sample\-\_\-interval}}
+\index{stat\-\_\-sample\-\_\-interval@{stat\-\_\-sample\-\_\-interval}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{stat\-\_\-sample\-\_\-interval}]{\setlength{\rightskip}{0pt plus 5cm}struct timespec stat\-\_\-sample\-\_\-interval\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a48b3791fe76f800b747a7c2c35adbdbd}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    .tv\_sec = (\hyperlink{stats_8h_ad0a95ec958d1ee5f5693d210cdc4c7e3}{STAT\_SAMPLE\_PERIOD\_MS} / 1000) / 
+      \hyperlink{stats_8h_a8612c0f61538d8f8dec0208e93af5f98}{STAT\_SAMPLE\_SIZE},
+    .tv\_nsec = (\textcolor{keywordtype}{int})(\hyperlink{stats_8h_ad0a95ec958d1ee5f5693d210cdc4c7e3}{STAT\_SAMPLE\_PERIOD\_MS} * 1e6 / 
+      \hyperlink{stats_8h_a8612c0f61538d8f8dec0208e93af5f98}{STAT\_SAMPLE\_SIZE}) % (\textcolor{keywordtype}{int})1e9
+\}
+\end{DoxyCode}
+
+
+The interval at which stats should be sampled. 
+
+
+
+Definition at line 629 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a56bfcaf6466b92d93b69b6dcc9e65d2c}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!stat\-\_\-samples@{stat\-\_\-samples}}
+\index{stat\-\_\-samples@{stat\-\_\-samples}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-sample}$\ast$ stat\-\_\-samples\mbox{[}{\bf N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a56bfcaf6466b92d93b69b6dcc9e65d2c}
+
+
+A statically allocated \hyperlink{structstat__sample}{stat\-\_\-sample} structure which is pre-\/allocated to store samples from each stat type. 
+
+
+
+Definition at line 626 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!stat\-\_\-types@{stat\-\_\-types}}
+\index{stat\-\_\-types@{stat\-\_\-types}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{stat\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-type} stat\-\_\-types\mbox{[}$\,$\mbox{]}}}\label{rt__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}
+
+
+The list of all statistics that can be gathered in the system. 
+
+
+
+Definition at line 96 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_a1b7740196a8b8beb4d29cd7da7e65a7e}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!stats\-\_\-initialized@{stats\-\_\-initialized}}
+\index{stats\-\_\-initialized@{stats\-\_\-initialized}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{stats\-\_\-initialized}]{\setlength{\rightskip}{0pt plus 5cm}bool stats\-\_\-initialized = false\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_a1b7740196a8b8beb4d29cd7da7e65a7e}
+
+
+Whether \hyperlink{rt__stats_8c_a987e4bed1652d7ebda191ee1f202addc}{init\-\_\-statistics} has been called. 
+
+
+
+Definition at line 43 of file rt\-\_\-stats.\-c.
+
+\hypertarget{rt__stats_8c_aa42dd6cab7ce22529b5bc68011d1d21a}{\index{rt\-\_\-stats.\-c@{rt\-\_\-stats.\-c}!stats\-\_\-start\-\_\-time@{stats\-\_\-start\-\_\-time}}
+\index{stats\-\_\-start\-\_\-time@{stats\-\_\-start\-\_\-time}!rt_stats.c@{rt\-\_\-stats.\-c}}
+\subsubsection[{stats\-\_\-start\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}struct timespec stats\-\_\-start\-\_\-time\hspace{0.3cm}{\ttfamily [static]}}}\label{rt__stats_8c_aa42dd6cab7ce22529b5bc68011d1d21a}
+
+
+The time at which the runtime started. 
+
+
+
+Definition at line 41 of file rt\-\_\-stats.\-c.
+

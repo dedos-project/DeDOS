@@ -1,0 +1,148 @@
+\hypertarget{global__controller_2jsmn_8h}{\section{src/global\-\_\-controller/jsmn.h File Reference}
+\label{global__controller_2jsmn_8h}\index{src/global\-\_\-controller/jsmn.\-h@{src/global\-\_\-controller/jsmn.\-h}}
+}
+{\ttfamily \#include $<$stddef.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structjsmntok__t}{jsmntok\-\_\-t}
+\begin{DoxyCompactList}\small\item\em J\-S\-O\-N token description. \end{DoxyCompactList}\item 
+struct \hyperlink{structjsmn__parser}{jsmn\-\_\-parser}
+\begin{DoxyCompactList}\small\item\em J\-S\-O\-N parser. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802f}{jsmntype\-\_\-t} \{ \\*
+\hyperlink{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa7bc5faeddd33197250cf352af984f185}{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D} = 0, 
+\hyperlink{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa416d6e733082bedc1166f0d66f571867}{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T} = 1, 
+\hyperlink{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fabc4c47216dacf36bd4f64ac3d649d471}{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y} = 2, 
+\hyperlink{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fad4ea6277c135d9d3377bf8b719779539}{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G} = 3, 
+\\*
+\hyperlink{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa2550c93fe929f81f30ea9b629ed98742}{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E} = 4, 
+\hyperlink{common_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa7bc5faeddd33197250cf352af984f185}{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D} = 0, 
+\hyperlink{common_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa416d6e733082bedc1166f0d66f571867}{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T} = 1, 
+\hyperlink{common_2jsmn_8h_a065320719769f9dc1fbe30094e52802fabc4c47216dacf36bd4f64ac3d649d471}{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y} = 2, 
+\\*
+\hyperlink{common_2jsmn_8h_a065320719769f9dc1fbe30094e52802fad4ea6277c135d9d3377bf8b719779539}{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G} = 3, 
+\hyperlink{common_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa2550c93fe929f81f30ea9b629ed98742}{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E} = 4
+ \}
+\begin{DoxyCompactList}\small\item\em J\-S\-O\-N type identifier. \end{DoxyCompactList}\item 
+enum \hyperlink{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80ea}{jsmnerr} \{ \\*
+\hyperlink{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaafa350a2c19cc5fddbfb7c90309d3fe41}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M} = -\/1, 
+\hyperlink{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa3297b1c54d926ce497b7a20530689171}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L} = -\/2, 
+\hyperlink{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa851a0e75343c14a13c6893b3727ead16}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T} = -\/3, 
+\hyperlink{common_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaafa350a2c19cc5fddbfb7c90309d3fe41}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M} = -\/1, 
+\\*
+\hyperlink{common_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa3297b1c54d926ce497b7a20530689171}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L} = -\/2, 
+\hyperlink{common_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa851a0e75343c14a13c6893b3727ead16}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T} = -\/3
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{global__controller_2jsmn_8h_a8d4a8b3ce5c3d600feea38615b5f9aa6}{jsmn\-\_\-init} (\hyperlink{structjsmn__parser}{jsmn\-\_\-parser} $\ast$parser)
+\begin{DoxyCompactList}\small\item\em Create J\-S\-O\-N parser over an array of tokens. \end{DoxyCompactList}\item 
+int \hyperlink{global__controller_2jsmn_8h_a774f985a9750a10c7e88304e30191e03}{jsmn\-\_\-parse} (\hyperlink{structjsmn__parser}{jsmn\-\_\-parser} $\ast$parser, const char $\ast$js, size\-\_\-t len, \hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$\hyperlink{http__parser_8c_a4e5747065ed2d7b90f2d8a148c88b55b}{tokens}, unsigned int num\-\_\-tokens)
+\begin{DoxyCompactList}\small\item\em Run J\-S\-O\-N parser. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80ea}{\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!jsmnerr@{jsmnerr}}
+\index{jsmnerr@{jsmnerr}!global_controller/jsmn.h@{global\-\_\-controller/jsmn.\-h}}
+\subsubsection[{jsmnerr}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf jsmnerr}}}\label{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80ea}
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaafa350a2c19cc5fddbfb7c90309d3fe41}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M}\label{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaafa350a2c19cc5fddbfb7c90309d3fe41}
+}]\index{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa3297b1c54d926ce497b7a20530689171}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L}\label{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa3297b1c54d926ce497b7a20530689171}
+}]\index{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa851a0e75343c14a13c6893b3727ead16}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T}\label{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa851a0e75343c14a13c6893b3727ead16}
+}]\index{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaafa350a2c19cc5fddbfb7c90309d3fe41}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-N\-O\-M\-E\-M}\label{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaafa350a2c19cc5fddbfb7c90309d3fe41}
+}]\index{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa3297b1c54d926ce497b7a20530689171}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-I\-N\-V\-A\-L}\label{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa3297b1c54d926ce497b7a20530689171}
+}]\index{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T@{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa851a0e75343c14a13c6893b3727ead16}{J\-S\-M\-N\-\_\-\-E\-R\-R\-O\-R\-\_\-\-P\-A\-R\-T}\label{global__controller_2jsmn_8h_afbbe22e63007677ec9e7837b5c1b80eaa851a0e75343c14a13c6893b3727ead16}
+}]\end{description}
+\end{Desc}
+
+
+Definition at line 46 of file jsmn.\-h.
+
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802f}{\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!jsmntype\-\_\-t@{jsmntype\-\_\-t}}
+\index{jsmntype\-\_\-t@{jsmntype\-\_\-t}!global_controller/jsmn.h@{global\-\_\-controller/jsmn.\-h}}
+\subsubsection[{jsmntype\-\_\-t}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf jsmntype\-\_\-t}}}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802f}
+
+
+J\-S\-O\-N type identifier. 
+
+Basic types are\-: o Object o Array o String o Other primitive\-: number, boolean (true/false) or null \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D@{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D@{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa7bc5faeddd33197250cf352af984f185}{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa7bc5faeddd33197250cf352af984f185}
+}]\index{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T@{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T@{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa416d6e733082bedc1166f0d66f571867}{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa416d6e733082bedc1166f0d66f571867}
+}]\index{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y@{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y@{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fabc4c47216dacf36bd4f64ac3d649d471}{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fabc4c47216dacf36bd4f64ac3d649d471}
+}]\index{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G@{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G@{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fad4ea6277c135d9d3377bf8b719779539}{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fad4ea6277c135d9d3377bf8b719779539}
+}]\index{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E@{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E@{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa2550c93fe929f81f30ea9b629ed98742}{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa2550c93fe929f81f30ea9b629ed98742}
+}]\index{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D@{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D@{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa7bc5faeddd33197250cf352af984f185}{J\-S\-M\-N\-\_\-\-U\-N\-D\-E\-F\-I\-N\-E\-D}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa7bc5faeddd33197250cf352af984f185}
+}]\index{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T@{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T@{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa416d6e733082bedc1166f0d66f571867}{J\-S\-M\-N\-\_\-\-O\-B\-J\-E\-C\-T}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa416d6e733082bedc1166f0d66f571867}
+}]\index{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y@{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y@{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fabc4c47216dacf36bd4f64ac3d649d471}{J\-S\-M\-N\-\_\-\-A\-R\-R\-A\-Y}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fabc4c47216dacf36bd4f64ac3d649d471}
+}]\index{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G@{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G@{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fad4ea6277c135d9d3377bf8b719779539}{J\-S\-M\-N\-\_\-\-S\-T\-R\-I\-N\-G}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fad4ea6277c135d9d3377bf8b719779539}
+}]\index{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E@{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E}!global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}}\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E@{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E}}\item[{\em 
+\hypertarget{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa2550c93fe929f81f30ea9b629ed98742}{J\-S\-M\-N\-\_\-\-P\-R\-I\-M\-I\-T\-I\-V\-E}\label{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802fa2550c93fe929f81f30ea9b629ed98742}
+}]\end{description}
+\end{Desc}
+
+
+Definition at line 38 of file jsmn.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{global__controller_2jsmn_8h_a8d4a8b3ce5c3d600feea38615b5f9aa6}{\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!jsmn\-\_\-init@{jsmn\-\_\-init}}
+\index{jsmn\-\_\-init@{jsmn\-\_\-init}!global_controller/jsmn.h@{global\-\_\-controller/jsmn.\-h}}
+\subsubsection[{jsmn\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}void jsmn\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmn\-\_\-parser} $\ast$}]{parser}
+\end{DoxyParamCaption}
+)}}\label{global__controller_2jsmn_8h_a8d4a8b3ce5c3d600feea38615b5f9aa6}
+
+
+Create J\-S\-O\-N parser over an array of tokens. 
+
+Create J\-S\-O\-N parser over an array of tokens. 
+
+Definition at line 331 of file jsmn.\-c.
+
+\hypertarget{global__controller_2jsmn_8h_a774f985a9750a10c7e88304e30191e03}{\index{global\-\_\-controller/jsmn.\-h@{global\-\_\-controller/jsmn.\-h}!jsmn\-\_\-parse@{jsmn\-\_\-parse}}
+\index{jsmn\-\_\-parse@{jsmn\-\_\-parse}!global_controller/jsmn.h@{global\-\_\-controller/jsmn.\-h}}
+\subsubsection[{jsmn\-\_\-parse}]{\setlength{\rightskip}{0pt plus 5cm}int jsmn\-\_\-parse (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmn\-\_\-parser} $\ast$}]{parser, }
+\item[{const char $\ast$}]{js, }
+\item[{size\-\_\-t}]{len, }
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{tokens, }
+\item[{unsigned int}]{num\-\_\-tokens}
+\end{DoxyParamCaption}
+)}}\label{global__controller_2jsmn_8h_a774f985a9750a10c7e88304e30191e03}
+
+
+Run J\-S\-O\-N parser. 
+
+It parses a J\-S\-O\-N data string into and array of tokens, each describing a single J\-S\-O\-N object.
+
+Run J\-S\-O\-N parser. 
+
+Definition at line 173 of file jsmn.\-c.
+

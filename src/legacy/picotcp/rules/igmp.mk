@@ -1,0 +1,3 @@
+OPTIONS+=-DPICO_SUPPORT_IGMP
+MOD_OBJ+=$(LIBBASE)/pico_igmp.o
+

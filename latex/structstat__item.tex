@@ -1,0 +1,105 @@
+\hypertarget{structstat__item}{\section{stat\-\_\-item Struct Reference}
+\label{structstat__item}\index{stat\-\_\-item@{stat\-\_\-item}}
+}
+
+
+The internal statistics structure where stats are aggregated One per statistic-\/item.  
+
+
+
+
+{\ttfamily \#include $<$controller\-\_\-stats.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+unsigned int \hyperlink{structstat__item_a8f48ef423c6bb652d59e567f3585f6bd}{id}
+\begin{DoxyCompactList}\small\item\em A unique identifier for the item being logged. \end{DoxyCompactList}\item 
+int \hyperlink{structstat__item_ab965c534375a75af564610e9afe766f4}{write\-\_\-index}
+\begin{DoxyCompactList}\small\item\em The write index in the circular buffer. \end{DoxyCompactList}\item 
+bool \hyperlink{structstat__item_ac8339e9dc15d83bd0e8a4de598427b56}{rolled\-\_\-over}
+\begin{DoxyCompactList}\small\item\em Whether the stats structure has rolled over at least once. \end{DoxyCompactList}\item 
+struct \hyperlink{structtimed__stat}{timed\-\_\-stat} $\ast$ \hyperlink{structstat__item_ad9e139d7db4acd1f95968520023895f5}{stats}
+\begin{DoxyCompactList}\small\item\em Timestamp and data for each gathered statistic. \end{DoxyCompactList}\item 
+pthread\-\_\-mutex\-\_\-t \hyperlink{structstat__item_a5dc6d221657bec60e0613ef64ea6ee28}{mutex}
+\begin{DoxyCompactList}\small\item\em Lock for changing stat item. \end{DoxyCompactList}\item 
+struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} \hyperlink{structstat__item_ac4feb1e4a0ac9c58669b532bd0c29c45}{stats}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The internal statistics structure where stats are aggregated One per statistic-\/item. 
+
+Definition at line 50 of file rt\-\_\-stats.\-c.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structstat__item_a8f48ef423c6bb652d59e567f3585f6bd}{\index{stat\-\_\-item@{stat\-\_\-item}!id@{id}}
+\index{id@{id}!stat_item@{stat\-\_\-item}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int stat\-\_\-item\-::id}}\label{structstat__item_a8f48ef423c6bb652d59e567f3585f6bd}
+
+
+A unique identifier for the item being logged. 
+
+
+
+Definition at line 52 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__item_a5dc6d221657bec60e0613ef64ea6ee28}{\index{stat\-\_\-item@{stat\-\_\-item}!mutex@{mutex}}
+\index{mutex@{mutex}!stat_item@{stat\-\_\-item}}
+\subsubsection[{mutex}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-mutex\-\_\-t stat\-\_\-item\-::mutex}}\label{structstat__item_a5dc6d221657bec60e0613ef64ea6ee28}
+
+
+Lock for changing stat item. 
+
+
+
+Definition at line 56 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__item_ac8339e9dc15d83bd0e8a4de598427b56}{\index{stat\-\_\-item@{stat\-\_\-item}!rolled\-\_\-over@{rolled\-\_\-over}}
+\index{rolled\-\_\-over@{rolled\-\_\-over}!stat_item@{stat\-\_\-item}}
+\subsubsection[{rolled\-\_\-over}]{\setlength{\rightskip}{0pt plus 5cm}bool stat\-\_\-item\-::rolled\-\_\-over}}\label{structstat__item_ac8339e9dc15d83bd0e8a4de598427b56}
+
+
+Whether the stats structure has rolled over at least once. 
+
+
+
+Definition at line 54 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__item_ac4feb1e4a0ac9c58669b532bd0c29c45}{\index{stat\-\_\-item@{stat\-\_\-item}!stats@{stats}}
+\index{stats@{stats}!stat_item@{stat\-\_\-item}}
+\subsubsection[{stats}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf timed\-\_\-rrdb} stat\-\_\-item\-::stats}}\label{structstat__item_ac4feb1e4a0ac9c58669b532bd0c29c45}
+
+
+Definition at line 30 of file controller\-\_\-stats.\-h.
+
+\hypertarget{structstat__item_ad9e139d7db4acd1f95968520023895f5}{\index{stat\-\_\-item@{stat\-\_\-item}!stats@{stats}}
+\index{stats@{stats}!stat_item@{stat\-\_\-item}}
+\subsubsection[{stats}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf timed\-\_\-stat}$\ast$ stat\-\_\-item\-::stats}}\label{structstat__item_ad9e139d7db4acd1f95968520023895f5}
+
+
+Timestamp and data for each gathered statistic. 
+
+
+
+Definition at line 55 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__item_ab965c534375a75af564610e9afe766f4}{\index{stat\-\_\-item@{stat\-\_\-item}!write\-\_\-index@{write\-\_\-index}}
+\index{write\-\_\-index@{write\-\_\-index}!stat_item@{stat\-\_\-item}}
+\subsubsection[{write\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}int stat\-\_\-item\-::write\-\_\-index}}\label{structstat__item_ab965c534375a75af564610e9afe766f4}
+
+
+The write index in the circular buffer. 
+
+
+
+Definition at line 53 of file rt\-\_\-stats.\-c.
+
+
+
+The documentation for this struct was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{rt__stats_8c}{rt\-\_\-stats.\-c}\item 
+src/global\-\_\-controller/\hyperlink{controller__stats_8h}{controller\-\_\-stats.\-h}\end{DoxyCompactItemize}

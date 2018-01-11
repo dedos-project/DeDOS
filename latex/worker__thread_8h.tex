@@ -1,0 +1,154 @@
+\hypertarget{worker__thread_8h}{\section{src/runtime/worker\-\_\-thread.h File Reference}
+\label{worker__thread_8h}\index{src/runtime/worker\-\_\-thread.\-h@{src/runtime/worker\-\_\-thread.\-h}}
+}
+
+
+Threads that hold M\-S\-Us.  
+
+
+{\ttfamily \#include \char`\"{}dedos\-\_\-threads.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structtimeout__list}{timeout\-\_\-list}
+\begin{DoxyCompactList}\small\item\em An entry in the linked list of timeouts. \end{DoxyCompactList}\item 
+struct \hyperlink{structworker__thread}{worker\-\_\-thread}
+\begin{DoxyCompactList}\small\item\em Representation of a thread that holds M\-S\-Us, messages, and waits on a semaphore. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$ \hyperlink{worker__thread_8h_acb4f348a4e9d05cdb98fe400a09ae4b7}{get\-\_\-worker\-\_\-thread} (int id)
+\item 
+void \hyperlink{worker__thread_8h_a71d58154369ffcc1cfe49794767fccbd}{stop\-\_\-worker\-\_\-thread} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread)
+\begin{DoxyCompactList}\small\item\em Signals the given worker thread that it should stop execution and exit its main loop. \end{DoxyCompactList}\item 
+void \hyperlink{worker__thread_8h_a387b490d4ae04c791a10b5a17ffe6332}{stop\-\_\-all\-\_\-worker\-\_\-threads} ()
+\begin{DoxyCompactList}\small\item\em Signals all worker threads to stop. \end{DoxyCompactList}\item 
+int \hyperlink{worker__thread_8h_ae4b8adc2386f68330ad795653a57fc89}{create\-\_\-worker\-\_\-thread} (unsigned int thread\-\_\-id, enum \hyperlink{dfg_8h_af31ca3002c5b769551da6f1183bafed5}{blocking\-\_\-mode} mode)
+\begin{DoxyCompactList}\small\item\em Starts a new worker thread with the given thread I\-D and pinned/unpinned status. \end{DoxyCompactList}\item 
+int \hyperlink{worker__thread_8h_a61c8c60e1f4f08b1453b090f596ab783}{unregister\-\_\-msu\-\_\-with\-\_\-thread} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Removes an M\-S\-U from the list of M\-S\-Us within its thread. \end{DoxyCompactList}\item 
+int \hyperlink{worker__thread_8h_aaa1f0d82e97d713803ce633ab8737bab}{register\-\_\-msu\-\_\-with\-\_\-thread} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Registers an M\-S\-U as one that should be run on its assigned thread. \end{DoxyCompactList}\item 
+int \hyperlink{worker__thread_8h_a6830e086bde2527a66062b172003dc5f}{enqueue\-\_\-worker\-\_\-timeout} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct timespec $\ast$interval)
+\begin{DoxyCompactList}\small\item\em Signals that the given thread should break when waiting on its semaphore once {\ttfamily interval} time has passed. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Threads that hold M\-S\-Us. 
+
+Definition in file \hyperlink{worker__thread_8h_source}{worker\-\_\-thread.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{worker__thread_8h_ae4b8adc2386f68330ad795653a57fc89}{\index{worker\-\_\-thread.\-h@{worker\-\_\-thread.\-h}!create\-\_\-worker\-\_\-thread@{create\-\_\-worker\-\_\-thread}}
+\index{create\-\_\-worker\-\_\-thread@{create\-\_\-worker\-\_\-thread}!worker_thread.h@{worker\-\_\-thread.\-h}}
+\subsubsection[{create\-\_\-worker\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int create\-\_\-worker\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{enum {\bf blocking\-\_\-mode}}]{mode}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8h_ae4b8adc2386f68330ad795653a57fc89}
+
+
+Starts a new worker thread with the given thread I\-D and pinned/unpinned status. 
+
+Blocks until thread has been started 
+
+Definition at line 382 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8h_a6830e086bde2527a66062b172003dc5f}{\index{worker\-\_\-thread.\-h@{worker\-\_\-thread.\-h}!enqueue\-\_\-worker\-\_\-timeout@{enqueue\-\_\-worker\-\_\-timeout}}
+\index{enqueue\-\_\-worker\-\_\-timeout@{enqueue\-\_\-worker\-\_\-timeout}!worker_thread.h@{worker\-\_\-thread.\-h}}
+\subsubsection[{enqueue\-\_\-worker\-\_\-timeout}]{\setlength{\rightskip}{0pt plus 5cm}int enqueue\-\_\-worker\-\_\-timeout (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct timespec $\ast$}]{interval}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8h_a6830e086bde2527a66062b172003dc5f}
+
+
+Signals that the given thread should break when waiting on its semaphore once {\ttfamily interval} time has passed. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 301 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8h_acb4f348a4e9d05cdb98fe400a09ae4b7}{\index{worker\-\_\-thread.\-h@{worker\-\_\-thread.\-h}!get\-\_\-worker\-\_\-thread@{get\-\_\-worker\-\_\-thread}}
+\index{get\-\_\-worker\-\_\-thread@{get\-\_\-worker\-\_\-thread}!worker_thread.h@{worker\-\_\-thread.\-h}}
+\subsubsection[{get\-\_\-worker\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf worker\-\_\-thread}$\ast$ get\-\_\-worker\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{int}]{id}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8h_acb4f348a4e9d05cdb98fe400a09ae4b7}
+\begin{DoxyReturn}{Returns}
+the worker thread with the given I\-D, or N\-U\-L\-L if not found 
+\end{DoxyReturn}
+
+
+Definition at line 79 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8h_aaa1f0d82e97d713803ce633ab8737bab}{\index{worker\-\_\-thread.\-h@{worker\-\_\-thread.\-h}!register\-\_\-msu\-\_\-with\-\_\-thread@{register\-\_\-msu\-\_\-with\-\_\-thread}}
+\index{register\-\_\-msu\-\_\-with\-\_\-thread@{register\-\_\-msu\-\_\-with\-\_\-thread}!worker_thread.h@{worker\-\_\-thread.\-h}}
+\subsubsection[{register\-\_\-msu\-\_\-with\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int register\-\_\-msu\-\_\-with\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8h_aaa1f0d82e97d713803ce633ab8737bab}
+
+
+Registers an M\-S\-U as one that should be run on its assigned thread. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 119 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8h_a387b490d4ae04c791a10b5a17ffe6332}{\index{worker\-\_\-thread.\-h@{worker\-\_\-thread.\-h}!stop\-\_\-all\-\_\-worker\-\_\-threads@{stop\-\_\-all\-\_\-worker\-\_\-threads}}
+\index{stop\-\_\-all\-\_\-worker\-\_\-threads@{stop\-\_\-all\-\_\-worker\-\_\-threads}!worker_thread.h@{worker\-\_\-thread.\-h}}
+\subsubsection[{stop\-\_\-all\-\_\-worker\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}void stop\-\_\-all\-\_\-worker\-\_\-threads (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8h_a387b490d4ae04c791a10b5a17ffe6332}
+
+
+Signals all worker threads to stop. 
+
+
+
+Definition at line 54 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8h_a71d58154369ffcc1cfe49794767fccbd}{\index{worker\-\_\-thread.\-h@{worker\-\_\-thread.\-h}!stop\-\_\-worker\-\_\-thread@{stop\-\_\-worker\-\_\-thread}}
+\index{stop\-\_\-worker\-\_\-thread@{stop\-\_\-worker\-\_\-thread}!worker_thread.h@{worker\-\_\-thread.\-h}}
+\subsubsection[{stop\-\_\-worker\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}void stop\-\_\-worker\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8h_a71d58154369ffcc1cfe49794767fccbd}
+
+
+Signals the given worker thread that it should stop execution and exit its main loop. 
+
+\hypertarget{worker__thread_8h_a61c8c60e1f4f08b1453b090f596ab783}{\index{worker\-\_\-thread.\-h@{worker\-\_\-thread.\-h}!unregister\-\_\-msu\-\_\-with\-\_\-thread@{unregister\-\_\-msu\-\_\-with\-\_\-thread}}
+\index{unregister\-\_\-msu\-\_\-with\-\_\-thread@{unregister\-\_\-msu\-\_\-with\-\_\-thread}!worker_thread.h@{worker\-\_\-thread.\-h}}
+\subsubsection[{unregister\-\_\-msu\-\_\-with\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int unregister\-\_\-msu\-\_\-with\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8h_a61c8c60e1f4f08b1453b090f596ab783}
+
+
+Removes an M\-S\-U from the list of M\-S\-Us within its thread. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 110 of file worker\-\_\-thread.\-c.
+

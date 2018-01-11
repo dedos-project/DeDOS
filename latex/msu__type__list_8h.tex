@@ -1,0 +1,93 @@
+\hypertarget{msu__type__list_8h}{\section{src/runtime/msu\-\_\-type\-\_\-list.h File Reference}
+\label{msu__type__list_8h}\index{src/runtime/msu\-\_\-type\-\_\-list.\-h@{src/runtime/msu\-\_\-type\-\_\-list.\-h}}
+}
+
+
+Defines the list of M\-S\-Us that can be instantiated on a runtime.  
+
+
+{\ttfamily \#include \char`\"{}socket\-\_\-msu.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{msu__type__list_8h_ac31f05551e37f10e26beff77ecfa6cfc}{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-S}
+\item 
+\#define \hyperlink{msu__type__list_8h_af3ead81cdf72e0e70f37cd820b7ee9e2}{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-M\-S\-U\-S}
+\begin{DoxyCompactList}\small\item\em Enables compilation of webserver M\-S\-Us. \end{DoxyCompactList}\item 
+\#define \hyperlink{msu__type__list_8h_a75dfd559245b025785f9a2760a79b8a9}{N\-D\-L\-O\-G\-\_\-\-M\-S\-U\-S}
+\begin{DoxyCompactList}\small\item\em Enables compilation of N\-Dlog M\-S\-Us. \end{DoxyCompactList}\item 
+\#define \hyperlink{msu__type__list_8h_ad3a812640d1cefe1c4e25041d2a10d9e}{P\-I\-C\-O\-\_\-\-T\-C\-P\-\_\-\-M\-S\-U\-S}
+\begin{DoxyCompactList}\small\item\em Enables compilation of picotcp M\-S\-Us. \end{DoxyCompactList}\item 
+\#define \hyperlink{msu__type__list_8h_a33520ff892585f555b08ae1ef9a39003}{M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-L\-I\-S\-T}
+\begin{DoxyCompactList}\small\item\em The complete list of M\-S\-U types. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Defines the list of M\-S\-Us that can be instantiated on a runtime. Ifdef guards allow you to optionally compile different groups of M\-S\-U\-S. 
+
+Definition in file \hyperlink{msu__type__list_8h_source}{msu\-\_\-type\-\_\-list.\-h}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{msu__type__list_8h_ac31f05551e37f10e26beff77ecfa6cfc}{\index{msu\-\_\-type\-\_\-list.\-h@{msu\-\_\-type\-\_\-list.\-h}!B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-S@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-S}}
+\index{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-S@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-S}!msu_type_list.h@{msu\-\_\-type\-\_\-list.\-h}}
+\subsubsection[{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-M\-S\-U\-S}}\label{msu__type__list_8h_ac31f05551e37f10e26beff77ecfa6cfc}
+
+
+Definition at line 44 of file msu\-\_\-type\-\_\-list.\-h.
+
+\hypertarget{msu__type__list_8h_a33520ff892585f555b08ae1ef9a39003}{\index{msu\-\_\-type\-\_\-list.\-h@{msu\-\_\-type\-\_\-list.\-h}!M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-L\-I\-S\-T@{M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-L\-I\-S\-T}}
+\index{M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-L\-I\-S\-T@{M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-L\-I\-S\-T}!msu_type_list.h@{msu\-\_\-type\-\_\-list.\-h}}
+\subsubsection[{M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-L\-I\-S\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-S\-U\-\_\-\-T\-Y\-P\-E\-\_\-\-L\-I\-S\-T}}\label{msu__type__list_8h_a33520ff892585f555b08ae1ef9a39003}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\{ \(\backslash\)
+        &\hyperlink{socket__msu_8c_a2eb4f0d50be9c696f83dba63e13be2e1}{SOCKET\_MSU\_TYPE}, \hyperlink{msu__type__list_8h_ad3a812640d1cefe1c4e25041d2a10d9e}{\(\backslash\)}
+\hyperlink{msu__type__list_8h_ad3a812640d1cefe1c4e25041d2a10d9e}{        BAREMETAL\_MSUS \(\backslash\)}
+\hyperlink{msu__type__list_8h_ad3a812640d1cefe1c4e25041d2a10d9e}{        WEBSERVER\_MSUS \(\backslash\)}
+\hyperlink{msu__type__list_8h_ad3a812640d1cefe1c4e25041d2a10d9e}{        NDLOG\_MSUS \(\backslash\)}
+\hyperlink{msu__type__list_8h_ad3a812640d1cefe1c4e25041d2a10d9e}{        PICO\_TCP\_MSUS} \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+The complete list of M\-S\-U types. 
+
+This is defined as a macro so that it can be overridden in testing scripts 
+
+Definition at line 105 of file msu\-\_\-type\-\_\-list.\-h.
+
+\hypertarget{msu__type__list_8h_a75dfd559245b025785f9a2760a79b8a9}{\index{msu\-\_\-type\-\_\-list.\-h@{msu\-\_\-type\-\_\-list.\-h}!N\-D\-L\-O\-G\-\_\-\-M\-S\-U\-S@{N\-D\-L\-O\-G\-\_\-\-M\-S\-U\-S}}
+\index{N\-D\-L\-O\-G\-\_\-\-M\-S\-U\-S@{N\-D\-L\-O\-G\-\_\-\-M\-S\-U\-S}!msu_type_list.h@{msu\-\_\-type\-\_\-list.\-h}}
+\subsubsection[{N\-D\-L\-O\-G\-\_\-\-M\-S\-U\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-D\-L\-O\-G\-\_\-\-M\-S\-U\-S}}\label{msu__type__list_8h_a75dfd559245b025785f9a2760a79b8a9}
+
+
+Enables compilation of N\-Dlog M\-S\-Us. 
+
+
+
+Definition at line 83 of file msu\-\_\-type\-\_\-list.\-h.
+
+\hypertarget{msu__type__list_8h_ad3a812640d1cefe1c4e25041d2a10d9e}{\index{msu\-\_\-type\-\_\-list.\-h@{msu\-\_\-type\-\_\-list.\-h}!P\-I\-C\-O\-\_\-\-T\-C\-P\-\_\-\-M\-S\-U\-S@{P\-I\-C\-O\-\_\-\-T\-C\-P\-\_\-\-M\-S\-U\-S}}
+\index{P\-I\-C\-O\-\_\-\-T\-C\-P\-\_\-\-M\-S\-U\-S@{P\-I\-C\-O\-\_\-\-T\-C\-P\-\_\-\-M\-S\-U\-S}!msu_type_list.h@{msu\-\_\-type\-\_\-list.\-h}}
+\subsubsection[{P\-I\-C\-O\-\_\-\-T\-C\-P\-\_\-\-M\-S\-U\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-I\-C\-O\-\_\-\-T\-C\-P\-\_\-\-M\-S\-U\-S}}\label{msu__type__list_8h_ad3a812640d1cefe1c4e25041d2a10d9e}
+
+
+Enables compilation of picotcp M\-S\-Us. 
+
+
+
+Definition at line 98 of file msu\-\_\-type\-\_\-list.\-h.
+
+\hypertarget{msu__type__list_8h_af3ead81cdf72e0e70f37cd820b7ee9e2}{\index{msu\-\_\-type\-\_\-list.\-h@{msu\-\_\-type\-\_\-list.\-h}!W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-M\-S\-U\-S@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-M\-S\-U\-S}}
+\index{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-M\-S\-U\-S@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-M\-S\-U\-S}!msu_type_list.h@{msu\-\_\-type\-\_\-list.\-h}}
+\subsubsection[{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-M\-S\-U\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-M\-S\-U\-S}}\label{msu__type__list_8h_af3ead81cdf72e0e70f37cd820b7ee9e2}
+
+
+Enables compilation of webserver M\-S\-Us. 
+
+
+
+Definition at line 69 of file msu\-\_\-type\-\_\-list.\-h.
+

@@ -1,0 +1,51 @@
+\hypertarget{regex__routing__msu_8c}{\section{src/msus/webserver/regex\-\_\-routing\-\_\-msu.c File Reference}
+\label{regex__routing__msu_8c}\index{src/msus/webserver/regex\-\_\-routing\-\_\-msu.\-c@{src/msus/webserver/regex\-\_\-routing\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/regex\-\_\-routing\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/regex\-\_\-msu.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{regex__routing__msu_8c_a9d6c90ae57ca0c399c29364fd0147db0}{routing\-\_\-receive} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{regex__routing__msu_8c_aa3c3362a6da3d8f000b2f3b27fdc857a}{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-R\-O\-U\-T\-I\-N\-G\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{regex__routing__msu_8c_a9d6c90ae57ca0c399c29364fd0147db0}{\index{regex\-\_\-routing\-\_\-msu.\-c@{regex\-\_\-routing\-\_\-msu.\-c}!routing\-\_\-receive@{routing\-\_\-receive}}
+\index{routing\-\_\-receive@{routing\-\_\-receive}!regex_routing_msu.c@{regex\-\_\-routing\-\_\-msu.\-c}}
+\subsubsection[{routing\-\_\-receive}]{\setlength{\rightskip}{0pt plus 5cm}static int routing\-\_\-receive (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{regex__routing__msu_8c_a9d6c90ae57ca0c399c29364fd0147db0}
+
+
+Definition at line 27 of file regex\-\_\-routing\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{regex__routing__msu_8c_aa3c3362a6da3d8f000b2f3b27fdc857a}{\index{regex\-\_\-routing\-\_\-msu.\-c@{regex\-\_\-routing\-\_\-msu.\-c}!W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-R\-O\-U\-T\-I\-N\-G\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-R\-O\-U\-T\-I\-N\-G\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-R\-O\-U\-T\-I\-N\-G\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-R\-O\-U\-T\-I\-N\-G\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!regex_routing_msu.c@{regex\-\_\-routing\-\_\-msu.\-c}}
+\subsubsection[{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-R\-O\-U\-T\-I\-N\-G\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-G\-E\-X\-\_\-\-R\-O\-U\-T\-I\-N\-G\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{regex__routing__msu_8c_aa3c3362a6da3d8f000b2f3b27fdc857a}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    .name = \textcolor{stringliteral}{"Regex\_Routing\_MSU"},
+    .id = \hyperlink{msu__ids_8h_a490afbda058aca2aaee882316e43bbc3}{WEBSERVER\_REGEX\_ROUTING\_MSU\_TYPE\_ID},
+    .receive = \hyperlink{regex__routing__msu_8c_a9d6c90ae57ca0c399c29364fd0147db0}{routing\_receive}
+\}
+\end{DoxyCode}
+
+
+Definition at line 31 of file regex\-\_\-routing\-\_\-msu.\-c.
+

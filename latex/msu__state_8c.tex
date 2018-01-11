@@ -1,0 +1,154 @@
+\hypertarget{msu__state_8c}{\section{src/runtime/msu\-\_\-state.c File Reference}
+\label{msu__state_8c}\index{src/runtime/msu\-\_\-state.\-c@{src/runtime/msu\-\_\-state.\-c}}
+}
+
+
+State storage that is tied to a specific M\-S\-U message.  
+
+
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}uthash.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__state}{msu\-\_\-state}
+\begin{DoxyCompactList}\small\item\em The structure contining msu state. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{msu__state_8c_a7e8e76f2f36f7ac9d810871025fc56b7}{C\-H\-E\-C\-K\-\_\-\-S\-T\-A\-T\-E\-\_\-\-R\-E\-P\-L\-A\-C\-E\-M\-E\-N\-T}~1
+\begin{DoxyCompactList}\small\item\em Explicitly check whether a state is being replaced on a call to msu\-\_\-init\-\_\-state. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{msu__state_8c_a2a46d14e43d1a47d6284d11dd575bd0c}{msu\-\_\-num\-\_\-states} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\item 
+void $\ast$ \hyperlink{msu__state_8c_a8f60aeeefb369dfa10110846be6cf380}{msu\-\_\-init\-\_\-state} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key, size\-\_\-t size)
+\begin{DoxyCompactList}\small\item\em Initializes a new M\-S\-U state of the given size with the provided key. \end{DoxyCompactList}\item 
+void $\ast$ \hyperlink{msu__state_8c_ad768344b67f8c8f56b411636b89629b8}{msu\-\_\-get\-\_\-state} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key, size\-\_\-t $\ast$size)
+\begin{DoxyCompactList}\small\item\em Gets the state allocated with the given key. \end{DoxyCompactList}\item 
+int \hyperlink{msu__state_8c_a01dae90025e93bc3587428e15e81cb08}{msu\-\_\-free\-\_\-state} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu, struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} $\ast$key)
+\begin{DoxyCompactList}\small\item\em Frees the state assocated with the given M\-S\-U and key. \end{DoxyCompactList}\item 
+void \hyperlink{msu__state_8c_a1dccaeb8a719e2c438804b4a889733ce}{msu\-\_\-free\-\_\-all\-\_\-state} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Frees all state structures associated with the given M\-S\-U. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+State storage that is tied to a specific M\-S\-U message. 
+
+Definition in file \hyperlink{msu__state_8c_source}{msu\-\_\-state.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{msu__state_8c_a7e8e76f2f36f7ac9d810871025fc56b7}{\index{msu\-\_\-state.\-c@{msu\-\_\-state.\-c}!C\-H\-E\-C\-K\-\_\-\-S\-T\-A\-T\-E\-\_\-\-R\-E\-P\-L\-A\-C\-E\-M\-E\-N\-T@{C\-H\-E\-C\-K\-\_\-\-S\-T\-A\-T\-E\-\_\-\-R\-E\-P\-L\-A\-C\-E\-M\-E\-N\-T}}
+\index{C\-H\-E\-C\-K\-\_\-\-S\-T\-A\-T\-E\-\_\-\-R\-E\-P\-L\-A\-C\-E\-M\-E\-N\-T@{C\-H\-E\-C\-K\-\_\-\-S\-T\-A\-T\-E\-\_\-\-R\-E\-P\-L\-A\-C\-E\-M\-E\-N\-T}!msu_state.c@{msu\-\_\-state.\-c}}
+\subsubsection[{C\-H\-E\-C\-K\-\_\-\-S\-T\-A\-T\-E\-\_\-\-R\-E\-P\-L\-A\-C\-E\-M\-E\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-H\-E\-C\-K\-\_\-\-S\-T\-A\-T\-E\-\_\-\-R\-E\-P\-L\-A\-C\-E\-M\-E\-N\-T~1}}\label{msu__state_8c_a7e8e76f2f36f7ac9d810871025fc56b7}
+
+
+Explicitly check whether a state is being replaced on a call to msu\-\_\-init\-\_\-state. 
+
+
+
+Definition at line 32 of file msu\-\_\-state.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{msu__state_8c_a1dccaeb8a719e2c438804b4a889733ce}{\index{msu\-\_\-state.\-c@{msu\-\_\-state.\-c}!msu\-\_\-free\-\_\-all\-\_\-state@{msu\-\_\-free\-\_\-all\-\_\-state}}
+\index{msu\-\_\-free\-\_\-all\-\_\-state@{msu\-\_\-free\-\_\-all\-\_\-state}!msu_state.c@{msu\-\_\-state.\-c}}
+\subsubsection[{msu\-\_\-free\-\_\-all\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void msu\-\_\-free\-\_\-all\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{msu__state_8c_a1dccaeb8a719e2c438804b4a889733ce}
+
+
+Frees all state structures associated with the given M\-S\-U. 
+
+
+
+Definition at line 117 of file msu\-\_\-state.\-c.
+
+\hypertarget{msu__state_8c_a01dae90025e93bc3587428e15e81cb08}{\index{msu\-\_\-state.\-c@{msu\-\_\-state.\-c}!msu\-\_\-free\-\_\-state@{msu\-\_\-free\-\_\-state}}
+\index{msu\-\_\-free\-\_\-state@{msu\-\_\-free\-\_\-state}!msu_state.c@{msu\-\_\-state.\-c}}
+\subsubsection[{msu\-\_\-free\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-free\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key}
+\end{DoxyParamCaption}
+)}}\label{msu__state_8c_a01dae90025e93bc3587428e15e81cb08}
+
+
+Frees the state assocated with the given M\-S\-U and key. 
+
+
+
+Definition at line 97 of file msu\-\_\-state.\-c.
+
+\hypertarget{msu__state_8c_ad768344b67f8c8f56b411636b89629b8}{\index{msu\-\_\-state.\-c@{msu\-\_\-state.\-c}!msu\-\_\-get\-\_\-state@{msu\-\_\-get\-\_\-state}}
+\index{msu\-\_\-get\-\_\-state@{msu\-\_\-get\-\_\-state}!msu_state.c@{msu\-\_\-state.\-c}}
+\subsubsection[{msu\-\_\-get\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ msu\-\_\-get\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key, }
+\item[{size\-\_\-t $\ast$}]{size}
+\end{DoxyParamCaption}
+)}}\label{msu__state_8c_ad768344b67f8c8f56b411636b89629b8}
+
+
+Gets the state allocated with the given key. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu} & The M\-S\-U storing the state \\
+\hline
+{\em key} & The key with which the state was allocated \\
+\hline
+{\em size} & An output argument, set to the size of the retrieved state if non-\/\-N\-U\-L\-L \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Allocated state if it exists, otherwise N\-U\-L\-L 
+\end{DoxyReturn}
+
+
+Definition at line 82 of file msu\-\_\-state.\-c.
+
+\hypertarget{msu__state_8c_a8f60aeeefb369dfa10110846be6cf380}{\index{msu\-\_\-state.\-c@{msu\-\_\-state.\-c}!msu\-\_\-init\-\_\-state@{msu\-\_\-init\-\_\-state}}
+\index{msu\-\_\-init\-\_\-state@{msu\-\_\-init\-\_\-state}!msu_state.c@{msu\-\_\-state.\-c}}
+\subsubsection[{msu\-\_\-init\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ msu\-\_\-init\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-key} $\ast$}]{key, }
+\item[{size\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{msu__state_8c_a8f60aeeefb369dfa10110846be6cf380}
+
+
+Initializes a new M\-S\-U state of the given size with the provided key. 
+
+The returned pointer should later be freed with \hyperlink{msu__state_8h_a01dae90025e93bc3587428e15e81cb08}{msu\-\_\-free\-\_\-state} \begin{DoxyReturn}{Returns}
+a pointer to the newly allocated state, or N\-U\-L\-L if error 
+\end{DoxyReturn}
+
+
+Definition at line 55 of file msu\-\_\-state.\-c.
+
+\hypertarget{msu__state_8c_a2a46d14e43d1a47d6284d11dd575bd0c}{\index{msu\-\_\-state.\-c@{msu\-\_\-state.\-c}!msu\-\_\-num\-\_\-states@{msu\-\_\-num\-\_\-states}}
+\index{msu\-\_\-num\-\_\-states@{msu\-\_\-num\-\_\-states}!msu_state.c@{msu\-\_\-state.\-c}}
+\subsubsection[{msu\-\_\-num\-\_\-states}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-num\-\_\-states (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{msu__state_8c_a2a46d14e43d1a47d6284d11dd575bd0c}
+\begin{DoxyReturn}{Returns}
+the number of states allocated by the provided M\-S\-U 
+\end{DoxyReturn}
+
+
+Definition at line 51 of file msu\-\_\-state.\-c.
+

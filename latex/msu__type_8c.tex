@@ -1,0 +1,221 @@
+\hypertarget{msu__type_8c}{\section{src/runtime/msu\-\_\-type.c File Reference}
+\label{msu__type_8c}\index{src/runtime/msu\-\_\-type.\-c@{src/runtime/msu\-\_\-type.\-c}}
+}
+
+
+Registration and location of msu types.  
+
+
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type\-\_\-list.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{msu__type_8c_a3744f20bdae8eedb2bb8d50f423ddec4}{M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D}~1000
+\begin{DoxyCompactList}\small\item\em M\-O\-V\-E\-M\-E\-: M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D This is the maximum I\-D that can be assigned to an M\-S\-U type. \end{DoxyCompactList}\item 
+\#define \hyperlink{msu__type_8c_a5b37a5ccb51d3ebe16c9ce067935622d}{N\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}~(sizeof(\hyperlink{msu__type_8c_a4067419b307e57b4df2c676a55d7fe4e}{D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}) / sizeof(struct \hyperlink{structmsu__type}{msu\-\_\-type}$\ast$))
+\begin{DoxyCompactList}\small\item\em The number of available M\-S\-U types. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{msu__type_8c_acf5c306bd02d9e5dfb07f48b5af2b47f}{register\-\_\-msu\-\_\-type} (struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Regsiters an M\-S\-U type so that it can be later referenced by its I\-D. \end{DoxyCompactList}\item 
+void \hyperlink{msu__type_8c_a16f3c8063269b29f763b4f7541080a76}{destroy\-\_\-msu\-\_\-types} ()
+\begin{DoxyCompactList}\small\item\em Calls the type-\/sepecific constructor for each instantiated M\-S\-U type. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$ \hyperlink{msu__type_8c_a618818f65f55ee1e527aea69dd153cc6}{get\-\_\-msu\-\_\-type} (int id)
+\begin{DoxyCompactList}\small\item\em Gets the M\-S\-U type with the provided I\-D. \end{DoxyCompactList}\item 
+static bool \hyperlink{msu__type_8c_ae8d5a704e94e907cd31b0bc82d6f5fce}{has\-\_\-required\-\_\-fields} (struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Checks whether the msu type has the required fields to be used. \end{DoxyCompactList}\item 
+static int \hyperlink{msu__type_8c_af87a59152e5bb5f6a1455ba38d47149b}{init\-\_\-msu\-\_\-type} (struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Initializes a specific M\-S\-U type, calling its init function and registering it for future calls. \end{DoxyCompactList}\item 
+int \hyperlink{msu__type_8c_af52a284f44a3cb950c25872505bf1c1c}{init\-\_\-msu\-\_\-type\-\_\-id} (unsigned int type\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Initializes the M\-S\-U type with the given I\-D, calling the custom constructor if appropriate. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$ \hyperlink{msu__type_8c_a4067419b307e57b4df2c676a55d7fe4e}{D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S} \mbox{[}$\,$\mbox{]} = \{ \&\hyperlink{socket__msu_8h_a2eb4f0d50be9c696f83dba63e13be2e1}{S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}, \}
+\begin{DoxyCompactList}\small\item\em Every M\-S\-U type that can be used. \end{DoxyCompactList}\item 
+static struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$ \hyperlink{msu__type_8c_ab0aef54bc608cc3b2f051d2d99d5ac2a}{msu\-\_\-types} \mbox{[}1000\mbox{]}
+\begin{DoxyCompactList}\small\item\em Pointers to M\-S\-U Types, indexed by I\-D. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Registration and location of msu types. 
+
+Definition in file \hyperlink{msu__type_8c_source}{msu\-\_\-type.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{msu__type_8c_a3744f20bdae8eedb2bb8d50f423ddec4}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D@{M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D}}
+\index{M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D@{M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D~1000}}\label{msu__type_8c_a3744f20bdae8eedb2bb8d50f423ddec4}
+
+
+M\-O\-V\-E\-M\-E\-: M\-A\-X\-\_\-\-T\-Y\-P\-E\-\_\-\-I\-D This is the maximum I\-D that can be assigned to an M\-S\-U type. 
+
+
+
+Definition at line 35 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8c_a5b37a5ccb51d3ebe16c9ce067935622d}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!N\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}}
+\index{N\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{N\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S~(sizeof({\bf D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}) / sizeof(struct {\bf msu\-\_\-type}$\ast$))}}\label{msu__type_8c_a5b37a5ccb51d3ebe16c9ce067935622d}
+
+
+The number of available M\-S\-U types. 
+
+
+
+Definition at line 46 of file msu\-\_\-type.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{msu__type_8c_a16f3c8063269b29f763b4f7541080a76}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!destroy\-\_\-msu\-\_\-types@{destroy\-\_\-msu\-\_\-types}}
+\index{destroy\-\_\-msu\-\_\-types@{destroy\-\_\-msu\-\_\-types}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{destroy\-\_\-msu\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\-\_\-msu\-\_\-types (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{msu__type_8c_a16f3c8063269b29f763b4f7541080a76}
+
+
+Calls the type-\/sepecific constructor for each instantiated M\-S\-U type. 
+
+
+
+Definition at line 69 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8c_a618818f65f55ee1e527aea69dd153cc6}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!get\-\_\-msu\-\_\-type@{get\-\_\-msu\-\_\-type}}
+\index{get\-\_\-msu\-\_\-type@{get\-\_\-msu\-\_\-type}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{get\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type}$\ast$ get\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{int}]{id}
+\end{DoxyParamCaption}
+)}}\label{msu__type_8c_a618818f65f55ee1e527aea69dd153cc6}
+
+
+Gets the M\-S\-U type with the provided I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & The type I\-D of the M\-S\-U type to retrieve \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The M\-S\-U Type with the given I\-D, N\-U\-L\-L in N/\-A 
+\end{DoxyReturn}
+
+
+Definition at line 80 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8c_ae8d5a704e94e907cd31b0bc82d6f5fce}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!has\-\_\-required\-\_\-fields@{has\-\_\-required\-\_\-fields}}
+\index{has\-\_\-required\-\_\-fields@{has\-\_\-required\-\_\-fields}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{has\-\_\-required\-\_\-fields}]{\setlength{\rightskip}{0pt plus 5cm}static bool has\-\_\-required\-\_\-fields (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{msu__type_8c_ae8d5a704e94e907cd31b0bc82d6f5fce}
+
+
+Checks whether the msu type has the required fields to be used. 
+
+(At the moment, the only required field is {\ttfamily receive}) \begin{DoxyReturn}{Returns}
+true/false 
+\end{DoxyReturn}
+
+
+Definition at line 94 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8c_af87a59152e5bb5f6a1455ba38d47149b}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!init\-\_\-msu\-\_\-type@{init\-\_\-msu\-\_\-type}}
+\index{init\-\_\-msu\-\_\-type@{init\-\_\-msu\-\_\-type}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{init\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int init\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{msu__type_8c_af87a59152e5bb5f6a1455ba38d47149b}
+
+
+Initializes a specific M\-S\-U type, calling its init function and registering it for future calls. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em type} & The type of M\-S\-U to be registered \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 109 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8c_af52a284f44a3cb950c25872505bf1c1c}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!init\-\_\-msu\-\_\-type\-\_\-id@{init\-\_\-msu\-\_\-type\-\_\-id}}
+\index{init\-\_\-msu\-\_\-type\-\_\-id@{init\-\_\-msu\-\_\-type\-\_\-id}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{init\-\_\-msu\-\_\-type\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-msu\-\_\-type\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{type\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{msu__type_8c_af52a284f44a3cb950c25872505bf1c1c}
+
+
+Initializes the M\-S\-U type with the given I\-D, calling the custom constructor if appropriate. 
+
+This function is meant to be called on each M\-S\-U type that is defined in the D\-F\-G used to initialize the runtime. \begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 132 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8c_acf5c306bd02d9e5dfb07f48b5af2b47f}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!register\-\_\-msu\-\_\-type@{register\-\_\-msu\-\_\-type}}
+\index{register\-\_\-msu\-\_\-type@{register\-\_\-msu\-\_\-type}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{register\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static int register\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{msu__type_8c_acf5c306bd02d9e5dfb07f48b5af2b47f}
+
+
+Regsiters an M\-S\-U type so that it can be later referenced by its I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em type} & M\-S\-U Type to be registered \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 58 of file msu\-\_\-type.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{msu__type_8c_a4067419b307e57b4df2c676a55d7fe4e}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S@{D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}}
+\index{D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S@{D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type}$\ast$ D\-E\-F\-I\-N\-E\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E\-S\mbox{[}$\,$\mbox{]} = \{ \&{\bf S\-O\-C\-K\-E\-T\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}, \}\hspace{0.3cm}{\ttfamily [static]}}}\label{msu__type_8c_a4067419b307e57b4df2c676a55d7fe4e}
+
+
+Every M\-S\-U type that can be used. 
+
+Defined in {\ttfamily \hyperlink{msu__type__list_8h}{msu\-\_\-type\-\_\-list.\-h}}, or overridden from previous definition 
+
+Definition at line 41 of file msu\-\_\-type.\-c.
+
+\hypertarget{msu__type_8c_ab0aef54bc608cc3b2f051d2d99d5ac2a}{\index{msu\-\_\-type.\-c@{msu\-\_\-type.\-c}!msu\-\_\-types@{msu\-\_\-types}}
+\index{msu\-\_\-types@{msu\-\_\-types}!msu_type.c@{msu\-\_\-type.\-c}}
+\subsubsection[{msu\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type}$\ast$ msu\-\_\-types\mbox{[}1000\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{msu__type_8c_ab0aef54bc608cc3b2f051d2d99d5ac2a}
+
+
+Pointers to M\-S\-U Types, indexed by I\-D. 
+
+
+
+Definition at line 51 of file msu\-\_\-type.\-c.
+

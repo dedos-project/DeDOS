@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - unnamed - msus/webserver/httpops.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">msus/webserver</a> - httpops.c<span style="font-size: 80%;"> (source / <a href="httpops.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">unnamed</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntryLo">73.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-01-11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            : START OF LICENSE STUB
+<span class="lineNum">       3 </span>            :     DeDOS: Declarative Dispersion-Oriented Software
+<span class="lineNum">       4 </span>            :     Copyright (C) 2017 University of Pennsylvania, Georgetown University
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       7 </span>            :     it under the terms of the GNU General Public License as published by
+<span class="lineNum">       8 </span>            :     the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       9 </span>            :     (at your option) any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            :     GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            :     You should have received a copy of the GNU General Public License
+<span class="lineNum">      17 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      18 </span>            : END OF LICENSE STUB
+<span class="lineNum">      19 </span>            : */
+<span class="lineNum">      20 </span>            : #include &quot;logging.h&quot;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;webserver/httpops.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #define BASE_HTTP_HEADER\
+<span class="lineNum">      25 </span>            :     &quot;HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #define NOT_FOUND_HEADER\
+<span class="lineNum">      28 </span>            :     &quot;HTTP/1.1 404 Not Found\r\n\r\n&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #define NOT_IMPLEMENTED_HEADER\
+<span class="lineNum">      31 </span>            :     &quot;HTTP/1.1 501 Not Implemented\r\n\r\n&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #define DEFAULT_MIME_TYPE\
+<a name="34"><span class="lineNum">      34 </span>            :     &quot;text/html&quot;</a>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">        119 : char *path_to_mimetype(char *path) {</span>
+<span class="lineNum">      37 </span><span class="lineCov">        119 :     char *extension = path;</span>
+<span class="lineNum">      38 </span><span class="lineCov">        119 :     for (; *extension != '.' &amp;&amp; *extension != '\0'; extension++);</span>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">        119 :     if (*extension == '\0')</span>
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :         return DEFAULT_MIME_TYPE;</span>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">        119 :     extension++; // Advance past the dot</span>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :     // TODO: Necessary to replace this by loading /etc/mime.types into hashmap?
+<span class="lineNum">      46 </span><span class="lineCov">        238 :     if (strcasecmp(extension, &quot;html&quot;) == 0 ||</span>
+<span class="lineNum">      47 </span><span class="lineCov">        238 :         strcasecmp(extension, &quot;htm&quot;) == 0 ||</span>
+<span class="lineNum">      48 </span><span class="lineCov">        119 :         strcasecmp(extension, &quot;txt&quot;) == 0) {</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :         return &quot;text/html&quot;;</span>
+<span class="lineNum">      50 </span><span class="lineCov">        119 :     } else if (strcasecmp(extension, &quot;png&quot;) == 0) {</span>
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :         return &quot;image/png&quot;;</span>
+<span class="lineNum">      52 </span><span class="lineCov">        238 :     } else if (strcasecmp(extension, &quot;jpg&quot;) == 0 ||</span>
+<span class="lineNum">      53 </span><span class="lineCov">        119 :                strcasecmp(extension, &quot;jpeg&quot;) == 0) {</span>
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :         return &quot;image/jpeg&quot;;</span>
+<span class="lineNum">      55 </span><span class="lineCov">        119 :     } else if (strcasecmp(extension, &quot;gif&quot;) == 0) {</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :         return &quot;image/gif&quot;;</span>
+<span class="lineNum">      57 </span>            :     }
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">        119 :     return DEFAULT_MIME_TYPE;</span>
+<a name="60"><span class="lineNum">      60 </span>            : }</a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">        134 : int url_to_path(char *url, char *dir, char *path, int capacity) {</span>
+<span class="lineNum">      63 </span><span class="lineCov">        134 :     int len = 0;</span>
+<span class="lineNum">      64 </span><span class="lineCov">        134 :     for (char *c = url; *c != '\0' &amp;&amp; *c != '?'; c++, len++);</span>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">        134 :     int dir_len = strlen(dir);</span>
+<span class="lineNum">      67 </span><span class="lineCov">        134 :     int dir_slash = (dir[dir_len - 1] == '/');</span>
+<span class="lineNum">      68 </span><span class="lineCov">        134 :     int url_slash = (url[0] == '/');</span>
+<span class="lineNum">      69 </span><span class="lineCov">        134 :     dir_len -= (dir_slash &amp;&amp; url_slash);</span>
+<span class="lineNum">      70 </span><span class="lineCov">        134 :     int both_missing_slash = (!dir_slash &amp;&amp; !url_slash);</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">        134 :     if (dir_len + len + both_missing_slash &gt;= capacity) {</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :         log_error(&quot;Path from url (%s) too large for buffer (%d)&quot;, url, capacity);</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">      75 </span>            :     }
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">        134 :     char *dest = path;</span>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">        134 :     strncpy(dest, dir, dir_len);</span>
+<span class="lineNum">      80 </span><span class="lineCov">        134 :     if (both_missing_slash) {</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         dest[dir_len] = '/';</span>
+<span class="lineNum">      82 </span>            :     }
+<span class="lineNum">      83 </span><span class="lineCov">        134 :     strncpy(&amp;dest[dir_len + both_missing_slash], url, len);</span>
+<span class="lineNum">      84 </span><span class="lineCov">        134 :     dest[dir_len + both_missing_slash + len] = '\0';</span>
+<span class="lineNum">      85 </span><span class="lineCov">        134 :     return dir_len + len;</span>
+<a name="86"><span class="lineNum">      86 </span>            : }</a>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">        120 : int generate_header(char *dest, int code, int capacity, int body_len, char *mime_type) {</span>
+<span class="lineNum">      89 </span><span class="lineCov">        120 :     if (code == 200) {</span>
+<span class="lineNum">      90 </span><span class="lineCov">        120 :         return snprintf(dest, capacity, BASE_HTTP_HEADER, mime_type, body_len);</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :     } else if (code == 404) {</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :         return snprintf(dest, capacity, NOT_FOUND_HEADER);</span>
+<span class="lineNum">      93 </span>            :     } else {
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :         return snprintf(dest, capacity, NOT_IMPLEMENTED_HEADER);</span>
+<span class="lineNum">      95 </span>            :     }
+<span class="lineNum">      96 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

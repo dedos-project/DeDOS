@@ -1,0 +1,721 @@
+\hypertarget{dfg_8c}{\section{src/common/dfg.c File Reference}
+\label{dfg_8c}\index{src/common/dfg.\-c@{src/common/dfg.\-c}}
+}
+
+
+Code for the creation and modifcation of the data-\/flow graph.  
+
+
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{dfg_8c_a7e8399de877d0337e6b5313c2cb43a2f}{S\-E\-A\-R\-C\-H\-\_\-\-F\-O\-R\-\_\-\-I\-D}(s, n, field, id\-\_\-)
+\begin{DoxyCompactList}\small\item\em Convenience macro to search a field within a structure for the element with an I\-D. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{dfg_8c_ab837561cc853acd26f68e4150335720c}{set\-\_\-dfg} (struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$dfg\-\_\-in)
+\begin{DoxyCompactList}\small\item\em Sets the local copy of the D\-F\-G, so it doesn't have to be passed in for each call. \end{DoxyCompactList}\item 
+struct \hyperlink{structdb__info}{db\-\_\-info} $\ast$ \hyperlink{dfg_8c_a4aacb05176ec962cd15c27e6b6a7a453}{get\-\_\-db\-\_\-info} ()
+\begin{DoxyCompactList}\small\item\em Returns D\-B info. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_a760d03c02924c45aad545278eb4d126b}{get\-\_\-dfg\-\_\-n\-\_\-runtimes} ()
+\begin{DoxyCompactList}\small\item\em Returns the number of registered runtime. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$ \hyperlink{dfg_8c_a4d5591b32b0c05fa84f9153ccf253f7d}{get\-\_\-dfg\-\_\-runtime} (unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Returns the runtime with the given I\-D. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$ \hyperlink{dfg_8c_a68f0d4ea85d31dbbac4b450488024e0c}{get\-\_\-dfg\-\_\-msu\-\_\-type} (unsigned int id)
+\begin{DoxyCompactList}\small\item\em Returns the M\-S\-U type with the given I\-D. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$ \hyperlink{dfg_8c_a6470ba37b1c7313e39acebcee9bcb6ec}{get\-\_\-dfg\-\_\-runtime\-\_\-route} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt, unsigned int id)
+\item 
+struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$ \hyperlink{dfg_8c_ac6e8f3be3f3caf9b9f3a9349abcf980c}{get\-\_\-dfg\-\_\-route} (unsigned int id)
+\begin{DoxyCompactList}\small\item\em Returns the route with the given I\-D. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$ \hyperlink{dfg_8c_ad09e64d6967e22d355ae945b28d0d833}{get\-\_\-dfg\-\_\-msu} (unsigned int id)
+\begin{DoxyCompactList}\small\item\em Returns the M\-S\-U with the given I\-D. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$ \hyperlink{dfg_8c_a01708b47ce7d2af66fc1662b0b9c5db6}{get\-\_\-dfg\-\_\-rt\-\_\-route\-\_\-by\-\_\-type} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt, struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Returns the route on the given runtime with the specified M\-S\-U type. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$ \hyperlink{dfg_8c_a98ec8a996513358bc6cb99ac1d79aebe}{get\-\_\-dfg\-\_\-msu\-\_\-route\-\_\-by\-\_\-type} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu, struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$route\-\_\-type)
+\begin{DoxyCompactList}\small\item\em Returns the route which the given M\-S\-U sends to of the specified M\-S\-U type. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__thread}{dfg\-\_\-thread} $\ast$ \hyperlink{dfg_8c_a498ed9b8fd2c74dec3286638dcae70a0}{get\-\_\-dfg\-\_\-thread} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt, unsigned int id)
+\begin{DoxyCompactList}\small\item\em Returns the thread on the given runtime with the specified I\-D. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$ \hyperlink{dfg_8c_acf66e1453c100fe8ba67bd3dfb7eadc1}{get\-\_\-dfg\-\_\-route\-\_\-endpoint} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}, unsigned int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Returns the endpoint within the given route which has the specified M\-S\-U I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_a2627ed9b01b9cf785fbb582b7a531dce}{msu\-\_\-has\-\_\-route} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu, struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route})
+\begin{DoxyCompactList}\small\item\em Returns 1 if the given M\-S\-U has the route as an endpoint. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$ \hyperlink{dfg_8c_afd4c9fc46ae6053953e17edfaaf50deb}{msu\-\_\-type\-\_\-on\-\_\-runtime} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt, struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Returns 1 if the given M\-S\-U type is present on the provided runtime. \end{DoxyCompactList}\item 
+enum \hyperlink{dfg_8h_a673ccd9aadafd31e8beaf16423c07db2}{thread\-\_\-mode} \hyperlink{dfg_8c_a1e70d3e47d162b98375f900c8797d9b8}{str\-\_\-to\-\_\-thread\-\_\-mode} (char $\ast$mode\-\_\-str)
+\begin{DoxyCompactList}\small\item\em Converts a string of pinned/unpinned to the corresponding enumerator. \end{DoxyCompactList}\item 
+enum \hyperlink{dfg_8h_af31ca3002c5b769551da6f1183bafed5}{blocking\-\_\-mode} \hyperlink{dfg_8c_a8f6c8fc5db9ab9c4e47f18bdf15d86b4}{str\-\_\-to\-\_\-blocking\-\_\-mode} (char $\ast$mode\-\_\-str)
+\begin{DoxyCompactList}\small\item\em Converts a string of blocking/non-\/blocking to the correct enumerator. \end{DoxyCompactList}\item 
+\hyperlink{msus_2webserver_2uthash_8h_aba7bc1797add20fe3efdf37ced1182c5}{uint8\-\_\-t} \hyperlink{dfg_8c_a44727ed28e87acf95fa9630f28be4f57}{str\-\_\-to\-\_\-vertex\-\_\-type} (char $\ast$str\-\_\-type)
+\begin{DoxyCompactList}\small\item\em Converts a string containing exit and/or entry to the correct bitmask. \end{DoxyCompactList}\item 
+static void \hyperlink{dfg_8c_a1cecc578fbc37e27a420cabfa2038c42}{set\-\_\-msu\-\_\-properties} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$template, struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$target)
+\begin{DoxyCompactList}\small\item\em Sets the non-\/scheduling properties of the M\-S\-U to be equal to those of the passed in target. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$ \hyperlink{dfg_8c_aa898763d85a7ba61441d18b10198f576}{copy\-\_\-dfg\-\_\-msu} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$input)
+\begin{DoxyCompactList}\small\item\em Allocates a new M\-S\-U with the same fields as the input M\-S\-U (though unscheduled) \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$ \hyperlink{dfg_8c_af3c28699ea4a22c29e988779cae792eb}{init\-\_\-dfg\-\_\-msu} (unsigned int id, struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$type, \hyperlink{msus_2webserver_2uthash_8h_aba7bc1797add20fe3efdf37ced1182c5}{uint8\-\_\-t} vertex\-\_\-type, enum \hyperlink{dfg_8h_af31ca3002c5b769551da6f1183bafed5}{blocking\-\_\-mode} mode, struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} $\ast$init\-\_\-data)
+\begin{DoxyCompactList}\small\item\em Allocates a new M\-S\-U with the given parameters. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_a27bc0d05bd214229b51480ab73411363}{free\-\_\-dfg\-\_\-msu} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$input)
+\begin{DoxyCompactList}\small\item\em Frees an M\-S\-U structure. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg_8c_ae46d1cf3036ac5ce40260c5302369e52}{schedule\-\_\-msu\-\_\-on\-\_\-thread} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu, struct \hyperlink{structdfg__thread}{dfg\-\_\-thread} $\ast$thread, struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt)
+\begin{DoxyCompactList}\small\item\em Adds the M\-S\-U to the thread, runtime, and instance, and adds the thread and runtime to the M\-S\-U. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_aa4010944e89bf1916e9acec3dc511009}{schedule\-\_\-dfg\-\_\-msu} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, unsigned int thread\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Places the given M\-S\-U on the correct runtime and thread. \end{DoxyCompactList}\item 
+static int \hyperlink{dfg_8c_a2f946e7a3e158126750d5065df4a2ee9}{remove\-\_\-msu\-\_\-from\-\_\-thread} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Removes the msu from it's thread, runtime, and instance, and removes the thread and runtime from the M\-S\-U. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_aa31cbd0e24702ceebbe87eb92deec9bc}{unschedule\-\_\-dfg\-\_\-msu} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Removes the given M\-S\-U from its runtime and thread. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$ \hyperlink{dfg_8c_acdccc288dd73befb85f3402755eaf6ba}{create\-\_\-dfg\-\_\-route} (unsigned int id, struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$type, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Creates a route with the specified parameters. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_a6ba05622e40f53d231bba4dcaeb7b651}{delete\-\_\-dfg\-\_\-route} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route})
+\begin{DoxyCompactList}\small\item\em Deletes the provided route from the D\-F\-G. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_a668fe0dbb5cefa85985e05c70453efd7}{add\-\_\-dfg\-\_\-route\-\_\-to\-\_\-msu} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}, struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Subscribes an M\-S\-U to a route, so it can send to the route's endpoints. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$ \hyperlink{dfg_8c_a9d9533fb845b74518b0a1cd52d4c0a13}{add\-\_\-dfg\-\_\-route\-\_\-endpoint} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key, struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route})
+\begin{DoxyCompactList}\small\item\em Adds an M\-S\-U as an endpoint to a route. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_abc6ad7c0883fb3a87009fd251e84e6aa}{del\-\_\-dfg\-\_\-route\-\_\-endpoint} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}, struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$ep)
+\begin{DoxyCompactList}\small\item\em Removes an M\-S\-U as a route endpoint. \end{DoxyCompactList}\item 
+int \hyperlink{dfg_8c_ab2f33035d339e7a0b447a89eb9921cd8}{mod\-\_\-dfg\-\_\-route\-\_\-endpoint} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route}, struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$ep, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} new\-\_\-key)
+\begin{DoxyCompactList}\small\item\em Modifies the key associated with an M\-S\-U endpoint. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__thread}{dfg\-\_\-thread} $\ast$ \hyperlink{dfg_8c_a10bfc20ced915a80e30e4afb5cf713c2}{create\-\_\-dfg\-\_\-thread} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt, int thread\-\_\-id, enum \hyperlink{dfg_8h_a673ccd9aadafd31e8beaf16423c07db2}{thread\-\_\-mode} mode)
+\begin{DoxyCompactList}\small\item\em Creates a new thread on the given runtime. \end{DoxyCompactList}\item 
+static void \hyperlink{dfg_8c_ad84b24c705731c652d9dfdaff13a89af}{free\-\_\-dfg\-\_\-msu\-\_\-type} (struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$type)
+\begin{DoxyCompactList}\small\item\em Frees elements in the M\-S\-U type structure. \end{DoxyCompactList}\item 
+static void \hyperlink{dfg_8c_a4f6385ee32097761054e8ee85f87f5ee}{free\-\_\-dfg\-\_\-runtime} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt)
+\begin{DoxyCompactList}\small\item\em Frees the runtime and all threads and routes associated with it. \end{DoxyCompactList}\item 
+void \hyperlink{dfg_8c_a184d21f32a6c70cca6b92f87c2c8df45}{free\-\_\-dfg} (struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$\hyperlink{dfg_8c_a7e47c8351eb11d990fbe315642762ddd}{dfg})
+\begin{DoxyCompactList}\small\item\em Frees the entirety of the D\-F\-G structure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$ \hyperlink{dfg_8c_a7e47c8351eb11d990fbe315642762ddd}{dfg}
+\begin{DoxyCompactList}\small\item\em Static local copy of the D\-F\-G, so each call doesn't have to pass a copy. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Code for the creation and modifcation of the data-\/flow graph. 
+
+Definition in file \hyperlink{dfg_8c_source}{dfg.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{dfg_8c_a7e8399de877d0337e6b5313c2cb43a2f}{\index{dfg.\-c@{dfg.\-c}!S\-E\-A\-R\-C\-H\-\_\-\-F\-O\-R\-\_\-\-I\-D@{S\-E\-A\-R\-C\-H\-\_\-\-F\-O\-R\-\_\-\-I\-D}}
+\index{S\-E\-A\-R\-C\-H\-\_\-\-F\-O\-R\-\_\-\-I\-D@{S\-E\-A\-R\-C\-H\-\_\-\-F\-O\-R\-\_\-\-I\-D}!dfg.c@{dfg.\-c}}
+\subsubsection[{S\-E\-A\-R\-C\-H\-\_\-\-F\-O\-R\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-E\-A\-R\-C\-H\-\_\-\-F\-O\-R\-\_\-\-I\-D(
+\begin{DoxyParamCaption}
+\item[{}]{s, }
+\item[{}]{n, }
+\item[{}]{field, }
+\item[{}]{id\-\_\-}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a7e8399de877d0337e6b5313c2cb43a2f}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} (\hyperlink{dfg_8c_a7e47c8351eb11d990fbe315642762ddd}{dfg} == NULL) \(\backslash\)
+        return NULL; \(\backslash\)
+    for (\textcolor{keywordtype}{int} i=0; i<(n); ++i) \{ \(\backslash\)
+        if (field[i]->\textcolor{keywordtype}{id} == id\_) \{ \(\backslash\)
+            return field[i]; \(\backslash\)
+        \} \(\backslash\)
+    \} \(\backslash\)
+    return NULL;
+\end{DoxyCode}
+
+
+Convenience macro to search a field within a structure for the element with an I\-D. 
+
+Specifically, searches field\mbox{[}i\mbox{]}-\/$>$id for each element in field. 
+\begin{DoxyParams}{Parameters}
+{\em s} & A parent structure. If N\-U\-L\-L, returns N\-U\-L\-L \\
+\hline
+{\em n} & The number of elements in the field to search \\
+\hline
+{\em field} & The list of structures to search for the given I\-D \\
+\hline
+{\em id\-\_\-} & The I\-D to search for in the list of structures \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 46 of file dfg.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dfg_8c_a9d9533fb845b74518b0a1cd52d4c0a13}{\index{dfg.\-c@{dfg.\-c}!add\-\_\-dfg\-\_\-route\-\_\-endpoint@{add\-\_\-dfg\-\_\-route\-\_\-endpoint}}
+\index{add\-\_\-dfg\-\_\-route\-\_\-endpoint@{add\-\_\-dfg\-\_\-route\-\_\-endpoint}!dfg.c@{dfg.\-c}}
+\subsubsection[{add\-\_\-dfg\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route\-\_\-endpoint}$\ast$ add\-\_\-dfg\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu, }
+\item[{{\bf uint32\-\_\-t}}]{key, }
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a9d9533fb845b74518b0a1cd52d4c0a13}
+
+
+Adds an M\-S\-U as an endpoint to a route. 
+
+
+
+Definition at line 455 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a668fe0dbb5cefa85985e05c70453efd7}{\index{dfg.\-c@{dfg.\-c}!add\-\_\-dfg\-\_\-route\-\_\-to\-\_\-msu@{add\-\_\-dfg\-\_\-route\-\_\-to\-\_\-msu}}
+\index{add\-\_\-dfg\-\_\-route\-\_\-to\-\_\-msu@{add\-\_\-dfg\-\_\-route\-\_\-to\-\_\-msu}!dfg.c@{dfg.\-c}}
+\subsubsection[{add\-\_\-dfg\-\_\-route\-\_\-to\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-dfg\-\_\-route\-\_\-to\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route, }
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a668fe0dbb5cefa85985e05c70453efd7}
+
+
+Subscribes an M\-S\-U to a route, so it can send to the route's endpoints. 
+
+
+
+Definition at line 428 of file dfg.\-c.
+
+\hypertarget{dfg_8c_aa898763d85a7ba61441d18b10198f576}{\index{dfg.\-c@{dfg.\-c}!copy\-\_\-dfg\-\_\-msu@{copy\-\_\-dfg\-\_\-msu}}
+\index{copy\-\_\-dfg\-\_\-msu@{copy\-\_\-dfg\-\_\-msu}!dfg.c@{dfg.\-c}}
+\subsubsection[{copy\-\_\-dfg\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu}$\ast$ copy\-\_\-dfg\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{input}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_aa898763d85a7ba61441d18b10198f576}
+
+
+Allocates a new M\-S\-U with the same fields as the input M\-S\-U (though unscheduled) 
+
+
+
+Definition at line 190 of file dfg.\-c.
+
+\hypertarget{dfg_8c_acdccc288dd73befb85f3402755eaf6ba}{\index{dfg.\-c@{dfg.\-c}!create\-\_\-dfg\-\_\-route@{create\-\_\-dfg\-\_\-route}}
+\index{create\-\_\-dfg\-\_\-route@{create\-\_\-dfg\-\_\-route}!dfg.c@{dfg.\-c}}
+\subsubsection[{create\-\_\-dfg\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route}$\ast$ create\-\_\-dfg\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id, }
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{type, }
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_acdccc288dd73befb85f3402755eaf6ba}
+
+
+Creates a route with the specified parameters. 
+
+
+
+Definition at line 366 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a10bfc20ced915a80e30e4afb5cf713c2}{\index{dfg.\-c@{dfg.\-c}!create\-\_\-dfg\-\_\-thread@{create\-\_\-dfg\-\_\-thread}}
+\index{create\-\_\-dfg\-\_\-thread@{create\-\_\-dfg\-\_\-thread}!dfg.c@{dfg.\-c}}
+\subsubsection[{create\-\_\-dfg\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-thread}$\ast$ create\-\_\-dfg\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt, }
+\item[{int}]{thread\-\_\-id, }
+\item[{enum {\bf thread\-\_\-mode}}]{mode}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a10bfc20ced915a80e30e4afb5cf713c2}
+
+
+Creates a new thread on the given runtime. 
+
+
+
+Definition at line 539 of file dfg.\-c.
+
+\hypertarget{dfg_8c_abc6ad7c0883fb3a87009fd251e84e6aa}{\index{dfg.\-c@{dfg.\-c}!del\-\_\-dfg\-\_\-route\-\_\-endpoint@{del\-\_\-dfg\-\_\-route\-\_\-endpoint}}
+\index{del\-\_\-dfg\-\_\-route\-\_\-endpoint@{del\-\_\-dfg\-\_\-route\-\_\-endpoint}!dfg.c@{dfg.\-c}}
+\subsubsection[{del\-\_\-dfg\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int del\-\_\-dfg\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route, }
+\item[{struct {\bf dfg\-\_\-route\-\_\-endpoint} $\ast$}]{ep}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_abc6ad7c0883fb3a87009fd251e84e6aa}
+
+
+Removes an M\-S\-U as a route endpoint. 
+
+
+
+Definition at line 487 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a6ba05622e40f53d231bba4dcaeb7b651}{\index{dfg.\-c@{dfg.\-c}!delete\-\_\-dfg\-\_\-route@{delete\-\_\-dfg\-\_\-route}}
+\index{delete\-\_\-dfg\-\_\-route@{delete\-\_\-dfg\-\_\-route}!dfg.c@{dfg.\-c}}
+\subsubsection[{delete\-\_\-dfg\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}int delete\-\_\-dfg\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a6ba05622e40f53d231bba4dcaeb7b651}
+
+
+Deletes the provided route from the D\-F\-G. 
+
+
+
+Definition at line 399 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a184d21f32a6c70cca6b92f87c2c8df45}{\index{dfg.\-c@{dfg.\-c}!free\-\_\-dfg@{free\-\_\-dfg}}
+\index{free\-\_\-dfg@{free\-\_\-dfg}!dfg.c@{dfg.\-c}}
+\subsubsection[{free\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}void free\-\_\-dfg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-dfg} $\ast$}]{dfg}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a184d21f32a6c70cca6b92f87c2c8df45}
+
+
+Frees the entirety of the D\-F\-G structure. 
+
+
+
+Definition at line 596 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a27bc0d05bd214229b51480ab73411363}{\index{dfg.\-c@{dfg.\-c}!free\-\_\-dfg\-\_\-msu@{free\-\_\-dfg\-\_\-msu}}
+\index{free\-\_\-dfg\-\_\-msu@{free\-\_\-dfg\-\_\-msu}!dfg.c@{dfg.\-c}}
+\subsubsection[{free\-\_\-dfg\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int free\-\_\-dfg\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{input}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a27bc0d05bd214229b51480ab73411363}
+
+
+Frees an M\-S\-U structure. 
+
+
+
+Definition at line 225 of file dfg.\-c.
+
+\hypertarget{dfg_8c_ad84b24c705731c652d9dfdaff13a89af}{\index{dfg.\-c@{dfg.\-c}!free\-\_\-dfg\-\_\-msu\-\_\-type@{free\-\_\-dfg\-\_\-msu\-\_\-type}}
+\index{free\-\_\-dfg\-\_\-msu\-\_\-type@{free\-\_\-dfg\-\_\-msu\-\_\-type}!dfg.c@{dfg.\-c}}
+\subsubsection[{free\-\_\-dfg\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static void free\-\_\-dfg\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg_8c_ad84b24c705731c652d9dfdaff13a89af}
+
+
+Frees elements in the M\-S\-U type structure. 
+
+
+
+Definition at line 574 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a4f6385ee32097761054e8ee85f87f5ee}{\index{dfg.\-c@{dfg.\-c}!free\-\_\-dfg\-\_\-runtime@{free\-\_\-dfg\-\_\-runtime}}
+\index{free\-\_\-dfg\-\_\-runtime@{free\-\_\-dfg\-\_\-runtime}!dfg.c@{dfg.\-c}}
+\subsubsection[{free\-\_\-dfg\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}static void free\-\_\-dfg\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg_8c_a4f6385ee32097761054e8ee85f87f5ee}
+
+
+Frees the runtime and all threads and routes associated with it. 
+
+
+
+Definition at line 582 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a4aacb05176ec962cd15c27e6b6a7a453}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-db\-\_\-info@{get\-\_\-db\-\_\-info}}
+\index{get\-\_\-db\-\_\-info@{get\-\_\-db\-\_\-info}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-db\-\_\-info}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf db\-\_\-info}$\ast$ get\-\_\-db\-\_\-info (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a4aacb05176ec962cd15c27e6b6a7a453}
+
+
+Returns D\-B info. 
+
+
+
+Definition at line 56 of file dfg.\-c.
+
+\hypertarget{dfg_8c_ad09e64d6967e22d355ae945b28d0d833}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-msu@{get\-\_\-dfg\-\_\-msu}}
+\index{get\-\_\-dfg\-\_\-msu@{get\-\_\-dfg\-\_\-msu}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu}$\ast$ get\-\_\-dfg\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_ad09e64d6967e22d355ae945b28d0d833}
+
+
+Returns the M\-S\-U with the given I\-D. 
+
+
+
+Definition at line 86 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a98ec8a996513358bc6cb99ac1d79aebe}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-msu\-\_\-route\-\_\-by\-\_\-type@{get\-\_\-dfg\-\_\-msu\-\_\-route\-\_\-by\-\_\-type}}
+\index{get\-\_\-dfg\-\_\-msu\-\_\-route\-\_\-by\-\_\-type@{get\-\_\-dfg\-\_\-msu\-\_\-route\-\_\-by\-\_\-type}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-msu\-\_\-route\-\_\-by\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route}$\ast$ get\-\_\-dfg\-\_\-msu\-\_\-route\-\_\-by\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{route\-\_\-type}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a98ec8a996513358bc6cb99ac1d79aebe}
+
+
+Returns the route which the given M\-S\-U sends to of the specified M\-S\-U type. 
+
+
+
+Definition at line 99 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a68f0d4ea85d31dbbac4b450488024e0c}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-msu\-\_\-type@{get\-\_\-dfg\-\_\-msu\-\_\-type}}
+\index{get\-\_\-dfg\-\_\-msu\-\_\-type@{get\-\_\-dfg\-\_\-msu\-\_\-type}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu\-\_\-type}$\ast$ get\-\_\-dfg\-\_\-msu\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a68f0d4ea85d31dbbac4b450488024e0c}
+
+
+Returns the M\-S\-U type with the given I\-D. 
+
+
+
+Definition at line 68 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a760d03c02924c45aad545278eb4d126b}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-n\-\_\-runtimes@{get\-\_\-dfg\-\_\-n\-\_\-runtimes}}
+\index{get\-\_\-dfg\-\_\-n\-\_\-runtimes@{get\-\_\-dfg\-\_\-n\-\_\-runtimes}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-n\-\_\-runtimes}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-dfg\-\_\-n\-\_\-runtimes (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a760d03c02924c45aad545278eb4d126b}
+
+
+Returns the number of registered runtime. 
+
+
+
+Definition at line 60 of file dfg.\-c.
+
+\hypertarget{dfg_8c_ac6e8f3be3f3caf9b9f3a9349abcf980c}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-route@{get\-\_\-dfg\-\_\-route}}
+\index{get\-\_\-dfg\-\_\-route@{get\-\_\-dfg\-\_\-route}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route}$\ast$ get\-\_\-dfg\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_ac6e8f3be3f3caf9b9f3a9349abcf980c}
+
+
+Returns the route with the given I\-D. 
+
+
+
+Definition at line 76 of file dfg.\-c.
+
+\hypertarget{dfg_8c_acf66e1453c100fe8ba67bd3dfb7eadc1}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-route\-\_\-endpoint@{get\-\_\-dfg\-\_\-route\-\_\-endpoint}}
+\index{get\-\_\-dfg\-\_\-route\-\_\-endpoint@{get\-\_\-dfg\-\_\-route\-\_\-endpoint}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route\-\_\-endpoint}$\ast$ get\-\_\-dfg\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route, }
+\item[{unsigned int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_acf66e1453c100fe8ba67bd3dfb7eadc1}
+
+
+Returns the endpoint within the given route which has the specified M\-S\-U I\-D. 
+
+
+
+Definition at line 112 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a01708b47ce7d2af66fc1662b0b9c5db6}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-rt\-\_\-route\-\_\-by\-\_\-type@{get\-\_\-dfg\-\_\-rt\-\_\-route\-\_\-by\-\_\-type}}
+\index{get\-\_\-dfg\-\_\-rt\-\_\-route\-\_\-by\-\_\-type@{get\-\_\-dfg\-\_\-rt\-\_\-route\-\_\-by\-\_\-type}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-rt\-\_\-route\-\_\-by\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route}$\ast$ get\-\_\-dfg\-\_\-rt\-\_\-route\-\_\-by\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt, }
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a01708b47ce7d2af66fc1662b0b9c5db6}
+
+
+Returns the route on the given runtime with the specified M\-S\-U type. 
+
+
+
+Definition at line 90 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a4d5591b32b0c05fa84f9153ccf253f7d}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-runtime@{get\-\_\-dfg\-\_\-runtime}}
+\index{get\-\_\-dfg\-\_\-runtime@{get\-\_\-dfg\-\_\-runtime}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-runtime}$\ast$ get\-\_\-dfg\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a4d5591b32b0c05fa84f9153ccf253f7d}
+
+
+Returns the runtime with the given I\-D. 
+
+
+
+Definition at line 64 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a6470ba37b1c7313e39acebcee9bcb6ec}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-runtime\-\_\-route@{get\-\_\-dfg\-\_\-runtime\-\_\-route}}
+\index{get\-\_\-dfg\-\_\-runtime\-\_\-route@{get\-\_\-dfg\-\_\-runtime\-\_\-route}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-runtime\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route}$\ast$ get\-\_\-dfg\-\_\-runtime\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt, }
+\item[{unsigned int}]{id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a6470ba37b1c7313e39acebcee9bcb6ec}
+
+
+Definition at line 72 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a498ed9b8fd2c74dec3286638dcae70a0}{\index{dfg.\-c@{dfg.\-c}!get\-\_\-dfg\-\_\-thread@{get\-\_\-dfg\-\_\-thread}}
+\index{get\-\_\-dfg\-\_\-thread@{get\-\_\-dfg\-\_\-thread}!dfg.c@{dfg.\-c}}
+\subsubsection[{get\-\_\-dfg\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-thread}$\ast$ get\-\_\-dfg\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt, }
+\item[{unsigned int}]{id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a498ed9b8fd2c74dec3286638dcae70a0}
+
+
+Returns the thread on the given runtime with the specified I\-D. 
+
+
+
+Definition at line 108 of file dfg.\-c.
+
+\hypertarget{dfg_8c_af3c28699ea4a22c29e988779cae792eb}{\index{dfg.\-c@{dfg.\-c}!init\-\_\-dfg\-\_\-msu@{init\-\_\-dfg\-\_\-msu}}
+\index{init\-\_\-dfg\-\_\-msu@{init\-\_\-dfg\-\_\-msu}!dfg.c@{dfg.\-c}}
+\subsubsection[{init\-\_\-dfg\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu}$\ast$ init\-\_\-dfg\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id, }
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{type, }
+\item[{{\bf uint8\-\_\-t}}]{vertex\-\_\-type, }
+\item[{enum {\bf blocking\-\_\-mode}}]{mode, }
+\item[{struct {\bf msu\-\_\-init\-\_\-data} $\ast$}]{init\-\_\-data}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_af3c28699ea4a22c29e988779cae792eb}
+
+
+Allocates a new M\-S\-U with the given parameters. 
+
+
+
+Definition at line 200 of file dfg.\-c.
+
+\hypertarget{dfg_8c_ab2f33035d339e7a0b447a89eb9921cd8}{\index{dfg.\-c@{dfg.\-c}!mod\-\_\-dfg\-\_\-route\-\_\-endpoint@{mod\-\_\-dfg\-\_\-route\-\_\-endpoint}}
+\index{mod\-\_\-dfg\-\_\-route\-\_\-endpoint@{mod\-\_\-dfg\-\_\-route\-\_\-endpoint}!dfg.c@{dfg.\-c}}
+\subsubsection[{mod\-\_\-dfg\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int mod\-\_\-dfg\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route, }
+\item[{struct {\bf dfg\-\_\-route\-\_\-endpoint} $\ast$}]{ep, }
+\item[{{\bf uint32\-\_\-t}}]{new\-\_\-key}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_ab2f33035d339e7a0b447a89eb9921cd8}
+
+
+Modifies the key associated with an M\-S\-U endpoint. 
+
+
+
+Definition at line 505 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a2627ed9b01b9cf785fbb582b7a531dce}{\index{dfg.\-c@{dfg.\-c}!msu\-\_\-has\-\_\-route@{msu\-\_\-has\-\_\-route}}
+\index{msu\-\_\-has\-\_\-route@{msu\-\_\-has\-\_\-route}!dfg.c@{dfg.\-c}}
+\subsubsection[{msu\-\_\-has\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-has\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a2627ed9b01b9cf785fbb582b7a531dce}
+
+
+Returns 1 if the given M\-S\-U has the route as an endpoint. 
+
+
+
+Definition at line 121 of file dfg.\-c.
+
+\hypertarget{dfg_8c_afd4c9fc46ae6053953e17edfaaf50deb}{\index{dfg.\-c@{dfg.\-c}!msu\-\_\-type\-\_\-on\-\_\-runtime@{msu\-\_\-type\-\_\-on\-\_\-runtime}}
+\index{msu\-\_\-type\-\_\-on\-\_\-runtime@{msu\-\_\-type\-\_\-on\-\_\-runtime}!dfg.c@{dfg.\-c}}
+\subsubsection[{msu\-\_\-type\-\_\-on\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu}$\ast$ msu\-\_\-type\-\_\-on\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt, }
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_afd4c9fc46ae6053953e17edfaaf50deb}
+
+
+Returns 1 if the given M\-S\-U type is present on the provided runtime. 
+
+
+
+Definition at line 130 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a2f946e7a3e158126750d5065df4a2ee9}{\index{dfg.\-c@{dfg.\-c}!remove\-\_\-msu\-\_\-from\-\_\-thread@{remove\-\_\-msu\-\_\-from\-\_\-thread}}
+\index{remove\-\_\-msu\-\_\-from\-\_\-thread@{remove\-\_\-msu\-\_\-from\-\_\-thread}!dfg.c@{dfg.\-c}}
+\subsubsection[{remove\-\_\-msu\-\_\-from\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static int remove\-\_\-msu\-\_\-from\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg_8c_a2f946e7a3e158126750d5065df4a2ee9}
+
+
+Removes the msu from it's thread, runtime, and instance, and removes the thread and runtime from the M\-S\-U. 
+
+
+
+Definition at line 298 of file dfg.\-c.
+
+\hypertarget{dfg_8c_aa4010944e89bf1916e9acec3dc511009}{\index{dfg.\-c@{dfg.\-c}!schedule\-\_\-dfg\-\_\-msu@{schedule\-\_\-dfg\-\_\-msu}}
+\index{schedule\-\_\-dfg\-\_\-msu@{schedule\-\_\-dfg\-\_\-msu}!dfg.c@{dfg.\-c}}
+\subsubsection[{schedule\-\_\-dfg\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int schedule\-\_\-dfg\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu, }
+\item[{unsigned int}]{runtime\-\_\-id, }
+\item[{unsigned int}]{thread\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_aa4010944e89bf1916e9acec3dc511009}
+
+
+Places the given M\-S\-U on the correct runtime and thread. 
+
+
+
+Definition at line 261 of file dfg.\-c.
+
+\hypertarget{dfg_8c_ae46d1cf3036ac5ce40260c5302369e52}{\index{dfg.\-c@{dfg.\-c}!schedule\-\_\-msu\-\_\-on\-\_\-thread@{schedule\-\_\-msu\-\_\-on\-\_\-thread}}
+\index{schedule\-\_\-msu\-\_\-on\-\_\-thread@{schedule\-\_\-msu\-\_\-on\-\_\-thread}!dfg.c@{dfg.\-c}}
+\subsubsection[{schedule\-\_\-msu\-\_\-on\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static int schedule\-\_\-msu\-\_\-on\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf dfg\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg_8c_ae46d1cf3036ac5ce40260c5302369e52}
+
+
+Adds the M\-S\-U to the thread, runtime, and instance, and adds the thread and runtime to the M\-S\-U. 
+
+
+
+Definition at line 237 of file dfg.\-c.
+
+\hypertarget{dfg_8c_ab837561cc853acd26f68e4150335720c}{\index{dfg.\-c@{dfg.\-c}!set\-\_\-dfg@{set\-\_\-dfg}}
+\index{set\-\_\-dfg@{set\-\_\-dfg}!dfg.c@{dfg.\-c}}
+\subsubsection[{set\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}void set\-\_\-dfg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-dfg} $\ast$}]{dfg}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_ab837561cc853acd26f68e4150335720c}
+
+
+Sets the local copy of the D\-F\-G, so it doesn't have to be passed in for each call. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em dfg} & The copy of the D\-F\-G to set statically \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 34 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a1cecc578fbc37e27a420cabfa2038c42}{\index{dfg.\-c@{dfg.\-c}!set\-\_\-msu\-\_\-properties@{set\-\_\-msu\-\_\-properties}}
+\index{set\-\_\-msu\-\_\-properties@{set\-\_\-msu\-\_\-properties}!dfg.c@{dfg.\-c}}
+\subsubsection[{set\-\_\-msu\-\_\-properties}]{\setlength{\rightskip}{0pt plus 5cm}static void set\-\_\-msu\-\_\-properties (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{template, }
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{target}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg_8c_a1cecc578fbc37e27a420cabfa2038c42}
+
+
+Sets the non-\/scheduling properties of the M\-S\-U to be equal to those of the passed in target. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em template} & The M\-S\-U from which to copy the properties \\
+\hline
+{\em target} & The M\-S\-U into which the properties are to be copied \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 182 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a8f6c8fc5db9ab9c4e47f18bdf15d86b4}{\index{dfg.\-c@{dfg.\-c}!str\-\_\-to\-\_\-blocking\-\_\-mode@{str\-\_\-to\-\_\-blocking\-\_\-mode}}
+\index{str\-\_\-to\-\_\-blocking\-\_\-mode@{str\-\_\-to\-\_\-blocking\-\_\-mode}!dfg.c@{dfg.\-c}}
+\subsubsection[{str\-\_\-to\-\_\-blocking\-\_\-mode}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf blocking\-\_\-mode} str\-\_\-to\-\_\-blocking\-\_\-mode (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{mode\-\_\-str}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a8f6c8fc5db9ab9c4e47f18bdf15d86b4}
+
+
+Converts a string of blocking/non-\/blocking to the correct enumerator. 
+
+String should be \char`\"{}blocking\char`\"{} or \char`\"{}non-\/blocking\char`\"{} (or \char`\"{}nonblocking\char`\"{}) (case insensitive). 
+
+Definition at line 150 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a1e70d3e47d162b98375f900c8797d9b8}{\index{dfg.\-c@{dfg.\-c}!str\-\_\-to\-\_\-thread\-\_\-mode@{str\-\_\-to\-\_\-thread\-\_\-mode}}
+\index{str\-\_\-to\-\_\-thread\-\_\-mode@{str\-\_\-to\-\_\-thread\-\_\-mode}!dfg.c@{dfg.\-c}}
+\subsubsection[{str\-\_\-to\-\_\-thread\-\_\-mode}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf thread\-\_\-mode} str\-\_\-to\-\_\-thread\-\_\-mode (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{mode}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a1e70d3e47d162b98375f900c8797d9b8}
+
+
+Converts a string of pinned/unpinned to the corresponding enumerator. 
+
+String should be \char`\"{}pinned\char`\"{} or \char`\"{}unpinned\char`\"{} (case insensitive). 
+
+Definition at line 139 of file dfg.\-c.
+
+\hypertarget{dfg_8c_a44727ed28e87acf95fa9630f28be4f57}{\index{dfg.\-c@{dfg.\-c}!str\-\_\-to\-\_\-vertex\-\_\-type@{str\-\_\-to\-\_\-vertex\-\_\-type}}
+\index{str\-\_\-to\-\_\-vertex\-\_\-type@{str\-\_\-to\-\_\-vertex\-\_\-type}!dfg.c@{dfg.\-c}}
+\subsubsection[{str\-\_\-to\-\_\-vertex\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint8\-\_\-t} str\-\_\-to\-\_\-vertex\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{str\-\_\-type}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_a44727ed28e87acf95fa9630f28be4f57}
+
+
+Converts a string containing exit and/or entry to the correct bitmask. 
+
+
+
+Definition at line 162 of file dfg.\-c.
+
+\hypertarget{dfg_8c_aa31cbd0e24702ceebbe87eb92deec9bc}{\index{dfg.\-c@{dfg.\-c}!unschedule\-\_\-dfg\-\_\-msu@{unschedule\-\_\-dfg\-\_\-msu}}
+\index{unschedule\-\_\-dfg\-\_\-msu@{unschedule\-\_\-dfg\-\_\-msu}!dfg.c@{dfg.\-c}}
+\subsubsection[{unschedule\-\_\-dfg\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int unschedule\-\_\-dfg\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{dfg_8c_aa31cbd0e24702ceebbe87eb92deec9bc}
+
+
+Removes the given M\-S\-U from its runtime and thread. 
+
+
+
+Definition at line 339 of file dfg.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{dfg_8c_a7e47c8351eb11d990fbe315642762ddd}{\index{dfg.\-c@{dfg.\-c}!dfg@{dfg}}
+\index{dfg@{dfg}!dfg.c@{dfg.\-c}}
+\subsubsection[{dfg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-dfg}$\ast$ dfg\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg_8c_a7e47c8351eb11d990fbe315642762ddd}
+
+
+Static local copy of the D\-F\-G, so each call doesn't have to pass a copy. 
+
+
+
+Definition at line 32 of file dfg.\-c.
+

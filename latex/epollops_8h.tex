@@ -1,0 +1,157 @@
+\hypertarget{epollops_8h}{\section{src/common/epollops.h File Reference}
+\label{epollops_8h}\index{src/common/epollops.\-h@{src/common/epollops.\-h}}
+}
+
+
+Wrapper functions for epoll to manage event-\/based communication.  
+
+
+{\ttfamily \#include $<$stdint.\-h$>$}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{epollops_8h_a62461bc0aea925b0d9d525bba1b3a573}{enable\-\_\-epoll} (int \hyperlink{socket__monitor_8c_ae4afe2171ee3ec9b9cce747171f0b20d}{epoll\-\_\-fd}, int new\-\_\-fd, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} events)
+\begin{DoxyCompactList}\small\item\em Enables a file descriptor which has already been aded to an epoll instance. \end{DoxyCompactList}\item 
+int \hyperlink{epollops_8h_a3252b426ec1102eb206f06a20ee71214}{add\-\_\-to\-\_\-epoll} (int \hyperlink{socket__monitor_8c_ae4afe2171ee3ec9b9cce747171f0b20d}{epoll\-\_\-fd}, int new\-\_\-fd, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} events, bool oneshot)
+\begin{DoxyCompactList}\small\item\em Adds a file descriptor to an epoll instance. \end{DoxyCompactList}\item 
+int \hyperlink{epollops_8h_a0ae6381d514030e563f9226bc2a482e6}{epoll\-\_\-loop} (int socket\-\_\-fd, int \hyperlink{socket__monitor_8c_ae4afe2171ee3ec9b9cce747171f0b20d}{epoll\-\_\-fd}, int batch\-\_\-size, int timeout, bool oneshot, int($\ast$connection\-\_\-handler)(int, void $\ast$), int($\ast$accept\-\_\-handler)(int, void $\ast$), void $\ast$data)
+\begin{DoxyCompactList}\small\item\em The event-\/based loop for epoll\-\_\-wait. \end{DoxyCompactList}\item 
+int \hyperlink{epollops_8h_a3b8e5b82ae367ad5433a64bba0a5fae1}{init\-\_\-epoll} (int socket\-\_\-fd)
+\begin{DoxyCompactList}\small\item\em Initializes a new instance of an epoll file descriptor and adds a socket to it, listening for input on that socket. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Wrapper functions for epoll to manage event-\/based communication. 
+
+Definition in file \hyperlink{epollops_8h_source}{epollops.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{epollops_8h_a3252b426ec1102eb206f06a20ee71214}{\index{epollops.\-h@{epollops.\-h}!add\-\_\-to\-\_\-epoll@{add\-\_\-to\-\_\-epoll}}
+\index{add\-\_\-to\-\_\-epoll@{add\-\_\-to\-\_\-epoll}!epollops.h@{epollops.\-h}}
+\subsubsection[{add\-\_\-to\-\_\-epoll}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-to\-\_\-epoll (
+\begin{DoxyParamCaption}
+\item[{int}]{epoll\-\_\-fd, }
+\item[{int}]{new\-\_\-fd, }
+\item[{{\bf uint32\-\_\-t}}]{events, }
+\item[{bool}]{oneshot}
+\end{DoxyParamCaption}
+)}}\label{epollops_8h_a3252b426ec1102eb206f06a20ee71214}
+
+
+Adds a file descriptor to an epoll instance. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoll\-\_\-fd} & Epoll file descriptor \\
+\hline
+{\em new\-\_\-fd} & File descriptor to add to the epoll instance \\
+\hline
+{\em events} & E\-P\-O\-L\-L\-I\-N \&/$\vert$ E\-P\-O\-L\-L\-O\-U\-T \\
+\hline
+{\em oneshot} & Whether to enable E\-P\-O\-L\-L\-O\-N\-E\-S\-H\-O\-T on the added fd \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 59 of file epollops.\-c.
+
+\hypertarget{epollops_8h_a62461bc0aea925b0d9d525bba1b3a573}{\index{epollops.\-h@{epollops.\-h}!enable\-\_\-epoll@{enable\-\_\-epoll}}
+\index{enable\-\_\-epoll@{enable\-\_\-epoll}!epollops.h@{epollops.\-h}}
+\subsubsection[{enable\-\_\-epoll}]{\setlength{\rightskip}{0pt plus 5cm}int enable\-\_\-epoll (
+\begin{DoxyParamCaption}
+\item[{int}]{epoll\-\_\-fd, }
+\item[{int}]{new\-\_\-fd, }
+\item[{{\bf uint32\-\_\-t}}]{events}
+\end{DoxyParamCaption}
+)}}\label{epollops_8h_a62461bc0aea925b0d9d525bba1b3a573}
+
+
+Enables a file descriptor which has already been aded to an epoll instance. 
+
+Or's E\-P\-O\-L\-L\-O\-N\-E\-S\-H\-O\-T with events so the event will only be responded to once 
+\begin{DoxyParams}{Parameters}
+{\em epoll\-\_\-fd} & Epoll file descriptor \\
+\hline
+{\em new\-\_\-fd} & File descriptor to enable in the epoll instance \\
+\hline
+{\em events} & E\-P\-O\-L\-L\-I\-N \&/$\vert$ E\-P\-O\-L\-L\-O\-U\-T \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 42 of file epollops.\-c.
+
+\hypertarget{epollops_8h_a0ae6381d514030e563f9226bc2a482e6}{\index{epollops.\-h@{epollops.\-h}!epoll\-\_\-loop@{epoll\-\_\-loop}}
+\index{epoll\-\_\-loop@{epoll\-\_\-loop}!epollops.h@{epollops.\-h}}
+\subsubsection[{epoll\-\_\-loop}]{\setlength{\rightskip}{0pt plus 5cm}int epoll\-\_\-loop (
+\begin{DoxyParamCaption}
+\item[{int}]{socket\-\_\-fd, }
+\item[{int}]{epoll\-\_\-fd, }
+\item[{int}]{batch\-\_\-size, }
+\item[{int}]{timeout, }
+\item[{bool}]{oneshot, }
+\item[{int($\ast$)(int, void $\ast$)}]{connection\-\_\-handler, }
+\item[{int($\ast$)(int, void $\ast$)}]{accept\-\_\-handler, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{epollops_8h_a0ae6381d514030e563f9226bc2a482e6}
+
+
+The event-\/based loop for epoll\-\_\-wait. 
+
+Loops (epolling), and accepts new connections when they are available on socket\-\_\-fd. Calls the provided functions on socket activity (connection\-\_\-handler), and on new connections (accept\-\_\-handler). N\-O\-T\-E\-: On first connect, only calls {\ttfamily connection\-\_\-handler} on E\-P\-O\-L\-L\-I\-N activity. 
+\begin{DoxyParams}{Parameters}
+{\em socket\-\_\-fd} & Socket on which to accept new connections, or -\/1 if no accept is necessary \\
+\hline
+{\em epoll\-\_\-fd} & Fd of epoll instance \\
+\hline
+{\em batch\-\_\-size} & Number of connections to process in a row before exiting the loop or -\/1 for N\-A \\
+\hline
+{\em timeout} & Epoll timeout. -\/1 for no timeout. \\
+\hline
+{\em connection\-\_\-handler} & Calls this function with args (int fd, void $\ast$data) on fd activity \\
+\hline
+{\em accept\-\_\-handler} & Calls this function with args (int fd, void $\ast$data) on new connection N\-U\-L\-L for no callback or N/\-A \\
+\hline
+{\em data} & Data to be passed through to handler functions \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 132 of file epollops.\-c.
+
+\hypertarget{epollops_8h_a3b8e5b82ae367ad5433a64bba0a5fae1}{\index{epollops.\-h@{epollops.\-h}!init\-\_\-epoll@{init\-\_\-epoll}}
+\index{init\-\_\-epoll@{init\-\_\-epoll}!epollops.h@{epollops.\-h}}
+\subsubsection[{init\-\_\-epoll}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-epoll (
+\begin{DoxyParamCaption}
+\item[{int}]{socket\-\_\-fd}
+\end{DoxyParamCaption}
+)}}\label{epollops_8h_a3b8e5b82ae367ad5433a64bba0a5fae1}
+
+
+Initializes a new instance of an epoll file descriptor and adds a socket to it, listening for input on that socket. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em socket\-\_\-fd} & Socket on which to listen for new connections. -\/1 if creating epoll without socket. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+epoll file descriptor 
+\end{DoxyReturn}
+
+
+Definition at line 182 of file epollops.\-c.
+

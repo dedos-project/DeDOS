@@ -1,0 +1,583 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - unnamed - runtime/routing.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">runtime</a> - routing.c<span style="font-size: 80%;"> (source / <a href="routing.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">unnamed</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">145</td>
+            <td class="headerCovTableEntry">243</td>
+            <td class="headerCovTableEntryLo">59.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-01-11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryMed">79.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            : START OF LICENSE STUB
+<span class="lineNum">       3 </span>            :     DeDOS: Declarative Dispersion-Oriented Software
+<span class="lineNum">       4 </span>            :     Copyright (C) 2017 University of Pennsylvania, Georgetown University
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       7 </span>            :     it under the terms of the GNU General Public License as published by
+<span class="lineNum">       8 </span>            :     the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       9 </span>            :     (at your option) any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            :     GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            :     You should have received a copy of the GNU General Public License
+<span class="lineNum">      17 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      18 </span>            : END OF LICENSE STUB
+<span class="lineNum">      19 </span>            : */
+<span class="lineNum">      20 </span>            : /**
+<span class="lineNum">      21 </span>            :  * @file routing.c
+<span class="lineNum">      22 </span>            :  *
+<span class="lineNum">      23 </span>            :  * Functions for routing MSU messages between MSUs
+<span class="lineNum">      24 </span>            :  */
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &quot;dfg.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;routing.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;logging.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;runtime_dfg.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;local_msu.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;unused_def.h&quot;
+<span class="lineNum">      32 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;limits.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;pthread.h&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /** The maximum number of destinations a route can have */
+<span class="lineNum">      37 </span>            : #define MAX_DESTINATIONS 128
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : /** The maximum ID that may be assigned to a route */
+<span class="lineNum">      40 </span>            : #define MAX_ROUTE_ID 10000
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : /**
+<span class="lineNum">      43 </span>            :  * The core of the routing system, the routing table lists a route's destinations.
+<span class="lineNum">      44 </span>            :  * The routing_table is kept private so the rwlock can be enfoced.
+<span class="lineNum">      45 </span>            :  * All destinations in a routing table must have the same type_id.
+<span class="lineNum">      46 </span>            :  */
+<span class="lineNum">      47 </span>            : struct routing_table{
+<span class="lineNum">      48 </span>            :     int id;
+<span class="lineNum">      49 </span>            :     int type_id; /**&lt; The type-id associated with the destinations in this table */
+<span class="lineNum">      50 </span>            :     pthread_rwlock_t rwlock; /**&lt; Protects access to the destinations so they cannot be changed
+<span class="lineNum">      51 </span>            :                                   while they are being read */
+<span class="lineNum">      52 </span>            :     int n_endpoints;      /**&lt; The number of destinations this route contains */
+<span class="lineNum">      53 </span>            :     uint32_t keys[MAX_DESTINATIONS]; /**&lt; The keys associated with each of the destinations */
+<span class="lineNum">      54 </span>            :     struct msu_endpoint endpoints[MAX_DESTINATIONS]; /**&lt; The destinations themselves */
+<span class="lineNum">      55 </span>            : };
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : #ifdef LOG_ROUTING_CHANGES
+<span class="lineNum">      58 </span>            : static void print_routing_table(struct routing_table *table) {
+<span class="lineNum">      59 </span>            :     char output[1024];
+<span class="lineNum">      60 </span>            :     int offset = sprintf(output,&quot;\n---------- ROUTE TYPE: %d ----------\n&quot;, table-&gt;type_id);
+<span class="lineNum">      61 </span>            :     for (int i=0; i&lt;table-&gt;n_endpoints; i++) {
+<span class="lineNum">      62 </span>            :         struct msu_endpoint *destination = &amp;table-&gt;endpoints[i];
+<span class="lineNum">      63 </span>            :         offset += sprintf(output+offset, &quot;- %4d: %3d\n&quot;, destination-&gt;id, (int)table-&gt;keys[i]);
+<span class="lineNum">      64 </span>            :     }
+<span class="lineNum">      65 </span>            :     log(LOG_ROUTING_CHANGES, &quot;%s&quot;, output);
+<span class="lineNum">      66 </span>            : }
+<span class="lineNum">      67 </span>            : #else
+<span class="lineNum">      68 </span>            : #define print_routing_table(t)
+<span class="lineNum">      69 </span>            : #endif
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : /**
+<span class="lineNum">      72 </span>            :  * All of the created routes in this runtime
+<span class="lineNum">      73 </span>            :  */
+<span class="lineNum">      74 </span>            : static struct routing_table *all_routes[MAX_ROUTE_ID];
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : /**
+<span class="lineNum">      77 </span>            :  * Simple wrapper to lock a routing table for reading
+<span class="lineNum">      78 </span>            :  * @param table the routing table to be locked for reading
+<a name="79"><span class="lineNum">      79 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">      80 </span>            :  */
+<span class="lineNum">      81 </span><span class="lineCov">          8 : static int read_lock(struct routing_table *table) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">          8 :     return pthread_rwlock_rdlock(&amp;table-&gt;rwlock);</span>
+<span class="lineNum">      83 </span>            : }
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : /**
+<span class="lineNum">      86 </span>            :  * Simple wrapper to lock a routing table for writing
+<span class="lineNum">      87 </span>            :  * @param table the routing table to be locked for writing
+<a name="88"><span class="lineNum">      88 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">      89 </span>            :  */
+<span class="lineNum">      90 </span><span class="lineCov">          6 : static int write_lock(struct routing_table *table) {</span>
+<span class="lineNum">      91 </span><span class="lineCov">          6 :     return pthread_rwlock_wrlock(&amp;table-&gt;rwlock);</span>
+<span class="lineNum">      92 </span>            : }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : /**
+<span class="lineNum">      95 </span>            :  * Simple wrapper to unlock a locked routing table
+<span class="lineNum">      96 </span>            :  * @param table the routing table to be unlocked
+<a name="97"><span class="lineNum">      97 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">      98 </span>            :  */
+<span class="lineNum">      99 </span><span class="lineCov">         14 : static int unlock(struct routing_table *table) {</span>
+<span class="lineNum">     100 </span><span class="lineCov">         14 :     return pthread_rwlock_unlock(&amp;table-&gt;rwlock);</span>
+<span class="lineNum">     101 </span>            : }
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : /**
+<span class="lineNum">     104 </span>            :  * Searches through the entries in the routing table, returning the index of the first key
+<span class="lineNum">     105 </span>            :  * which surpasses the provided value
+<span class="lineNum">     106 </span>            :  * @param table the table to search
+<span class="lineNum">     107 </span>            :  * @param value the value to use in the search
+<a name="108"><span class="lineNum">     108 </span>            :  * @return the index of the destination with the appropriate value</a>
+<span class="lineNum">     109 </span>            :  */
+<span class="lineNum">     110 </span><span class="lineCov">         10 : static int find_value_index(struct routing_table *table, uint32_t value) {</span>
+<span class="lineNum">     111 </span>            :     //TODO: Binary search?
+<span class="lineNum">     112 </span><span class="lineCov">         10 :     int i = -1;</span>
+<span class="lineNum">     113 </span><span class="lineCov">         10 :     if (table-&gt;n_endpoints == 0)</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     115 </span><span class="lineCov">         10 :     value = value % table-&gt;keys[table-&gt;n_endpoints-1];</span>
+<span class="lineNum">     116 </span><span class="lineCov">         21 :     for (i=0; i&lt;table-&gt;n_endpoints; i++) {</span>
+<span class="lineNum">     117 </span><span class="lineCov">         21 :         if (table-&gt;keys[i] &gt; value)</span>
+<span class="lineNum">     118 </span><span class="lineCov">         10 :             return i;</span>
+<span class="lineNum">     119 </span>            :     }
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :     return i;</span>
+<span class="lineNum">     121 </span>            : }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : /**
+<span class="lineNum">     124 </span>            :  * Finds the index of the entry in the routing table with the destination that has the provided
+<span class="lineNum">     125 </span>            :  * msu id
+<span class="lineNum">     126 </span>            :  * @param table the table to search
+<span class="lineNum">     127 </span>            :  * @param msu_id the ID to search for in the table
+<a name="128"><span class="lineNum">     128 </span>            :  * @return the index of the destination with the appropriate msu id</a>
+<span class="lineNum">     129 </span>            :  */
+<span class="lineNum">     130 </span><span class="lineCov">          6 : static int find_id_index(struct routing_table *table, int msu_id) {</span>
+<span class="lineNum">     131 </span><span class="lineCov">         13 :     for (int i=0; i&lt;table-&gt;n_endpoints; i++) {</span>
+<span class="lineNum">     132 </span><span class="lineCov">         12 :         if (table-&gt;endpoints[i].id == msu_id)</span>
+<span class="lineNum">     133 </span><span class="lineCov">          5 :             return i;</span>
+<span class="lineNum">     134 </span>            :     }
+<span class="lineNum">     135 </span><span class="lineCov">          1 :     return -1;</span>
+<span class="lineNum">     136 </span>            : }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : /**
+<span class="lineNum">     139 </span>            :  * Removes a destination from the routing table
+<span class="lineNum">     140 </span>            :  * @param table The table from which to remove the entry
+<span class="lineNum">     141 </span>            :  * @param msu_id The ID of the msu to remove from the table
+<a name="142"><span class="lineNum">     142 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">     143 </span>            :  */
+<span class="lineNum">     144 </span><span class="lineCov">          1 : static int rm_routing_table_entry(struct routing_table *table, int msu_id) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">          1 :     write_lock(table);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          1 :     int index = find_id_index(table, msu_id);</span>
+<span class="lineNum">     147 </span><span class="lineCov">          1 :     if (index == -1) {</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         log_error(&quot;MSU %d does not exist in route %d&quot;, msu_id, table-&gt;id);</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         unlock(table);</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     151 </span>            :     }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :     // Shift destinations after removed index back by one
+<span class="lineNum">     154 </span><span class="lineCov">          2 :     for (int i=index; i&lt;table-&gt;n_endpoints-1; ++i) {</span>
+<span class="lineNum">     155 </span><span class="lineCov">          1 :         table-&gt;keys[i] = table-&gt;keys[i+1];</span>
+<span class="lineNum">     156 </span><span class="lineCov">          1 :         table-&gt;endpoints[i] = table-&gt;endpoints[i+1];</span>
+<span class="lineNum">     157 </span>            :     }
+<span class="lineNum">     158 </span><span class="lineCov">          1 :     table-&gt;n_endpoints--;</span>
+<span class="lineNum">     159 </span><span class="lineCov">          1 :     unlock(table);</span>
+<span class="lineNum">     160 </span><span class="lineCov">          1 :     log(LOG_ROUTING_CHANGES, &quot;Removed destination %d from table %d (type %d)&quot;,</span>
+<span class="lineNum">     161 </span>            :                msu_id, table-&gt;id, table-&gt;type_id);
+<span class="lineNum">     162 </span>            :     print_routing_table(table);
+<span class="lineNum">     163 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     164 </span>            : }
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : /**
+<span class="lineNum">     167 </span>            :  * Adds a (copy of the) destination to a routing table.
+<span class="lineNum">     168 </span>            :  * Note: Kept non-static but excluded from header so it can be used for testing
+<span class="lineNum">     169 </span>            :  * @param table The table to which the destination is to be added
+<span class="lineNum">     170 </span>            :  * @param destination The endpoint to add (a copy is made)
+<span class="lineNum">     171 </span>            :  * @param key The key to be associated with this destination
+<a name="172"><span class="lineNum">     172 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">     173 </span>            :  */
+<span class="lineNum">     174 </span><span class="lineCov">          4 : int add_routing_table_entry(struct routing_table *table,</span>
+<span class="lineNum">     175 </span>            :                             struct msu_endpoint *dest, uint32_t key) {
+<span class="lineNum">     176 </span><span class="lineCov">          4 :     write_lock(table);</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :     int i;
+<span class="lineNum">     179 </span><span class="lineCov">          4 :     if (table-&gt;n_endpoints &gt;= MAX_DESTINATIONS) {</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :         log_error(&quot;Too many endpoints to add to route. Max: %d&quot;, MAX_DESTINATIONS);</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :         unlock(table);</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     183 </span>            :     }
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :     // Shift all endpoints greater than the provided endpoint up by one
+<span class="lineNum">     186 </span><span class="lineCov">          5 :     for (i = table-&gt;n_endpoints; i &gt; 0 &amp;&amp; key &lt; table-&gt;keys[i-1]; --i) {</span>
+<span class="lineNum">     187 </span><span class="lineCov">          1 :         table-&gt;keys[i] = table-&gt;keys[i-1];</span>
+<span class="lineNum">     188 </span><span class="lineCov">          1 :         table-&gt;endpoints[i] = table-&gt;endpoints[i-1];</span>
+<span class="lineNum">     189 </span>            :     }
+<span class="lineNum">     190 </span><span class="lineCov">          4 :     table-&gt;keys[i] = key;</span>
+<span class="lineNum">     191 </span><span class="lineCov">          4 :     table-&gt;endpoints[i] = *dest;</span>
+<span class="lineNum">     192 </span><span class="lineCov">          4 :     table-&gt;endpoints[i].route_id = table-&gt;id;</span>
+<span class="lineNum">     193 </span><span class="lineCov">          4 :     table-&gt;n_endpoints++;</span>
+<span class="lineNum">     194 </span><span class="lineCov">          4 :     unlock(table);</span>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineCov">          4 :     log(LOG_ROUTING_CHANGES, &quot;Added destination %d to table %d (type: %d)&quot;,</span>
+<span class="lineNum">     197 </span>            :                dest-&gt;id, table-&gt;id, table-&gt;type_id);
+<span class="lineNum">     198 </span>            :     print_routing_table(table);
+<span class="lineNum">     199 </span><span class="lineCov">          4 :     return 0;</span>
+<span class="lineNum">     200 </span>            : }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : /**
+<span class="lineNum">     203 </span>            :  * Modifies the key associated with an existing destination in a routing table
+<span class="lineNum">     204 </span>            :  * @param table The routing table to modify
+<span class="lineNum">     205 </span>            :  * @param msu_id The ID of the destination to modify
+<span class="lineNum">     206 </span>            :  * @param new_key The new key that should be associated with this destination
+<a name="207"><span class="lineNum">     207 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">     208 </span>            :  */
+<span class="lineNum">     209 </span><span class="lineCov">          1 : static int alter_routing_table_entry(struct routing_table *table,</span>
+<span class="lineNum">     210 </span>            :                                      int msu_id, uint32_t new_key) {
+<span class="lineNum">     211 </span><span class="lineCov">          1 :     write_lock(table);</span>
+<span class="lineNum">     212 </span><span class="lineCov">          1 :     int index = find_id_index(table, msu_id);</span>
+<span class="lineNum">     213 </span><span class="lineCov">          1 :     if (index == -1) {</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         log_error(&quot;MSU %d does not exist in route %d&quot;, msu_id, table-&gt;id);</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :         unlock(table);</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     217 </span>            :     }
+<span class="lineNum">     218 </span>            :     // TODO: Next two steps could be done in one operation
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineCov">          1 :     int UNUSED orig_key = table-&gt;keys[index];</span>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span><span class="lineCov">          1 :     struct msu_endpoint endpoint = table-&gt;endpoints[index];</span>
+<span class="lineNum">     223 </span>            :     // Shift indices after removed back
+<span class="lineNum">     224 </span><span class="lineCov">          3 :     for (int i=index; i&lt;table-&gt;n_endpoints-1; i++) {</span>
+<span class="lineNum">     225 </span><span class="lineCov">          2 :         table-&gt;keys[i] = table-&gt;keys[i+1];</span>
+<span class="lineNum">     226 </span><span class="lineCov">          2 :         table-&gt;endpoints[i] = table-&gt;endpoints[i+1];</span>
+<span class="lineNum">     227 </span>            :     }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :     // Shift indices after inserted forward
+<span class="lineNum">     230 </span>            :     int i;
+<span class="lineNum">     231 </span><span class="lineCov">          2 :     for (i = table-&gt;n_endpoints-1; i &gt; 0 &amp;&amp; new_key &lt; table-&gt;keys[i-1]; i--) {</span>
+<span class="lineNum">     232 </span><span class="lineCov">          1 :         table-&gt;keys[i] = table-&gt;keys[i-1];</span>
+<span class="lineNum">     233 </span><span class="lineCov">          1 :         table-&gt;endpoints[i] = table-&gt;endpoints[i-1];</span>
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span><span class="lineCov">          1 :     table-&gt;keys[i] = new_key;</span>
+<span class="lineNum">     236 </span><span class="lineCov">          1 :     table-&gt;endpoints[i] = endpoint;</span>
+<span class="lineNum">     237 </span><span class="lineCov">          1 :     unlock(table);</span>
+<span class="lineNum">     238 </span><span class="lineCov">          1 :     log(LOG_ROUTING_CHANGES, &quot;Changed key of msu %d in table %d from %d to %d&quot;,</span>
+<span class="lineNum">     239 </span>            :                msu_id, table-&gt;id, orig_key, new_key);
+<span class="lineNum">     240 </span>            :     print_routing_table(table);
+<span class="lineNum">     241 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     242 </span>            : }
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : /**
+<span class="lineNum">     245 </span>            :  * Initializes and returns a new routing table.
+<span class="lineNum">     246 </span>            :  * Note: Not for external access! Use init_route()
+<span class="lineNum">     247 </span>            :  * Note: Kept non-static (but exclued from header) so it can be accessed during testing
+<a name="248"><span class="lineNum">     248 </span>            :  * @returns The new routing table</a>
+<span class="lineNum">     249 </span>            :  */
+<span class="lineNum">     250 </span><span class="lineCov">         28 : struct routing_table *init_routing_table(int route_id, int type_id) {</span>
+<span class="lineNum">     251 </span><span class="lineCov">         28 :     struct routing_table *table = calloc(1, sizeof(*table));</span>
+<span class="lineNum">     252 </span><span class="lineCov">         28 :     if (table == NULL) {</span>
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :         log_error(&quot;Error allocating routing table&quot;);</span>
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :         return NULL;</span>
+<span class="lineNum">     255 </span>            :     }
+<span class="lineNum">     256 </span><span class="lineCov">         28 :     table-&gt;id = route_id;</span>
+<span class="lineNum">     257 </span><span class="lineCov">         28 :     table-&gt;type_id = type_id;</span>
+<span class="lineNum">     258 </span><span class="lineCov">         28 :     pthread_rwlock_init(&amp;table-&gt;rwlock, NULL);</span>
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span><span class="lineCov">         28 :     return table;</span>
+<span class="lineNum">     261 </span>            : }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            : /**
+<span class="lineNum">     264 </span>            :  * Gets the routing table associated with the route_id
+<a name="265"><span class="lineNum">     265 </span>            :  * @returns A pointer to the routing table if it exists, or NULL</a>
+<span class="lineNum">     266 </span>            :  */
+<span class="lineNum">     267 </span><span class="lineCov">         24 : static struct routing_table *get_routing_table(int route_id) {</span>
+<span class="lineNum">     268 </span><span class="lineCov">         24 :     if (route_id &gt; MAX_ROUTE_ID) {</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :         log_error(&quot;Cannot get route with ID &gt; %d&quot;, MAX_ROUTE_ID);</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :         return NULL;</span>
+<span class="lineNum">     271 </span>            :     }
+<span class="lineNum">     272 </span><span class="lineCov">         24 :     return all_routes[route_id];</span>
+<span class="lineNum">     273 </span>            : }
+<a name="274"><span class="lineNum">     274 </span>            : </a>
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span><span class="lineCov">         11 : int init_route(int route_id, int type_id) {</span>
+<span class="lineNum">     277 </span><span class="lineCov">         11 :     if (route_id &gt; MAX_ROUTE_ID) {</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :         log_error(&quot;Cannot initialize route with ID &gt; %d&quot;, MAX_ROUTE_ID);</span>
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     280 </span>            :     }
+<span class="lineNum">     281 </span><span class="lineCov">         11 :     struct routing_table *table = get_routing_table(route_id);</span>
+<span class="lineNum">     282 </span><span class="lineCov">         11 :     if (table != NULL) {</span>
+<span class="lineNum">     283 </span><span class="lineCov">          1 :         log_error(&quot;Route with id %d already exists on runtime&quot;, route_id);</span>
+<span class="lineNum">     284 </span><span class="lineCov">          1 :         return -1;</span>
+<span class="lineNum">     285 </span>            :     }
+<span class="lineNum">     286 </span><span class="lineCov">         10 :     table = init_routing_table(route_id, type_id);</span>
+<span class="lineNum">     287 </span><span class="lineCov">         10 :     if (table == NULL) {</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :         log_error(&quot;Error initializing routing table %d&quot;, route_id);</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     290 </span>            :     }
+<span class="lineNum">     291 </span><span class="lineCov">         10 :     all_routes[route_id] = table;</span>
+<span class="lineNum">     292 </span><span class="lineCov">         10 :     log(LOG_ROUTING_CHANGES, &quot;Initialized route %d (type %d)&quot;, route_id, type_id);</span>
+<span class="lineNum">     293 </span><span class="lineCov">         10 :     return 0;</span>
+<span class="lineNum">     294 </span>            : }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : // TODO: Redefine, move  MAX_MSU_Q_SIZE!!
+<a name="297"><span class="lineNum">     297 </span>            : #define MAX_MSU_Q_SIZE INT_MAX</a>
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 : int get_shortest_queue_endpoint(struct routing_table *table,</span>
+<span class="lineNum">     300 </span>            :                                 uint32_t key, struct msu_endpoint *endpoint) {
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :     read_lock(table);</span>
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :     unsigned int shortest_queue = MAX_MSU_Q_SIZE;</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :     int n_shortest = 0;</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :     struct msu_endpoint *endpoints[table-&gt;n_endpoints];</span>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :     for (int i=0; i&lt;table-&gt;n_endpoints; i++) {</span>
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :         if (table-&gt;endpoints[i].locality == MSU_IS_REMOTE) {</span>
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     310 </span>            :         }
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :         int length = table-&gt;endpoints[i].queue-&gt;num_msgs;</span>
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :         if (length &lt; shortest_queue) {</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :             endpoints[0] = &amp;table-&gt;endpoints[i];</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :             shortest_queue = length;</span>
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :             n_shortest = 1;</span>
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :         } else if (length == shortest_queue) {</span>
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 :             endpoints[n_shortest] = &amp;table-&gt;endpoints[i];</span>
+<span class="lineNum">     318 </span><span class="lineNoCov">          0 :             n_shortest++;</span>
+<span class="lineNum">     319 </span>            :         }
+<span class="lineNum">     320 </span>            :     }
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :     if (n_shortest == 0) {</span>
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :         unlock(table);</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     325 </span>            :     }
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :     *endpoint = *endpoints[key % (int)n_shortest];</span>
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :     unlock(table);</span>
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :     return 0;</span>
+<a name="330"><span class="lineNum">     330 </span>            : }</a>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineCov">          3 : int get_endpoint_by_index(struct routing_table *table, int index, </span>
+<span class="lineNum">     333 </span>            :                           struct msu_endpoint *endpoint) {
+<span class="lineNum">     334 </span><span class="lineCov">          3 :     int rtn = -1;</span>
+<span class="lineNum">     335 </span><span class="lineCov">          3 :     read_lock(table);</span>
+<span class="lineNum">     336 </span><span class="lineCov">          3 :     if (table-&gt;n_endpoints &gt; index) {</span>
+<span class="lineNum">     337 </span><span class="lineCov">          2 :         *endpoint = table-&gt;endpoints[index];</span>
+<span class="lineNum">     338 </span><span class="lineCov">          2 :         rtn = 0;</span>
+<span class="lineNum">     339 </span>            :     }
+<span class="lineNum">     340 </span><span class="lineCov">          3 :     unlock(table);</span>
+<span class="lineNum">     341 </span><span class="lineCov">          3 :     return rtn;</span>
+<a name="342"><span class="lineNum">     342 </span>            : }</a>
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span><span class="lineCov">          4 : int get_endpoint_by_id(struct routing_table *table, int msu_id, </span>
+<span class="lineNum">     345 </span>            :                        struct msu_endpoint *endpoint) {
+<span class="lineNum">     346 </span><span class="lineCov">          4 :     int rtn = -1;</span>
+<span class="lineNum">     347 </span><span class="lineCov">          4 :     read_lock(table);</span>
+<span class="lineNum">     348 </span><span class="lineCov">         12 :     for (int i=0; i &lt; table-&gt;n_endpoints; i++) {</span>
+<span class="lineNum">     349 </span><span class="lineCov">         10 :         if (table-&gt;endpoints[i].id == msu_id) {</span>
+<span class="lineNum">     350 </span><span class="lineCov">          2 :             *endpoint = table-&gt;endpoints[i];</span>
+<span class="lineNum">     351 </span><span class="lineCov">          2 :             rtn = 0;</span>
+<span class="lineNum">     352 </span><span class="lineCov">          2 :             break;</span>
+<span class="lineNum">     353 </span>            :         }
+<span class="lineNum">     354 </span>            :     }
+<span class="lineNum">     355 </span><span class="lineCov">          4 :     unlock(table);</span>
+<span class="lineNum">     356 </span><span class="lineCov">          4 :     return rtn;</span>
+<a name="357"><span class="lineNum">     357 </span>            : }</a>
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 : int get_endpoints_by_runtime_id(struct routing_table *table, int runtime_id,</span>
+<span class="lineNum">     360 </span>            :                                 struct msu_endpoint *endpoints, int n_endpoints) {
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :     int found_endpoints = 0;</span>
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :     read_lock(table);</span>
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :     for (int i=0; i &lt; table-&gt;n_endpoints; i++) {</span>
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :         if (table-&gt;endpoints[i].runtime_id == runtime_id) {</span>
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :             if (n_endpoints &lt;= found_endpoints) {</span>
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :                 log_error(&quot;Not enough endpoints passed in to hold results&quot;);</span>
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :                 unlock(table);</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     369 </span>            :             }
+<span class="lineNum">     370 </span><span class="lineNoCov">          0 :             endpoints[found_endpoints] = table-&gt;endpoints[i];</span>
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :             found_endpoints++;</span>
+<span class="lineNum">     372 </span>            :         }
+<span class="lineNum">     373 </span>            :     }
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :     unlock(table);</span>
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :     return found_endpoints;</span>
+<a name="376"><span class="lineNum">     376 </span>            : }</a>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 : int get_n_endpoints(struct routing_table *table) {</span>
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :     read_lock(table);</span>
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :     int n_endpoints = table-&gt;n_endpoints;</span>
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :     unlock(table);</span>
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :     return n_endpoints;</span>
+<a name="383"><span class="lineNum">     383 </span>            : }</a>
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span><span class="lineCov">          1 : int get_route_endpoint(struct routing_table *table, uint32_t key, struct msu_endpoint *endpoint) {</span>
+<span class="lineNum">     386 </span><span class="lineCov">          1 :     read_lock(table);</span>
+<span class="lineNum">     387 </span><span class="lineCov">          1 :     int index = find_value_index(table, key);</span>
+<span class="lineNum">     388 </span><span class="lineCov">          1 :     if (index &lt; 0) {</span>
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :         log_error(&quot;Could not find index for key %d&quot;, key);</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :         unlock(table);</span>
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     392 </span>            :     }
+<span class="lineNum">     393 </span><span class="lineCov">          1 :     *endpoint = table-&gt;endpoints[index];</span>
+<span class="lineNum">     394 </span><span class="lineCov">          1 :     log(LOG_ROUTING_DECISIONS, &quot;Endpoint for key %u is %d&quot;, key, endpoint-&gt;id);</span>
+<span class="lineNum">     395 </span><span class="lineCov">          1 :     unlock(table);</span>
+<span class="lineNum">     396 </span><span class="lineCov">          1 :     return 0;</span>
+<a name="397"><span class="lineNum">     397 </span>            : }</a>
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span><span class="lineCov">          3 : struct routing_table *get_type_from_route_set(struct route_set *set, int type_id) {</span>
+<span class="lineNum">     400 </span><span class="lineCov">          6 :     for (int i=0; i&lt;set-&gt;n_routes; i++) {</span>
+<span class="lineNum">     401 </span><span class="lineCov">          5 :         if (set-&gt;routes[i]-&gt;type_id == type_id) {</span>
+<span class="lineNum">     402 </span><span class="lineCov">          2 :             return set-&gt;routes[i];</span>
+<span class="lineNum">     403 </span>            :         }
+<span class="lineNum">     404 </span>            :     }
+<span class="lineNum">     405 </span><span class="lineCov">          1 :     log_error(&quot;No route available of type %d&quot;, type_id);</span>
+<span class="lineNum">     406 </span><span class="lineCov">          1 :     return NULL;</span>
+<a name="407"><span class="lineNum">     407 </span>            : }</a>
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span><span class="lineCov">          3 : int add_route_endpoint(int route_id, struct msu_endpoint endpoint, uint32_t key) {</span>
+<span class="lineNum">     410 </span><span class="lineCov">          3 :     log(LOG_ROUTING_CHANGES, &quot;Adding endpoint %d to route %d&quot;, endpoint.id, route_id);</span>
+<span class="lineNum">     411 </span><span class="lineCov">          3 :     struct routing_table *table = get_routing_table(route_id);</span>
+<span class="lineNum">     412 </span><span class="lineCov">          3 :     if (table == NULL) {</span>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :         log_error(&quot;Route %d does not exist&quot;, route_id);</span>
+<span class="lineNum">     414 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     415 </span>            :     }
+<span class="lineNum">     416 </span><span class="lineCov">          3 :     return add_routing_table_entry(table, &amp;endpoint, key);</span>
+<a name="417"><span class="lineNum">     417 </span>            : }</a>
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 : int remove_route_endpoint(int route_id, int msu_id) {</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :     struct routing_table *table = get_routing_table(route_id);</span>
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :     if (table == NULL) {</span>
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :         log_error(&quot;Route %d does not exist&quot;, route_id);</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     424 </span>            :     }
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :     int rtn = rm_routing_table_entry(table, msu_id);</span>
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :     if (rtn == -1) {</span>
+<span class="lineNum">     427 </span><span class="lineNoCov">          0 :         log_error(&quot;Error removing msu %d from route %d&quot;, msu_id, route_id);</span>
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     429 </span>            :     }
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :     log(LOG_ROUTING_CHANGES, &quot;Removed destination %d from route %d&quot;, msu_id, route_id);</span>
+<span class="lineNum">     431 </span><span class="lineNoCov">          0 :     return 0;</span>
+<a name="432"><span class="lineNum">     432 </span>            : }</a>
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span><span class="lineNoCov">          0 : int modify_route_endpoint(int route_id, int msu_id, uint32_t new_key) {</span>
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :     struct routing_table *table = get_routing_table(route_id);</span>
+<span class="lineNum">     436 </span><span class="lineNoCov">          0 :     if (table == NULL) {</span>
+<span class="lineNum">     437 </span><span class="lineNoCov">          0 :         log_error(&quot;Route %d does not exist&quot;, route_id);</span>
+<span class="lineNum">     438 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     439 </span>            :     }
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :     int rtn = alter_routing_table_entry(table, msu_id, new_key);</span>
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     442 </span><span class="lineNoCov">          0 :         log_error(&quot;Error altering routing for msu %d on route %d&quot;, msu_id, route_id);</span>
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     444 </span>            :     }
+<span class="lineNum">     445 </span><span class="lineNoCov">          0 :     log(LOG_ROUTING_CHANGES, &quot;Altered key %d for msu %d in route %d&quot;,</span>
+<span class="lineNum">     446 </span>            :                new_key, msu_id, route_id);
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :     return 0;</span>
+<a name="448"><span class="lineNum">     448 </span>            : }</a>
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span><span class="lineCov">          5 : int add_route_to_set(struct route_set *set, int route_id) {</span>
+<span class="lineNum">     451 </span><span class="lineCov">          5 :     struct routing_table *table = get_routing_table(route_id);</span>
+<span class="lineNum">     452 </span><span class="lineCov">          5 :     if (table == NULL) {</span>
+<span class="lineNum">     453 </span><span class="lineCov">          1 :         log_error(&quot;Route %d does not exist&quot;, route_id);</span>
+<span class="lineNum">     454 </span><span class="lineCov">          1 :         return -1;</span>
+<span class="lineNum">     455 </span>            :     }
+<span class="lineNum">     456 </span><span class="lineCov">          4 :     set-&gt;routes = realloc(set-&gt;routes, sizeof(*set-&gt;routes) * (set-&gt;n_routes + 1));</span>
+<span class="lineNum">     457 </span><span class="lineCov">          4 :     if (set-&gt;routes == NULL) {</span>
+<span class="lineNum">     458 </span><span class="lineNoCov">          0 :         log_error(&quot;Error reallocating routes&quot;);</span>
+<span class="lineNum">     459 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     460 </span>            :     }
+<span class="lineNum">     461 </span><span class="lineCov">          4 :     set-&gt;routes[set-&gt;n_routes] = table;</span>
+<span class="lineNum">     462 </span><span class="lineCov">          4 :     set-&gt;n_routes++;</span>
+<a name="463"><span class="lineNum">     463 </span><span class="lineCov">          4 :     return 0;</span></a>
+<span class="lineNum">     464 </span>            : }
+<span class="lineNum">     465 </span><span class="lineCov">          5 : int rm_route_from_set(struct route_set *set, int route_id) {</span>
+<span class="lineNum">     466 </span>            :     int i;
+<span class="lineNum">     467 </span><span class="lineCov">         10 :     for (i=0; i&lt;set-&gt;n_routes; i++) {</span>
+<span class="lineNum">     468 </span><span class="lineCov">          8 :         if (set-&gt;routes[i]-&gt;id == route_id) {</span>
+<span class="lineNum">     469 </span><span class="lineCov">          3 :             break;</span>
+<span class="lineNum">     470 </span>            :         }
+<span class="lineNum">     471 </span>            :     }
+<span class="lineNum">     472 </span><span class="lineCov">          5 :     if (i == set-&gt;n_routes) {</span>
+<span class="lineNum">     473 </span><span class="lineCov">          2 :         log_error(&quot;route %d does not exist in set&quot;, route_id);</span>
+<span class="lineNum">     474 </span><span class="lineCov">          2 :         return -1;</span>
+<span class="lineNum">     475 </span>            :     }
+<span class="lineNum">     476 </span><span class="lineCov">          3 :     for (; i&lt;set-&gt;n_routes - 1; i++) {</span>
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :         set-&gt;routes[i] = set-&gt;routes[i+1];</span>
+<span class="lineNum">     478 </span>            :     }
+<span class="lineNum">     479 </span><span class="lineCov">          3 :     set-&gt;n_routes--;</span>
+<span class="lineNum">     480 </span><span class="lineCov">          3 :     return 0;</span>
+<a name="481"><span class="lineNum">     481 </span>            : }</a>
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span><span class="lineCov">          3 : int init_msu_endpoint(int msu_id, int runtime_id, struct msu_endpoint *endpoint) {</span>
+<span class="lineNum">     484 </span><span class="lineCov">          3 :     endpoint-&gt;id = msu_id;</span>
+<span class="lineNum">     485 </span><span class="lineCov">          3 :     int local_id = local_runtime_id();</span>
+<span class="lineNum">     486 </span><span class="lineCov">          3 :     if (local_id &lt; 0) {</span>
+<span class="lineNum">     487 </span><span class="lineNoCov">          0 :         log_error(&quot;Cannot get local runtime ID&quot;);</span>
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     489 </span>            :     }
+<span class="lineNum">     490 </span><span class="lineCov">          3 :     if (runtime_id == local_id) {</span>
+<span class="lineNum">     491 </span><span class="lineNoCov">          0 :         endpoint-&gt;locality = MSU_IS_LOCAL;</span>
+<span class="lineNum">     492 </span><span class="lineNoCov">          0 :         struct local_msu *msu = get_local_msu(msu_id);</span>
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :         if (msu == NULL) {</span>
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :             log_error(&quot;Cannot find local MSU with id %d for initializing endpoint&quot;,</span>
+<span class="lineNum">     495 </span>            :                       msu_id);
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 :             return -1;</span>
+<span class="lineNum">     497 </span>            :         }
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :         endpoint-&gt;queue = &amp;msu-&gt;queue;</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :         endpoint-&gt;runtime_id = runtime_id;</span>
+<span class="lineNum">     500 </span>            :     } else {
+<span class="lineNum">     501 </span><span class="lineCov">          3 :         endpoint-&gt;locality = MSU_IS_REMOTE;</span>
+<span class="lineNum">     502 </span><span class="lineCov">          3 :         endpoint-&gt;runtime_id = runtime_id;</span>
+<span class="lineNum">     503 </span>            :     }
+<span class="lineNum">     504 </span><span class="lineCov">          3 :     return 0;</span>
+<span class="lineNum">     505 </span>            : }
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

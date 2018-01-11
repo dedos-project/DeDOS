@@ -1,0 +1,238 @@
+\hypertarget{scheduling__decision_8c}{\section{src/global\-\_\-controller/scheduling\-\_\-decision.c File Reference}
+\label{scheduling__decision_8c}\index{src/global\-\_\-controller/scheduling\-\_\-decision.\-c@{src/global\-\_\-controller/scheduling\-\_\-decision.\-c}}
+}
+{\ttfamily \#include \char`\"{}controller\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-ids.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}haproxy.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}scheduling.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structcloning__info}{cloning\-\_\-info}
+\item 
+struct \hyperlink{structclone__decision}{clone\-\_\-decision}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{scheduling__decision_8c_a88501c56cbf1ae341be81a7589693344}{M\-A\-X\-\_\-\-C\-L\-O\-N\-E\-\_\-\-C\-O\-N\-D\-I\-T\-I\-O\-N\-S}~2
+\item 
+\#define \hyperlink{scheduling__decision_8c_a450db95c8cc311be531ed385e5c56834}{C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S}~10
+\item 
+\#define \hyperlink{scheduling__decision_8c_a281f259d29588f91f9596ef4c1948a04}{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S}~50
+\item 
+\#define \hyperlink{scheduling__decision_8c_ab8b9b9e63d29e9ca0fd47857ac4d5312}{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N}~sizeof(\hyperlink{scheduling__decision_8c_a3c58dea6fa9f965d000b73763c67c6bc}{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}) / sizeof($\ast$\hyperlink{scheduling__decision_8c_a3c58dea6fa9f965d000b73763c67c6bc}{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S})
+\item 
+\#define \hyperlink{scheduling__decision_8c_a3d5fb7ddc77fda16ef36bc9709c85f7b}{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N}~sizeof(\hyperlink{scheduling__decision_8c_a8f0829e1a3f542e49c87e2b4a523338b}{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}) / sizeof($\ast$\hyperlink{scheduling__decision_8c_a8f0829e1a3f542e49c87e2b4a523338b}{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S})
+\item 
+\#define \hyperlink{scheduling__decision_8c_a2d1b5ecc8d92f261c2101f68cb44f8d9}{M\-I\-N\-\_\-\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}~750
+\item 
+\#define \hyperlink{scheduling__decision_8c_aac80101b413d2c7a1e6d6464f5ab4a90}{M\-I\-N\-\_\-\-U\-N\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}~750
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{scheduling__decision_8c_a490bbee0958d45c90b0d8a59b619285c}{gather\-\_\-cloning\-\_\-info} (struct \hyperlink{structcloning__info}{cloning\-\_\-info} $\ast$info)
+\item 
+static int \hyperlink{scheduling__decision_8c_acef9851e6ed49ef464ffd801e9f47043}{gather\-\_\-cloning\-\_\-decision} (struct \hyperlink{structclone__decision}{clone\-\_\-decision} $\ast$decision)
+\item 
+static bool \hyperlink{scheduling__decision_8c_ad7f485bf98b5690e1b9f75d6336649fd}{should\-\_\-clone} (struct \hyperlink{structclone__decision}{clone\-\_\-decision} $\ast$decision)
+\item 
+static bool \hyperlink{scheduling__decision_8c_a0cbef06d2852328b8dbfc158d04a807e}{should\-\_\-unclone} (struct \hyperlink{structclone__decision}{clone\-\_\-decision} $\ast$decision)
+\item 
+int \hyperlink{scheduling__decision_8c_a7ccdbcfef92911ee31ea9d35ad562225}{try\-\_\-to\-\_\-clone} ()
+\item 
+int \hyperlink{scheduling__decision_8c_a9eb36712d0eec821968e0fcf54a66ac6}{try\-\_\-to\-\_\-unclone} ()
+\item 
+int \hyperlink{scheduling__decision_8c_a1b86655a44d7c9f9374e19fc6e611c67}{perform\-\_\-cloning} ()
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structclone__decision}{clone\-\_\-decision} \hyperlink{scheduling__decision_8c_a3c58dea6fa9f965d000b73763c67c6bc}{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S} \mbox{[}$\,$\mbox{]}
+\item 
+static struct \hyperlink{structclone__decision}{clone\-\_\-decision} \hyperlink{scheduling__decision_8c_a8f0829e1a3f542e49c87e2b4a523338b}{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S} \mbox{[}$\,$\mbox{]}
+\item 
+static bool \hyperlink{scheduling__decision_8c_a76b6e7f1a88a22fc856a4ad3448e8438}{min\-\_\-instances\-\_\-recorded} = false
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{scheduling__decision_8c_ab8b9b9e63d29e9ca0fd47857ac4d5312}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N@{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N}}
+\index{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N@{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N~sizeof({\bf C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}) / sizeof($\ast${\bf C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S})}}\label{scheduling__decision_8c_ab8b9b9e63d29e9ca0fd47857ac4d5312}
+
+
+Definition at line 70 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a450db95c8cc311be531ed385e5c56834}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S@{C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S}}
+\index{C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S@{C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S~10}}\label{scheduling__decision_8c_a450db95c8cc311be531ed385e5c56834}
+
+
+Definition at line 50 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a88501c56cbf1ae341be81a7589693344}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!M\-A\-X\-\_\-\-C\-L\-O\-N\-E\-\_\-\-C\-O\-N\-D\-I\-T\-I\-O\-N\-S@{M\-A\-X\-\_\-\-C\-L\-O\-N\-E\-\_\-\-C\-O\-N\-D\-I\-T\-I\-O\-N\-S}}
+\index{M\-A\-X\-\_\-\-C\-L\-O\-N\-E\-\_\-\-C\-O\-N\-D\-I\-T\-I\-O\-N\-S@{M\-A\-X\-\_\-\-C\-L\-O\-N\-E\-\_\-\-C\-O\-N\-D\-I\-T\-I\-O\-N\-S}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-C\-L\-O\-N\-E\-\_\-\-C\-O\-N\-D\-I\-T\-I\-O\-N\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-C\-L\-O\-N\-E\-\_\-\-C\-O\-N\-D\-I\-T\-I\-O\-N\-S~2}}\label{scheduling__decision_8c_a88501c56cbf1ae341be81a7589693344}
+
+
+Definition at line 30 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a2d1b5ecc8d92f261c2101f68cb44f8d9}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!M\-I\-N\-\_\-\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S@{M\-I\-N\-\_\-\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}}
+\index{M\-I\-N\-\_\-\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S@{M\-I\-N\-\_\-\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{M\-I\-N\-\_\-\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-I\-N\-\_\-\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S~750}}\label{scheduling__decision_8c_a2d1b5ecc8d92f261c2101f68cb44f8d9}
+
+
+Definition at line 153 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_aac80101b413d2c7a1e6d6464f5ab4a90}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!M\-I\-N\-\_\-\-U\-N\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S@{M\-I\-N\-\_\-\-U\-N\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}}
+\index{M\-I\-N\-\_\-\-U\-N\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S@{M\-I\-N\-\_\-\-U\-N\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{M\-I\-N\-\_\-\-U\-N\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-I\-N\-\_\-\-U\-N\-C\-L\-O\-N\-E\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S~750}}\label{scheduling__decision_8c_aac80101b413d2c7a1e6d6464f5ab4a90}
+
+
+Definition at line 154 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a3d5fb7ddc77fda16ef36bc9709c85f7b}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N@{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N}}
+\index{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N@{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-\_\-\-L\-E\-N~sizeof({\bf U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}) / sizeof($\ast${\bf U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S})}}\label{scheduling__decision_8c_a3d5fb7ddc77fda16ef36bc9709c85f7b}
+
+
+Definition at line 71 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a281f259d29588f91f9596ef4c1948a04}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S@{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S}}
+\index{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S@{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-S\-A\-M\-P\-L\-E\-S~50}}\label{scheduling__decision_8c_a281f259d29588f91f9596ef4c1948a04}
+
+
+Definition at line 60 of file scheduling\-\_\-decision.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{scheduling__decision_8c_acef9851e6ed49ef464ffd801e9f47043}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!gather\-\_\-cloning\-\_\-decision@{gather\-\_\-cloning\-\_\-decision}}
+\index{gather\-\_\-cloning\-\_\-decision@{gather\-\_\-cloning\-\_\-decision}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{gather\-\_\-cloning\-\_\-decision}]{\setlength{\rightskip}{0pt plus 5cm}static int gather\-\_\-cloning\-\_\-decision (
+\begin{DoxyParamCaption}
+\item[{struct {\bf clone\-\_\-decision} $\ast$}]{decision}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling__decision_8c_acef9851e6ed49ef464ffd801e9f47043}
+
+
+Definition at line 99 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a490bbee0958d45c90b0d8a59b619285c}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!gather\-\_\-cloning\-\_\-info@{gather\-\_\-cloning\-\_\-info}}
+\index{gather\-\_\-cloning\-\_\-info@{gather\-\_\-cloning\-\_\-info}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{gather\-\_\-cloning\-\_\-info}]{\setlength{\rightskip}{0pt plus 5cm}static int gather\-\_\-cloning\-\_\-info (
+\begin{DoxyParamCaption}
+\item[{struct {\bf cloning\-\_\-info} $\ast$}]{info}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling__decision_8c_a490bbee0958d45c90b0d8a59b619285c}
+
+
+Definition at line 73 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a1b86655a44d7c9f9374e19fc6e611c67}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!perform\-\_\-cloning@{perform\-\_\-cloning}}
+\index{perform\-\_\-cloning@{perform\-\_\-cloning}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{perform\-\_\-cloning}]{\setlength{\rightskip}{0pt plus 5cm}int perform\-\_\-cloning (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{scheduling__decision_8c_a1b86655a44d7c9f9374e19fc6e611c67}
+
+
+Definition at line 215 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_ad7f485bf98b5690e1b9f75d6336649fd}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!should\-\_\-clone@{should\-\_\-clone}}
+\index{should\-\_\-clone@{should\-\_\-clone}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{should\-\_\-clone}]{\setlength{\rightskip}{0pt plus 5cm}static bool should\-\_\-clone (
+\begin{DoxyParamCaption}
+\item[{struct {\bf clone\-\_\-decision} $\ast$}]{decision}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling__decision_8c_ad7f485bf98b5690e1b9f75d6336649fd}
+
+
+Definition at line 106 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a0cbef06d2852328b8dbfc158d04a807e}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!should\-\_\-unclone@{should\-\_\-unclone}}
+\index{should\-\_\-unclone@{should\-\_\-unclone}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{should\-\_\-unclone}]{\setlength{\rightskip}{0pt plus 5cm}static bool should\-\_\-unclone (
+\begin{DoxyParamCaption}
+\item[{struct {\bf clone\-\_\-decision} $\ast$}]{decision}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling__decision_8c_a0cbef06d2852328b8dbfc158d04a807e}
+
+
+Definition at line 125 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a7ccdbcfef92911ee31ea9d35ad562225}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!try\-\_\-to\-\_\-clone@{try\-\_\-to\-\_\-clone}}
+\index{try\-\_\-to\-\_\-clone@{try\-\_\-to\-\_\-clone}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{try\-\_\-to\-\_\-clone}]{\setlength{\rightskip}{0pt plus 5cm}int try\-\_\-to\-\_\-clone (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{scheduling__decision_8c_a7ccdbcfef92911ee31ea9d35ad562225}
+
+
+Definition at line 156 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a9eb36712d0eec821968e0fcf54a66ac6}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!try\-\_\-to\-\_\-unclone@{try\-\_\-to\-\_\-unclone}}
+\index{try\-\_\-to\-\_\-unclone@{try\-\_\-to\-\_\-unclone}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{try\-\_\-to\-\_\-unclone}]{\setlength{\rightskip}{0pt plus 5cm}int try\-\_\-to\-\_\-unclone (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{scheduling__decision_8c_a9eb36712d0eec821968e0fcf54a66ac6}
+
+
+Definition at line 185 of file scheduling\-\_\-decision.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{scheduling__decision_8c_a3c58dea6fa9f965d000b73763c67c6bc}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S@{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}}
+\index{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S@{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf clone\-\_\-decision} C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling__decision_8c_a3c58dea6fa9f965d000b73763c67c6bc}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    \{  500 , \{
+    \{  500 , \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea12a6b7f2204c50215b8cf5c9d7d4d7f0}{MSU\_QUEUE\_LEN}, 2,  10 \}\}, 1\},
+    \{  553 , \{
+    \{  553 , \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea12a6b7f2204c50215b8cf5c9d7d4d7f0}{MSU\_QUEUE\_LEN}, 1,  10 \}\}, 1\},
+    \{  500 , \{
+    \{  552 , \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eace4e2b956986e374b71665b6a2bca708}{MSU\_NUM\_STATES}, 820,  10 \}\}, 1\}
+\}
+\end{DoxyCode}
+
+
+Definition at line 51 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a76b6e7f1a88a22fc856a4ad3448e8438}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!min\-\_\-instances\-\_\-recorded@{min\-\_\-instances\-\_\-recorded}}
+\index{min\-\_\-instances\-\_\-recorded@{min\-\_\-instances\-\_\-recorded}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{min\-\_\-instances\-\_\-recorded}]{\setlength{\rightskip}{0pt plus 5cm}bool min\-\_\-instances\-\_\-recorded = false\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling__decision_8c_a76b6e7f1a88a22fc856a4ad3448e8438}
+
+
+Definition at line 213 of file scheduling\-\_\-decision.\-c.
+
+\hypertarget{scheduling__decision_8c_a8f0829e1a3f542e49c87e2b4a523338b}{\index{scheduling\-\_\-decision.\-c@{scheduling\-\_\-decision.\-c}!U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S@{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}}
+\index{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S@{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}!scheduling_decision.c@{scheduling\-\_\-decision.\-c}}
+\subsubsection[{U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf clone\-\_\-decision} U\-N\-C\-L\-O\-N\-I\-N\-G\-\_\-\-D\-E\-C\-I\-S\-I\-O\-N\-S\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling__decision_8c_a8f0829e1a3f542e49c87e2b4a523338b}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    \{  500 , \{
+    \{  500 , \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea12a6b7f2204c50215b8cf5c9d7d4d7f0}{MSU\_QUEUE\_LEN}, .01,  50 \},
+    \{  552 , \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eace4e2b956986e374b71665b6a2bca708}{MSU\_NUM\_STATES}, 410,  50 \}\}, 2\},
+    \{  553 , \{
+    \{  553 , \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea12a6b7f2204c50215b8cf5c9d7d4d7f0}{MSU\_QUEUE\_LEN}, .01,  50 \}\}, 1\}
+\}
+\end{DoxyCode}
+
+
+Definition at line 61 of file scheduling\-\_\-decision.\-c.
+

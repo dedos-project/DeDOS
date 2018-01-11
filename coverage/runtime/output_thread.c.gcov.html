@@ -1,0 +1,318 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - unnamed - runtime/output_thread.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">runtime</a> - output_thread.c<span style="font-size: 80%;"> (source / <a href="output_thread.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">unnamed</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">112</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-01-11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            : START OF LICENSE STUB
+<span class="lineNum">       3 </span>            :     DeDOS: Declarative Dispersion-Oriented Software
+<span class="lineNum">       4 </span>            :     Copyright (C) 2017 University of Pennsylvania, Georgetown University
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       7 </span>            :     it under the terms of the GNU General Public License as published by
+<span class="lineNum">       8 </span>            :     the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       9 </span>            :     (at your option) any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            :     GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            :     You should have received a copy of the GNU General Public License
+<span class="lineNum">      17 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      18 </span>            : END OF LICENSE STUB
+<span class="lineNum">      19 </span>            : */
+<span class="lineNum">      20 </span>            : /**
+<span class="lineNum">      21 </span>            :  * @file output_thread.c
+<span class="lineNum">      22 </span>            :  *
+<span class="lineNum">      23 </span>            :  * A dedos_thread which monitors a queue for output to be sent to
+<span class="lineNum">      24 </span>            :  * other runtimes or the global controller
+<span class="lineNum">      25 </span>            :  */
+<span class="lineNum">      26 </span>            : #include &quot;logging.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;worker_thread.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;dedos_threads.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;thread_message.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;msu_type.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;controller_communication.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;ctrl_runtime_messages.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;output_thread.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;stats.h&quot;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;netinet/ip.h&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : /** A static copy of the output thread, so others can enqueue messages */
+<span class="lineNum">      40 </span>            : static struct dedos_thread *static_output_thread;
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<span class="lineNum">      42 </span>            : /** Initializes the static copy of the output thread */
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 : static void *init_output_thread(struct dedos_thread *output_thread) {</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :     static_output_thread = output_thread;</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :     return NULL;</span>
+<span class="lineNum">      46 </span>            : }
+<a name="47"><span class="lineNum">      47 </span>            : </a>
+<span class="lineNum">      48 </span>            : /** Process a ::SEND_TO_CTRL message */
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 : static int output_thread_send_to_ctrl(struct send_to_ctrl_msg *msg) {</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :     int rtn = send_to_controller(&amp;msg-&gt;hdr, msg-&gt;data);</span>
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :         log_error(&quot;Error sending message to controller&quot;);</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">      54 </span>            :     }
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :     free(msg-&gt;data);</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">      57 </span>            : }
+<a name="58"><span class="lineNum">      58 </span>            : </a>
+<span class="lineNum">      59 </span>            : /** Process a ::SEND_TO_PEER message */
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 : static int output_thread_send_to_peer(struct send_to_peer_msg *msg) {</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :     int rtn = send_to_peer(msg-&gt;runtime_id, &amp;msg-&gt;hdr, msg-&gt;data);</span>
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :         log_error(&quot;Error sending message to runtime %d&quot;, msg-&gt;runtime_id);</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">      65 </span>            :     }
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :     free(msg-&gt;data);</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">      68 </span>            : }
+<a name="69"><span class="lineNum">      69 </span>            : </a>
+<span class="lineNum">      70 </span>            : /** Process a ::CONNECT_TO_RUNTIME message */
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 : static int output_thread_connect_to_runtime(struct ctrl_add_runtime_msg *msg){</span>
+<span class="lineNum">      72 </span>            :     struct sockaddr_in addr;
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :     bzero(&amp;addr, sizeof(addr));</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :     addr.sin_family = AF_INET;</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :     addr.sin_addr.s_addr = msg-&gt;ip;</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :     addr.sin_port = htons(msg-&gt;port);</span>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :     int rtn = connect_to_runtime_peer(msg-&gt;runtime_id, &amp;addr);</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :         log_error(&quot;Could not add runtime peer&quot;);</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">      82 </span>            :     }
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :     return 0;</span>
+<a name="84"><span class="lineNum">      84 </span>            : }</a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 : void stop_output_monitor() {</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :     dedos_thread_stop(static_output_thread);</span>
+<a name="88"><span class="lineNum">      88 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 : void join_output_thread() {</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :     pthread_join(static_output_thread-&gt;pthread, NULL);</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :     free(static_output_thread);</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : /** Checks whether the size of the message matches the size of the target struct */
+<span class="lineNum">      96 </span>            : #define CHECK_MSG_SIZE(msg, target) \
+<span class="lineNum">      97 </span>            :     if (msg-&gt;data_size != sizeof(target)) { \
+<span class="lineNum">      98 </span>            :         log_warn(&quot;Message data size (%d) does not match size&quot; \
+<span class="lineNum">      99 </span>            :                  &quot;of target type (%d)&quot; #target, (int)msg-&gt;data_size , \
+<span class="lineNum">     100 </span>            :                  (int)sizeof(target)); \
+<span class="lineNum">     101 </span>            :         return -1; \
+<span class="lineNum">     102 </span>            :     } \
+<a name="103"><span class="lineNum">     103 </span>            : </a>
+<span class="lineNum">     104 </span>            : /** Processes a thread message that is  delivered to the output thread */
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 : static int process_output_thread_msg(struct thread_msg *msg) {</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :     log(LOG_MAIN_THREAD, &quot;processing message %p with type id: %d&quot;,</span>
+<span class="lineNum">     108 </span>            :         msg, msg-&gt;type);
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :     int rtn = -1;</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :     switch (msg-&gt;type) {</span>
+<span class="lineNum">     111 </span>            :         case CONNECT_TO_RUNTIME:
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct ctrl_add_runtime_msg);</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :             struct ctrl_add_runtime_msg *runtime_msg = msg-&gt;data;</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :             rtn = output_thread_connect_to_runtime(runtime_msg);</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :                 log_warn(&quot;Error adding runtime peer&quot;);</span>
+<span class="lineNum">     118 </span>            :             }
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     120 </span>            :         case SEND_TO_PEER:
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct send_to_peer_msg);</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :             struct send_to_peer_msg *forward_msg = msg-&gt;data;</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :             rtn = output_thread_send_to_peer(forward_msg);</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                 log_warn(&quot;Error forwarding message to peer&quot;);</span>
+<span class="lineNum">     127 </span>            :             }
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     129 </span>            :         case SEND_TO_CTRL:
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :             CHECK_MSG_SIZE(msg, struct send_to_ctrl_msg);</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :             struct send_to_ctrl_msg *ctrl_msg = msg-&gt;data;</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :             rtn = output_thread_send_to_ctrl(ctrl_msg);</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                 log_warn(&quot;Error sending message to controller&quot;);</span>
+<span class="lineNum">     135 </span>            :             }
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     137 </span>            :         case CREATE_MSU:
+<span class="lineNum">     138 </span>            :         case DELETE_MSU:
+<span class="lineNum">     139 </span>            :         case MSU_ROUTE:
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :             log_error(&quot;Message (type: %d) meant for worker thread sent to output thread&quot;,</span>
+<span class="lineNum">     141 </span>            :                        msg-&gt;type);
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     143 </span>            :         default:
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :             log_error(&quot;Unknown message type %d delivered to output thread&quot;, msg-&gt;type);</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     146 </span>            :     }
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :     return rtn;</span>
+<span class="lineNum">     148 </span>            : }
+<a name="149"><span class="lineNum">     149 </span>            : </a>
+<span class="lineNum">     150 </span>            : /** Checks the queue of the output thread for messages and acts on them if present */
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 : static int check_output_thread_queue(struct dedos_thread *output_thread) {</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :     struct thread_msg *msg = dequeue_thread_msg(&amp;output_thread-&gt;queue);</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :     if (msg == NULL) {</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     157 </span>            :     }
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :     int rtn = process_output_thread_msg(msg);</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :     free(msg);</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :         log_error(&quot;Error processing thread msg&quot;);</span>
+<span class="lineNum">     163 </span>            :     }
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     165 </span>            : }
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : /** How often to report statistics */
+<span class="lineNum">     168 </span>            : #define STAT_REPORTING_DURATION_MS STAT_SAMPLE_PERIOD_MS
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : /**
+<span class="lineNum">     171 </span>            :  * The main thread loop for the output thread.
+<a name="172"><span class="lineNum">     172 </span>            :  * Checks the queue for messages, sends them, sends stats messages</a>
+<span class="lineNum">     173 </span>            :  */
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 : static int output_thread_loop(struct dedos_thread *self, void UNUSED *init_data) {</span>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :     struct timespec elapsed;
+<span class="lineNum">     177 </span>            :     struct timespec timeout_abs;
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :     clock_gettime(CLOCK_REALTIME, &amp;timeout_abs);</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :     while (!dedos_thread_should_exit(self)) {</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :         clock_gettime(CLOCK_REALTIME, &amp;elapsed);</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :         if (elapsed.tv_sec &gt; timeout_abs.tv_sec || (elapsed.tv_sec == timeout_abs.tv_sec &amp;&amp;</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :                                                     elapsed.tv_nsec &gt; timeout_abs.tv_nsec)) {</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :             if (send_stats_to_controller() &lt; 0) {</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :                 log(LOG_STATS_SEND, &quot;Error sending stats to controller&quot;);</span>
+<span class="lineNum">     186 </span>            :             }
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :             log(LOG_STATS_SEND, &quot;Sent stats&quot;);</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :             timeout_abs = elapsed;</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :             timeout_abs.tv_nsec += (long)STAT_REPORTING_DURATION_MS * 1e6;</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :             while (timeout_abs.tv_nsec &gt; 1e9) {</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :                 timeout_abs.tv_nsec -= 1e9;</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :                 timeout_abs.tv_sec += 1;</span>
+<span class="lineNum">     193 </span>            :             }
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :             timeout_abs.tv_sec += (long)STAT_REPORTING_DURATION_MS / 1000;</span>
+<span class="lineNum">     195 </span>            :         }
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :         int rtn = thread_wait(self, &amp;timeout_abs);</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :         if (rtn &lt; 0) {</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :             log_error(&quot;Error waiting on output thread semaphore&quot;);</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :             return -1;</span>
+<span class="lineNum">     201 </span>            :         }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :         rtn = check_output_thread_queue(self);</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :         if (rtn != 0) {</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :             log_info(&quot;Breaking from output loop &quot;</span>
+<span class="lineNum">     206 </span>            :                      &quot;due to thread queue&quot;);
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     208 </span>            :         }
+<span class="lineNum">     209 </span>            :     }
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :     return 0;</span>
+<a name="211"><span class="lineNum">     211 </span>            : }</a>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 : int enqueue_for_output(struct thread_msg *msg) {</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :     int rtn = enqueue_thread_msg(msg, &amp;static_output_thread-&gt;queue);</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :         log_error(&quot;Error enqueuing message %p to main thread&quot;, msg);</span>
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     218 </span>            :     }
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :     log(MAIN_THREAD, &quot;Enqueued message %p to main thread queue&quot;, msg);</span>
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :     return 0;</span>
+<a name="221"><span class="lineNum">     221 </span>            : }</a>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 : struct dedos_thread *start_output_monitor_thread(void) {</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :     struct dedos_thread *output_thread = malloc(sizeof(*output_thread));</span>
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :     if (output_thread == NULL) {</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :         log_perror(&quot;Error allocating output thread&quot;);</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :         return NULL;</span>
+<span class="lineNum">     228 </span>            :     }
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :     int rtn = start_dedos_thread(output_thread_loop,</span>
+<span class="lineNum">     230 </span>            :                                  init_output_thread,
+<span class="lineNum">     231 </span>            :                                  NULL,
+<span class="lineNum">     232 </span>            :                                  UNPINNED_THREAD,
+<span class="lineNum">     233 </span>            :                                  OUTPUT_THREAD_ID,
+<span class="lineNum">     234 </span>            :                                  output_thread);
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :     if (rtn &lt; 0) {</span>
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :         log_error(&quot;Error starting output thread loop&quot;);</span>
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :         return NULL;</span>
+<span class="lineNum">     238 </span>            :     }
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :     log_info(&quot;Started output thread loop&quot;);</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :     return output_thread;</span>
+<span class="lineNum">     241 </span>            : }
+<span class="lineNum">     242 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

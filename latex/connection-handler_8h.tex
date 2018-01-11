@@ -1,0 +1,259 @@
+\hypertarget{connection-handler_8h}{\section{src/msus/webserver/connection-\/handler.h File Reference}
+\label{connection-handler_8h}\index{src/msus/webserver/connection-\/handler.\-h@{src/msus/webserver/connection-\/handler.\-h}}
+}
+{\ttfamily \#include $<$openssl/ssl.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}webserver.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dbops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}request\-\_\-parser.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structconnection}{connection}
+\item 
+struct \hyperlink{structread__state}{read\-\_\-state}
+\item 
+struct \hyperlink{structhttp__state}{http\-\_\-state}
+\item 
+struct \hyperlink{structresponse__state}{response\-\_\-state}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{connection-handler_8h_a76e334e12a376a91d58c9ec5ae9a7abf}{M\-A\-X\-\_\-\-H\-E\-A\-D\-E\-R\-\_\-\-L\-E\-N}~4096
+\item 
+\#define \hyperlink{connection-handler_8h_a55d3700b57daefe139c225b101a6d89f}{M\-A\-X\-\_\-\-F\-I\-L\-E\-P\-A\-T\-H\-\_\-\-L\-E\-N}~512
+\item 
+\#define \hyperlink{connection-handler_8h_ab5d508eee849407d84f67ece294ac8b0}{M\-A\-X\-\_\-\-B\-O\-D\-Y\-\_\-\-L\-E\-N}~4096
+\item 
+\#define \hyperlink{connection-handler_8h_a774d5c0d74bbc47fad33f175a0bd13f4}{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N}~4096
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{connection-handler_8h_af82ade39f14338cc7e30798368452364}{init\-\_\-read\-\_\-state} (struct \hyperlink{structread__state}{read\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state}, struct \hyperlink{structconnection}{connection} $\ast$conn)
+\item 
+void \hyperlink{connection-handler_8h_ac4d0e53d85b747ae364c2d65686e9bc3}{init\-\_\-http\-\_\-state} (struct \hyperlink{structhttp__state}{http\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state}, struct \hyperlink{structconnection}{connection} $\ast$conn)
+\item 
+void \hyperlink{connection-handler_8h_a15d9f343d7b0a10ca8fc2643821bbd2d}{init\-\_\-response\-\_\-state} (struct \hyperlink{structresponse__state}{response\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state}, struct \hyperlink{structconnection}{connection} $\ast$conn)
+\item 
+void \hyperlink{connection-handler_8h_a9e4f80d42f79c16c463443629b480b75}{init\-\_\-connection} (struct \hyperlink{structconnection}{connection} $\ast$conn, int fd)
+\item 
+int \hyperlink{connection-handler_8h_a8b0520ef94350639d01d226c01f1e0d3}{accept\-\_\-connection} (struct \hyperlink{structconnection}{connection} $\ast$conn, int use\-\_\-ssl)
+\item 
+int \hyperlink{connection-handler_8h_a45111b168f72434544555058f1bdc047}{read\-\_\-request} (struct \hyperlink{structread__state}{read\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{connection-handler_8h_af06abb9d08854f0672082140a01dd0f8}{parse\-\_\-request} (char $\ast$req, int req\-\_\-len, struct \hyperlink{structhttp__state}{http\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{connection-handler_8h_ad3d7de1563a29af15a1bbef2fc7674c9}{write\-\_\-response} (struct \hyperlink{structresponse__state}{response\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{connection-handler_8h_a0171242e91a6a1c18938b8aba84625e5}{close\-\_\-connection} (struct \hyperlink{structconnection}{connection} $\ast$conn)
+\item 
+int \hyperlink{connection-handler_8h_a371095605bf8a8222590bc46b2d38b59}{access\-\_\-database} (char $\ast$url, struct \hyperlink{structdb__state}{db\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\item 
+int \hyperlink{connection-handler_8h_aad4e23d034482bdd8a28174ff70d3ea0}{has\-\_\-regex} (char $\ast$url)
+\item 
+int \hyperlink{connection-handler_8h_a8df53347c2a2137c4f39c79fbe3af03e}{craft\-\_\-error\-\_\-response} (char $\ast$url, char $\ast$response)
+\item 
+int \hyperlink{connection-handler_8h_a40ddee505082e691c9e94a8afda7d4b5}{craft\-\_\-nonregex\-\_\-response} (char $\ast$url, char $\ast$response)
+\item 
+int \hyperlink{connection-handler_8h_a7cb78a1a29fdde2658e016d01287bf7a}{craft\-\_\-regex\-\_\-response} (char $\ast$url, char $\ast$response)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{connection-handler_8h_ab5d508eee849407d84f67ece294ac8b0}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!M\-A\-X\-\_\-\-B\-O\-D\-Y\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-B\-O\-D\-Y\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-B\-O\-D\-Y\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-B\-O\-D\-Y\-\_\-\-L\-E\-N}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{M\-A\-X\-\_\-\-B\-O\-D\-Y\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-B\-O\-D\-Y\-\_\-\-L\-E\-N~4096}}\label{connection-handler_8h_ab5d508eee849407d84f67ece294ac8b0}
+
+
+Definition at line 30 of file connection-\/handler.\-h.
+
+\hypertarget{connection-handler_8h_a55d3700b57daefe139c225b101a6d89f}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!M\-A\-X\-\_\-\-F\-I\-L\-E\-P\-A\-T\-H\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-F\-I\-L\-E\-P\-A\-T\-H\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-F\-I\-L\-E\-P\-A\-T\-H\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-F\-I\-L\-E\-P\-A\-T\-H\-\_\-\-L\-E\-N}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{M\-A\-X\-\_\-\-F\-I\-L\-E\-P\-A\-T\-H\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-F\-I\-L\-E\-P\-A\-T\-H\-\_\-\-L\-E\-N~512}}\label{connection-handler_8h_a55d3700b57daefe139c225b101a6d89f}
+
+
+Definition at line 29 of file connection-\/handler.\-h.
+
+\hypertarget{connection-handler_8h_a76e334e12a376a91d58c9ec5ae9a7abf}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!M\-A\-X\-\_\-\-H\-E\-A\-D\-E\-R\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-H\-E\-A\-D\-E\-R\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-H\-E\-A\-D\-E\-R\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-H\-E\-A\-D\-E\-R\-\_\-\-L\-E\-N}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{M\-A\-X\-\_\-\-H\-E\-A\-D\-E\-R\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-H\-E\-A\-D\-E\-R\-\_\-\-L\-E\-N~4096}}\label{connection-handler_8h_a76e334e12a376a91d58c9ec5ae9a7abf}
+
+
+Definition at line 28 of file connection-\/handler.\-h.
+
+\hypertarget{connection-handler_8h_a774d5c0d74bbc47fad33f175a0bd13f4}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N~4096}}\label{connection-handler_8h_a774d5c0d74bbc47fad33f175a0bd13f4}
+
+
+Definition at line 31 of file connection-\/handler.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{connection-handler_8h_a8b0520ef94350639d01d226c01f1e0d3}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!accept\-\_\-connection@{accept\-\_\-connection}}
+\index{accept\-\_\-connection@{accept\-\_\-connection}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{accept\-\_\-connection}]{\setlength{\rightskip}{0pt plus 5cm}int accept\-\_\-connection (
+\begin{DoxyParamCaption}
+\item[{struct {\bf connection} $\ast$}]{conn, }
+\item[{int}]{use\-\_\-ssl}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a8b0520ef94350639d01d226c01f1e0d3}
+
+
+Definition at line 64 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_a371095605bf8a8222590bc46b2d38b59}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!access\-\_\-database@{access\-\_\-database}}
+\index{access\-\_\-database@{access\-\_\-database}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{access\-\_\-database}]{\setlength{\rightskip}{0pt plus 5cm}int access\-\_\-database (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{url, }
+\item[{struct {\bf db\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a371095605bf8a8222590bc46b2d38b59}
+
+
+Definition at line 173 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_a0171242e91a6a1c18938b8aba84625e5}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!close\-\_\-connection@{close\-\_\-connection}}
+\index{close\-\_\-connection@{close\-\_\-connection}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{close\-\_\-connection}]{\setlength{\rightskip}{0pt plus 5cm}int close\-\_\-connection (
+\begin{DoxyParamCaption}
+\item[{struct {\bf connection} $\ast$}]{conn}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a0171242e91a6a1c18938b8aba84625e5}
+
+
+Definition at line 298 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_a8df53347c2a2137c4f39c79fbe3af03e}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!craft\-\_\-error\-\_\-response@{craft\-\_\-error\-\_\-response}}
+\index{craft\-\_\-error\-\_\-response@{craft\-\_\-error\-\_\-response}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{craft\-\_\-error\-\_\-response}]{\setlength{\rightskip}{0pt plus 5cm}int craft\-\_\-error\-\_\-response (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{url, }
+\item[{char $\ast$}]{response}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a8df53347c2a2137c4f39c79fbe3af03e}
+
+
+Definition at line 207 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_a40ddee505082e691c9e94a8afda7d4b5}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!craft\-\_\-nonregex\-\_\-response@{craft\-\_\-nonregex\-\_\-response}}
+\index{craft\-\_\-nonregex\-\_\-response@{craft\-\_\-nonregex\-\_\-response}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{craft\-\_\-nonregex\-\_\-response}]{\setlength{\rightskip}{0pt plus 5cm}int craft\-\_\-nonregex\-\_\-response (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{url, }
+\item[{char $\ast$}]{response}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a40ddee505082e691c9e94a8afda7d4b5}
+
+
+Definition at line 213 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_a7cb78a1a29fdde2658e016d01287bf7a}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!craft\-\_\-regex\-\_\-response@{craft\-\_\-regex\-\_\-response}}
+\index{craft\-\_\-regex\-\_\-response@{craft\-\_\-regex\-\_\-response}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{craft\-\_\-regex\-\_\-response}]{\setlength{\rightskip}{0pt plus 5cm}int craft\-\_\-regex\-\_\-response (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{url, }
+\item[{char $\ast$}]{response}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a7cb78a1a29fdde2658e016d01287bf7a}
+
+
+Definition at line 220 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_aad4e23d034482bdd8a28174ff70d3ea0}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!has\-\_\-regex@{has\-\_\-regex}}
+\index{has\-\_\-regex@{has\-\_\-regex}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{has\-\_\-regex}]{\setlength{\rightskip}{0pt plus 5cm}int has\-\_\-regex (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{url}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_aad4e23d034482bdd8a28174ff70d3ea0}
+
+
+Definition at line 138 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_a9e4f80d42f79c16c463443629b480b75}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!init\-\_\-connection@{init\-\_\-connection}}
+\index{init\-\_\-connection@{init\-\_\-connection}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{init\-\_\-connection}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-connection (
+\begin{DoxyParamCaption}
+\item[{struct {\bf connection} $\ast$}]{conn, }
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a9e4f80d42f79c16c463443629b480b75}
+
+
+Definition at line 36 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_ac4d0e53d85b747ae364c2d65686e9bc3}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!init\-\_\-http\-\_\-state@{init\-\_\-http\-\_\-state}}
+\index{init\-\_\-http\-\_\-state@{init\-\_\-http\-\_\-state}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{init\-\_\-http\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-http\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf http\-\_\-state} $\ast$}]{state, }
+\item[{struct {\bf connection} $\ast$}]{conn}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_ac4d0e53d85b747ae364c2d65686e9bc3}
+
+
+Definition at line 48 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_af82ade39f14338cc7e30798368452364}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!init\-\_\-read\-\_\-state@{init\-\_\-read\-\_\-state}}
+\index{init\-\_\-read\-\_\-state@{init\-\_\-read\-\_\-state}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{init\-\_\-read\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-read\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf read\-\_\-state} $\ast$}]{state, }
+\item[{struct {\bf connection} $\ast$}]{conn}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_af82ade39f14338cc7e30798368452364}
+
+
+Definition at line 42 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_a15d9f343d7b0a10ca8fc2643821bbd2d}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!init\-\_\-response\-\_\-state@{init\-\_\-response\-\_\-state}}
+\index{init\-\_\-response\-\_\-state@{init\-\_\-response\-\_\-state}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{init\-\_\-response\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-response\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf response\-\_\-state} $\ast$}]{state, }
+\item[{struct {\bf connection} $\ast$}]{conn}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a15d9f343d7b0a10ca8fc2643821bbd2d}
+
+
+Definition at line 54 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_af06abb9d08854f0672082140a01dd0f8}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!parse\-\_\-request@{parse\-\_\-request}}
+\index{parse\-\_\-request@{parse\-\_\-request}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{parse\-\_\-request}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-\_\-request (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{req, }
+\item[{int}]{req\-\_\-len, }
+\item[{struct {\bf http\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_af06abb9d08854f0672082140a01dd0f8}
+
+
+Definition at line 117 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_a45111b168f72434544555058f1bdc047}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!read\-\_\-request@{read\-\_\-request}}
+\index{read\-\_\-request@{read\-\_\-request}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{read\-\_\-request}]{\setlength{\rightskip}{0pt plus 5cm}int read\-\_\-request (
+\begin{DoxyParamCaption}
+\item[{struct {\bf read\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_a45111b168f72434544555058f1bdc047}
+
+
+Definition at line 87 of file connection-\/handler.\-c.
+
+\hypertarget{connection-handler_8h_ad3d7de1563a29af15a1bbef2fc7674c9}{\index{connection-\/handler.\-h@{connection-\/handler.\-h}!write\-\_\-response@{write\-\_\-response}}
+\index{write\-\_\-response@{write\-\_\-response}!connection-handler.h@{connection-\/handler.\-h}}
+\subsubsection[{write\-\_\-response}]{\setlength{\rightskip}{0pt plus 5cm}int write\-\_\-response (
+\begin{DoxyParamCaption}
+\item[{struct {\bf response\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{connection-handler_8h_ad3d7de1563a29af15a1bbef2fc7674c9}
+
+
+Definition at line 239 of file connection-\/handler.\-c.
+

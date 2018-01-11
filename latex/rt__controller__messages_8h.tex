@@ -1,0 +1,52 @@
+\hypertarget{rt__controller__messages_8h}{\section{src/common/rt\-\_\-controller\-\_\-messages.h File Reference}
+\label{rt__controller__messages_8h}\index{src/common/rt\-\_\-controller\-\_\-messages.\-h@{src/common/rt\-\_\-controller\-\_\-messages.\-h}}
+}
+
+
+Definitiions of structures for sending messages {\bfseries from} runtimes {\bfseries to} controller.  
+
+
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structrt__controller__msg__hdr}{rt\-\_\-controller\-\_\-msg\-\_\-hdr}
+\begin{DoxyCompactList}\small\item\em Header for all messages from controller to runtime. \end{DoxyCompactList}\item 
+struct \hyperlink{structrt__controller__init__msg}{rt\-\_\-controller\-\_\-init\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Initialization message, sent to controller to identify runtime upon first connection. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeb}{rt\-\_\-controller\-\_\-msg\-\_\-type} \{ \hyperlink{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeba1417fef2e16d1c4b9a3c77523b5f0449}{R\-T\-\_\-\-C\-T\-L\-\_\-\-I\-N\-I\-T}, 
+\hyperlink{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeba1be4f69425bed3a0f8f35f42f4dcec4a}{R\-T\-\_\-\-S\-T\-A\-T\-S}
+ \}
+\begin{DoxyCompactList}\small\item\em The types of messages which can be sent from controller to runtimes. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Definitiions of structures for sending messages {\bfseries from} runtimes {\bfseries to} controller. 
+
+Definition in file \hyperlink{rt__controller__messages_8h_source}{rt\-\_\-controller\-\_\-messages.\-h}.
+
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeb}{\index{rt\-\_\-controller\-\_\-messages.\-h@{rt\-\_\-controller\-\_\-messages.\-h}!rt\-\_\-controller\-\_\-msg\-\_\-type@{rt\-\_\-controller\-\_\-msg\-\_\-type}}
+\index{rt\-\_\-controller\-\_\-msg\-\_\-type@{rt\-\_\-controller\-\_\-msg\-\_\-type}!rt_controller_messages.h@{rt\-\_\-controller\-\_\-messages.\-h}}
+\subsubsection[{rt\-\_\-controller\-\_\-msg\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf rt\-\_\-controller\-\_\-msg\-\_\-type}}}\label{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeb}
+
+
+The types of messages which can be sent from controller to runtimes. 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{R\-T\-\_\-\-C\-T\-L\-\_\-\-I\-N\-I\-T@{R\-T\-\_\-\-C\-T\-L\-\_\-\-I\-N\-I\-T}!rt\-\_\-controller\-\_\-messages.\-h@{rt\-\_\-controller\-\_\-messages.\-h}}\index{rt\-\_\-controller\-\_\-messages.\-h@{rt\-\_\-controller\-\_\-messages.\-h}!R\-T\-\_\-\-C\-T\-L\-\_\-\-I\-N\-I\-T@{R\-T\-\_\-\-C\-T\-L\-\_\-\-I\-N\-I\-T}}\item[{\em 
+\hypertarget{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeba1417fef2e16d1c4b9a3c77523b5f0449}{R\-T\-\_\-\-C\-T\-L\-\_\-\-I\-N\-I\-T}\label{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeba1417fef2e16d1c4b9a3c77523b5f0449}
+}]Payload type\-: \hyperlink{structrt__controller__init__msg}{rt\-\_\-controller\-\_\-init\-\_\-msg}. \index{R\-T\-\_\-\-S\-T\-A\-T\-S@{R\-T\-\_\-\-S\-T\-A\-T\-S}!rt\-\_\-controller\-\_\-messages.\-h@{rt\-\_\-controller\-\_\-messages.\-h}}\index{rt\-\_\-controller\-\_\-messages.\-h@{rt\-\_\-controller\-\_\-messages.\-h}!R\-T\-\_\-\-S\-T\-A\-T\-S@{R\-T\-\_\-\-S\-T\-A\-T\-S}}\item[{\em 
+\hypertarget{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeba1be4f69425bed3a0f8f35f42f4dcec4a}{R\-T\-\_\-\-S\-T\-A\-T\-S}\label{rt__controller__messages_8h_ab990cb7ec49a837b83bdb51c50903aeba1be4f69425bed3a0f8f35f42f4dcec4a}
+}]Payload\-: output of \hyperlink{stats_8h_aec7690b989cbd389c9614df7f81837d1}{serialize\-\_\-stat\-\_\-samples}. \end{description}
+\end{Desc}
+
+
+Definition at line 30 of file rt\-\_\-controller\-\_\-messages.\-h.
+

@@ -1,0 +1,73 @@
+\hypertarget{runtime_2main_8c}{\section{src/runtime/main.c File Reference}
+\label{runtime_2main_8c}\index{src/runtime/main.\-c@{src/runtime/main.\-c}}
+}
+
+
+Main executable file to start the runtime.  
+
+
+{\ttfamily \#include \char`\"{}worker\-\_\-thread.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-files.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}output\-\_\-thread.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}socket\-\_\-monitor.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}profiler.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+{\ttfamily \#include $<$getopt.\-h$>$}\\*
+{\ttfamily \#include $<$libgen.\-h$>$}\\*
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{runtime_2main_8c_a27e095fed1b5f277218b04f5f297b981}{U\-S\-A\-G\-E\-\_\-\-A\-R\-G\-S}~\char`\"{} -\/j dfg.\-json -\/i \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id} \mbox{[}-\/l statlog\mbox{]} \mbox{[}-\/p profiling\-\_\-prob\mbox{]}\char`\"{}
+\begin{DoxyCompactList}\small\item\em The command-\/line arguments. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{runtime_2main_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main} (int argc, char $\ast$$\ast$argv)
+\begin{DoxyCompactList}\small\item\em Entry point to start the runtime. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Main executable file to start the runtime. 
+
+Definition in file \hyperlink{runtime_2main_8c_source}{main.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{runtime_2main_8c_a27e095fed1b5f277218b04f5f297b981}{\index{runtime/main.\-c@{runtime/main.\-c}!U\-S\-A\-G\-E\-\_\-\-A\-R\-G\-S@{U\-S\-A\-G\-E\-\_\-\-A\-R\-G\-S}}
+\index{U\-S\-A\-G\-E\-\_\-\-A\-R\-G\-S@{U\-S\-A\-G\-E\-\_\-\-A\-R\-G\-S}!runtime/main.c@{runtime/main.\-c}}
+\subsubsection[{U\-S\-A\-G\-E\-\_\-\-A\-R\-G\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\-S\-A\-G\-E\-\_\-\-A\-R\-G\-S~\char`\"{} -\/j dfg.\-json -\/i {\bf runtime\-\_\-id} \mbox{[}-\/l statlog\mbox{]} \mbox{[}-\/p profiling\-\_\-prob\mbox{]}\char`\"{}}}\label{runtime_2main_8c_a27e095fed1b5f277218b04f5f297b981}
+
+
+The command-\/line arguments. 
+
+
+
+Definition at line 43 of file main.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{runtime_2main_8c_a3c04138a5bfe5d72780bb7e82a18e627}{\index{runtime/main.\-c@{runtime/main.\-c}!main@{main}}
+\index{main@{main}!runtime/main.c@{runtime/main.\-c}}
+\subsubsection[{main}]{\setlength{\rightskip}{0pt plus 5cm}int main (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$$\ast$}]{argv}
+\end{DoxyParamCaption}
+)}}\label{runtime_2main_8c_a3c04138a5bfe5d72780bb7e82a18e627}
+
+
+Entry point to start the runtime. 
+
+
+
+Definition at line 49 of file main.\-c.
+

@@ -1,0 +1,172 @@
+\hypertarget{structhttp__parser}{\section{http\-\_\-parser Struct Reference}
+\label{structhttp__parser}\index{http\-\_\-parser@{http\-\_\-parser}}
+}
+
+
+{\ttfamily \#include $<$http\-\_\-parser.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+unsigned int \hyperlink{structhttp__parser_ac6c327558547d55eb64a8aea1310cc2e}{type}\-: 2
+\begin{DoxyCompactList}\small\item\em P\-R\-I\-V\-A\-T\-E. \end{DoxyCompactList}\item 
+unsigned int \hyperlink{structhttp__parser_a5e54708e0cb3f9ced19bd829dcdeaf53}{flags}\-: 8
+\item 
+unsigned int \hyperlink{structhttp__parser_a6f5952e0b47c83aeacf64fc287fd8003}{state}\-: 7
+\item 
+unsigned int \hyperlink{structhttp__parser_ac5b254b99c6472ca19ae1f426758ce75}{header\-\_\-state}\-: 7
+\item 
+unsigned int \hyperlink{structhttp__parser_a6f7ba706f975f447b3bf72be97facdf8}{index}\-: 7
+\item 
+unsigned int \hyperlink{structhttp__parser_acd80a931fcc87d41999397af1662fc3c}{lenient\-\_\-http\-\_\-headers}\-: 1
+\item 
+\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} \hyperlink{structhttp__parser_a78085ca896bb3b9aa1ecb0f6fddc039d}{nread}
+\item 
+uint64\-\_\-t \hyperlink{structhttp__parser_a7fd5a194802b1206bb773e096d291f29}{content\-\_\-length}
+\item 
+unsigned short \hyperlink{structhttp__parser_ac994a4a8268652f5ce82de5bde5c3f9d}{http\-\_\-major}
+\begin{DoxyCompactList}\small\item\em R\-E\-A\-D-\/\-O\-N\-L\-Y. \end{DoxyCompactList}\item 
+unsigned short \hyperlink{structhttp__parser_ae8af6433c824f5348773842db62ad4ab}{http\-\_\-minor}
+\item 
+unsigned int \hyperlink{structhttp__parser_a82f5aed92ca3566489def7bc384bab26}{status\-\_\-code}\-: 16
+\item 
+unsigned int \hyperlink{structhttp__parser_a7955de339fafd81ad54380845913457d}{method}\-: 8
+\item 
+unsigned int \hyperlink{structhttp__parser_ab8638d65fa174bc1925d77e2533117fa}{http\-\_\-errno}\-: 7
+\item 
+unsigned int \hyperlink{structhttp__parser_a748f476eacc5ac56b84dd07dbafb42a4}{upgrade}\-: 1
+\item 
+void $\ast$ \hyperlink{structhttp__parser_a7e87ce57b97f60f1fdb7039a8ecb0bca}{data}
+\begin{DoxyCompactList}\small\item\em P\-U\-B\-L\-I\-C. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 307 of file http\-\_\-parser.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structhttp__parser_a7fd5a194802b1206bb773e096d291f29}{\index{http\-\_\-parser@{http\-\_\-parser}!content\-\_\-length@{content\-\_\-length}}
+\index{content\-\_\-length@{content\-\_\-length}!http_parser@{http\-\_\-parser}}
+\subsubsection[{content\-\_\-length}]{\setlength{\rightskip}{0pt plus 5cm}uint64\-\_\-t http\-\_\-parser\-::content\-\_\-length}}\label{structhttp__parser_a7fd5a194802b1206bb773e096d291f29}
+
+
+Definition at line 317 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_a7e87ce57b97f60f1fdb7039a8ecb0bca}{\index{http\-\_\-parser@{http\-\_\-parser}!data@{data}}
+\index{data@{data}!http_parser@{http\-\_\-parser}}
+\subsubsection[{data}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ http\-\_\-parser\-::data}}\label{structhttp__parser_a7e87ce57b97f60f1fdb7039a8ecb0bca}
+
+
+P\-U\-B\-L\-I\-C. 
+
+
+
+Definition at line 334 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_a5e54708e0cb3f9ced19bd829dcdeaf53}{\index{http\-\_\-parser@{http\-\_\-parser}!flags@{flags}}
+\index{flags@{flags}!http_parser@{http\-\_\-parser}}
+\subsubsection[{flags}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::flags}}\label{structhttp__parser_a5e54708e0cb3f9ced19bd829dcdeaf53}
+
+
+Definition at line 310 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_ac5b254b99c6472ca19ae1f426758ce75}{\index{http\-\_\-parser@{http\-\_\-parser}!header\-\_\-state@{header\-\_\-state}}
+\index{header\-\_\-state@{header\-\_\-state}!http_parser@{http\-\_\-parser}}
+\subsubsection[{header\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::header\-\_\-state}}\label{structhttp__parser_ac5b254b99c6472ca19ae1f426758ce75}
+
+
+Definition at line 312 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_ab8638d65fa174bc1925d77e2533117fa}{\index{http\-\_\-parser@{http\-\_\-parser}!http\-\_\-errno@{http\-\_\-errno}}
+\index{http\-\_\-errno@{http\-\_\-errno}!http_parser@{http\-\_\-parser}}
+\subsubsection[{http\-\_\-errno}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::http\-\_\-errno}}\label{structhttp__parser_ab8638d65fa174bc1925d77e2533117fa}
+
+
+Definition at line 324 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_ac994a4a8268652f5ce82de5bde5c3f9d}{\index{http\-\_\-parser@{http\-\_\-parser}!http\-\_\-major@{http\-\_\-major}}
+\index{http\-\_\-major@{http\-\_\-major}!http_parser@{http\-\_\-parser}}
+\subsubsection[{http\-\_\-major}]{\setlength{\rightskip}{0pt plus 5cm}unsigned short http\-\_\-parser\-::http\-\_\-major}}\label{structhttp__parser_ac994a4a8268652f5ce82de5bde5c3f9d}
+
+
+R\-E\-A\-D-\/\-O\-N\-L\-Y. 
+
+
+
+Definition at line 320 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_ae8af6433c824f5348773842db62ad4ab}{\index{http\-\_\-parser@{http\-\_\-parser}!http\-\_\-minor@{http\-\_\-minor}}
+\index{http\-\_\-minor@{http\-\_\-minor}!http_parser@{http\-\_\-parser}}
+\subsubsection[{http\-\_\-minor}]{\setlength{\rightskip}{0pt plus 5cm}unsigned short http\-\_\-parser\-::http\-\_\-minor}}\label{structhttp__parser_ae8af6433c824f5348773842db62ad4ab}
+
+
+Definition at line 321 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_a6f7ba706f975f447b3bf72be97facdf8}{\index{http\-\_\-parser@{http\-\_\-parser}!index@{index}}
+\index{index@{index}!http_parser@{http\-\_\-parser}}
+\subsubsection[{index}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::index}}\label{structhttp__parser_a6f7ba706f975f447b3bf72be97facdf8}
+
+
+Definition at line 313 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_acd80a931fcc87d41999397af1662fc3c}{\index{http\-\_\-parser@{http\-\_\-parser}!lenient\-\_\-http\-\_\-headers@{lenient\-\_\-http\-\_\-headers}}
+\index{lenient\-\_\-http\-\_\-headers@{lenient\-\_\-http\-\_\-headers}!http_parser@{http\-\_\-parser}}
+\subsubsection[{lenient\-\_\-http\-\_\-headers}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::lenient\-\_\-http\-\_\-headers}}\label{structhttp__parser_acd80a931fcc87d41999397af1662fc3c}
+
+
+Definition at line 314 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_a7955de339fafd81ad54380845913457d}{\index{http\-\_\-parser@{http\-\_\-parser}!method@{method}}
+\index{method@{method}!http_parser@{http\-\_\-parser}}
+\subsubsection[{method}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::method}}\label{structhttp__parser_a7955de339fafd81ad54380845913457d}
+
+
+Definition at line 323 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_a78085ca896bb3b9aa1ecb0f6fddc039d}{\index{http\-\_\-parser@{http\-\_\-parser}!nread@{nread}}
+\index{nread@{nread}!http_parser@{http\-\_\-parser}}
+\subsubsection[{nread}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint32\-\_\-t} http\-\_\-parser\-::nread}}\label{structhttp__parser_a78085ca896bb3b9aa1ecb0f6fddc039d}
+
+
+Definition at line 316 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_a6f5952e0b47c83aeacf64fc287fd8003}{\index{http\-\_\-parser@{http\-\_\-parser}!state@{state}}
+\index{state@{state}!http_parser@{http\-\_\-parser}}
+\subsubsection[{state}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::state}}\label{structhttp__parser_a6f5952e0b47c83aeacf64fc287fd8003}
+
+
+Definition at line 311 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_a82f5aed92ca3566489def7bc384bab26}{\index{http\-\_\-parser@{http\-\_\-parser}!status\-\_\-code@{status\-\_\-code}}
+\index{status\-\_\-code@{status\-\_\-code}!http_parser@{http\-\_\-parser}}
+\subsubsection[{status\-\_\-code}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::status\-\_\-code}}\label{structhttp__parser_a82f5aed92ca3566489def7bc384bab26}
+
+
+Definition at line 322 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_ac6c327558547d55eb64a8aea1310cc2e}{\index{http\-\_\-parser@{http\-\_\-parser}!type@{type}}
+\index{type@{type}!http_parser@{http\-\_\-parser}}
+\subsubsection[{type}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::type}}\label{structhttp__parser_ac6c327558547d55eb64a8aea1310cc2e}
+
+
+P\-R\-I\-V\-A\-T\-E. 
+
+
+
+Definition at line 309 of file http\-\_\-parser.\-h.
+
+\hypertarget{structhttp__parser_a748f476eacc5ac56b84dd07dbafb42a4}{\index{http\-\_\-parser@{http\-\_\-parser}!upgrade@{upgrade}}
+\index{upgrade@{upgrade}!http_parser@{http\-\_\-parser}}
+\subsubsection[{upgrade}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int http\-\_\-parser\-::upgrade}}\label{structhttp__parser_a748f476eacc5ac56b84dd07dbafb42a4}
+
+
+Definition at line 331 of file http\-\_\-parser.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/msus/webserver/\hyperlink{http__parser_8h}{http\-\_\-parser.\-h}\end{DoxyCompactItemize}

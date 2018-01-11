@@ -1,0 +1,230 @@
+\hypertarget{cache__msu_8c}{\section{src/msus/webserver/cache\-\_\-msu.c File Reference}
+\label{cache__msu_8c}\index{src/msus/webserver/cache\-\_\-msu.\-c@{src/msus/webserver/cache\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}connection-\/handler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing\-\_\-strategies.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-files.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/uthash.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/write\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/cache\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/fileio\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/httpops.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structcached__file}{cached\-\_\-file}
+\item 
+struct \hyperlink{structws__cache__state}{ws\-\_\-cache\-\_\-state}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{cache__msu_8c_a2845f1f56f81efaee0afad449ff58ed4}{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-W\-W\-\_\-\-D\-I\-R}~\char`\"{}www/\char`\"{}
+\item 
+\#define \hyperlink{cache__msu_8c_aa19a0eef68c0bcd8699456d3c8571b3d}{D\-E\-F\-A\-U\-L\-T\-\_\-\-O\-C\-C\-U\-P\-A\-N\-C\-Y\-\_\-\-R\-A\-T\-E}~0.\-2
+\item 
+\#define \hyperlink{cache__msu_8c_a1ddf5acf05ce1ebf8714a337a51081cf}{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-K\-B\-\_\-\-S\-I\-Z\-E}~U\-I\-N\-T\-\_\-\-M\-A\-X
+\item 
+\#define \hyperlink{cache__msu_8c_ac324f4a8f4634931df04c44514cedf72}{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-F\-I\-L\-E\-S}~U\-I\-N\-T\-\_\-\-M\-A\-X
+\item 
+\#define \hyperlink{cache__msu_8c_a0c7e2dcd4a963cc2fded23419238f995}{C\-A\-C\-H\-E\-\_\-\-I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}
+\item 
+\#define \hyperlink{cache__msu_8c_a2ec2a1b55c90969d466794367794b45d}{M\-O\-N\-I\-T\-O\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-S\-T\-A\-T\-S}
+\item 
+\#define \hyperlink{cache__msu_8c_ade2ed44bffc7c446d24894c143a0583f}{C\-A\-C\-H\-E\-\_\-\-H\-I\-T\-\_\-\-S\-T\-A\-T}~\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea683fb9b76979d337a5368650735c64bb}{M\-S\-U\-\_\-\-S\-T\-A\-T1}
+\item 
+\#define \hyperlink{cache__msu_8c_a4e6bade874dd75598d1c531728b559c2}{C\-A\-C\-H\-E\-\_\-\-M\-I\-S\-S\-\_\-\-S\-T\-A\-T}~\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea98cc3279c0885fd7f51186fb3471344b}{M\-S\-U\-\_\-\-S\-T\-A\-T2}
+\item 
+\#define \hyperlink{cache__msu_8c_a1fe35972719ec13b6308c12112789257}{C\-A\-C\-H\-E\-\_\-\-E\-V\-I\-C\-T\-\_\-\-S\-T\-A\-T}~\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea99eb466bdab72df6827c6d0921f19652}{M\-S\-U\-\_\-\-S\-T\-A\-T3}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structcached__file}{cached\-\_\-file} $\ast$ \hyperlink{cache__msu_8c_ac2eb297bac2f831cc7cd4c9d188a507b}{check\-\_\-cache} (struct \hyperlink{structws__cache__state}{ws\-\_\-cache\-\_\-state} $\ast$fc, char $\ast$path)
+\item 
+static int \hyperlink{cache__msu_8c_a33fa50166d619b3ba131021bd79f0c9b}{parse\-\_\-init\-\_\-cache\-\_\-payload} (char $\ast$to\-\_\-parse, struct \hyperlink{structws__cache__state}{ws\-\_\-cache\-\_\-state} $\ast$cache\-\_\-state)
+\item 
+static int \hyperlink{cache__msu_8c_a95889312710319071071cfb505264f21}{cache\-\_\-file} (struct \hyperlink{structws__cache__state}{ws\-\_\-cache\-\_\-state} $\ast$fc, char $\ast$path, char $\ast$contents, long length)
+\item 
+static int \hyperlink{cache__msu_8c_a8c645d95ce7b622e81c4171151b7ada3}{ws\-\_\-cache\-\_\-lookup} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+static int \hyperlink{cache__msu_8c_a6afd60636a70752327c1a53b7ce90168}{ws\-\_\-cache\-\_\-init} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} $\ast$init\-\_\-data)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{cache__msu_8c_aa4ff3c29661e0c7a60ed3d3b993a8382}{cache\-\_\-instance}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{cache__msu_8c_a6547af6500682988471baebf7b7c6f72}{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{cache__msu_8c_a1fe35972719ec13b6308c12112789257}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!C\-A\-C\-H\-E\-\_\-\-E\-V\-I\-C\-T\-\_\-\-S\-T\-A\-T@{C\-A\-C\-H\-E\-\_\-\-E\-V\-I\-C\-T\-\_\-\-S\-T\-A\-T}}
+\index{C\-A\-C\-H\-E\-\_\-\-E\-V\-I\-C\-T\-\_\-\-S\-T\-A\-T@{C\-A\-C\-H\-E\-\_\-\-E\-V\-I\-C\-T\-\_\-\-S\-T\-A\-T}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{C\-A\-C\-H\-E\-\_\-\-E\-V\-I\-C\-T\-\_\-\-S\-T\-A\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-A\-C\-H\-E\-\_\-\-E\-V\-I\-C\-T\-\_\-\-S\-T\-A\-T~{\bf M\-S\-U\-\_\-\-S\-T\-A\-T3}}}\label{cache__msu_8c_a1fe35972719ec13b6308c12112789257}
+
+
+Definition at line 50 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_ade2ed44bffc7c446d24894c143a0583f}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!C\-A\-C\-H\-E\-\_\-\-H\-I\-T\-\_\-\-S\-T\-A\-T@{C\-A\-C\-H\-E\-\_\-\-H\-I\-T\-\_\-\-S\-T\-A\-T}}
+\index{C\-A\-C\-H\-E\-\_\-\-H\-I\-T\-\_\-\-S\-T\-A\-T@{C\-A\-C\-H\-E\-\_\-\-H\-I\-T\-\_\-\-S\-T\-A\-T}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{C\-A\-C\-H\-E\-\_\-\-H\-I\-T\-\_\-\-S\-T\-A\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-A\-C\-H\-E\-\_\-\-H\-I\-T\-\_\-\-S\-T\-A\-T~{\bf M\-S\-U\-\_\-\-S\-T\-A\-T1}}}\label{cache__msu_8c_ade2ed44bffc7c446d24894c143a0583f}
+
+
+Definition at line 48 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a0c7e2dcd4a963cc2fded23419238f995}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!C\-A\-C\-H\-E\-\_\-\-I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X@{C\-A\-C\-H\-E\-\_\-\-I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}}
+\index{C\-A\-C\-H\-E\-\_\-\-I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X@{C\-A\-C\-H\-E\-\_\-\-I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{C\-A\-C\-H\-E\-\_\-\-I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-A\-C\-H\-E\-\_\-\-I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}}\label{cache__msu_8c_a0c7e2dcd4a963cc2fded23419238f995}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{stringliteral}{"<www\_dir>, <max\_cache\_size\_in\_kb>, <max\_cached\_files>, "} \(\backslash\)
+                          \textcolor{stringliteral}{"<max\_cache\_occupancy\_rate>"}
+\end{DoxyCode}
+
+
+Definition at line 44 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a4e6bade874dd75598d1c531728b559c2}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!C\-A\-C\-H\-E\-\_\-\-M\-I\-S\-S\-\_\-\-S\-T\-A\-T@{C\-A\-C\-H\-E\-\_\-\-M\-I\-S\-S\-\_\-\-S\-T\-A\-T}}
+\index{C\-A\-C\-H\-E\-\_\-\-M\-I\-S\-S\-\_\-\-S\-T\-A\-T@{C\-A\-C\-H\-E\-\_\-\-M\-I\-S\-S\-\_\-\-S\-T\-A\-T}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{C\-A\-C\-H\-E\-\_\-\-M\-I\-S\-S\-\_\-\-S\-T\-A\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-A\-C\-H\-E\-\_\-\-M\-I\-S\-S\-\_\-\-S\-T\-A\-T~{\bf M\-S\-U\-\_\-\-S\-T\-A\-T2}}}\label{cache__msu_8c_a4e6bade874dd75598d1c531728b559c2}
+
+
+Definition at line 49 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_ac324f4a8f4634931df04c44514cedf72}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-F\-I\-L\-E\-S@{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-F\-I\-L\-E\-S}}
+\index{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-F\-I\-L\-E\-S@{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-F\-I\-L\-E\-S}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-F\-I\-L\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-F\-I\-L\-E\-S~U\-I\-N\-T\-\_\-\-M\-A\-X}}\label{cache__msu_8c_ac324f4a8f4634931df04c44514cedf72}
+
+
+Definition at line 43 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a1ddf5acf05ce1ebf8714a337a51081cf}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-K\-B\-\_\-\-S\-I\-Z\-E@{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-K\-B\-\_\-\-S\-I\-Z\-E}}
+\index{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-K\-B\-\_\-\-S\-I\-Z\-E@{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-K\-B\-\_\-\-S\-I\-Z\-E}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-K\-B\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-X\-\_\-\-K\-B\-\_\-\-S\-I\-Z\-E~U\-I\-N\-T\-\_\-\-M\-A\-X}}\label{cache__msu_8c_a1ddf5acf05ce1ebf8714a337a51081cf}
+
+
+Definition at line 42 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_aa19a0eef68c0bcd8699456d3c8571b3d}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!D\-E\-F\-A\-U\-L\-T\-\_\-\-O\-C\-C\-U\-P\-A\-N\-C\-Y\-\_\-\-R\-A\-T\-E@{D\-E\-F\-A\-U\-L\-T\-\_\-\-O\-C\-C\-U\-P\-A\-N\-C\-Y\-\_\-\-R\-A\-T\-E}}
+\index{D\-E\-F\-A\-U\-L\-T\-\_\-\-O\-C\-C\-U\-P\-A\-N\-C\-Y\-\_\-\-R\-A\-T\-E@{D\-E\-F\-A\-U\-L\-T\-\_\-\-O\-C\-C\-U\-P\-A\-N\-C\-Y\-\_\-\-R\-A\-T\-E}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{D\-E\-F\-A\-U\-L\-T\-\_\-\-O\-C\-C\-U\-P\-A\-N\-C\-Y\-\_\-\-R\-A\-T\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-E\-F\-A\-U\-L\-T\-\_\-\-O\-C\-C\-U\-P\-A\-N\-C\-Y\-\_\-\-R\-A\-T\-E~0.\-2}}\label{cache__msu_8c_aa19a0eef68c0bcd8699456d3c8571b3d}
+
+
+Definition at line 41 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a2845f1f56f81efaee0afad449ff58ed4}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-W\-W\-\_\-\-D\-I\-R@{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-W\-W\-\_\-\-D\-I\-R}}
+\index{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-W\-W\-\_\-\-D\-I\-R@{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-W\-W\-\_\-\-D\-I\-R}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-W\-W\-\_\-\-D\-I\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-W\-W\-\_\-\-D\-I\-R~\char`\"{}www/\char`\"{}}}\label{cache__msu_8c_a2845f1f56f81efaee0afad449ff58ed4}
+
+
+Definition at line 40 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a2ec2a1b55c90969d466794367794b45d}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!M\-O\-N\-I\-T\-O\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-S\-T\-A\-T\-S@{M\-O\-N\-I\-T\-O\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-S\-T\-A\-T\-S}}
+\index{M\-O\-N\-I\-T\-O\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-S\-T\-A\-T\-S@{M\-O\-N\-I\-T\-O\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-S\-T\-A\-T\-S}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{M\-O\-N\-I\-T\-O\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-S\-T\-A\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-O\-N\-I\-T\-O\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-S\-T\-A\-T\-S}}\label{cache__msu_8c_a2ec2a1b55c90969d466794367794b45d}
+
+
+Definition at line 47 of file cache\-\_\-msu.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{cache__msu_8c_a95889312710319071071cfb505264f21}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!cache\-\_\-file@{cache\-\_\-file}}
+\index{cache\-\_\-file@{cache\-\_\-file}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{cache\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}static int cache\-\_\-file (
+\begin{DoxyParamCaption}
+\item[{struct {\bf ws\-\_\-cache\-\_\-state} $\ast$}]{fc, }
+\item[{char $\ast$}]{path, }
+\item[{char $\ast$}]{contents, }
+\item[{long}]{length}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cache__msu_8c_a95889312710319071071cfb505264f21}
+
+
+Definition at line 152 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_ac2eb297bac2f831cc7cd4c9d188a507b}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!check\-\_\-cache@{check\-\_\-cache}}
+\index{check\-\_\-cache@{check\-\_\-cache}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{check\-\_\-cache}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf cached\-\_\-file}$\ast$ check\-\_\-cache (
+\begin{DoxyParamCaption}
+\item[{struct {\bf ws\-\_\-cache\-\_\-state} $\ast$}]{fc, }
+\item[{char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}}\label{cache__msu_8c_ac2eb297bac2f831cc7cd4c9d188a507b}
+
+
+Definition at line 76 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a33fa50166d619b3ba131021bd79f0c9b}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!parse\-\_\-init\-\_\-cache\-\_\-payload@{parse\-\_\-init\-\_\-cache\-\_\-payload}}
+\index{parse\-\_\-init\-\_\-cache\-\_\-payload@{parse\-\_\-init\-\_\-cache\-\_\-payload}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{parse\-\_\-init\-\_\-cache\-\_\-payload}]{\setlength{\rightskip}{0pt plus 5cm}static int parse\-\_\-init\-\_\-cache\-\_\-payload (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{to\-\_\-parse, }
+\item[{struct {\bf ws\-\_\-cache\-\_\-state} $\ast$}]{cache\-\_\-state}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cache__msu_8c_a33fa50166d619b3ba131021bd79f0c9b}
+
+
+Definition at line 102 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a6afd60636a70752327c1a53b7ce90168}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!ws\-\_\-cache\-\_\-init@{ws\-\_\-cache\-\_\-init}}
+\index{ws\-\_\-cache\-\_\-init@{ws\-\_\-cache\-\_\-init}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{ws\-\_\-cache\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}static int ws\-\_\-cache\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-init\-\_\-data} $\ast$}]{init\-\_\-data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cache__msu_8c_a6afd60636a70752327c1a53b7ce90168}
+
+
+Definition at line 276 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a8c645d95ce7b622e81c4171151b7ada3}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!ws\-\_\-cache\-\_\-lookup@{ws\-\_\-cache\-\_\-lookup}}
+\index{ws\-\_\-cache\-\_\-lookup@{ws\-\_\-cache\-\_\-lookup}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{ws\-\_\-cache\-\_\-lookup}]{\setlength{\rightskip}{0pt plus 5cm}static int ws\-\_\-cache\-\_\-lookup (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{cache__msu_8c_a8c645d95ce7b622e81c4171151b7ada3}
+
+
+Definition at line 231 of file cache\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{cache__msu_8c_aa4ff3c29661e0c7a60ed3d3b993a8382}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!cache\-\_\-instance@{cache\-\_\-instance}}
+\index{cache\-\_\-instance@{cache\-\_\-instance}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{cache\-\_\-instance}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ cache\-\_\-instance\hspace{0.3cm}{\ttfamily [static]}}}\label{cache__msu_8c_aa4ff3c29661e0c7a60ed3d3b993a8382}
+
+
+Definition at line 53 of file cache\-\_\-msu.\-c.
+
+\hypertarget{cache__msu_8c_a6547af6500682988471baebf7b7c6f72}{\index{cache\-\_\-msu.\-c@{cache\-\_\-msu.\-c}!W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!cache_msu.c@{cache\-\_\-msu.\-c}}
+\subsubsection[{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-C\-A\-C\-H\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{cache__msu_8c_a6547af6500682988471baebf7b7c6f72}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+        .name = \textcolor{stringliteral}{"Webserver\_cache\_msu"},
+        .id = \hyperlink{cache__msu_8h_ab197808ba5284337b256e3516aa5867c}{WEBSERVER\_CACHE\_MSU\_TYPE\_ID},
+        .receive = \hyperlink{cache__msu_8c_a8c645d95ce7b622e81c4171151b7ada3}{ws\_cache\_lookup},
+        .init = \hyperlink{cache__msu_8c_a6afd60636a70752327c1a53b7ce90168}{ws\_cache\_init},
+        .route = \hyperlink{routing__strategies_8c_a31ea29fa373e8daa760f9a66e4c43ead}{shortest\_queue\_route}
+\}
+\end{DoxyCode}
+
+
+Definition at line 300 of file cache\-\_\-msu.\-c.
+

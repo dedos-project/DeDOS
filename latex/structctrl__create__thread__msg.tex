@@ -1,0 +1,58 @@
+\hypertarget{structctrl__create__thread__msg}{\section{ctrl\-\_\-create\-\_\-thread\-\_\-msg Struct Reference}
+\label{structctrl__create__thread__msg}\index{ctrl\-\_\-create\-\_\-thread\-\_\-msg@{ctrl\-\_\-create\-\_\-thread\-\_\-msg}}
+}
+
+
+Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2e623fd9e79d281a3137762f1d5569fe}{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}.  
+
+
+
+
+{\ttfamily \#include $<$ctrl\-\_\-runtime\-\_\-messages.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structctrl__create__thread__msg_a930a1b6ad3d62f876fa6ce4a44f2daf1}{thread\-\_\-id}
+\begin{DoxyCompactList}\small\item\em The I\-D to give to the created thread. \end{DoxyCompactList}\item 
+enum \hyperlink{dfg_8h_af31ca3002c5b769551da6f1183bafed5}{blocking\-\_\-mode} \hyperlink{structctrl__create__thread__msg_af74075761b9c8f46b619d33d4ef21c81}{mode}
+\begin{DoxyCompactList}\small\item\em The mode of the thread. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2e623fd9e79d281a3137762f1d5569fe}{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}. 
+
+Creates a new thread with the given I\-D and pinned/unpinned mode on the target runtime. 
+
+Definition at line 84 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structctrl__create__thread__msg_af74075761b9c8f46b619d33d4ef21c81}{\index{ctrl\-\_\-create\-\_\-thread\-\_\-msg@{ctrl\-\_\-create\-\_\-thread\-\_\-msg}!mode@{mode}}
+\index{mode@{mode}!ctrl_create_thread_msg@{ctrl\-\_\-create\-\_\-thread\-\_\-msg}}
+\subsubsection[{mode}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf blocking\-\_\-mode} ctrl\-\_\-create\-\_\-thread\-\_\-msg\-::mode}}\label{structctrl__create__thread__msg_af74075761b9c8f46b619d33d4ef21c81}
+
+
+The mode of the thread. 
+
+\hyperlink{dfg_8h_af31ca3002c5b769551da6f1183bafed5a3e9aecc35fdf55d99ab9e876cce4411c}{B\-L\-O\-C\-K\-I\-N\-G\-\_\-\-M\-S\-U} corresponds to \hyperlink{dfg_8h_a673ccd9aadafd31e8beaf16423c07db2ad7379b426f921781afd49485009640f0}{P\-I\-N\-N\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D} for now 
+
+Definition at line 86 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__create__thread__msg_a930a1b6ad3d62f876fa6ce4a44f2daf1}{\index{ctrl\-\_\-create\-\_\-thread\-\_\-msg@{ctrl\-\_\-create\-\_\-thread\-\_\-msg}!thread\-\_\-id@{thread\-\_\-id}}
+\index{thread\-\_\-id@{thread\-\_\-id}!ctrl_create_thread_msg@{ctrl\-\_\-create\-\_\-thread\-\_\-msg}}
+\subsubsection[{thread\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int ctrl\-\_\-create\-\_\-thread\-\_\-msg\-::thread\-\_\-id}}\label{structctrl__create__thread__msg_a930a1b6ad3d62f876fa6ce4a44f2daf1}
+
+
+The I\-D to give to the created thread. 
+
+
+
+Definition at line 85 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{ctrl__runtime__messages_8h}{ctrl\-\_\-runtime\-\_\-messages.\-h}\end{DoxyCompactItemize}

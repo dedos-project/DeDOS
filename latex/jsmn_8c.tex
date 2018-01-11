@@ -1,0 +1,147 @@
+\hypertarget{jsmn_8c}{\section{src/common/jsmn.c File Reference}
+\label{jsmn_8c}\index{src/common/jsmn.\-c@{src/common/jsmn.\-c}}
+}
+
+
+\href{https://github.com/zserge/jsmn}{\tt https\-://github.\-com/zserge/jsmn}.  
+
+
+{\ttfamily \#include \char`\"{}jsmn.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$ \hyperlink{jsmn_8c_a0d7a964b95b65cd16699a355ede80394}{jsmn\-\_\-alloc\-\_\-token} (\hyperlink{structjsmn__parser}{jsmn\-\_\-parser} $\ast$parser, \hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$\hyperlink{http__parser_8c_a4e5747065ed2d7b90f2d8a148c88b55b}{tokens}, size\-\_\-t num\-\_\-tokens)
+\begin{DoxyCompactList}\small\item\em Allocates a fresh unused token from the token pull. \end{DoxyCompactList}\item 
+static void \hyperlink{jsmn_8c_a20b875e37a2a5c88888c6d80068715be}{jsmn\-\_\-fill\-\_\-token} (\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$token, \hyperlink{global__controller_2jsmn_8h_a065320719769f9dc1fbe30094e52802f}{jsmntype\-\_\-t} type, int start, int end)
+\begin{DoxyCompactList}\small\item\em Fills token type and boundaries. \end{DoxyCompactList}\item 
+static int \hyperlink{jsmn_8c_a4d1f29464811e2bbf5506fbe5c7ee9de}{jsmn\-\_\-parse\-\_\-primitive} (\hyperlink{structjsmn__parser}{jsmn\-\_\-parser} $\ast$parser, const char $\ast$js, size\-\_\-t len, \hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$\hyperlink{http__parser_8c_a4e5747065ed2d7b90f2d8a148c88b55b}{tokens}, size\-\_\-t num\-\_\-tokens)
+\begin{DoxyCompactList}\small\item\em Fills next available token with J\-S\-O\-N primitive. \end{DoxyCompactList}\item 
+static int \hyperlink{jsmn_8c_a568f184e45bb9718270088e1e05a4264}{jsmn\-\_\-parse\-\_\-string} (\hyperlink{structjsmn__parser}{jsmn\-\_\-parser} $\ast$parser, const char $\ast$js, size\-\_\-t len, \hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$\hyperlink{http__parser_8c_a4e5747065ed2d7b90f2d8a148c88b55b}{tokens}, size\-\_\-t num\-\_\-tokens)
+\begin{DoxyCompactList}\small\item\em Fills next token with J\-S\-O\-N string. \end{DoxyCompactList}\item 
+int \hyperlink{jsmn_8c_a774f985a9750a10c7e88304e30191e03}{jsmn\-\_\-parse} (\hyperlink{structjsmn__parser}{jsmn\-\_\-parser} $\ast$parser, const char $\ast$js, size\-\_\-t len, \hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$\hyperlink{http__parser_8c_a4e5747065ed2d7b90f2d8a148c88b55b}{tokens}, unsigned int num\-\_\-tokens)
+\begin{DoxyCompactList}\small\item\em Parse J\-S\-O\-N string and fill tokens. \end{DoxyCompactList}\item 
+void \hyperlink{jsmn_8c_a8d4a8b3ce5c3d600feea38615b5f9aa6}{jsmn\-\_\-init} (\hyperlink{structjsmn__parser}{jsmn\-\_\-parser} $\ast$parser)
+\begin{DoxyCompactList}\small\item\em Creates a new parser based over a given buffer with an array of tokens available. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\href{https://github.com/zserge/jsmn}{\tt https\-://github.\-com/zserge/jsmn}. Copyright (c) 2010 Serge A. Zaitsev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \char`\"{}\-Software\char`\"{}), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions\-:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+T\-H\-E S\-O\-F\-T\-W\-A\-R\-E I\-S P\-R\-O\-V\-I\-D\-E\-D \char`\"{}\-A\-S I\-S\char`\"{}, W\-I\-T\-H\-O\-U\-T W\-A\-R\-R\-A\-N\-T\-Y O\-F A\-N\-Y K\-I\-N\-D, E\-X\-P\-R\-E\-S\-S O\-R I\-M\-P\-L\-I\-E\-D, I\-N\-C\-L\-U\-D\-I\-N\-G B\-U\-T N\-O\-T L\-I\-M\-I\-T\-E\-D T\-O T\-H\-E W\-A\-R\-R\-A\-N\-T\-I\-E\-S O\-F M\-E\-R\-C\-H\-A\-N\-T\-A\-B\-I\-L\-I\-T\-Y, F\-I\-T\-N\-E\-S\-S F\-O\-R A P\-A\-R\-T\-I\-C\-U\-L\-A\-R P\-U\-R\-P\-O\-S\-E A\-N\-D N\-O\-N\-I\-N\-F\-R\-I\-N\-G\-E\-M\-E\-N\-T. I\-N N\-O E\-V\-E\-N\-T S\-H\-A\-L\-L T\-H\-E A\-U\-T\-H\-O\-R\-S O\-R C\-O\-P\-Y\-R\-I\-G\-H\-T H\-O\-L\-D\-E\-R\-S B\-E L\-I\-A\-B\-L\-E F\-O\-R A\-N\-Y C\-L\-A\-I\-M, D\-A\-M\-A\-G\-E\-S O\-R O\-T\-H\-E\-R L\-I\-A\-B\-I\-L\-I\-T\-Y, W\-H\-E\-T\-H\-E\-R I\-N A\-N A\-C\-T\-I\-O\-N O\-F C\-O\-N\-T\-R\-A\-C\-T, T\-O\-R\-T O\-R O\-T\-H\-E\-R\-W\-I\-S\-E, A\-R\-I\-S\-I\-N\-G F\-R\-O\-M, O\-U\-T O\-F O\-R I\-N C\-O\-N\-N\-E\-C\-T\-I\-O\-N W\-I\-T\-H T\-H\-E S\-O\-F\-T\-W\-A\-R\-E O\-R T\-H\-E U\-S\-E O\-R O\-T\-H\-E\-R D\-E\-A\-L\-I\-N\-G\-S I\-N T\-H\-E S\-O\-F\-T\-W\-A\-R\-E. 
+
+Definition in file \hyperlink{jsmn_8c_source}{jsmn.\-c}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{jsmn_8c_a0d7a964b95b65cd16699a355ede80394}{\index{jsmn.\-c@{jsmn.\-c}!jsmn\-\_\-alloc\-\_\-token@{jsmn\-\_\-alloc\-\_\-token}}
+\index{jsmn\-\_\-alloc\-\_\-token@{jsmn\-\_\-alloc\-\_\-token}!jsmn.c@{jsmn.\-c}}
+\subsubsection[{jsmn\-\_\-alloc\-\_\-token}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf jsmntok\-\_\-t}$\ast$ jsmn\-\_\-alloc\-\_\-token (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmn\-\_\-parser} $\ast$}]{parser, }
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{tokens, }
+\item[{size\-\_\-t}]{num\-\_\-tokens}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{jsmn_8c_a0d7a964b95b65cd16699a355ede80394}
+
+
+Allocates a fresh unused token from the token pull. 
+
+
+
+Definition at line 28 of file jsmn.\-c.
+
+\hypertarget{jsmn_8c_a20b875e37a2a5c88888c6d80068715be}{\index{jsmn.\-c@{jsmn.\-c}!jsmn\-\_\-fill\-\_\-token@{jsmn\-\_\-fill\-\_\-token}}
+\index{jsmn\-\_\-fill\-\_\-token@{jsmn\-\_\-fill\-\_\-token}!jsmn.c@{jsmn.\-c}}
+\subsubsection[{jsmn\-\_\-fill\-\_\-token}]{\setlength{\rightskip}{0pt plus 5cm}static void jsmn\-\_\-fill\-\_\-token (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{token, }
+\item[{{\bf jsmntype\-\_\-t}}]{type, }
+\item[{int}]{start, }
+\item[{int}]{end}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{jsmn_8c_a20b875e37a2a5c88888c6d80068715be}
+
+
+Fills token type and boundaries. 
+
+
+
+Definition at line 46 of file jsmn.\-c.
+
+\hypertarget{jsmn_8c_a8d4a8b3ce5c3d600feea38615b5f9aa6}{\index{jsmn.\-c@{jsmn.\-c}!jsmn\-\_\-init@{jsmn\-\_\-init}}
+\index{jsmn\-\_\-init@{jsmn\-\_\-init}!jsmn.c@{jsmn.\-c}}
+\subsubsection[{jsmn\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}void jsmn\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmn\-\_\-parser} $\ast$}]{parser}
+\end{DoxyParamCaption}
+)}}\label{jsmn_8c_a8d4a8b3ce5c3d600feea38615b5f9aa6}
+
+
+Creates a new parser based over a given buffer with an array of tokens available. 
+
+Create J\-S\-O\-N parser over an array of tokens. 
+
+Definition at line 331 of file jsmn.\-c.
+
+\hypertarget{jsmn_8c_a774f985a9750a10c7e88304e30191e03}{\index{jsmn.\-c@{jsmn.\-c}!jsmn\-\_\-parse@{jsmn\-\_\-parse}}
+\index{jsmn\-\_\-parse@{jsmn\-\_\-parse}!jsmn.c@{jsmn.\-c}}
+\subsubsection[{jsmn\-\_\-parse}]{\setlength{\rightskip}{0pt plus 5cm}int jsmn\-\_\-parse (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmn\-\_\-parser} $\ast$}]{parser, }
+\item[{const char $\ast$}]{js, }
+\item[{size\-\_\-t}]{len, }
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{tokens, }
+\item[{unsigned int}]{num\-\_\-tokens}
+\end{DoxyParamCaption}
+)}}\label{jsmn_8c_a774f985a9750a10c7e88304e30191e03}
+
+
+Parse J\-S\-O\-N string and fill tokens. 
+
+Run J\-S\-O\-N parser. 
+
+Definition at line 173 of file jsmn.\-c.
+
+\hypertarget{jsmn_8c_a4d1f29464811e2bbf5506fbe5c7ee9de}{\index{jsmn.\-c@{jsmn.\-c}!jsmn\-\_\-parse\-\_\-primitive@{jsmn\-\_\-parse\-\_\-primitive}}
+\index{jsmn\-\_\-parse\-\_\-primitive@{jsmn\-\_\-parse\-\_\-primitive}!jsmn.c@{jsmn.\-c}}
+\subsubsection[{jsmn\-\_\-parse\-\_\-primitive}]{\setlength{\rightskip}{0pt plus 5cm}static int jsmn\-\_\-parse\-\_\-primitive (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmn\-\_\-parser} $\ast$}]{parser, }
+\item[{const char $\ast$}]{js, }
+\item[{size\-\_\-t}]{len, }
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{tokens, }
+\item[{size\-\_\-t}]{num\-\_\-tokens}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{jsmn_8c_a4d1f29464811e2bbf5506fbe5c7ee9de}
+
+
+Fills next available token with J\-S\-O\-N primitive. 
+
+
+
+Definition at line 57 of file jsmn.\-c.
+
+\hypertarget{jsmn_8c_a568f184e45bb9718270088e1e05a4264}{\index{jsmn.\-c@{jsmn.\-c}!jsmn\-\_\-parse\-\_\-string@{jsmn\-\_\-parse\-\_\-string}}
+\index{jsmn\-\_\-parse\-\_\-string@{jsmn\-\_\-parse\-\_\-string}!jsmn.c@{jsmn.\-c}}
+\subsubsection[{jsmn\-\_\-parse\-\_\-string}]{\setlength{\rightskip}{0pt plus 5cm}static int jsmn\-\_\-parse\-\_\-string (
+\begin{DoxyParamCaption}
+\item[{{\bf jsmn\-\_\-parser} $\ast$}]{parser, }
+\item[{const char $\ast$}]{js, }
+\item[{size\-\_\-t}]{len, }
+\item[{{\bf jsmntok\-\_\-t} $\ast$}]{tokens, }
+\item[{size\-\_\-t}]{num\-\_\-tokens}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{jsmn_8c_a568f184e45bb9718270088e1e05a4264}
+
+
+Fills next token with J\-S\-O\-N string. 
+
+
+
+Definition at line 106 of file jsmn.\-c.
+

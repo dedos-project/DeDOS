@@ -1,0 +1,193 @@
+\hypertarget{communication_8c}{\section{src/common/communication.c File Reference}
+\label{communication_8c}\index{src/common/communication.\-c@{src/common/communication.\-c}}
+}
+
+
+General-\/purpose socket communication functions used from global controller, runtime, or M\-S\-Us.  
+
+
+{\ttfamily \#include \char`\"{}communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$arpa/inet.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{communication_8c_ab506880a619f9d803ab4de9e0d6ea226}{M\-A\-X\-\_\-\-R\-E\-A\-D\-\_\-\-A\-T\-T\-E\-M\-P\-T\-S}~100
+\begin{DoxyCompactList}\small\item\em The maximum number of times that a call to {\ttfamily read()} can be attempted for a single buffer before giving up. \end{DoxyCompactList}\item 
+\#define \hyperlink{communication_8c_aeefbbafa97642defe3ee6c3080b7d66f}{B\-A\-C\-K\-L\-O\-G}~1024
+\begin{DoxyCompactList}\small\item\em The backlog size for listening sockets. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{communication_8c_a15f6c94631766be58c33ff65cefea7bf}{read\-\_\-payload} (int fd, size\-\_\-t size, void $\ast$buff)
+\begin{DoxyCompactList}\small\item\em Reads a buffer of a given size from a file descriptor. \end{DoxyCompactList}\item 
+ssize\-\_\-t \hyperlink{communication_8c_a905d09c8c60a1c6044f072f1d9afcd0a}{send\-\_\-to\-\_\-endpoint} (int fd, void $\ast$data, size\-\_\-t data\-\_\-len)
+\begin{DoxyCompactList}\small\item\em Writes a buffer of a given size to a file descriptor. \end{DoxyCompactList}\item 
+int \hyperlink{communication_8c_a15adda94475e88ccde759a19f2b69cf1}{init\-\_\-connected\-\_\-socket} (struct sockaddr\-\_\-in $\ast$addr)
+\begin{DoxyCompactList}\small\item\em Initializes a socket that is connected to a given address. \end{DoxyCompactList}\item 
+int \hyperlink{communication_8c_aacab08fb4e59e053ab68c9c74f94121f}{init\-\_\-bound\-\_\-socket} (int port)
+\begin{DoxyCompactList}\small\item\em Initializes a socket which is bound to a given port (and any local I\-P address). \end{DoxyCompactList}\item 
+int \hyperlink{communication_8c_a7b4b5117094ca794d34545752db89322}{init\-\_\-listening\-\_\-socket} (int port)
+\begin{DoxyCompactList}\small\item\em Initializes a socket which is bound to and listening on the given port. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+General-\/purpose socket communication functions used from global controller, runtime, or M\-S\-Us. 
+
+Definition in file \hyperlink{communication_8c_source}{communication.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{communication_8c_aeefbbafa97642defe3ee6c3080b7d66f}{\index{communication.\-c@{communication.\-c}!B\-A\-C\-K\-L\-O\-G@{B\-A\-C\-K\-L\-O\-G}}
+\index{B\-A\-C\-K\-L\-O\-G@{B\-A\-C\-K\-L\-O\-G}!communication.c@{communication.\-c}}
+\subsubsection[{B\-A\-C\-K\-L\-O\-G}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\-A\-C\-K\-L\-O\-G~1024}}\label{communication_8c_aeefbbafa97642defe3ee6c3080b7d66f}
+
+
+The backlog size for listening sockets. 
+
+
+
+Definition at line 145 of file communication.\-c.
+
+\hypertarget{communication_8c_ab506880a619f9d803ab4de9e0d6ea226}{\index{communication.\-c@{communication.\-c}!M\-A\-X\-\_\-\-R\-E\-A\-D\-\_\-\-A\-T\-T\-E\-M\-P\-T\-S@{M\-A\-X\-\_\-\-R\-E\-A\-D\-\_\-\-A\-T\-T\-E\-M\-P\-T\-S}}
+\index{M\-A\-X\-\_\-\-R\-E\-A\-D\-\_\-\-A\-T\-T\-E\-M\-P\-T\-S@{M\-A\-X\-\_\-\-R\-E\-A\-D\-\_\-\-A\-T\-T\-E\-M\-P\-T\-S}!communication.c@{communication.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-E\-A\-D\-\_\-\-A\-T\-T\-E\-M\-P\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-E\-A\-D\-\_\-\-A\-T\-T\-E\-M\-P\-T\-S~100}}\label{communication_8c_ab506880a619f9d803ab4de9e0d6ea226}
+
+
+The maximum number of times that a call to {\ttfamily read()} can be attempted for a single buffer before giving up. 
+
+
+
+Definition at line 35 of file communication.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{communication_8c_aacab08fb4e59e053ab68c9c74f94121f}{\index{communication.\-c@{communication.\-c}!init\-\_\-bound\-\_\-socket@{init\-\_\-bound\-\_\-socket}}
+\index{init\-\_\-bound\-\_\-socket@{init\-\_\-bound\-\_\-socket}!communication.c@{communication.\-c}}
+\subsubsection[{init\-\_\-bound\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-bound\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)}}\label{communication_8c_aacab08fb4e59e053ab68c9c74f94121f}
+
+
+Initializes a socket which is bound to a given port (and any local I\-P address). 
+
+Sets {\ttfamily R\-E\-U\-S\-E\-P\-O\-R\-T} and {\ttfamily R\-E\-U\-S\-E\-A\-D\-D\-R} on the socket. 
+\begin{DoxyParams}{Parameters}
+{\em port} & The port to which to bind \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the file descriptor on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 114 of file communication.\-c.
+
+\hypertarget{communication_8c_a15adda94475e88ccde759a19f2b69cf1}{\index{communication.\-c@{communication.\-c}!init\-\_\-connected\-\_\-socket@{init\-\_\-connected\-\_\-socket}}
+\index{init\-\_\-connected\-\_\-socket@{init\-\_\-connected\-\_\-socket}!communication.c@{communication.\-c}}
+\subsubsection[{init\-\_\-connected\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-connected\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{struct sockaddr\-\_\-in $\ast$}]{addr}
+\end{DoxyParamCaption}
+)}}\label{communication_8c_a15adda94475e88ccde759a19f2b69cf1}
+
+
+Initializes a socket that is connected to a given address. 
+
+Blocks until the connection has been estabslished. Sets port and address to be reusable 
+\begin{DoxyParams}{Parameters}
+{\em addr} & The address to connect to \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+file descriptor on sucecss, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 81 of file communication.\-c.
+
+\hypertarget{communication_8c_a7b4b5117094ca794d34545752db89322}{\index{communication.\-c@{communication.\-c}!init\-\_\-listening\-\_\-socket@{init\-\_\-listening\-\_\-socket}}
+\index{init\-\_\-listening\-\_\-socket@{init\-\_\-listening\-\_\-socket}!communication.c@{communication.\-c}}
+\subsubsection[{init\-\_\-listening\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-listening\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)}}\label{communication_8c_a7b4b5117094ca794d34545752db89322}
+
+
+Initializes a socket which is bound to and listening on the given port. 
+
+Sets backlog on socket to be equal to \hyperlink{communication_8c_aeefbbafa97642defe3ee6c3080b7d66f}{B\-A\-C\-K\-L\-O\-G} 
+\begin{DoxyParams}{Parameters}
+{\em port} & The port on which to listen \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The file descriptor on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 147 of file communication.\-c.
+
+\hypertarget{communication_8c_a15f6c94631766be58c33ff65cefea7bf}{\index{communication.\-c@{communication.\-c}!read\-\_\-payload@{read\-\_\-payload}}
+\index{read\-\_\-payload@{read\-\_\-payload}!communication.c@{communication.\-c}}
+\subsubsection[{read\-\_\-payload}]{\setlength{\rightskip}{0pt plus 5cm}int read\-\_\-payload (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{size\-\_\-t}]{size, }
+\item[{void $\ast$}]{buff}
+\end{DoxyParamCaption}
+)}}\label{communication_8c_a15f6c94631766be58c33ff65cefea7bf}
+
+
+Reads a buffer of a given size from a file descriptor. 
+
+Loops until enough bytes have been read off of the socket, until the socket is closed, or until it has tried more than \hyperlink{communication_8c_ab506880a619f9d803ab4de9e0d6ea226}{M\-A\-X\-\_\-\-R\-E\-A\-D\-\_\-\-A\-T\-T\-E\-M\-P\-T\-S} times. 
+\begin{DoxyParams}{Parameters}
+{\em fd} & The file descriptor from which to read \\
+\hline
+{\em size} & The number of bytes to read off of the file desriptor \\
+\hline
+{\em buff} & The buffer into which the read the bytes \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 37 of file communication.\-c.
+
+\hypertarget{communication_8c_a905d09c8c60a1c6044f072f1d9afcd0a}{\index{communication.\-c@{communication.\-c}!send\-\_\-to\-\_\-endpoint@{send\-\_\-to\-\_\-endpoint}}
+\index{send\-\_\-to\-\_\-endpoint@{send\-\_\-to\-\_\-endpoint}!communication.c@{communication.\-c}}
+\subsubsection[{send\-\_\-to\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}ssize\-\_\-t send\-\_\-to\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{void $\ast$}]{data, }
+\item[{size\-\_\-t}]{data\-\_\-len}
+\end{DoxyParamCaption}
+)}}\label{communication_8c_a905d09c8c60a1c6044f072f1d9afcd0a}
+
+
+Writes a buffer of a given size to a file descriptor. 
+
+Loops on the write call until all of the bytes have been sent or it encounters an error. 
+\begin{DoxyParams}{Parameters}
+{\em fd} & The file descriptor to which the data is to be written \\
+\hline
+{\em data} & The buffer to write to the file descriptor \\
+\hline
+{\em data\-\_\-len} & The size of the buffer to write \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Number of bytes writen. 0 if no bytes could be written. 
+\end{DoxyReturn}
+
+
+Definition at line 66 of file communication.\-c.
+

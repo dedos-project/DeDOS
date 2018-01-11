@@ -1,0 +1,423 @@
+\hypertarget{routing_8h}{\section{src/runtime/routing.h File Reference}
+\label{routing_8h}\index{src/runtime/routing.\-h@{src/runtime/routing.\-h}}
+}
+
+
+Functions for routing M\-S\-U messages between M\-S\-Us.  
+
+
+{\ttfamily \#include $<$inttypes.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}message\-\_\-queue.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint}
+\begin{DoxyCompactList}\small\item\em An endpoint to which an \hyperlink{structmsu__msg}{msu\-\_\-msg} can be delivered. \end{DoxyCompactList}\item 
+struct \hyperlink{structroute__set}{route\-\_\-set}
+\begin{DoxyCompactList}\small\item\em The publicly accessible copy of the routing table. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{routing_8h_a1e0801e863d8b098cf254722055a87c9}{init\-\_\-route} (int route\-\_\-id, int type\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Initializes a new route with the given route\-\_\-id and type\-\_\-id. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_a99f6378f65fffa352c3998bb3f97dbfb}{get\-\_\-route\-\_\-endpoint} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Gets the endpoint associated with the given key in the provided route. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_ab38d138296385e8072c91e6dcb40d0c7}{get\-\_\-shortest\-\_\-queue\-\_\-endpoint} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Gets the local endpoint from a route with the shortest queue length. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_a902dc65f11a09acdb584ae4fd4826674}{get\-\_\-endpoint\-\_\-by\-\_\-index} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int index, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Gets endpoint witih given index in route set. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_add72ff42f980c871753d8b98215aab4d}{get\-\_\-endpoint\-\_\-by\-\_\-id} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int msu\-\_\-id, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Gets endpoint with the given M\-S\-U I\-D in the provided route. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_a9cb0da845b542a9affb9075927af100d}{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoints, int n\-\_\-endpoints)
+\begin{DoxyCompactList}\small\item\em Gets all of the endpoints in the provided routing table with the right runtime id. \end{DoxyCompactList}\item 
+struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$ \hyperlink{routing_8h_a42073a39b7fbe2db506a545d579706f4}{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set} (struct \hyperlink{structroute__set}{route\-\_\-set} $\ast$routes, int type\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Gets the route from the provided array of routes which has the correct type I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_a419c38e56683f27d1406d71e2e697ddc}{get\-\_\-n\-\_\-endpoints} (struct \hyperlink{structrouting__table}{routing\-\_\-table} $\ast$table)
+\item 
+int \hyperlink{routing_8h_a13b3cd8ef49074daf5b4d453c17348ac}{add\-\_\-route\-\_\-endpoint} (int route\-\_\-id, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} endpoint, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} key)
+\begin{DoxyCompactList}\small\item\em Adds an endpoint to the route with the given I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_ac411d3a1f72933be63db7d3c01fd6181}{remove\-\_\-route\-\_\-endpoint} (int route\-\_\-id, int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Removes destination from route with given I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_ab1718cec32cc293750b298a178075174}{modify\-\_\-route\-\_\-endpoint} (int route\-\_\-id, int msu\-\_\-id, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} new\-\_\-key)
+\begin{DoxyCompactList}\small\item\em Modifies key associated with M\-S\-U in route. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_af28581c955d70183c6dd6327b71784b7}{add\-\_\-route\-\_\-to\-\_\-set} (struct \hyperlink{structroute__set}{route\-\_\-set} $\ast$set, int route\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Adds a route to a set of routes. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_a7bfa5c057f831fb87630be184d8332a4}{rm\-\_\-route\-\_\-from\-\_\-set} (struct \hyperlink{structroute__set}{route\-\_\-set} $\ast$set, int route\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Removes a route from a set of routes. \end{DoxyCompactList}\item 
+int \hyperlink{routing_8h_aedf8a035a80203c23ef060a497c1b90f}{init\-\_\-msu\-\_\-endpoint} (int msu\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$endpoint)
+\begin{DoxyCompactList}\small\item\em Initializes an endpoint structure to point to the relevant msu. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Functions for routing M\-S\-U messages between M\-S\-Us. 
+
+Definition in file \hyperlink{routing_8h_source}{routing.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{routing_8h_a13b3cd8ef49074daf5b4d453c17348ac}{\index{routing.\-h@{routing.\-h}!add\-\_\-route\-\_\-endpoint@{add\-\_\-route\-\_\-endpoint}}
+\index{add\-\_\-route\-\_\-endpoint@{add\-\_\-route\-\_\-endpoint}!routing.h@{routing.\-h}}
+\subsubsection[{add\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint}}]{endpoint, }
+\item[{{\bf uint32\-\_\-t}}]{key}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_a13b3cd8ef49074daf5b4d453c17348ac}
+
+
+Adds an endpoint to the route with the given I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route\-\_\-id} & I\-D of the route to which the endpoint is added \\
+\hline
+{\em endpoint} & the endpoint to be added \\
+\hline
+{\em key} & Key to associate with endpoint \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 409 of file routing.\-c.
+
+\hypertarget{routing_8h_af28581c955d70183c6dd6327b71784b7}{\index{routing.\-h@{routing.\-h}!add\-\_\-route\-\_\-to\-\_\-set@{add\-\_\-route\-\_\-to\-\_\-set}}
+\index{add\-\_\-route\-\_\-to\-\_\-set@{add\-\_\-route\-\_\-to\-\_\-set}!routing.h@{routing.\-h}}
+\subsubsection[{add\-\_\-route\-\_\-to\-\_\-set}]{\setlength{\rightskip}{0pt plus 5cm}int add\-\_\-route\-\_\-to\-\_\-set (
+\begin{DoxyParamCaption}
+\item[{struct {\bf route\-\_\-set} $\ast$}]{set, }
+\item[{int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_af28581c955d70183c6dd6327b71784b7}
+
+
+Adds a route to a set of routes. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \hyperlink{structroute__set}{route\-\_\-set}} & Set to add the route to \\
+\hline
+{\em route\-\_\-id} & I\-D of the route to add \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 450 of file routing.\-c.
+
+\hypertarget{routing_8h_add72ff42f980c871753d8b98215aab4d}{\index{routing.\-h@{routing.\-h}!get\-\_\-endpoint\-\_\-by\-\_\-id@{get\-\_\-endpoint\-\_\-by\-\_\-id}}
+\index{get\-\_\-endpoint\-\_\-by\-\_\-id@{get\-\_\-endpoint\-\_\-by\-\_\-id}!routing.h@{routing.\-h}}
+\subsubsection[{get\-\_\-endpoint\-\_\-by\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-endpoint\-\_\-by\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{msu\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_add72ff42f980c871753d8b98215aab4d}
+
+
+Gets endpoint with the given M\-S\-U I\-D in the provided route. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & Route to get the endpoint from \\
+\hline
+{\em msu\-\_\-id} & M\-S\-U I\-D to search for in the route set \\
+\hline
+{\em endpoint} & Points to appropriate endpoint on success \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 344 of file routing.\-c.
+
+\hypertarget{routing_8h_a902dc65f11a09acdb584ae4fd4826674}{\index{routing.\-h@{routing.\-h}!get\-\_\-endpoint\-\_\-by\-\_\-index@{get\-\_\-endpoint\-\_\-by\-\_\-index}}
+\index{get\-\_\-endpoint\-\_\-by\-\_\-index@{get\-\_\-endpoint\-\_\-by\-\_\-index}!routing.h@{routing.\-h}}
+\subsubsection[{get\-\_\-endpoint\-\_\-by\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-endpoint\-\_\-by\-\_\-index (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{index, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_a902dc65f11a09acdb584ae4fd4826674}
+
+
+Gets endpoint witih given index in route set. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & the route to get the endpoint from \\
+\hline
+{\em index} & Index of the endpoint to retrieve \\
+\hline
+{\em endpoint} & Points to appropriate endpoint on success \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 332 of file routing.\-c.
+
+\hypertarget{routing_8h_a9cb0da845b542a9affb9075927af100d}{\index{routing.\-h@{routing.\-h}!get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id@{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id}}
+\index{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id@{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id}!routing.h@{routing.\-h}}
+\subsubsection[{get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-endpoints\-\_\-by\-\_\-runtime\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{int}]{runtime\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoints, }
+\item[{int}]{n\-\_\-endpoints}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_a9cb0da845b542a9affb9075927af100d}
+
+
+Gets all of the endpoints in the provided routing table with the right runtime id. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em table} & The table to search for endpoints \\
+\hline
+{\em runtime\-\_\-id} & The I\-D of the runtime on which endpoints must reside \\
+\hline
+{\em endpoints} & An array of endpoints to be filled. \\
+\hline
+{\em n\-\_\-endpoints} & The amount of endpoints allocated in {\ttfamily endpoints} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The number of endpoints stored in {\ttfamily endpoints}, or -\/1 if n\-\_\-endpoints is too low 
+\end{DoxyReturn}
+
+
+Definition at line 359 of file routing.\-c.
+
+\hypertarget{routing_8h_a419c38e56683f27d1406d71e2e697ddc}{\index{routing.\-h@{routing.\-h}!get\-\_\-n\-\_\-endpoints@{get\-\_\-n\-\_\-endpoints}}
+\index{get\-\_\-n\-\_\-endpoints@{get\-\_\-n\-\_\-endpoints}!routing.h@{routing.\-h}}
+\subsubsection[{get\-\_\-n\-\_\-endpoints}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-n\-\_\-endpoints (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_a419c38e56683f27d1406d71e2e697ddc}
+
+
+Definition at line 378 of file routing.\-c.
+
+\hypertarget{routing_8h_a99f6378f65fffa352c3998bb3f97dbfb}{\index{routing.\-h@{routing.\-h}!get\-\_\-route\-\_\-endpoint@{get\-\_\-route\-\_\-endpoint}}
+\index{get\-\_\-route\-\_\-endpoint@{get\-\_\-route\-\_\-endpoint}!routing.h@{routing.\-h}}
+\subsubsection[{get\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{{\bf uint32\-\_\-t}}]{key, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_a99f6378f65fffa352c3998bb3f97dbfb}
+
+
+Gets the endpoint associated with the given key in the provided route. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route} & Route to search for key \\
+\hline
+{\em key} & The key with which to search the route set  endpoint Points to the appropraite endpoint on success \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 385 of file routing.\-c.
+
+\hypertarget{routing_8h_ab38d138296385e8072c91e6dcb40d0c7}{\index{routing.\-h@{routing.\-h}!get\-\_\-shortest\-\_\-queue\-\_\-endpoint@{get\-\_\-shortest\-\_\-queue\-\_\-endpoint}}
+\index{get\-\_\-shortest\-\_\-queue\-\_\-endpoint@{get\-\_\-shortest\-\_\-queue\-\_\-endpoint}!routing.h@{routing.\-h}}
+\subsubsection[{get\-\_\-shortest\-\_\-queue\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-shortest\-\_\-queue\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{struct {\bf routing\-\_\-table} $\ast$}]{table, }
+\item[{{\bf uint32\-\_\-t}}]{key, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_ab38d138296385e8072c91e6dcb40d0c7}
+
+
+Gets the local endpoint from a route with the shortest queue length. 
+
+Ignores enpoints on remote runtimes. 
+\begin{DoxyParams}{Parameters}
+{\em table} & The route to search for the shortest queue length \\
+\hline
+{\em key} & Used as a tiebreaker in the case of multiple M\-S\-Us with same queue length \\
+\hline
+{\em endpoint} & Points to appropriate endpoint on success \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 299 of file routing.\-c.
+
+\hypertarget{routing_8h_a42073a39b7fbe2db506a545d579706f4}{\index{routing.\-h@{routing.\-h}!get\-\_\-type\-\_\-from\-\_\-route\-\_\-set@{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set}}
+\index{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set@{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set}!routing.h@{routing.\-h}}
+\subsubsection[{get\-\_\-type\-\_\-from\-\_\-route\-\_\-set}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf routing\-\_\-table}$\ast$ get\-\_\-type\-\_\-from\-\_\-route\-\_\-set (
+\begin{DoxyParamCaption}
+\item[{struct {\bf route\-\_\-set} $\ast$}]{routes, }
+\item[{int}]{type\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_a42073a39b7fbe2db506a545d579706f4}
+
+
+Gets the route from the provided array of routes which has the correct type I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em routes} & Pointer to array of routes to search \\
+\hline
+{\em n\-\_\-routes} & Number of routes in route array \\
+\hline
+{\em type\-\_\-id} & Type I\-D to search for \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+pointer to the routing table with correct type I\-D on success, else N\-U\-L\-L 
+\end{DoxyReturn}
+
+
+Definition at line 399 of file routing.\-c.
+
+\hypertarget{routing_8h_aedf8a035a80203c23ef060a497c1b90f}{\index{routing.\-h@{routing.\-h}!init\-\_\-msu\-\_\-endpoint@{init\-\_\-msu\-\_\-endpoint}}
+\index{init\-\_\-msu\-\_\-endpoint@{init\-\_\-msu\-\_\-endpoint}!routing.h@{routing.\-h}}
+\subsubsection[{init\-\_\-msu\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-msu\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id, }
+\item[{int}]{runtime\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{endpoint}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_aedf8a035a80203c23ef060a497c1b90f}
+
+
+Initializes an endpoint structure to point to the relevant msu. 
+
+
+
+Definition at line 483 of file routing.\-c.
+
+\hypertarget{routing_8h_a1e0801e863d8b098cf254722055a87c9}{\index{routing.\-h@{routing.\-h}!init\-\_\-route@{init\-\_\-route}}
+\index{init\-\_\-route@{init\-\_\-route}!routing.h@{routing.\-h}}
+\subsubsection[{init\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{int}]{type\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_a1e0801e863d8b098cf254722055a87c9}
+
+
+Initializes a new route with the given route\-\_\-id and type\-\_\-id. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route\-\_\-id} & The I\-D to assign to the new route \\
+\hline
+{\em type\-\_\-id} & The Type I\-D to assign to the new route \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 276 of file routing.\-c.
+
+\hypertarget{routing_8h_ab1718cec32cc293750b298a178075174}{\index{routing.\-h@{routing.\-h}!modify\-\_\-route\-\_\-endpoint@{modify\-\_\-route\-\_\-endpoint}}
+\index{modify\-\_\-route\-\_\-endpoint@{modify\-\_\-route\-\_\-endpoint}!routing.h@{routing.\-h}}
+\subsubsection[{modify\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int modify\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{int}]{msu\-\_\-id, }
+\item[{{\bf uint32\-\_\-t}}]{new\-\_\-key}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_ab1718cec32cc293750b298a178075174}
+
+
+Modifies key associated with M\-S\-U in route. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route\-\_\-id} & The I\-D of the route to modify \\
+\hline
+{\em msu\-\_\-id} & I\-D of M\-S\-U to modify \\
+\hline
+{\em new\-\_\-key} & New key to associate with M\-S\-U in route \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 434 of file routing.\-c.
+
+\hypertarget{routing_8h_ac411d3a1f72933be63db7d3c01fd6181}{\index{routing.\-h@{routing.\-h}!remove\-\_\-route\-\_\-endpoint@{remove\-\_\-route\-\_\-endpoint}}
+\index{remove\-\_\-route\-\_\-endpoint@{remove\-\_\-route\-\_\-endpoint}!routing.h@{routing.\-h}}
+\subsubsection[{remove\-\_\-route\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}int remove\-\_\-route\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{route\-\_\-id, }
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_ac411d3a1f72933be63db7d3c01fd6181}
+
+
+Removes destination from route with given I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em route\-\_\-id} & I\-D of the route from which the endpoint is removed \\
+\hline
+{\em msu\-\_\-id} & I\-D of the msu to remove \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 419 of file routing.\-c.
+
+\hypertarget{routing_8h_a7bfa5c057f831fb87630be184d8332a4}{\index{routing.\-h@{routing.\-h}!rm\-\_\-route\-\_\-from\-\_\-set@{rm\-\_\-route\-\_\-from\-\_\-set}}
+\index{rm\-\_\-route\-\_\-from\-\_\-set@{rm\-\_\-route\-\_\-from\-\_\-set}!routing.h@{routing.\-h}}
+\subsubsection[{rm\-\_\-route\-\_\-from\-\_\-set}]{\setlength{\rightskip}{0pt plus 5cm}int rm\-\_\-route\-\_\-from\-\_\-set (
+\begin{DoxyParamCaption}
+\item[{struct {\bf route\-\_\-set} $\ast$}]{set, }
+\item[{int}]{route\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{routing_8h_a7bfa5c057f831fb87630be184d8332a4}
+
+
+Removes a route from a set of routes. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \hyperlink{structroute__set}{route\-\_\-set}} & Set to remove the route from \\
+\hline
+{\em route\-\_\-id} & I\-D of the route to remove \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 465 of file routing.\-c.
+

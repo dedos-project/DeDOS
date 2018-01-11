@@ -1,0 +1,84 @@
+\hypertarget{structctrl__runtime__msg__hdr}{\section{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr Struct Reference}
+\label{structctrl__runtime__msg__hdr}\index{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}}
+}
+
+
+All messages sent from controller to runtime are prefixed with this header.  
+
+
+
+
+{\ttfamily \#include $<$ctrl\-\_\-runtime\-\_\-messages.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9}{ctrl\-\_\-runtime\-\_\-msg\-\_\-type} \hyperlink{structctrl__runtime__msg__hdr_a765e6683d264c80a950d44f9e6936fcf}{type}
+\begin{DoxyCompactList}\small\item\em Identifies the type of payload that follows. \end{DoxyCompactList}\item 
+int \hyperlink{structctrl__runtime__msg__hdr_a108aad48b5396f75b3168a4f6d380b22}{id}
+\begin{DoxyCompactList}\small\item\em Id for confirmation message (not implemented) \end{DoxyCompactList}\item 
+int \hyperlink{structctrl__runtime__msg__hdr_a43dc841753e857ee2a825e3c253644df}{thread\-\_\-id}
+\begin{DoxyCompactList}\small\item\em I\-D of the Thread to which the message is to be delivered. \end{DoxyCompactList}\item 
+size\-\_\-t \hyperlink{structctrl__runtime__msg__hdr_a58295be6c498903d48cb6aa6cf651c01}{payload\-\_\-size}
+\begin{DoxyCompactList}\small\item\em Payload will be serialized following this struct. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+All messages sent from controller to runtime are prefixed with this header. 
+
+This header is always followed by a payload of size \hyperlink{structctrl__runtime__msg__hdr_a58295be6c498903d48cb6aa6cf651c01}{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr\-::payload\-\_\-size} 
+
+Definition at line 56 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structctrl__runtime__msg__hdr_a108aad48b5396f75b3168a4f6d380b22}{\index{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}!id@{id}}
+\index{id@{id}!ctrl_runtime_msg_hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr\-::id}}\label{structctrl__runtime__msg__hdr_a108aad48b5396f75b3168a4f6d380b22}
+
+
+Id for confirmation message (not implemented) 
+
+
+
+Definition at line 58 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__runtime__msg__hdr_a58295be6c498903d48cb6aa6cf651c01}{\index{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}!payload\-\_\-size@{payload\-\_\-size}}
+\index{payload\-\_\-size@{payload\-\_\-size}!ctrl_runtime_msg_hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}}
+\subsubsection[{payload\-\_\-size}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr\-::payload\-\_\-size}}\label{structctrl__runtime__msg__hdr_a58295be6c498903d48cb6aa6cf651c01}
+
+
+Payload will be serialized following this struct. 
+
+
+
+Definition at line 62 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__runtime__msg__hdr_a43dc841753e857ee2a825e3c253644df}{\index{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}!thread\-\_\-id@{thread\-\_\-id}}
+\index{thread\-\_\-id@{thread\-\_\-id}!ctrl_runtime_msg_hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}}
+\subsubsection[{thread\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr\-::thread\-\_\-id}}\label{structctrl__runtime__msg__hdr_a43dc841753e857ee2a825e3c253644df}
+
+
+I\-D of the Thread to which the message is to be delivered. 
+
+Should be 0 if delivering to the main thread. 
+
+Definition at line 60 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{structctrl__runtime__msg__hdr_a765e6683d264c80a950d44f9e6936fcf}{\index{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}!type@{type}}
+\index{type@{type}!ctrl_runtime_msg_hdr@{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}}
+\subsubsection[{type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf ctrl\-\_\-runtime\-\_\-msg\-\_\-type} ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr\-::type}}\label{structctrl__runtime__msg__hdr_a765e6683d264c80a950d44f9e6936fcf}
+
+
+Identifies the type of payload that follows. 
+
+
+
+Definition at line 57 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{ctrl__runtime__messages_8h}{ctrl\-\_\-runtime\-\_\-messages.\-h}\end{DoxyCompactItemize}

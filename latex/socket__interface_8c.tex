@@ -1,0 +1,56 @@
+\hypertarget{socket__interface_8c}{\section{src/global\-\_\-controller/socket\-\_\-interface.c File Reference}
+\label{socket__interface_8c}\index{src/global\-\_\-controller/socket\-\_\-interface.\-c@{src/global\-\_\-controller/socket\-\_\-interface.\-c}}
+}
+{\ttfamily \#include \char`\"{}socket\-\_\-interface.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cli.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$zmq.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{socket__interface_8c_a774d5c0d74bbc47fad33f175a0bd13f4}{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N}~1024
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void $\ast$ \hyperlink{socket__interface_8c_af0be15c2486adf7b498183e0ed30010f}{socket\-\_\-loop} (void $\ast$v\-\_\-port)
+\item 
+int \hyperlink{socket__interface_8c_a8e5318d9edc3d970f21f084cf4d5a901}{start\-\_\-socket\-\_\-interface\-\_\-thread} (pthread\-\_\-t $\ast$thread, int port)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{socket__interface_8c_a774d5c0d74bbc47fad33f175a0bd13f4}{\index{socket\-\_\-interface.\-c@{socket\-\_\-interface.\-c}!M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N}!socket_interface.c@{socket\-\_\-interface.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-L\-E\-N~1024}}\label{socket__interface_8c_a774d5c0d74bbc47fad33f175a0bd13f4}
+
+
+Definition at line 27 of file socket\-\_\-interface.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{socket__interface_8c_af0be15c2486adf7b498183e0ed30010f}{\index{socket\-\_\-interface.\-c@{socket\-\_\-interface.\-c}!socket\-\_\-loop@{socket\-\_\-loop}}
+\index{socket\-\_\-loop@{socket\-\_\-loop}!socket_interface.c@{socket\-\_\-interface.\-c}}
+\subsubsection[{socket\-\_\-loop}]{\setlength{\rightskip}{0pt plus 5cm}static void$\ast$ socket\-\_\-loop (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{v\-\_\-port}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{socket__interface_8c_af0be15c2486adf7b498183e0ed30010f}
+
+
+Definition at line 29 of file socket\-\_\-interface.\-c.
+
+\hypertarget{socket__interface_8c_a8e5318d9edc3d970f21f084cf4d5a901}{\index{socket\-\_\-interface.\-c@{socket\-\_\-interface.\-c}!start\-\_\-socket\-\_\-interface\-\_\-thread@{start\-\_\-socket\-\_\-interface\-\_\-thread}}
+\index{start\-\_\-socket\-\_\-interface\-\_\-thread@{start\-\_\-socket\-\_\-interface\-\_\-thread}!socket_interface.c@{socket\-\_\-interface.\-c}}
+\subsubsection[{start\-\_\-socket\-\_\-interface\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int start\-\_\-socket\-\_\-interface\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{pthread\-\_\-t $\ast$}]{thread, }
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)}}\label{socket__interface_8c_a8e5318d9edc3d970f21f084cf4d5a901}
+
+
+Definition at line 84 of file socket\-\_\-interface.\-c.
+

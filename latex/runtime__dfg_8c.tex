@@ -1,0 +1,207 @@
+\hypertarget{runtime__dfg_8c}{\section{src/runtime/runtime\-\_\-dfg.c File Reference}
+\label{runtime__dfg_8c}\index{src/runtime/runtime\-\_\-dfg.\-c@{src/runtime/runtime\-\_\-dfg.\-c}}
+}
+
+
+Interactions with the global dfg from an individual runtime's perspective.  
+
+
+{\ttfamily \#include \char`\"{}runtime\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg\-\_\-reader.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg\-\_\-instantiation.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{runtime__dfg_8c_ad66e3b2bbf6b075e3c89c097980cb7b6}{set\-\_\-local\-\_\-runtime} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt)
+\begin{DoxyCompactList}\small\item\em Sets the local runtime to be equal to the provided rt. \end{DoxyCompactList}\item 
+int \hyperlink{runtime__dfg_8c_ace38d08092baf5668351832c3297910f}{init\-\_\-runtime\-\_\-dfg} (char $\ast$filename, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\begin{DoxyCompactList}\small\item\em Initializes the D\-F\-G as loaded from a J\-S\-O\-N file, and sets the global variables such that the D\-F\-G and runtime can be accessed. \end{DoxyCompactList}\item 
+int \hyperlink{runtime__dfg_8c_a10c95cd4a987df8ba31e579ce1907365}{controller\-\_\-address} (struct sockaddr\-\_\-in $\ast$addr)
+\begin{DoxyCompactList}\small\item\em Gets the sockaddr associated with the global controller. \end{DoxyCompactList}\item 
+int \hyperlink{runtime__dfg_8c_a04f1c32d1d07723d1ec9b2be747727e9}{local\-\_\-runtime\-\_\-id} ()
+\item 
+int \hyperlink{runtime__dfg_8c_a4976d87275c64b34fc6f1f988c423538}{local\-\_\-runtime\-\_\-port} ()
+\item 
+\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} \hyperlink{runtime__dfg_8c_aa15b50efd31e38a102e305e891800a71}{local\-\_\-runtime\-\_\-ip} ()
+\item 
+struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$ \hyperlink{runtime__dfg_8c_ab46ddcf8f68e7f7d76381d4256684f8b}{get\-\_\-dfg} ()
+\item 
+void \hyperlink{runtime__dfg_8c_a7f387166949cbf6061d2089c4b45d019}{free\-\_\-runtime\-\_\-dfg} ()
+\begin{DoxyCompactList}\small\item\em Frees the runtime's static instance of the D\-F\-G. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$ \hyperlink{runtime__dfg_8c_aec8e5a3726d7d58b766e6ff9e46094a7}{D\-F\-G} = N\-U\-L\-L
+\begin{DoxyCompactList}\small\item\em Static (global) variable for accessing a lodaed Dfg. \end{DoxyCompactList}\item 
+static struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$ \hyperlink{runtime__dfg_8c_ad9e3dbb10bed0c512e4aafb5c264ebcc}{L\-O\-C\-A\-L\-\_\-\-R\-U\-N\-T\-I\-M\-E} = N\-U\-L\-L
+\begin{DoxyCompactList}\small\item\em Static (global) variable holding this runtime's dfg. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Interactions with the global dfg from an individual runtime's perspective. 
+
+Definition in file \hyperlink{runtime__dfg_8c_source}{runtime\-\_\-dfg.\-c}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{runtime__dfg_8c_a10c95cd4a987df8ba31e579ce1907365}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!controller\-\_\-address@{controller\-\_\-address}}
+\index{controller\-\_\-address@{controller\-\_\-address}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{controller\-\_\-address}]{\setlength{\rightskip}{0pt plus 5cm}int controller\-\_\-address (
+\begin{DoxyParamCaption}
+\item[{struct sockaddr\-\_\-in $\ast$}]{addr}
+\end{DoxyParamCaption}
+)}}\label{runtime__dfg_8c_a10c95cd4a987df8ba31e579ce1907365}
+
+
+Gets the sockaddr associated with the global controller. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em addr} & Output parameter to be filled with controller's ip and port \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 77 of file runtime\-\_\-dfg.\-c.
+
+\hypertarget{runtime__dfg_8c_a7f387166949cbf6061d2089c4b45d019}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!free\-\_\-runtime\-\_\-dfg@{free\-\_\-runtime\-\_\-dfg}}
+\index{free\-\_\-runtime\-\_\-dfg@{free\-\_\-runtime\-\_\-dfg}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{free\-\_\-runtime\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}void free\-\_\-runtime\-\_\-dfg (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{runtime__dfg_8c_a7f387166949cbf6061d2089c4b45d019}
+
+
+Frees the runtime's static instance of the D\-F\-G. 
+
+
+
+Definition at line 119 of file runtime\-\_\-dfg.\-c.
+
+\hypertarget{runtime__dfg_8c_ab46ddcf8f68e7f7d76381d4256684f8b}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!get\-\_\-dfg@{get\-\_\-dfg}}
+\index{get\-\_\-dfg@{get\-\_\-dfg}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{get\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-dfg}$\ast$ get\-\_\-dfg (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{runtime__dfg_8c_ab46ddcf8f68e7f7d76381d4256684f8b}
+\begin{DoxyReturn}{Returns}
+the D\-F\-G with which this runtime was instantiated 
+\end{DoxyReturn}
+
+
+Definition at line 115 of file runtime\-\_\-dfg.\-c.
+
+\hypertarget{runtime__dfg_8c_ace38d08092baf5668351832c3297910f}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!init\-\_\-runtime\-\_\-dfg@{init\-\_\-runtime\-\_\-dfg}}
+\index{init\-\_\-runtime\-\_\-dfg@{init\-\_\-runtime\-\_\-dfg}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{init\-\_\-runtime\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-runtime\-\_\-dfg (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{filename, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{runtime__dfg_8c_ace38d08092baf5668351832c3297910f}
+
+
+Initializes the D\-F\-G as loaded from a J\-S\-O\-N file, and sets the global variables such that the D\-F\-G and runtime can be accessed. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & File from which to load the json D\-F\-G \\
+\hline
+{\em runtime\-\_\-id} & Idenitifer for this runtime \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 41 of file runtime\-\_\-dfg.\-c.
+
+\hypertarget{runtime__dfg_8c_a04f1c32d1d07723d1ec9b2be747727e9}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!local\-\_\-runtime\-\_\-id@{local\-\_\-runtime\-\_\-id}}
+\index{local\-\_\-runtime\-\_\-id@{local\-\_\-runtime\-\_\-id}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{local\-\_\-runtime\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int local\-\_\-runtime\-\_\-id (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{runtime__dfg_8c_a04f1c32d1d07723d1ec9b2be747727e9}
+\begin{DoxyReturn}{Returns}
+the I\-D of the local runtime 
+\end{DoxyReturn}
+
+
+Definition at line 91 of file runtime\-\_\-dfg.\-c.
+
+\hypertarget{runtime__dfg_8c_aa15b50efd31e38a102e305e891800a71}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!local\-\_\-runtime\-\_\-ip@{local\-\_\-runtime\-\_\-ip}}
+\index{local\-\_\-runtime\-\_\-ip@{local\-\_\-runtime\-\_\-ip}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{local\-\_\-runtime\-\_\-ip}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint32\-\_\-t} local\-\_\-runtime\-\_\-ip (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{runtime__dfg_8c_aa15b50efd31e38a102e305e891800a71}
+
+
+Definition at line 107 of file runtime\-\_\-dfg.\-c.
+
+\hypertarget{runtime__dfg_8c_a4976d87275c64b34fc6f1f988c423538}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!local\-\_\-runtime\-\_\-port@{local\-\_\-runtime\-\_\-port}}
+\index{local\-\_\-runtime\-\_\-port@{local\-\_\-runtime\-\_\-port}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{local\-\_\-runtime\-\_\-port}]{\setlength{\rightskip}{0pt plus 5cm}int local\-\_\-runtime\-\_\-port (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{runtime__dfg_8c_a4976d87275c64b34fc6f1f988c423538}
+\begin{DoxyReturn}{Returns}
+the port on which the local runtime is listening 
+\end{DoxyReturn}
+
+
+Definition at line 99 of file runtime\-\_\-dfg.\-c.
+
+\hypertarget{runtime__dfg_8c_ad66e3b2bbf6b075e3c89c097980cb7b6}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!set\-\_\-local\-\_\-runtime@{set\-\_\-local\-\_\-runtime}}
+\index{set\-\_\-local\-\_\-runtime@{set\-\_\-local\-\_\-runtime}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{set\-\_\-local\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}void set\-\_\-local\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt}
+\end{DoxyParamCaption}
+)}}\label{runtime__dfg_8c_ad66e3b2bbf6b075e3c89c097980cb7b6}
+
+
+Sets the local runtime to be equal to the provided rt. 
+
+Really should only be used from testing. Use \hyperlink{runtime__dfg_8h_ace38d08092baf5668351832c3297910f}{init\-\_\-runtime\-\_\-dfg} instead 
+
+Definition at line 37 of file runtime\-\_\-dfg.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{runtime__dfg_8c_aec8e5a3726d7d58b766e6ff9e46094a7}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!D\-F\-G@{D\-F\-G}}
+\index{D\-F\-G@{D\-F\-G}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{D\-F\-G}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-dfg}$\ast$ D\-F\-G = N\-U\-L\-L\hspace{0.3cm}{\ttfamily [static]}}}\label{runtime__dfg_8c_aec8e5a3726d7d58b766e6ff9e46094a7}
+
+
+Static (global) variable for accessing a lodaed Dfg. 
+
+
+
+Definition at line 33 of file runtime\-\_\-dfg.\-c.
+
+\hypertarget{runtime__dfg_8c_ad9e3dbb10bed0c512e4aafb5c264ebcc}{\index{runtime\-\_\-dfg.\-c@{runtime\-\_\-dfg.\-c}!L\-O\-C\-A\-L\-\_\-\-R\-U\-N\-T\-I\-M\-E@{L\-O\-C\-A\-L\-\_\-\-R\-U\-N\-T\-I\-M\-E}}
+\index{L\-O\-C\-A\-L\-\_\-\-R\-U\-N\-T\-I\-M\-E@{L\-O\-C\-A\-L\-\_\-\-R\-U\-N\-T\-I\-M\-E}!runtime_dfg.c@{runtime\-\_\-dfg.\-c}}
+\subsubsection[{L\-O\-C\-A\-L\-\_\-\-R\-U\-N\-T\-I\-M\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-runtime}$\ast$ L\-O\-C\-A\-L\-\_\-\-R\-U\-N\-T\-I\-M\-E = N\-U\-L\-L\hspace{0.3cm}{\ttfamily [static]}}}\label{runtime__dfg_8c_ad9e3dbb10bed0c512e4aafb5c264ebcc}
+
+
+Static (global) variable holding this runtime's dfg. 
+
+
+
+Definition at line 35 of file runtime\-\_\-dfg.\-c.
+

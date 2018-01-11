@@ -1,0 +1,404 @@
+\hypertarget{stats_8h}{\section{src/common/stats.h File Reference}
+\label{stats_8h}\index{src/common/stats.\-h@{src/common/stats.\-h}}
+}
+
+
+Functions for the sending and receiving of statistics between ctrl and runtime.  
+
+
+{\ttfamily \#include \char`\"{}unused\-\_\-def.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stat\-\_\-ids.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$time.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structtimed__stat}{timed\-\_\-stat}
+\begin{DoxyCompactList}\small\item\em Holds a single timestamped value. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__sample__hdr}{stat\-\_\-sample\-\_\-hdr}
+\begin{DoxyCompactList}\small\item\em Header for a single stat sample for a single item. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__sample}{stat\-\_\-sample}
+\begin{DoxyCompactList}\small\item\em A single stat sample for a single item. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__type__label}{stat\-\_\-type\-\_\-label}
+\begin{DoxyCompactList}\small\item\em Structure to hold both the stat I\-D and the string describing it. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{stats_8h_a9eb185b8710f30e8f8581bbbf541896a}{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}
+\item 
+\#define \hyperlink{stats_8h_ad6d09c7c8189a8a7527983fd27baa2d1}{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}
+\item 
+\#define \hyperlink{stats_8h_abba66a08e3a3b0fb1c4d85cb97112f36}{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}
+\item 
+\#define \hyperlink{stats_8h_aba80bf65b75f471ebcb80e11b6143067}{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}~sizeof(\hyperlink{stats_8h_a148ea5c03d56cf13d8201129a2a60211}{reported\-\_\-stat\-\_\-types}) / sizeof($\ast$\hyperlink{stats_8h_a148ea5c03d56cf13d8201129a2a60211}{reported\-\_\-stat\-\_\-types})
+\begin{DoxyCompactList}\small\item\em Number of reported stat types. \end{DoxyCompactList}\item 
+\#define \hyperlink{stats_8h_aa98f11ea9c3ae048c3caaa751d903b9c}{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}~sizeof(\hyperlink{stats_8h_aef4b307300bf4297b42047ad28498eb9}{reported\-\_\-msu\-\_\-stat\-\_\-types}) / sizeof($\ast$\hyperlink{stats_8h_aef4b307300bf4297b42047ad28498eb9}{reported\-\_\-msu\-\_\-stat\-\_\-types})
+\item 
+\#define \hyperlink{stats_8h_a5724f37c3d02f75e087b3a05b9c2a5da}{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}~sizeof(\hyperlink{stats_8h_a3a8c2b622bb4f46ff98005a7f8a44eef}{reported\-\_\-thread\-\_\-stat\-\_\-types}) / sizeof($\ast$\hyperlink{stats_8h_a3a8c2b622bb4f46ff98005a7f8a44eef}{reported\-\_\-thread\-\_\-stat\-\_\-types})
+\item 
+\#define \hyperlink{stats_8h_afc5ce879c3857f15d5956b09c8aad809}{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}~4192
+\begin{DoxyCompactList}\small\item\em Maxmimum identifier that can be assigned to a stat item. \end{DoxyCompactList}\item 
+\#define \hyperlink{stats_8h_a8612c0f61538d8f8dec0208e93af5f98}{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E}~5
+\begin{DoxyCompactList}\small\item\em Number of statistics sampled in each send from runtime to controller. \end{DoxyCompactList}\item 
+\#define \hyperlink{stats_8h_ad0a95ec958d1ee5f5693d210cdc4c7e3}{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S}~500
+\begin{DoxyCompactList}\small\item\em How often samples are sent from runtime to controller. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{stats_8h_a80131dba9e9b4036db53954517846734}{is\-\_\-thread\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id)
+\item 
+int \hyperlink{stats_8h_a7b298d79a63c3c056ea5ed5d55e7cc2d}{is\-\_\-msu\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id)
+\item 
+void \hyperlink{stats_8h_abbcfc514644de1e0dbb52817e28d4f32}{free\-\_\-stat\-\_\-samples} (struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$samples, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Frees a set of stat samples. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$ \hyperlink{stats_8h_a15767cac95ee8d9b2c967c8b4990f392}{init\-\_\-stat\-\_\-samples} (int max\-\_\-stats, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Initilizes {\ttfamily n} sets of samples of statistics, each of which contains {\ttfamily max\-\_\-stats} points. \end{DoxyCompactList}\item 
+int \hyperlink{stats_8h_acb9a8fc9e7db1b910a43e765efc7b64e}{deserialize\-\_\-stat\-\_\-samples} (void $\ast$buffer, size\-\_\-t buff\-\_\-len, struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$samples, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Deserializes from the provided buffer into the {\ttfamily samples} structure. \end{DoxyCompactList}\item 
+ssize\-\_\-t \hyperlink{stats_8h_aec7690b989cbd389c9614df7f81837d1}{serialize\-\_\-stat\-\_\-samples} (struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$samples, int n\-\_\-samples, void $\ast$buffer, size\-\_\-t buff\-\_\-len)
+\begin{DoxyCompactList}\small\item\em Serializes from the provided {\ttfamily samples} into the {\ttfamily buffer} \end{DoxyCompactList}\item 
+size\-\_\-t \hyperlink{stats_8h_a6129fdec9d673634cdd96602c740f8ff}{serialized\-\_\-stat\-\_\-sample\-\_\-size} (struct \hyperlink{structstat__sample}{stat\-\_\-sample} $\ast$sample, int n\-\_\-samples)
+\begin{DoxyCompactList}\small\item\em Determines the size needed to hold the serialized version of {\ttfamily sample}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structstat__type__label}{stat\-\_\-type\-\_\-label} \hyperlink{stats_8h_a148ea5c03d56cf13d8201129a2a60211}{reported\-\_\-stat\-\_\-types} \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em Static structure so the reported stat types can be referenced as an array. \end{DoxyCompactList}\item 
+static struct \hyperlink{structstat__type__label}{stat\-\_\-type\-\_\-label} \hyperlink{stats_8h_aef4b307300bf4297b42047ad28498eb9}{reported\-\_\-msu\-\_\-stat\-\_\-types} \mbox{[}$\,$\mbox{]}
+\item 
+static struct \hyperlink{structstat__type__label}{stat\-\_\-type\-\_\-label} \hyperlink{stats_8h_a3a8c2b622bb4f46ff98005a7f8a44eef}{reported\-\_\-thread\-\_\-stat\-\_\-types} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Functions for the sending and receiving of statistics between ctrl and runtime. 
+
+Definition in file \hyperlink{stats_8h_source}{stats.\-h}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{stats_8h_afc5ce879c3857f15d5956b09c8aad809}{\index{stats.\-h@{stats.\-h}!M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D@{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}}
+\index{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D@{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}!stats.h@{stats.\-h}}
+\subsubsection[{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D~4192}}\label{stats_8h_afc5ce879c3857f15d5956b09c8aad809}
+
+
+Maxmimum identifier that can be assigned to a stat item. 
+
+
+
+Definition at line 126 of file stats.\-h.
+
+\hypertarget{stats_8h_aa98f11ea9c3ae048c3caaa751d903b9c}{\index{stats.\-h@{stats.\-h}!N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}
+\index{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}!stats.h@{stats.\-h}}
+\subsubsection[{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S~sizeof({\bf reported\-\_\-msu\-\_\-stat\-\_\-types}) / sizeof($\ast${\bf reported\-\_\-msu\-\_\-stat\-\_\-types})}}\label{stats_8h_aa98f11ea9c3ae048c3caaa751d903b9c}
+
+
+Definition at line 114 of file stats.\-h.
+
+\hypertarget{stats_8h_aba80bf65b75f471ebcb80e11b6143067}{\index{stats.\-h@{stats.\-h}!N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}
+\index{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}!stats.h@{stats.\-h}}
+\subsubsection[{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S~sizeof({\bf reported\-\_\-stat\-\_\-types}) / sizeof($\ast${\bf reported\-\_\-stat\-\_\-types})}}\label{stats_8h_aba80bf65b75f471ebcb80e11b6143067}
+
+
+Number of reported stat types. 
+
+
+
+Definition at line 109 of file stats.\-h.
+
+\hypertarget{stats_8h_a5724f37c3d02f75e087b3a05b9c2a5da}{\index{stats.\-h@{stats.\-h}!N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}
+\index{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}!stats.h@{stats.\-h}}
+\subsubsection[{N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-\_\-\-R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S~sizeof({\bf reported\-\_\-thread\-\_\-stat\-\_\-types}) / sizeof($\ast${\bf reported\-\_\-thread\-\_\-stat\-\_\-types})}}\label{stats_8h_a5724f37c3d02f75e087b3a05b9c2a5da}
+
+
+Definition at line 120 of file stats.\-h.
+
+\hypertarget{stats_8h_a9eb185b8710f30e8f8581bbbf541896a}{\index{stats.\-h@{stats.\-h}!R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}
+\index{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}!stats.h@{stats.\-h}}
+\subsubsection[{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}\label{stats_8h_a9eb185b8710f30e8f8581bbbf541896a}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea12a6b7f2204c50215b8cf5c9d7d4d7f0}{MSU\_QUEUE\_LEN}, \textcolor{stringliteral}{"QUEUE\_LEN"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea1b6372f66e1b4da3d1f66cf91fbe67fb}{MSU\_ITEMS\_PROCESSED}, \textcolor{stringliteral}{"ITEMS\_PROCESSED"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea003bb405e663e22b980595a0a9966987}{MSU\_MEM\_ALLOC}, \textcolor{stringliteral}{"MEMORY\_ALLOCATED"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eace4e2b956986e374b71665b6a2bca708}{MSU\_NUM\_STATES}, \textcolor{stringliteral}{"NUM\_STATES"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea7caed2ec31d7e3e90def7caef8615e4c}{MSU\_EXEC\_TIME}, \textcolor{stringliteral}{"EXEC\_TIME"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea8d5f55aea7b42f8ae9ef6825a6497e8f}{MSU\_IDLE\_TIME}, \textcolor{stringliteral}{"IDLE\_TIME"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea10e14365e196acab962c7059b73b6413}{MSU\_ERROR\_CNT}, \textcolor{stringliteral}{"ERROR\_COUNT"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea47d96bf87775ffc393489363dc2a6dbf}{MSU\_UCPUTIME}, \textcolor{stringliteral}{"MSU\_USER\_TIME"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea31fc4ec60940e48f34e4878b9f5d7fda}{MSU\_SCPUTIME}, \textcolor{stringliteral}{"MSU\_KERNEL\_TIME"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6724476dcc0304e7bb03c9db48dd8a96}{MSU\_MINFLT}, \textcolor{stringliteral}{"MSU\_MINOR\_FAULTS"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eaffe6d77948b752c5305dddb075199ee2}{MSU\_MAJFLT}, \textcolor{stringliteral}{"MSU\_MAJOR\_FAULTS"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea488ca954ecca0d0766a3e90f63d3f0eb}{MSU\_VCSW}, \textcolor{stringliteral}{"MSU\_VOL\_CTX\_SW"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea0a0a8fa406d350e76b815797667033b5}{MSU\_IVCSW}, \textcolor{stringliteral}{"MSU\_INVOL\_CTX\_SW"}\}
+\end{DoxyCode}
+
+
+Definition at line 68 of file stats.\-h.
+
+\hypertarget{stats_8h_abba66a08e3a3b0fb1c4d85cb97112f36}{\index{stats.\-h@{stats.\-h}!R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}
+\index{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}!stats.h@{stats.\-h}}
+\subsubsection[{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}\label{stats_8h_abba66a08e3a3b0fb1c4d85cb97112f36}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\hyperlink{stats_8h_a9eb185b8710f30e8f8581bbbf541896a}{REPORTED\_MSU\_STAT\_TYPES}, \hyperlink{stats_8h_ad6d09c7c8189a8a7527983fd27baa2d1}{\(\backslash\)}
+\hyperlink{stats_8h_ad6d09c7c8189a8a7527983fd27baa2d1}{    REPORTED\_THREAD\_STAT\_TYPES}
+\end{DoxyCode}
+
+
+Definition at line 96 of file stats.\-h.
+
+\hypertarget{stats_8h_ad6d09c7c8189a8a7527983fd27baa2d1}{\index{stats.\-h@{stats.\-h}!R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}
+\index{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}!stats.h@{stats.\-h}}
+\subsubsection[{R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\-E\-P\-O\-R\-T\-E\-D\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}\label{stats_8h_ad6d09c7c8189a8a7527983fd27baa2d1}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea3c85d2952150487e586b3802e537ccbe}{THREAD\_UCPUTIME}, \textcolor{stringliteral}{"USER\_TIME"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eaa63b74df8de1a0b9060b2a03a509dcca}{THREAD\_SCPUTIME}, \textcolor{stringliteral}{"KERNAL\_TIME"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea79748a810c4e5630689a4b1219617650}{THREAD\_MAXRSS}, \textcolor{stringliteral}{"MAX\_RSS"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6af8b8f31f19cb35feddf1d139f8e3f4}{THREAD\_MINFLT}, \textcolor{stringliteral}{"MINOR\_FAULTS"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eada0624fa212ca4a497fd97a18bb1238f}{THREAD\_MAJFLT}, \textcolor{stringliteral}{"MAJOR\_FAULTS"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6cb62a4f93fea310ff9dbf5f0e1312c7}{THREAD\_VCSW}, \textcolor{stringliteral}{"VOL\_CTX\_SW"}\}, \(\backslash\)
+    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea2feb94c9d8936da27ab7e7f8c5e8f12b}{THREAD\_IVCSW}, \textcolor{stringliteral}{"INVOL\_CTX\_SW"}\}
+\end{DoxyCode}
+
+
+Definition at line 85 of file stats.\-h.
+
+\hypertarget{stats_8h_ad0a95ec958d1ee5f5693d210cdc4c7e3}{\index{stats.\-h@{stats.\-h}!S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S@{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S}}
+\index{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S@{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S}!stats.h@{stats.\-h}}
+\subsubsection[{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S~500}}\label{stats_8h_ad0a95ec958d1ee5f5693d210cdc4c7e3}
+
+
+How often samples are sent from runtime to controller. 
+
+
+
+Definition at line 132 of file stats.\-h.
+
+\hypertarget{stats_8h_a8612c0f61538d8f8dec0208e93af5f98}{\index{stats.\-h@{stats.\-h}!S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E@{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E}}
+\index{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E@{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E}!stats.h@{stats.\-h}}
+\subsubsection[{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-S\-I\-Z\-E~5}}\label{stats_8h_a8612c0f61538d8f8dec0208e93af5f98}
+
+
+Number of statistics sampled in each send from runtime to controller. 
+
+
+
+Definition at line 129 of file stats.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{stats_8h_acb9a8fc9e7db1b910a43e765efc7b64e}{\index{stats.\-h@{stats.\-h}!deserialize\-\_\-stat\-\_\-samples@{deserialize\-\_\-stat\-\_\-samples}}
+\index{deserialize\-\_\-stat\-\_\-samples@{deserialize\-\_\-stat\-\_\-samples}!stats.h@{stats.\-h}}
+\subsubsection[{deserialize\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}int deserialize\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{buffer, }
+\item[{size\-\_\-t}]{buff\-\_\-len, }
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{samples, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{stats_8h_acb9a8fc9e7db1b910a43e765efc7b64e}
+
+
+Deserializes from the provided buffer into the {\ttfamily samples} structure. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em buffer} & The buffer to deserialize \\
+\hline
+{\em buff\-\_\-len} & The size of the serialized buffer \\
+\hline
+{\em samples} & The structure into which to deserialize \\
+\hline
+{\em n\-\_\-samples} & The number of items allocated in {\ttfamily samples} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 176 of file stats.\-c.
+
+\hypertarget{stats_8h_abbcfc514644de1e0dbb52817e28d4f32}{\index{stats.\-h@{stats.\-h}!free\-\_\-stat\-\_\-samples@{free\-\_\-stat\-\_\-samples}}
+\index{free\-\_\-stat\-\_\-samples@{free\-\_\-stat\-\_\-samples}!stats.h@{stats.\-h}}
+\subsubsection[{free\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}void free\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{samples, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{stats_8h_abbcfc514644de1e0dbb52817e28d4f32}
+
+
+Frees a set of stat samples. 
+
+
+
+Definition at line 71 of file stats.\-c.
+
+\hypertarget{stats_8h_a15767cac95ee8d9b2c967c8b4990f392}{\index{stats.\-h@{stats.\-h}!init\-\_\-stat\-\_\-samples@{init\-\_\-stat\-\_\-samples}}
+\index{init\-\_\-stat\-\_\-samples@{init\-\_\-stat\-\_\-samples}!stats.h@{stats.\-h}}
+\subsubsection[{init\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-sample}$\ast$ init\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{int}]{max\-\_\-stats, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{stats_8h_a15767cac95ee8d9b2c967c8b4990f392}
+
+
+Initilizes {\ttfamily n} sets of samples of statistics, each of which contains {\ttfamily max\-\_\-stats} points. 
+
+\begin{DoxyReturn}{Returns}
+allocated structure on success, N\-U\-L\-L on error 
+\end{DoxyReturn}
+
+
+Definition at line 80 of file stats.\-c.
+
+\hypertarget{stats_8h_a7b298d79a63c3c056ea5ed5d55e7cc2d}{\index{stats.\-h@{stats.\-h}!is\-\_\-msu\-\_\-stat@{is\-\_\-msu\-\_\-stat}}
+\index{is\-\_\-msu\-\_\-stat@{is\-\_\-msu\-\_\-stat}!stats.h@{stats.\-h}}
+\subsubsection[{is\-\_\-msu\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int is\-\_\-msu\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id}
+\end{DoxyParamCaption}
+)}}\label{stats_8h_a7b298d79a63c3c056ea5ed5d55e7cc2d}
+
+
+Definition at line 49 of file stats.\-c.
+
+\hypertarget{stats_8h_a80131dba9e9b4036db53954517846734}{\index{stats.\-h@{stats.\-h}!is\-\_\-thread\-\_\-stat@{is\-\_\-thread\-\_\-stat}}
+\index{is\-\_\-thread\-\_\-stat@{is\-\_\-thread\-\_\-stat}!stats.h@{stats.\-h}}
+\subsubsection[{is\-\_\-thread\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int is\-\_\-thread\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id}
+\end{DoxyParamCaption}
+)}}\label{stats_8h_a80131dba9e9b4036db53954517846734}
+
+
+Definition at line 40 of file stats.\-c.
+
+\hypertarget{stats_8h_aec7690b989cbd389c9614df7f81837d1}{\index{stats.\-h@{stats.\-h}!serialize\-\_\-stat\-\_\-samples@{serialize\-\_\-stat\-\_\-samples}}
+\index{serialize\-\_\-stat\-\_\-samples@{serialize\-\_\-stat\-\_\-samples}!stats.h@{stats.\-h}}
+\subsubsection[{serialize\-\_\-stat\-\_\-samples}]{\setlength{\rightskip}{0pt plus 5cm}ssize\-\_\-t serialize\-\_\-stat\-\_\-samples (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{samples, }
+\item[{int}]{n\-\_\-samples, }
+\item[{void $\ast$}]{buffer, }
+\item[{size\-\_\-t}]{buff\-\_\-len}
+\end{DoxyParamCaption}
+)}}\label{stats_8h_aec7690b989cbd389c9614df7f81837d1}
+
+
+Serializes from the provided {\ttfamily samples} into the {\ttfamily buffer} 
+
+
+\begin{DoxyParams}{Parameters}
+{\em samples} & The samples to deserialize \\
+\hline
+{\em n\-\_\-samples} & size of {\ttfamily samples} \\
+\hline
+{\em buffer} & The buffer into which to serialize \\
+\hline
+{\em buff\-\_\-len} & The size of the allocated {\ttfamily buffer} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error (if buffer is too small) 
+\end{DoxyReturn}
+
+
+Definition at line 122 of file stats.\-c.
+
+\hypertarget{stats_8h_a6129fdec9d673634cdd96602c740f8ff}{\index{stats.\-h@{stats.\-h}!serialized\-\_\-stat\-\_\-sample\-\_\-size@{serialized\-\_\-stat\-\_\-sample\-\_\-size}}
+\index{serialized\-\_\-stat\-\_\-sample\-\_\-size@{serialized\-\_\-stat\-\_\-sample\-\_\-size}!stats.h@{stats.\-h}}
+\subsubsection[{serialized\-\_\-stat\-\_\-sample\-\_\-size}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t serialized\-\_\-stat\-\_\-sample\-\_\-size (
+\begin{DoxyParamCaption}
+\item[{struct {\bf stat\-\_\-sample} $\ast$}]{sample, }
+\item[{int}]{n\-\_\-samples}
+\end{DoxyParamCaption}
+)}}\label{stats_8h_a6129fdec9d673634cdd96602c740f8ff}
+
+
+Determines the size needed to hold the serialized version of {\ttfamily sample}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em sample} & The sample to serialize \\
+\hline
+{\em n\-\_\-samples} & The number of elements in {\ttfamily sample} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+size needed 
+\end{DoxyReturn}
+
+
+Definition at line 96 of file stats.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{stats_8h_aef4b307300bf4297b42047ad28498eb9}{\index{stats.\-h@{stats.\-h}!reported\-\_\-msu\-\_\-stat\-\_\-types@{reported\-\_\-msu\-\_\-stat\-\_\-types}}
+\index{reported\-\_\-msu\-\_\-stat\-\_\-types@{reported\-\_\-msu\-\_\-stat\-\_\-types}!stats.h@{stats.\-h}}
+\subsubsection[{reported\-\_\-msu\-\_\-stat\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-type\-\_\-label} reported\-\_\-msu\-\_\-stat\-\_\-types\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{stats_8h_aef4b307300bf4297b42047ad28498eb9}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+     \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea12a6b7f2204c50215b8cf5c9d7d4d7f0}{MSU\_QUEUE\_LEN}, \textcolor{stringliteral}{"QUEUE\_LEN"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea1b6372f66e1b4da3d1f66cf91fbe67fb}{MSU\_ITEMS\_PROCESSED}, \textcolor{stringliteral}{"ITEMS\_PROCESSED
+      "}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea003bb405e663e22b980595a0a9966987}{MSU\_MEM\_ALLOC}, \textcolor{stringliteral}{"MEMORY\_ALLOCATED"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eace4e2b956986e374b71665b6a2bca708}{MSU\_NUM\_STATES}, \textcolor{stringliteral}{"NUM\_STATES"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea7caed2ec31d7e3e90def7caef8615e4c}{MSU\_EXEC\_TIME}, \textcolor{stringliteral}{"EXEC\_TIME"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea8d5f55aea7b42f8ae9ef6825a6497e8f}{MSU\_IDLE\_TIME}, \textcolor{stringliteral}{"IDLE\_TIME"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea10e14365e196acab962c7059b73b6413}{MSU\_ERROR\_CNT}, \textcolor{stringliteral}{"ERROR\_COUNT"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea47d96bf87775ffc393489363dc2a6dbf}{MSU\_UCPUTIME}, \textcolor{stringliteral}{"MSU\_USER\_TIME"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea31fc4ec60940e48f34e4878b9f5d7fda}{MSU\_SCPUTIME}, \textcolor{stringliteral}{"MSU\_KERNEL\_TIME"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6724476dcc0304e7bb03c9db48dd8a96}{MSU\_MINFLT}, \textcolor{stringliteral}{"MSU\_MINOR\_FAULTS"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eaffe6d77948b752c5305dddb075199ee2}{MSU\_MAJFLT}, \textcolor{stringliteral}{"MSU\_MAJOR\_FAULTS"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea488ca954ecca0d0766a3e90f63d3f0eb}{MSU\_VCSW}, \textcolor{stringliteral}{"MSU\_VOL\_CTX\_SW"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea0a0a8fa406d350e76b815797667033b5}{MSU\_IVCSW}, \textcolor{stringliteral}{"MSU\_INVOL\_CTX\_SW"}\} 
+\}
+\end{DoxyCode}
+
+
+Definition at line 111 of file stats.\-h.
+
+\hypertarget{stats_8h_a148ea5c03d56cf13d8201129a2a60211}{\index{stats.\-h@{stats.\-h}!reported\-\_\-stat\-\_\-types@{reported\-\_\-stat\-\_\-types}}
+\index{reported\-\_\-stat\-\_\-types@{reported\-\_\-stat\-\_\-types}!stats.h@{stats.\-h}}
+\subsubsection[{reported\-\_\-stat\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-type\-\_\-label} reported\-\_\-stat\-\_\-types\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{stats_8h_a148ea5c03d56cf13d8201129a2a60211}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+      \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea12a6b7f2204c50215b8cf5c9d7d4d7f0}{MSU\_QUEUE\_LEN}, \textcolor{stringliteral}{"QUEUE\_LEN"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea1b6372f66e1b4da3d1f66cf91fbe67fb}{MSU\_ITEMS\_PROCESSED}, \textcolor{stringliteral}{"
+      ITEMS\_PROCESSED"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea003bb405e663e22b980595a0a9966987}{MSU\_MEM\_ALLOC}, \textcolor{stringliteral}{"MEMORY\_ALLOCATED"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eace4e2b956986e374b71665b6a2bca708}{MSU\_NUM\_STATES}, \textcolor{stringliteral}{"NUM\_STATES"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea7caed2ec31d7e3e90def7caef8615e4c}{MSU\_EXEC\_TIME}, \textcolor{stringliteral}{"EXEC\_TIME"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea8d5f55aea7b42f8ae9ef6825a6497e8f}{MSU\_IDLE\_TIME}, \textcolor{stringliteral}{"IDLE\_TIME"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea10e14365e196acab962c7059b73b6413}{MSU\_ERROR\_CNT}, \textcolor{stringliteral}{"ERROR\_COUNT"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea47d96bf87775ffc393489363dc2a6dbf}{MSU\_UCPUTIME}, \textcolor{stringliteral}{"MSU\_USER\_TIME"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea31fc4ec60940e48f34e4878b9f5d7fda}{MSU\_SCPUTIME}, \textcolor{stringliteral}{"MSU\_KERNEL\_TIME"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6724476dcc0304e7bb03c9db48dd8a96}{MSU\_MINFLT}, \textcolor{stringliteral}{"MSU\_MINOR\_FAULTS"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eaffe6d77948b752c5305dddb075199ee2}{MSU\_MAJFLT}, \textcolor{stringliteral}{"MSU\_MAJOR\_FAULTS"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea488ca954ecca0d0766a3e90f63d3f0eb}{MSU\_VCSW}, \textcolor{stringliteral}{"MSU\_VOL\_CTX\_SW"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea0a0a8fa406d350e76b815797667033b5}{MSU\_IVCSW}, \textcolor{stringliteral}{"MSU\_INVOL\_CTX\_SW"}\} ,    \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea3c85d2952150487e586b3802e537ccbe}{THREAD\_UCPUTIME}, \textcolor{stringliteral}{"USER\_TIME"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eaa63b74df8de1a0b9060b2a03a509dcca}{THREAD\_SCPUTIME}, \textcolor{stringliteral}{"KERNAL\_TIME"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea79748a810c4e5630689a4b1219617650}{THREAD\_MAXRSS}, \textcolor{stringliteral}{"MAX\_RSS"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6af8b8f31f19cb35feddf1d139f8e3f4}{THREAD\_MINFLT}, \textcolor{stringliteral}{"MINOR\_FAULTS"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eada0624fa212ca4a497fd97a18bb1238f}{THREAD\_MAJFLT}, \textcolor{stringliteral}{"MAJOR\_FAULTS"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6cb62a4f93fea310ff9dbf5f0e1312c7}{THREAD\_VCSW}, \textcolor{stringliteral}{"VOL\_CTX\_SW"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea2feb94c9d8936da27ab7e7f8c5e8f12b}{THREAD\_IVCSW}, \textcolor{stringliteral}{"INVOL\_CTX\_SW"}\}  
+\}
+\end{DoxyCode}
+
+
+Static structure so the reported stat types can be referenced as an array. 
+
+
+
+Definition at line 105 of file stats.\-h.
+
+\hypertarget{stats_8h_a3a8c2b622bb4f46ff98005a7f8a44eef}{\index{stats.\-h@{stats.\-h}!reported\-\_\-thread\-\_\-stat\-\_\-types@{reported\-\_\-thread\-\_\-stat\-\_\-types}}
+\index{reported\-\_\-thread\-\_\-stat\-\_\-types@{reported\-\_\-thread\-\_\-stat\-\_\-types}!stats.h@{stats.\-h}}
+\subsubsection[{reported\-\_\-thread\-\_\-stat\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-type\-\_\-label} reported\-\_\-thread\-\_\-stat\-\_\-types\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{stats_8h_a3a8c2b622bb4f46ff98005a7f8a44eef}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+     \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea3c85d2952150487e586b3802e537ccbe}{THREAD\_UCPUTIME}, \textcolor{stringliteral}{"USER\_TIME"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eaa63b74df8de1a0b9060b2a03a509dcca}{THREAD\_SCPUTIME}, \textcolor{stringliteral}{"KERNAL\_TIME"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea79748a810c4e5630689a4b1219617650}{THREAD\_MAXRSS}, \textcolor{stringliteral}{"MAX\_RSS"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6af8b8f31f19cb35feddf1d139f8e3f4}{THREAD\_MINFLT}, \textcolor{stringliteral}{"MINOR\_FAULTS"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eada0624fa212ca4a497fd97a18bb1238f}{THREAD\_MAJFLT}, \textcolor{stringliteral}{"MAJOR\_FAULTS"}\},   \{\hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6cb62a4f93fea310ff9dbf5f0e1312c7}{THREAD\_VCSW}, \textcolor{stringliteral}{"VOL\_CTX\_SW"}\},   \{
+      \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea2feb94c9d8936da27ab7e7f8c5e8f12b}{THREAD\_IVCSW}, \textcolor{stringliteral}{"INVOL\_CTX\_SW"}\} 
+\}
+\end{DoxyCode}
+
+
+Definition at line 117 of file stats.\-h.
+

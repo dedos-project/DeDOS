@@ -1,0 +1,89 @@
+\hypertarget{socket__monitor_8h}{\section{src/runtime/socket\-\_\-monitor.h File Reference}
+\label{socket__monitor_8h}\index{src/runtime/socket\-\_\-monitor.\-h@{src/runtime/socket\-\_\-monitor.\-h}}
+}
+
+
+Monitors an incoming port for messages from runtime or controller.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{socket__monitor_8h_af3c81eedd8bff4ee84ab127a56c6d58e}{monitor\-\_\-controller\-\_\-socket} (int fd)
+\begin{DoxyCompactList}\small\item\em Adds the global controller to be monitored by the socket monitor. \end{DoxyCompactList}\item 
+int \hyperlink{socket__monitor_8h_aaeea62b12335940cdcec2dd661037550}{monitor\-\_\-runtime\-\_\-socket} (int fd)
+\begin{DoxyCompactList}\small\item\em Adds a runtime to be monitored by the socket monitor. \end{DoxyCompactList}\item 
+int \hyperlink{socket__monitor_8h_a7caa1e5d245b8915e590649d449b6ab7}{run\-\_\-socket\-\_\-monitor} (int local\-\_\-port, struct sockaddr\-\_\-in $\ast$ctrl\-\_\-addr)
+\begin{DoxyCompactList}\small\item\em Starts (blocking) the socket monitor, listening on the provided port. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Monitors an incoming port for messages from runtime or controller. 
+
+Definition in file \hyperlink{socket__monitor_8h_source}{socket\-\_\-monitor.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{socket__monitor_8h_af3c81eedd8bff4ee84ab127a56c6d58e}{\index{socket\-\_\-monitor.\-h@{socket\-\_\-monitor.\-h}!monitor\-\_\-controller\-\_\-socket@{monitor\-\_\-controller\-\_\-socket}}
+\index{monitor\-\_\-controller\-\_\-socket@{monitor\-\_\-controller\-\_\-socket}!socket_monitor.h@{socket\-\_\-monitor.\-h}}
+\subsubsection[{monitor\-\_\-controller\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int monitor\-\_\-controller\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{socket__monitor_8h_af3c81eedd8bff4ee84ab127a56c6d58e}
+
+
+Adds the global controller to be monitored by the socket monitor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fd} & the file decriptor of the global controller \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 116 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8h_aaeea62b12335940cdcec2dd661037550}{\index{socket\-\_\-monitor.\-h@{socket\-\_\-monitor.\-h}!monitor\-\_\-runtime\-\_\-socket@{monitor\-\_\-runtime\-\_\-socket}}
+\index{monitor\-\_\-runtime\-\_\-socket@{monitor\-\_\-runtime\-\_\-socket}!socket_monitor.h@{socket\-\_\-monitor.\-h}}
+\subsubsection[{monitor\-\_\-runtime\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int monitor\-\_\-runtime\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{socket__monitor_8h_aaeea62b12335940cdcec2dd661037550}
+
+
+Adds a runtime to be monitored by the socket monitor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fd} & the file descriptor of the new runtime \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 130 of file socket\-\_\-monitor.\-c.
+
+\hypertarget{socket__monitor_8h_a7caa1e5d245b8915e590649d449b6ab7}{\index{socket\-\_\-monitor.\-h@{socket\-\_\-monitor.\-h}!run\-\_\-socket\-\_\-monitor@{run\-\_\-socket\-\_\-monitor}}
+\index{run\-\_\-socket\-\_\-monitor@{run\-\_\-socket\-\_\-monitor}!socket_monitor.h@{socket\-\_\-monitor.\-h}}
+\subsubsection[{run\-\_\-socket\-\_\-monitor}]{\setlength{\rightskip}{0pt plus 5cm}int run\-\_\-socket\-\_\-monitor (
+\begin{DoxyParamCaption}
+\item[{int}]{local\-\_\-port, }
+\item[{struct sockaddr\-\_\-in $\ast$}]{ctrl\-\_\-addr}
+\end{DoxyParamCaption}
+)}}\label{socket__monitor_8h_a7caa1e5d245b8915e590649d449b6ab7}
+
+
+Starts (blocking) the socket monitor, listening on the provided port. 
+
+Also connects to the global controller at the provided address 
+
+Definition at line 145 of file socket\-\_\-monitor.\-c.
+

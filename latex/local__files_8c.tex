@@ -1,0 +1,76 @@
+\hypertarget{local__files_8c}{\section{src/common/local\-\_\-files.c File Reference}
+\label{local__files_8c}\index{src/common/local\-\_\-files.\-c@{src/common/local\-\_\-files.\-c}}
+}
+
+
+Accessing local files within the repo.  
+
+
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{local__files_8c_a808407e4d53245f6eee7b404a4428e91}{set\-\_\-local\-\_\-directory} (char $\ast$dir)
+\begin{DoxyCompactList}\small\item\em Sets the directory of the executable so we can get relaitve paths. \end{DoxyCompactList}\item 
+int \hyperlink{local__files_8c_ab767d74402272158be24bc948e6fb6ce}{get\-\_\-local\-\_\-file} (char $\ast$out, char $\ast$file)
+\begin{DoxyCompactList}\small\item\em Gets a file relative to the path of the executable. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static char $\ast$ \hyperlink{local__files_8c_aaab17b7203855bf9e6bdf36d99fc5837}{local\-\_\-dir}
+\begin{DoxyCompactList}\small\item\em Set to the directory of the executabe. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Accessing local files within the repo. 
+
+Definition in file \hyperlink{local__files_8c_source}{local\-\_\-files.\-c}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{local__files_8c_ab767d74402272158be24bc948e6fb6ce}{\index{local\-\_\-files.\-c@{local\-\_\-files.\-c}!get\-\_\-local\-\_\-file@{get\-\_\-local\-\_\-file}}
+\index{get\-\_\-local\-\_\-file@{get\-\_\-local\-\_\-file}!local_files.c@{local\-\_\-files.\-c}}
+\subsubsection[{get\-\_\-local\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-local\-\_\-file (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{out, }
+\item[{char $\ast$}]{file}
+\end{DoxyParamCaption}
+)}}\label{local__files_8c_ab767d74402272158be24bc948e6fb6ce}
+
+
+Gets a file relative to the path of the executable. 
+
+
+
+Definition at line 38 of file local\-\_\-files.\-c.
+
+\hypertarget{local__files_8c_a808407e4d53245f6eee7b404a4428e91}{\index{local\-\_\-files.\-c@{local\-\_\-files.\-c}!set\-\_\-local\-\_\-directory@{set\-\_\-local\-\_\-directory}}
+\index{set\-\_\-local\-\_\-directory@{set\-\_\-local\-\_\-directory}!local_files.c@{local\-\_\-files.\-c}}
+\subsubsection[{set\-\_\-local\-\_\-directory}]{\setlength{\rightskip}{0pt plus 5cm}int set\-\_\-local\-\_\-directory (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{dir}
+\end{DoxyParamCaption}
+)}}\label{local__files_8c_a808407e4d53245f6eee7b404a4428e91}
+
+
+Sets the directory of the executable so we can get relaitve paths. 
+
+
+
+Definition at line 33 of file local\-\_\-files.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{local__files_8c_aaab17b7203855bf9e6bdf36d99fc5837}{\index{local\-\_\-files.\-c@{local\-\_\-files.\-c}!local\-\_\-dir@{local\-\_\-dir}}
+\index{local\-\_\-dir@{local\-\_\-dir}!local_files.c@{local\-\_\-files.\-c}}
+\subsubsection[{local\-\_\-dir}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ local\-\_\-dir\hspace{0.3cm}{\ttfamily [static]}}}\label{local__files_8c_aaab17b7203855bf9e6bdf36d99fc5837}
+
+
+Set to the directory of the executabe. 
+
+
+
+Definition at line 31 of file local\-\_\-files.\-c.
+

@@ -1,0 +1,93 @@
+\hypertarget{global__controller_2main_8c}{\section{src/global\-\_\-controller/main.c File Reference}
+\label{global__controller_2main_8c}\index{src/global\-\_\-controller/main.\-c@{src/global\-\_\-controller/main.\-c}}
+}
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$getopt.\-h$>$}\\*
+{\ttfamily \#include $<$pthread.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$libgen.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-files.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cli.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}socket\-\_\-interface.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}scheduling.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg\-\_\-reader.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-mysql.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{global__controller_2main_8c_af6de213ce531c3d57b22515890d2b667}{F\-I\-L\-E\-N\-A\-M\-E\-\_\-\-L\-E\-N}~32
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \hyperlink{global__controller_2main_8c_a5abe0071a53c95b01791701e62cc1e07}{print\-\_\-usage} ()
+\item 
+int \hyperlink{global__controller_2main_8c_a0ddf1224851353fc92bfbff6f499fa97}{main} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+pthread\-\_\-t \hyperlink{global__controller_2main_8c_abdd8e128346048e8802581476eed5707}{cli\-\_\-thread}
+\item 
+pthread\-\_\-t \hyperlink{global__controller_2main_8c_aca055402d569f023395d5dde615825dc}{sock\-\_\-thread}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{global__controller_2main_8c_af6de213ce531c3d57b22515890d2b667}{\index{global\-\_\-controller/main.\-c@{global\-\_\-controller/main.\-c}!F\-I\-L\-E\-N\-A\-M\-E\-\_\-\-L\-E\-N@{F\-I\-L\-E\-N\-A\-M\-E\-\_\-\-L\-E\-N}}
+\index{F\-I\-L\-E\-N\-A\-M\-E\-\_\-\-L\-E\-N@{F\-I\-L\-E\-N\-A\-M\-E\-\_\-\-L\-E\-N}!global_controller/main.c@{global\-\_\-controller/main.\-c}}
+\subsubsection[{F\-I\-L\-E\-N\-A\-M\-E\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define F\-I\-L\-E\-N\-A\-M\-E\-\_\-\-L\-E\-N~32}}\label{global__controller_2main_8c_af6de213ce531c3d57b22515890d2b667}
+
+
+Definition at line 40 of file main.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{global__controller_2main_8c_a0ddf1224851353fc92bfbff6f499fa97}{\index{global\-\_\-controller/main.\-c@{global\-\_\-controller/main.\-c}!main@{main}}
+\index{main@{main}!global_controller/main.c@{global\-\_\-controller/main.\-c}}
+\subsubsection[{main}]{\setlength{\rightskip}{0pt plus 5cm}int main (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]}}
+\end{DoxyParamCaption}
+)}}\label{global__controller_2main_8c_a0ddf1224851353fc92bfbff6f499fa97}
+
+
+Definition at line 49 of file main.\-c.
+
+\hypertarget{global__controller_2main_8c_a5abe0071a53c95b01791701e62cc1e07}{\index{global\-\_\-controller/main.\-c@{global\-\_\-controller/main.\-c}!print\-\_\-usage@{print\-\_\-usage}}
+\index{print\-\_\-usage@{print\-\_\-usage}!global_controller/main.c@{global\-\_\-controller/main.\-c}}
+\subsubsection[{print\-\_\-usage}]{\setlength{\rightskip}{0pt plus 5cm}static void print\-\_\-usage (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2main_8c_a5abe0071a53c95b01791701e62cc1e07}
+
+
+Definition at line 45 of file main.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{global__controller_2main_8c_abdd8e128346048e8802581476eed5707}{\index{global\-\_\-controller/main.\-c@{global\-\_\-controller/main.\-c}!cli\-\_\-thread@{cli\-\_\-thread}}
+\index{cli\-\_\-thread@{cli\-\_\-thread}!global_controller/main.c@{global\-\_\-controller/main.\-c}}
+\subsubsection[{cli\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-t cli\-\_\-thread}}\label{global__controller_2main_8c_abdd8e128346048e8802581476eed5707}
+
+
+Definition at line 42 of file main.\-c.
+
+\hypertarget{global__controller_2main_8c_aca055402d569f023395d5dde615825dc}{\index{global\-\_\-controller/main.\-c@{global\-\_\-controller/main.\-c}!sock\-\_\-thread@{sock\-\_\-thread}}
+\index{sock\-\_\-thread@{sock\-\_\-thread}!global_controller/main.c@{global\-\_\-controller/main.\-c}}
+\subsubsection[{sock\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-t sock\-\_\-thread}}\label{global__controller_2main_8c_aca055402d569f023395d5dde615825dc}
+
+
+Definition at line 43 of file main.\-c.
+

@@ -1,0 +1,134 @@
+\hypertarget{structlocal__msu}{\section{local\-\_\-msu Struct Reference}
+\label{structlocal__msu}\index{local\-\_\-msu@{local\-\_\-msu}}
+}
+
+
+The structure that represents an M\-S\-U located on the local machine.  
+
+
+
+
+{\ttfamily \#include $<$local\-\_\-msu.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$ \hyperlink{structlocal__msu_a4a5eb0c93e0be80ec816c050662885b3}{type}
+\begin{DoxyCompactList}\small\item\em Pointer to struct containing information shared across all instances of this type of M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structroute__set}{route\-\_\-set} \hyperlink{structlocal__msu_ad5a5a49f5e637d526668a373fd741ad8}{routes}
+\begin{DoxyCompactList}\small\item\em Routing table set, containing all destination M\-S\-Us (see \hyperlink{routing_8h}{routing.\-h} for details) \end{DoxyCompactList}\item 
+unsigned int \hyperlink{structlocal__msu_a1ca7fa0ae8f056072f5e92b895b7be1e}{id}
+\begin{DoxyCompactList}\small\item\em Unique I\-D for a local M\-S\-U. \end{DoxyCompactList}\item 
+unsigned int \hyperlink{structlocal__msu_afa2bd1495e53a10cf352af70aaaba10d}{scheduling\-\_\-weight}
+\begin{DoxyCompactList}\small\item\em The number of items that should be dequeued on this M\-S\-U each tick. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsg__queue}{msg\-\_\-queue} \hyperlink{structlocal__msu_a33cb8e5c68228acf60cbf1869ff2a395}{queue}
+\begin{DoxyCompactList}\small\item\em Input queue to M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsu__state}{msu\-\_\-state} $\ast$ \hyperlink{structlocal__msu_a1f36b6678f46ffb35e60a8fd4a99a862}{item\-\_\-state}
+\begin{DoxyCompactList}\small\item\em Keyed state structure, accessible through queue item I\-Ds. \end{DoxyCompactList}\item 
+void $\ast$ \hyperlink{structlocal__msu_a4b540cc46b0cc35e4e7684f2d6af7c41}{msu\-\_\-state}
+\begin{DoxyCompactList}\small\item\em State related to the entire instance of the M\-S\-U, not just individual items. \end{DoxyCompactList}\item 
+struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$ \hyperlink{structlocal__msu_a8f2b8ca820e060261f888b3bcb01d222}{thread}
+\begin{DoxyCompactList}\small\item\em The worker thread on which this M\-S\-U is placed. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The structure that represents an M\-S\-U located on the local machine. 
+
+Definition at line 38 of file local\-\_\-msu.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structlocal__msu_a1ca7fa0ae8f056072f5e92b895b7be1e}{\index{local\-\_\-msu@{local\-\_\-msu}!id@{id}}
+\index{id@{id}!local_msu@{local\-\_\-msu}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int local\-\_\-msu\-::id}}\label{structlocal__msu_a1ca7fa0ae8f056072f5e92b895b7be1e}
+
+
+Unique I\-D for a local M\-S\-U. 
+
+
+
+Definition at line 54 of file local\-\_\-msu.\-h.
+
+\hypertarget{structlocal__msu_a1f36b6678f46ffb35e60a8fd4a99a862}{\index{local\-\_\-msu@{local\-\_\-msu}!item\-\_\-state@{item\-\_\-state}}
+\index{item\-\_\-state@{item\-\_\-state}!local_msu@{local\-\_\-msu}}
+\subsubsection[{item\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-state}$\ast$ local\-\_\-msu\-::item\-\_\-state}}\label{structlocal__msu_a1f36b6678f46ffb35e60a8fd4a99a862}
+
+
+Keyed state structure, accessible through queue item I\-Ds. 
+
+
+
+Definition at line 63 of file local\-\_\-msu.\-h.
+
+\hypertarget{structlocal__msu_a4b540cc46b0cc35e4e7684f2d6af7c41}{\index{local\-\_\-msu@{local\-\_\-msu}!msu\-\_\-state@{msu\-\_\-state}}
+\index{msu\-\_\-state@{msu\-\_\-state}!local_msu@{local\-\_\-msu}}
+\subsubsection[{msu\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ local\-\_\-msu\-::msu\-\_\-state}}\label{structlocal__msu_a4b540cc46b0cc35e4e7684f2d6af7c41}
+
+
+State related to the entire instance of the M\-S\-U, not just individual items. 
+
+
+
+Definition at line 66 of file local\-\_\-msu.\-h.
+
+\hypertarget{structlocal__msu_a33cb8e5c68228acf60cbf1869ff2a395}{\index{local\-\_\-msu@{local\-\_\-msu}!queue@{queue}}
+\index{queue@{queue}!local_msu@{local\-\_\-msu}}
+\subsubsection[{queue}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msg\-\_\-queue} local\-\_\-msu\-::queue}}\label{structlocal__msu_a33cb8e5c68228acf60cbf1869ff2a395}
+
+
+Input queue to M\-S\-U. 
+
+
+
+Definition at line 60 of file local\-\_\-msu.\-h.
+
+\hypertarget{structlocal__msu_ad5a5a49f5e637d526668a373fd741ad8}{\index{local\-\_\-msu@{local\-\_\-msu}!routes@{routes}}
+\index{routes@{routes}!local_msu@{local\-\_\-msu}}
+\subsubsection[{routes}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf route\-\_\-set} local\-\_\-msu\-::routes}}\label{structlocal__msu_ad5a5a49f5e637d526668a373fd741ad8}
+
+
+Routing table set, containing all destination M\-S\-Us (see \hyperlink{routing_8h}{routing.\-h} for details) 
+
+
+
+Definition at line 51 of file local\-\_\-msu.\-h.
+
+\hypertarget{structlocal__msu_afa2bd1495e53a10cf352af70aaaba10d}{\index{local\-\_\-msu@{local\-\_\-msu}!scheduling\-\_\-weight@{scheduling\-\_\-weight}}
+\index{scheduling\-\_\-weight@{scheduling\-\_\-weight}!local_msu@{local\-\_\-msu}}
+\subsubsection[{scheduling\-\_\-weight}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int local\-\_\-msu\-::scheduling\-\_\-weight}}\label{structlocal__msu_afa2bd1495e53a10cf352af70aaaba10d}
+
+
+The number of items that should be dequeued on this M\-S\-U each tick. 
+
+
+
+Definition at line 57 of file local\-\_\-msu.\-h.
+
+\hypertarget{structlocal__msu_a8f2b8ca820e060261f888b3bcb01d222}{\index{local\-\_\-msu@{local\-\_\-msu}!thread@{thread}}
+\index{thread@{thread}!local_msu@{local\-\_\-msu}}
+\subsubsection[{thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf worker\-\_\-thread}$\ast$ local\-\_\-msu\-::thread}}\label{structlocal__msu_a8f2b8ca820e060261f888b3bcb01d222}
+
+
+The worker thread on which this M\-S\-U is placed. 
+
+
+
+Definition at line 69 of file local\-\_\-msu.\-h.
+
+\hypertarget{structlocal__msu_a4a5eb0c93e0be80ec816c050662885b3}{\index{local\-\_\-msu@{local\-\_\-msu}!type@{type}}
+\index{type@{type}!local_msu@{local\-\_\-msu}}
+\subsubsection[{type}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type}$\ast$ local\-\_\-msu\-::type}}\label{structlocal__msu_a4a5eb0c93e0be80ec816c050662885b3}
+
+
+Pointer to struct containing information shared across all instances of this type of M\-S\-U. 
+
+Includes type-\/specific M\-S\-U functions 
+
+Definition at line 45 of file local\-\_\-msu.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{local__msu_8h}{local\-\_\-msu.\-h}\end{DoxyCompactItemize}

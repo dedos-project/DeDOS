@@ -1,0 +1,137 @@
+\hypertarget{controller__communication_8h}{\section{src/runtime/controller\-\_\-communication.h File Reference}
+\label{controller__communication_8h}\index{src/runtime/controller\-\_\-communication.\-h@{src/runtime/controller\-\_\-communication.\-h}}
+}
+
+
+Communication with global controller from runtime.  
+
+
+{\ttfamily \#include \char`\"{}netinet/ip.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}ctrl\-\_\-runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-controller\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{controller__communication_8h_a85fe34a3173f21a57cb9e765531d525e}{send\-\_\-to\-\_\-controller} (struct \hyperlink{structrt__controller__msg__hdr}{rt\-\_\-controller\-\_\-msg\-\_\-hdr} $\ast$msg, void $\ast$payload)
+\begin{DoxyCompactList}\small\item\em Sends a message to the global controller. \end{DoxyCompactList}\item 
+int \hyperlink{controller__communication_8h_ac7a6c7f7b6a1f5be06fc3391c63751ff}{init\-\_\-controller\-\_\-socket} (struct sockaddr\-\_\-in $\ast$addr)
+\begin{DoxyCompactList}\small\item\em Initilizes a connection with the global controller located at the provided address. \end{DoxyCompactList}\item 
+int \hyperlink{controller__communication_8h_af6d098df8134bfff0e07fc57d4035a49}{handle\-\_\-controller\-\_\-communication} (int fd)
+\begin{DoxyCompactList}\small\item\em Reads and processes a controller message off of the provided file descriptor. \end{DoxyCompactList}\item 
+int \hyperlink{controller__communication_8h_a5cfed3733b48e989d340b0f785f2c6a3}{send\-\_\-ack\-\_\-message} (int ack\-\_\-id, bool success)
+\begin{DoxyCompactList}\small\item\em {\bfseries W\-I\-L\-L} Send an acknoweledgement of success for a specific message. \end{DoxyCompactList}\item 
+bool \hyperlink{controller__communication_8h_a1644332e48be0783c8efb4be330716c4}{is\-\_\-controller\-\_\-fd} (int fd)
+\begin{DoxyCompactList}\small\item\em Checks if {\ttfamily fd} is file descriptor for controller. \end{DoxyCompactList}\item 
+int \hyperlink{controller__communication_8h_a84d5b711e4fbbb35b846ddb6ced70498}{send\-\_\-stats\-\_\-to\-\_\-controller} ()
+\begin{DoxyCompactList}\small\item\em Samples the relevant statistics and sends them to the controller. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Communication with global controller from runtime. 
+
+Definition in file \hyperlink{controller__communication_8h_source}{controller\-\_\-communication.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{controller__communication_8h_af6d098df8134bfff0e07fc57d4035a49}{\index{controller\-\_\-communication.\-h@{controller\-\_\-communication.\-h}!handle\-\_\-controller\-\_\-communication@{handle\-\_\-controller\-\_\-communication}}
+\index{handle\-\_\-controller\-\_\-communication@{handle\-\_\-controller\-\_\-communication}!controller_communication.h@{controller\-\_\-communication.\-h}}
+\subsubsection[{handle\-\_\-controller\-\_\-communication}]{\setlength{\rightskip}{0pt plus 5cm}int handle\-\_\-controller\-\_\-communication (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{controller__communication_8h_af6d098df8134bfff0e07fc57d4035a49}
+
+
+Reads and processes a controller message off of the provided file descriptor. 
+
+Controller message should start with \hyperlink{structctrl__runtime__msg__hdr}{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}.  fd File descriptor off of which to read the message 
+
+Definition at line 419 of file controller\-\_\-communication.\-c.
+
+\hypertarget{controller__communication_8h_ac7a6c7f7b6a1f5be06fc3391c63751ff}{\index{controller\-\_\-communication.\-h@{controller\-\_\-communication.\-h}!init\-\_\-controller\-\_\-socket@{init\-\_\-controller\-\_\-socket}}
+\index{init\-\_\-controller\-\_\-socket@{init\-\_\-controller\-\_\-socket}!controller_communication.h@{controller\-\_\-communication.\-h}}
+\subsubsection[{init\-\_\-controller\-\_\-socket}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-controller\-\_\-socket (
+\begin{DoxyParamCaption}
+\item[{struct sockaddr\-\_\-in $\ast$}]{addr}
+\end{DoxyParamCaption}
+)}}\label{controller__communication_8h_ac7a6c7f7b6a1f5be06fc3391c63751ff}
+
+
+Initilizes a connection with the global controller located at the provided address. 
+
+
+
+Definition at line 448 of file controller\-\_\-communication.\-c.
+
+\hypertarget{controller__communication_8h_a1644332e48be0783c8efb4be330716c4}{\index{controller\-\_\-communication.\-h@{controller\-\_\-communication.\-h}!is\-\_\-controller\-\_\-fd@{is\-\_\-controller\-\_\-fd}}
+\index{is\-\_\-controller\-\_\-fd@{is\-\_\-controller\-\_\-fd}!controller_communication.h@{controller\-\_\-communication.\-h}}
+\subsubsection[{is\-\_\-controller\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}bool is\-\_\-controller\-\_\-fd (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{controller__communication_8h_a1644332e48be0783c8efb4be330716c4}
+
+
+Checks if {\ttfamily fd} is file descriptor for controller. 
+
+
+
+Definition at line 443 of file controller\-\_\-communication.\-c.
+
+\hypertarget{controller__communication_8h_a5cfed3733b48e989d340b0f785f2c6a3}{\index{controller\-\_\-communication.\-h@{controller\-\_\-communication.\-h}!send\-\_\-ack\-\_\-message@{send\-\_\-ack\-\_\-message}}
+\index{send\-\_\-ack\-\_\-message@{send\-\_\-ack\-\_\-message}!controller_communication.h@{controller\-\_\-communication.\-h}}
+\subsubsection[{send\-\_\-ack\-\_\-message}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-ack\-\_\-message (
+\begin{DoxyParamCaption}
+\item[{int}]{ack\-\_\-id, }
+\item[{bool}]{success}
+\end{DoxyParamCaption}
+)}}\label{controller__communication_8h_a5cfed3733b48e989d340b0f785f2c6a3}
+
+
+{\bfseries W\-I\-L\-L} Send an acknoweledgement of success for a specific message. 
+
+Not yet used 
+
+Definition at line 380 of file controller\-\_\-communication.\-c.
+
+\hypertarget{controller__communication_8h_a84d5b711e4fbbb35b846ddb6ced70498}{\index{controller\-\_\-communication.\-h@{controller\-\_\-communication.\-h}!send\-\_\-stats\-\_\-to\-\_\-controller@{send\-\_\-stats\-\_\-to\-\_\-controller}}
+\index{send\-\_\-stats\-\_\-to\-\_\-controller@{send\-\_\-stats\-\_\-to\-\_\-controller}!controller_communication.h@{controller\-\_\-communication.\-h}}
+\subsubsection[{send\-\_\-stats\-\_\-to\-\_\-controller}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-stats\-\_\-to\-\_\-controller (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__communication_8h_a84d5b711e4fbbb35b846ddb6ced70498}
+
+
+Samples the relevant statistics and sends them to the controller. 
+
+
+
+Definition at line 462 of file controller\-\_\-communication.\-c.
+
+\hypertarget{controller__communication_8h_a85fe34a3173f21a57cb9e765531d525e}{\index{controller\-\_\-communication.\-h@{controller\-\_\-communication.\-h}!send\-\_\-to\-\_\-controller@{send\-\_\-to\-\_\-controller}}
+\index{send\-\_\-to\-\_\-controller@{send\-\_\-to\-\_\-controller}!controller_communication.h@{controller\-\_\-communication.\-h}}
+\subsubsection[{send\-\_\-to\-\_\-controller}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-to\-\_\-controller (
+\begin{DoxyParamCaption}
+\item[{struct {\bf rt\-\_\-controller\-\_\-msg\-\_\-hdr} $\ast$}]{msg, }
+\item[{void $\ast$}]{payload}
+\end{DoxyParamCaption}
+)}}\label{controller__communication_8h_a85fe34a3173f21a57cb9e765531d525e}
+
+
+Sends a message to the global controller. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msg} & Message to send. Must define payload\-\_\-len. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+-\/1 on error, 0 on success 
+\end{DoxyReturn}
+
+
+Definition at line 47 of file controller\-\_\-communication.\-c.
+

@@ -1,0 +1,286 @@
+\hypertarget{logging_8h}{\section{src/common/logging.h File Reference}
+\label{logging_8h}\index{src/common/logging.\-h@{src/common/logging.\-h}}
+}
+
+
+Logging of status messages to the terminal.  
+
+
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$errno.\-h$>$}\\*
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$pthread.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{logging_8h_a34995b955465f6bbb37c359173d50477}{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-D}~\char`\"{}\textbackslash{}x1b\mbox{[}31m\char`\"{}
+\item 
+\#define \hyperlink{logging_8h_a966c72d8d733c7734c6c784753d894c7}{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-G\-R\-E\-E\-N}~\char`\"{}\textbackslash{}x1b\mbox{[}32m\char`\"{}
+\item 
+\#define \hyperlink{logging_8h_a5a123b382640b3aa65dd5db386002fbc}{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-Y\-E\-L\-L\-O\-W}~\char`\"{}\textbackslash{}x1b\mbox{[}33m\char`\"{}
+\item 
+\#define \hyperlink{logging_8h_aca16e6a49eb51333c5fd3eee19487315}{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-B\-L\-U\-E}~\char`\"{}\textbackslash{}x1b\mbox{[}34m\char`\"{}
+\item 
+\#define \hyperlink{logging_8h_a92a364c2b863dde1a024a77eac2a5b3b}{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-S\-E\-T}~\char`\"{}\textbackslash{}x1b\mbox{[}0m\char`\"{}
+\item 
+\#define \hyperlink{logging_8h_a1666185bc75c7b490062225c63da4257}{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-P\-U\-R\-P\-L\-E}~\char`\"{}\textbackslash{}x1b\mbox{[}35m\char`\"{}
+\item 
+\#define \hyperlink{logging_8h_a3d6c86ecc3b54c3eeab0d854e201f233}{P\-I\-C\-O\-\_\-\-S\-U\-P\-P\-O\-R\-T\-\_\-\-N\-D\-E\-B\-U\-G}
+\item 
+\#define \hyperlink{logging_8h_a693f4bf64aab5d2170eaabceae559b23}{L\-O\-G\-\_\-\-F\-D}~stderr
+\begin{DoxyCompactList}\small\item\em Where logs are printed to. \end{DoxyCompactList}\item 
+\#define \hyperlink{logging_8h_a7574ce4aa047de1f4a564c9b441e69dc}{L\-O\-G\-\_\-\-A\-L\-L}~0
+\item 
+\#define \hyperlink{logging_8h_abecc42ee1ea33f532105590bde81279e}{log\-\_\-at\-\_\-level}(lvl\-\_\-label, color, fd, fmt,...)
+\begin{DoxyCompactList}\small\item\em Macro utilized by all loggers. \end{DoxyCompactList}\item 
+\#define \hyperlink{logging_8h_aa77e596ef13d2f0f75d0ac9540ed358d}{log\-\_\-debug}(...)
+\begin{DoxyCompactList}\small\item\em Use of log\-\_\-debug(fmt, ...) is not recommended. \end{DoxyCompactList}\item 
+\#define \hyperlink{logging_8h_a20f8a31603d3b132bf448a96fceec17d}{debug}(fmt,...)~\hyperlink{logging_8h_aa77e596ef13d2f0f75d0ac9540ed358d}{log\-\_\-debug}(\-\_\-\-\_\-\-V\-A\-\_\-\-A\-R\-G\-S\-\_\-\-\_\-)
+\item 
+\#define \hyperlink{logging_8h_a442f23202cd03383ed8e3ec6bbae5bd2}{log\-\_\-info}(fmt,...)
+\item 
+\#define \hyperlink{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}{log\-\_\-error}(fmt,...)
+\item 
+\#define \hyperlink{logging_8h_a0cacd3ee0d2548c976984591088f19a7}{log\-\_\-perror}(fmt,...)
+\item 
+\#define \hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{log\-\_\-warn}(fmt,...)
+\item 
+\#define \hyperlink{logging_8h_a92f094ae1a93abe45a34e2fa2a97f335}{log\-\_\-critical}(fmt,...)
+\item 
+\#define \hyperlink{logging_8h_a6688e6218820c9d155006dcab23eb611}{log}(level, fmt,...)
+\begin{DoxyCompactList}\small\item\em Log at a custom level. \end{DoxyCompactList}\item 
+\#define \hyperlink{logging_8h_a625458b1f38b555c1824e88adcacab76}{log\-\_\-profile}(...)
+\item 
+\#define \hyperlink{logging_8h_a4f15acb0905083ec9700ba3fa1b0e8c6}{tcp\-\_\-dbg}(...)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Logging of status messages to the terminal. The De\-D\-O\-S logger supports five built-\/in log levels (debug, info, error, warn, and critical), in addition to custom log levels.
+
+To enable a custom log level, simply write\-: {\ttfamily log(L\-O\-G\-\_\-\-S\-O\-M\-E\-T\-H\-I\-N\-G, \char`\"{}\-Stuff to \%s\char`\"{}, log);}
+
+If the macro {\ttfamily L\-O\-G\-\_\-\-S\-O\-M\-E\-T\-H\-I\-N\-G} is defined, \char`\"{}\-Stuff to log\char`\"{} will be output. Otherwise, it will be compiled away (if optimization $>$ 0). 
+
+Definition in file \hyperlink{logging_8h_source}{logging.\-h}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{logging_8h_aca16e6a49eb51333c5fd3eee19487315}{\index{logging.\-h@{logging.\-h}!A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-B\-L\-U\-E@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-B\-L\-U\-E}}
+\index{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-B\-L\-U\-E@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-B\-L\-U\-E}!logging.h@{logging.\-h}}
+\subsubsection[{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-B\-L\-U\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-B\-L\-U\-E~\char`\"{}\textbackslash{}x1b\mbox{[}34m\char`\"{}}}\label{logging_8h_aca16e6a49eb51333c5fd3eee19487315}
+
+
+Definition at line 46 of file logging.\-h.
+
+\hypertarget{logging_8h_a966c72d8d733c7734c6c784753d894c7}{\index{logging.\-h@{logging.\-h}!A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-G\-R\-E\-E\-N@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-G\-R\-E\-E\-N}}
+\index{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-G\-R\-E\-E\-N@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-G\-R\-E\-E\-N}!logging.h@{logging.\-h}}
+\subsubsection[{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-G\-R\-E\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-G\-R\-E\-E\-N~\char`\"{}\textbackslash{}x1b\mbox{[}32m\char`\"{}}}\label{logging_8h_a966c72d8d733c7734c6c784753d894c7}
+
+
+Definition at line 44 of file logging.\-h.
+
+\hypertarget{logging_8h_a1666185bc75c7b490062225c63da4257}{\index{logging.\-h@{logging.\-h}!A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-P\-U\-R\-P\-L\-E@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-P\-U\-R\-P\-L\-E}}
+\index{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-P\-U\-R\-P\-L\-E@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-P\-U\-R\-P\-L\-E}!logging.h@{logging.\-h}}
+\subsubsection[{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-P\-U\-R\-P\-L\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-P\-U\-R\-P\-L\-E~\char`\"{}\textbackslash{}x1b\mbox{[}35m\char`\"{}}}\label{logging_8h_a1666185bc75c7b490062225c63da4257}
+
+
+Definition at line 48 of file logging.\-h.
+
+\hypertarget{logging_8h_a34995b955465f6bbb37c359173d50477}{\index{logging.\-h@{logging.\-h}!A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-D@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-D}}
+\index{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-D@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-D}!logging.h@{logging.\-h}}
+\subsubsection[{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-D~\char`\"{}\textbackslash{}x1b\mbox{[}31m\char`\"{}}}\label{logging_8h_a34995b955465f6bbb37c359173d50477}
+
+
+Definition at line 43 of file logging.\-h.
+
+\hypertarget{logging_8h_a92a364c2b863dde1a024a77eac2a5b3b}{\index{logging.\-h@{logging.\-h}!A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-S\-E\-T@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-S\-E\-T}}
+\index{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-S\-E\-T@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-S\-E\-T}!logging.h@{logging.\-h}}
+\subsubsection[{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-S\-E\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-R\-E\-S\-E\-T~\char`\"{}\textbackslash{}x1b\mbox{[}0m\char`\"{}}}\label{logging_8h_a92a364c2b863dde1a024a77eac2a5b3b}
+
+
+Definition at line 47 of file logging.\-h.
+
+\hypertarget{logging_8h_a5a123b382640b3aa65dd5db386002fbc}{\index{logging.\-h@{logging.\-h}!A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-Y\-E\-L\-L\-O\-W@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-Y\-E\-L\-L\-O\-W}}
+\index{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-Y\-E\-L\-L\-O\-W@{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-Y\-E\-L\-L\-O\-W}!logging.h@{logging.\-h}}
+\subsubsection[{A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-Y\-E\-L\-L\-O\-W}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\-N\-S\-I\-\_\-\-C\-O\-L\-O\-R\-\_\-\-Y\-E\-L\-L\-O\-W~\char`\"{}\textbackslash{}x1b\mbox{[}33m\char`\"{}}}\label{logging_8h_a5a123b382640b3aa65dd5db386002fbc}
+
+
+Definition at line 45 of file logging.\-h.
+
+\hypertarget{logging_8h_a20f8a31603d3b132bf448a96fceec17d}{\index{logging.\-h@{logging.\-h}!debug@{debug}}
+\index{debug@{debug}!logging.h@{logging.\-h}}
+\subsubsection[{debug}]{\setlength{\rightskip}{0pt plus 5cm}\#define debug(
+\begin{DoxyParamCaption}
+\item[{}]{fmt, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)~{\bf log\-\_\-debug}(\-\_\-\-\_\-\-V\-A\-\_\-\-A\-R\-G\-S\-\_\-\-\_\-)}}\label{logging_8h_a20f8a31603d3b132bf448a96fceec17d}
+
+
+Definition at line 78 of file logging.\-h.
+
+\hypertarget{logging_8h_a6688e6218820c9d155006dcab23eb611}{\index{logging.\-h@{logging.\-h}!log@{log}}
+\index{log@{log}!logging.h@{logging.\-h}}
+\subsubsection[{log}]{\setlength{\rightskip}{0pt plus 5cm}\#define log(
+\begin{DoxyParamCaption}
+\item[{}]{level, }
+\item[{}]{fmt, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_a6688e6218820c9d155006dcab23eb611}
+
+
+Log at a custom level. 
+
+Compiled away if L\-O\-G\-\_\-\-C\-U\-S\-T\-O\-M is not defined, and optimized out if the preprocessor macro {\ttfamily level} is not defined (and optimization level is sufficiently high) 
+
+Definition at line 147 of file logging.\-h.
+
+\hypertarget{logging_8h_a7574ce4aa047de1f4a564c9b441e69dc}{\index{logging.\-h@{logging.\-h}!L\-O\-G\-\_\-\-A\-L\-L@{L\-O\-G\-\_\-\-A\-L\-L}}
+\index{L\-O\-G\-\_\-\-A\-L\-L@{L\-O\-G\-\_\-\-A\-L\-L}!logging.h@{logging.\-h}}
+\subsubsection[{L\-O\-G\-\_\-\-A\-L\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\-O\-G\-\_\-\-A\-L\-L~0}}\label{logging_8h_a7574ce4aa047de1f4a564c9b441e69dc}
+
+
+Definition at line 58 of file logging.\-h.
+
+\hypertarget{logging_8h_abecc42ee1ea33f532105590bde81279e}{\index{logging.\-h@{logging.\-h}!log\-\_\-at\-\_\-level@{log\-\_\-at\-\_\-level}}
+\index{log\-\_\-at\-\_\-level@{log\-\_\-at\-\_\-level}!logging.h@{logging.\-h}}
+\subsubsection[{log\-\_\-at\-\_\-level}]{\setlength{\rightskip}{0pt plus 5cm}\#define log\-\_\-at\-\_\-level(
+\begin{DoxyParamCaption}
+\item[{}]{lvl\-\_\-label, }
+\item[{}]{color, }
+\item[{}]{fd, }
+\item[{}]{fmt, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_abecc42ee1ea33f532105590bde81279e}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+fprintf(fd, \textcolor{stringliteral}{""} color \textcolor{stringliteral}{"%lu:%s:%d:%s(): "} lvl\_label \textcolor{stringliteral}{": "} fmt \hyperlink{logging_8h_a92a364c2b863dde1a024a77eac2a5b3b}{ANSI\_COLOR\_RESET} \textcolor{stringliteral}{"\(\backslash\)n"}, \(\backslash\)
+                pthread\_self(), \_\_FILE\_\_, \_\_LINE\_\_, \_\_func\_\_, ##\_\_VA\_ARGS\_\_)
+\end{DoxyCode}
+
+
+Macro utilized by all loggers. 
+
+
+
+Definition at line 65 of file logging.\-h.
+
+\hypertarget{logging_8h_a92f094ae1a93abe45a34e2fa2a97f335}{\index{logging.\-h@{logging.\-h}!log\-\_\-critical@{log\-\_\-critical}}
+\index{log\-\_\-critical@{log\-\_\-critical}!logging.h@{logging.\-h}}
+\subsubsection[{log\-\_\-critical}]{\setlength{\rightskip}{0pt plus 5cm}\#define log\-\_\-critical(
+\begin{DoxyParamCaption}
+\item[{}]{fmt, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_a92f094ae1a93abe45a34e2fa2a97f335}
+
+
+Definition at line 124 of file logging.\-h.
+
+\hypertarget{logging_8h_aa77e596ef13d2f0f75d0ac9540ed358d}{\index{logging.\-h@{logging.\-h}!log\-\_\-debug@{log\-\_\-debug}}
+\index{log\-\_\-debug@{log\-\_\-debug}!logging.h@{logging.\-h}}
+\subsubsection[{log\-\_\-debug}]{\setlength{\rightskip}{0pt plus 5cm}\#define log\-\_\-debug(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_aa77e596ef13d2f0f75d0ac9540ed358d}
+
+
+Use of log\-\_\-debug(fmt, ...) is not recommended. 
+
+Use log(L\-V\-L, fmt, ...) below 
+
+Definition at line 76 of file logging.\-h.
+
+\hypertarget{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}{\index{logging.\-h@{logging.\-h}!log\-\_\-error@{log\-\_\-error}}
+\index{log\-\_\-error@{log\-\_\-error}!logging.h@{logging.\-h}}
+\subsubsection[{log\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}\#define log\-\_\-error(
+\begin{DoxyParamCaption}
+\item[{}]{fmt, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_a887f83dbb884a13949e4f2ad710e5ddf}
+
+
+Definition at line 101 of file logging.\-h.
+
+\hypertarget{logging_8h_a693f4bf64aab5d2170eaabceae559b23}{\index{logging.\-h@{logging.\-h}!L\-O\-G\-\_\-\-F\-D@{L\-O\-G\-\_\-\-F\-D}}
+\index{L\-O\-G\-\_\-\-F\-D@{L\-O\-G\-\_\-\-F\-D}!logging.h@{logging.\-h}}
+\subsubsection[{L\-O\-G\-\_\-\-F\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\-O\-G\-\_\-\-F\-D~stderr}}\label{logging_8h_a693f4bf64aab5d2170eaabceae559b23}
+
+
+Where logs are printed to. 
+
+
+
+Definition at line 53 of file logging.\-h.
+
+\hypertarget{logging_8h_a442f23202cd03383ed8e3ec6bbae5bd2}{\index{logging.\-h@{logging.\-h}!log\-\_\-info@{log\-\_\-info}}
+\index{log\-\_\-info@{log\-\_\-info}!logging.h@{logging.\-h}}
+\subsubsection[{log\-\_\-info}]{\setlength{\rightskip}{0pt plus 5cm}\#define log\-\_\-info(
+\begin{DoxyParamCaption}
+\item[{}]{fmt, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_a442f23202cd03383ed8e3ec6bbae5bd2}
+
+
+Definition at line 88 of file logging.\-h.
+
+\hypertarget{logging_8h_a0cacd3ee0d2548c976984591088f19a7}{\index{logging.\-h@{logging.\-h}!log\-\_\-perror@{log\-\_\-perror}}
+\index{log\-\_\-perror@{log\-\_\-perror}!logging.h@{logging.\-h}}
+\subsubsection[{log\-\_\-perror}]{\setlength{\rightskip}{0pt plus 5cm}\#define log\-\_\-perror(
+\begin{DoxyParamCaption}
+\item[{}]{fmt, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_a0cacd3ee0d2548c976984591088f19a7}
+
+
+Definition at line 102 of file logging.\-h.
+
+\hypertarget{logging_8h_a625458b1f38b555c1824e88adcacab76}{\index{logging.\-h@{logging.\-h}!log\-\_\-profile@{log\-\_\-profile}}
+\index{log\-\_\-profile@{log\-\_\-profile}!logging.h@{logging.\-h}}
+\subsubsection[{log\-\_\-profile}]{\setlength{\rightskip}{0pt plus 5cm}\#define log\-\_\-profile(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_a625458b1f38b555c1824e88adcacab76}
+
+
+Definition at line 156 of file logging.\-h.
+
+\hypertarget{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{\index{logging.\-h@{logging.\-h}!log\-\_\-warn@{log\-\_\-warn}}
+\index{log\-\_\-warn@{log\-\_\-warn}!logging.h@{logging.\-h}}
+\subsubsection[{log\-\_\-warn}]{\setlength{\rightskip}{0pt plus 5cm}\#define log\-\_\-warn(
+\begin{DoxyParamCaption}
+\item[{}]{fmt, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}
+
+
+Definition at line 113 of file logging.\-h.
+
+\hypertarget{logging_8h_a3d6c86ecc3b54c3eeab0d854e201f233}{\index{logging.\-h@{logging.\-h}!P\-I\-C\-O\-\_\-\-S\-U\-P\-P\-O\-R\-T\-\_\-\-N\-D\-E\-B\-U\-G@{P\-I\-C\-O\-\_\-\-S\-U\-P\-P\-O\-R\-T\-\_\-\-N\-D\-E\-B\-U\-G}}
+\index{P\-I\-C\-O\-\_\-\-S\-U\-P\-P\-O\-R\-T\-\_\-\-N\-D\-E\-B\-U\-G@{P\-I\-C\-O\-\_\-\-S\-U\-P\-P\-O\-R\-T\-\_\-\-N\-D\-E\-B\-U\-G}!logging.h@{logging.\-h}}
+\subsubsection[{P\-I\-C\-O\-\_\-\-S\-U\-P\-P\-O\-R\-T\-\_\-\-N\-D\-E\-B\-U\-G}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\-I\-C\-O\-\_\-\-S\-U\-P\-P\-O\-R\-T\-\_\-\-N\-D\-E\-B\-U\-G}}\label{logging_8h_a3d6c86ecc3b54c3eeab0d854e201f233}
+
+
+Definition at line 50 of file logging.\-h.
+
+\hypertarget{logging_8h_a4f15acb0905083ec9700ba3fa1b0e8c6}{\index{logging.\-h@{logging.\-h}!tcp\-\_\-dbg@{tcp\-\_\-dbg}}
+\index{tcp\-\_\-dbg@{tcp\-\_\-dbg}!logging.h@{logging.\-h}}
+\subsubsection[{tcp\-\_\-dbg}]{\setlength{\rightskip}{0pt plus 5cm}\#define tcp\-\_\-dbg(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{logging_8h_a4f15acb0905083ec9700ba3fa1b0e8c6}
+
+
+Definition at line 165 of file logging.\-h.
+

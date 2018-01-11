@@ -1,0 +1,263 @@
+\hypertarget{sslops_8c}{\section{src/msus/webserver/sslops.c File Reference}
+\label{sslops_8c}\index{src/msus/webserver/sslops.\-c@{src/msus/webserver/sslops.\-c}}
+}
+{\ttfamily \#include \char`\"{}webserver/sslops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/webserver.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$pthread.\-h$>$}\\*
+{\ttfamily \#include $<$openssl/err.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{sslops_8c_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D}
+\item 
+\#define \hyperlink{sslops_8c_a6a6af270149b9193d7311d498b1008c4}{print\-\_\-request\-\_\-error}(...)
+\item 
+\#define \hyperlink{sslops_8c_a8b380eb12d20cb117204521964058fe8}{print\-\_\-ssl\-\_\-error}(ssl, rtn)
+\begin{DoxyCompactList}\small\item\em Explains an S\-S\-L error. \end{DoxyCompactList}\item 
+\#define \hyperlink{sslops_8c_a3c7e8b2b6e63a118e41b9a54d2b2d36f}{C\-H\-E\-C\-K\-\_\-\-S\-S\-L\-\_\-\-W\-A\-N\-T\-S}(ssl, rtn)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \hyperlink{sslops_8c_a48de569796cede0adfde0ffa3ac0d134}{crypto\-\_\-locking\-\_\-callback} (int mode, int n, const char $\ast$file, int line)
+\item 
+static unsigned long \hyperlink{sslops_8c_ab8cfa0bcd1f59c8e5b9f09f6efd4dc8a}{crypto\-\_\-id\-\_\-function} (void)
+\item 
+void \hyperlink{sslops_8c_a145b02abc34e7304191782676c31064c}{init\-\_\-ssl\-\_\-locks} (void)
+\item 
+void \hyperlink{sslops_8c_a3c66189378af52381768df0585e44240}{kill\-\_\-ssl\-\_\-locks} (void)
+\item 
+int \hyperlink{sslops_8c_a8d80d2f2f1fb9bec9ef4c3be2edd7e86}{init\-\_\-ssl\-\_\-context} (void)
+\item 
+int \hyperlink{sslops_8c_ab18f9a63a4af1b485040bd370defece6}{load\-\_\-ssl\-\_\-certificate} (char $\ast$cert\-\_\-file, char $\ast$key\-\_\-file)
+\item 
+S\-S\-L $\ast$ \hyperlink{sslops_8c_a6b5e4a1f9abb00fd3457510b60bc8681}{init\-\_\-ssl\-\_\-connection} (int fd)
+\item 
+int \hyperlink{sslops_8c_a863e72497cdf17912d71c7e9277c2594}{accept\-\_\-ssl} (S\-S\-L $\ast$ssl)
+\item 
+int \hyperlink{sslops_8c_aed1792e43b3858645b64ef30c586665b}{read\-\_\-ssl} (S\-S\-L $\ast$ssl, char $\ast$buf, int $\ast$buf\-\_\-size)
+\item 
+int \hyperlink{sslops_8c_a98fe0c08f0209d7da3b823a550145bcc}{write\-\_\-ssl} (S\-S\-L $\ast$ssl, char $\ast$buf, int $\ast$buf\-\_\-size)
+\item 
+int \hyperlink{sslops_8c_a0147677cd81cb6308dd7ad420e626072}{close\-\_\-ssl} (S\-S\-L $\ast$ssl)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static pthread\-\_\-mutex\-\_\-t $\ast$ \hyperlink{sslops_8c_aaf502b08c03edc9573657e748da60e26}{lockarray}
+\item 
+S\-S\-L\-\_\-\-C\-T\-X $\ast$ \hyperlink{sslops_8c_a500f2070b7b9f34238a51cbf8f9b5024}{ssl\-\_\-ctx} = N\-U\-L\-L
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{sslops_8c_a3c7e8b2b6e63a118e41b9a54d2b2d36f}{\index{sslops.\-c@{sslops.\-c}!C\-H\-E\-C\-K\-\_\-\-S\-S\-L\-\_\-\-W\-A\-N\-T\-S@{C\-H\-E\-C\-K\-\_\-\-S\-S\-L\-\_\-\-W\-A\-N\-T\-S}}
+\index{C\-H\-E\-C\-K\-\_\-\-S\-S\-L\-\_\-\-W\-A\-N\-T\-S@{C\-H\-E\-C\-K\-\_\-\-S\-S\-L\-\_\-\-W\-A\-N\-T\-S}!sslops.c@{sslops.\-c}}
+\subsubsection[{C\-H\-E\-C\-K\-\_\-\-S\-S\-L\-\_\-\-W\-A\-N\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-H\-E\-C\-K\-\_\-\-S\-S\-L\-\_\-\-W\-A\-N\-T\-S(
+\begin{DoxyParamCaption}
+\item[{}]{ssl, }
+\item[{}]{rtn}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a3c7e8b2b6e63a118e41b9a54d2b2d36f}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \(\backslash\)
+        int err = SSL\_get\_error(ssl, rtn); \(\backslash\)
+        if (err != SSL\_ERROR\_WANT\_READ && err != SSL\_ERROR\_WANT\_WRITE) \{ \hyperlink{sslops_8c_a8b380eb12d20cb117204521964058fe8}{\(\backslash\)}
+\hyperlink{sslops_8c_a8b380eb12d20cb117204521964058fe8}{            print\_ssl\_error}(ssl, rtn); \(\backslash\)
+            return \hyperlink{webserver_8h_ab31158a3e885b01a4ae7bb133a44bde9}{WS\_ERROR}; \(\backslash\)
+        \} \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( err == SSL\_ERROR\_WANT\_READ) \{ \(\backslash\)
+            return \hyperlink{webserver_8h_a31f4beb89f21628cde6587cd0d192e86}{WS\_INCOMPLETE\_READ}; \(\backslash\)
+        \} \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( err == SSL\_ERROR\_WANT\_WRITE) \{ \(\backslash\)
+            return \hyperlink{webserver_8h_ae669d94030dfc6a6ae6a58f696268bd3}{WS\_INCOMPLETE\_WRITE}; \(\backslash\)
+        \} \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0);
+\end{DoxyCode}
+
+
+Definition at line 182 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a6a6af270149b9193d7311d498b1008c4}{\index{sslops.\-c@{sslops.\-c}!print\-\_\-request\-\_\-error@{print\-\_\-request\-\_\-error}}
+\index{print\-\_\-request\-\_\-error@{print\-\_\-request\-\_\-error}!sslops.c@{sslops.\-c}}
+\subsubsection[{print\-\_\-request\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}\#define print\-\_\-request\-\_\-error(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a6a6af270149b9193d7311d498b1008c4}
+
+
+Definition at line 38 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a8b380eb12d20cb117204521964058fe8}{\index{sslops.\-c@{sslops.\-c}!print\-\_\-ssl\-\_\-error@{print\-\_\-ssl\-\_\-error}}
+\index{print\-\_\-ssl\-\_\-error@{print\-\_\-ssl\-\_\-error}!sslops.c@{sslops.\-c}}
+\subsubsection[{print\-\_\-ssl\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}\#define print\-\_\-ssl\-\_\-error(
+\begin{DoxyParamCaption}
+\item[{}]{ssl, }
+\item[{}]{rtn}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a8b380eb12d20cb117204521964058fe8}
+
+
+Explains an S\-S\-L error. 
+
+Written as a macro so we have traceability in the log\-\_\-error statements 
+
+Definition at line 89 of file sslops.\-c.
+
+\hypertarget{sslops_8c_addf5ec070e9499d36b7f2009ce736076}{\index{sslops.\-c@{sslops.\-c}!U\-N\-U\-S\-E\-D@{U\-N\-U\-S\-E\-D}}
+\index{U\-N\-U\-S\-E\-D@{U\-N\-U\-S\-E\-D}!sslops.c@{sslops.\-c}}
+\subsubsection[{U\-N\-U\-S\-E\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\-N\-U\-S\-E\-D}}\label{sslops_8c_addf5ec070e9499d36b7f2009ce736076}
+
+
+Definition at line 29 of file sslops.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{sslops_8c_a863e72497cdf17912d71c7e9277c2594}{\index{sslops.\-c@{sslops.\-c}!accept\-\_\-ssl@{accept\-\_\-ssl}}
+\index{accept\-\_\-ssl@{accept\-\_\-ssl}!sslops.c@{sslops.\-c}}
+\subsubsection[{accept\-\_\-ssl}]{\setlength{\rightskip}{0pt plus 5cm}int accept\-\_\-ssl (
+\begin{DoxyParamCaption}
+\item[{S\-S\-L $\ast$}]{ssl}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a863e72497cdf17912d71c7e9277c2594}
+
+
+Definition at line 195 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a0147677cd81cb6308dd7ad420e626072}{\index{sslops.\-c@{sslops.\-c}!close\-\_\-ssl@{close\-\_\-ssl}}
+\index{close\-\_\-ssl@{close\-\_\-ssl}!sslops.c@{sslops.\-c}}
+\subsubsection[{close\-\_\-ssl}]{\setlength{\rightskip}{0pt plus 5cm}int close\-\_\-ssl (
+\begin{DoxyParamCaption}
+\item[{S\-S\-L $\ast$}]{ssl}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a0147677cd81cb6308dd7ad420e626072}
+
+
+Definition at line 241 of file sslops.\-c.
+
+\hypertarget{sslops_8c_ab8cfa0bcd1f59c8e5b9f09f6efd4dc8a}{\index{sslops.\-c@{sslops.\-c}!crypto\-\_\-id\-\_\-function@{crypto\-\_\-id\-\_\-function}}
+\index{crypto\-\_\-id\-\_\-function@{crypto\-\_\-id\-\_\-function}!sslops.c@{sslops.\-c}}
+\subsubsection[{crypto\-\_\-id\-\_\-function}]{\setlength{\rightskip}{0pt plus 5cm}static unsigned long crypto\-\_\-id\-\_\-function (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{sslops_8c_ab8cfa0bcd1f59c8e5b9f09f6efd4dc8a}
+
+
+Definition at line 103 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a48de569796cede0adfde0ffa3ac0d134}{\index{sslops.\-c@{sslops.\-c}!crypto\-\_\-locking\-\_\-callback@{crypto\-\_\-locking\-\_\-callback}}
+\index{crypto\-\_\-locking\-\_\-callback@{crypto\-\_\-locking\-\_\-callback}!sslops.c@{sslops.\-c}}
+\subsubsection[{crypto\-\_\-locking\-\_\-callback}]{\setlength{\rightskip}{0pt plus 5cm}static void crypto\-\_\-locking\-\_\-callback (
+\begin{DoxyParamCaption}
+\item[{int}]{mode, }
+\item[{int}]{n, }
+\item[{const char $\ast$}]{file, }
+\item[{int}]{line}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{sslops_8c_a48de569796cede0adfde0ffa3ac0d134}
+
+
+Definition at line 94 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a6b5e4a1f9abb00fd3457510b60bc8681}{\index{sslops.\-c@{sslops.\-c}!init\-\_\-ssl\-\_\-connection@{init\-\_\-ssl\-\_\-connection}}
+\index{init\-\_\-ssl\-\_\-connection@{init\-\_\-ssl\-\_\-connection}!sslops.c@{sslops.\-c}}
+\subsubsection[{init\-\_\-ssl\-\_\-connection}]{\setlength{\rightskip}{0pt plus 5cm}S\-S\-L$\ast$ init\-\_\-ssl\-\_\-connection (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a6b5e4a1f9abb00fd3457510b60bc8681}
+
+
+Definition at line 176 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a8d80d2f2f1fb9bec9ef4c3be2edd7e86}{\index{sslops.\-c@{sslops.\-c}!init\-\_\-ssl\-\_\-context@{init\-\_\-ssl\-\_\-context}}
+\index{init\-\_\-ssl\-\_\-context@{init\-\_\-ssl\-\_\-context}!sslops.c@{sslops.\-c}}
+\subsubsection[{init\-\_\-ssl\-\_\-context}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-ssl\-\_\-context (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a8d80d2f2f1fb9bec9ef4c3be2edd7e86}
+
+
+Definition at line 134 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a145b02abc34e7304191782676c31064c}{\index{sslops.\-c@{sslops.\-c}!init\-\_\-ssl\-\_\-locks@{init\-\_\-ssl\-\_\-locks}}
+\index{init\-\_\-ssl\-\_\-locks@{init\-\_\-ssl\-\_\-locks}!sslops.c@{sslops.\-c}}
+\subsubsection[{init\-\_\-ssl\-\_\-locks}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-ssl\-\_\-locks (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a145b02abc34e7304191782676c31064c}
+
+
+Definition at line 107 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a3c66189378af52381768df0585e44240}{\index{sslops.\-c@{sslops.\-c}!kill\-\_\-ssl\-\_\-locks@{kill\-\_\-ssl\-\_\-locks}}
+\index{kill\-\_\-ssl\-\_\-locks@{kill\-\_\-ssl\-\_\-locks}!sslops.c@{sslops.\-c}}
+\subsubsection[{kill\-\_\-ssl\-\_\-locks}]{\setlength{\rightskip}{0pt plus 5cm}void kill\-\_\-ssl\-\_\-locks (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a3c66189378af52381768df0585e44240}
+
+
+Definition at line 122 of file sslops.\-c.
+
+\hypertarget{sslops_8c_ab18f9a63a4af1b485040bd370defece6}{\index{sslops.\-c@{sslops.\-c}!load\-\_\-ssl\-\_\-certificate@{load\-\_\-ssl\-\_\-certificate}}
+\index{load\-\_\-ssl\-\_\-certificate@{load\-\_\-ssl\-\_\-certificate}!sslops.c@{sslops.\-c}}
+\subsubsection[{load\-\_\-ssl\-\_\-certificate}]{\setlength{\rightskip}{0pt plus 5cm}int load\-\_\-ssl\-\_\-certificate (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{cert\-\_\-file, }
+\item[{char $\ast$}]{key\-\_\-file}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_ab18f9a63a4af1b485040bd370defece6}
+
+
+Definition at line 160 of file sslops.\-c.
+
+\hypertarget{sslops_8c_aed1792e43b3858645b64ef30c586665b}{\index{sslops.\-c@{sslops.\-c}!read\-\_\-ssl@{read\-\_\-ssl}}
+\index{read\-\_\-ssl@{read\-\_\-ssl}!sslops.c@{sslops.\-c}}
+\subsubsection[{read\-\_\-ssl}]{\setlength{\rightskip}{0pt plus 5cm}int read\-\_\-ssl (
+\begin{DoxyParamCaption}
+\item[{S\-S\-L $\ast$}]{ssl, }
+\item[{char $\ast$}]{buf, }
+\item[{int $\ast$}]{buf\-\_\-size}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_aed1792e43b3858645b64ef30c586665b}
+
+
+Definition at line 211 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a98fe0c08f0209d7da3b823a550145bcc}{\index{sslops.\-c@{sslops.\-c}!write\-\_\-ssl@{write\-\_\-ssl}}
+\index{write\-\_\-ssl@{write\-\_\-ssl}!sslops.c@{sslops.\-c}}
+\subsubsection[{write\-\_\-ssl}]{\setlength{\rightskip}{0pt plus 5cm}int write\-\_\-ssl (
+\begin{DoxyParamCaption}
+\item[{S\-S\-L $\ast$}]{ssl, }
+\item[{char $\ast$}]{buf, }
+\item[{int $\ast$}]{buf\-\_\-size}
+\end{DoxyParamCaption}
+)}}\label{sslops_8c_a98fe0c08f0209d7da3b823a550145bcc}
+
+
+Definition at line 224 of file sslops.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{sslops_8c_aaf502b08c03edc9573657e748da60e26}{\index{sslops.\-c@{sslops.\-c}!lockarray@{lockarray}}
+\index{lockarray@{lockarray}!sslops.c@{sslops.\-c}}
+\subsubsection[{lockarray}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-mutex\-\_\-t$\ast$ lockarray\hspace{0.3cm}{\ttfamily [static]}}}\label{sslops_8c_aaf502b08c03edc9573657e748da60e26}
+
+
+Definition at line 92 of file sslops.\-c.
+
+\hypertarget{sslops_8c_a500f2070b7b9f34238a51cbf8f9b5024}{\index{sslops.\-c@{sslops.\-c}!ssl\-\_\-ctx@{ssl\-\_\-ctx}}
+\index{ssl\-\_\-ctx@{ssl\-\_\-ctx}!sslops.c@{sslops.\-c}}
+\subsubsection[{ssl\-\_\-ctx}]{\setlength{\rightskip}{0pt plus 5cm}S\-S\-L\-\_\-\-C\-T\-X$\ast$ ssl\-\_\-ctx = N\-U\-L\-L}}\label{sslops_8c_a500f2070b7b9f34238a51cbf8f9b5024}
+
+
+Definition at line 120 of file sslops.\-c.
+

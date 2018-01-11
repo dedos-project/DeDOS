@@ -1,0 +1,491 @@
+\hypertarget{dfg__writer_8c}{\section{src/global\-\_\-controller/dfg\-\_\-writer.c File Reference}
+\label{dfg__writer_8c}\index{src/global\-\_\-controller/dfg\-\_\-writer.\-c@{src/global\-\_\-controller/dfg\-\_\-writer.\-c}}
+}
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}timeseries.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}jsmn.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structjson__output}{json\-\_\-output}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{dfg__writer_8c_a1a431ab2aa9e3be8b18a16b1978c39cf}{J\-S\-O\-N\-\_\-\-L\-E\-N\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T}~1024
+\item 
+\#define \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{C\-H\-E\-C\-K\-\_\-\-J\-S\-O\-N\-\_\-\-L\-E\-N}(json, len)
+\item 
+\#define \hyperlink{dfg__writer_8c_a5f91f8c7d02e7894b0989e9564e1caeb}{S\-T\-A\-R\-T\-\_\-\-J\-S\-O\-N}(json)~(json).length = 0
+\item 
+\#define \hyperlink{dfg__writer_8c_a321c4492aba97df3a8757e93b191ca25}{S\-T\-A\-R\-T\-\_\-\-L\-I\-S\-T}(json)
+\item 
+\#define \hyperlink{dfg__writer_8c_ab7310864559f08751aef5dc7f59ec6bc}{E\-N\-D\-\_\-\-L\-I\-S\-T}(json)
+\item 
+\#define \hyperlink{dfg__writer_8c_a6a33bedf2c81422f684916d7c8162f53}{S\-T\-A\-R\-T\-\_\-\-O\-B\-J}(json)
+\item 
+\#define \hyperlink{dfg__writer_8c_ad34025b5028b5c559849ab5285ad8989}{E\-N\-D\-\_\-\-O\-B\-J}(json)
+\item 
+\#define \hyperlink{dfg__writer_8c_a6876977357ac74064038ff4848ac56d8}{K\-E\-Y\-\_\-\-V\-A\-L}(json, key, fmt, value, value\-\_\-len)
+\item 
+\#define \hyperlink{dfg__writer_8c_a3b267459f780b01b3198731d238764fb}{K\-E\-Y\-\_\-\-I\-N\-T\-V\-A\-L}(json, key, value)~\hyperlink{dfg__writer_8c_a6876977357ac74064038ff4848ac56d8}{K\-E\-Y\-\_\-\-V\-A\-L}(json, key, \char`\"{}\%d\char`\"{}, value, 128)
+\item 
+\#define \hyperlink{dfg__writer_8c_a4460add0a2a8e163ea3750be76df7671}{K\-E\-Y\-\_\-\-S\-T\-R\-V\-A\-L}(json, key, value)~\hyperlink{dfg__writer_8c_a6876977357ac74064038ff4848ac56d8}{K\-E\-Y\-\_\-\-V\-A\-L}(json, key, \char`\"{}\textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}, value, strlen(value))
+\item 
+\#define \hyperlink{dfg__writer_8c_ab99fc044e164378a1c57c02a99e5cb31}{F\-M\-T\-\_\-\-K\-E\-Y\-\_\-\-V\-A\-L}(json, key\-\_\-fmt, key, key\-\_\-len, val\-\_\-fmt, value, value\-\_\-len)
+\item 
+\#define \hyperlink{dfg__writer_8c_a462068a47aeae72040d737fe5fd79631}{K\-E\-Y}(json, key)
+\item 
+\#define \hyperlink{dfg__writer_8c_a589cdcc5eaee674c0b176e8b4baa8a61}{V\-A\-L\-U\-E}(json, fmt, value, value\-\_\-len)
+\item 
+\#define \hyperlink{dfg__writer_8c_a03e612183231dd1ea6c07f9f854a2684}{E\-N\-D\-\_\-\-J\-S\-O\-N}(json)~(json).string\mbox{[}(json).length-\/1\mbox{]} = '\textbackslash{}0'
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_a38224ce8da8009b5a3eea24aa194c1f7}{stat\-\_\-to\-\_\-json} (struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$timeseries, int n\-\_\-stats)
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_ac74ccfac964775d2b7a9664a38ed1aac}{meta\-\_\-routing\-\_\-to\-\_\-json} (struct \hyperlink{structdfg__meta__routing}{dfg\-\_\-meta\-\_\-routing} $\ast$meta\-\_\-routing)
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_a9d595e57dfea082174c082255df2d446}{dependency\-\_\-to\-\_\-json} (struct \hyperlink{structdfg__dependency}{dfg\-\_\-dependency} $\ast$dep)
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_a7e0eebef5ec3d0aba2c345fc854ff839}{msu\-\_\-type\-\_\-to\-\_\-json} (struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$type)
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_a897cf385047bce3df12a4ca077f69cdf}{scheduling\-\_\-to\-\_\-json} (struct \hyperlink{structdfg__scheduling}{dfg\-\_\-scheduling} $\ast$sched)
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_a8ac254dd8d3805d7600b170b852d8c22}{msu\-\_\-stats\-\_\-to\-\_\-json} (int msu\-\_\-id, int n\-\_\-stats)
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_ac31e9041864aaf6792e7836d8d6b94bd}{msu\-\_\-to\-\_\-json} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu, int n\-\_\-stats)
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_a97e11bc94a16fb4bbed485f6e777380e}{endpoint\-\_\-to\-\_\-json} (struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$ep)
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_a1ebb2e54d34c053857877ef8348d5f3b}{route\-\_\-to\-\_\-json} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route})
+\item 
+static char $\ast$ \hyperlink{dfg__writer_8c_a6d44399ff224262b0c286f2e50b5436d}{runtime\-\_\-to\-\_\-json} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt)
+\item 
+char $\ast$ \hyperlink{dfg__writer_8c_aacd6e1b653cc4c1d1b6c03d5e3bec0f0}{dfg\-\_\-to\-\_\-json} (struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$\hyperlink{dfg_8c_a7e47c8351eb11d990fbe315642762ddd}{dfg}, int n\-\_\-stats)
+\item 
+void \hyperlink{dfg__writer_8c_a7992da8b6bd08fd7033744ae99191120}{dfg\-\_\-to\-\_\-file} (char $\ast$filename)
+\item 
+int \hyperlink{dfg__writer_8c_a684e5406b8c74485ecf73bb46136a32a}{dfg\-\_\-to\-\_\-fd} (int fd)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static pthread\-\_\-mutex\-\_\-t \hyperlink{dfg__writer_8c_a43558d8bb1f7a966cbdb8be915a88655}{json\-\_\-lock}
+\item 
+static int \hyperlink{dfg__writer_8c_ad06983e7f6e71b233ea7ff3dee1952f2}{initialized} = 0
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!C\-H\-E\-C\-K\-\_\-\-J\-S\-O\-N\-\_\-\-L\-E\-N@{C\-H\-E\-C\-K\-\_\-\-J\-S\-O\-N\-\_\-\-L\-E\-N}}
+\index{C\-H\-E\-C\-K\-\_\-\-J\-S\-O\-N\-\_\-\-L\-E\-N@{C\-H\-E\-C\-K\-\_\-\-J\-S\-O\-N\-\_\-\-L\-E\-N}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{C\-H\-E\-C\-K\-\_\-\-J\-S\-O\-N\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-H\-E\-C\-K\-\_\-\-J\-S\-O\-N\-\_\-\-L\-E\-N(
+\begin{DoxyParamCaption}
+\item[{}]{json, }
+\item[{}]{len}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{while} ( (\textcolor{keywordtype}{int})((json).allocated\_size - (json).length) < (len)) \{ \hyperlink{logging_8h_a6688e6218820c9d155006dcab23eb611}{\(\backslash\)}
+\hyperlink{logging_8h_a6688e6218820c9d155006dcab23eb611}{        log}(LOG\_DFG\_WRITER, \textcolor{stringliteral}{"Reallocating to %d"}, (\textcolor{keywordtype}{int})(json.allocated\_size + 
+      \hyperlink{dfg__writer_8c_a1a431ab2aa9e3be8b18a16b1978c39cf}{JSON\_LEN\_INCREMENT})); \(\backslash\)
+        (json).\textcolor{keywordtype}{string} = realloc((json).string, (json).allocated\_size + 
+      \hyperlink{dfg__writer_8c_a1a431ab2aa9e3be8b18a16b1978c39cf}{JSON\_LEN\_INCREMENT}); \(\backslash\)
+        (json).allocated\_size += \hyperlink{dfg__writer_8c_a1a431ab2aa9e3be8b18a16b1978c39cf}{JSON\_LEN\_INCREMENT}; \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Definition at line 34 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a03e612183231dd1ea6c07f9f854a2684}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!E\-N\-D\-\_\-\-J\-S\-O\-N@{E\-N\-D\-\_\-\-J\-S\-O\-N}}
+\index{E\-N\-D\-\_\-\-J\-S\-O\-N@{E\-N\-D\-\_\-\-J\-S\-O\-N}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{E\-N\-D\-\_\-\-J\-S\-O\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define E\-N\-D\-\_\-\-J\-S\-O\-N(
+\begin{DoxyParamCaption}
+\item[{}]{json}
+\end{DoxyParamCaption}
+)~(json).string\mbox{[}(json).length-\/1\mbox{]} = '\textbackslash{}0'}}\label{dfg__writer_8c_a03e612183231dd1ea6c07f9f854a2684}
+
+
+Definition at line 101 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_ab7310864559f08751aef5dc7f59ec6bc}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!E\-N\-D\-\_\-\-L\-I\-S\-T@{E\-N\-D\-\_\-\-L\-I\-S\-T}}
+\index{E\-N\-D\-\_\-\-L\-I\-S\-T@{E\-N\-D\-\_\-\-L\-I\-S\-T}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{E\-N\-D\-\_\-\-L\-I\-S\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define E\-N\-D\-\_\-\-L\-I\-S\-T(
+\begin{DoxyParamCaption}
+\item[{}]{json}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_ab7310864559f08751aef5dc7f59ec6bc}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\(\backslash\)}
+\hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{        CHECK\_JSON\_LEN}(json, 2); \(\backslash\)
+        (json).length += sprintf((json).string + (json).length - 1, \textcolor{stringliteral}{"],"}) - 1; \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 53 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_ad34025b5028b5c559849ab5285ad8989}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!E\-N\-D\-\_\-\-O\-B\-J@{E\-N\-D\-\_\-\-O\-B\-J}}
+\index{E\-N\-D\-\_\-\-O\-B\-J@{E\-N\-D\-\_\-\-O\-B\-J}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{E\-N\-D\-\_\-\-O\-B\-J}]{\setlength{\rightskip}{0pt plus 5cm}\#define E\-N\-D\-\_\-\-O\-B\-J(
+\begin{DoxyParamCaption}
+\item[{}]{json}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_ad34025b5028b5c559849ab5285ad8989}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\(\backslash\)}
+\hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{        CHECK\_JSON\_LEN}(json, 2); \(\backslash\)
+        (json).length += sprintf((json).string + (json).length - 1 , \textcolor{stringliteral}{"\},"}) - 1; \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 65 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_ab99fc044e164378a1c57c02a99e5cb31}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!F\-M\-T\-\_\-\-K\-E\-Y\-\_\-\-V\-A\-L@{F\-M\-T\-\_\-\-K\-E\-Y\-\_\-\-V\-A\-L}}
+\index{F\-M\-T\-\_\-\-K\-E\-Y\-\_\-\-V\-A\-L@{F\-M\-T\-\_\-\-K\-E\-Y\-\_\-\-V\-A\-L}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{F\-M\-T\-\_\-\-K\-E\-Y\-\_\-\-V\-A\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define F\-M\-T\-\_\-\-K\-E\-Y\-\_\-\-V\-A\-L(
+\begin{DoxyParamCaption}
+\item[{}]{json, }
+\item[{}]{key\-\_\-fmt, }
+\item[{}]{key, }
+\item[{}]{key\-\_\-len, }
+\item[{}]{val\-\_\-fmt, }
+\item[{}]{value, }
+\item[{}]{value\-\_\-len}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_ab99fc044e164378a1c57c02a99e5cb31}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\(\backslash\)}
+\hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{        CHECK\_JSON\_LEN}(json, key\_len + value\_len + 8); \(\backslash\)
+        (json).length += sprintf((json).string + (json).length, \textcolor{stringliteral}{"\(\backslash\)""} key\_fmt \textcolor{stringliteral}{"\(\backslash\)":\(\backslash\)""} val\_fmt \textcolor{stringliteral}{"\(\backslash\)","}, key, 
+      value); \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 83 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a1a431ab2aa9e3be8b18a16b1978c39cf}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!J\-S\-O\-N\-\_\-\-L\-E\-N\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T@{J\-S\-O\-N\-\_\-\-L\-E\-N\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T}}
+\index{J\-S\-O\-N\-\_\-\-L\-E\-N\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T@{J\-S\-O\-N\-\_\-\-L\-E\-N\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{J\-S\-O\-N\-\_\-\-L\-E\-N\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define J\-S\-O\-N\-\_\-\-L\-E\-N\-\_\-\-I\-N\-C\-R\-E\-M\-E\-N\-T~1024}}\label{dfg__writer_8c_a1a431ab2aa9e3be8b18a16b1978c39cf}
+
+
+Definition at line 32 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a462068a47aeae72040d737fe5fd79631}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!K\-E\-Y@{K\-E\-Y}}
+\index{K\-E\-Y@{K\-E\-Y}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{K\-E\-Y}]{\setlength{\rightskip}{0pt plus 5cm}\#define K\-E\-Y(
+\begin{DoxyParamCaption}
+\item[{}]{json, }
+\item[{}]{key}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_a462068a47aeae72040d737fe5fd79631}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\(\backslash\)}
+\hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{        CHECK\_JSON\_LEN}(json, strlen(key) + 4); \(\backslash\)
+        (json).length += sprintf((json).string + (json).length, \textcolor{stringliteral}{"\(\backslash\)""} key \textcolor{stringliteral}{"\(\backslash\)":"}); \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 89 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a3b267459f780b01b3198731d238764fb}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!K\-E\-Y\-\_\-\-I\-N\-T\-V\-A\-L@{K\-E\-Y\-\_\-\-I\-N\-T\-V\-A\-L}}
+\index{K\-E\-Y\-\_\-\-I\-N\-T\-V\-A\-L@{K\-E\-Y\-\_\-\-I\-N\-T\-V\-A\-L}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{K\-E\-Y\-\_\-\-I\-N\-T\-V\-A\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define K\-E\-Y\-\_\-\-I\-N\-T\-V\-A\-L(
+\begin{DoxyParamCaption}
+\item[{}]{json, }
+\item[{}]{key, }
+\item[{}]{value}
+\end{DoxyParamCaption}
+)~{\bf K\-E\-Y\-\_\-\-V\-A\-L}(json, key, \char`\"{}\%d\char`\"{}, value, 128)}}\label{dfg__writer_8c_a3b267459f780b01b3198731d238764fb}
+
+
+Definition at line 77 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a4460add0a2a8e163ea3750be76df7671}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!K\-E\-Y\-\_\-\-S\-T\-R\-V\-A\-L@{K\-E\-Y\-\_\-\-S\-T\-R\-V\-A\-L}}
+\index{K\-E\-Y\-\_\-\-S\-T\-R\-V\-A\-L@{K\-E\-Y\-\_\-\-S\-T\-R\-V\-A\-L}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{K\-E\-Y\-\_\-\-S\-T\-R\-V\-A\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define K\-E\-Y\-\_\-\-S\-T\-R\-V\-A\-L(
+\begin{DoxyParamCaption}
+\item[{}]{json, }
+\item[{}]{key, }
+\item[{}]{value}
+\end{DoxyParamCaption}
+)~{\bf K\-E\-Y\-\_\-\-V\-A\-L}(json, key, \char`\"{}\textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}, value, strlen(value))}}\label{dfg__writer_8c_a4460add0a2a8e163ea3750be76df7671}
+
+
+Definition at line 80 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a6876977357ac74064038ff4848ac56d8}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!K\-E\-Y\-\_\-\-V\-A\-L@{K\-E\-Y\-\_\-\-V\-A\-L}}
+\index{K\-E\-Y\-\_\-\-V\-A\-L@{K\-E\-Y\-\_\-\-V\-A\-L}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{K\-E\-Y\-\_\-\-V\-A\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define K\-E\-Y\-\_\-\-V\-A\-L(
+\begin{DoxyParamCaption}
+\item[{}]{json, }
+\item[{}]{key, }
+\item[{}]{fmt, }
+\item[{}]{value, }
+\item[{}]{value\-\_\-len}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_a6876977357ac74064038ff4848ac56d8}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\(\backslash\)}
+\hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{        CHECK\_JSON\_LEN}(json, value\_len + strlen(key) + 8); \(\backslash\)
+        (json).length += sprintf((json).string + (json).length, \textcolor{stringliteral}{"\(\backslash\)""} key \textcolor{stringliteral}{"\(\backslash\)":"} fmt \textcolor{stringliteral}{","}, value); \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 71 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a5f91f8c7d02e7894b0989e9564e1caeb}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!S\-T\-A\-R\-T\-\_\-\-J\-S\-O\-N@{S\-T\-A\-R\-T\-\_\-\-J\-S\-O\-N}}
+\index{S\-T\-A\-R\-T\-\_\-\-J\-S\-O\-N@{S\-T\-A\-R\-T\-\_\-\-J\-S\-O\-N}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{S\-T\-A\-R\-T\-\_\-\-J\-S\-O\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-T\-A\-R\-T\-\_\-\-J\-S\-O\-N(
+\begin{DoxyParamCaption}
+\item[{}]{json}
+\end{DoxyParamCaption}
+)~(json).length = 0}}\label{dfg__writer_8c_a5f91f8c7d02e7894b0989e9564e1caeb}
+
+
+Definition at line 41 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a321c4492aba97df3a8757e93b191ca25}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!S\-T\-A\-R\-T\-\_\-\-L\-I\-S\-T@{S\-T\-A\-R\-T\-\_\-\-L\-I\-S\-T}}
+\index{S\-T\-A\-R\-T\-\_\-\-L\-I\-S\-T@{S\-T\-A\-R\-T\-\_\-\-L\-I\-S\-T}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{S\-T\-A\-R\-T\-\_\-\-L\-I\-S\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-T\-A\-R\-T\-\_\-\-L\-I\-S\-T(
+\begin{DoxyParamCaption}
+\item[{}]{json}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_a321c4492aba97df3a8757e93b191ca25}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\(\backslash\)}
+\hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{        CHECK\_JSON\_LEN}(json, 2); \(\backslash\)
+        (json).length += sprintf((json).string + (json).length, \textcolor{stringliteral}{"[ "}); \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 44 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a6a33bedf2c81422f684916d7c8162f53}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!S\-T\-A\-R\-T\-\_\-\-O\-B\-J@{S\-T\-A\-R\-T\-\_\-\-O\-B\-J}}
+\index{S\-T\-A\-R\-T\-\_\-\-O\-B\-J@{S\-T\-A\-R\-T\-\_\-\-O\-B\-J}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{S\-T\-A\-R\-T\-\_\-\-O\-B\-J}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-T\-A\-R\-T\-\_\-\-O\-B\-J(
+\begin{DoxyParamCaption}
+\item[{}]{json}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_a6a33bedf2c81422f684916d7c8162f53}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\(\backslash\)}
+\hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{        CHECK\_JSON\_LEN}(json, 2); \(\backslash\)
+        (json).length += sprintf((json).string + (json).length, \textcolor{stringliteral}{"\{ "} ); \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 59 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a589cdcc5eaee674c0b176e8b4baa8a61}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!V\-A\-L\-U\-E@{V\-A\-L\-U\-E}}
+\index{V\-A\-L\-U\-E@{V\-A\-L\-U\-E}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{V\-A\-L\-U\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define V\-A\-L\-U\-E(
+\begin{DoxyParamCaption}
+\item[{}]{json, }
+\item[{}]{fmt, }
+\item[{}]{value, }
+\item[{}]{value\-\_\-len}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_a589cdcc5eaee674c0b176e8b4baa8a61}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{ \hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{\(\backslash\)}
+\hyperlink{dfg__writer_8c_a6386583b96d43cbd24953c4794562a3f}{        CHECK\_JSON\_LEN}(json, value\_len + 4); \(\backslash\)
+        (json).length += sprintf((json).string + (json).length,  fmt \textcolor{stringliteral}{","}, value); \(\backslash\)
+    \} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 95 of file dfg\-\_\-writer.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dfg__writer_8c_a9d595e57dfea082174c082255df2d446}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!dependency\-\_\-to\-\_\-json@{dependency\-\_\-to\-\_\-json}}
+\index{dependency\-\_\-to\-\_\-json@{dependency\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{dependency\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ dependency\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-dependency} $\ast$}]{dep}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a9d595e57dfea082174c082255df2d446}
+
+
+Definition at line 163 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a684e5406b8c74485ecf73bb46136a32a}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!dfg\-\_\-to\-\_\-fd@{dfg\-\_\-to\-\_\-fd}}
+\index{dfg\-\_\-to\-\_\-fd@{dfg\-\_\-to\-\_\-fd}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{dfg\-\_\-to\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-to\-\_\-fd (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_a684e5406b8c74485ecf73bb46136a32a}
+
+
+Definition at line 429 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a7992da8b6bd08fd7033744ae99191120}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!dfg\-\_\-to\-\_\-file@{dfg\-\_\-to\-\_\-file}}
+\index{dfg\-\_\-to\-\_\-file@{dfg\-\_\-to\-\_\-file}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{dfg\-\_\-to\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}void dfg\-\_\-to\-\_\-file (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_a7992da8b6bd08fd7033744ae99191120}
+
+
+Definition at line 413 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_aacd6e1b653cc4c1d1b6c03d5e3bec0f0}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!dfg\-\_\-to\-\_\-json@{dfg\-\_\-to\-\_\-json}}
+\index{dfg\-\_\-to\-\_\-json@{dfg\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{dfg\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ dfg\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-dfg} $\ast$}]{dfg, }
+\item[{int}]{n\-\_\-stats}
+\end{DoxyParamCaption}
+)}}\label{dfg__writer_8c_aacd6e1b653cc4c1d1b6c03d5e3bec0f0}
+
+
+Definition at line 362 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a97e11bc94a16fb4bbed485f6e777380e}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!endpoint\-\_\-to\-\_\-json@{endpoint\-\_\-to\-\_\-json}}
+\index{endpoint\-\_\-to\-\_\-json@{endpoint\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{endpoint\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ endpoint\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route\-\_\-endpoint} $\ast$}]{ep}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a97e11bc94a16fb4bbed485f6e777380e}
+
+
+Definition at line 290 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_ac74ccfac964775d2b7a9664a38ed1aac}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!meta\-\_\-routing\-\_\-to\-\_\-json@{meta\-\_\-routing\-\_\-to\-\_\-json}}
+\index{meta\-\_\-routing\-\_\-to\-\_\-json@{meta\-\_\-routing\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{meta\-\_\-routing\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ meta\-\_\-routing\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-meta\-\_\-routing} $\ast$}]{meta\-\_\-routing}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_ac74ccfac964775d2b7a9664a38ed1aac}
+
+
+Definition at line 138 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a8ac254dd8d3805d7600b170b852d8c22}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!msu\-\_\-stats\-\_\-to\-\_\-json@{msu\-\_\-stats\-\_\-to\-\_\-json}}
+\index{msu\-\_\-stats\-\_\-to\-\_\-json@{msu\-\_\-stats\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{msu\-\_\-stats\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ msu\-\_\-stats\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id, }
+\item[{int}]{n\-\_\-stats}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a8ac254dd8d3805d7600b170b852d8c22}
+
+
+Definition at line 227 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_ac31e9041864aaf6792e7836d8d6b94bd}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!msu\-\_\-to\-\_\-json@{msu\-\_\-to\-\_\-json}}
+\index{msu\-\_\-to\-\_\-json@{msu\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{msu\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ msu\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu, }
+\item[{int}]{n\-\_\-stats}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_ac31e9041864aaf6792e7836d8d6b94bd}
+
+
+Definition at line 254 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a7e0eebef5ec3d0aba2c345fc854ff839}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!msu\-\_\-type\-\_\-to\-\_\-json@{msu\-\_\-type\-\_\-to\-\_\-json}}
+\index{msu\-\_\-type\-\_\-to\-\_\-json@{msu\-\_\-type\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{msu\-\_\-type\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ msu\-\_\-type\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a7e0eebef5ec3d0aba2c345fc854ff839}
+
+
+Definition at line 176 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a1ebb2e54d34c053857877ef8348d5f3b}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!route\-\_\-to\-\_\-json@{route\-\_\-to\-\_\-json}}
+\index{route\-\_\-to\-\_\-json@{route\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{route\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ route\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a1ebb2e54d34c053857877ef8348d5f3b}
+
+
+Definition at line 303 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a6d44399ff224262b0c286f2e50b5436d}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!runtime\-\_\-to\-\_\-json@{runtime\-\_\-to\-\_\-json}}
+\index{runtime\-\_\-to\-\_\-json@{runtime\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{runtime\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ runtime\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a6d44399ff224262b0c286f2e50b5436d}
+
+
+Definition at line 326 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a897cf385047bce3df12a4ca077f69cdf}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!scheduling\-\_\-to\-\_\-json@{scheduling\-\_\-to\-\_\-json}}
+\index{scheduling\-\_\-to\-\_\-json@{scheduling\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{scheduling\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ scheduling\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-scheduling} $\ast$}]{sched}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a897cf385047bce3df12a4ca077f69cdf}
+
+
+Definition at line 205 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a38224ce8da8009b5a3eea24aa194c1f7}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!stat\-\_\-to\-\_\-json@{stat\-\_\-to\-\_\-json}}
+\index{stat\-\_\-to\-\_\-json@{stat\-\_\-to\-\_\-json}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{stat\-\_\-to\-\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ stat\-\_\-to\-\_\-json (
+\begin{DoxyParamCaption}
+\item[{struct {\bf timed\-\_\-rrdb} $\ast$}]{timeseries, }
+\item[{int}]{n\-\_\-stats}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a38224ce8da8009b5a3eea24aa194c1f7}
+
+
+Definition at line 112 of file dfg\-\_\-writer.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{dfg__writer_8c_ad06983e7f6e71b233ea7ff3dee1952f2}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!initialized@{initialized}}
+\index{initialized@{initialized}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{initialized}]{\setlength{\rightskip}{0pt plus 5cm}int initialized = 0\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_ad06983e7f6e71b233ea7ff3dee1952f2}
+
+
+Definition at line 360 of file dfg\-\_\-writer.\-c.
+
+\hypertarget{dfg__writer_8c_a43558d8bb1f7a966cbdb8be915a88655}{\index{dfg\-\_\-writer.\-c@{dfg\-\_\-writer.\-c}!json\-\_\-lock@{json\-\_\-lock}}
+\index{json\-\_\-lock@{json\-\_\-lock}!dfg_writer.c@{dfg\-\_\-writer.\-c}}
+\subsubsection[{json\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-mutex\-\_\-t json\-\_\-lock\hspace{0.3cm}{\ttfamily [static]}}}\label{dfg__writer_8c_a43558d8bb1f7a966cbdb8be915a88655}
+
+
+Definition at line 359 of file dfg\-\_\-writer.\-c.
+

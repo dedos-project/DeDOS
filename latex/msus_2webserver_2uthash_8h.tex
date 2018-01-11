@@ -1,0 +1,1480 @@
+\hypertarget{msus_2webserver_2uthash_8h}{\section{src/msus/webserver/uthash.h File Reference}
+\label{msus_2webserver_2uthash_8h}\index{src/msus/webserver/uthash.\-h@{src/msus/webserver/uthash.\-h}}
+}
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$stddef.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_u_t__hash__bucket}{U\-T\-\_\-hash\-\_\-bucket}
+\item 
+struct \hyperlink{struct_u_t__hash__table}{U\-T\-\_\-hash\-\_\-table}
+\item 
+struct \hyperlink{struct_u_t__hash__handle}{U\-T\-\_\-hash\-\_\-handle}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aa56cef9cb86dc1f4b5d27ee3a691077e}{U\-T\-H\-A\-S\-H\-\_\-\-V\-E\-R\-S\-I\-O\-N}~2.\-0.\-1
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a716ba290563c2d955cb0c90d85874073}{D\-E\-C\-L\-T\-Y\-P\-E}(x)~(\-\_\-\-\_\-typeof(x))
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a3c736f2f2dd643f2987b2bc323e269ba}{D\-E\-C\-L\-T\-Y\-P\-E\-\_\-\-A\-S\-S\-I\-G\-N}(dst, src)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a03b52301b0ed976b6981ef33613320c1}{uthash\-\_\-fatal}(msg)~exit(-\/1)        /$\ast$ fatal error (out of memory,etc) $\ast$/
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a861013aff36c0448f1888a2b0b5836d8}{uthash\-\_\-malloc}(sz)~malloc(sz)      /$\ast$ malloc fcn                      $\ast$/
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a56cdf8c254fc700332c8e6a7263b4657}{uthash\-\_\-free}(ptr, sz)~free(ptr)     /$\ast$ free fcn                        $\ast$/
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aa14634cb1f894d48256362bae7239be6}{uthash\-\_\-strlen}(s)~strlen(s)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a8ca9a884b81d487034b57f87d2f97fa4}{uthash\-\_\-memcmp}(a, b, n)~memcmp(a,b,n)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a7cc237d8f87de3836b5390856cfc5c86}{uthash\-\_\-noexpand\-\_\-fyi}(tbl)~/$\ast$ can be defined to \hyperlink{logging_8h_a6688e6218820c9d155006dcab23eb611}{log} noexpand  $\ast$/
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a86ea78714da520989a6f7a764b4d71b4}{uthash\-\_\-expand\-\_\-fyi}(tbl)~/$\ast$ can be defined to \hyperlink{logging_8h_a6688e6218820c9d155006dcab23eb611}{log} expands   $\ast$/
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a361cdc5e8d6d8fe5fae6912588ae15d0}{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S}~32\-U     /$\ast$ initial number of buckets        $\ast$/
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a0b39a5cf1d6c05c43bd8530db2ec908c}{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S\-\_\-\-L\-O\-G2}~5\-U /$\ast$ lg2 of initial number of buckets $\ast$/
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a8ae3e6473261f6c4b78c030c94f5d68f}{H\-A\-S\-H\-\_\-\-B\-K\-T\-\_\-\-C\-A\-P\-A\-C\-I\-T\-Y\-\_\-\-T\-H\-R\-E\-S\-H}~10\-U     /$\ast$ expand when bucket count reaches $\ast$/
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a568e95048979b8b3e4ea1567fd91c186}{E\-L\-M\-T\-\_\-\-F\-R\-O\-M\-\_\-\-H\-H}(tbl, hhp)~((void$\ast$)(((char$\ast$)(hhp)) -\/ ((tbl)-\/$>$hho)))
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a46261e43585c404cccf8ab0f5c6d271e}{H\-H\-\_\-\-F\-R\-O\-M\-\_\-\-E\-L\-M\-T}(tbl, elp)~((\hyperlink{struct_u_t__hash__handle}{U\-T\-\_\-hash\-\_\-handle} $\ast$)(((char$\ast$)(elp)) + ((tbl)-\/$>$hho)))
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{H\-A\-S\-H\-\_\-\-V\-A\-L\-U\-E}(keyptr, keylen, hashv)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}(hh, head, keyptr, keylen, hashval, out)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_ad4a1cd39c3044936c0e49d3f372c9dbf}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D}(hh, head, keyptr, keylen, out)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a254f427772a1fe7a2480a8302af8f8b8}{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-M\-A\-K\-E}(tbl)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_ad6847ad938fc26bfd0726d7f159efd0a}{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-F\-R\-E\-E}(tbl)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_acaad947212056cd8bfe3d660265fb2db}{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-A\-D\-D}(tbl, hashv)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a06bfbf880899d54da35487d0d39c1009}{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-T\-E\-S\-T}(tbl, hashv)~(1)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a81f88a18c0837c77f40926074e7811db}{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-B\-Y\-T\-E\-L\-E\-N}~0\-U
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aeba971430f623b6334f565d9c7ec9de5}{H\-A\-S\-H\-\_\-\-M\-A\-K\-E\-\_\-\-T\-A\-B\-L\-E}(hh, head)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aa0104b44f5a911bfda7fd9f939e1594f}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, fieldname, keylen\-\_\-in, hashval, add, replaced, cmpfcn)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_ab7fc2175a455ed8e8351737b4f8b2842}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}(hh, head, fieldname, keylen\-\_\-in, hashval, add, replaced)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a9897aa8b1ace582e7bbdef05f21cbc54}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}(hh, head, fieldname, keylen\-\_\-in, add, replaced)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aa6d7a872d8855c9b8bf55d62e8eb0430}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, fieldname, keylen\-\_\-in, add, replaced, cmpfcn)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aeec8f4c804ae5b87ebded933252804fd}{H\-A\-S\-H\-\_\-\-A\-P\-P\-E\-N\-D\-\_\-\-L\-I\-S\-T}(hh, head, add)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aae1fa76ff12cbf5328bcf4a2375d055f}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, keyptr, keylen\-\_\-in, hashval, add, cmpfcn)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a5a5f675b8bbeaff0a25de5f91330eae8}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, keyptr, keylen\-\_\-in, add, cmpfcn)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a7caae291b965a3f618661927481bf960}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, fieldname, keylen\-\_\-in, hashval, add, cmpfcn)~\hyperlink{common_2uthash_8h_aae1fa76ff12cbf5328bcf4a2375d055f}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, \&((add)-\/$>$fieldname), keylen\-\_\-in, hashval, add, cmpfcn)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a1befde1b63e6bc0cb4d6b34cb863eebe}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, fieldname, keylen\-\_\-in, add, cmpfcn)~\hyperlink{common_2uthash_8h_a5a5f675b8bbeaff0a25de5f91330eae8}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, \&((add)-\/$>$fieldname), keylen\-\_\-in, add, cmpfcn)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aa0e4d9dcfb23a6616c6439aa0d4a3f4d}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}(hh, head, keyptr, keylen\-\_\-in, hashval, add)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a0b7468360b5c788762cdb2ccf9cd4d26}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R}(hh, head, keyptr, keylen\-\_\-in, add)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a34a0dfca975d8b5ae83d9c307c8d6305}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}(hh, head, fieldname, keylen\-\_\-in, hashval, add)~\hyperlink{common_2uthash_8h_aa0e4d9dcfb23a6616c6439aa0d4a3f4d}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}(hh, head, \&((add)-\/$>$fieldname), keylen\-\_\-in, hashval, add)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aaf01358e257c8d838eb5e4b189f0c399}{H\-A\-S\-H\-\_\-\-A\-D\-D}(hh, head, fieldname, keylen\-\_\-in, add)~\hyperlink{common_2uthash_8h_a0b7468360b5c788762cdb2ccf9cd4d26}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R}(hh, head, \&((add)-\/$>$fieldname), keylen\-\_\-in, add)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a4d7691544128a6ef265f3e4fa5ed3113}{H\-A\-S\-H\-\_\-\-T\-O\-\_\-\-B\-K\-T}(hashv, num\-\_\-bkts, bkt)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a3f83117e1108d63844a58d2d79c3b980}{H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E}(hh, head, delptr)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a214529083adfab2fa8cd402d2eeb0a84}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-S\-T\-R}(head, findstr, out)~\hyperlink{common_2uthash_8h_ad4a1cd39c3044936c0e49d3f372c9dbf}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D}(hh,head,findstr,(unsigned)\hyperlink{common_2uthash_8h_aa14634cb1f894d48256362bae7239be6}{uthash\-\_\-strlen}(findstr),out)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a9724951736f3985f74df17638c8a7885}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-S\-T\-R}(head, strfield, add)~\hyperlink{common_2uthash_8h_aaf01358e257c8d838eb5e4b189f0c399}{H\-A\-S\-H\-\_\-\-A\-D\-D}(hh,head,strfield\mbox{[}0\mbox{]},(unsigned)\hyperlink{common_2uthash_8h_aa14634cb1f894d48256362bae7239be6}{uthash\-\_\-strlen}(add-\/$>$strfield),add)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a069b31f4fbc11094d8d3d5e3b1a641db}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-S\-T\-R}(head, strfield, add, replaced)~\hyperlink{common_2uthash_8h_a9897aa8b1ace582e7bbdef05f21cbc54}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}(hh,head,strfield\mbox{[}0\mbox{]},(unsigned)\hyperlink{common_2uthash_8h_aa14634cb1f894d48256362bae7239be6}{uthash\-\_\-strlen}(add-\/$>$strfield),add,replaced)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_aadcb19b940348f3141bd51505ede0142}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-T}(head, findint, out)~\hyperlink{common_2uthash_8h_ad4a1cd39c3044936c0e49d3f372c9dbf}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D}(hh,head,findint,sizeof(int),out)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_acf85835471af894e354efb7e346698f3}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-T}(head, intfield, add)~\hyperlink{common_2uthash_8h_aaf01358e257c8d838eb5e4b189f0c399}{H\-A\-S\-H\-\_\-\-A\-D\-D}(hh,head,intfield,sizeof(int),add)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a43124846a2747f48f45bf9f16631a6da}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-T}(head, intfield, add, replaced)~\hyperlink{common_2uthash_8h_a9897aa8b1ace582e7bbdef05f21cbc54}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}(hh,head,intfield,sizeof(int),add,replaced)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a26a887f8e31952034becac0cf446f6c3}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-P\-T\-R}(head, findptr, out)~\hyperlink{common_2uthash_8h_ad4a1cd39c3044936c0e49d3f372c9dbf}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D}(hh,head,findptr,sizeof(void $\ast$),out)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a2ad1f84ef1ba9df99fa2ada38cb61823}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-P\-T\-R}(head, ptrfield, add)~\hyperlink{common_2uthash_8h_aaf01358e257c8d838eb5e4b189f0c399}{H\-A\-S\-H\-\_\-\-A\-D\-D}(hh,head,ptrfield,sizeof(void $\ast$),add)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a13bcd1176a34c0a924fbf187c897bf68}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-P\-T\-R}(head, ptrfield, add, replaced)~\hyperlink{common_2uthash_8h_a9897aa8b1ace582e7bbdef05f21cbc54}{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}(hh,head,ptrfield,sizeof(void $\ast$),add,replaced)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a48b7ed374602dcb236501aa23a971f05}{H\-A\-S\-H\-\_\-\-D\-E\-L}(head, delptr)~\hyperlink{common_2uthash_8h_a3f83117e1108d63844a58d2d79c3b980}{H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E}(hh,head,delptr)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a7d882fadb26a4e6c13c134d8be4d0759}{H\-A\-S\-H\-\_\-\-F\-S\-C\-K}(hh, head)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a44f9d46e2cc79652492e5dd3e6c40a15}{H\-A\-S\-H\-\_\-\-E\-M\-I\-T\-\_\-\-K\-E\-Y}(hh, head, keyptr, fieldlen)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_abd3356419b386c379116393700a751d3}{H\-A\-S\-H\-\_\-\-F\-C\-N}~\hyperlink{common_2uthash_8h_a724ff23efd254654ac087ed60233c465}{H\-A\-S\-H\-\_\-\-J\-E\-N}
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a7fb1644fa1d057a1c124c7548b9146b3}{H\-A\-S\-H\-\_\-\-B\-E\-R}(key, keylen, hashv)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_ae8cf38dbd44a475eb0fa4cdb9988e13a}{H\-A\-S\-H\-\_\-\-S\-A\-X}(key, keylen, hashv)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a65c61fa2c45a7d0cb918407d725e94bc}{H\-A\-S\-H\-\_\-\-F\-N\-V}(key, keylen, hashv)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a22c77754346c75bfafd872d2d49c6dc7}{H\-A\-S\-H\-\_\-\-O\-A\-T}(key, keylen, hashv)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a6d37144e54d2bd49eb88fbfd04c59dc5}{H\-A\-S\-H\-\_\-\-J\-E\-N\-\_\-\-M\-I\-X}(a, b, c)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a724ff23efd254654ac087ed60233c465}{H\-A\-S\-H\-\_\-\-J\-E\-N}(key, keylen, hashv)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_abc7d71657be8975a51684e41029b7964}{get16bits}(d)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a91480d6a21f082d49d20faeee0295cbb}{H\-A\-S\-H\-\_\-\-S\-F\-H}(key, keylen, hashv)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a54951c7b798e8da9931d2b607e97b619}{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-\_\-\-B\-K\-T}(tbl, hh, head, keyptr, keylen\-\_\-in, hashval, out)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a78e11adee321f45c5cb31ff2d6eb0348}{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-T\-O\-\_\-\-B\-K\-T}(head, addhh)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a1b2d6f694f98cf6350cdd18225cb3f78}{H\-A\-S\-H\-\_\-\-D\-E\-L\-\_\-\-I\-N\-\_\-\-B\-K\-T}(hh, head, hh\-\_\-del)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a6439fd6271474e61b1840fbf83132f03}{H\-A\-S\-H\-\_\-\-E\-X\-P\-A\-N\-D\-\_\-\-B\-U\-C\-K\-E\-T\-S}(tbl)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a88d2ab40956878caacd02c214f7e8f15}{H\-A\-S\-H\-\_\-\-S\-O\-R\-T}(head, cmpfcn)~\hyperlink{common_2uthash_8h_a388b4071dcff005154f431d3d3025fbd}{H\-A\-S\-H\-\_\-\-S\-R\-T}(hh,head,cmpfcn)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a388b4071dcff005154f431d3d3025fbd}{H\-A\-S\-H\-\_\-\-S\-R\-T}(hh, head, cmpfcn)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_ad190366f7a476ece79bd628240a5fc93}{H\-A\-S\-H\-\_\-\-S\-E\-L\-E\-C\-T}(hh\-\_\-dst, dst, hh\-\_\-src, src, cond)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a0512b3f7a824275579ec82643ef2cc23}{H\-A\-S\-H\-\_\-\-C\-L\-E\-A\-R}(hh, head)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_ab35e223d7385dfbe3c42758f502f4c04}{H\-A\-S\-H\-\_\-\-O\-V\-E\-R\-H\-E\-A\-D}(hh, head)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a4d524042f1fcb976d8bccae9e4cc63d6}{H\-A\-S\-H\-\_\-\-I\-T\-E\-R}(hh, head, el, tmp)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a7d3edf55a3ee4da1a0e1b477c314342f}{H\-A\-S\-H\-\_\-\-C\-O\-U\-N\-T}(head)~\hyperlink{common_2uthash_8h_a6ea9e661cd8c35eff1fdcd5731127edd}{H\-A\-S\-H\-\_\-\-C\-N\-T}(hh,head)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a6ea9e661cd8c35eff1fdcd5731127edd}{H\-A\-S\-H\-\_\-\-C\-N\-T}(hh, head)~((head != N\-U\-L\-L)?((head)-\/$>$hh.\-tbl-\/$>$num\-\_\-items)\-:0\-U)
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a4a7a46b9b92a9c73e4f9321e8e6b6bb2}{H\-A\-S\-H\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E}~0xa0111fe1u
+\item 
+\#define \hyperlink{msus_2webserver_2uthash_8h_a18a33f4269f05c1e81ce54edbc0ffca6}{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E}~0xb12220f2u
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef unsigned int \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t}
+\item 
+typedef unsigned char \hyperlink{msus_2webserver_2uthash_8h_aba7bc1797add20fe3efdf37ced1182c5}{uint8\-\_\-t}
+\item 
+typedef struct \hyperlink{struct_u_t__hash__bucket}{U\-T\-\_\-hash\-\_\-bucket} \hyperlink{msus_2webserver_2uthash_8h_a3ba3da0ca59a082c35a0d6b52e803ddf}{U\-T\-\_\-hash\-\_\-bucket}
+\item 
+typedef struct \hyperlink{struct_u_t__hash__table}{U\-T\-\_\-hash\-\_\-table} \hyperlink{msus_2webserver_2uthash_8h_a0758074b9942c2ad076610b3e0ce548e}{U\-T\-\_\-hash\-\_\-table}
+\item 
+typedef struct \hyperlink{struct_u_t__hash__handle}{U\-T\-\_\-hash\-\_\-handle} \hyperlink{msus_2webserver_2uthash_8h_a0e3a99ed9f776349720d0c362f956fb6}{U\-T\-\_\-hash\-\_\-handle}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{msus_2webserver_2uthash_8h_a716ba290563c2d955cb0c90d85874073}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!D\-E\-C\-L\-T\-Y\-P\-E@{D\-E\-C\-L\-T\-Y\-P\-E}}
+\index{D\-E\-C\-L\-T\-Y\-P\-E@{D\-E\-C\-L\-T\-Y\-P\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{D\-E\-C\-L\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-E\-C\-L\-T\-Y\-P\-E(
+\begin{DoxyParamCaption}
+\item[{}]{x}
+\end{DoxyParamCaption}
+)~(\-\_\-\-\_\-typeof(x))}}\label{msus_2webserver_2uthash_8h_a716ba290563c2d955cb0c90d85874073}
+
+
+Definition at line 67 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a3c736f2f2dd643f2987b2bc323e269ba}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!D\-E\-C\-L\-T\-Y\-P\-E\-\_\-\-A\-S\-S\-I\-G\-N@{D\-E\-C\-L\-T\-Y\-P\-E\-\_\-\-A\-S\-S\-I\-G\-N}}
+\index{D\-E\-C\-L\-T\-Y\-P\-E\-\_\-\-A\-S\-S\-I\-G\-N@{D\-E\-C\-L\-T\-Y\-P\-E\-\_\-\-A\-S\-S\-I\-G\-N}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{D\-E\-C\-L\-T\-Y\-P\-E\-\_\-\-A\-S\-S\-I\-G\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-E\-C\-L\-T\-Y\-P\-E\-\_\-\-A\-S\-S\-I\-G\-N(
+\begin{DoxyParamCaption}
+\item[{}]{dst, }
+\item[{}]{src}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a3c736f2f2dd643f2987b2bc323e269ba}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  (dst) = \hyperlink{msus_2webserver_2uthash_8h_a716ba290563c2d955cb0c90d85874073}{DECLTYPE}(dst)(src);                                                    \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 77 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a568e95048979b8b3e4ea1567fd91c186}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!E\-L\-M\-T\-\_\-\-F\-R\-O\-M\-\_\-\-H\-H@{E\-L\-M\-T\-\_\-\-F\-R\-O\-M\-\_\-\-H\-H}}
+\index{E\-L\-M\-T\-\_\-\-F\-R\-O\-M\-\_\-\-H\-H@{E\-L\-M\-T\-\_\-\-F\-R\-O\-M\-\_\-\-H\-H}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{E\-L\-M\-T\-\_\-\-F\-R\-O\-M\-\_\-\-H\-H}]{\setlength{\rightskip}{0pt plus 5cm}\#define E\-L\-M\-T\-\_\-\-F\-R\-O\-M\-\_\-\-H\-H(
+\begin{DoxyParamCaption}
+\item[{}]{tbl, }
+\item[{}]{hhp}
+\end{DoxyParamCaption}
+)~((void$\ast$)(((char$\ast$)(hhp)) -\/ ((tbl)-\/$>$hho)))}}\label{msus_2webserver_2uthash_8h_a568e95048979b8b3e4ea1567fd91c186}
+
+
+Definition at line 129 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_abc7d71657be8975a51684e41029b7964}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!get16bits@{get16bits}}
+\index{get16bits@{get16bits}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{get16bits}]{\setlength{\rightskip}{0pt plus 5cm}\#define get16bits(
+\begin{DoxyParamCaption}
+\item[{}]{d}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_abc7d71657be8975a51684e41029b7964}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+((((\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\_t})(((\textcolor{keyword}{const} \hyperlink{msus_2webserver_2uthash_8h_aba7bc1797add20fe3efdf37ced1182c5}{uint8\_t} *)(d))[1])) << 8)             \(\backslash\)
+                       +(\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\_t})(((\textcolor{keyword}{const} \hyperlink{msus_2webserver_2uthash_8h_aba7bc1797add20fe3efdf37ced1182c5}{uint8\_t} *)(d))[0]) )
+\end{DoxyCode}
+
+
+Definition at line 606 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aaf01358e257c8d838eb5e4b189f0c399}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D@{H\-A\-S\-H\-\_\-\-A\-D\-D}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D@{H\-A\-S\-H\-\_\-\-A\-D\-D}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{fieldname, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{add}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R}(hh, head, \&((add)-\/$>$fieldname), keylen\-\_\-in, add)}}\label{msus_2webserver_2uthash_8h_aaf01358e257c8d838eb5e4b189f0c399}
+
+
+Definition at line 336 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a34a0dfca975d8b5ae83d9c307c8d6305}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{fieldname, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{hashval, }
+\item[{}]{add}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}(hh, head, \&((add)-\/$>$fieldname), keylen\-\_\-in, hashval, add)}}\label{msus_2webserver_2uthash_8h_a34a0dfca975d8b5ae83d9c307c8d6305}
+
+
+Definition at line 333 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a7caae291b965a3f618661927481bf960}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{fieldname, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{hashval, }
+\item[{}]{add, }
+\item[{}]{cmpfcn}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, \&((add)-\/$>$fieldname), keylen\-\_\-in, hashval, add, cmpfcn)}}\label{msus_2webserver_2uthash_8h_a7caae291b965a3f618661927481bf960}
+
+
+Definition at line 297 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a1befde1b63e6bc0cb4d6b34cb863eebe}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-O\-R\-D\-E\-R}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-O\-R\-D\-E\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-O\-R\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-O\-R\-D\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{fieldname, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{add, }
+\item[{}]{cmpfcn}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R}(hh, head, \&((add)-\/$>$fieldname), keylen\-\_\-in, add, cmpfcn)}}\label{msus_2webserver_2uthash_8h_a1befde1b63e6bc0cb4d6b34cb863eebe}
+
+
+Definition at line 300 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_acf85835471af894e354efb7e346698f3}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-T@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-T}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-T@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-I\-N\-T(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{intfield, }
+\item[{}]{add}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-A\-D\-D}(hh,head,intfield,sizeof(int),add)}}\label{msus_2webserver_2uthash_8h_acf85835471af894e354efb7e346698f3}
+
+
+Definition at line 401 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a0b7468360b5c788762cdb2ccf9cd4d26}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{keyptr, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{add}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a0b7468360b5c788762cdb2ccf9cd4d26}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_ha\_hashv;                                                            
+      \hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{  HASH\_VALUE}(keyptr, keylen\_in, \_ha\_hashv);                                      
+      \hyperlink{msus_2webserver_2uthash_8h_aa0e4d9dcfb23a6616c6439aa0d4a3f4d}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_aa0e4d9dcfb23a6616c6439aa0d4a3f4d}{  HASH\_ADD\_KEYPTR\_BYHASHVALUE}(hh, head, keyptr, keylen\_in, \_ha\_hashv, add);   
+         \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 326 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aa0e4d9dcfb23a6616c6439aa0d4a3f4d}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{keyptr, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{hashval, }
+\item[{}]{add}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_aa0e4d9dcfb23a6616c6439aa0d4a3f4d}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_ha\_bkt;                                                              \(\backslash\)
+  (add)->hh.hashv = (hashval);                                                   \(\backslash\)
+  (add)->hh.key = (\textcolor{keywordtype}{char}*) (keyptr);                                              \(\backslash\)
+  (add)->hh.keylen = (\textcolor{keywordtype}{unsigned}) (keylen\_in);                                     \(\backslash\)
+  if (!(head)) \{                                                                 \(\backslash\)
+    (add)->hh.next = NULL;                                                       \(\backslash\)
+    (add)->hh.prev = NULL;                                                       \(\backslash\)
+    (head) = (add);                                                              
+      \hyperlink{msus_2webserver_2uthash_8h_aeba971430f623b6334f565d9c7ec9de5}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_aeba971430f623b6334f565d9c7ec9de5}{    HASH\_MAKE\_TABLE}(hh, head);                                                   \(\backslash\)
+  \} \textcolor{keywordflow}{else} \{                                                                       \(\backslash\)
+    (add)->hh.tbl = (head)->hh.tbl;                                              
+      \hyperlink{msus_2webserver_2uthash_8h_aeec8f4c804ae5b87ebded933252804fd}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_aeec8f4c804ae5b87ebded933252804fd}{    HASH\_APPEND\_LIST}(hh, head, add);                                             \(\backslash\)
+  \}                                                                              \(\backslash\)
+  (head)->hh.tbl->num\_items++;                                                   \(\backslash\)
+  \hyperlink{msus_2webserver_2uthash_8h_a4d7691544128a6ef265f3e4fa5ed3113}{HASH\_TO\_BKT}(hashval, (head)->hh.tbl->num\_buckets, \_ha\_bkt);                    
+      \hyperlink{msus_2webserver_2uthash_8h_a78e11adee321f45c5cb31ff2d6eb0348}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a78e11adee321f45c5cb31ff2d6eb0348}{  HASH\_ADD\_TO\_BKT}((head)->hh.tbl->buckets[\_ha\_bkt], &(add)->hh);                 
+      \hyperlink{msus_2webserver_2uthash_8h_acaad947212056cd8bfe3d660265fb2db}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_acaad947212056cd8bfe3d660265fb2db}{  HASH\_BLOOM\_ADD}((head)->hh.tbl, hashval);                                       
+      \hyperlink{msus_2webserver_2uthash_8h_a44f9d46e2cc79652492e5dd3e6c40a15}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a44f9d46e2cc79652492e5dd3e6c40a15}{  HASH\_EMIT\_KEY}(hh, head, keyptr, keylen\_in);                                    
+      \hyperlink{msus_2webserver_2uthash_8h_a7d882fadb26a4e6c13c134d8be4d0759}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a7d882fadb26a4e6c13c134d8be4d0759}{  HASH\_FSCK}(hh, head);                                                           \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 303 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aae1fa76ff12cbf5328bcf4a2375d055f}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{keyptr, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{hashval, }
+\item[{}]{add, }
+\item[{}]{cmpfcn}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_aae1fa76ff12cbf5328bcf4a2375d055f}
+
+
+Definition at line 252 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a5a5f675b8bbeaff0a25de5f91330eae8}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-K\-E\-Y\-P\-T\-R\-\_\-\-I\-N\-O\-R\-D\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{keyptr, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{add, }
+\item[{}]{cmpfcn}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a5a5f675b8bbeaff0a25de5f91330eae8}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_hs\_hashv;                                                            
+      \hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{  HASH\_VALUE}(keyptr, keylen\_in, \_hs\_hashv);                                      
+      \hyperlink{msus_2webserver_2uthash_8h_aae1fa76ff12cbf5328bcf4a2375d055f}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_aae1fa76ff12cbf5328bcf4a2375d055f}{  HASH\_ADD\_KEYPTR\_BYHASHVALUE\_INORDER}(hh, head, keyptr, keylen\_in, 
+      \_hs\_hashv, add, cmpfcn); \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 290 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a2ad1f84ef1ba9df99fa2ada38cb61823}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-P\-T\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-P\-T\-R}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-P\-T\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-P\-T\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-P\-T\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-P\-T\-R(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{ptrfield, }
+\item[{}]{add}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-A\-D\-D}(hh,head,ptrfield,sizeof(void $\ast$),add)}}\label{msus_2webserver_2uthash_8h_a2ad1f84ef1ba9df99fa2ada38cb61823}
+
+
+Definition at line 407 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a9724951736f3985f74df17638c8a7885}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-S\-T\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-S\-T\-R}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-S\-T\-R@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-S\-T\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-S\-T\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-S\-T\-R(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{strfield, }
+\item[{}]{add}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-A\-D\-D}(hh,head,strfield\mbox{[}0\mbox{]},(unsigned){\bf uthash\-\_\-strlen}(add-\/$>$strfield),add)}}\label{msus_2webserver_2uthash_8h_a9724951736f3985f74df17638c8a7885}
+
+
+Definition at line 395 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a78e11adee321f45c5cb31ff2d6eb0348}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-T\-O\-\_\-\-B\-K\-T@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-T\-O\-\_\-\-B\-K\-T}}
+\index{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-T\-O\-\_\-\-B\-K\-T@{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-T\-O\-\_\-\-B\-K\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-T\-O\-\_\-\-B\-K\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-D\-D\-\_\-\-T\-O\-\_\-\-B\-K\-T(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{addhh}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a78e11adee321f45c5cb31ff2d6eb0348}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+ head.count++;                                                                   \(\backslash\)
+ (addhh)->hh\_next = head.hh\_head;                                                \(\backslash\)
+ (addhh)->hh\_prev = NULL;                                                        \(\backslash\)
+ if (head.hh\_head != NULL) \{ (head).hh\_head->hh\_prev = (addhh); \}                \(\backslash\)
+ (head).hh\_head=addhh;                                                           \(\backslash\)
+ if ((head.count >= ((head.expand\_mult+1U) * \hyperlink{msus_2webserver_2uthash_8h_a8ae3e6473261f6c4b78c030c94f5d68f}{HASH\_BKT\_CAPACITY\_THRESH}))          \(\backslash\)
+     && ((addhh)->tbl->noexpand != 1U)) \{                                        
+      \hyperlink{msus_2webserver_2uthash_8h_a6439fd6271474e61b1840fbf83132f03}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a6439fd6271474e61b1840fbf83132f03}{       HASH\_EXPAND\_BUCKETS}((addhh)->tbl);                                        
+      \(\backslash\)
+ \}                                                                               \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 755 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aeec8f4c804ae5b87ebded933252804fd}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-A\-P\-P\-E\-N\-D\-\_\-\-L\-I\-S\-T@{H\-A\-S\-H\-\_\-\-A\-P\-P\-E\-N\-D\-\_\-\-L\-I\-S\-T}}
+\index{H\-A\-S\-H\-\_\-\-A\-P\-P\-E\-N\-D\-\_\-\-L\-I\-S\-T@{H\-A\-S\-H\-\_\-\-A\-P\-P\-E\-N\-D\-\_\-\-L\-I\-S\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-A\-P\-P\-E\-N\-D\-\_\-\-L\-I\-S\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-A\-P\-P\-E\-N\-D\-\_\-\-L\-I\-S\-T(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{add}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_aeec8f4c804ae5b87ebded933252804fd}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  (add)->hh.next = NULL;                                                         \(\backslash\)
+  (add)->hh.prev = \hyperlink{msus_2webserver_2uthash_8h_a568e95048979b8b3e4ea1567fd91c186}{ELMT\_FROM\_HH}((head)->hh.tbl, (head)->hh.tbl->tail);           \(\backslash\)
+  (head)->hh.tbl->tail->next = (add);                                            \(\backslash\)
+  (head)->hh.tbl->tail = &((add)->hh);                                           \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 244 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a7fb1644fa1d057a1c124c7548b9146b3}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-B\-E\-R@{H\-A\-S\-H\-\_\-\-B\-E\-R}}
+\index{H\-A\-S\-H\-\_\-\-B\-E\-R@{H\-A\-S\-H\-\_\-\-B\-E\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-B\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-B\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{key, }
+\item[{}]{keylen, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a7fb1644fa1d057a1c124c7548b9146b3}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_hb\_keylen=(unsigned)keylen;                                          \(\backslash\)
+  const \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} *\_hb\_key=(\textcolor{keyword}{const} \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}*)(key);                      \(\backslash\)
+  (hashv) = 0;                                                                   \(\backslash\)
+  while (\_hb\_keylen-- != 0U) \{                                                   \(\backslash\)
+      (hashv) = (((hashv) << 5) + (hashv)) + *\_hb\_key++;                         \(\backslash\)
+  \}                                                                              \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 496 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a8ae3e6473261f6c4b78c030c94f5d68f}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-B\-K\-T\-\_\-\-C\-A\-P\-A\-C\-I\-T\-Y\-\_\-\-T\-H\-R\-E\-S\-H@{H\-A\-S\-H\-\_\-\-B\-K\-T\-\_\-\-C\-A\-P\-A\-C\-I\-T\-Y\-\_\-\-T\-H\-R\-E\-S\-H}}
+\index{H\-A\-S\-H\-\_\-\-B\-K\-T\-\_\-\-C\-A\-P\-A\-C\-I\-T\-Y\-\_\-\-T\-H\-R\-E\-S\-H@{H\-A\-S\-H\-\_\-\-B\-K\-T\-\_\-\-C\-A\-P\-A\-C\-I\-T\-Y\-\_\-\-T\-H\-R\-E\-S\-H}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-B\-K\-T\-\_\-\-C\-A\-P\-A\-C\-I\-T\-Y\-\_\-\-T\-H\-R\-E\-S\-H}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-B\-K\-T\-\_\-\-C\-A\-P\-A\-C\-I\-T\-Y\-\_\-\-T\-H\-R\-E\-S\-H~10\-U     /$\ast$ expand when bucket count reaches $\ast$/}}\label{msus_2webserver_2uthash_8h_a8ae3e6473261f6c4b78c030c94f5d68f}
+
+
+Definition at line 126 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_acaad947212056cd8bfe3d660265fb2db}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-A\-D\-D@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-A\-D\-D}}
+\index{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-A\-D\-D@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-A\-D\-D}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-A\-D\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-A\-D\-D(
+\begin{DoxyParamCaption}
+\item[{}]{tbl, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_acaad947212056cd8bfe3d660265fb2db}
+
+
+Definition at line 186 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a81f88a18c0837c77f40926074e7811db}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-B\-Y\-T\-E\-L\-E\-N@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-B\-Y\-T\-E\-L\-E\-N}}
+\index{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-B\-Y\-T\-E\-L\-E\-N@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-B\-Y\-T\-E\-L\-E\-N}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-B\-Y\-T\-E\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-B\-Y\-T\-E\-L\-E\-N~0\-U}}\label{msus_2webserver_2uthash_8h_a81f88a18c0837c77f40926074e7811db}
+
+
+Definition at line 188 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_ad6847ad938fc26bfd0726d7f159efd0a}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-F\-R\-E\-E@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-F\-R\-E\-E}}
+\index{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-F\-R\-E\-E@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-F\-R\-E\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-F\-R\-E\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-F\-R\-E\-E(
+\begin{DoxyParamCaption}
+\item[{}]{tbl}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_ad6847ad938fc26bfd0726d7f159efd0a}
+
+
+Definition at line 185 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a254f427772a1fe7a2480a8302af8f8b8}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-M\-A\-K\-E@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-M\-A\-K\-E}}
+\index{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-M\-A\-K\-E@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-M\-A\-K\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-M\-A\-K\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-M\-A\-K\-E(
+\begin{DoxyParamCaption}
+\item[{}]{tbl}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a254f427772a1fe7a2480a8302af8f8b8}
+
+
+Definition at line 184 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a18a33f4269f05c1e81ce54edbc0ffca6}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E}}
+\index{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E~0xb12220f2u}}\label{msus_2webserver_2uthash_8h_a18a33f4269f05c1e81ce54edbc0ffca6}
+
+
+Definition at line 1047 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a06bfbf880899d54da35487d0d39c1009}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-T\-E\-S\-T@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-T\-E\-S\-T}}
+\index{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-T\-E\-S\-T@{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-T\-E\-S\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-T\-E\-S\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-B\-L\-O\-O\-M\-\_\-\-T\-E\-S\-T(
+\begin{DoxyParamCaption}
+\item[{}]{tbl, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)~(1)}}\label{msus_2webserver_2uthash_8h_a06bfbf880899d54da35487d0d39c1009}
+
+
+Definition at line 187 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a0512b3f7a824275579ec82643ef2cc23}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-C\-L\-E\-A\-R@{H\-A\-S\-H\-\_\-\-C\-L\-E\-A\-R}}
+\index{H\-A\-S\-H\-\_\-\-C\-L\-E\-A\-R@{H\-A\-S\-H\-\_\-\-C\-L\-E\-A\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-C\-L\-E\-A\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-C\-L\-E\-A\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a0512b3f7a824275579ec82643ef2cc23}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  if (head != NULL) \{                                                            
+      \hyperlink{msus_2webserver_2uthash_8h_a56cdf8c254fc700332c8e6a7263b4657}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a56cdf8c254fc700332c8e6a7263b4657}{    uthash\_free}((head)->hh.tbl->buckets,                                         \(\backslash\)
+                (head)->hh.tbl->num\_buckets*\textcolor{keyword}{sizeof}(\textcolor{keyword}{struct} \hyperlink{struct_u_t__hash__bucket}{UT\_hash\_bucket}));      
+      \hyperlink{msus_2webserver_2uthash_8h_ad6847ad938fc26bfd0726d7f159efd0a}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_ad6847ad938fc26bfd0726d7f159efd0a}{    HASH\_BLOOM\_FREE}((head)->hh.tbl);                                             
+      \hyperlink{msus_2webserver_2uthash_8h_a56cdf8c254fc700332c8e6a7263b4657}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a56cdf8c254fc700332c8e6a7263b4657}{    uthash\_free}((head)->hh.tbl, \textcolor{keyword}{sizeof}(\hyperlink{struct_u_t__hash__table}{UT\_hash\_table}));                        
+        \(\backslash\)
+    (head)=NULL;                                                                 \(\backslash\)
+  \}                                                                              \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 993 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a6ea9e661cd8c35eff1fdcd5731127edd}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-C\-N\-T@{H\-A\-S\-H\-\_\-\-C\-N\-T}}
+\index{H\-A\-S\-H\-\_\-\-C\-N\-T@{H\-A\-S\-H\-\_\-\-C\-N\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-C\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-C\-N\-T(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head}
+\end{DoxyParamCaption}
+)~((head != N\-U\-L\-L)?((head)-\/$>$hh.\-tbl-\/$>$num\-\_\-items)\-:0\-U)}}\label{msus_2webserver_2uthash_8h_a6ea9e661cd8c35eff1fdcd5731127edd}
+
+
+Definition at line 1023 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a7d3edf55a3ee4da1a0e1b477c314342f}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-C\-O\-U\-N\-T@{H\-A\-S\-H\-\_\-\-C\-O\-U\-N\-T}}
+\index{H\-A\-S\-H\-\_\-\-C\-O\-U\-N\-T@{H\-A\-S\-H\-\_\-\-C\-O\-U\-N\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-C\-O\-U\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-C\-O\-U\-N\-T(
+\begin{DoxyParamCaption}
+\item[{}]{head}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-C\-N\-T}(hh,head)}}\label{msus_2webserver_2uthash_8h_a7d3edf55a3ee4da1a0e1b477c314342f}
+
+
+Definition at line 1022 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a48b7ed374602dcb236501aa23a971f05}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-D\-E\-L@{H\-A\-S\-H\-\_\-\-D\-E\-L}}
+\index{H\-A\-S\-H\-\_\-\-D\-E\-L@{H\-A\-S\-H\-\_\-\-D\-E\-L}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-D\-E\-L}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-D\-E\-L(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{delptr}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E}(hh,head,delptr)}}\label{msus_2webserver_2uthash_8h_a48b7ed374602dcb236501aa23a971f05}
+
+
+Definition at line 411 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a1b2d6f694f98cf6350cdd18225cb3f78}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-D\-E\-L\-\_\-\-I\-N\-\_\-\-B\-K\-T@{H\-A\-S\-H\-\_\-\-D\-E\-L\-\_\-\-I\-N\-\_\-\-B\-K\-T}}
+\index{H\-A\-S\-H\-\_\-\-D\-E\-L\-\_\-\-I\-N\-\_\-\-B\-K\-T@{H\-A\-S\-H\-\_\-\-D\-E\-L\-\_\-\-I\-N\-\_\-\-B\-K\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-D\-E\-L\-\_\-\-I\-N\-\_\-\-B\-K\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-D\-E\-L\-\_\-\-I\-N\-\_\-\-B\-K\-T(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{hh\-\_\-del}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a1b2d6f694f98cf6350cdd18225cb3f78}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+(head).count--;                                                              \(\backslash\)
+    if ((head).hh\_head == hh\_del) \{                                              \(\backslash\)
+      (head).hh\_head = hh\_del->hh\_next;                                          \(\backslash\)
+    \}                                                                            \(\backslash\)
+    if (hh\_del->hh\_prev) \{                                                       \(\backslash\)
+        hh\_del->hh\_prev->hh\_next = hh\_del->hh\_next;                              \(\backslash\)
+    \}                                                                            \(\backslash\)
+    if (hh\_del->hh\_next) \{                                                       \(\backslash\)
+        hh\_del->hh\_next->hh\_prev = hh\_del->hh\_prev;                              \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Definition at line 769 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a3f83117e1108d63844a58d2d79c3b980}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E@{H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E}}
+\index{H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E@{H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-D\-E\-L\-E\-T\-E(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{delptr}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a3f83117e1108d63844a58d2d79c3b980}
+
+
+Definition at line 356 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a44f9d46e2cc79652492e5dd3e6c40a15}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-E\-M\-I\-T\-\_\-\-K\-E\-Y@{H\-A\-S\-H\-\_\-\-E\-M\-I\-T\-\_\-\-K\-E\-Y}}
+\index{H\-A\-S\-H\-\_\-\-E\-M\-I\-T\-\_\-\-K\-E\-Y@{H\-A\-S\-H\-\_\-\-E\-M\-I\-T\-\_\-\-K\-E\-Y}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-E\-M\-I\-T\-\_\-\-K\-E\-Y}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-E\-M\-I\-T\-\_\-\-K\-E\-Y(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{keyptr, }
+\item[{}]{fieldlen}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a44f9d46e2cc79652492e5dd3e6c40a15}
+
+
+Definition at line 485 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a6439fd6271474e61b1840fbf83132f03}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-E\-X\-P\-A\-N\-D\-\_\-\-B\-U\-C\-K\-E\-T\-S@{H\-A\-S\-H\-\_\-\-E\-X\-P\-A\-N\-D\-\_\-\-B\-U\-C\-K\-E\-T\-S}}
+\index{H\-A\-S\-H\-\_\-\-E\-X\-P\-A\-N\-D\-\_\-\-B\-U\-C\-K\-E\-T\-S@{H\-A\-S\-H\-\_\-\-E\-X\-P\-A\-N\-D\-\_\-\-B\-U\-C\-K\-E\-T\-S}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-E\-X\-P\-A\-N\-D\-\_\-\-B\-U\-C\-K\-E\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-E\-X\-P\-A\-N\-D\-\_\-\-B\-U\-C\-K\-E\-T\-S(
+\begin{DoxyParamCaption}
+\item[{}]{tbl}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a6439fd6271474e61b1840fbf83132f03}
+
+
+Definition at line 810 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_abd3356419b386c379116393700a751d3}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-C\-N@{H\-A\-S\-H\-\_\-\-F\-C\-N}}
+\index{H\-A\-S\-H\-\_\-\-F\-C\-N@{H\-A\-S\-H\-\_\-\-F\-C\-N}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-C\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-C\-N~{\bf H\-A\-S\-H\-\_\-\-J\-E\-N}}}\label{msus_2webserver_2uthash_8h_abd3356419b386c379116393700a751d3}
+
+
+Definition at line 492 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_ad4a1cd39c3044936c0e49d3f372c9dbf}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-I\-N\-D@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D}}
+\index{H\-A\-S\-H\-\_\-\-F\-I\-N\-D@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-I\-N\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-I\-N\-D(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{keyptr, }
+\item[{}]{keylen, }
+\item[{}]{out}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_ad4a1cd39c3044936c0e49d3f372c9dbf}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_hf\_hashv;                                                            
+      \hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{  HASH\_VALUE}(keyptr, keylen, \_hf\_hashv);                                         
+      \hyperlink{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}{  HASH\_FIND\_BYHASHVALUE}(hh, head, keyptr, keylen, \_hf\_hashv, out);               \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 150 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}}
+\index{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{keyptr, }
+\item[{}]{keylen, }
+\item[{}]{hashval, }
+\item[{}]{out}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  (out) = NULL;                                                                  \(\backslash\)
+  if (head) \{                                                                    \(\backslash\)
+    unsigned \_hf\_bkt;                                                            
+      \hyperlink{msus_2webserver_2uthash_8h_a4d7691544128a6ef265f3e4fa5ed3113}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a4d7691544128a6ef265f3e4fa5ed3113}{    HASH\_TO\_BKT}(hashval, (head)->hh.tbl->num\_buckets, \_hf\_bkt);                  \(\backslash\)
+    if (\hyperlink{msus_2webserver_2uthash_8h_a06bfbf880899d54da35487d0d39c1009}{HASH\_BLOOM\_TEST}((head)->hh.tbl, hashval) != 0) \{                         
+      \hyperlink{msus_2webserver_2uthash_8h_a54951c7b798e8da9931d2b607e97b619}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a54951c7b798e8da9931d2b607e97b619}{      HASH\_FIND\_IN\_BKT}((head)->hh.tbl, hh, (head)->hh.tbl->buckets[ \_hf\_bkt ], keyptr
+      , keylen, hashval, out); \(\backslash\)
+    \}                                                                            \(\backslash\)
+  \}                                                                              \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 138 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a54951c7b798e8da9931d2b607e97b619}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-\_\-\-B\-K\-T@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-\_\-\-B\-K\-T}}
+\index{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-\_\-\-B\-K\-T@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-\_\-\-B\-K\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-\_\-\-B\-K\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-\_\-\-B\-K\-T(
+\begin{DoxyParamCaption}
+\item[{}]{tbl, }
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{keyptr, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{hashval, }
+\item[{}]{out}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a54951c7b798e8da9931d2b607e97b619}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  if ((head).hh\_head != NULL) \{                                                  
+      \hyperlink{msus_2webserver_2uthash_8h_a3c736f2f2dd643f2987b2bc323e269ba}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a3c736f2f2dd643f2987b2bc323e269ba}{    DECLTYPE\_ASSIGN}(out, \hyperlink{msus_2webserver_2uthash_8h_a568e95048979b8b3e4ea1567fd91c186}{ELMT\_FROM\_HH}(tbl, (head).hh\_head));                
+           \(\backslash\)
+  \} \textcolor{keywordflow}{else} \{                                                                       \(\backslash\)
+    (out) = NULL;                                                                \(\backslash\)
+  \}                                                                              \(\backslash\)
+  while ((out) != NULL) \{                                                        \(\backslash\)
+    if ((out)->hh.hashv == (hashval) && (out)->hh.keylen == (keylen\_in)) \{       \(\backslash\)
+      if (\hyperlink{msus_2webserver_2uthash_8h_a8ca9a884b81d487034b57f87d2f97fa4}{uthash\_memcmp}((out)->hh.key, keyptr, keylen\_in) == 0) \{                \(\backslash\)
+        break;                                                                   \(\backslash\)
+      \}                                                                          \(\backslash\)
+    \}                                                                            \(\backslash\)
+    if ((out)->hh.hh\_next != NULL) \{                                             
+      \hyperlink{msus_2webserver_2uthash_8h_a3c736f2f2dd643f2987b2bc323e269ba}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a3c736f2f2dd643f2987b2bc323e269ba}{      DECLTYPE\_ASSIGN}(out, \hyperlink{msus_2webserver_2uthash_8h_a568e95048979b8b3e4ea1567fd91c186}{ELMT\_FROM\_HH}(tbl, (out)->hh.hh\_next));         
+             \(\backslash\)
+    \} \textcolor{keywordflow}{else} \{                                                                     \(\backslash\)
+      (out) = NULL;                                                              \(\backslash\)
+    \}                                                                            \(\backslash\)
+  \}                                                                              \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 733 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aadcb19b940348f3141bd51505ede0142}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-T@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-T}}
+\index{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-T@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-I\-N\-T(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{findint, }
+\item[{}]{out}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-F\-I\-N\-D}(hh,head,findint,sizeof(int),out)}}\label{msus_2webserver_2uthash_8h_aadcb19b940348f3141bd51505ede0142}
+
+
+Definition at line 399 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a26a887f8e31952034becac0cf446f6c3}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-P\-T\-R@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-P\-T\-R}}
+\index{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-P\-T\-R@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-P\-T\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-P\-T\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-P\-T\-R(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{findptr, }
+\item[{}]{out}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-F\-I\-N\-D}(hh,head,findptr,sizeof(void $\ast$),out)}}\label{msus_2webserver_2uthash_8h_a26a887f8e31952034becac0cf446f6c3}
+
+
+Definition at line 405 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a214529083adfab2fa8cd402d2eeb0a84}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-S\-T\-R@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-S\-T\-R}}
+\index{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-S\-T\-R@{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-S\-T\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-S\-T\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-I\-N\-D\-\_\-\-S\-T\-R(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{findstr, }
+\item[{}]{out}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-F\-I\-N\-D}(hh,head,findstr,(unsigned){\bf uthash\-\_\-strlen}(findstr),out)}}\label{msus_2webserver_2uthash_8h_a214529083adfab2fa8cd402d2eeb0a84}
+
+
+Definition at line 393 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a65c61fa2c45a7d0cb918407d725e94bc}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-N\-V@{H\-A\-S\-H\-\_\-\-F\-N\-V}}
+\index{H\-A\-S\-H\-\_\-\-F\-N\-V@{H\-A\-S\-H\-\_\-\-F\-N\-V}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-N\-V}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-N\-V(
+\begin{DoxyParamCaption}
+\item[{}]{key, }
+\item[{}]{keylen, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a65c61fa2c45a7d0cb918407d725e94bc}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_fn\_i;                                                                \(\backslash\)
+  const \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} *\_hf\_key=(\textcolor{keyword}{const} \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}*)(key);                      \(\backslash\)
+  hashv = 2166136261U;                                                           \(\backslash\)
+  for(\_fn\_i=0; \_fn\_i < keylen; \_fn\_i++) \{                                        \(\backslash\)
+      hashv = hashv ^ \_hf\_key[\_fn\_i];                                            \(\backslash\)
+      hashv = hashv * 16777619U;                                                 \(\backslash\)
+  \}                                                                              \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 519 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a7d882fadb26a4e6c13c134d8be4d0759}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-F\-S\-C\-K@{H\-A\-S\-H\-\_\-\-F\-S\-C\-K}}
+\index{H\-A\-S\-H\-\_\-\-F\-S\-C\-K@{H\-A\-S\-H\-\_\-\-F\-S\-C\-K}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-F\-S\-C\-K}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-F\-S\-C\-K(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a7d882fadb26a4e6c13c134d8be4d0759}
+
+
+Definition at line 471 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a361cdc5e8d6d8fe5fae6912588ae15d0}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S@{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S}}
+\index{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S@{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S~32\-U     /$\ast$ initial number of buckets        $\ast$/}}\label{msus_2webserver_2uthash_8h_a361cdc5e8d6d8fe5fae6912588ae15d0}
+
+
+Definition at line 124 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a0b39a5cf1d6c05c43bd8530db2ec908c}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S\-\_\-\-L\-O\-G2@{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S\-\_\-\-L\-O\-G2}}
+\index{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S\-\_\-\-L\-O\-G2@{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S\-\_\-\-L\-O\-G2}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S\-\_\-\-L\-O\-G2}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-I\-N\-I\-T\-I\-A\-L\-\_\-\-N\-U\-M\-\_\-\-B\-U\-C\-K\-E\-T\-S\-\_\-\-L\-O\-G2~5\-U /$\ast$ lg2 of initial number of buckets $\ast$/}}\label{msus_2webserver_2uthash_8h_a0b39a5cf1d6c05c43bd8530db2ec908c}
+
+
+Definition at line 125 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a4d524042f1fcb976d8bccae9e4cc63d6}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-I\-T\-E\-R@{H\-A\-S\-H\-\_\-\-I\-T\-E\-R}}
+\index{H\-A\-S\-H\-\_\-\-I\-T\-E\-R@{H\-A\-S\-H\-\_\-\-I\-T\-E\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-I\-T\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-I\-T\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{el, }
+\item[{}]{tmp}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a4d524042f1fcb976d8bccae9e4cc63d6}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{for}(((el)=(head)), ((tmp)=\hyperlink{msus_2webserver_2uthash_8h_a716ba290563c2d955cb0c90d85874073}{DECLTYPE}(el)((head!=NULL)?(head)->hh.next:NULL));      \(\backslash\)
+  (el) != NULL; ((el)=(tmp)), ((tmp)=\hyperlink{msus_2webserver_2uthash_8h_a716ba290563c2d955cb0c90d85874073}{DECLTYPE}(el)((tmp!=NULL)?(tmp)->hh.next:NULL)))
+\end{DoxyCode}
+
+
+Definition at line 1016 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a724ff23efd254654ac087ed60233c465}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-J\-E\-N@{H\-A\-S\-H\-\_\-\-J\-E\-N}}
+\index{H\-A\-S\-H\-\_\-\-J\-E\-N@{H\-A\-S\-H\-\_\-\-J\-E\-N}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-J\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-J\-E\-N(
+\begin{DoxyParamCaption}
+\item[{}]{key, }
+\item[{}]{keylen, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a724ff23efd254654ac087ed60233c465}
+
+
+Definition at line 558 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a6d37144e54d2bd49eb88fbfd04c59dc5}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-J\-E\-N\-\_\-\-M\-I\-X@{H\-A\-S\-H\-\_\-\-J\-E\-N\-\_\-\-M\-I\-X}}
+\index{H\-A\-S\-H\-\_\-\-J\-E\-N\-\_\-\-M\-I\-X@{H\-A\-S\-H\-\_\-\-J\-E\-N\-\_\-\-M\-I\-X}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-J\-E\-N\-\_\-\-M\-I\-X}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-J\-E\-N\-\_\-\-M\-I\-X(
+\begin{DoxyParamCaption}
+\item[{}]{a, }
+\item[{}]{b, }
+\item[{}]{c}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a6d37144e54d2bd49eb88fbfd04c59dc5}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  a -= b; a -= c; a ^= ( c >> 13 );                                              \(\backslash\)
+  b -= c; b -= a; b ^= ( a << 8 );                                               \(\backslash\)
+  c -= a; c -= b; c ^= ( b >> 13 );                                              \(\backslash\)
+  a -= b; a -= c; a ^= ( c >> 12 );                                              \(\backslash\)
+  b -= c; b -= a; b ^= ( a << 16 );                                              \(\backslash\)
+  c -= a; c -= b; c ^= ( b >> 5 );                                               \(\backslash\)
+  a -= b; a -= c; a ^= ( c >> 3 );                                               \(\backslash\)
+  b -= c; b -= a; b ^= ( a << 10 );                                              \(\backslash\)
+  c -= a; c -= b; c ^= ( b >> 15 );                                              \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 545 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aeba971430f623b6334f565d9c7ec9de5}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-M\-A\-K\-E\-\_\-\-T\-A\-B\-L\-E@{H\-A\-S\-H\-\_\-\-M\-A\-K\-E\-\_\-\-T\-A\-B\-L\-E}}
+\index{H\-A\-S\-H\-\_\-\-M\-A\-K\-E\-\_\-\-T\-A\-B\-L\-E@{H\-A\-S\-H\-\_\-\-M\-A\-K\-E\-\_\-\-T\-A\-B\-L\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-M\-A\-K\-E\-\_\-\-T\-A\-B\-L\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-M\-A\-K\-E\-\_\-\-T\-A\-B\-L\-E(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_aeba971430f623b6334f565d9c7ec9de5}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  (head)->hh.tbl = (\hyperlink{struct_u_t__hash__table}{UT\_hash\_table}*)\hyperlink{msus_2webserver_2uthash_8h_a861013aff36c0448f1888a2b0b5836d8}{uthash\_malloc}(                                
+      \(\backslash\)
+                  \textcolor{keyword}{sizeof}(\hyperlink{struct_u_t__hash__table}{UT\_hash\_table}));                                        \(\backslash\)
+  if (!((head)->hh.tbl))  \{ \hyperlink{msus_2webserver_2uthash_8h_a03b52301b0ed976b6981ef33613320c1}{uthash\_fatal}( \textcolor{stringliteral}{"out of memory"}); \}                    \(\backslash\)
+  memset((head)->hh.tbl, 0, \textcolor{keyword}{sizeof}(\hyperlink{struct_u_t__hash__table}{UT\_hash\_table}));                              \(\backslash\)
+  (head)->hh.tbl->tail = &((head)->hh);                                          \(\backslash\)
+  (head)->hh.tbl->num\_buckets = \hyperlink{msus_2webserver_2uthash_8h_a361cdc5e8d6d8fe5fae6912588ae15d0}{HASH\_INITIAL\_NUM\_BUCKETS};                        \(\backslash\)
+  (head)->hh.tbl->log2\_num\_buckets = \hyperlink{msus_2webserver_2uthash_8h_a0b39a5cf1d6c05c43bd8530db2ec908c}{HASH\_INITIAL\_NUM\_BUCKETS\_LOG2};           
+         \(\backslash\)
+  (head)->hh.tbl->hho = (\textcolor{keywordtype}{char}*)(&(head)->hh) - (\textcolor{keywordtype}{char}*)(head);                    \(\backslash\)
+  (head)->hh.tbl->buckets = (\hyperlink{struct_u_t__hash__bucket}{UT\_hash\_bucket}*)\hyperlink{msus_2webserver_2uthash_8h_a861013aff36c0448f1888a2b0b5836d8}{uthash\_malloc}(                     
+       \(\backslash\)
+          \hyperlink{msus_2webserver_2uthash_8h_a361cdc5e8d6d8fe5fae6912588ae15d0}{HASH\_INITIAL\_NUM\_BUCKETS}*\textcolor{keyword}{sizeof}(\textcolor{keyword}{struct} 
+      \hyperlink{struct_u_t__hash__bucket}{UT\_hash\_bucket}));               \(\backslash\)
+  if (! (head)->hh.tbl->buckets) \{ \hyperlink{msus_2webserver_2uthash_8h_a03b52301b0ed976b6981ef33613320c1}{uthash\_fatal}( \textcolor{stringliteral}{"out of memory"}); \}             \(\backslash\)
+  memset((head)->hh.tbl->buckets, 0,                                             \(\backslash\)
+          \hyperlink{msus_2webserver_2uthash_8h_a361cdc5e8d6d8fe5fae6912588ae15d0}{HASH\_INITIAL\_NUM\_BUCKETS}*\textcolor{keyword}{sizeof}(\textcolor{keyword}{struct} 
+      \hyperlink{struct_u_t__hash__bucket}{UT\_hash\_bucket}));               \hyperlink{msus_2webserver_2uthash_8h_a254f427772a1fe7a2480a8302af8f8b8}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a254f427772a1fe7a2480a8302af8f8b8}{  HASH\_BLOOM\_MAKE}((head)->hh.tbl);                                               \(\backslash\)
+  (head)->hh.tbl->signature = \hyperlink{msus_2webserver_2uthash_8h_a4a7a46b9b92a9c73e4f9321e8e6b6bb2}{HASH\_SIGNATURE};                                    \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 191 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a22c77754346c75bfafd872d2d49c6dc7}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-O\-A\-T@{H\-A\-S\-H\-\_\-\-O\-A\-T}}
+\index{H\-A\-S\-H\-\_\-\-O\-A\-T@{H\-A\-S\-H\-\_\-\-O\-A\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-O\-A\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-O\-A\-T(
+\begin{DoxyParamCaption}
+\item[{}]{key, }
+\item[{}]{keylen, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a22c77754346c75bfafd872d2d49c6dc7}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_ho\_i;                                                                \(\backslash\)
+  const \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} *\_ho\_key=(\textcolor{keyword}{const} \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}*)(key);                      \(\backslash\)
+  hashv = 0;                                                                     \(\backslash\)
+  for(\_ho\_i=0; \_ho\_i < keylen; \_ho\_i++) \{                                        \(\backslash\)
+      hashv += \_ho\_key[\_ho\_i];                                                   \(\backslash\)
+      hashv += (hashv << 10);                                                    \(\backslash\)
+      hashv ^= (hashv >> 6);                                                     \(\backslash\)
+  \}                                                                              \(\backslash\)
+  hashv += (hashv << 3);                                                         \(\backslash\)
+  hashv ^= (hashv >> 11);                                                        \(\backslash\)
+  hashv += (hashv << 15);                                                        \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 530 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_ab35e223d7385dfbe3c42758f502f4c04}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-O\-V\-E\-R\-H\-E\-A\-D@{H\-A\-S\-H\-\_\-\-O\-V\-E\-R\-H\-E\-A\-D}}
+\index{H\-A\-S\-H\-\_\-\-O\-V\-E\-R\-H\-E\-A\-D@{H\-A\-S\-H\-\_\-\-O\-V\-E\-R\-H\-E\-A\-D}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-O\-V\-E\-R\-H\-E\-A\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-O\-V\-E\-R\-H\-E\-A\-D(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_ab35e223d7385dfbe3c42758f502f4c04}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+((head != NULL) ? (                                                             \(\backslash\)
+ (\textcolor{keywordtype}{size\_t})(((head)->hh.tbl->num\_items   * \textcolor{keyword}{sizeof}(\hyperlink{struct_u_t__hash__handle}{UT\_hash\_handle}))   +             \(\backslash\)
+          ((head)->hh.tbl->num\_buckets * \textcolor{keyword}{sizeof}(\hyperlink{msus_2webserver_2uthash_8h_a3ba3da0ca59a082c35a0d6b52e803ddf}{UT\_hash\_bucket}))   +             \(\backslash\)
+           sizeof(\hyperlink{struct_u_t__hash__table}{UT\_hash\_table})                                   +             \(\backslash\)
+           (\hyperlink{msus_2webserver_2uthash_8h_a81f88a18c0837c77f40926074e7811db}{HASH\_BLOOM\_BYTELEN}))) : 0U)
+\end{DoxyCode}
+
+
+Definition at line 1004 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a9897aa8b1ace582e7bbdef05f21cbc54}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}}
+\index{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{fieldname, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{add, }
+\item[{}]{replaced}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a9897aa8b1ace582e7bbdef05f21cbc54}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_hr\_hashv;                                                            
+      \hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{  HASH\_VALUE}(&((add)->fieldname), keylen\_in, \_hr\_hashv);                         
+      \hyperlink{msus_2webserver_2uthash_8h_ab7fc2175a455ed8e8351737b4f8b2842}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_ab7fc2175a455ed8e8351737b4f8b2842}{  HASH\_REPLACE\_BYHASHVALUE}(hh, head, fieldname, keylen\_in, \_hr\_hashv, add, 
+      replaced); \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 230 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_ab7fc2175a455ed8e8351737b4f8b2842}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}}
+\index{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{fieldname, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{hashval, }
+\item[{}]{add, }
+\item[{}]{replaced}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_ab7fc2175a455ed8e8351737b4f8b2842}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  (replaced) = NULL;                                                             
+      \hyperlink{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}{  HASH\_FIND\_BYHASHVALUE}(hh, head, &((add)->fieldname), keylen\_in, hashval, replaced)
+      ; \(\backslash\)
+  if (replaced) \{                                                                
+      \hyperlink{msus_2webserver_2uthash_8h_a3f83117e1108d63844a58d2d79c3b980}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a3f83117e1108d63844a58d2d79c3b980}{     HASH\_DELETE}(hh, head, replaced);                                            \(\backslash\)
+  \}                                                                              
+      \hyperlink{msus_2webserver_2uthash_8h_aa0e4d9dcfb23a6616c6439aa0d4a3f4d}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_aa0e4d9dcfb23a6616c6439aa0d4a3f4d}{  HASH\_ADD\_KEYPTR\_BYHASHVALUE}(hh, head, &((add)->fieldname), keylen\_in, 
+      hashval, add); \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 220 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aa0104b44f5a911bfda7fd9f939e1594f}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}}
+\index{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-B\-Y\-H\-A\-S\-H\-V\-A\-L\-U\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{fieldname, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{hashval, }
+\item[{}]{add, }
+\item[{}]{replaced, }
+\item[{}]{cmpfcn}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_aa0104b44f5a911bfda7fd9f939e1594f}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  (replaced) = NULL;                                                             
+      \hyperlink{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_afc2b27fc2a6b13aece881528f45de693}{  HASH\_FIND\_BYHASHVALUE}(hh, head, &((add)->fieldname), keylen\_in, hashval, replaced)
+      ; \(\backslash\)
+  if (replaced) \{                                                                
+      \hyperlink{msus_2webserver_2uthash_8h_a3f83117e1108d63844a58d2d79c3b980}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a3f83117e1108d63844a58d2d79c3b980}{     HASH\_DELETE}(hh, head, replaced);                                            \(\backslash\)
+  \}                                                                              
+      \hyperlink{msus_2webserver_2uthash_8h_aae1fa76ff12cbf5328bcf4a2375d055f}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_aae1fa76ff12cbf5328bcf4a2375d055f}{  HASH\_ADD\_KEYPTR\_BYHASHVALUE\_INORDER}(hh, head, &((add)->fieldname), 
+      keylen\_in, hashval, add, cmpfcn); \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 210 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aa6d7a872d8855c9b8bf55d62e8eb0430}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}}
+\index{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-O\-R\-D\-E\-R(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{fieldname, }
+\item[{}]{keylen\-\_\-in, }
+\item[{}]{add, }
+\item[{}]{replaced, }
+\item[{}]{cmpfcn}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_aa6d7a872d8855c9b8bf55d62e8eb0430}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_hr\_hashv;                                                            
+      \hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{  HASH\_VALUE}(&((add)->fieldname), keylen\_in, \_hr\_hashv);                         
+      \hyperlink{msus_2webserver_2uthash_8h_aa0104b44f5a911bfda7fd9f939e1594f}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_aa0104b44f5a911bfda7fd9f939e1594f}{  HASH\_REPLACE\_BYHASHVALUE\_INORDER}(hh, head, fieldname, keylen\_in, 
+      \_hr\_hashv, add, replaced, cmpfcn); \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 237 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a43124846a2747f48f45bf9f16631a6da}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-T@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-T}}
+\index{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-T@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-I\-N\-T(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{intfield, }
+\item[{}]{add, }
+\item[{}]{replaced}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}(hh,head,intfield,sizeof(int),add,replaced)}}\label{msus_2webserver_2uthash_8h_a43124846a2747f48f45bf9f16631a6da}
+
+
+Definition at line 403 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a13bcd1176a34c0a924fbf187c897bf68}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-P\-T\-R@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-P\-T\-R}}
+\index{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-P\-T\-R@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-P\-T\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-P\-T\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-P\-T\-R(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{ptrfield, }
+\item[{}]{add, }
+\item[{}]{replaced}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}(hh,head,ptrfield,sizeof(void $\ast$),add,replaced)}}\label{msus_2webserver_2uthash_8h_a13bcd1176a34c0a924fbf187c897bf68}
+
+
+Definition at line 409 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a069b31f4fbc11094d8d3d5e3b1a641db}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-S\-T\-R@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-S\-T\-R}}
+\index{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-S\-T\-R@{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-S\-T\-R}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-S\-T\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E\-\_\-\-S\-T\-R(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{strfield, }
+\item[{}]{add, }
+\item[{}]{replaced}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-R\-E\-P\-L\-A\-C\-E}(hh,head,strfield\mbox{[}0\mbox{]},(unsigned){\bf uthash\-\_\-strlen}(add-\/$>$strfield),add,replaced)}}\label{msus_2webserver_2uthash_8h_a069b31f4fbc11094d8d3d5e3b1a641db}
+
+
+Definition at line 397 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_ae8cf38dbd44a475eb0fa4cdb9988e13a}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-S\-A\-X@{H\-A\-S\-H\-\_\-\-S\-A\-X}}
+\index{H\-A\-S\-H\-\_\-\-S\-A\-X@{H\-A\-S\-H\-\_\-\-S\-A\-X}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-S\-A\-X}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-S\-A\-X(
+\begin{DoxyParamCaption}
+\item[{}]{key, }
+\item[{}]{keylen, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_ae8cf38dbd44a475eb0fa4cdb9988e13a}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  unsigned \_sx\_i;                                                                \(\backslash\)
+  const \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} *\_hs\_key=(\textcolor{keyword}{const} \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}*)(key);                      \(\backslash\)
+  hashv = 0;                                                                     \(\backslash\)
+  for(\_sx\_i=0; \_sx\_i < keylen; \_sx\_i++) \{                                        \(\backslash\)
+      hashv ^= (hashv << 5) + (hashv >> 2) + \_hs\_key[\_sx\_i];                     \(\backslash\)
+  \}                                                                              \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 509 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_ad190366f7a476ece79bd628240a5fc93}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-S\-E\-L\-E\-C\-T@{H\-A\-S\-H\-\_\-\-S\-E\-L\-E\-C\-T}}
+\index{H\-A\-S\-H\-\_\-\-S\-E\-L\-E\-C\-T@{H\-A\-S\-H\-\_\-\-S\-E\-L\-E\-C\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-S\-E\-L\-E\-C\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-S\-E\-L\-E\-C\-T(
+\begin{DoxyParamCaption}
+\item[{}]{hh\-\_\-dst, }
+\item[{}]{dst, }
+\item[{}]{hh\-\_\-src, }
+\item[{}]{src, }
+\item[{}]{cond}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_ad190366f7a476ece79bd628240a5fc93}
+
+
+Definition at line 955 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a91480d6a21f082d49d20faeee0295cbb}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-S\-F\-H@{H\-A\-S\-H\-\_\-\-S\-F\-H}}
+\index{H\-A\-S\-H\-\_\-\-S\-F\-H@{H\-A\-S\-H\-\_\-\-S\-F\-H}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-S\-F\-H}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-S\-F\-H(
+\begin{DoxyParamCaption}
+\item[{}]{key, }
+\item[{}]{keylen, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a91480d6a21f082d49d20faeee0295cbb}
+
+
+Definition at line 609 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a4a7a46b9b92a9c73e4f9321e8e6b6bb2}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E@{H\-A\-S\-H\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E}}
+\index{H\-A\-S\-H\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E@{H\-A\-S\-H\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-S\-I\-G\-N\-A\-T\-U\-R\-E~0xa0111fe1u}}\label{msus_2webserver_2uthash_8h_a4a7a46b9b92a9c73e4f9321e8e6b6bb2}
+
+
+Definition at line 1046 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a88d2ab40956878caacd02c214f7e8f15}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-S\-O\-R\-T@{H\-A\-S\-H\-\_\-\-S\-O\-R\-T}}
+\index{H\-A\-S\-H\-\_\-\-S\-O\-R\-T@{H\-A\-S\-H\-\_\-\-S\-O\-R\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-S\-O\-R\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-S\-O\-R\-T(
+\begin{DoxyParamCaption}
+\item[{}]{head, }
+\item[{}]{cmpfcn}
+\end{DoxyParamCaption}
+)~{\bf H\-A\-S\-H\-\_\-\-S\-R\-T}(hh,head,cmpfcn)}}\label{msus_2webserver_2uthash_8h_a88d2ab40956878caacd02c214f7e8f15}
+
+
+Definition at line 862 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a388b4071dcff005154f431d3d3025fbd}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-S\-R\-T@{H\-A\-S\-H\-\_\-\-S\-R\-T}}
+\index{H\-A\-S\-H\-\_\-\-S\-R\-T@{H\-A\-S\-H\-\_\-\-S\-R\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-S\-R\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-S\-R\-T(
+\begin{DoxyParamCaption}
+\item[{}]{hh, }
+\item[{}]{head, }
+\item[{}]{cmpfcn}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a388b4071dcff005154f431d3d3025fbd}
+
+
+Definition at line 863 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a4d7691544128a6ef265f3e4fa5ed3113}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-T\-O\-\_\-\-B\-K\-T@{H\-A\-S\-H\-\_\-\-T\-O\-\_\-\-B\-K\-T}}
+\index{H\-A\-S\-H\-\_\-\-T\-O\-\_\-\-B\-K\-T@{H\-A\-S\-H\-\_\-\-T\-O\-\_\-\-B\-K\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-T\-O\-\_\-\-B\-K\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-T\-O\-\_\-\-B\-K\-T(
+\begin{DoxyParamCaption}
+\item[{}]{hashv, }
+\item[{}]{num\-\_\-bkts, }
+\item[{}]{bkt}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a4d7691544128a6ef265f3e4fa5ed3113}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             \(\backslash\)
+  bkt = ((hashv) & ((num\_bkts) - 1U));                                           \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 339 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-A\-S\-H\-\_\-\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-V\-A\-L\-U\-E}}
+\index{H\-A\-S\-H\-\_\-\-V\-A\-L\-U\-E@{H\-A\-S\-H\-\_\-\-V\-A\-L\-U\-E}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-A\-S\-H\-\_\-\-V\-A\-L\-U\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-A\-S\-H\-\_\-\-V\-A\-L\-U\-E(
+\begin{DoxyParamCaption}
+\item[{}]{keyptr, }
+\item[{}]{keylen, }
+\item[{}]{hashv}
+\end{DoxyParamCaption}
+)}}\label{msus_2webserver_2uthash_8h_a5bc1c6438f5d6fc56b8dcbf4bbe50271}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{do} \{                                                                             
+      \hyperlink{msus_2webserver_2uthash_8h_abd3356419b386c379116393700a751d3}{\(\backslash\)}
+\hyperlink{msus_2webserver_2uthash_8h_abd3356419b386c379116393700a751d3}{  HASH\_FCN}(keyptr, keylen, hashv);                                               \(\backslash\)
+\} \textcolor{keywordflow}{while} (0)
+\end{DoxyCode}
+
+
+Definition at line 133 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a46261e43585c404cccf8ab0f5c6d271e}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!H\-H\-\_\-\-F\-R\-O\-M\-\_\-\-E\-L\-M\-T@{H\-H\-\_\-\-F\-R\-O\-M\-\_\-\-E\-L\-M\-T}}
+\index{H\-H\-\_\-\-F\-R\-O\-M\-\_\-\-E\-L\-M\-T@{H\-H\-\_\-\-F\-R\-O\-M\-\_\-\-E\-L\-M\-T}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{H\-H\-\_\-\-F\-R\-O\-M\-\_\-\-E\-L\-M\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\-H\-\_\-\-F\-R\-O\-M\-\_\-\-E\-L\-M\-T(
+\begin{DoxyParamCaption}
+\item[{}]{tbl, }
+\item[{}]{elp}
+\end{DoxyParamCaption}
+)~(({\bf U\-T\-\_\-hash\-\_\-handle} $\ast$)(((char$\ast$)(elp)) + ((tbl)-\/$>$hho)))}}\label{msus_2webserver_2uthash_8h_a46261e43585c404cccf8ab0f5c6d271e}
+
+
+Definition at line 131 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a86ea78714da520989a6f7a764b4d71b4}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uthash\-\_\-expand\-\_\-fyi@{uthash\-\_\-expand\-\_\-fyi}}
+\index{uthash\-\_\-expand\-\_\-fyi@{uthash\-\_\-expand\-\_\-fyi}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uthash\-\_\-expand\-\_\-fyi}]{\setlength{\rightskip}{0pt plus 5cm}\#define uthash\-\_\-expand\-\_\-fyi(
+\begin{DoxyParamCaption}
+\item[{}]{tbl}
+\end{DoxyParamCaption}
+)~/$\ast$ can be defined to {\bf log} expands   $\ast$/}}\label{msus_2webserver_2uthash_8h_a86ea78714da520989a6f7a764b4d71b4}
+
+
+Definition at line 120 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a03b52301b0ed976b6981ef33613320c1}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uthash\-\_\-fatal@{uthash\-\_\-fatal}}
+\index{uthash\-\_\-fatal@{uthash\-\_\-fatal}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uthash\-\_\-fatal}]{\setlength{\rightskip}{0pt plus 5cm}\#define uthash\-\_\-fatal(
+\begin{DoxyParamCaption}
+\item[{}]{msg}
+\end{DoxyParamCaption}
+)~exit(-\/1)        /$\ast$ fatal error (out of memory,etc) $\ast$/}}\label{msus_2webserver_2uthash_8h_a03b52301b0ed976b6981ef33613320c1}
+
+
+Definition at line 101 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a56cdf8c254fc700332c8e6a7263b4657}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uthash\-\_\-free@{uthash\-\_\-free}}
+\index{uthash\-\_\-free@{uthash\-\_\-free}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uthash\-\_\-free}]{\setlength{\rightskip}{0pt plus 5cm}\#define uthash\-\_\-free(
+\begin{DoxyParamCaption}
+\item[{}]{ptr, }
+\item[{}]{sz}
+\end{DoxyParamCaption}
+)~free(ptr)     /$\ast$ free fcn                        $\ast$/}}\label{msus_2webserver_2uthash_8h_a56cdf8c254fc700332c8e6a7263b4657}
+
+
+Definition at line 107 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a861013aff36c0448f1888a2b0b5836d8}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uthash\-\_\-malloc@{uthash\-\_\-malloc}}
+\index{uthash\-\_\-malloc@{uthash\-\_\-malloc}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uthash\-\_\-malloc}]{\setlength{\rightskip}{0pt plus 5cm}\#define uthash\-\_\-malloc(
+\begin{DoxyParamCaption}
+\item[{}]{sz}
+\end{DoxyParamCaption}
+)~malloc(sz)      /$\ast$ malloc fcn                      $\ast$/}}\label{msus_2webserver_2uthash_8h_a861013aff36c0448f1888a2b0b5836d8}
+
+
+Definition at line 104 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a8ca9a884b81d487034b57f87d2f97fa4}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uthash\-\_\-memcmp@{uthash\-\_\-memcmp}}
+\index{uthash\-\_\-memcmp@{uthash\-\_\-memcmp}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uthash\-\_\-memcmp}]{\setlength{\rightskip}{0pt plus 5cm}\#define uthash\-\_\-memcmp(
+\begin{DoxyParamCaption}
+\item[{}]{a, }
+\item[{}]{b, }
+\item[{}]{n}
+\end{DoxyParamCaption}
+)~memcmp(a,b,n)}}\label{msus_2webserver_2uthash_8h_a8ca9a884b81d487034b57f87d2f97fa4}
+
+
+Definition at line 113 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a7cc237d8f87de3836b5390856cfc5c86}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uthash\-\_\-noexpand\-\_\-fyi@{uthash\-\_\-noexpand\-\_\-fyi}}
+\index{uthash\-\_\-noexpand\-\_\-fyi@{uthash\-\_\-noexpand\-\_\-fyi}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uthash\-\_\-noexpand\-\_\-fyi}]{\setlength{\rightskip}{0pt plus 5cm}\#define uthash\-\_\-noexpand\-\_\-fyi(
+\begin{DoxyParamCaption}
+\item[{}]{tbl}
+\end{DoxyParamCaption}
+)~/$\ast$ can be defined to {\bf log} noexpand  $\ast$/}}\label{msus_2webserver_2uthash_8h_a7cc237d8f87de3836b5390856cfc5c86}
+
+
+Definition at line 117 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aa14634cb1f894d48256362bae7239be6}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uthash\-\_\-strlen@{uthash\-\_\-strlen}}
+\index{uthash\-\_\-strlen@{uthash\-\_\-strlen}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uthash\-\_\-strlen}]{\setlength{\rightskip}{0pt plus 5cm}\#define uthash\-\_\-strlen(
+\begin{DoxyParamCaption}
+\item[{}]{s}
+\end{DoxyParamCaption}
+)~strlen(s)}}\label{msus_2webserver_2uthash_8h_aa14634cb1f894d48256362bae7239be6}
+
+
+Definition at line 110 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aa56cef9cb86dc1f4b5d27ee3a691077e}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!U\-T\-H\-A\-S\-H\-\_\-\-V\-E\-R\-S\-I\-O\-N@{U\-T\-H\-A\-S\-H\-\_\-\-V\-E\-R\-S\-I\-O\-N}}
+\index{U\-T\-H\-A\-S\-H\-\_\-\-V\-E\-R\-S\-I\-O\-N@{U\-T\-H\-A\-S\-H\-\_\-\-V\-E\-R\-S\-I\-O\-N}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{U\-T\-H\-A\-S\-H\-\_\-\-V\-E\-R\-S\-I\-O\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\-T\-H\-A\-S\-H\-\_\-\-V\-E\-R\-S\-I\-O\-N~2.\-0.\-1}}\label{msus_2webserver_2uthash_8h_aa56cef9cb86dc1f4b5d27ee3a691077e}
+
+
+Definition at line 46 of file uthash.\-h.
+
+
+
+\subsection{Typedef Documentation}
+\hypertarget{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uint32\-\_\-t@{uint32\-\_\-t}}
+\index{uint32\-\_\-t@{uint32\-\_\-t}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uint32\-\_\-t}]{\setlength{\rightskip}{0pt plus 5cm}typedef unsigned int {\bf uint32\-\_\-t}}}\label{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}
+
+
+Definition at line 96 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_aba7bc1797add20fe3efdf37ced1182c5}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!uint8\-\_\-t@{uint8\-\_\-t}}
+\index{uint8\-\_\-t@{uint8\-\_\-t}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{uint8\-\_\-t}]{\setlength{\rightskip}{0pt plus 5cm}typedef unsigned char {\bf uint8\-\_\-t}}}\label{msus_2webserver_2uthash_8h_aba7bc1797add20fe3efdf37ced1182c5}
+
+
+Definition at line 97 of file uthash.\-h.
+
+\hypertarget{msus_2webserver_2uthash_8h_a3ba3da0ca59a082c35a0d6b52e803ddf}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!U\-T\-\_\-hash\-\_\-bucket@{U\-T\-\_\-hash\-\_\-bucket}}
+\index{U\-T\-\_\-hash\-\_\-bucket@{U\-T\-\_\-hash\-\_\-bucket}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{U\-T\-\_\-hash\-\_\-bucket}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct {\bf U\-T\-\_\-hash\-\_\-bucket}  {\bf U\-T\-\_\-hash\-\_\-bucket}}}\label{msus_2webserver_2uthash_8h_a3ba3da0ca59a082c35a0d6b52e803ddf}
+\hypertarget{msus_2webserver_2uthash_8h_a0e3a99ed9f776349720d0c362f956fb6}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!U\-T\-\_\-hash\-\_\-handle@{U\-T\-\_\-hash\-\_\-handle}}
+\index{U\-T\-\_\-hash\-\_\-handle@{U\-T\-\_\-hash\-\_\-handle}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{U\-T\-\_\-hash\-\_\-handle}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct {\bf U\-T\-\_\-hash\-\_\-handle}  {\bf U\-T\-\_\-hash\-\_\-handle}}}\label{msus_2webserver_2uthash_8h_a0e3a99ed9f776349720d0c362f956fb6}
+\hypertarget{msus_2webserver_2uthash_8h_a0758074b9942c2ad076610b3e0ce548e}{\index{msus/webserver/uthash.\-h@{msus/webserver/uthash.\-h}!U\-T\-\_\-hash\-\_\-table@{U\-T\-\_\-hash\-\_\-table}}
+\index{U\-T\-\_\-hash\-\_\-table@{U\-T\-\_\-hash\-\_\-table}!msus/webserver/uthash.h@{msus/webserver/uthash.\-h}}
+\subsubsection[{U\-T\-\_\-hash\-\_\-table}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct {\bf U\-T\-\_\-hash\-\_\-table}  {\bf U\-T\-\_\-hash\-\_\-table}}}\label{msus_2webserver_2uthash_8h_a0758074b9942c2ad076610b3e0ce548e}

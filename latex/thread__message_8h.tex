@@ -1,0 +1,186 @@
+\hypertarget{thread__message_8h}{\section{src/runtime/thread\-\_\-message.h File Reference}
+\label{thread__message_8h}\index{src/runtime/thread\-\_\-message.\-h@{src/runtime/thread\-\_\-message.\-h}}
+}
+
+
+Messages to be delivered to dedos\-\_\-threads.  
+
+
+{\ttfamily \#include \char`\"{}runtime\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}inter\-\_\-runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-controller\-\_\-messages.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structthread__msg}{thread\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em A message to be delivered to a \hyperlink{structdedos__thread}{dedos\-\_\-thread}. \end{DoxyCompactList}\item 
+struct \hyperlink{structsend__to__peer__msg}{send\-\_\-to\-\_\-peer\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em For delivery to the output monitor thread, a message to be sent to a peer runtime. \end{DoxyCompactList}\item 
+struct \hyperlink{structsend__to__ctrl__msg}{send\-\_\-to\-\_\-ctrl\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em For delivery to output monitor thread, a message to be sent to the controller. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380}{thread\-\_\-msg\-\_\-type} \{ \\*
+\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a73033ccc1d9957790b34a40e5aeae612}{U\-N\-K\-N\-O\-W\-N\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G} = 0, 
+\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acde413fd81f842dfc555f97766f3aeab}{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E} = 13, 
+\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R} = 1000, 
+\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a9abf78c296448ffc429d6c578f856b61}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L} = 1001, 
+\\*
+\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380afc71b1a03479bff7cb968ec5f4fe9b3d}{C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U} = 2001, 
+\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acc50b9083447f815f85e23fb81002cb9}{D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U} = 2002, 
+\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abc50c83ce2eceb66696f7f5ea87b7f95}{M\-S\-U\-\_\-\-R\-O\-U\-T\-E} = 3001
+ \}
+\begin{DoxyCompactList}\small\item\em All messages that can be received by output thread or workers. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$ \hyperlink{thread__message_8h_a16da34e7380a3dd2d36c62274e2ebbf9}{init\-\_\-send\-\_\-thread\-\_\-msg} (unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, unsigned int target\-\_\-id, size\-\_\-t data\-\_\-len, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Initializes a send\-\_\-to\-\_\-peer message (\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R}) \end{DoxyCompactList}\item 
+void \hyperlink{thread__message_8h_afaff3e68978e7cb561934ace441e8bc8}{destroy\-\_\-thread\-\_\-msg} (struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Frees a thread message. \end{DoxyCompactList}\item 
+struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$ \hyperlink{thread__message_8h_a391692ddae9fce2d1c1672b8092a00ba}{construct\-\_\-thread\-\_\-msg} (enum \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380}{thread\-\_\-msg\-\_\-type} type, ssize\-\_\-t data\-\_\-size, void $\ast$data)
+\begin{DoxyCompactList}\small\item\em Allocates and initializes a thread message with the provided options. \end{DoxyCompactList}\item 
+int \hyperlink{thread__message_8h_a418f391cc55e477e74e42e10157c0c45}{enqueue\-\_\-thread\-\_\-msg} (struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$msg, struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Enqueues a \hyperlink{structdedos__msg}{dedos\-\_\-msg} with a \hyperlink{structthread__msg}{thread\-\_\-msg} as the payload to the appropriate queue. \end{DoxyCompactList}\item 
+struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$ \hyperlink{thread__message_8h_aec35917b4b5fcac70279d5776be37e29}{dequeue\-\_\-thread\-\_\-msg} (struct \hyperlink{structmsg__queue}{msg\-\_\-queue} $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Dequeues a \hyperlink{structthread__msg}{thread\-\_\-msg} from the message queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Messages to be delivered to dedos\-\_\-threads. 
+
+Definition in file \hyperlink{thread__message_8h_source}{thread\-\_\-message.\-h}.
+
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380}{\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!thread\-\_\-msg\-\_\-type@{thread\-\_\-msg\-\_\-type}}
+\index{thread\-\_\-msg\-\_\-type@{thread\-\_\-msg\-\_\-type}!thread_message.h@{thread\-\_\-message.\-h}}
+\subsubsection[{thread\-\_\-msg\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf thread\-\_\-msg\-\_\-type}}}\label{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380}
+
+
+All messages that can be received by output thread or workers. 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{U\-N\-K\-N\-O\-W\-N\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G@{U\-N\-K\-N\-O\-W\-N\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G}!thread\-\_\-message.\-h@{thread\-\_\-message.\-h}}\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!U\-N\-K\-N\-O\-W\-N\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G@{U\-N\-K\-N\-O\-W\-N\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G}}\item[{\em 
+\hypertarget{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a73033ccc1d9957790b34a40e5aeae612}{U\-N\-K\-N\-O\-W\-N\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-M\-S\-G}\label{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a73033ccc1d9957790b34a40e5aeae612}
+}]Kept unknown at 0 to catch mis-\/labeled messages. \index{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E@{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}!thread\-\_\-message.\-h@{thread\-\_\-message.\-h}}\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E@{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}}\item[{\em 
+\hypertarget{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acde413fd81f842dfc555f97766f3aeab}{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}\label{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acde413fd81f842dfc555f97766f3aeab}
+}]payload\-: \hyperlink{structctrl__add__runtime__msg}{ctrl\-\_\-add\-\_\-runtime\-\_\-msg} (\hyperlink{ctrl__runtime__messages_8h}{ctrl\-\_\-runtime\-\_\-messages.\-h}) \index{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R@{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R}!thread\-\_\-message.\-h@{thread\-\_\-message.\-h}}\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R@{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R}}\item[{\em 
+\hypertarget{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R}\label{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}
+}]payload\-: send\-\_\-to\-\_\-runtime\-\_\-msg (below) \index{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L@{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L}!thread\-\_\-message.\-h@{thread\-\_\-message.\-h}}\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L@{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L}}\item[{\em 
+\hypertarget{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a9abf78c296448ffc429d6c578f856b61}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L}\label{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a9abf78c296448ffc429d6c578f856b61}
+}]payload\-: \hyperlink{structsend__to__ctrl__msg}{send\-\_\-to\-\_\-ctrl\-\_\-msg} (below) \index{C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U@{C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U}!thread\-\_\-message.\-h@{thread\-\_\-message.\-h}}\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U@{C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U}}\item[{\em 
+\hypertarget{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380afc71b1a03479bff7cb968ec5f4fe9b3d}{C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U}\label{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380afc71b1a03479bff7cb968ec5f4fe9b3d}
+}]\hyperlink{structctrl__create__msu__msg}{ctrl\-\_\-create\-\_\-msu\-\_\-msg} (\hyperlink{ctrl__runtime__messages_8h}{ctrl\-\_\-runtime\-\_\-messages.\-h}) \index{D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U@{D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U}!thread\-\_\-message.\-h@{thread\-\_\-message.\-h}}\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U@{D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U}}\item[{\em 
+\hypertarget{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acc50b9083447f815f85e23fb81002cb9}{D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U}\label{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acc50b9083447f815f85e23fb81002cb9}
+}]\hyperlink{structctrl__delete__msu__msg}{ctrl\-\_\-delete\-\_\-msu\-\_\-msg} (\hyperlink{ctrl__runtime__messages_8h}{ctrl\-\_\-runtime\-\_\-messages.\-h}) \index{M\-S\-U\-\_\-\-R\-O\-U\-T\-E@{M\-S\-U\-\_\-\-R\-O\-U\-T\-E}!thread\-\_\-message.\-h@{thread\-\_\-message.\-h}}\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!M\-S\-U\-\_\-\-R\-O\-U\-T\-E@{M\-S\-U\-\_\-\-R\-O\-U\-T\-E}}\item[{\em 
+\hypertarget{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abc50c83ce2eceb66696f7f5ea87b7f95}{M\-S\-U\-\_\-\-R\-O\-U\-T\-E}\label{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abc50c83ce2eceb66696f7f5ea87b7f95}
+}]\hyperlink{structctrl__msu__route__msg}{ctrl\-\_\-msu\-\_\-route\-\_\-msg} (\hyperlink{ctrl__runtime__messages_8h}{ctrl\-\_\-runtime\-\_\-messages.\-h}) \end{description}
+\end{Desc}
+
+
+Definition at line 35 of file thread\-\_\-message.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{thread__message_8h_a391692ddae9fce2d1c1672b8092a00ba}{\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!construct\-\_\-thread\-\_\-msg@{construct\-\_\-thread\-\_\-msg}}
+\index{construct\-\_\-thread\-\_\-msg@{construct\-\_\-thread\-\_\-msg}!thread_message.h@{thread\-\_\-message.\-h}}
+\subsubsection[{construct\-\_\-thread\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf thread\-\_\-msg}$\ast$ construct\-\_\-thread\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{enum {\bf thread\-\_\-msg\-\_\-type}}]{type, }
+\item[{ssize\-\_\-t}]{data\-\_\-size, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{thread__message_8h_a391692ddae9fce2d1c1672b8092a00ba}
+
+
+Allocates and initializes a thread message with the provided options. 
+
+
+
+Definition at line 66 of file thread\-\_\-message.\-c.
+
+\hypertarget{thread__message_8h_aec35917b4b5fcac70279d5776be37e29}{\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!dequeue\-\_\-thread\-\_\-msg@{dequeue\-\_\-thread\-\_\-msg}}
+\index{dequeue\-\_\-thread\-\_\-msg@{dequeue\-\_\-thread\-\_\-msg}!thread_message.h@{thread\-\_\-message.\-h}}
+\subsubsection[{dequeue\-\_\-thread\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf thread\-\_\-msg}$\ast$ dequeue\-\_\-thread\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{thread__message_8h_aec35917b4b5fcac70279d5776be37e29}
+
+
+Dequeues a \hyperlink{structthread__msg}{thread\-\_\-msg} from the message queue. 
+
+\begin{DoxyReturn}{Returns}
+The dequeued message or N\-U\-L\-L if error 
+\end{DoxyReturn}
+
+
+Definition at line 48 of file thread\-\_\-message.\-c.
+
+\hypertarget{thread__message_8h_afaff3e68978e7cb561934ace441e8bc8}{\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!destroy\-\_\-thread\-\_\-msg@{destroy\-\_\-thread\-\_\-msg}}
+\index{destroy\-\_\-thread\-\_\-msg@{destroy\-\_\-thread\-\_\-msg}!thread_message.h@{thread\-\_\-message.\-h}}
+\subsubsection[{destroy\-\_\-thread\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\-\_\-thread\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf thread\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)}}\label{thread__message_8h_afaff3e68978e7cb561934ace441e8bc8}
+
+
+Frees a thread message. 
+
+
+
+Definition at line 81 of file thread\-\_\-message.\-c.
+
+\hypertarget{thread__message_8h_a418f391cc55e477e74e42e10157c0c45}{\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!enqueue\-\_\-thread\-\_\-msg@{enqueue\-\_\-thread\-\_\-msg}}
+\index{enqueue\-\_\-thread\-\_\-msg@{enqueue\-\_\-thread\-\_\-msg}!thread_message.h@{thread\-\_\-message.\-h}}
+\subsubsection[{enqueue\-\_\-thread\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}int enqueue\-\_\-thread\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf thread\-\_\-msg} $\ast$}]{msg, }
+\item[{struct {\bf msg\-\_\-queue} $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{thread__message_8h_a418f391cc55e477e74e42e10157c0c45}
+
+
+Enqueues a \hyperlink{structdedos__msg}{dedos\-\_\-msg} with a \hyperlink{structthread__msg}{thread\-\_\-msg} as the payload to the appropriate queue. 
+
+
+
+Definition at line 29 of file thread\-\_\-message.\-c.
+
+\hypertarget{thread__message_8h_a16da34e7380a3dd2d36c62274e2ebbf9}{\index{thread\-\_\-message.\-h@{thread\-\_\-message.\-h}!init\-\_\-send\-\_\-thread\-\_\-msg@{init\-\_\-send\-\_\-thread\-\_\-msg}}
+\index{init\-\_\-send\-\_\-thread\-\_\-msg@{init\-\_\-send\-\_\-thread\-\_\-msg}!thread_message.h@{thread\-\_\-message.\-h}}
+\subsubsection[{init\-\_\-send\-\_\-thread\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf thread\-\_\-msg}$\ast$ init\-\_\-send\-\_\-thread\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{runtime\-\_\-id, }
+\item[{unsigned int}]{target\-\_\-id, }
+\item[{size\-\_\-t}]{data\-\_\-len, }
+\item[{void $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{thread__message_8h_a16da34e7380a3dd2d36c62274e2ebbf9}
+
+
+Initializes a send\-\_\-to\-\_\-peer message (\hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R}) 
+
+
+\begin{DoxyParams}{Parameters}
+{\em runtime\-\_\-id} & The runtime to deliver the message to \\
+\hline
+{\em target\-\_\-id} & The remote target (either thread I\-D or M\-S\-U I\-D) \\
+\hline
+{\em data\-\_\-len} & size of provided data \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Newly allocated thread message on success, N\-U\-L\-L on error 
+\end{DoxyReturn}
+
+
+Definition at line 87 of file thread\-\_\-message.\-c.
+

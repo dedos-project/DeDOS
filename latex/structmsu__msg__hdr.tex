@@ -1,0 +1,71 @@
+\hypertarget{structmsu__msg__hdr}{\section{msu\-\_\-msg\-\_\-hdr Struct Reference}
+\label{structmsu__msg__hdr}\index{msu\-\_\-msg\-\_\-hdr@{msu\-\_\-msg\-\_\-hdr}}
+}
+
+
+Header for messages passed to M\-S\-Us.  
+
+
+
+
+{\ttfamily \#include $<$msu\-\_\-message.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} \hyperlink{structmsu__msg__hdr_a4fdc31ee60340dd9b2550df651fb185a}{key}
+\begin{DoxyCompactList}\small\item\em Routing/state key. \end{DoxyCompactList}\item 
+struct \hyperlink{structmsg__provinance}{msg\-\_\-provinance} \hyperlink{structmsu__msg__hdr_ab64c7b4c508dd04d23bbd940cd6dabea}{provinance}
+\begin{DoxyCompactList}\small\item\em Message history. \end{DoxyCompactList}\item 
+int \hyperlink{structmsu__msg__hdr_a254483afe24cc34da7244aa0d9201879}{error\-\_\-flag}
+\begin{DoxyCompactList}\small\item\em 0 if no error has been encountered \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Header for messages passed to M\-S\-Us. 
+
+Keeps track of message history, route-\/ and state-\/keys 
+
+Definition at line 85 of file msu\-\_\-message.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structmsu__msg__hdr_a254483afe24cc34da7244aa0d9201879}{\index{msu\-\_\-msg\-\_\-hdr@{msu\-\_\-msg\-\_\-hdr}!error\-\_\-flag@{error\-\_\-flag}}
+\index{error\-\_\-flag@{error\-\_\-flag}!msu_msg_hdr@{msu\-\_\-msg\-\_\-hdr}}
+\subsubsection[{error\-\_\-flag}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-msg\-\_\-hdr\-::error\-\_\-flag}}\label{structmsu__msg__hdr_a254483afe24cc34da7244aa0d9201879}
+
+
+0 if no error has been encountered 
+
+
+
+Definition at line 91 of file msu\-\_\-message.\-h.
+
+\hypertarget{structmsu__msg__hdr_a4fdc31ee60340dd9b2550df651fb185a}{\index{msu\-\_\-msg\-\_\-hdr@{msu\-\_\-msg\-\_\-hdr}!key@{key}}
+\index{key@{key}!msu_msg_hdr@{msu\-\_\-msg\-\_\-hdr}}
+\subsubsection[{key}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-msg\-\_\-key} msu\-\_\-msg\-\_\-hdr\-::key}}\label{structmsu__msg__hdr_a4fdc31ee60340dd9b2550df651fb185a}
+
+
+Routing/state key. 
+
+
+
+Definition at line 87 of file msu\-\_\-message.\-h.
+
+\hypertarget{structmsu__msg__hdr_ab64c7b4c508dd04d23bbd940cd6dabea}{\index{msu\-\_\-msg\-\_\-hdr@{msu\-\_\-msg\-\_\-hdr}!provinance@{provinance}}
+\index{provinance@{provinance}!msu_msg_hdr@{msu\-\_\-msg\-\_\-hdr}}
+\subsubsection[{provinance}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msg\-\_\-provinance} msu\-\_\-msg\-\_\-hdr\-::provinance}}\label{structmsu__msg__hdr_ab64c7b4c508dd04d23bbd940cd6dabea}
+
+
+Message history. 
+
+
+
+Definition at line 89 of file msu\-\_\-message.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{msu__message_8h}{msu\-\_\-message.\-h}\end{DoxyCompactItemize}

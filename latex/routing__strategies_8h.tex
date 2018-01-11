@@ -1,0 +1,160 @@
+\hypertarget{routing__strategies_8h}{\section{src/runtime/routing\-\_\-strategies.h File Reference}
+\label{routing__strategies_8h}\index{src/runtime/routing\-\_\-strategies.\-h@{src/runtime/routing\-\_\-strategies.\-h}}
+}
+
+
+Declares strategies that M\-S\-Us can use for routing to endpoints.  
+
+
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{routing__strategies_8h_a0d7c6823c1258452b364a98e536ebd0b}{default\-\_\-routing} (struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$output)
+\begin{DoxyCompactList}\small\item\em The defualt routing strategy, using the key of the M\-S\-U message to route to a pre-\/defined endpoint. \end{DoxyCompactList}\item 
+int \hyperlink{routing__strategies_8h_a31ea29fa373e8daa760f9a66e4c43ead}{shortest\-\_\-queue\-\_\-route} (struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$output)
+\begin{DoxyCompactList}\small\item\em Chooses the local M\-S\-U with the shortest queue. \end{DoxyCompactList}\item 
+int \hyperlink{routing__strategies_8h_a9f031d29e108b5ce51225eacf9fb7980}{route\-\_\-to\-\_\-id} (struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, int msu\-\_\-id, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$output)
+\begin{DoxyCompactList}\small\item\em Chooses the M\-S\-U with the given I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{routing__strategies_8h_a4cecf041254066a9d178fd6cc041cfa9}{route\-\_\-to\-\_\-origin\-\_\-runtime} (struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$sender, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg, struct \hyperlink{structmsu__endpoint}{msu\-\_\-endpoint} $\ast$output)
+\begin{DoxyCompactList}\small\item\em Routes an M\-S\-U message to the runtime on which the message originated. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Declares strategies that M\-S\-Us can use for routing to endpoints. 
+
+Definition in file \hyperlink{routing__strategies_8h_source}{routing\-\_\-strategies.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{routing__strategies_8h_a0d7c6823c1258452b364a98e536ebd0b}{\index{routing\-\_\-strategies.\-h@{routing\-\_\-strategies.\-h}!default\-\_\-routing@{default\-\_\-routing}}
+\index{default\-\_\-routing@{default\-\_\-routing}!routing_strategies.h@{routing\-\_\-strategies.\-h}}
+\subsubsection[{default\-\_\-routing}]{\setlength{\rightskip}{0pt plus 5cm}int default\-\_\-routing (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{output}
+\end{DoxyParamCaption}
+)}}\label{routing__strategies_8h_a0d7c6823c1258452b364a98e536ebd0b}
+
+
+The defualt routing strategy, using the key of the M\-S\-U message to route to a pre-\/defined endpoint. 
+
+This function can be used as-\/is as an entry in the \hyperlink{structmsu__type}{msu\-\_\-type} struct. 
+\begin{DoxyParams}{Parameters}
+{\em type} & The M\-S\-U type to receive the message \\
+\hline
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em msg} & The message to be sent \\
+\hline
+{\em output} & Output parameter, set to the desired msu endpoint \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 30 of file routing\-\_\-strategies.\-c.
+
+\hypertarget{routing__strategies_8h_a9f031d29e108b5ce51225eacf9fb7980}{\index{routing\-\_\-strategies.\-h@{routing\-\_\-strategies.\-h}!route\-\_\-to\-\_\-id@{route\-\_\-to\-\_\-id}}
+\index{route\-\_\-to\-\_\-id@{route\-\_\-to\-\_\-id}!routing_strategies.h@{routing\-\_\-strategies.\-h}}
+\subsubsection[{route\-\_\-to\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int route\-\_\-to\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{int}]{msu\-\_\-id, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{output}
+\end{DoxyParamCaption}
+)}}\label{routing__strategies_8h_a9f031d29e108b5ce51225eacf9fb7980}
+
+
+Chooses the M\-S\-U with the given I\-D. 
+
+This function must be wrapped in another function to choose the appropriate I\-D if it is to be used in the \hyperlink{structmsu__type}{msu\-\_\-type} struct. 
+\begin{DoxyParams}{Parameters}
+{\em type} & The M\-S\-U type to receive the message \\
+\hline
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em msg} & The message to be sent \\
+\hline
+{\em output} & Output parameter, set to the desired M\-S\-U endpoint \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 61 of file routing\-\_\-strategies.\-c.
+
+\hypertarget{routing__strategies_8h_a4cecf041254066a9d178fd6cc041cfa9}{\index{routing\-\_\-strategies.\-h@{routing\-\_\-strategies.\-h}!route\-\_\-to\-\_\-origin\-\_\-runtime@{route\-\_\-to\-\_\-origin\-\_\-runtime}}
+\index{route\-\_\-to\-\_\-origin\-\_\-runtime@{route\-\_\-to\-\_\-origin\-\_\-runtime}!routing_strategies.h@{routing\-\_\-strategies.\-h}}
+\subsubsection[{route\-\_\-to\-\_\-origin\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}int route\-\_\-to\-\_\-origin\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{output}
+\end{DoxyParamCaption}
+)}}\label{routing__strategies_8h_a4cecf041254066a9d178fd6cc041cfa9}
+
+
+Routes an M\-S\-U message to the runtime on which the message originated. 
+
+This function can be used as-\/is as an entry in the \hyperlink{structmsu__type}{msu\-\_\-type} struct.
+
+
+\begin{DoxyParams}{Parameters}
+{\em type} & The M\-S\-U type receiving the message \\
+\hline
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em msg} & The message to be sent \\
+\hline
+{\em output} & Output parameter, set to the desired M\-S\-U endpoint \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 76 of file routing\-\_\-strategies.\-c.
+
+\hypertarget{routing__strategies_8h_a31ea29fa373e8daa760f9a66e4c43ead}{\index{routing\-\_\-strategies.\-h@{routing\-\_\-strategies.\-h}!shortest\-\_\-queue\-\_\-route@{shortest\-\_\-queue\-\_\-route}}
+\index{shortest\-\_\-queue\-\_\-route@{shortest\-\_\-queue\-\_\-route}!routing_strategies.h@{routing\-\_\-strategies.\-h}}
+\subsubsection[{shortest\-\_\-queue\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}int shortest\-\_\-queue\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{sender, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg, }
+\item[{struct {\bf msu\-\_\-endpoint} $\ast$}]{output}
+\end{DoxyParamCaption}
+)}}\label{routing__strategies_8h_a31ea29fa373e8daa760f9a66e4c43ead}
+
+
+Chooses the local M\-S\-U with the shortest queue. 
+
+This function can be used as-\/is as an entry in the \hyperlink{structmsu__type}{msu\-\_\-type} struct 
+\begin{DoxyParams}{Parameters}
+{\em type} & The M\-S\-U type to receive the message \\
+\hline
+{\em sender} & The M\-S\-U sending the message \\
+\hline
+{\em msg} & The message to be sent \\
+\hline
+{\em output} & Output parameter, set to the desired M\-S\-U endpoint \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 46 of file routing\-\_\-strategies.\-c.
+

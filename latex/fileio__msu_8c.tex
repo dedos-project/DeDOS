@@ -1,0 +1,58 @@
+\hypertarget{fileio__msu_8c}{\section{src/msus/webserver/fileio\-\_\-msu.c File Reference}
+\label{fileio__msu_8c}\index{src/msus/webserver/fileio\-\_\-msu.\-c@{src/msus/webserver/fileio\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing\-\_\-strategies.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/httpops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/write\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/fileio\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/cache\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/connection-\/handler.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{fileio__msu_8c_a97c875f35edb939269e8e6166b4e4077}{ws\-\_\-fileio\-\_\-load} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{fileio__msu_8c_a1184eb023543f47f908ffd1e9ea063e8}{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-F\-I\-L\-E\-I\-O\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{fileio__msu_8c_a97c875f35edb939269e8e6166b4e4077}{\index{fileio\-\_\-msu.\-c@{fileio\-\_\-msu.\-c}!ws\-\_\-fileio\-\_\-load@{ws\-\_\-fileio\-\_\-load}}
+\index{ws\-\_\-fileio\-\_\-load@{ws\-\_\-fileio\-\_\-load}!fileio_msu.c@{fileio\-\_\-msu.\-c}}
+\subsubsection[{ws\-\_\-fileio\-\_\-load}]{\setlength{\rightskip}{0pt plus 5cm}static int ws\-\_\-fileio\-\_\-load (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{fileio__msu_8c_a97c875f35edb939269e8e6166b4e4077}
+
+
+Definition at line 34 of file fileio\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{fileio__msu_8c_a1184eb023543f47f908ffd1e9ea063e8}{\index{fileio\-\_\-msu.\-c@{fileio\-\_\-msu.\-c}!W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-F\-I\-L\-E\-I\-O\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-F\-I\-L\-E\-I\-O\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-F\-I\-L\-E\-I\-O\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-F\-I\-L\-E\-I\-O\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!fileio_msu.c@{fileio\-\_\-msu.\-c}}
+\subsubsection[{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-F\-I\-L\-E\-I\-O\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-F\-I\-L\-E\-I\-O\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{fileio__msu_8c_a1184eb023543f47f908ffd1e9ea063e8}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+        .name = \textcolor{stringliteral}{"Webserver\_fileio\_msu"},
+        .id = \hyperlink{fileio__msu_8h_a340adc065181eb12e5a3bca0a8fdae52}{WEBSERVER\_FILEIO\_MSU\_TYPE\_ID},
+        .receive = \hyperlink{fileio__msu_8c_a97c875f35edb939269e8e6166b4e4077}{ws\_fileio\_load},
+        .route = \hyperlink{routing__strategies_8c_a31ea29fa373e8daa760f9a66e4c43ead}{shortest\_queue\_route}
+\}
+\end{DoxyCode}
+
+
+Definition at line 76 of file fileio\-\_\-msu.\-c.
+

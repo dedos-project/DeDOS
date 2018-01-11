@@ -1,0 +1,171 @@
+\hypertarget{read__msu_8c}{\section{src/msus/webserver/read\-\_\-msu.c File Reference}
+\label{read__msu_8c}\index{src/msus/webserver/read\-\_\-msu.\-c@{src/msus/webserver/read\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}webserver/read\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/http\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/sslops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}socket\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/connection-\/handler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing\-\_\-strategies.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-state.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-files.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unused\-\_\-def.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$signal.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structws__read__state}{ws\-\_\-read\-\_\-state}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{read__msu_8c_a4db85282e80db696066107bca686c372}{S\-S\-L\-\_\-\-I\-N\-I\-T\-\_\-\-C\-M\-D}~\char`\"{}S\-S\-L\char`\"{}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{read__msu_8c_a39d802867fb0fd245175ca1aaf7689ac}{handle\-\_\-read} (struct \hyperlink{structread__state}{read\-\_\-state} $\ast$\hyperlink{structread__state}{read\-\_\-state}, struct \hyperlink{structws__read__state}{ws\-\_\-read\-\_\-state} $\ast$\hyperlink{structmsu__state}{msu\-\_\-state}, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+static int \hyperlink{read__msu_8c_a11c35b0cedeeec45b0a3eb3c6f041198}{handle\-\_\-accept} (struct \hyperlink{structread__state}{read\-\_\-state} $\ast$\hyperlink{structread__state}{read\-\_\-state}, struct \hyperlink{structws__read__state}{ws\-\_\-read\-\_\-state} $\ast$\hyperlink{structmsu__state}{msu\-\_\-state}, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+static int \hyperlink{read__msu_8c_a93dc36bd81275c43084ac83b86c9b60a}{read\-\_\-http\-\_\-request} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+static int \hyperlink{read__msu_8c_ac5dc6c7cbcbbf4de552f710d84f9a23f}{ws\-\_\-read\-\_\-init} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} $\ast$data)
+\item 
+static void \hyperlink{read__msu_8c_a3ae6ddff3e7ff9602efaa017c6b941f6}{ws\-\_\-read\-\_\-destroy} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self)
+\item 
+static int \hyperlink{read__msu_8c_ade25b9513fe6d64334702637a3327956}{init\-\_\-ssl\-\_\-ctx} (struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{unused__def_8h_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D} $\ast$type)
+\item 
+static void \hyperlink{read__msu_8c_a3d39c168861159a73ef5b89f20ac6100}{destroy\-\_\-ssl\-\_\-ctx} (struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{unused__def_8h_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D} $\ast$type)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{read__msu_8c_a70e6db550412c503123a9a0026e450cd}{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-A\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{read__msu_8c_a4db85282e80db696066107bca686c372}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!S\-S\-L\-\_\-\-I\-N\-I\-T\-\_\-\-C\-M\-D@{S\-S\-L\-\_\-\-I\-N\-I\-T\-\_\-\-C\-M\-D}}
+\index{S\-S\-L\-\_\-\-I\-N\-I\-T\-\_\-\-C\-M\-D@{S\-S\-L\-\_\-\-I\-N\-I\-T\-\_\-\-C\-M\-D}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{S\-S\-L\-\_\-\-I\-N\-I\-T\-\_\-\-C\-M\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-S\-L\-\_\-\-I\-N\-I\-T\-\_\-\-C\-M\-D~\char`\"{}S\-S\-L\char`\"{}}}\label{read__msu_8c_a4db85282e80db696066107bca686c372}
+
+
+Definition at line 143 of file read\-\_\-msu.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{read__msu_8c_a3d39c168861159a73ef5b89f20ac6100}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!destroy\-\_\-ssl\-\_\-ctx@{destroy\-\_\-ssl\-\_\-ctx}}
+\index{destroy\-\_\-ssl\-\_\-ctx@{destroy\-\_\-ssl\-\_\-ctx}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{destroy\-\_\-ssl\-\_\-ctx}]{\setlength{\rightskip}{0pt plus 5cm}static void destroy\-\_\-ssl\-\_\-ctx (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} {\bf U\-N\-U\-S\-E\-D} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{read__msu_8c_a3d39c168861159a73ef5b89f20ac6100}
+
+
+Definition at line 190 of file read\-\_\-msu.\-c.
+
+\hypertarget{read__msu_8c_a11c35b0cedeeec45b0a3eb3c6f041198}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!handle\-\_\-accept@{handle\-\_\-accept}}
+\index{handle\-\_\-accept@{handle\-\_\-accept}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{handle\-\_\-accept}]{\setlength{\rightskip}{0pt plus 5cm}static int handle\-\_\-accept (
+\begin{DoxyParamCaption}
+\item[{struct {\bf read\-\_\-state} $\ast$}]{read\-\_\-state, }
+\item[{struct {\bf ws\-\_\-read\-\_\-state} $\ast$}]{msu\-\_\-state, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{read__msu_8c_a11c35b0cedeeec45b0a3eb3c6f041198}
+
+
+Definition at line 74 of file read\-\_\-msu.\-c.
+
+\hypertarget{read__msu_8c_a39d802867fb0fd245175ca1aaf7689ac}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!handle\-\_\-read@{handle\-\_\-read}}
+\index{handle\-\_\-read@{handle\-\_\-read}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{handle\-\_\-read}]{\setlength{\rightskip}{0pt plus 5cm}static int handle\-\_\-read (
+\begin{DoxyParamCaption}
+\item[{struct {\bf read\-\_\-state} $\ast$}]{read\-\_\-state, }
+\item[{struct {\bf ws\-\_\-read\-\_\-state} $\ast$}]{msu\-\_\-state, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{read__msu_8c_a39d802867fb0fd245175ca1aaf7689ac}
+
+
+Definition at line 41 of file read\-\_\-msu.\-c.
+
+\hypertarget{read__msu_8c_ade25b9513fe6d64334702637a3327956}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!init\-\_\-ssl\-\_\-ctx@{init\-\_\-ssl\-\_\-ctx}}
+\index{init\-\_\-ssl\-\_\-ctx@{init\-\_\-ssl\-\_\-ctx}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{init\-\_\-ssl\-\_\-ctx}]{\setlength{\rightskip}{0pt plus 5cm}static int init\-\_\-ssl\-\_\-ctx (
+\begin{DoxyParamCaption}
+\item[{struct {\bf msu\-\_\-type} {\bf U\-N\-U\-S\-E\-D} $\ast$}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{read__msu_8c_ade25b9513fe6d64334702637a3327956}
+
+
+Definition at line 171 of file read\-\_\-msu.\-c.
+
+\hypertarget{read__msu_8c_a93dc36bd81275c43084ac83b86c9b60a}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!read\-\_\-http\-\_\-request@{read\-\_\-http\-\_\-request}}
+\index{read\-\_\-http\-\_\-request@{read\-\_\-http\-\_\-request}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{read\-\_\-http\-\_\-request}]{\setlength{\rightskip}{0pt plus 5cm}static int read\-\_\-http\-\_\-request (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{read__msu_8c_a93dc36bd81275c43084ac83b86c9b60a}
+
+
+Definition at line 95 of file read\-\_\-msu.\-c.
+
+\hypertarget{read__msu_8c_a3ae6ddff3e7ff9602efaa017c6b941f6}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!ws\-\_\-read\-\_\-destroy@{ws\-\_\-read\-\_\-destroy}}
+\index{ws\-\_\-read\-\_\-destroy@{ws\-\_\-read\-\_\-destroy}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{ws\-\_\-read\-\_\-destroy}]{\setlength{\rightskip}{0pt plus 5cm}static void ws\-\_\-read\-\_\-destroy (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{read__msu_8c_a3ae6ddff3e7ff9602efaa017c6b941f6}
+
+
+Definition at line 166 of file read\-\_\-msu.\-c.
+
+\hypertarget{read__msu_8c_ac5dc6c7cbcbbf4de552f710d84f9a23f}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!ws\-\_\-read\-\_\-init@{ws\-\_\-read\-\_\-init}}
+\index{ws\-\_\-read\-\_\-init@{ws\-\_\-read\-\_\-init}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{ws\-\_\-read\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}static int ws\-\_\-read\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-init\-\_\-data} $\ast$}]{data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{read__msu_8c_ac5dc6c7cbcbbf4de552f710d84f9a23f}
+
+
+Definition at line 145 of file read\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{read__msu_8c_a70e6db550412c503123a9a0026e450cd}{\index{read\-\_\-msu.\-c@{read\-\_\-msu.\-c}!W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-A\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-A\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-A\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-A\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!read_msu.c@{read\-\_\-msu.\-c}}
+\subsubsection[{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-A\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-R\-E\-A\-D\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{read__msu_8c_a70e6db550412c503123a9a0026e450cd}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    .name = \textcolor{stringliteral}{"Webserver\_read\_MSU"},
+    .id = \hyperlink{msu__ids_8h_afe0cbf07bdf7bea5eef1c6bbdee131c5}{WEBSERVER\_READ\_MSU\_TYPE\_ID},
+    .init\_type = \hyperlink{read__msu_8c_ade25b9513fe6d64334702637a3327956}{init\_ssl\_ctx},
+    .destroy\_type = \hyperlink{read__msu_8c_a3d39c168861159a73ef5b89f20ac6100}{destroy\_ssl\_ctx},
+    .init = \hyperlink{read__msu_8c_ac5dc6c7cbcbbf4de552f710d84f9a23f}{ws\_read\_init},
+    .destroy = \hyperlink{read__msu_8c_a3ae6ddff3e7ff9602efaa017c6b941f6}{ws\_read\_destroy},
+    .route = \hyperlink{routing__strategies_8c_a4cecf041254066a9d178fd6cc041cfa9}{route\_to\_origin\_runtime},
+    .receive = \hyperlink{read__msu_8c_a93dc36bd81275c43084ac83b86c9b60a}{read\_http\_request}
+\}
+\end{DoxyCode}
+
+
+Definition at line 194 of file read\-\_\-msu.\-c.
+

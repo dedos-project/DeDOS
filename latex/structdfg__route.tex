@@ -1,0 +1,97 @@
+\hypertarget{structdfg__route}{\section{dfg\-\_\-route Struct Reference}
+\label{structdfg__route}\index{dfg\-\_\-route@{dfg\-\_\-route}}
+}
+
+
+A route through which M\-S\-U messages can be passed.  
+
+
+
+
+{\ttfamily \#include $<$dfg.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structdfg__route_aade838574772b19aa4c562f818a04c4a}{id}
+\begin{DoxyCompactList}\small\item\em A unique identifier for the route. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$ \hyperlink{structdfg__route_a07ec2a43f3078fc9fe4b8cc1ab0339b3}{runtime}
+\begin{DoxyCompactList}\small\item\em The runtime on which the route is located. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$ \hyperlink{structdfg__route_abfa4b2c8836a5db1b78c1f64c84f7221}{msu\-\_\-type}
+\begin{DoxyCompactList}\small\item\em The type of M\-S\-U to which this route delivers. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__route__endpoint}{dfg\-\_\-route\-\_\-endpoint} $\ast$ \hyperlink{structdfg__route_a6e4febfc25853befadf7dc64de1b7cff}{endpoints} \mbox{[}256\mbox{]}
+\begin{DoxyCompactList}\small\item\em The endpoints of the route. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__route_aa8015cd7ca3c4400e88120e0af74fc99}{n\-\_\-endpoints}
+\begin{DoxyCompactList}\small\item\em The number of endpoints in \hyperlink{structdfg__route_a6e4febfc25853befadf7dc64de1b7cff}{dfg\-\_\-route\-::endpoints}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A route through which M\-S\-U messages can be passed. 
+
+A route consists of a series of M\-S\-Us to which a message can be delivered. Multiple M\-S\-Us can send through the same route, as long as it exists on the M\-S\-U's runtime. A route can only send to M\-S\-Us of a single type. 
+
+Definition at line 152 of file dfg.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structdfg__route_a6e4febfc25853befadf7dc64de1b7cff}{\index{dfg\-\_\-route@{dfg\-\_\-route}!endpoints@{endpoints}}
+\index{endpoints@{endpoints}!dfg_route@{dfg\-\_\-route}}
+\subsubsection[{endpoints}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route\-\_\-endpoint}$\ast$ dfg\-\_\-route\-::endpoints\mbox{[}256\mbox{]}}}\label{structdfg__route_a6e4febfc25853befadf7dc64de1b7cff}
+
+
+The endpoints of the route. 
+
+
+
+Definition at line 156 of file dfg.\-h.
+
+\hypertarget{structdfg__route_aade838574772b19aa4c562f818a04c4a}{\index{dfg\-\_\-route@{dfg\-\_\-route}!id@{id}}
+\index{id@{id}!dfg_route@{dfg\-\_\-route}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-route\-::id}}\label{structdfg__route_aade838574772b19aa4c562f818a04c4a}
+
+
+A unique identifier for the route. 
+
+
+
+Definition at line 153 of file dfg.\-h.
+
+\hypertarget{structdfg__route_abfa4b2c8836a5db1b78c1f64c84f7221}{\index{dfg\-\_\-route@{dfg\-\_\-route}!msu\-\_\-type@{msu\-\_\-type}}
+\index{msu\-\_\-type@{msu\-\_\-type}!dfg_route@{dfg\-\_\-route}}
+\subsubsection[{msu\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu\-\_\-type}$\ast$ dfg\-\_\-route\-::msu\-\_\-type}}\label{structdfg__route_abfa4b2c8836a5db1b78c1f64c84f7221}
+
+
+The type of M\-S\-U to which this route delivers. 
+
+
+
+Definition at line 155 of file dfg.\-h.
+
+\hypertarget{structdfg__route_aa8015cd7ca3c4400e88120e0af74fc99}{\index{dfg\-\_\-route@{dfg\-\_\-route}!n\-\_\-endpoints@{n\-\_\-endpoints}}
+\index{n\-\_\-endpoints@{n\-\_\-endpoints}!dfg_route@{dfg\-\_\-route}}
+\subsubsection[{n\-\_\-endpoints}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-route\-::n\-\_\-endpoints}}\label{structdfg__route_aa8015cd7ca3c4400e88120e0af74fc99}
+
+
+The number of endpoints in \hyperlink{structdfg__route_a6e4febfc25853befadf7dc64de1b7cff}{dfg\-\_\-route\-::endpoints}. 
+
+
+
+Definition at line 157 of file dfg.\-h.
+
+\hypertarget{structdfg__route_a07ec2a43f3078fc9fe4b8cc1ab0339b3}{\index{dfg\-\_\-route@{dfg\-\_\-route}!runtime@{runtime}}
+\index{runtime@{runtime}!dfg_route@{dfg\-\_\-route}}
+\subsubsection[{runtime}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-runtime}$\ast$ dfg\-\_\-route\-::runtime}}\label{structdfg__route_a07ec2a43f3078fc9fe4b8cc1ab0339b3}
+
+
+The runtime on which the route is located. 
+
+
+
+Definition at line 154 of file dfg.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{dfg_8h}{dfg.\-h}\end{DoxyCompactItemize}

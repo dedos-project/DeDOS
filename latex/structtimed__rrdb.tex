@@ -1,0 +1,71 @@
+\hypertarget{structtimed__rrdb}{\section{timed\-\_\-rrdb Struct Reference}
+\label{structtimed__rrdb}\index{timed\-\_\-rrdb@{timed\-\_\-rrdb}}
+}
+
+
+Round-\/robin database (circular buffer) for storing timeseries data.  
+
+
+
+
+{\ttfamily \#include $<$timeseries.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+double \hyperlink{structtimed__rrdb_af2d8f1edb6d62eb38ce97d8f65570182}{data} \mbox{[}240\mbox{]}
+\begin{DoxyCompactList}\small\item\em The statistics. \end{DoxyCompactList}\item 
+struct timespec \hyperlink{structtimed__rrdb_abcf16b68b8b0bb8eb6a3c1e266b4c2f8}{time} \mbox{[}240\mbox{]}
+\begin{DoxyCompactList}\small\item\em The time at which the stats were gathered. \end{DoxyCompactList}\item 
+int \hyperlink{structtimed__rrdb_ab0c1ce0ef397283f1f93ed5d03583bab}{write\-\_\-index}
+\begin{DoxyCompactList}\small\item\em Offset into the rrdb at which writing has occurred. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Round-\/robin database (circular buffer) for storing timeseries data. 
+
+Meant for reporting statistics to the global controller 
+
+Definition at line 36 of file timeseries.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structtimed__rrdb_af2d8f1edb6d62eb38ce97d8f65570182}{\index{timed\-\_\-rrdb@{timed\-\_\-rrdb}!data@{data}}
+\index{data@{data}!timed_rrdb@{timed\-\_\-rrdb}}
+\subsubsection[{data}]{\setlength{\rightskip}{0pt plus 5cm}double timed\-\_\-rrdb\-::data\mbox{[}240\mbox{]}}}\label{structtimed__rrdb_af2d8f1edb6d62eb38ce97d8f65570182}
+
+
+The statistics. 
+
+
+
+Definition at line 37 of file timeseries.\-h.
+
+\hypertarget{structtimed__rrdb_abcf16b68b8b0bb8eb6a3c1e266b4c2f8}{\index{timed\-\_\-rrdb@{timed\-\_\-rrdb}!time@{time}}
+\index{time@{time}!timed_rrdb@{timed\-\_\-rrdb}}
+\subsubsection[{time}]{\setlength{\rightskip}{0pt plus 5cm}struct timespec timed\-\_\-rrdb\-::time\mbox{[}240\mbox{]}}}\label{structtimed__rrdb_abcf16b68b8b0bb8eb6a3c1e266b4c2f8}
+
+
+The time at which the stats were gathered. 
+
+
+
+Definition at line 38 of file timeseries.\-h.
+
+\hypertarget{structtimed__rrdb_ab0c1ce0ef397283f1f93ed5d03583bab}{\index{timed\-\_\-rrdb@{timed\-\_\-rrdb}!write\-\_\-index@{write\-\_\-index}}
+\index{write\-\_\-index@{write\-\_\-index}!timed_rrdb@{timed\-\_\-rrdb}}
+\subsubsection[{write\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}int timed\-\_\-rrdb\-::write\-\_\-index}}\label{structtimed__rrdb_ab0c1ce0ef397283f1f93ed5d03583bab}
+
+
+Offset into the rrdb at which writing has occurred. 
+
+
+
+Definition at line 39 of file timeseries.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/global\-\_\-controller/\hyperlink{timeseries_8h}{timeseries.\-h}\end{DoxyCompactItemize}

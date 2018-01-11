@@ -1,0 +1,47 @@
+\hypertarget{dfg__reader_8h}{\section{src/common/dfg\-\_\-reader.h File Reference}
+\label{dfg__reader_8h}\index{src/common/dfg\-\_\-reader.\-h@{src/common/dfg\-\_\-reader.\-h}}
+}
+
+
+Declares function for converting J\-S\-O\-N to \hyperlink{structdedos__dfg}{dedos\-\_\-dfg}.  
+
+
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$ \hyperlink{dfg__reader_8h_a98d23a2e881a150cc003ffdb6700309b}{parse\-\_\-dfg\-\_\-json\-\_\-file} (const char $\ast$filename)
+\begin{DoxyCompactList}\small\item\em Converts a json file to a dfg structure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Declares function for converting J\-S\-O\-N to \hyperlink{structdedos__dfg}{dedos\-\_\-dfg}. 
+
+Definition in file \hyperlink{dfg__reader_8h_source}{dfg\-\_\-reader.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dfg__reader_8h_a98d23a2e881a150cc003ffdb6700309b}{\index{dfg\-\_\-reader.\-h@{dfg\-\_\-reader.\-h}!parse\-\_\-dfg\-\_\-json\-\_\-file@{parse\-\_\-dfg\-\_\-json\-\_\-file}}
+\index{parse\-\_\-dfg\-\_\-json\-\_\-file@{parse\-\_\-dfg\-\_\-json\-\_\-file}!dfg_reader.h@{dfg\-\_\-reader.\-h}}
+\subsubsection[{parse\-\_\-dfg\-\_\-json\-\_\-file}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-dfg}$\ast$ parse\-\_\-dfg\-\_\-json\-\_\-file (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{dfg__reader_8h_a98d23a2e881a150cc003ffdb6700309b}
+
+
+Converts a json file to a dfg structure. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & The json file to parse \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A copy of the newly-\/allocated D\-F\-G, or N\-U\-L\-L if error 
+\end{DoxyReturn}
+
+
+Definition at line 96 of file dfg\-\_\-reader.\-c.
+

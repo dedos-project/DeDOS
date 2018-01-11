@@ -1,0 +1,285 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - unnamed - msus/webserver/http_msu.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">msus/webserver</a> - http_msu.c<span style="font-size: 80%;"> (source / <a href="http_msu.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">unnamed</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntry">103</td>
+            <td class="headerCovTableEntryMed">78.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-01-11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            : START OF LICENSE STUB
+<span class="lineNum">       3 </span>            :     DeDOS: Declarative Dispersion-Oriented Software
+<span class="lineNum">       4 </span>            :     Copyright (C) 2017 University of Pennsylvania, Georgetown University
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       7 </span>            :     it under the terms of the GNU General Public License as published by
+<span class="lineNum">       8 </span>            :     the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       9 </span>            :     (at your option) any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            :     GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            :     You should have received a copy of the GNU General Public License
+<span class="lineNum">      17 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      18 </span>            : END OF LICENSE STUB
+<span class="lineNum">      19 </span>            : */
+<span class="lineNum">      20 </span>            : #include &quot;webserver/http_msu.h&quot;
+<span class="lineNum">      21 </span>            : #include &quot;webserver/connection-handler.h&quot;
+<span class="lineNum">      22 </span>            : #include &quot;webserver/dbops.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;webserver/cache_msu.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;webserver/write_msu.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;webserver/read_msu.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;socket_msu.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;msu_calls.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;logging.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;epollops.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;msu_state.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;unused_def.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;local_msu.h&quot;
+<a name="33"><span class="lineNum">      33 </span>            : #include &quot;webserver/regex_routing_msu.h&quot;</a>
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">          3 : static int send_error(struct local_msu *self, struct http_state *http_state,</span>
+<span class="lineNum">      36 </span>            :                       struct msu_msg_hdr *hdr) {
+<span class="lineNum">      37 </span><span class="lineCov">          3 :     struct response_state *resp = malloc(sizeof(*resp));</span>
+<span class="lineNum">      38 </span><span class="lineCov">          3 :     init_response_state(resp, &amp;http_state-&gt;conn);</span>
+<span class="lineNum">      39 </span><span class="lineCov">          3 :     resp-&gt;body_len = craft_error_response(resp-&gt;url, resp-&gt;body);</span>
+<span class="lineNum">      40 </span><span class="lineCov">          3 :     return call_msu_type(self, &amp;WEBSERVER_WRITE_MSU_TYPE, hdr, sizeof(*resp), resp);</span>
+<a name="41"><span class="lineNum">      41 </span>            : }</a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">        144 : static int handle_db(struct http_state *http_state,</span>
+<span class="lineNum">      44 </span>            :                      struct local_msu *self,
+<span class="lineNum">      45 </span>            :                      struct msu_msg *msg) {
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">        144 :     http_state-&gt;db.data = self-&gt;msu_state;</span>
+<span class="lineNum">      48 </span><span class="lineCov">        144 :     int rtn = access_database(http_state-&gt;parser.url, &amp;http_state-&gt;db);</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">        144 :     if (rtn &amp; WS_ERROR) {</span>
+<span class="lineNum">      51 </span><span class="lineCov">          1 :         log_warn(&quot;Could not access database!&quot;);</span>
+<span class="lineNum">      52 </span><span class="lineCov">          1 :         msu_error(self, &amp;msg-&gt;hdr, 0);</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span><span class="lineCov">          1 :         send_error(self, http_state, &amp;msg-&gt;hdr);</span>
+<span class="lineNum">      55 </span><span class="lineCov">          1 :         msu_free_state(self, &amp;msg-&gt;hdr.key);</span>
+<span class="lineNum">      56 </span><span class="lineCov">          1 :         return -1;</span>
+<span class="lineNum">      57 </span><span class="lineCov">        143 :     } else if (rtn &amp; (WS_INCOMPLETE_READ | WS_INCOMPLETE_WRITE)) {</span>
+<span class="lineNum">      58 </span><span class="lineCov">          1 :         log(LOG_HTTP_MSU, &quot;Partial db access, requeuing state %p&quot;, http_state);</span>
+<span class="lineNum">      59 </span><span class="lineCov">          1 :         http_state-&gt;conn.status = CON_DB_REQUEST;</span>
+<span class="lineNum">      60 </span><span class="lineCov">          1 :         return msu_monitor_fd(http_state-&gt;db.db_fd, RTN_TO_EVT(rtn), self, &amp;msg-&gt;hdr);</span>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">        142 :     } else if (rtn &amp; WS_COMPLETE) {</span>
+<span class="lineNum">      63 </span><span class="lineCov">        142 :         struct response_state *resp = malloc(sizeof(*resp));</span>
+<span class="lineNum">      64 </span><span class="lineCov">        142 :         init_response_state(resp, &amp;http_state-&gt;conn);</span>
+<span class="lineNum">      65 </span><span class="lineCov">        142 :         strcpy(resp-&gt;url, http_state-&gt;parser.url);</span>
+<span class="lineNum">      66 </span><span class="lineCov">        142 :         msu_free_state(self, &amp;msg-&gt;hdr.key);</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">        142 :         if (!has_regex(resp-&gt;url)) {</span>
+<span class="lineNum">      69 </span><span class="lineCov">        140 :             log(LOG_HTTP_MSU, &quot;Crafting response for url %s&quot;, resp-&gt;url);</span>
+<span class="lineNum">      70 </span><span class="lineCov">        140 :             return call_msu_type(self, &amp;WEBSERVER_CACHE_MSU_TYPE, &amp;msg-&gt;hdr, sizeof(*resp), resp);</span>
+<span class="lineNum">      71 </span>            :         }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineCov">          2 :         return call_msu_type(self, &amp;WEBSERVER_REGEX_ROUTING_MSU_TYPE, &amp;msg-&gt;hdr, sizeof(*resp), resp);</span>
+<span class="lineNum">      74 </span>            :     }
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :     log_error(&quot;Unknown return code from database access: %d&quot;, rtn);</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :     msu_error(self, &amp;msg-&gt;hdr, 0);</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :     return -1;</span>
+<a name="78"><span class="lineNum">      78 </span>            : }</a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">          1 : static int clear_state(struct local_msu *self, struct msu_msg *msg) {</span>
+<span class="lineNum">      81 </span><span class="lineCov">          1 :     log(LOG_HTTP_MSU, &quot;Clearing state due to received error message&quot;);</span>
+<span class="lineNum">      82 </span><span class="lineCov">          1 :     msu_free_state(self, &amp;msg-&gt;hdr.key);</span>
+<span class="lineNum">      83 </span><span class="lineCov">          1 :     return 0;</span>
+<a name="84"><span class="lineNum">      84 </span>            : }</a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">        149 : static int handle_parsing(struct read_state *read_state,</span>
+<span class="lineNum">      87 </span>            :                           struct http_state *http_state,
+<span class="lineNum">      88 </span>            :                           struct local_msu *self,
+<span class="lineNum">      89 </span>            :                           struct msu_msg *msg) {
+<span class="lineNum">      90 </span><span class="lineCov">        149 :     if (read_state-&gt;req_len == -1) {</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :         log(LOG_HTTP_MSU, &quot;Clearing state (fd: %d)&quot;, read_state-&gt;conn.fd);</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :         msu_free_state(self, &amp;msg-&gt;hdr.key);</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">      94 </span>            :     }
+<span class="lineNum">      95 </span><span class="lineCov">        149 :     log(LOG_HTTP_MSU, &quot;Parsing request: %s (fd: %d)&quot;, read_state-&gt;req, read_state-&gt;conn.fd);</span>
+<span class="lineNum">      96 </span><span class="lineCov">        149 :     int rtn = parse_request(read_state-&gt;req, read_state-&gt;req_len, http_state);</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">        149 :     if (rtn &amp; WS_COMPLETE) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">        143 :         free(read_state);</span>
+<span class="lineNum">     100 </span><span class="lineCov">        143 :         return handle_db(http_state, self, msg);</span>
+<span class="lineNum">     101 </span><span class="lineCov">          6 :     } else if (rtn &amp; WS_ERROR) {</span>
+<span class="lineNum">     102 </span><span class="lineCov">          2 :         send_error(self, http_state, &amp;msg-&gt;hdr);</span>
+<span class="lineNum">     103 </span><span class="lineCov">          2 :         msu_free_state(self, &amp;msg-&gt;hdr.key);</span>
+<span class="lineNum">     104 </span><span class="lineCov">          2 :         return 0;</span>
+<span class="lineNum">     105 </span>            :     } else {
+<span class="lineNum">     106 </span><span class="lineCov">          4 :         http_state-&gt;conn.status = CON_READING;</span>
+<span class="lineNum">     107 </span><span class="lineCov">          4 :         log(LOG_PARTIAL_READS, &quot;Got partial request %.*s (fd: %d)&quot;,</span>
+<span class="lineNum">     108 </span>            :                    read_state-&gt;req_len, read_state-&gt;req, read_state-&gt;conn.fd);
+<span class="lineNum">     109 </span><span class="lineCov">          4 :         return call_msu_type(self, &amp;WEBSERVER_READ_MSU_TYPE, &amp;msg-&gt;hdr, msg-&gt;data_size, msg-&gt;data);</span>
+<span class="lineNum">     110 </span>            :     }
+<a name="111"><span class="lineNum">     111 </span>            : }</a>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">        150 : static int craft_http_response(struct local_msu *self,</span>
+<span class="lineNum">     114 </span>            :                                struct msu_msg *msg) {
+<span class="lineNum">     115 </span><span class="lineCov">        150 :     struct read_state *read_state = msg-&gt;data;</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">        150 :     size_t size = 0;</span>
+<span class="lineNum">     118 </span><span class="lineCov">        150 :     struct http_state *http_state = msu_get_state(self, &amp;msg-&gt;hdr.key, &amp;size);</span>
+<span class="lineNum">     119 </span><span class="lineCov">        150 :     int retrieved = 0;</span>
+<span class="lineNum">     120 </span><span class="lineCov">        150 :     if (http_state == NULL) {</span>
+<span class="lineNum">     121 </span><span class="lineCov">        149 :         http_state = msu_init_state(self, &amp;msg-&gt;hdr.key, sizeof(*http_state));</span>
+<span class="lineNum">     122 </span><span class="lineCov">        149 :         read_state-&gt;conn.status = CON_READING;</span>
+<span class="lineNum">     123 </span><span class="lineCov">        149 :         init_http_state(http_state, &amp;read_state-&gt;conn);</span>
+<span class="lineNum">     124 </span><span class="lineCov">        149 :         memcpy(&amp;http_state-&gt;conn, &amp;read_state-&gt;conn, sizeof(read_state-&gt;conn));</span>
+<span class="lineNum">     125 </span>            :     } else {
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">          1 :         log(LOG_HTTP_MSU, &quot;Retrieved state %p (status %d)&quot;,</span>
+<span class="lineNum">     128 </span>            :                    http_state, http_state-&gt;conn.status);
+<span class="lineNum">     129 </span><span class="lineCov">          1 :         retrieved = 1;</span>
+<span class="lineNum">     130 </span><span class="lineCov">          1 :         if (http_state-&gt;conn.status != CON_DB_REQUEST) {</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :             log(LOG_PARTIAL_READS, &quot;Recovering partial read state ID: %u&quot;,</span>
+<span class="lineNum">     132 </span>            :                        msg-&gt;hdr.key.id);
+<span class="lineNum">     133 </span>            :         }
+<span class="lineNum">     134 </span>            :     }
+<span class="lineNum">     135 </span><span class="lineCov">        150 :     if (msg-&gt;data_size == sizeof(*read_state) &amp;&amp; read_state-&gt;req_len == -1) {</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :         if (http_state-&gt;conn.status == CON_DB_REQUEST) {</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :             http_state-&gt;conn.status = NO_CONNECTION;</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :             return 0;</span>
+<span class="lineNum">     139 </span>            :         } else {
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :             msu_free_state(self, &amp;msg-&gt;hdr.key);</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :             return 0;</span>
+<span class="lineNum">     142 </span>            :         }
+<span class="lineNum">     143 </span>            :     }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :     int rtn;
+<span class="lineNum">     147 </span><span class="lineCov">        150 :     switch (http_state-&gt;conn.status) {</span>
+<span class="lineNum">     148 </span>            :         case NIL:
+<span class="lineNum">     149 </span>            :         case CON_READING:
+<span class="lineNum">     150 </span><span class="lineCov">        149 :             log(LOG_HTTP_MSU, &quot;got CON_READING&quot;);</span>
+<span class="lineNum">     151 </span><span class="lineCov">        149 :             rtn = handle_parsing(read_state, http_state, self, msg);</span>
+<span class="lineNum">     152 </span><span class="lineCov">        149 :             if (rtn &lt; 0) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">          1 :                 log_error(&quot;Error processing fd %d, ID %u, retrieved %d&quot;, read_state-&gt;conn.fd,</span>
+<span class="lineNum">     154 </span>            :                           (msg-&gt;hdr.key.id), retrieved);
+<span class="lineNum">     155 </span>            :             }
+<span class="lineNum">     156 </span><span class="lineCov">        149 :             return rtn;</span>
+<span class="lineNum">     157 </span>            :         case CON_DB_REQUEST:
+<span class="lineNum">     158 </span><span class="lineCov">          1 :             log(LOG_HTTP_MSU, &quot;got CON_DB_REQUEST&quot;);</span>
+<span class="lineNum">     159 </span><span class="lineCov">          1 :             free(read_state);</span>
+<span class="lineNum">     160 </span><span class="lineCov">          1 :             return handle_db(http_state, self, msg);</span>
+<span class="lineNum">     161 </span>            :         case NO_CONNECTION:
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :             msu_free_state(self, &amp;msg-&gt;hdr.key);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :             return 0;</span>
+<span class="lineNum">     164 </span>            :         default:
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :             log_error(&quot;Received unknown packet status: %d&quot;, read_state-&gt;conn.status);</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :             return -1;</span>
+<span class="lineNum">     167 </span>            :     }
+<a name="168"><span class="lineNum">     168 </span>            : }</a>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineCov">         29 : static int http_init(struct local_msu *self, struct msu_init_data *data) {</span>
+<span class="lineNum">     171 </span><span class="lineCov">         29 :     self-&gt;msu_state = allocate_db_memory();</span>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineCov">         29 :     char *init_data = data-&gt;init_data;</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :     char *ip, *saveptr;
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">         29 :     if ((ip = strtok_r(init_data, &quot; &quot;, &amp;saveptr)) == NULL) {</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :         log_error(&quot;Did not provide IP for DB initialization to http MSU&quot;);</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     180 </span>            :     }
+<span class="lineNum">     181 </span>            :     char *port_str;
+<span class="lineNum">     182 </span><span class="lineCov">         29 :     if ((port_str = strtok_r(NULL, &quot; &quot;, &amp;saveptr)) == NULL) {</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :         log_error(&quot;Did not provide port for DB initialization to http MSU&quot;);</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     185 </span>            :     }
+<span class="lineNum">     186 </span><span class="lineCov">         29 :     int port = atoi(port_str);</span>
+<span class="lineNum">     187 </span>            :     char *n_files_str;
+<span class="lineNum">     188 </span><span class="lineCov">         29 :     if ((n_files_str = strtok_r(NULL, &quot; &quot;, &amp;saveptr)) == NULL) {</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :         log_error(&quot;Did not provide n_files for DB initialization to http MSU&quot;);</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     191 </span>            :     }
+<span class="lineNum">     192 </span><span class="lineCov">         29 :     int n_files = atoi(n_files_str);</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">         29 :     init_db(ip, port, n_files);</span>
+<span class="lineNum">     195 </span><span class="lineCov">         29 :     return 0;</span>
+<a name="196"><span class="lineNum">     196 </span>            : }</a>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">         29 : static void http_destroy(struct local_msu *self) {</span>
+<span class="lineNum">     199 </span><span class="lineCov">         29 :     free_db_memory(self-&gt;msu_state);</span>
+<span class="lineNum">     200 </span><span class="lineCov">         29 : }</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : struct msu_type WEBSERVER_HTTP_MSU_TYPE = {
+<span class="lineNum">     203 </span>            :     .name = &quot;Webserver_HTTP_MSU&quot;,
+<span class="lineNum">     204 </span>            :     .id = WEBSERVER_HTTP_MSU_TYPE_ID,
+<span class="lineNum">     205 </span>            :     .init = http_init,
+<span class="lineNum">     206 </span>            :     .destroy = http_destroy,
+<span class="lineNum">     207 </span>            :     .receive = craft_http_response,
+<span class="lineNum">     208 </span>            :     .receive_error = clear_state
+<span class="lineNum">     209 </span>            : };
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

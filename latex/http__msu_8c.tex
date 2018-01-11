@@ -1,0 +1,150 @@
+\hypertarget{http__msu_8c}{\section{src/msus/webserver/http\-\_\-msu.c File Reference}
+\label{http__msu_8c}\index{src/msus/webserver/http\-\_\-msu.\-c@{src/msus/webserver/http\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}webserver/http\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/connection-\/handler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/dbops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/cache\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/write\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/read\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}socket\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}epollops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-state.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unused\-\_\-def.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/regex\-\_\-routing\-\_\-msu.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{http__msu_8c_a5321b0f8e9329c59f12a9fef889ca4b5}{send\-\_\-error} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structhttp__state}{http\-\_\-state} $\ast$\hyperlink{structhttp__state}{http\-\_\-state}, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr)
+\item 
+static int \hyperlink{http__msu_8c_a9c6622a1355ec58a323688f3fdbb29af}{handle\-\_\-db} (struct \hyperlink{structhttp__state}{http\-\_\-state} $\ast$\hyperlink{structhttp__state}{http\-\_\-state}, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+static int \hyperlink{http__msu_8c_aebac0752fa27e3ce00b01af41307befb}{clear\-\_\-state} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+static int \hyperlink{http__msu_8c_a09928aa676e8114a3a16332a00a5de82}{handle\-\_\-parsing} (struct \hyperlink{structread__state}{read\-\_\-state} $\ast$\hyperlink{structread__state}{read\-\_\-state}, struct \hyperlink{structhttp__state}{http\-\_\-state} $\ast$\hyperlink{structhttp__state}{http\-\_\-state}, struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+static int \hyperlink{http__msu_8c_a509bd86e39d4d26e9336803b81a820f5}{craft\-\_\-http\-\_\-response} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\item 
+static int \hyperlink{http__msu_8c_a8eae7485a9fc3a1dc22a97d4ff4ded7a}{http\-\_\-init} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} $\ast$data)
+\item 
+static void \hyperlink{http__msu_8c_a3eb868998f27dce647e7e5aefe55cb8f}{http\-\_\-destroy} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{http__msu_8c_a807d27432630f08db46c680496f5d04a}{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-H\-T\-T\-P\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{http__msu_8c_aebac0752fa27e3ce00b01af41307befb}{\index{http\-\_\-msu.\-c@{http\-\_\-msu.\-c}!clear\-\_\-state@{clear\-\_\-state}}
+\index{clear\-\_\-state@{clear\-\_\-state}!http_msu.c@{http\-\_\-msu.\-c}}
+\subsubsection[{clear\-\_\-state}]{\setlength{\rightskip}{0pt plus 5cm}static int clear\-\_\-state (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{http__msu_8c_aebac0752fa27e3ce00b01af41307befb}
+
+
+Definition at line 80 of file http\-\_\-msu.\-c.
+
+\hypertarget{http__msu_8c_a509bd86e39d4d26e9336803b81a820f5}{\index{http\-\_\-msu.\-c@{http\-\_\-msu.\-c}!craft\-\_\-http\-\_\-response@{craft\-\_\-http\-\_\-response}}
+\index{craft\-\_\-http\-\_\-response@{craft\-\_\-http\-\_\-response}!http_msu.c@{http\-\_\-msu.\-c}}
+\subsubsection[{craft\-\_\-http\-\_\-response}]{\setlength{\rightskip}{0pt plus 5cm}static int craft\-\_\-http\-\_\-response (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{http__msu_8c_a509bd86e39d4d26e9336803b81a820f5}
+
+
+Definition at line 113 of file http\-\_\-msu.\-c.
+
+\hypertarget{http__msu_8c_a9c6622a1355ec58a323688f3fdbb29af}{\index{http\-\_\-msu.\-c@{http\-\_\-msu.\-c}!handle\-\_\-db@{handle\-\_\-db}}
+\index{handle\-\_\-db@{handle\-\_\-db}!http_msu.c@{http\-\_\-msu.\-c}}
+\subsubsection[{handle\-\_\-db}]{\setlength{\rightskip}{0pt plus 5cm}static int handle\-\_\-db (
+\begin{DoxyParamCaption}
+\item[{struct {\bf http\-\_\-state} $\ast$}]{http\-\_\-state, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{http__msu_8c_a9c6622a1355ec58a323688f3fdbb29af}
+
+
+Definition at line 43 of file http\-\_\-msu.\-c.
+
+\hypertarget{http__msu_8c_a09928aa676e8114a3a16332a00a5de82}{\index{http\-\_\-msu.\-c@{http\-\_\-msu.\-c}!handle\-\_\-parsing@{handle\-\_\-parsing}}
+\index{handle\-\_\-parsing@{handle\-\_\-parsing}!http_msu.c@{http\-\_\-msu.\-c}}
+\subsubsection[{handle\-\_\-parsing}]{\setlength{\rightskip}{0pt plus 5cm}static int handle\-\_\-parsing (
+\begin{DoxyParamCaption}
+\item[{struct {\bf read\-\_\-state} $\ast$}]{read\-\_\-state, }
+\item[{struct {\bf http\-\_\-state} $\ast$}]{http\-\_\-state, }
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{http__msu_8c_a09928aa676e8114a3a16332a00a5de82}
+
+
+Definition at line 86 of file http\-\_\-msu.\-c.
+
+\hypertarget{http__msu_8c_a3eb868998f27dce647e7e5aefe55cb8f}{\index{http\-\_\-msu.\-c@{http\-\_\-msu.\-c}!http\-\_\-destroy@{http\-\_\-destroy}}
+\index{http\-\_\-destroy@{http\-\_\-destroy}!http_msu.c@{http\-\_\-msu.\-c}}
+\subsubsection[{http\-\_\-destroy}]{\setlength{\rightskip}{0pt plus 5cm}static void http\-\_\-destroy (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{http__msu_8c_a3eb868998f27dce647e7e5aefe55cb8f}
+
+
+Definition at line 198 of file http\-\_\-msu.\-c.
+
+\hypertarget{http__msu_8c_a8eae7485a9fc3a1dc22a97d4ff4ded7a}{\index{http\-\_\-msu.\-c@{http\-\_\-msu.\-c}!http\-\_\-init@{http\-\_\-init}}
+\index{http\-\_\-init@{http\-\_\-init}!http_msu.c@{http\-\_\-msu.\-c}}
+\subsubsection[{http\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}static int http\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-init\-\_\-data} $\ast$}]{data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{http__msu_8c_a8eae7485a9fc3a1dc22a97d4ff4ded7a}
+
+
+Definition at line 170 of file http\-\_\-msu.\-c.
+
+\hypertarget{http__msu_8c_a5321b0f8e9329c59f12a9fef889ca4b5}{\index{http\-\_\-msu.\-c@{http\-\_\-msu.\-c}!send\-\_\-error@{send\-\_\-error}}
+\index{send\-\_\-error@{send\-\_\-error}!http_msu.c@{http\-\_\-msu.\-c}}
+\subsubsection[{send\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}static int send\-\_\-error (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf http\-\_\-state} $\ast$}]{http\-\_\-state, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{http__msu_8c_a5321b0f8e9329c59f12a9fef889ca4b5}
+
+
+Definition at line 35 of file http\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{http__msu_8c_a807d27432630f08db46c680496f5d04a}{\index{http\-\_\-msu.\-c@{http\-\_\-msu.\-c}!W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-H\-T\-T\-P\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-H\-T\-T\-P\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-H\-T\-T\-P\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-H\-T\-T\-P\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!http_msu.c@{http\-\_\-msu.\-c}}
+\subsubsection[{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-H\-T\-T\-P\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-H\-T\-T\-P\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{http__msu_8c_a807d27432630f08db46c680496f5d04a}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    .name = \textcolor{stringliteral}{"Webserver\_HTTP\_MSU"},
+    .id = \hyperlink{msu__ids_8h_a027c0b61561fea04e715012ca1875806}{WEBSERVER\_HTTP\_MSU\_TYPE\_ID},
+    .init = \hyperlink{http__msu_8c_a8eae7485a9fc3a1dc22a97d4ff4ded7a}{http\_init},
+    .destroy = \hyperlink{http__msu_8c_a3eb868998f27dce647e7e5aefe55cb8f}{http\_destroy},
+    .receive = \hyperlink{http__msu_8c_a509bd86e39d4d26e9336803b81a820f5}{craft\_http\_response},
+    .receive\_error = \hyperlink{http__msu_8c_aebac0752fa27e3ce00b01af41307befb}{clear\_state}
+\}
+\end{DoxyCode}
+
+
+Definition at line 202 of file http\-\_\-msu.\-c.
+

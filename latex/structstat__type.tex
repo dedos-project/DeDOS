@@ -1,0 +1,166 @@
+\hypertarget{structstat__type}{\section{stat\-\_\-type Struct Reference}
+\label{structstat__type}\index{stat\-\_\-type@{stat\-\_\-type}}
+}
+
+
+The structure holding all items of a type of stats.  
+
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{structstat__type_a6ad1dba35c226756f00d7d14f4615d8a}{id}
+\begin{DoxyCompactList}\small\item\em Stat I\-D as defined in \hyperlink{stats_8h}{stats.\-h}. \end{DoxyCompactList}\item 
+bool \hyperlink{structstat__type_a3c657ea7ad6abd10ce5f50feafd7dae0}{enabled}
+\begin{DoxyCompactList}\small\item\em If true, logging for this item is enabled. \end{DoxyCompactList}\item 
+int \hyperlink{structstat__type_aa53de19c795fd6100739929a37000248}{max\-\_\-stats}
+\begin{DoxyCompactList}\small\item\em Maximum number of statistics that can be held in memory. \end{DoxyCompactList}\item 
+char $\ast$ \hyperlink{structstat__type_afb56fba8ca558f25ae9e89192430381e}{format}
+\begin{DoxyCompactList}\small\item\em Format for printf. \end{DoxyCompactList}\item 
+char $\ast$ \hyperlink{structstat__type_a4859052f95e109f5fef80c48883707c9}{label}
+\begin{DoxyCompactList}\small\item\em Name to output for this statistic. \end{DoxyCompactList}\item 
+int \hyperlink{structstat__type_a8960781cdec87c113b60ddf11dd4fab2}{id\-\_\-indices} \mbox{[}\hyperlink{stats_8h_afc5ce879c3857f15d5956b09c8aad809}{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-T\-E\-M\-\_\-\-I\-D}\mbox{]}
+\begin{DoxyCompactList}\small\item\em Index at which the I\-Ds are stored. \end{DoxyCompactList}\item 
+int \hyperlink{structstat__type_a58e7d3ee8ef48ab267367fc3266a9113}{num\-\_\-items}
+\begin{DoxyCompactList}\small\item\em Number of items currently registered for logging. \end{DoxyCompactList}\item 
+int \hyperlink{structstat__type_af697600ffa976b8c4530f7e20e817023}{max\-\_\-items}
+\begin{DoxyCompactList}\small\item\em Number of items allocated for logging. \end{DoxyCompactList}\item 
+pthread\-\_\-rwlock\-\_\-t \hyperlink{structstat__type_a22f632f9d74f51d3bd8d95a5c8b2536e}{lock}
+\begin{DoxyCompactList}\small\item\em Lock for adding new stat items. \end{DoxyCompactList}\item 
+struct \hyperlink{structstat__item}{stat\-\_\-item} $\ast$ \hyperlink{structstat__type_a15ccf932c19f6e6b07a3575a956cfacd}{items}
+\begin{DoxyCompactList}\small\item\em The items of this type being logged. \end{DoxyCompactList}\item 
+char $\ast$ \hyperlink{structstat__type_ae4e7f67c4950bcfbe35ba672bcfd6923}{name}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The structure holding all items of a type of stats. 
+
+Definition at line 62 of file rt\-\_\-stats.\-c.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structstat__type_a3c657ea7ad6abd10ce5f50feafd7dae0}{\index{stat\-\_\-type@{stat\-\_\-type}!enabled@{enabled}}
+\index{enabled@{enabled}!stat_type@{stat\-\_\-type}}
+\subsubsection[{enabled}]{\setlength{\rightskip}{0pt plus 5cm}bool stat\-\_\-type\-::enabled}}\label{structstat__type_a3c657ea7ad6abd10ce5f50feafd7dae0}
+
+
+If true, logging for this item is enabled. 
+
+
+
+Definition at line 64 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_afb56fba8ca558f25ae9e89192430381e}{\index{stat\-\_\-type@{stat\-\_\-type}!format@{format}}
+\index{format@{format}!stat_type@{stat\-\_\-type}}
+\subsubsection[{format}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ stat\-\_\-type\-::format}}\label{structstat__type_afb56fba8ca558f25ae9e89192430381e}
+
+
+Format for printf. 
+
+
+
+Definition at line 66 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_a6ad1dba35c226756f00d7d14f4615d8a}{\index{stat\-\_\-type@{stat\-\_\-type}!id@{id}}
+\index{id@{id}!stat_type@{stat\-\_\-type}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf stat\-\_\-id} stat\-\_\-type\-::id}}\label{structstat__type_a6ad1dba35c226756f00d7d14f4615d8a}
+
+
+Stat I\-D as defined in \hyperlink{stats_8h}{stats.\-h}. 
+
+
+
+Definition at line 63 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_a8960781cdec87c113b60ddf11dd4fab2}{\index{stat\-\_\-type@{stat\-\_\-type}!id\-\_\-indices@{id\-\_\-indices}}
+\index{id\-\_\-indices@{id\-\_\-indices}!stat_type@{stat\-\_\-type}}
+\subsubsection[{id\-\_\-indices}]{\setlength{\rightskip}{0pt plus 5cm}int stat\-\_\-type\-::id\-\_\-indices}}\label{structstat__type_a8960781cdec87c113b60ddf11dd4fab2}
+
+
+Index at which the I\-Ds are stored. 
+
+
+
+Definition at line 68 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_a15ccf932c19f6e6b07a3575a956cfacd}{\index{stat\-\_\-type@{stat\-\_\-type}!items@{items}}
+\index{items@{items}!stat_type@{stat\-\_\-type}}
+\subsubsection[{items}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-item} $\ast$ stat\-\_\-type\-::items}}\label{structstat__type_a15ccf932c19f6e6b07a3575a956cfacd}
+
+
+The items of this type being logged. 
+
+
+
+Definition at line 72 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_a4859052f95e109f5fef80c48883707c9}{\index{stat\-\_\-type@{stat\-\_\-type}!label@{label}}
+\index{label@{label}!stat_type@{stat\-\_\-type}}
+\subsubsection[{label}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ stat\-\_\-type\-::label}}\label{structstat__type_a4859052f95e109f5fef80c48883707c9}
+
+
+Name to output for this statistic. 
+
+
+
+Definition at line 67 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_a22f632f9d74f51d3bd8d95a5c8b2536e}{\index{stat\-\_\-type@{stat\-\_\-type}!lock@{lock}}
+\index{lock@{lock}!stat_type@{stat\-\_\-type}}
+\subsubsection[{lock}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-rwlock\-\_\-t stat\-\_\-type\-::lock}}\label{structstat__type_a22f632f9d74f51d3bd8d95a5c8b2536e}
+
+
+Lock for adding new stat items. 
+
+
+
+Definition at line 71 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_af697600ffa976b8c4530f7e20e817023}{\index{stat\-\_\-type@{stat\-\_\-type}!max\-\_\-items@{max\-\_\-items}}
+\index{max\-\_\-items@{max\-\_\-items}!stat_type@{stat\-\_\-type}}
+\subsubsection[{max\-\_\-items}]{\setlength{\rightskip}{0pt plus 5cm}int stat\-\_\-type\-::max\-\_\-items}}\label{structstat__type_af697600ffa976b8c4530f7e20e817023}
+
+
+Number of items allocated for logging. 
+
+
+
+Definition at line 70 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_aa53de19c795fd6100739929a37000248}{\index{stat\-\_\-type@{stat\-\_\-type}!max\-\_\-stats@{max\-\_\-stats}}
+\index{max\-\_\-stats@{max\-\_\-stats}!stat_type@{stat\-\_\-type}}
+\subsubsection[{max\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int stat\-\_\-type\-::max\-\_\-stats}}\label{structstat__type_aa53de19c795fd6100739929a37000248}
+
+
+Maximum number of statistics that can be held in memory. 
+
+
+
+Definition at line 65 of file rt\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_ae4e7f67c4950bcfbe35ba672bcfd6923}{\index{stat\-\_\-type@{stat\-\_\-type}!name@{name}}
+\index{name@{name}!stat_type@{stat\-\_\-type}}
+\subsubsection[{name}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ stat\-\_\-type\-::name}}\label{structstat__type_ae4e7f67c4950bcfbe35ba672bcfd6923}
+
+
+Definition at line 32 of file controller\-\_\-stats.\-c.
+
+\hypertarget{structstat__type_a58e7d3ee8ef48ab267367fc3266a9113}{\index{stat\-\_\-type@{stat\-\_\-type}!num\-\_\-items@{num\-\_\-items}}
+\index{num\-\_\-items@{num\-\_\-items}!stat_type@{stat\-\_\-type}}
+\subsubsection[{num\-\_\-items}]{\setlength{\rightskip}{0pt plus 5cm}int stat\-\_\-type\-::num\-\_\-items}}\label{structstat__type_a58e7d3ee8ef48ab267367fc3266a9113}
+
+
+Number of items currently registered for logging. 
+
+
+
+Definition at line 69 of file rt\-\_\-stats.\-c.
+
+
+
+The documentation for this struct was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{rt__stats_8c}{rt\-\_\-stats.\-c}\item 
+src/global\-\_\-controller/\hyperlink{controller__stats_8c}{controller\-\_\-stats.\-c}\end{DoxyCompactItemize}

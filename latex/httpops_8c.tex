@@ -1,0 +1,99 @@
+\hypertarget{httpops_8c}{\section{src/msus/webserver/httpops.c File Reference}
+\label{httpops_8c}\index{src/msus/webserver/httpops.\-c@{src/msus/webserver/httpops.\-c}}
+}
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/httpops.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{httpops_8c_acc53e2c5ac3f99de0db0b91854ca85b3}{B\-A\-S\-E\-\_\-\-H\-T\-T\-P\-\_\-\-H\-E\-A\-D\-E\-R}~\char`\"{}H\-T\-T\-P/1.\-1 200 O\-K\textbackslash{}r\textbackslash{}n\-Content-\/Type\-: \%s\textbackslash{}r\textbackslash{}n\-Content-\/Length\-: \%d\textbackslash{}r\textbackslash{}n\textbackslash{}r\textbackslash{}n\char`\"{}
+\item 
+\#define \hyperlink{httpops_8c_a42a4117e89492958b665cc4c08fceeae}{N\-O\-T\-\_\-\-F\-O\-U\-N\-D\-\_\-\-H\-E\-A\-D\-E\-R}~\char`\"{}H\-T\-T\-P/1.\-1 404 Not Found\textbackslash{}r\textbackslash{}n\textbackslash{}r\textbackslash{}n\char`\"{}
+\item 
+\#define \hyperlink{httpops_8c_a13edb306791723dd4edb445689ef9032}{N\-O\-T\-\_\-\-I\-M\-P\-L\-E\-M\-E\-N\-T\-E\-D\-\_\-\-H\-E\-A\-D\-E\-R}~\char`\"{}H\-T\-T\-P/1.\-1 501 Not Implemented\textbackslash{}r\textbackslash{}n\textbackslash{}r\textbackslash{}n\char`\"{}
+\item 
+\#define \hyperlink{httpops_8c_a5634fe1868f0a72980de4d8092b64fa5}{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-I\-M\-E\-\_\-\-T\-Y\-P\-E}~\char`\"{}text/html\char`\"{}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+char $\ast$ \hyperlink{httpops_8c_a4837bb407acf7bc67cf07aefea2c41cd}{path\-\_\-to\-\_\-mimetype} (char $\ast$path)
+\item 
+int \hyperlink{httpops_8c_a30cebc15a905a9c71c6fbf42ba28c834}{url\-\_\-to\-\_\-path} (char $\ast$url, char $\ast$dir, char $\ast$path, int capacity)
+\item 
+int \hyperlink{httpops_8c_ab17fe55d68260ce93566f67490e8ba78}{generate\-\_\-header} (char $\ast$dest, int code, int capacity, int body\-\_\-len, char $\ast$mime\-\_\-type)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{httpops_8c_acc53e2c5ac3f99de0db0b91854ca85b3}{\index{httpops.\-c@{httpops.\-c}!B\-A\-S\-E\-\_\-\-H\-T\-T\-P\-\_\-\-H\-E\-A\-D\-E\-R@{B\-A\-S\-E\-\_\-\-H\-T\-T\-P\-\_\-\-H\-E\-A\-D\-E\-R}}
+\index{B\-A\-S\-E\-\_\-\-H\-T\-T\-P\-\_\-\-H\-E\-A\-D\-E\-R@{B\-A\-S\-E\-\_\-\-H\-T\-T\-P\-\_\-\-H\-E\-A\-D\-E\-R}!httpops.c@{httpops.\-c}}
+\subsubsection[{B\-A\-S\-E\-\_\-\-H\-T\-T\-P\-\_\-\-H\-E\-A\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\-A\-S\-E\-\_\-\-H\-T\-T\-P\-\_\-\-H\-E\-A\-D\-E\-R~\char`\"{}H\-T\-T\-P/1.\-1 200 O\-K\textbackslash{}r\textbackslash{}n\-Content-\/Type\-: \%s\textbackslash{}r\textbackslash{}n\-Content-\/Length\-: \%d\textbackslash{}r\textbackslash{}n\textbackslash{}r\textbackslash{}n\char`\"{}}}\label{httpops_8c_acc53e2c5ac3f99de0db0b91854ca85b3}
+
+
+Definition at line 24 of file httpops.\-c.
+
+\hypertarget{httpops_8c_a5634fe1868f0a72980de4d8092b64fa5}{\index{httpops.\-c@{httpops.\-c}!D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-I\-M\-E\-\_\-\-T\-Y\-P\-E@{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-I\-M\-E\-\_\-\-T\-Y\-P\-E}}
+\index{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-I\-M\-E\-\_\-\-T\-Y\-P\-E@{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-I\-M\-E\-\_\-\-T\-Y\-P\-E}!httpops.c@{httpops.\-c}}
+\subsubsection[{D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-I\-M\-E\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-I\-M\-E\-\_\-\-T\-Y\-P\-E~\char`\"{}text/html\char`\"{}}}\label{httpops_8c_a5634fe1868f0a72980de4d8092b64fa5}
+
+
+Definition at line 33 of file httpops.\-c.
+
+\hypertarget{httpops_8c_a42a4117e89492958b665cc4c08fceeae}{\index{httpops.\-c@{httpops.\-c}!N\-O\-T\-\_\-\-F\-O\-U\-N\-D\-\_\-\-H\-E\-A\-D\-E\-R@{N\-O\-T\-\_\-\-F\-O\-U\-N\-D\-\_\-\-H\-E\-A\-D\-E\-R}}
+\index{N\-O\-T\-\_\-\-F\-O\-U\-N\-D\-\_\-\-H\-E\-A\-D\-E\-R@{N\-O\-T\-\_\-\-F\-O\-U\-N\-D\-\_\-\-H\-E\-A\-D\-E\-R}!httpops.c@{httpops.\-c}}
+\subsubsection[{N\-O\-T\-\_\-\-F\-O\-U\-N\-D\-\_\-\-H\-E\-A\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-O\-T\-\_\-\-F\-O\-U\-N\-D\-\_\-\-H\-E\-A\-D\-E\-R~\char`\"{}H\-T\-T\-P/1.\-1 404 Not Found\textbackslash{}r\textbackslash{}n\textbackslash{}r\textbackslash{}n\char`\"{}}}\label{httpops_8c_a42a4117e89492958b665cc4c08fceeae}
+
+
+Definition at line 27 of file httpops.\-c.
+
+\hypertarget{httpops_8c_a13edb306791723dd4edb445689ef9032}{\index{httpops.\-c@{httpops.\-c}!N\-O\-T\-\_\-\-I\-M\-P\-L\-E\-M\-E\-N\-T\-E\-D\-\_\-\-H\-E\-A\-D\-E\-R@{N\-O\-T\-\_\-\-I\-M\-P\-L\-E\-M\-E\-N\-T\-E\-D\-\_\-\-H\-E\-A\-D\-E\-R}}
+\index{N\-O\-T\-\_\-\-I\-M\-P\-L\-E\-M\-E\-N\-T\-E\-D\-\_\-\-H\-E\-A\-D\-E\-R@{N\-O\-T\-\_\-\-I\-M\-P\-L\-E\-M\-E\-N\-T\-E\-D\-\_\-\-H\-E\-A\-D\-E\-R}!httpops.c@{httpops.\-c}}
+\subsubsection[{N\-O\-T\-\_\-\-I\-M\-P\-L\-E\-M\-E\-N\-T\-E\-D\-\_\-\-H\-E\-A\-D\-E\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-O\-T\-\_\-\-I\-M\-P\-L\-E\-M\-E\-N\-T\-E\-D\-\_\-\-H\-E\-A\-D\-E\-R~\char`\"{}H\-T\-T\-P/1.\-1 501 Not Implemented\textbackslash{}r\textbackslash{}n\textbackslash{}r\textbackslash{}n\char`\"{}}}\label{httpops_8c_a13edb306791723dd4edb445689ef9032}
+
+
+Definition at line 30 of file httpops.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{httpops_8c_ab17fe55d68260ce93566f67490e8ba78}{\index{httpops.\-c@{httpops.\-c}!generate\-\_\-header@{generate\-\_\-header}}
+\index{generate\-\_\-header@{generate\-\_\-header}!httpops.c@{httpops.\-c}}
+\subsubsection[{generate\-\_\-header}]{\setlength{\rightskip}{0pt plus 5cm}int generate\-\_\-header (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{dest, }
+\item[{int}]{code, }
+\item[{int}]{capacity, }
+\item[{int}]{body\-\_\-len, }
+\item[{char $\ast$}]{mime\-\_\-type}
+\end{DoxyParamCaption}
+)}}\label{httpops_8c_ab17fe55d68260ce93566f67490e8ba78}
+
+
+Definition at line 88 of file httpops.\-c.
+
+\hypertarget{httpops_8c_a4837bb407acf7bc67cf07aefea2c41cd}{\index{httpops.\-c@{httpops.\-c}!path\-\_\-to\-\_\-mimetype@{path\-\_\-to\-\_\-mimetype}}
+\index{path\-\_\-to\-\_\-mimetype@{path\-\_\-to\-\_\-mimetype}!httpops.c@{httpops.\-c}}
+\subsubsection[{path\-\_\-to\-\_\-mimetype}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ path\-\_\-to\-\_\-mimetype (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}}\label{httpops_8c_a4837bb407acf7bc67cf07aefea2c41cd}
+
+
+Definition at line 36 of file httpops.\-c.
+
+\hypertarget{httpops_8c_a30cebc15a905a9c71c6fbf42ba28c834}{\index{httpops.\-c@{httpops.\-c}!url\-\_\-to\-\_\-path@{url\-\_\-to\-\_\-path}}
+\index{url\-\_\-to\-\_\-path@{url\-\_\-to\-\_\-path}!httpops.c@{httpops.\-c}}
+\subsubsection[{url\-\_\-to\-\_\-path}]{\setlength{\rightskip}{0pt plus 5cm}int url\-\_\-to\-\_\-path (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{url, }
+\item[{char $\ast$}]{dir, }
+\item[{char $\ast$}]{path, }
+\item[{int}]{capacity}
+\end{DoxyParamCaption}
+)}}\label{httpops_8c_a30cebc15a905a9c71c6fbf42ba28c834}
+
+
+Definition at line 62 of file httpops.\-c.
+

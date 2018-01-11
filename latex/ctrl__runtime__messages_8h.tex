@@ -1,0 +1,143 @@
+\hypertarget{ctrl__runtime__messages_8h}{\section{src/common/ctrl\-\_\-runtime\-\_\-messages.h File Reference}
+\label{ctrl__runtime__messages_8h}\index{src/common/ctrl\-\_\-runtime\-\_\-messages.\-h@{src/common/ctrl\-\_\-runtime\-\_\-messages.\-h}}
+}
+
+
+Definitions of structures for sending messages {\bfseries from} the global controller {\bfseries to} runtimes.  
+
+
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structctrl__runtime__msg__hdr}{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr}
+\begin{DoxyCompactList}\small\item\em All messages sent from controller to runtime are prefixed with this header. \end{DoxyCompactList}\item 
+struct \hyperlink{structctrl__add__runtime__msg}{ctrl\-\_\-add\-\_\-runtime\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9abd94df6087ab59f47dd546d51eb62d78}{C\-T\-R\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}. \end{DoxyCompactList}\item 
+struct \hyperlink{structctrl__create__thread__msg}{ctrl\-\_\-create\-\_\-thread\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2e623fd9e79d281a3137762f1d5569fe}{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}. \end{DoxyCompactList}\item 
+struct \hyperlink{structctrl__delete__thread__msg}{ctrl\-\_\-delete\-\_\-thread\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a3c0e4be670ba69db1375758d3c8a4f33}{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}. \end{DoxyCompactList}\item 
+struct \hyperlink{structctrl__route__msg}{ctrl\-\_\-route\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a79d3d73ddfdd3bc9813806c4ca56a6e1}{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}. \end{DoxyCompactList}\item 
+struct \hyperlink{structctrl__create__msu__msg}{ctrl\-\_\-create\-\_\-msu\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a63b47c3674f449f7bb6842ff88c04d5e}{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U}. \end{DoxyCompactList}\item 
+struct \hyperlink{structctrl__delete__msu__msg}{ctrl\-\_\-delete\-\_\-msu\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9abb237dc0ea60528dd97f4aab37fc9723}{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U}. \end{DoxyCompactList}\item 
+struct \hyperlink{structctrl__msu__route__msg}{ctrl\-\_\-msu\-\_\-route\-\_\-msg}
+\begin{DoxyCompactList}\small\item\em Payload for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2a0142e4dd46b965c0cd6e97b51c30d4}{C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9}{ctrl\-\_\-runtime\-\_\-msg\-\_\-type} \{ \\*
+\hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9abd94df6087ab59f47dd546d51eb62d78}{C\-T\-R\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}, 
+\hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2e623fd9e79d281a3137762f1d5569fe}{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}, 
+\hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a3c0e4be670ba69db1375758d3c8a4f33}{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}, 
+\hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a79d3d73ddfdd3bc9813806c4ca56a6e1}{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}, 
+\\*
+\hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a63b47c3674f449f7bb6842ff88c04d5e}{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U}, 
+\hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9abb237dc0ea60528dd97f4aab37fc9723}{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U}, 
+\hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2a0142e4dd46b965c0cd6e97b51c30d4}{C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S}
+ \}
+\begin{DoxyCompactList}\small\item\em The various top-\/level types of messages which can be sent from the controller to runtimes. \end{DoxyCompactList}\item 
+enum \hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8}{ctrl\-\_\-route\-\_\-msg\-\_\-type} \{ \\*
+\hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8af3b7ba89a90883322a996a4955044b0a}{C\-R\-E\-A\-T\-E\-\_\-\-R\-O\-U\-T\-E}, 
+\hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8a27c79700b87a098ea618c6df64884c09}{D\-E\-L\-E\-T\-E\-\_\-\-R\-O\-U\-T\-E}, 
+\hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8af26dd4724e2cbba74770d1a47cf90339}{A\-D\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}, 
+\hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8a809144b90957c455b0cd5c6563203731}{D\-E\-L\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}, 
+\\*
+\hyperlink{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8aeedf1ecfee1e3618cb919b4448498723}{M\-O\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}
+ \}
+\begin{DoxyCompactList}\small\item\em Sub-\/types for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a79d3d73ddfdd3bc9813806c4ca56a6e1}{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}, which have payload \hyperlink{structctrl__route__msg}{ctrl\-\_\-route\-\_\-msg}. \end{DoxyCompactList}\item 
+enum \hyperlink{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7}{ctrl\-\_\-msu\-\_\-route\-\_\-type} \{ \hyperlink{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7a43babbb330edc6ff927720b33563d609}{A\-D\-D\-\_\-\-R\-O\-U\-T\-E}, 
+\hyperlink{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7aa60eeffbd38cc3427c0c14bbe15ea24b}{D\-E\-L\-\_\-\-R\-O\-U\-T\-E}
+ \}
+\begin{DoxyCompactList}\small\item\em Sub-\/types for payloads of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2a0142e4dd46b965c0cd6e97b51c30d4}{C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Definitions of structures for sending messages {\bfseries from} the global controller {\bfseries to} runtimes. 
+
+Definition in file \hyperlink{ctrl__runtime__messages_8h_source}{ctrl\-\_\-runtime\-\_\-messages.\-h}.
+
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7}{\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!ctrl\-\_\-msu\-\_\-route\-\_\-type@{ctrl\-\_\-msu\-\_\-route\-\_\-type}}
+\index{ctrl\-\_\-msu\-\_\-route\-\_\-type@{ctrl\-\_\-msu\-\_\-route\-\_\-type}!ctrl_runtime_messages.h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}
+\subsubsection[{ctrl\-\_\-msu\-\_\-route\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf ctrl\-\_\-msu\-\_\-route\-\_\-type}}}\label{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7}
+
+
+Sub-\/types for payloads of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2a0142e4dd46b965c0cd6e97b51c30d4}{C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S}. 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{A\-D\-D\-\_\-\-R\-O\-U\-T\-E@{A\-D\-D\-\_\-\-R\-O\-U\-T\-E}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!A\-D\-D\-\_\-\-R\-O\-U\-T\-E@{A\-D\-D\-\_\-\-R\-O\-U\-T\-E}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7a43babbb330edc6ff927720b33563d609}{A\-D\-D\-\_\-\-R\-O\-U\-T\-E}\label{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7a43babbb330edc6ff927720b33563d609}
+}]Adds a route to an M\-S\-U. \index{D\-E\-L\-\_\-\-R\-O\-U\-T\-E@{D\-E\-L\-\_\-\-R\-O\-U\-T\-E}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!D\-E\-L\-\_\-\-R\-O\-U\-T\-E@{D\-E\-L\-\_\-\-R\-O\-U\-T\-E}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7aa60eeffbd38cc3427c0c14bbe15ea24b}{D\-E\-L\-\_\-\-R\-O\-U\-T\-E}\label{ctrl__runtime__messages_8h_aa8b79c4e41165b9ea65d306ce7550fa7aa60eeffbd38cc3427c0c14bbe15ea24b}
+}]Removes a route from an M\-S\-U. \end{description}
+\end{Desc}
+
+
+Definition at line 154 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8}{\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!ctrl\-\_\-route\-\_\-msg\-\_\-type@{ctrl\-\_\-route\-\_\-msg\-\_\-type}}
+\index{ctrl\-\_\-route\-\_\-msg\-\_\-type@{ctrl\-\_\-route\-\_\-msg\-\_\-type}!ctrl_runtime_messages.h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}
+\subsubsection[{ctrl\-\_\-route\-\_\-msg\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf ctrl\-\_\-route\-\_\-msg\-\_\-type}}}\label{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8}
+
+
+Sub-\/types for messages of type \hyperlink{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a79d3d73ddfdd3bc9813806c4ca56a6e1}{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}, which have payload \hyperlink{structctrl__route__msg}{ctrl\-\_\-route\-\_\-msg}. 
+
+Each type corresponds to a different operation that can be used to modify route creation and membership. Not to be used to modify route subscription. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{C\-R\-E\-A\-T\-E\-\_\-\-R\-O\-U\-T\-E@{C\-R\-E\-A\-T\-E\-\_\-\-R\-O\-U\-T\-E}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!C\-R\-E\-A\-T\-E\-\_\-\-R\-O\-U\-T\-E@{C\-R\-E\-A\-T\-E\-\_\-\-R\-O\-U\-T\-E}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8af3b7ba89a90883322a996a4955044b0a}{C\-R\-E\-A\-T\-E\-\_\-\-R\-O\-U\-T\-E}\label{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8af3b7ba89a90883322a996a4955044b0a}
+}]Creates a new route. \index{D\-E\-L\-E\-T\-E\-\_\-\-R\-O\-U\-T\-E@{D\-E\-L\-E\-T\-E\-\_\-\-R\-O\-U\-T\-E}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!D\-E\-L\-E\-T\-E\-\_\-\-R\-O\-U\-T\-E@{D\-E\-L\-E\-T\-E\-\_\-\-R\-O\-U\-T\-E}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8a27c79700b87a098ea618c6df64884c09}{D\-E\-L\-E\-T\-E\-\_\-\-R\-O\-U\-T\-E}\label{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8a27c79700b87a098ea618c6df64884c09}
+}]Deletes a route. \index{A\-D\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T@{A\-D\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!A\-D\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T@{A\-D\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8af26dd4724e2cbba74770d1a47cf90339}{A\-D\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}\label{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8af26dd4724e2cbba74770d1a47cf90339}
+}]Adds an endpoint to a route. \index{D\-E\-L\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T@{D\-E\-L\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!D\-E\-L\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T@{D\-E\-L\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8a809144b90957c455b0cd5c6563203731}{D\-E\-L\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}\label{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8a809144b90957c455b0cd5c6563203731}
+}]Deletes an endpoint from a route. \index{M\-O\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T@{M\-O\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!M\-O\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T@{M\-O\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8aeedf1ecfee1e3618cb919b4448498723}{M\-O\-D\-\_\-\-E\-N\-D\-P\-O\-I\-N\-T}\label{ctrl__runtime__messages_8h_ad951c7380db78ed80db2c2484eb7daa8aeedf1ecfee1e3618cb919b4448498723}
+}]Modifies the key corresponding to a route endpoint. \end{description}
+\end{Desc}
+
+
+Definition at line 105 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+
+\hypertarget{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9}{\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!ctrl\-\_\-runtime\-\_\-msg\-\_\-type@{ctrl\-\_\-runtime\-\_\-msg\-\_\-type}}
+\index{ctrl\-\_\-runtime\-\_\-msg\-\_\-type@{ctrl\-\_\-runtime\-\_\-msg\-\_\-type}!ctrl_runtime_messages.h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}
+\subsubsection[{ctrl\-\_\-runtime\-\_\-msg\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf ctrl\-\_\-runtime\-\_\-msg\-\_\-type}}}\label{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9}
+
+
+The various top-\/level types of messages which can be sent from the controller to runtimes. 
+
+Payload types the structures indicated in the comments below. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{C\-T\-R\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E@{C\-T\-R\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!C\-T\-R\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E@{C\-T\-R\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9abd94df6087ab59f47dd546d51eb62d78}{C\-T\-R\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}\label{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9abd94df6087ab59f47dd546d51eb62d78}
+}]payload\-: \hyperlink{structctrl__add__runtime__msg}{ctrl\-\_\-add\-\_\-runtime\-\_\-msg} \index{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D@{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D@{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2e623fd9e79d281a3137762f1d5569fe}{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}\label{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2e623fd9e79d281a3137762f1d5569fe}
+}]payload\-: \hyperlink{structctrl__create__thread__msg}{ctrl\-\_\-create\-\_\-thread\-\_\-msg} \index{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D@{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D@{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a3c0e4be670ba69db1375758d3c8a4f33}{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-T\-H\-R\-E\-A\-D}\label{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a3c0e4be670ba69db1375758d3c8a4f33}
+}]payload\-: \hyperlink{structctrl__delete__thread__msg}{ctrl\-\_\-delete\-\_\-thread\-\_\-msg} \index{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E@{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E@{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a79d3d73ddfdd3bc9813806c4ca56a6e1}{C\-T\-R\-L\-\_\-\-M\-O\-D\-I\-F\-Y\-\_\-\-R\-O\-U\-T\-E}\label{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a79d3d73ddfdd3bc9813806c4ca56a6e1}
+}]payload\-: \hyperlink{structctrl__route__msg}{ctrl\-\_\-route\-\_\-msg} \index{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U@{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U@{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a63b47c3674f449f7bb6842ff88c04d5e}{C\-T\-R\-L\-\_\-\-C\-R\-E\-A\-T\-E\-\_\-\-M\-S\-U}\label{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a63b47c3674f449f7bb6842ff88c04d5e}
+}]payload\-: \hyperlink{structctrl__create__msu__msg}{ctrl\-\_\-create\-\_\-msu\-\_\-msg} \index{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U@{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U@{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9abb237dc0ea60528dd97f4aab37fc9723}{C\-T\-R\-L\-\_\-\-D\-E\-L\-E\-T\-E\-\_\-\-M\-S\-U}\label{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9abb237dc0ea60528dd97f4aab37fc9723}
+}]payload\-: \hyperlink{structctrl__delete__msu__msg}{ctrl\-\_\-delete\-\_\-msu\-\_\-msg} \index{C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S@{C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S}!ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}}\index{ctrl\-\_\-runtime\-\_\-messages.\-h@{ctrl\-\_\-runtime\-\_\-messages.\-h}!C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S@{C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S}}\item[{\em 
+\hypertarget{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2a0142e4dd46b965c0cd6e97b51c30d4}{C\-T\-R\-L\-\_\-\-M\-S\-U\-\_\-\-R\-O\-U\-T\-E\-S}\label{ctrl__runtime__messages_8h_aff250b7918a6975b13277c84bc6ec5b9a2a0142e4dd46b965c0cd6e97b51c30d4}
+}]payload\-: \hyperlink{structctrl__msu__route__msg}{ctrl\-\_\-msu\-\_\-route\-\_\-msg} \end{description}
+\end{Desc}
+
+
+Definition at line 36 of file ctrl\-\_\-runtime\-\_\-messages.\-h.
+

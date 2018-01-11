@@ -1,0 +1,149 @@
+\hypertarget{controller__stats_8h}{\section{src/global\-\_\-controller/controller\-\_\-stats.h File Reference}
+\label{controller__stats_8h}\index{src/global\-\_\-controller/controller\-\_\-stats.\-h@{src/global\-\_\-controller/controller\-\_\-stats.\-h}}
+}
+{\ttfamily \#include \char`\"{}timeseries.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unused\-\_\-def.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structstat__item}{stat\-\_\-item}
+\begin{DoxyCompactList}\small\item\em The internal statistics structure where stats are aggregated One per statistic-\/item. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{controller__stats_8h_abba5ba4b22e925591870927dd3483184}{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D}~4192
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$ \hyperlink{controller__stats_8h_a85375362edd836dfab829c415aff3641}{get\-\_\-msu\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id, unsigned int msu\-\_\-id)
+\item 
+struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$ \hyperlink{controller__stats_8h_ad9f31425225a9c92dfd6d18954cd27e2}{get\-\_\-thread\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id, unsigned int thread\-\_\-id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__stats_8h_a0b586a4d840dde8f832066c88534c5cc}{unregister\-\_\-msu\-\_\-stats} (unsigned int msu\-\_\-id)
+\item 
+int \hyperlink{controller__stats_8h_a1f2050497a6b205ae3d2f31e62bf8bea}{register\-\_\-msu\-\_\-stats} (unsigned int msu\-\_\-id, int msu\-\_\-type\-\_\-id, int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__stats_8h_ac29c17fd5a8f47223ba648b59d6d397f}{unregister\-\_\-thread\-\_\-stats} (unsigned int thread\-\_\-id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__stats_8h_a59435da360ded4cc6c9a6cc5a3e0834a}{register\-\_\-thread\-\_\-stats} (unsigned int thread\-\_\-id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__stats_8h_a987e4bed1652d7ebda191ee1f202addc}{init\-\_\-statistics} ()
+\begin{DoxyCompactList}\small\item\em Initializes the entire stats module. \end{DoxyCompactList}\item 
+void \hyperlink{controller__stats_8h_a256a57eae442310da08b39e60b30f396}{show\-\_\-stats} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{controller__stats_8h_abba5ba4b22e925591870927dd3483184}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D@{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D}}
+\index{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D@{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D~4192}}\label{controller__stats_8h_abba5ba4b22e925591870927dd3483184}
+
+
+Definition at line 33 of file controller\-\_\-stats.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{controller__stats_8h_a85375362edd836dfab829c415aff3641}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!get\-\_\-msu\-\_\-stat@{get\-\_\-msu\-\_\-stat}}
+\index{get\-\_\-msu\-\_\-stat@{get\-\_\-msu\-\_\-stat}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{get\-\_\-msu\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf timed\-\_\-rrdb}$\ast$ get\-\_\-msu\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id, }
+\item[{unsigned int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8h_a85375362edd836dfab829c415aff3641}
+
+
+Definition at line 95 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8h_ad9f31425225a9c92dfd6d18954cd27e2}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!get\-\_\-thread\-\_\-stat@{get\-\_\-thread\-\_\-stat}}
+\index{get\-\_\-thread\-\_\-stat@{get\-\_\-thread\-\_\-stat}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{get\-\_\-thread\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf timed\-\_\-rrdb}$\ast$ get\-\_\-thread\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id, }
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8h_ad9f31425225a9c92dfd6d18954cd27e2}
+
+
+Definition at line 85 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8h_a987e4bed1652d7ebda191ee1f202addc}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!init\-\_\-statistics@{init\-\_\-statistics}}
+\index{init\-\_\-statistics@{init\-\_\-statistics}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{init\-\_\-statistics}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-statistics (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8h_a987e4bed1652d7ebda191ee1f202addc}
+
+
+Initializes the entire stats module. 
+
+M\-U\-S\-T B\-E C\-A\-L\-L\-E\-D before runtime starts 
+
+Definition at line 783 of file rt\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8h_a1f2050497a6b205ae3d2f31e62bf8bea}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!register\-\_\-msu\-\_\-stats@{register\-\_\-msu\-\_\-stats}}
+\index{register\-\_\-msu\-\_\-stats@{register\-\_\-msu\-\_\-stats}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{register\-\_\-msu\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int register\-\_\-msu\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id, }
+\item[{int}]{msu\-\_\-type\-\_\-id, }
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8h_a1f2050497a6b205ae3d2f31e62bf8bea}
+
+
+Definition at line 170 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8h_a59435da360ded4cc6c9a6cc5a3e0834a}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!register\-\_\-thread\-\_\-stats@{register\-\_\-thread\-\_\-stats}}
+\index{register\-\_\-thread\-\_\-stats@{register\-\_\-thread\-\_\-stats}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{register\-\_\-thread\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int register\-\_\-thread\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8h_a59435da360ded4cc6c9a6cc5a3e0834a}
+
+
+Definition at line 181 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8h_a256a57eae442310da08b39e60b30f396}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!show\-\_\-stats@{show\-\_\-stats}}
+\index{show\-\_\-stats@{show\-\_\-stats}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{show\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}void show\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8h_a256a57eae442310da08b39e60b30f396}
+
+
+Definition at line 231 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8h_a0b586a4d840dde8f832066c88534c5cc}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!unregister\-\_\-msu\-\_\-stats@{unregister\-\_\-msu\-\_\-stats}}
+\index{unregister\-\_\-msu\-\_\-stats@{unregister\-\_\-msu\-\_\-stats}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{unregister\-\_\-msu\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int unregister\-\_\-msu\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8h_a0b586a4d840dde8f832066c88534c5cc}
+
+
+Definition at line 116 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8h_ac29c17fd5a8f47223ba648b59d6d397f}{\index{controller\-\_\-stats.\-h@{controller\-\_\-stats.\-h}!unregister\-\_\-thread\-\_\-stats@{unregister\-\_\-thread\-\_\-stats}}
+\index{unregister\-\_\-thread\-\_\-stats@{unregister\-\_\-thread\-\_\-stats}!controller_stats.h@{controller\-\_\-stats.\-h}}
+\subsubsection[{unregister\-\_\-thread\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int unregister\-\_\-thread\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8h_ac29c17fd5a8f47223ba648b59d6d397f}
+
+
+Definition at line 124 of file controller\-\_\-stats.\-c.
+

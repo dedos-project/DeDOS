@@ -1,0 +1,104 @@
+\hypertarget{structworker__thread}{\section{worker\-\_\-thread Struct Reference}
+\label{structworker__thread}\index{worker\-\_\-thread@{worker\-\_\-thread}}
+}
+
+
+Representation of a thread that holds M\-S\-Us, messages, and waits on a semaphore.  
+
+
+
+
+{\ttfamily \#include $<$worker\-\_\-thread.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$ \hyperlink{structworker__thread_a5da2605902d4e02c6c486ed16a76a8df}{thread}
+\begin{DoxyCompactList}\small\item\em The underlying \hyperlink{structdedos__thread}{dedos\-\_\-thread}. \end{DoxyCompactList}\item 
+int \hyperlink{structworker__thread_a737618048817673c66abf74b29054796}{n\-\_\-msus}
+\begin{DoxyCompactList}\small\item\em The number of msus on the thread. \end{DoxyCompactList}\item 
+pthread\-\_\-mutex\-\_\-t \hyperlink{structworker__thread_a92b93bfd566a2cef147993fd851beb30}{exit\-\_\-lock}
+\begin{DoxyCompactList}\small\item\em Lock protecting the \hyperlink{structworker__thread_a671b6ce2bdb562ebb744b9bcf6764e64}{worker\-\_\-thread\-::exit\-\_\-signal}. \end{DoxyCompactList}\item 
+int \hyperlink{structworker__thread_a671b6ce2bdb562ebb744b9bcf6764e64}{exit\-\_\-signal}
+\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{structworker__thread_a5b9f22e2454a995f711f92817e5761e2}{msus} \mbox{[}\hyperlink{dfg_8h_a223dc89350ecbd6a5bf07e56bb2d78fe}{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-P\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D}\mbox{]}
+\begin{DoxyCompactList}\small\item\em The M\-S\-Us on the thread. \end{DoxyCompactList}\item 
+struct \hyperlink{structtimeout__list}{timeout\-\_\-list} $\ast$ \hyperlink{structworker__thread_a1839face176d6d351d17cd9970396bad}{timeouts}
+\begin{DoxyCompactList}\small\item\em The times at which the sem\-\_\-trywait on on the local semaphore should be released. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Representation of a thread that holds M\-S\-Us, messages, and waits on a semaphore. 
+
+Definition at line 40 of file worker\-\_\-thread.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structworker__thread_a92b93bfd566a2cef147993fd851beb30}{\index{worker\-\_\-thread@{worker\-\_\-thread}!exit\-\_\-lock@{exit\-\_\-lock}}
+\index{exit\-\_\-lock@{exit\-\_\-lock}!worker_thread@{worker\-\_\-thread}}
+\subsubsection[{exit\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-mutex\-\_\-t worker\-\_\-thread\-::exit\-\_\-lock}}\label{structworker__thread_a92b93bfd566a2cef147993fd851beb30}
+
+
+Lock protecting the \hyperlink{structworker__thread_a671b6ce2bdb562ebb744b9bcf6764e64}{worker\-\_\-thread\-::exit\-\_\-signal}. 
+
+
+
+Definition at line 46 of file worker\-\_\-thread.\-h.
+
+\hypertarget{structworker__thread_a671b6ce2bdb562ebb744b9bcf6764e64}{\index{worker\-\_\-thread@{worker\-\_\-thread}!exit\-\_\-signal@{exit\-\_\-signal}}
+\index{exit\-\_\-signal@{exit\-\_\-signal}!worker_thread@{worker\-\_\-thread}}
+\subsubsection[{exit\-\_\-signal}]{\setlength{\rightskip}{0pt plus 5cm}int worker\-\_\-thread\-::exit\-\_\-signal}}\label{structworker__thread_a671b6ce2bdb562ebb744b9bcf6764e64}
+
+
+Definition at line 47 of file worker\-\_\-thread.\-h.
+
+\hypertarget{structworker__thread_a5b9f22e2454a995f711f92817e5761e2}{\index{worker\-\_\-thread@{worker\-\_\-thread}!msus@{msus}}
+\index{msus@{msus}!worker_thread@{worker\-\_\-thread}}
+\subsubsection[{msus}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ worker\-\_\-thread\-::msus\mbox{[}{\bf M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-P\-E\-R\-\_\-\-T\-H\-R\-E\-A\-D}\mbox{]}}}\label{structworker__thread_a5b9f22e2454a995f711f92817e5761e2}
+
+
+The M\-S\-Us on the thread. 
+
+
+
+Definition at line 49 of file worker\-\_\-thread.\-h.
+
+\hypertarget{structworker__thread_a737618048817673c66abf74b29054796}{\index{worker\-\_\-thread@{worker\-\_\-thread}!n\-\_\-msus@{n\-\_\-msus}}
+\index{n\-\_\-msus@{n\-\_\-msus}!worker_thread@{worker\-\_\-thread}}
+\subsubsection[{n\-\_\-msus}]{\setlength{\rightskip}{0pt plus 5cm}int worker\-\_\-thread\-::n\-\_\-msus}}\label{structworker__thread_a737618048817673c66abf74b29054796}
+
+
+The number of msus on the thread. 
+
+
+
+Definition at line 44 of file worker\-\_\-thread.\-h.
+
+\hypertarget{structworker__thread_a5da2605902d4e02c6c486ed16a76a8df}{\index{worker\-\_\-thread@{worker\-\_\-thread}!thread@{thread}}
+\index{thread@{thread}!worker_thread@{worker\-\_\-thread}}
+\subsubsection[{thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-thread}$\ast$ worker\-\_\-thread\-::thread}}\label{structworker__thread_a5da2605902d4e02c6c486ed16a76a8df}
+
+
+The underlying \hyperlink{structdedos__thread}{dedos\-\_\-thread}. 
+
+
+
+Definition at line 42 of file worker\-\_\-thread.\-h.
+
+\hypertarget{structworker__thread_a1839face176d6d351d17cd9970396bad}{\index{worker\-\_\-thread@{worker\-\_\-thread}!timeouts@{timeouts}}
+\index{timeouts@{timeouts}!worker_thread@{worker\-\_\-thread}}
+\subsubsection[{timeouts}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf timeout\-\_\-list}$\ast$ worker\-\_\-thread\-::timeouts}}\label{structworker__thread_a1839face176d6d351d17cd9970396bad}
+
+
+The times at which the sem\-\_\-trywait on on the local semaphore should be released. 
+
+
+
+Definition at line 51 of file worker\-\_\-thread.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{worker__thread_8h}{worker\-\_\-thread.\-h}\end{DoxyCompactItemize}

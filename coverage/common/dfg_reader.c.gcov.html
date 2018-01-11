@@ -1,0 +1,819 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - unnamed - common/dfg_reader.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">common</a> - dfg_reader.c<span style="font-size: 80%;"> (source / <a href="dfg_reader.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">unnamed</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">230</td>
+            <td class="headerCovTableEntry">367</td>
+            <td class="headerCovTableEntryLo">62.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-01-11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntry">51</td>
+            <td class="headerCovTableEntryLo">68.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            : START OF LICENSE STUB
+<span class="lineNum">       3 </span>            :     DeDOS: Declarative Dispersion-Oriented Software
+<span class="lineNum">       4 </span>            :     Copyright (C) 2017 University of Pennsylvania, Georgetown University
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            :     This program is free software: you can redistribute it and/or modify
+<span class="lineNum">       7 </span>            :     it under the terms of the GNU General Public License as published by
+<span class="lineNum">       8 </span>            :     the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       9 </span>            :     (at your option) any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            :     GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            :     You should have received a copy of the GNU General Public License
+<span class="lineNum">      17 </span>            :     along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      18 </span>            : END OF LICENSE STUB
+<span class="lineNum">      19 </span>            : */
+<span class="lineNum">      20 </span>            : /**
+<span class="lineNum">      21 </span>            :  * @file dfg_reader.c
+<span class="lineNum">      22 </span>            :  *
+<span class="lineNum">      23 </span>            :  * Defines conversion of JSON strings to dedos_dfg
+<span class="lineNum">      24 </span>            :  */
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &quot;dfg_reader.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;dfg.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;jsmn_parser.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;jsmn.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;logging.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;strings.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;stdbool.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /** The objects types which can be located in the json DFG
+<span class="lineNum">      37 </span>            :  * See ::key_map for usage.
+<span class="lineNum">      38 </span>            :  * */
+<span class="lineNum">      39 </span>            : enum object_type {
+<span class="lineNum">      40 </span>            :     ROOT=0, RUNTIMES=1, ROUTES=2, DESTINATIONS=3, MSUS=4, PROFILING=5,
+<span class="lineNum">      41 </span>            :     META_ROUTING=6, SOURCE_TYPES=7, SCHEDULING=8, DEPENDENCIES=9, MSU_TYPES = 10
+<span class="lineNum">      42 </span>            : };
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : /**
+<span class="lineNum">      45 </span>            :  * Fixes the thread assignment within the DFG such that the
+<span class="lineNum">      46 </span>            :  * pinned and unpinned threads are accurate.
+<span class="lineNum">      47 </span>            :  * Must be run, because during execution the only hint of pinned/unpinned is
+<span class="lineNum">      48 </span>            :  * msu blocking mode.
+<span class="lineNum">      49 </span>            :  * To be run after DFG is fully parsed.
+<a name="50"><span class="lineNum">      50 </span>            :  * @return 0 on success, -1 on error</a>
+<span class="lineNum">      51 </span>            :  */
+<span class="lineNum">      52 </span><span class="lineCov">          3 : static int fix_num_threads(struct dedos_dfg *dfg) {</span>
+<span class="lineNum">      53 </span><span class="lineCov">          5 :     for (int i=0; i&lt;dfg-&gt;n_runtimes; i++) {</span>
+<span class="lineNum">      54 </span><span class="lineCov">          3 :         struct dfg_runtime *rt = dfg-&gt;runtimes[i];</span>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">          3 :         int n_pinned = rt-&gt;n_pinned_threads;</span>
+<span class="lineNum">      57 </span><span class="lineCov">          3 :         int n_unpinned = rt-&gt;n_unpinned_threads;</span>
+<span class="lineNum">      58 </span><span class="lineCov">          3 :         int total = n_pinned + n_unpinned;</span>
+<span class="lineNum">      59 </span><span class="lineCov">         21 :         for (int t=0; t &lt; total; t++) {</span>
+<span class="lineNum">      60 </span><span class="lineCov">         18 :             struct dfg_thread *thread = rt-&gt;threads[t];</span>
+<span class="lineNum">      61 </span><span class="lineCov">         18 :             if (thread-&gt;mode == PINNED_THREAD) {</span>
+<span class="lineNum">      62 </span><span class="lineCov">          7 :                 n_pinned--;</span>
+<span class="lineNum">      63 </span><span class="lineCov">         11 :             } else if (thread-&gt;mode == UNPINNED_THREAD) {</span>
+<span class="lineNum">      64 </span><span class="lineCov">          5 :                 n_unpinned--;</span>
+<span class="lineNum">      65 </span>            :             } else {
+<span class="lineNum">      66 </span><span class="lineCov">          6 :                 if (n_pinned &gt; 0) {</span>
+<span class="lineNum">      67 </span><span class="lineCov">          2 :                     thread-&gt;mode = PINNED_THREAD;</span>
+<span class="lineNum">      68 </span><span class="lineCov">          2 :                     log(LOG_DFG_READER, &quot;Setting thread %d with no MSUs to pinned&quot;, t);</span>
+<span class="lineNum">      69 </span><span class="lineCov">          2 :                     n_pinned--;</span>
+<span class="lineNum">      70 </span><span class="lineCov">          4 :                 } else if (n_unpinned &gt; 0) {</span>
+<span class="lineNum">      71 </span><span class="lineCov">          4 :                     thread-&gt;mode = UNPINNED_THREAD;</span>
+<span class="lineNum">      72 </span><span class="lineCov">          4 :                     log(LOG_DFG_READER, &quot;Setting thread %d with no MSUs to unpinned&quot;, t);</span>
+<span class="lineNum">      73 </span><span class="lineCov">          4 :                     n_unpinned--;</span>
+<span class="lineNum">      74 </span>            :                 } else {
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :                     log_error(&quot;Cannot determine pinned/unpinned status of threads &quot;</span>
+<span class="lineNum">      76 </span>            :                               &quot;based on number of blocking/nonblock MSUs&quot;);
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :                     return -1;</span>
+<span class="lineNum">      78 </span>            :                 }
+<span class="lineNum">      79 </span>            :             }
+<span class="lineNum">      80 </span>            :         }
+<span class="lineNum">      81 </span><span class="lineCov">          3 :         if (n_pinned &lt; 0 || n_unpinned &lt; 0) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">          1 :             log_error(&quot;More pinned/unpinned threads specified by MSUs than by DFG on rt %d: &quot;</span>
+<span class="lineNum">      83 </span>            :                       &quot;%d more pinned, %d more unpinned&quot;, rt-&gt;id, -1 * n_pinned, -1 * n_unpinned);
+<span class="lineNum">      84 </span><span class="lineCov">          1 :             return -1;</span>
+<span class="lineNum">      85 </span>            :         }
+<span class="lineNum">      86 </span>            :     }
+<span class="lineNum">      87 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">      88 </span>            : }
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : /**
+<span class="lineNum">      91 </span>            :  * Provides the mapping between the keys in the JSON and the functions which are called
+<span class="lineNum">      92 </span>            :  * when those keys are encountered.
+<span class="lineNum">      93 </span>            :  */
+<a name="94"><span class="lineNum">      94 </span>            : static struct key_mapping key_map[];</a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">          1 : struct dedos_dfg *parse_dfg_json_file(const char *filename){</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">          1 :     struct dedos_dfg *dfg = calloc(1, sizeof(*dfg));</span>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          1 :     set_dfg(dfg);</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">          1 :     int rtn = parse_file_into_obj(filename, dfg, key_map);</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">          1 :     if (rtn &gt;= 0){</span>
+<span class="lineNum">     105 </span><span class="lineCov">          1 :         rtn = fix_num_threads(dfg);</span>
+<span class="lineNum">     106 </span><span class="lineCov">          1 :         if (rtn &lt; 0) {</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :             return NULL;</span>
+<span class="lineNum">     108 </span>            :         }
+<span class="lineNum">     109 </span><span class="lineCov">          1 :         return dfg;</span>
+<span class="lineNum">     110 </span>            :     } else {
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :         log_error(&quot;Failed to parse jsmn&quot;);</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :         return NULL;</span>
+<span class="lineNum">     113 </span>            :     }
+<span class="lineNum">     114 </span>            : }
+<a name="115"><span class="lineNum">     115 </span>            : </a>
+<span class="lineNum">     116 </span>            : /** Key: &quot;application_name&quot;, Object: ::ROOT */
+<span class="lineNum">     117 </span><span class="lineCov">          1 : PARSE_FN(set_app_name) {</span>
+<span class="lineNum">     118 </span><span class="lineCov">          1 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     119 </span><span class="lineCov">          1 :     char *name = GET_STR_TOK();</span>
+<span class="lineNum">     120 </span><span class="lineCov">          1 :     if (strlen(name) &gt; MAX_APP_NAME_LENGTH) {</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :         log_error(&quot;Application name '%s' is too long&quot;, name);</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     123 </span>            :     }
+<span class="lineNum">     124 </span><span class="lineCov">          1 :     strcpy(dfg-&gt;application_name, name);</span>
+<span class="lineNum">     125 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     126 </span>            : }
+<a name="127"><span class="lineNum">     127 </span>            : </a>
+<span class="lineNum">     128 </span>            : /** Key: &quot;global_ctl_ip&quot;, Object: ::ROOT */
+<span class="lineNum">     129 </span><span class="lineCov">          1 : PARSE_FN(set_ctl_ip) {</span>
+<span class="lineNum">     130 </span><span class="lineCov">          1 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     131 </span><span class="lineCov">          1 :     char *ip = GET_STR_TOK();</span>
+<span class="lineNum">     132 </span>            :     struct in_addr addr;
+<span class="lineNum">     133 </span><span class="lineCov">          1 :     int rtn = inet_pton(AF_INET, ip, &amp;addr);</span>
+<span class="lineNum">     134 </span><span class="lineCov">          1 :     if (rtn &lt;= 0) {</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :         log_perror(&quot;Error converting '%s' to IP address&quot;, ip);</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     137 </span>            :     }
+<span class="lineNum">     138 </span><span class="lineCov">          1 :     dfg-&gt;global_ctl_ip = addr.s_addr;</span>
+<span class="lineNum">     139 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     140 </span>            : }
+<a name="141"><span class="lineNum">     141 </span>            : </a>
+<span class="lineNum">     142 </span>            : /** Key: &quot;global_ctl_port&quot;, Object: ::ROOT */
+<span class="lineNum">     143 </span><span class="lineCov">          1 : PARSE_FN(set_ctl_port) {</span>
+<span class="lineNum">     144 </span><span class="lineCov">          1 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     145 </span><span class="lineCov">          1 :     dfg-&gt;global_ctl_port = GET_INT_TOK();</span>
+<span class="lineNum">     146 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     147 </span>            : }
+<a name="148"><span class="lineNum">     148 </span>            : </a>
+<span class="lineNum">     149 </span>            : /** Key: &quot;db_ip&quot;, Object: ::ROOT */
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 : PARSE_FN(set_db_ip) {</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :     char *ip = GET_STR_TOK();</span>
+<span class="lineNum">     153 </span>            :     struct in_addr addr;
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :     int rtn = inet_pton(AF_INET, ip, &amp;addr);</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :     if (rtn &lt;= 0) {</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :         log_perror(&quot;Error converting '%s' to IP address&quot;, ip);</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     158 </span>            :     }
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :     dfg-&gt;db.ip = addr.s_addr;</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     162 </span>            : }
+<a name="163"><span class="lineNum">     163 </span>            : </a>
+<span class="lineNum">     164 </span>            : /** Key: &quot;global_ctl_port&quot;, Object: ::ROOT */
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 : PARSE_FN(set_db_port) {</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     dfg-&gt;db.port = GET_INT_TOK();</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     170 </span>            : }
+<a name="171"><span class="lineNum">     171 </span>            : </a>
+<span class="lineNum">     172 </span>            : /** Key: &quot;db_user&quot;, Object ::ROOT */
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 : PARSE_FN(set_db_user) {</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :     char *str_db_user = GET_STR_TOK();</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :     memcpy(dfg-&gt;db.user, str_db_user, strlen(str_db_user));</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     179 </span>            : }
+<a name="180"><span class="lineNum">     180 </span>            : </a>
+<span class="lineNum">     181 </span>            : /** Key: &quot;db_pwd&quot;, Object ::ROOT */
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 : PARSE_FN(set_db_pwd) {</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :     char *str_db_pwd = GET_STR_TOK();</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :     memcpy(dfg-&gt;db.pwd, str_db_pwd, strlen(str_db_pwd));</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     188 </span>            : }
+<a name="189"><span class="lineNum">     189 </span>            : </a>
+<span class="lineNum">     190 </span>            : /** Key: &quot;db_name&quot;, Object ::ROOT */
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 : PARSE_FN(set_db_name) {</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :     char *str_db_name = GET_STR_TOK();</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :     memcpy(dfg-&gt;db.name, str_db_name, strlen(str_db_name));</span>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     197 </span>            : }
+<a name="198"><span class="lineNum">     198 </span>            : </a>
+<span class="lineNum">     199 </span>            : /** Key: element in &quot;runtimes&quot;, Object ::ROOT */
+<span class="lineNum">     200 </span><span class="lineCov">          1 : INIT_OBJ_FN(init_runtime) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">          1 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     202 </span><span class="lineCov">          1 :     int index = GET_OBJ_INDEX();</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">          1 :     dfg-&gt;n_runtimes++;</span>
+<span class="lineNum">     205 </span><span class="lineCov">          1 :     dfg-&gt;runtimes[index] = calloc(1, sizeof(*dfg-&gt;runtimes[index]));</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span><span class="lineCov">          1 :     RETURN_OBJ(dfg-&gt;runtimes[index], RUNTIMES);</span>
+<span class="lineNum">     208 </span>            : }
+<a name="209"><span class="lineNum">     209 </span>            : </a>
+<span class="lineNum">     210 </span>            : /** Key: &quot;runtimes&quot;, Object ::ROOT */
+<span class="lineNum">     211 </span><span class="lineCov">          1 : PARSE_OBJ_LIST_FN(set_runtimes, init_runtime);</span>
+<a name="212"><span class="lineNum">     212 </span>            : </a>
+<span class="lineNum">     213 </span>            : /** Key: element in &quot;MSUs&quot;, Object ::ROOT */
+<span class="lineNum">     214 </span><span class="lineCov">          3 : INIT_OBJ_FN(init_dfg_msu_from_json) {</span>
+<span class="lineNum">     215 </span><span class="lineCov">          3 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     216 </span><span class="lineCov">          3 :     int index = GET_OBJ_INDEX();</span>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">          3 :     dfg-&gt;n_msus++;</span>
+<span class="lineNum">     219 </span><span class="lineCov">          3 :     dfg-&gt;msus[index] = calloc(1, sizeof(struct dfg_msu));</span>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineCov">          3 :     RETURN_OBJ(dfg-&gt;msus[index], MSUS);</span>
+<span class="lineNum">     222 </span>            : }
+<a name="223"><span class="lineNum">     223 </span>            : </a>
+<span class="lineNum">     224 </span>            : /** Key: &quot;MSUs&quot;, Object ::ROOT */
+<span class="lineNum">     225 </span><span class="lineCov">          1 : PARSE_OBJ_LIST_FN(set_msus, init_dfg_msu_from_json);</span>
+<a name="226"><span class="lineNum">     226 </span>            : </a>
+<span class="lineNum">     227 </span>            : /** Key: element in &quot;MSU_types&quot;, Object ::ROOT */
+<span class="lineNum">     228 </span><span class="lineCov">          2 : INIT_OBJ_FN(init_dfg_msu_type) {</span>
+<span class="lineNum">     229 </span><span class="lineCov">          2 :     struct dedos_dfg *dfg = GET_PARSE_OBJ();</span>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">          2 :     int index = GET_OBJ_INDEX();</span>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">          2 :     dfg-&gt;n_msu_types++;</span>
+<span class="lineNum">     234 </span><span class="lineCov">          2 :     dfg-&gt;msu_types[index] = calloc(1, sizeof(**dfg-&gt;msu_types));</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineCov">          2 :     RETURN_OBJ(dfg-&gt;msu_types[index], MSU_TYPES);</span>
+<span class="lineNum">     237 </span>            : }
+<a name="238"><span class="lineNum">     238 </span>            : </a>
+<span class="lineNum">     239 </span>            : /** Key: &quot;MSU_types&quot;, Object: ::ROOT */
+<span class="lineNum">     240 </span><span class="lineCov">          1 : PARSE_OBJ_LIST_FN(set_msu_types, init_dfg_msu_type);</span>
+<a name="241"><span class="lineNum">     241 </span>            : </a>
+<span class="lineNum">     242 </span>            : /** Key: &quot;id&quot;, Object: ::MSU_TYPES */
+<span class="lineNum">     243 </span><span class="lineCov">          2 : PARSE_FN(set_msu_type_id) {</span>
+<span class="lineNum">     244 </span><span class="lineCov">          2 :     struct dfg_msu_type *type = GET_PARSE_OBJ();</span>
+<span class="lineNum">     245 </span><span class="lineCov">          2 :     type-&gt;id = GET_INT_TOK();</span>
+<span class="lineNum">     246 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">     247 </span>            : }
+<a name="248"><span class="lineNum">     248 </span>            : </a>
+<span class="lineNum">     249 </span>            : /** Key: &quot;name&quot;, Object: ::MSU_TYPES */
+<span class="lineNum">     250 </span><span class="lineCov">          2 : PARSE_FN(set_msu_type_name) {</span>
+<span class="lineNum">     251 </span><span class="lineCov">          2 :     struct dfg_msu_type *type = GET_PARSE_OBJ();</span>
+<span class="lineNum">     252 </span><span class="lineCov">          2 :     char *name = GET_STR_TOK();</span>
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span><span class="lineCov">          2 :     if (strlen(name) &gt; MAX_MSU_NAME_LEN) {</span>
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :         log_error(&quot;MSU name %s too long&quot;, name);</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     257 </span>            :     }
+<span class="lineNum">     258 </span><span class="lineCov">          2 :     strcpy(type-&gt;name, name);</span>
+<span class="lineNum">     259 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">     260 </span>            : }
+<a name="261"><span class="lineNum">     261 </span>            : </a>
+<span class="lineNum">     262 </span>            : /** Key: &quot;meta_routing&quot;, Object: ::MSU_TYPES */
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 : PARSE_OBJ_FN(set_meta_routing, struct dfg_msu_type, meta_routing, META_ROUTING);</span>
+<a name="264"><span class="lineNum">     264 </span>            : </a>
+<span class="lineNum">     265 </span>            : /** Key: Element in &quot;dependencies&quot;, Object: ::MSU_TYPES */
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 : INIT_OBJ_FN(init_dependencies) {</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :     struct dfg_msu_type *type = GET_PARSE_OBJ();</span>
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :     int index = GET_OBJ_INDEX();</span>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :     type-&gt;n_dependencies++;</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :     type-&gt;dependencies[index] = calloc(1, sizeof(*type-&gt;dependencies[index]));</span>
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :     RETURN_OBJ(type-&gt;dependencies[index], DEPENDENCIES);</span>
+<span class="lineNum">     274 </span>            : }
+<a name="275"><span class="lineNum">     275 </span>            : </a>
+<span class="lineNum">     276 </span>            : /** Key: &quot;dependencies&quot;, Object ::MSU_TYPES */
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 : PARSE_OBJ_LIST_FN(set_dependencies, init_dependencies);</span>
+<a name="278"><span class="lineNum">     278 </span>            : </a>
+<span class="lineNum">     279 </span>            : /** Key: &quot;cloneable&quot;, Object ::MSU_TYPES */
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 : PARSE_FN(set_cloneable) {</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :     struct dfg_msu_type *type = GET_PARSE_OBJ();</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :     type-&gt;cloneable = GET_INT_TOK();</span>
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     284 </span>            : }
+<a name="285"><span class="lineNum">     285 </span>            : </a>
+<span class="lineNum">     286 </span>            : /** Key: &quot;colocation_group&quot;, object ::MSU_TYPES */
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 : PARSE_FN(set_colocation_group) {</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :     struct dfg_msu_type *type = GET_PARSE_OBJ();</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :     type-&gt;colocation_group = GET_INT_TOK();</span>
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     291 </span>            : }
+<a name="292"><span class="lineNum">     292 </span>            : </a>
+<span class="lineNum">     293 </span>            : /** Key: &quot;init_data&quot;, Object: ::MSUS */
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 : PARSE_FN(set_msu_init_data) {</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :     struct dfg_msu *vertex = GET_PARSE_OBJ();</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :     char *init_data = GET_STR_TOK();</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :     if (strlen(init_data) &gt; MAX_INIT_DATA_LEN) {</span>
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :         log_error(&quot;Init data '%s' too long&quot;, init_data);</span>
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     301 </span>            :     }
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :     strcpy(vertex-&gt;init_data.init_data, init_data);</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     304 </span>            : }
+<a name="305"><span class="lineNum">     305 </span>            : </a>
+<span class="lineNum">     306 </span>            : /** Key: &quot;id&quot;, Object ::MSUS */
+<span class="lineNum">     307 </span><span class="lineCov">          3 : PARSE_FN(set_msu_id) {</span>
+<span class="lineNum">     308 </span><span class="lineCov">          3 :     struct dfg_msu *msu = GET_PARSE_OBJ();</span>
+<span class="lineNum">     309 </span><span class="lineCov">          3 :     msu-&gt;id = GET_INT_TOK();</span>
+<span class="lineNum">     310 </span><span class="lineCov">          3 :     return 0;</span>
+<span class="lineNum">     311 </span>            : }
+<a name="312"><span class="lineNum">     312 </span>            : </a>
+<span class="lineNum">     313 </span>            : /** Key: &quot;vertex_type&quot;, Object ::MSUS */
+<span class="lineNum">     314 </span><span class="lineCov">          2 : PARSE_FN(set_msu_vertex_type) {</span>
+<span class="lineNum">     315 </span><span class="lineCov">          2 :     struct dfg_msu *msu = GET_PARSE_OBJ();</span>
+<span class="lineNum">     316 </span><span class="lineCov">          2 :     char *str_type = GET_STR_TOK();</span>
+<span class="lineNum">     317 </span><span class="lineCov">          2 :     msu-&gt;vertex_type = str_to_vertex_type(str_type);</span>
+<span class="lineNum">     318 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">     319 </span>            : }
+<a name="320"><span class="lineNum">     320 </span>            : </a>
+<span class="lineNum">     321 </span>            : /** Key &quot;type&quot;, Object ::MSUS */
+<span class="lineNum">     322 </span><span class="lineCov">          3 : PARSE_FN(set_msu_type) {</span>
+<span class="lineNum">     323 </span><span class="lineCov">          3 :     struct dfg_msu *vertex = GET_PARSE_OBJ();</span>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span><span class="lineCov">          3 :     struct dfg_msu_type *type = get_dfg_msu_type(GET_INT_TOK());</span>
+<span class="lineNum">     326 </span><span class="lineCov">          3 :     if (type == NULL) {</span>
+<span class="lineNum">     327 </span>            :         // Return once type has been instantiated
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     329 </span>            :     }
+<span class="lineNum">     330 </span><span class="lineCov">          3 :     vertex-&gt;type = type;</span>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineCov">          3 :     type-&gt;instances[type-&gt;n_instances] = vertex;</span>
+<span class="lineNum">     333 </span><span class="lineCov">          3 :     type-&gt;n_instances++;</span>
+<span class="lineNum">     334 </span><span class="lineCov">          3 :     return 0;</span>
+<span class="lineNum">     335 </span>            : }
+<a name="336"><span class="lineNum">     336 </span>            : </a>
+<span class="lineNum">     337 </span>            : /** key: &quot;blocking_mode&quot;, object: ::MSUS */
+<span class="lineNum">     338 </span><span class="lineCov">          6 : PARSE_FN(set_blocking_mode) {</span>
+<span class="lineNum">     339 </span><span class="lineCov">          6 :     struct dfg_msu *vertex = GET_PARSE_OBJ();</span>
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span><span class="lineCov">          6 :     char *str_mode = GET_STR_TOK();</span>
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span><span class="lineCov">          6 :     vertex-&gt;blocking_mode = str_to_blocking_mode(str_mode);</span>
+<span class="lineNum">     344 </span><span class="lineCov">          6 :     if (vertex-&gt;blocking_mode == UNKNOWN_BLOCKING_MODE) {</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :         log_error(&quot;Unknown blocking mode specified: %s&quot;, str_mode);</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     347 </span>            :     }
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span><span class="lineCov">          6 :     struct dfg_runtime *rt = vertex-&gt;scheduling.runtime;</span>
+<span class="lineNum">     350 </span><span class="lineCov">          6 :     if (rt == NULL) {</span>
+<span class="lineNum">     351 </span><span class="lineCov">          3 :         return 1;</span>
+<span class="lineNum">     352 </span>            :     }
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span><span class="lineCov">          3 :     struct dfg_thread *thread = vertex-&gt;scheduling.thread;</span>
+<span class="lineNum">     355 </span><span class="lineCov">          3 :     if (thread == NULL) {</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :         log(LOG_DFG_READER, &quot;Waiting for thread instantiation&quot;);</span>
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     358 </span>            :     }
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span><span class="lineCov">          3 :     if (thread-&gt;mode == UNSPECIFIED_THREAD_MODE) {</span>
+<span class="lineNum">     361 </span><span class="lineCov">          3 :         thread-&gt;mode = (vertex-&gt;blocking_mode == NONBLOCK_MSU) ? PINNED_THREAD : UNPINNED_THREAD;</span>
+<span class="lineNum">     362 </span>            :     }
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span><span class="lineCov">          3 :     if ((thread-&gt;mode == PINNED_THREAD) ^ (vertex-&gt;blocking_mode == NONBLOCK_MSU)) {</span>
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :         log_error(&quot;Can only put blocking MSUs on pinned threads, and nonblock MSUs on unpinned&quot;);</span>
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     367 </span>            :     }
+<span class="lineNum">     368 </span><span class="lineCov">          3 :     return 0;</span>
+<span class="lineNum">     369 </span>            : }
+<a name="370"><span class="lineNum">     370 </span>            : </a>
+<span class="lineNum">     371 </span>            : /** Key: &quot;scheduling&quot;, Object ::MSUS */
+<span class="lineNum">     372 </span><span class="lineCov">          3 : PARSE_OBJ_FN(set_scheduling, struct dfg_msu, scheduling, SCHEDULING);</span>
+<a name="373"><span class="lineNum">     373 </span>            : </a>
+<span class="lineNum">     374 </span>            : /** Key: id, Object ::RUNTIMES */
+<span class="lineNum">     375 </span><span class="lineCov">          1 : PARSE_FN(set_rt_id) {</span>
+<span class="lineNum">     376 </span><span class="lineCov">          1 :     struct dfg_runtime *rt = GET_PARSE_OBJ();</span>
+<span class="lineNum">     377 </span><span class="lineCov">          1 :     rt-&gt;id = GET_INT_TOK();</span>
+<span class="lineNum">     378 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     379 </span>            : }
+<a name="380"><span class="lineNum">     380 </span>            : </a>
+<span class="lineNum">     381 </span>            : /** Key: ip, Object ::RUNTIMES */
+<span class="lineNum">     382 </span><span class="lineCov">          1 : PARSE_FN(set_rt_ip) {</span>
+<span class="lineNum">     383 </span><span class="lineCov">          1 :     struct dfg_runtime *rt = GET_PARSE_OBJ();</span>
+<span class="lineNum">     384 </span><span class="lineCov">          1 :     char *ip = GET_STR_TOK();</span>
+<span class="lineNum">     385 </span>            :     struct in_addr addr;
+<span class="lineNum">     386 </span><span class="lineCov">          1 :     int rtn = inet_pton(AF_INET, ip, &amp;addr);</span>
+<span class="lineNum">     387 </span><span class="lineCov">          1 :     if (rtn &lt;= 0) {</span>
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :         log_perror(&quot;Error converting '%s' to IP address&quot;, ip);</span>
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     390 </span>            :     }
+<span class="lineNum">     391 </span><span class="lineCov">          1 :     rt-&gt;ip = addr.s_addr;</span>
+<span class="lineNum">     392 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     393 </span>            : }
+<a name="394"><span class="lineNum">     394 </span>            : </a>
+<span class="lineNum">     395 </span>            : /** Key: port, object ::RUNTIMES */
+<span class="lineNum">     396 </span><span class="lineCov">          1 : PARSE_FN(set_rt_port) {</span>
+<span class="lineNum">     397 </span><span class="lineCov">          1 :     struct dfg_runtime *rt = GET_PARSE_OBJ();</span>
+<span class="lineNum">     398 </span><span class="lineCov">          1 :     rt-&gt;port = GET_INT_TOK();</span>
+<span class="lineNum">     399 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     400 </span>            : }
+<a name="401"><span class="lineNum">     401 </span>            : </a>
+<span class="lineNum">     402 </span>            : /** Key: num_cores, object ::RUNTIMES */
+<span class="lineNum">     403 </span><span class="lineCov">          1 : PARSE_FN(set_rt_n_cores) {</span>
+<span class="lineNum">     404 </span><span class="lineCov">          1 :     struct dfg_runtime *rt = GET_PARSE_OBJ();</span>
+<span class="lineNum">     405 </span><span class="lineCov">          1 :     rt-&gt;n_cores = GET_INT_TOK();</span>
+<span class="lineNum">     406 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     407 </span>            : }
+<a name="408"><span class="lineNum">     408 </span>            : </a>
+<span class="lineNum">     409 </span>            : /** Key: num_pinned_threads, object ::RUNTIMES */
+<span class="lineNum">     410 </span><span class="lineCov">          1 : PARSE_FN(set_num_pinned_threads) {</span>
+<span class="lineNum">     411 </span><span class="lineCov">          1 :     struct dfg_runtime *rt = GET_PARSE_OBJ();</span>
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span><span class="lineCov">          1 :     int n_existing = rt-&gt;n_unpinned_threads;</span>
+<span class="lineNum">     414 </span><span class="lineCov">          1 :     int n_new = GET_INT_TOK();</span>
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span><span class="lineCov">          3 :     for (int i=n_existing; i&lt;n_existing+n_new; i++) {</span>
+<span class="lineNum">     417 </span><span class="lineCov">          2 :         rt-&gt;threads[i] = calloc(1, sizeof(**rt-&gt;threads));</span>
+<span class="lineNum">     418 </span><span class="lineCov">          2 :         rt-&gt;threads[i]-&gt;id = i+1;</span>
+<span class="lineNum">     419 </span>            :     }
+<span class="lineNum">     420 </span><span class="lineCov">          1 :     rt-&gt;n_pinned_threads = n_new;</span>
+<span class="lineNum">     421 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     422 </span>            : }
+<a name="423"><span class="lineNum">     423 </span>            : </a>
+<span class="lineNum">     424 </span>            : /** Key: num_unpinned_threads, object ::RUNTIMES */
+<span class="lineNum">     425 </span><span class="lineCov">          1 : PARSE_FN(set_num_unpinned_threads) {</span>
+<span class="lineNum">     426 </span><span class="lineCov">          1 :     struct dfg_runtime *rt = GET_PARSE_OBJ();</span>
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span><span class="lineCov">          1 :     int n_existing = rt-&gt;n_pinned_threads;</span>
+<span class="lineNum">     429 </span><span class="lineCov">          1 :     int n_new = GET_INT_TOK();</span>
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span><span class="lineCov">          2 :     for (int i=n_existing; i &lt; n_existing + n_new; i++) {</span>
+<span class="lineNum">     432 </span><span class="lineCov">          1 :         rt-&gt;threads[i] = calloc(1, sizeof(**rt-&gt;threads));</span>
+<span class="lineNum">     433 </span><span class="lineCov">          1 :         rt-&gt;threads[i]-&gt;id = i+1;</span>
+<span class="lineNum">     434 </span>            :     }
+<span class="lineNum">     435 </span><span class="lineCov">          1 :     rt-&gt;n_unpinned_threads = n_new;</span>
+<span class="lineNum">     436 </span><span class="lineCov">          1 :     return 0;</span>
+<span class="lineNum">     437 </span>            : }
+<a name="438"><span class="lineNum">     438 </span>            : </a>
+<span class="lineNum">     439 </span>            : /** Key: Element in &quot;routes&quot;, object ::RUNTIMES */
+<span class="lineNum">     440 </span><span class="lineCov">          2 : INIT_OBJ_FN(init_route) {</span>
+<span class="lineNum">     441 </span><span class="lineCov">          2 :     struct dfg_runtime *rt = GET_PARSE_OBJ();</span>
+<span class="lineNum">     442 </span><span class="lineCov">          2 :     int index = GET_OBJ_INDEX();</span>
+<span class="lineNum">     443 </span><span class="lineCov">          2 :     rt-&gt;n_routes++;</span>
+<span class="lineNum">     444 </span><span class="lineCov">          2 :     rt-&gt;routes[index] = calloc(1, sizeof(**rt-&gt;routes));</span>
+<span class="lineNum">     445 </span><span class="lineCov">          2 :     rt-&gt;routes[index]-&gt;runtime = rt;</span>
+<span class="lineNum">     446 </span>            : 
+<span class="lineNum">     447 </span><span class="lineCov">          2 :     RETURN_OBJ(rt-&gt;routes[index], ROUTES);</span>
+<span class="lineNum">     448 </span>            : }
+<a name="449"><span class="lineNum">     449 </span>            : </a>
+<span class="lineNum">     450 </span>            : /** Key: &quot;routes&quot;, object ::RUNTIMES */
+<span class="lineNum">     451 </span><span class="lineCov">          1 : PARSE_OBJ_LIST_FN(set_rt_routes, init_route);</span>
+<a name="452"><span class="lineNum">     452 </span>            : </a>
+<span class="lineNum">     453 </span>            : /** Key: &quot;id&quot;, object ::ROUTES */
+<span class="lineNum">     454 </span><span class="lineCov">          2 : PARSE_FN(set_route_id) {</span>
+<span class="lineNum">     455 </span><span class="lineCov">          2 :     struct dfg_route *route = GET_PARSE_OBJ();</span>
+<span class="lineNum">     456 </span><span class="lineCov">          2 :     int id = GET_INT_TOK();</span>
+<span class="lineNum">     457 </span><span class="lineCov">          2 :     struct dfg_route *existing = get_dfg_route(id);</span>
+<span class="lineNum">     458 </span><span class="lineCov">          2 :     if (existing != NULL) {</span>
+<span class="lineNum">     459 </span><span class="lineNoCov">          0 :         log_error(&quot;Route with ID %d exists twice in DFG&quot;, id);</span>
+<span class="lineNum">     460 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     461 </span>            :     }
+<span class="lineNum">     462 </span><span class="lineCov">          2 :     route-&gt;id = id;</span>
+<span class="lineNum">     463 </span><span class="lineCov">          2 :     log(LOG_DFG_PARSING, &quot;Created route with id: %d&quot;, id);</span>
+<span class="lineNum">     464 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">     465 </span>            : }
+<a name="466"><span class="lineNum">     466 </span>            : </a>
+<span class="lineNum">     467 </span>            : /** Key: &quot;type&quot;, object ::ROUTES */
+<span class="lineNum">     468 </span><span class="lineCov">          2 : PARSE_FN(set_route_type) {</span>
+<span class="lineNum">     469 </span><span class="lineCov">          2 :     struct dfg_route *route = GET_PARSE_OBJ();</span>
+<span class="lineNum">     470 </span><span class="lineCov">          2 :     int type_id = GET_INT_TOK();</span>
+<span class="lineNum">     471 </span><span class="lineCov">          2 :     struct dfg_msu_type *type = get_dfg_msu_type(type_id);</span>
+<span class="lineNum">     472 </span><span class="lineCov">          2 :     if (type == NULL) {</span>
+<span class="lineNum">     473 </span>            :         // Return once type is instantiated
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     475 </span>            :     }
+<span class="lineNum">     476 </span><span class="lineCov">          2 :     route-&gt;msu_type = type;</span>
+<span class="lineNum">     477 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">     478 </span>            : }
+<a name="479"><span class="lineNum">     479 </span>            : </a>
+<span class="lineNum">     480 </span>            : /** Key: Element in &quot;endpoints&quot;, object ::ROUTES */
+<span class="lineNum">     481 </span><span class="lineCov">          2 : INIT_OBJ_FN(init_endpoint) {</span>
+<span class="lineNum">     482 </span><span class="lineCov">          2 :     struct dfg_route *route = GET_PARSE_OBJ();</span>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span><span class="lineCov">          2 :     int index = GET_OBJ_INDEX();</span>
+<span class="lineNum">     485 </span><span class="lineCov">          2 :     route-&gt;n_endpoints++;</span>
+<span class="lineNum">     486 </span><span class="lineCov">          2 :     route-&gt;endpoints[index] = calloc(1, sizeof(**route-&gt;endpoints));</span>
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span><span class="lineCov">          2 :     RETURN_OBJ(route-&gt;endpoints[index], DESTINATIONS);</span>
+<span class="lineNum">     489 </span>            : }
+<a name="490"><span class="lineNum">     490 </span>            : </a>
+<span class="lineNum">     491 </span>            : /** Key: &quot;endpoints&quot;, object ::ROUTES */
+<span class="lineNum">     492 </span><span class="lineCov">          2 : PARSE_OBJ_LIST_FN(set_route_endpoints, init_endpoint);</span>
+<a name="493"><span class="lineNum">     493 </span>            : </a>
+<span class="lineNum">     494 </span>            : /** Key: &quot;key&quot;, object ::DESTINATIONS */
+<span class="lineNum">     495 </span><span class="lineCov">          2 : PARSE_FN(set_dest_key) {</span>
+<span class="lineNum">     496 </span><span class="lineCov">          2 :     struct dfg_route_endpoint *dest = GET_PARSE_OBJ();</span>
+<span class="lineNum">     497 </span><span class="lineCov">          2 :     dest-&gt;key = GET_INT_TOK();</span>
+<span class="lineNum">     498 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">     499 </span>            : }
+<a name="500"><span class="lineNum">     500 </span>            : </a>
+<span class="lineNum">     501 </span>            : /** Key: &quot;msu&quot;, object ::DESTINATIONS */
+<span class="lineNum">     502 </span><span class="lineCov">          4 : PARSE_FN(set_dest_msu) {</span>
+<span class="lineNum">     503 </span><span class="lineCov">          4 :     struct dfg_route_endpoint *dest = GET_PARSE_OBJ();</span>
+<span class="lineNum">     504 </span><span class="lineCov">          4 :     int msu_id = GET_INT_TOK();</span>
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span><span class="lineCov">          4 :     struct dfg_msu *msu = get_dfg_msu(msu_id);</span>
+<span class="lineNum">     507 </span><span class="lineCov">          4 :     if (msu == NULL) {</span>
+<span class="lineNum">     508 </span>            :         // Wait for MSU to be instantiated
+<span class="lineNum">     509 </span><span class="lineCov">          2 :         log(LOG_DFG_PARSING, &quot;MSU %d is not yet instantiated&quot;, msu_id);</span>
+<span class="lineNum">     510 </span><span class="lineCov">          2 :         return 1;</span>
+<span class="lineNum">     511 </span>            :     }
+<span class="lineNum">     512 </span><span class="lineCov">          2 :     dest-&gt;msu = msu;</span>
+<span class="lineNum">     513 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">     514 </span>            : }
+<a name="515"><span class="lineNum">     515 </span>            : </a>
+<span class="lineNum">     516 </span>            : /** Key: &quot;source_types&quot;, object ::META_ROUTING */
+<span class="lineNum">     517 </span><span class="lineNoCov">          0 : PARSE_FN(set_source_types) {</span>
+<span class="lineNum">     518 </span><span class="lineNoCov">          0 :     struct dfg_meta_routing *meta = GET_PARSE_OBJ();</span>
+<span class="lineNum">     519 </span>            :     int i;
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 :     bool found_types = true;</span>
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 :     START_ITER_TOK_LIST(i) {</span>
+<span class="lineNum">     522 </span><span class="lineNoCov">          0 :         int str_type = GET_INT_TOK();</span>
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :         struct dfg_msu_type *type = get_dfg_msu_type(str_type);</span>
+<span class="lineNum">     524 </span><span class="lineNoCov">          0 :         if (type == NULL) {</span>
+<span class="lineNum">     525 </span>            :             // Wait for type to be instantiated
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 :             log(LOG_DFG_PARSING, &quot;Type %d is not yet instantiated&quot;, str_type);</span>
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :             found_types = false;</span>
+<span class="lineNum">     528 </span>            :         } else {
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 :             meta-&gt;src_types[i] = type;</span>
+<span class="lineNum">     530 </span>            :         }
+<span class="lineNum">     531 </span><span class="lineNoCov">          0 :     } END_ITER_TOK_LIST(i)</span>
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :     meta-&gt;n_src_types = i;</span>
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 :     if (found_types == false)</span>
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     536 </span>            : }
+<a name="537"><span class="lineNum">     537 </span>            : </a>
+<span class="lineNum">     538 </span>            : /** Key: &quot;dst_types&quot;, object ::META_ROUTING */
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 : PARSE_FN(set_dst_types) {</span>
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :     struct dfg_meta_routing *meta = GET_PARSE_OBJ();</span>
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :     bool found_types = true;</span>
+<span class="lineNum">     542 </span>            :     int i;
+<span class="lineNum">     543 </span><span class="lineNoCov">          0 :     START_ITER_TOK_LIST(i) {</span>
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :         int str_type = GET_INT_TOK();</span>
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :         struct dfg_msu_type *type = get_dfg_msu_type(str_type);</span>
+<span class="lineNum">     546 </span><span class="lineNoCov">          0 :         if (type == NULL) {</span>
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :             log(LOG_DFG_PARSING, &quot;Type %d is not yet instantiated&quot;, str_type);</span>
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :             found_types = false;</span>
+<span class="lineNum">     549 </span>            :         } else {
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :             meta-&gt;dst_types[i] = type;</span>
+<span class="lineNum">     551 </span>            :         }
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :     } END_ITER_TOK_LIST(i)</span>
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :     meta-&gt;n_dst_types = i;</span>
+<span class="lineNum">     555 </span><span class="lineNoCov">          0 :     if (found_types == false) {</span>
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     557 </span>            :     }
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     559 </span>            : }
+<a name="560"><span class="lineNum">     560 </span>            : </a>
+<span class="lineNum">     561 </span>            : /** key: &quot;type&quot;, object ::DEPENDENCIES */
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 : PARSE_FN(set_dep_type) {</span>
+<span class="lineNum">     563 </span><span class="lineNoCov">          0 :     struct dfg_dependency *dep = GET_PARSE_OBJ();</span>
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span><span class="lineNoCov">          0 :     int type_id = GET_INT_TOK();</span>
+<span class="lineNum">     566 </span><span class="lineNoCov">          0 :     struct dfg_msu_type *type = get_dfg_msu_type(type_id);</span>
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 :     if (type == NULL) {</span>
+<span class="lineNum">     569 </span>            :         // Return once type has been instantiated
+<span class="lineNum">     570 </span><span class="lineNoCov">          0 :         log(LOG_DFG_PARSING, &quot;Type %d is not yet instantiated&quot;, type_id);</span>
+<span class="lineNum">     571 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     572 </span>            :     }
+<span class="lineNum">     573 </span><span class="lineNoCov">          0 :     dep-&gt;type = type;</span>
+<span class="lineNum">     574 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     575 </span>            : }
+<a name="576"><span class="lineNum">     576 </span>            : </a>
+<span class="lineNum">     577 </span>            : /** Key: &quot;locality&quot;, object: ::DEPENDENCIES */
+<span class="lineNum">     578 </span><span class="lineNoCov">          0 : PARSE_FN(set_dep_locality) {</span>
+<span class="lineNum">     579 </span><span class="lineNoCov">          0 :     struct dfg_dependency *dep = GET_PARSE_OBJ();</span>
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :     char *str_loc = GET_STR_TOK();</span>
+<span class="lineNum">     582 </span><span class="lineNoCov">          0 :     if (strcasecmp(str_loc, &quot;local&quot;) == 0) {</span>
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :         dep-&gt;locality = MSU_IS_LOCAL;</span>
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 :     } else if (strcasecmp(str_loc, &quot;remote&quot;) == 0) {</span>
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :         dep-&gt;locality = MSU_IS_REMOTE;</span>
+<span class="lineNum">     586 </span>            :     } else {
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :         log_error(&quot;Unknown locality %s specified. Must be 'local' or 'remote'&quot;, str_loc);</span>
+<span class="lineNum">     588 </span>            :     }
+<span class="lineNum">     589 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     590 </span>            : }
+<a name="591"><span class="lineNum">     591 </span>            : </a>
+<span class="lineNum">     592 </span>            : /** Key: &quot;runtime&quot;, object: ::SCHEDULING */
+<span class="lineNum">     593 </span><span class="lineCov">          3 : PARSE_FN(set_msu_runtime) {</span>
+<span class="lineNum">     594 </span><span class="lineCov">          3 :     struct dfg_scheduling *sched = GET_PARSE_OBJ();</span>
+<span class="lineNum">     595 </span>            : 
+<span class="lineNum">     596 </span><span class="lineCov">          3 :     int id = GET_INT_TOK();</span>
+<span class="lineNum">     597 </span><span class="lineCov">          3 :     struct dfg_runtime *rt = get_dfg_runtime(id);</span>
+<span class="lineNum">     598 </span><span class="lineCov">          3 :     if (rt == NULL) {</span>
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :         log(LOG_DFG_PARSING, &quot;Runtime %d is not yet instantiated&quot;, id);</span>
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     601 </span>            :     }
+<span class="lineNum">     602 </span><span class="lineCov">          3 :     sched-&gt;runtime = rt;</span>
+<span class="lineNum">     603 </span><span class="lineCov">          3 :     return 0;</span>
+<span class="lineNum">     604 </span>            : }
+<a name="605"><span class="lineNum">     605 </span>            : </a>
+<span class="lineNum">     606 </span>            : /** Key: &quot;thread_id&quot;, object: ::SCHEDULING */
+<span class="lineNum">     607 </span><span class="lineCov">          3 : PARSE_FN(set_msu_thread) {</span>
+<span class="lineNum">     608 </span><span class="lineCov">          3 :     struct dfg_scheduling *sched = GET_PARSE_OBJ();</span>
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span><span class="lineCov">          3 :     if (sched-&gt;runtime == NULL) {</span>
+<span class="lineNum">     611 </span>            :         // Runtime must be instantiated before thread
+<span class="lineNum">     612 </span><span class="lineNoCov">          0 :         log(LOG_DFG_PARSING, &quot;MSU runtime not yet instantiated&quot;);</span>
+<span class="lineNum">     613 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     614 </span>            :     }
+<span class="lineNum">     615 </span><span class="lineCov">          3 :     int id = GET_INT_TOK();</span>
+<span class="lineNum">     616 </span><span class="lineCov">          3 :     struct dfg_thread *thread = get_dfg_thread(sched-&gt;runtime, id);</span>
+<span class="lineNum">     617 </span><span class="lineCov">          3 :     if (thread == NULL) {</span>
+<span class="lineNum">     618 </span>            :         // Thread must be instantiated too
+<span class="lineNum">     619 </span><span class="lineNoCov">          0 :         log(LOG_DFG_PARSING, &quot;Thread %d not yet instantiated&quot;, id);</span>
+<span class="lineNum">     620 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     621 </span>            :     }
+<span class="lineNum">     622 </span><span class="lineCov">          3 :     sched-&gt;thread = thread;</span>
+<span class="lineNum">     623 </span>            : 
+<span class="lineNum">     624 </span>            :     // This is frustrating...
+<span class="lineNum">     625 </span>            :     // Have to iterate through all MSUs to find the one this scheduling object refers to
+<span class="lineNum">     626 </span>            :     // Should perhaps provide parse object as a linked list so you can traverse upwards?
+<span class="lineNum">     627 </span><span class="lineCov">          3 :     struct dedos_dfg *dfg = get_root_jsmn_obj();</span>
+<span class="lineNum">     628 </span><span class="lineCov">          3 :     struct dfg_msu *msu = NULL;</span>
+<span class="lineNum">     629 </span><span class="lineCov">          6 :     for (int i=0; i&lt;dfg-&gt;n_msus; i++) {</span>
+<span class="lineNum">     630 </span><span class="lineCov">          6 :         if (&amp;dfg-&gt;msus[i]-&gt;scheduling == sched) {</span>
+<span class="lineNum">     631 </span><span class="lineCov">          3 :             msu = dfg-&gt;msus[i];</span>
+<span class="lineNum">     632 </span><span class="lineCov">          3 :             break;</span>
+<span class="lineNum">     633 </span>            :         }
+<span class="lineNum">     634 </span>            :     }
+<span class="lineNum">     635 </span>            :     // Shouldn't happen, really...
+<span class="lineNum">     636 </span><span class="lineCov">          3 :     if (msu == NULL) {</span>
+<span class="lineNum">     637 </span><span class="lineNoCov">          0 :         log(LOG_DFG_PARSING, &quot;Msu for thead %d not yet instantiated&quot;, id);</span>
+<span class="lineNum">     638 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     639 </span>            :     }
+<span class="lineNum">     640 </span><span class="lineCov">          3 :     thread-&gt;msus[thread-&gt;n_msus] = msu;</span>
+<span class="lineNum">     641 </span><span class="lineCov">          3 :     thread-&gt;n_msus++;</span>
+<span class="lineNum">     642 </span>            : 
+<span class="lineNum">     643 </span><span class="lineCov">          3 :     return 0;</span>
+<span class="lineNum">     644 </span>            : }
+<a name="645"><span class="lineNum">     645 </span>            : </a>
+<span class="lineNum">     646 </span>            : /** key: &quot;routes&quot;, object ::SCHEDULING */
+<span class="lineNum">     647 </span><span class="lineCov">          2 : PARSE_FN(set_msu_routes) {</span>
+<span class="lineNum">     648 </span><span class="lineCov">          2 :     struct dfg_scheduling *sched = GET_PARSE_OBJ();</span>
+<span class="lineNum">     649 </span>            : 
+<span class="lineNum">     650 </span><span class="lineCov">          2 :     bool set_routes = true;</span>
+<span class="lineNum">     651 </span>            :     int i;
+<span class="lineNum">     652 </span><span class="lineCov">          2 :     log(LOG_DFG_PARSING, &quot;MSU_ROUTE pre TOK: %s&quot;, GET_STR_TOK());</span>
+<span class="lineNum">     653 </span><span class="lineCov">          4 :     START_ITER_TOK_LIST(i) {</span>
+<span class="lineNum">     654 </span><span class="lineCov">          2 :         log(LOG_DFG_PARSING, &quot;MSU_ROUTE TOK: %s&quot;, GET_STR_TOK());</span>
+<span class="lineNum">     655 </span><span class="lineCov">          2 :         int route_id = GET_INT_TOK();</span>
+<span class="lineNum">     656 </span><span class="lineCov">          2 :         struct dfg_route *route = get_dfg_route(route_id);</span>
+<span class="lineNum">     657 </span><span class="lineCov">          2 :         if (route == NULL) {</span>
+<span class="lineNum">     658 </span><span class="lineNoCov">          0 :             log(LOG_DFG_PARSING, &quot;Route %d not yet instantiated for msu&quot;, route_id);</span>
+<span class="lineNum">     659 </span><span class="lineNoCov">          0 :             set_routes = false;</span>
+<span class="lineNum">     660 </span>            :         } else {
+<span class="lineNum">     661 </span><span class="lineCov">          2 :             sched-&gt;routes[i] = route;</span>
+<span class="lineNum">     662 </span>            :         }
+<span class="lineNum">     663 </span><span class="lineCov">          2 :     } END_ITER_TOK_LIST(i)</span>
+<span class="lineNum">     664 </span>            : 
+<span class="lineNum">     665 </span><span class="lineCov">          2 :     sched-&gt;n_routes = i;</span>
+<span class="lineNum">     666 </span><span class="lineCov">          2 :     if (!set_routes) {</span>
+<span class="lineNum">     667 </span><span class="lineNoCov">          0 :         return 1;</span>
+<span class="lineNum">     668 </span>            :     }
+<span class="lineNum">     669 </span><span class="lineCov">          2 :     return 0;</span>
+<span class="lineNum">     670 </span>            : }
+<a name="671"><span class="lineNum">     671 </span>            : </a>
+<span class="lineNum">     672 </span>            : /** To be used to raise an error when a JSON key is deprecated */
+<span class="lineNum">     673 </span><span class="lineNoCov">          0 : static int not_implemented(jsmntok_t **tok, char *j, struct json_state *in, struct json_state **saved) {</span>
+<span class="lineNum">     674 </span><span class="lineNoCov">          0 :     log_warn(&quot;JSON key %s is not implemented in DFG reader&quot;, tok_to_str((*tok)-1, j));</span>
+<span class="lineNum">     675 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     676 </span>            : }
+<span class="lineNum">     677 </span>            : 
+<span class="lineNum">     678 </span>            : /**
+<span class="lineNum">     679 </span>            :  * (See jsmn_parser.h for details of key_mapping structure)
+<span class="lineNum">     680 </span>            :  */
+<span class="lineNum">     681 </span>            : static struct key_mapping key_map[] = {
+<span class="lineNum">     682 </span>            :     { &quot;application_name&quot;, ROOT, set_app_name },
+<span class="lineNum">     683 </span>            :     { &quot;global_ctl_ip&quot;, ROOT, set_ctl_ip },
+<span class="lineNum">     684 </span>            :     { &quot;global_ctl_port&quot;, ROOT, set_ctl_port },
+<span class="lineNum">     685 </span>            :     { &quot;db_ip&quot;, ROOT, set_db_ip },
+<span class="lineNum">     686 </span>            :     { &quot;db_port&quot;, ROOT, set_db_port },
+<span class="lineNum">     687 </span>            :     { &quot;db_user&quot;, ROOT, set_db_user },
+<span class="lineNum">     688 </span>            :     { &quot;db_pwd&quot;, ROOT, set_db_pwd },
+<span class="lineNum">     689 </span>            :     { &quot;db_name&quot;, ROOT, set_db_name },
+<span class="lineNum">     690 </span>            : 
+<span class="lineNum">     691 </span>            :     { &quot;MSU_types&quot;, ROOT, set_msu_types },
+<span class="lineNum">     692 </span>            :     { &quot;MSUs&quot;, ROOT, set_msus },
+<span class="lineNum">     693 </span>            :     { &quot;runtimes&quot;, ROOT, set_runtimes },
+<span class="lineNum">     694 </span>            : 
+<span class="lineNum">     695 </span>            :     { &quot;id&quot;, MSU_TYPES, set_msu_type_id},
+<span class="lineNum">     696 </span>            :     { &quot;name&quot;, MSU_TYPES, set_msu_type_name },
+<span class="lineNum">     697 </span>            :     { &quot;meta_routing&quot;, MSU_TYPES, set_meta_routing },
+<span class="lineNum">     698 </span>            :     { &quot;dependencies&quot;, MSU_TYPES, set_dependencies },
+<span class="lineNum">     699 </span>            :     { &quot;cloneable&quot;, MSU_TYPES, set_cloneable },
+<span class="lineNum">     700 </span>            :     { &quot;colocation_group&quot;, MSU_TYPES, set_colocation_group },
+<span class="lineNum">     701 </span>            : 
+<span class="lineNum">     702 </span>            :     { &quot;id&quot;, MSUS, set_msu_id },
+<span class="lineNum">     703 </span>            :     { &quot;vertex_type&quot;, MSUS, set_msu_vertex_type },
+<span class="lineNum">     704 </span>            :     { &quot;init_data&quot;, MSUS, set_msu_init_data },
+<span class="lineNum">     705 </span>            :     { &quot;type&quot;, MSUS, set_msu_type },
+<span class="lineNum">     706 </span>            :     { &quot;blocking_mode&quot;, MSUS,  set_blocking_mode },
+<span class="lineNum">     707 </span>            :     { &quot;scheduling&quot;, MSUS,  set_scheduling },
+<span class="lineNum">     708 </span>            : 
+<span class="lineNum">     709 </span>            :     { &quot;id&quot;, RUNTIMES, set_rt_id },
+<span class="lineNum">     710 </span>            :     { &quot;ip&quot;, RUNTIMES,  set_rt_ip },
+<span class="lineNum">     711 </span>            :     { &quot;port&quot;, RUNTIMES, set_rt_port },
+<span class="lineNum">     712 </span>            :     { &quot;num_cores&quot;, RUNTIMES, set_rt_n_cores },
+<span class="lineNum">     713 </span>            :     { &quot;num_pinned_threads&quot;, RUNTIMES, set_num_pinned_threads },
+<span class="lineNum">     714 </span>            :     { &quot;num_unpinned_threads&quot;, RUNTIMES, set_num_unpinned_threads },
+<span class="lineNum">     715 </span>            :     { &quot;routes&quot;, RUNTIMES, set_rt_routes },
+<span class="lineNum">     716 </span>            : 
+<span class="lineNum">     717 </span>            :     { &quot;id&quot;, ROUTES, set_route_id },
+<span class="lineNum">     718 </span>            :     { &quot;type&quot;, ROUTES, set_route_type },
+<span class="lineNum">     719 </span>            :     { &quot;endpoints&quot;, ROUTES, set_route_endpoints },
+<span class="lineNum">     720 </span>            : 
+<span class="lineNum">     721 </span>            :     { &quot;key&quot;, DESTINATIONS, set_dest_key },
+<span class="lineNum">     722 </span>            :     { &quot;msu&quot;, DESTINATIONS, set_dest_msu },
+<span class="lineNum">     723 </span>            : 
+<span class="lineNum">     724 </span>            :     { &quot;source_types&quot;, META_ROUTING,  set_source_types },
+<span class="lineNum">     725 </span>            :     { &quot;dst_types&quot;, META_ROUTING, set_dst_types },
+<span class="lineNum">     726 </span>            : 
+<span class="lineNum">     727 </span>            :     { &quot;type&quot;, DEPENDENCIES, set_dep_type },
+<span class="lineNum">     728 </span>            :     { &quot;locality&quot;, DEPENDENCIES, set_dep_locality },
+<span class="lineNum">     729 </span>            : 
+<span class="lineNum">     730 </span>            :     { &quot;runtime&quot;, SCHEDULING, set_msu_runtime },
+<span class="lineNum">     731 </span>            :     { &quot;thread_id&quot;, SCHEDULING, set_msu_thread },
+<span class="lineNum">     732 </span>            :     { &quot;routes&quot;, SCHEDULING, set_msu_routes },
+<span class="lineNum">     733 </span>            : 
+<span class="lineNum">     734 </span>            :     { &quot;load_mode&quot;, ROOT, not_implemented },
+<span class="lineNum">     735 </span>            :     { &quot;application_deadline&quot;, ROOT, not_implemented },
+<span class="lineNum">     736 </span>            :     { &quot;profiling&quot;, MSUS, not_implemented },
+<span class="lineNum">     737 </span>            :     { &quot;statistics&quot;, MSUS, not_implemented },
+<span class="lineNum">     738 </span>            :     { &quot;dram&quot;, RUNTIMES, not_implemented },
+<span class="lineNum">     739 </span>            :     { &quot;io_network_bw&quot;, RUNTIMES, not_implemented},
+<span class="lineNum">     740 </span>            :     { &quot;deadline&quot;, SCHEDULING,  not_implemented},
+<span class="lineNum">     741 </span>            :     { NULL, 0, NULL }
+<span class="lineNum">     742 </span>            : };
+<span class="lineNum">     743 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

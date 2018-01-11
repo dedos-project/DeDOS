@@ -1,0 +1,186 @@
+\hypertarget{baremetal__socket__msu_8c}{\section{src/msus/baremetal/baremetal\-\_\-socket\-\_\-msu.c File Reference}
+\label{baremetal__socket__msu_8c}\index{src/msus/baremetal/baremetal\-\_\-socket\-\_\-msu.\-c@{src/msus/baremetal/baremetal\-\_\-socket\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}baremetal/baremetal\-\_\-socket\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}baremetal/baremetal\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}epollops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unused\-\_\-def.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{baremetal__socket__msu_8c_ad098c7d4453d618eaa634dbb2a3f4de5}{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-B\-U\-F\-\_\-\-L\-E\-N}~64
+\item 
+\#define \hyperlink{baremetal__socket__msu_8c_a5cf7ed68281c848da3dbc4cbd7070d9a}{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-T\-I\-M\-E\-O\-U\-T}~1000
+\item 
+\#define \hyperlink{baremetal__socket__msu_8c_aa8145fc5a8a72964560584e0c9485e10}{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-B\-A\-T\-C\-H}~1000
+\item 
+\#define \hyperlink{baremetal__socket__msu_8c_a2c8fa8648d77ac47cbb50c231b8c1607}{I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}~\char`\"{}$<$P\-O\-R\-T$>$ $<$N\-\_\-\-H\-O\-P\-S$>$\char`\"{}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{baremetal__socket__msu_8c_ab8d58b58107cb94594701462816e3cd1}{read\-\_\-and\-\_\-forward} (int fd, void \hyperlink{unused__def_8h_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D} $\ast$v\-\_\-state)
+\item 
+static int \hyperlink{baremetal__socket__msu_8c_a609499bcbdc82388c0f5bae91a3bad53}{socket\-\_\-handler\-\_\-main\-\_\-loop} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self)
+\item 
+static int \hyperlink{baremetal__socket__msu_8c_a8f142fa3720f503332085257ff089423}{bm\-\_\-sock\-\_\-receive} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$data)
+\item 
+static int \hyperlink{baremetal__socket__msu_8c_a06e2a6bca13d2bff32fa01e95881106f}{bm\-\_\-sock\-\_\-init} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} $\ast$init\-\_\-data)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{baremetal__socket__msu_8c_a1dc2957edb2945fdab0744ec1f3eabef}{static\-\_\-self}
+\item 
+static int \hyperlink{baremetal__socket__msu_8c_a88196e4aa2eb5939b1f879d8dde7aae1}{static\-\_\-n\-\_\-hops}
+\item 
+static int \hyperlink{baremetal__socket__msu_8c_a31809a5dc5e6cfb00483a71b75f9f5f2}{static\-\_\-sock\-\_\-fd}
+\item 
+static int \hyperlink{baremetal__socket__msu_8c_add2af3a25b9894c09e361d16ee75cb00}{static\-\_\-epoll\-\_\-fd}
+\item 
+static struct \hyperlink{structmsu__msg__key}{msu\-\_\-msg\-\_\-key} \hyperlink{baremetal__socket__msu_8c_a8e7093e5d2b01d1d508cc495e6ea2b47}{self\-\_\-key} = \{\}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{baremetal__socket__msu_8c_a9748a48e0d6732cf147c01f2935efc7b}{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-S\-O\-C\-K\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{baremetal__socket__msu_8c_aa8145fc5a8a72964560584e0c9485e10}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-B\-A\-T\-C\-H@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-B\-A\-T\-C\-H}}
+\index{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-B\-A\-T\-C\-H@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-B\-A\-T\-C\-H}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-B\-A\-T\-C\-H}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-B\-A\-T\-C\-H~1000}}\label{baremetal__socket__msu_8c_aa8145fc5a8a72964560584e0c9485e10}
+
+
+Definition at line 51 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_a5cf7ed68281c848da3dbc4cbd7070d9a}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-T\-I\-M\-E\-O\-U\-T@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-T\-I\-M\-E\-O\-U\-T}}
+\index{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-T\-I\-M\-E\-O\-U\-T@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-T\-I\-M\-E\-O\-U\-T}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-T\-I\-M\-E\-O\-U\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-E\-P\-O\-L\-L\-\_\-\-T\-I\-M\-E\-O\-U\-T~1000}}\label{baremetal__socket__msu_8c_a5cf7ed68281c848da3dbc4cbd7070d9a}
+
+
+Definition at line 50 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_a2c8fa8648d77ac47cbb50c231b8c1607}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X@{I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}}
+\index{I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X@{I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\-N\-I\-T\-\_\-\-S\-Y\-N\-T\-A\-X~\char`\"{}$<$P\-O\-R\-T$>$ $<$N\-\_\-\-H\-O\-P\-S$>$\char`\"{}}}\label{baremetal__socket__msu_8c_a2c8fa8648d77ac47cbb50c231b8c1607}
+
+
+Definition at line 74 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_ad098c7d4453d618eaa634dbb2a3f4de5}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-B\-U\-F\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-B\-U\-F\-\_\-\-L\-E\-N}}
+\index{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-B\-U\-F\-\_\-\-L\-E\-N@{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-B\-U\-F\-\_\-\-L\-E\-N}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-B\-U\-F\-\_\-\-L\-E\-N}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-E\-C\-V\-\_\-\-B\-U\-F\-\_\-\-L\-E\-N~64}}\label{baremetal__socket__msu_8c_ad098c7d4453d618eaa634dbb2a3f4de5}
+
+
+Definition at line 14 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{baremetal__socket__msu_8c_a06e2a6bca13d2bff32fa01e95881106f}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!bm\-\_\-sock\-\_\-init@{bm\-\_\-sock\-\_\-init}}
+\index{bm\-\_\-sock\-\_\-init@{bm\-\_\-sock\-\_\-init}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{bm\-\_\-sock\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}static int bm\-\_\-sock\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-init\-\_\-data} $\ast$}]{init\-\_\-data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_a06e2a6bca13d2bff32fa01e95881106f}
+
+
+Definition at line 76 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_a8f142fa3720f503332085257ff089423}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!bm\-\_\-sock\-\_\-receive@{bm\-\_\-sock\-\_\-receive}}
+\index{bm\-\_\-sock\-\_\-receive@{bm\-\_\-sock\-\_\-receive}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{bm\-\_\-sock\-\_\-receive}]{\setlength{\rightskip}{0pt plus 5cm}static int bm\-\_\-sock\-\_\-receive (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_a8f142fa3720f503332085257ff089423}
+
+
+Definition at line 64 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_ab8d58b58107cb94594701462816e3cd1}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!read\-\_\-and\-\_\-forward@{read\-\_\-and\-\_\-forward}}
+\index{read\-\_\-and\-\_\-forward@{read\-\_\-and\-\_\-forward}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{read\-\_\-and\-\_\-forward}]{\setlength{\rightskip}{0pt plus 5cm}static int read\-\_\-and\-\_\-forward (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{void {\bf U\-N\-U\-S\-E\-D} $\ast$}]{v\-\_\-state}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_ab8d58b58107cb94594701462816e3cd1}
+
+
+Definition at line 21 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_a609499bcbdc82388c0f5bae91a3bad53}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!socket\-\_\-handler\-\_\-main\-\_\-loop@{socket\-\_\-handler\-\_\-main\-\_\-loop}}
+\index{socket\-\_\-handler\-\_\-main\-\_\-loop@{socket\-\_\-handler\-\_\-main\-\_\-loop}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{socket\-\_\-handler\-\_\-main\-\_\-loop}]{\setlength{\rightskip}{0pt plus 5cm}static int socket\-\_\-handler\-\_\-main\-\_\-loop (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_a609499bcbdc82388c0f5bae91a3bad53}
+
+
+Definition at line 53 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{baremetal__socket__msu_8c_a9748a48e0d6732cf147c01f2935efc7b}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-S\-O\-C\-K\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-S\-O\-C\-K\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-S\-O\-C\-K\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-S\-O\-C\-K\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-S\-O\-C\-K\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} B\-A\-R\-E\-M\-E\-T\-A\-L\-\_\-\-S\-O\-C\-K\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{baremetal__socket__msu_8c_a9748a48e0d6732cf147c01f2935efc7b}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    .name = \textcolor{stringliteral}{"baremetal\_sock\_msu"},
+    .id = \hyperlink{baremetal__socket__msu_8h_a5dad582320172430316f10703c59ee87}{BAREMETAL\_SOCK\_MSU\_TYPE\_ID},
+    .init = \hyperlink{baremetal__socket__msu_8c_a06e2a6bca13d2bff32fa01e95881106f}{bm\_sock\_init},
+    .receive = \hyperlink{baremetal__socket__msu_8c_a8f142fa3720f503332085257ff089423}{bm\_sock\_receive}
+\}
+\end{DoxyCode}
+
+
+Definition at line 116 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_a8e7093e5d2b01d1d508cc495e6ea2b47}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!self\-\_\-key@{self\-\_\-key}}
+\index{self\-\_\-key@{self\-\_\-key}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{self\-\_\-key}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-msg\-\_\-key} self\-\_\-key = \{\}\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_a8e7093e5d2b01d1d508cc495e6ea2b47}
+
+
+Definition at line 62 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_add2af3a25b9894c09e361d16ee75cb00}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!static\-\_\-epoll\-\_\-fd@{static\-\_\-epoll\-\_\-fd}}
+\index{static\-\_\-epoll\-\_\-fd@{static\-\_\-epoll\-\_\-fd}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{static\-\_\-epoll\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int static\-\_\-epoll\-\_\-fd\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_add2af3a25b9894c09e361d16ee75cb00}
+
+
+Definition at line 19 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_a88196e4aa2eb5939b1f879d8dde7aae1}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!static\-\_\-n\-\_\-hops@{static\-\_\-n\-\_\-hops}}
+\index{static\-\_\-n\-\_\-hops@{static\-\_\-n\-\_\-hops}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{static\-\_\-n\-\_\-hops}]{\setlength{\rightskip}{0pt plus 5cm}int static\-\_\-n\-\_\-hops\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_a88196e4aa2eb5939b1f879d8dde7aae1}
+
+
+Definition at line 17 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_a1dc2957edb2945fdab0744ec1f3eabef}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!static\-\_\-self@{static\-\_\-self}}
+\index{static\-\_\-self@{static\-\_\-self}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{static\-\_\-self}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ static\-\_\-self\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_a1dc2957edb2945fdab0744ec1f3eabef}
+
+
+Definition at line 16 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+
+\hypertarget{baremetal__socket__msu_8c_a31809a5dc5e6cfb00483a71b75f9f5f2}{\index{baremetal\-\_\-socket\-\_\-msu.\-c@{baremetal\-\_\-socket\-\_\-msu.\-c}!static\-\_\-sock\-\_\-fd@{static\-\_\-sock\-\_\-fd}}
+\index{static\-\_\-sock\-\_\-fd@{static\-\_\-sock\-\_\-fd}!baremetal_socket_msu.c@{baremetal\-\_\-socket\-\_\-msu.\-c}}
+\subsubsection[{static\-\_\-sock\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int static\-\_\-sock\-\_\-fd\hspace{0.3cm}{\ttfamily [static]}}}\label{baremetal__socket__msu_8c_a31809a5dc5e6cfb00483a71b75f9f5f2}
+
+
+Definition at line 18 of file baremetal\-\_\-socket\-\_\-msu.\-c.
+

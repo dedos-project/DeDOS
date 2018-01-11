@@ -1,0 +1,428 @@
+\hypertarget{worker__thread_8c}{\section{src/runtime/worker\-\_\-thread.c File Reference}
+\label{worker__thread_8c}\index{src/runtime/worker\-\_\-thread.\-c@{src/runtime/worker\-\_\-thread.\-c}}
+}
+
+
+Threads that hold M\-S\-Us.  
+
+
+{\ttfamily \#include \char`\"{}worker\-\_\-thread.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}thread\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{worker__thread_8c_a705cb27a1ac6915760cf88cebba062ca}{M\-A\-X\-\_\-\-D\-E\-D\-O\-S\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D}~32
+\begin{DoxyCompactList}\small\item\em The maximum I\-D that can be assigned to a worker thread. \end{DoxyCompactList}\item 
+\#define \hyperlink{worker__thread_8c_a53ca1e8b57647539d4b71aeecaf0a2bb}{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E}(msg, target)
+\begin{DoxyCompactList}\small\item\em Checks whether the size of the message is equal to the size of the target struct. \end{DoxyCompactList}\item 
+\#define \hyperlink{worker__thread_8c_aca31b6b12493c91f78b00950c95c9bf8}{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-A\-I\-T\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-S}~1
+\begin{DoxyCompactList}\small\item\em Default amount of time to wait before sem\-\_\-trywait should return. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void $\ast$ \hyperlink{worker__thread_8c_a3a127d6281e8cdeed6908ab760e8832b}{init\-\_\-worker\-\_\-thread} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread)
+\begin{DoxyCompactList}\small\item\em Allocates and returns a new worker thread structure. \end{DoxyCompactList}\item 
+void \hyperlink{worker__thread_8c_a387b490d4ae04c791a10b5a17ffe6332}{stop\-\_\-all\-\_\-worker\-\_\-threads} ()
+\begin{DoxyCompactList}\small\item\em Signals all worker threads to stop. \end{DoxyCompactList}\item 
+static void \hyperlink{worker__thread_8c_a5cf7303df6f6f9d6c36c6cea570791db}{destroy\-\_\-worker\-\_\-thread} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread, void $\ast$v\-\_\-worker\-\_\-thread)
+\begin{DoxyCompactList}\small\item\em Destroys all M\-S\-Us on a worker thread and frees the associated structure. \end{DoxyCompactList}\item 
+struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$ \hyperlink{worker__thread_8c_acb4f348a4e9d05cdb98fe400a09ae4b7}{get\-\_\-worker\-\_\-thread} (int id)
+\item 
+static int \hyperlink{worker__thread_8c_a2e8fb0fb2f80cfff21c86b3f74f8e46a}{get\-\_\-msu\-\_\-index} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Gets the index in \hyperlink{structworker__thread_a5b9f22e2454a995f711f92817e5761e2}{worker\-\_\-thread\-::msus} at which the msu\-\_\-id resides. \end{DoxyCompactList}\item 
+static int \hyperlink{worker__thread_8c_a9dffcd5c3eca3d281f41890bb830e70b}{remove\-\_\-idx\-\_\-from\-\_\-msu\-\_\-list} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, int idx)
+\begin{DoxyCompactList}\small\item\em Removes the M\-S\-U at the given index from the \hyperlink{structworker__thread_a5b9f22e2454a995f711f92817e5761e2}{worker\-\_\-thread\-::msus}. \end{DoxyCompactList}\item 
+int \hyperlink{worker__thread_8c_a61c8c60e1f4f08b1453b090f596ab783}{unregister\-\_\-msu\-\_\-with\-\_\-thread} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Removes an M\-S\-U from the list of M\-S\-Us within its thread. \end{DoxyCompactList}\item 
+int \hyperlink{worker__thread_8c_aaa1f0d82e97d713803ce633ab8737bab}{register\-\_\-msu\-\_\-with\-\_\-thread} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Registers an M\-S\-U as one that should be run on its assigned thread. \end{DoxyCompactList}\item 
+static int \hyperlink{worker__thread_8c_aaba35ec3cf7098f3e3c0768de88c8a74}{create\-\_\-msu\-\_\-on\-\_\-thread} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct \hyperlink{structctrl__create__msu__msg}{ctrl\-\_\-create\-\_\-msu\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Creates a new M\-S\-U on this thread based on the provided message. \end{DoxyCompactList}\item 
+static int \hyperlink{worker__thread_8c_adc76d2a9f9fb5ef041df00dbb5f6edcc}{del\-\_\-msu\-\_\-from\-\_\-thread} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct \hyperlink{structctrl__delete__msu__msg}{ctrl\-\_\-delete\-\_\-msu\-\_\-msg} $\ast$msg, int ack\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Removes an M\-S\-U from this thread based on the provided messages. \end{DoxyCompactList}\item 
+static int \hyperlink{worker__thread_8c_aee69cdb6d81921c488d525f1910c7d29}{worker\-\_\-mod\-\_\-msu\-\_\-route} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct \hyperlink{structctrl__msu__route__msg}{ctrl\-\_\-msu\-\_\-route\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Modifies the M\-S\-U's routes, either adding or removing a route subscription. \end{DoxyCompactList}\item 
+static int \hyperlink{worker__thread_8c_ae7182cb138fa55fb5818989bb58f3518}{process\-\_\-worker\-\_\-thread\-\_\-msg} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Processes a message which has been sent to the worker thread. \end{DoxyCompactList}\item 
+static double \hyperlink{worker__thread_8c_a8229f86491e42d208c45d0fd522f5618}{timediff\-\_\-s} (struct timespec $\ast$t1, struct timespec $\ast$t2)
+\begin{DoxyCompactList}\small\item\em Returns the difference in time in seconds, t2 -\/ t1. \end{DoxyCompactList}\item 
+static struct timespec $\ast$ \hyperlink{worker__thread_8c_a9ce9dc4d98f4a214ec3af317fd5f43de}{next\-\_\-timeout} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread)
+\begin{DoxyCompactList}\small\item\em Returns the next time at which the worker thread should exit its semaphore wait. \end{DoxyCompactList}\item 
+int \hyperlink{worker__thread_8c_a6830e086bde2527a66062b172003dc5f}{enqueue\-\_\-worker\-\_\-timeout} (struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct timespec $\ast$interval)
+\begin{DoxyCompactList}\small\item\em Signals that the given thread should break when waiting on its semaphore once {\ttfamily interval} time has passed. \end{DoxyCompactList}\item 
+static int \hyperlink{worker__thread_8c_affd43aeedbda560d9053be69cd049b1f}{worker\-\_\-thread\-\_\-loop} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$thread, void $\ast$v\-\_\-worker\-\_\-thread)
+\begin{DoxyCompactList}\small\item\em The main worker thread loop. \end{DoxyCompactList}\item 
+int \hyperlink{worker__thread_8c_ae4b8adc2386f68330ad795653a57fc89}{create\-\_\-worker\-\_\-thread} (unsigned int thread\-\_\-id, enum \hyperlink{dfg_8h_af31ca3002c5b769551da6f1183bafed5}{blocking\-\_\-mode} mode)
+\begin{DoxyCompactList}\small\item\em Starts a new worker thread with the given thread I\-D and pinned/unpinned status. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$ \hyperlink{worker__thread_8c_aa3af09741e0d9465673ae26fb5822eb1}{worker\-\_\-threads} \mbox{[}32\mbox{]}
+\begin{DoxyCompactList}\small\item\em Static struct to keep track of worker threads. \end{DoxyCompactList}\item 
+static struct timespec \hyperlink{worker__thread_8c_aca6807273671d50c81ae472c0ccff882}{cur\-\_\-time}
+\begin{DoxyCompactList}\small\item\em Static structure for holding current time, so it can be returned from \hyperlink{worker__thread_8c_a9ce9dc4d98f4a214ec3af317fd5f43de}{next\-\_\-timeout}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Threads that hold M\-S\-Us. 
+
+Definition in file \hyperlink{worker__thread_8c_source}{worker\-\_\-thread.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{worker__thread_8c_a53ca1e8b57647539d4b71aeecaf0a2bb}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E@{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E}}
+\index{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E@{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E(
+\begin{DoxyParamCaption}
+\item[{}]{msg, }
+\item[{}]{target}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8c_a53ca1e8b57647539d4b71aeecaf0a2bb}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} (msg->data\_size != \textcolor{keyword}{sizeof}(target)) \{ \hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{\(\backslash\)}
+\hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{        log\_warn}(\textcolor{stringliteral}{"Message data size does not match size"} \(\backslash\)
+                 \textcolor{stringliteral}{"of target type "} #target ); \(\backslash\)
+        break; \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Checks whether the size of the message is equal to the size of the target struct. 
+
+
+
+Definition at line 214 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_aca31b6b12493c91f78b00950c95c9bf8}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-A\-I\-T\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-S@{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-A\-I\-T\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-S}}
+\index{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-A\-I\-T\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-S@{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-A\-I\-T\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-S}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-A\-I\-T\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\-E\-F\-A\-U\-L\-T\-\_\-\-W\-A\-I\-T\-\_\-\-T\-I\-M\-E\-O\-U\-T\-\_\-\-S~1}}\label{worker__thread_8c_aca31b6b12493c91f78b00950c95c9bf8}
+
+
+Default amount of time to wait before sem\-\_\-trywait should return. 
+
+
+
+Definition at line 267 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a705cb27a1ac6915760cf88cebba062ca}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!M\-A\-X\-\_\-\-D\-E\-D\-O\-S\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D@{M\-A\-X\-\_\-\-D\-E\-D\-O\-S\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D}}
+\index{M\-A\-X\-\_\-\-D\-E\-D\-O\-S\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D@{M\-A\-X\-\_\-\-D\-E\-D\-O\-S\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-D\-E\-D\-O\-S\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-D\-E\-D\-O\-S\-\_\-\-T\-H\-R\-E\-A\-D\-\_\-\-I\-D~32}}\label{worker__thread_8c_a705cb27a1ac6915760cf88cebba062ca}
+
+
+The maximum I\-D that can be assigned to a worker thread. 
+
+
+
+Definition at line 36 of file worker\-\_\-thread.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{worker__thread_8c_aaba35ec3cf7098f3e3c0768de88c8a74}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!create\-\_\-msu\-\_\-on\-\_\-thread@{create\-\_\-msu\-\_\-on\-\_\-thread}}
+\index{create\-\_\-msu\-\_\-on\-\_\-thread@{create\-\_\-msu\-\_\-on\-\_\-thread}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{create\-\_\-msu\-\_\-on\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static int create\-\_\-msu\-\_\-on\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf ctrl\-\_\-create\-\_\-msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_aaba35ec3cf7098f3e3c0768de88c8a74}
+
+
+Creates a new M\-S\-U on this thread based on the provided message. 
+
+
+
+Definition at line 131 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_ae4b8adc2386f68330ad795653a57fc89}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!create\-\_\-worker\-\_\-thread@{create\-\_\-worker\-\_\-thread}}
+\index{create\-\_\-worker\-\_\-thread@{create\-\_\-worker\-\_\-thread}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{create\-\_\-worker\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int create\-\_\-worker\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{enum {\bf blocking\-\_\-mode}}]{mode}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8c_ae4b8adc2386f68330ad795653a57fc89}
+
+
+Starts a new worker thread with the given thread I\-D and pinned/unpinned status. 
+
+Blocks until thread has been started 
+
+Definition at line 382 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_adc76d2a9f9fb5ef041df00dbb5f6edcc}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!del\-\_\-msu\-\_\-from\-\_\-thread@{del\-\_\-msu\-\_\-from\-\_\-thread}}
+\index{del\-\_\-msu\-\_\-from\-\_\-thread@{del\-\_\-msu\-\_\-from\-\_\-thread}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{del\-\_\-msu\-\_\-from\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static int del\-\_\-msu\-\_\-from\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf ctrl\-\_\-delete\-\_\-msu\-\_\-msg} $\ast$}]{msg, }
+\item[{int}]{ack\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_adc76d2a9f9fb5ef041df00dbb5f6edcc}
+
+
+Removes an M\-S\-U from this thread based on the provided messages. 
+
+
+
+Definition at line 147 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a5cf7303df6f6f9d6c36c6cea570791db}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!destroy\-\_\-worker\-\_\-thread@{destroy\-\_\-worker\-\_\-thread}}
+\index{destroy\-\_\-worker\-\_\-thread@{destroy\-\_\-worker\-\_\-thread}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{destroy\-\_\-worker\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static void destroy\-\_\-worker\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{thread, }
+\item[{void $\ast$}]{v\-\_\-worker\-\_\-thread}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_a5cf7303df6f6f9d6c36c6cea570791db}
+
+
+Destroys all M\-S\-Us on a worker thread and frees the associated structure. 
+
+
+
+Definition at line 70 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a6830e086bde2527a66062b172003dc5f}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!enqueue\-\_\-worker\-\_\-timeout@{enqueue\-\_\-worker\-\_\-timeout}}
+\index{enqueue\-\_\-worker\-\_\-timeout@{enqueue\-\_\-worker\-\_\-timeout}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{enqueue\-\_\-worker\-\_\-timeout}]{\setlength{\rightskip}{0pt plus 5cm}int enqueue\-\_\-worker\-\_\-timeout (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct timespec $\ast$}]{interval}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8c_a6830e086bde2527a66062b172003dc5f}
+
+
+Signals that the given thread should break when waiting on its semaphore once {\ttfamily interval} time has passed. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 301 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a2e8fb0fb2f80cfff21c86b3f74f8e46a}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!get\-\_\-msu\-\_\-index@{get\-\_\-msu\-\_\-index}}
+\index{get\-\_\-msu\-\_\-index@{get\-\_\-msu\-\_\-index}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{get\-\_\-msu\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}static int get\-\_\-msu\-\_\-index (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_a2e8fb0fb2f80cfff21c86b3f74f8e46a}
+
+
+Gets the index in \hyperlink{structworker__thread_a5b9f22e2454a995f711f92817e5761e2}{worker\-\_\-thread\-::msus} at which the msu\-\_\-id resides. 
+
+
+
+Definition at line 88 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_acb4f348a4e9d05cdb98fe400a09ae4b7}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!get\-\_\-worker\-\_\-thread@{get\-\_\-worker\-\_\-thread}}
+\index{get\-\_\-worker\-\_\-thread@{get\-\_\-worker\-\_\-thread}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{get\-\_\-worker\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf worker\-\_\-thread}$\ast$ get\-\_\-worker\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{int}]{id}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8c_acb4f348a4e9d05cdb98fe400a09ae4b7}
+\begin{DoxyReturn}{Returns}
+the worker thread with the given I\-D, or N\-U\-L\-L if not found 
+\end{DoxyReturn}
+
+
+Definition at line 79 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a3a127d6281e8cdeed6908ab760e8832b}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!init\-\_\-worker\-\_\-thread@{init\-\_\-worker\-\_\-thread}}
+\index{init\-\_\-worker\-\_\-thread@{init\-\_\-worker\-\_\-thread}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{init\-\_\-worker\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static void$\ast$ init\-\_\-worker\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{thread}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_a3a127d6281e8cdeed6908ab760e8832b}
+
+
+Allocates and returns a new worker thread structure. 
+
+
+
+Definition at line 42 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a9ce9dc4d98f4a214ec3af317fd5f43de}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!next\-\_\-timeout@{next\-\_\-timeout}}
+\index{next\-\_\-timeout@{next\-\_\-timeout}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{next\-\_\-timeout}]{\setlength{\rightskip}{0pt plus 5cm}static struct timespec$\ast$ next\-\_\-timeout (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_a9ce9dc4d98f4a214ec3af317fd5f43de}
+
+
+Returns the next time at which the worker thread should exit its semaphore wait. 
+
+
+
+Definition at line 278 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_ae7182cb138fa55fb5818989bb58f3518}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!process\-\_\-worker\-\_\-thread\-\_\-msg@{process\-\_\-worker\-\_\-thread\-\_\-msg}}
+\index{process\-\_\-worker\-\_\-thread\-\_\-msg@{process\-\_\-worker\-\_\-thread\-\_\-msg}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{process\-\_\-worker\-\_\-thread\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}static int process\-\_\-worker\-\_\-thread\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf thread\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_ae7182cb138fa55fb5818989bb58f3518}
+
+
+Processes a message which has been sent to the worker thread. 
+
+
+
+Definition at line 222 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_aaa1f0d82e97d713803ce633ab8737bab}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!register\-\_\-msu\-\_\-with\-\_\-thread@{register\-\_\-msu\-\_\-with\-\_\-thread}}
+\index{register\-\_\-msu\-\_\-with\-\_\-thread@{register\-\_\-msu\-\_\-with\-\_\-thread}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{register\-\_\-msu\-\_\-with\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int register\-\_\-msu\-\_\-with\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8c_aaa1f0d82e97d713803ce633ab8737bab}
+
+
+Registers an M\-S\-U as one that should be run on its assigned thread. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 119 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a9dffcd5c3eca3d281f41890bb830e70b}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!remove\-\_\-idx\-\_\-from\-\_\-msu\-\_\-list@{remove\-\_\-idx\-\_\-from\-\_\-msu\-\_\-list}}
+\index{remove\-\_\-idx\-\_\-from\-\_\-msu\-\_\-list@{remove\-\_\-idx\-\_\-from\-\_\-msu\-\_\-list}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{remove\-\_\-idx\-\_\-from\-\_\-msu\-\_\-list}]{\setlength{\rightskip}{0pt plus 5cm}static int remove\-\_\-idx\-\_\-from\-\_\-msu\-\_\-list (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{int}]{idx}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_a9dffcd5c3eca3d281f41890bb830e70b}
+
+
+Removes the M\-S\-U at the given index from the \hyperlink{structworker__thread_a5b9f22e2454a995f711f92817e5761e2}{worker\-\_\-thread\-::msus}. 
+
+
+
+Definition at line 98 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a387b490d4ae04c791a10b5a17ffe6332}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!stop\-\_\-all\-\_\-worker\-\_\-threads@{stop\-\_\-all\-\_\-worker\-\_\-threads}}
+\index{stop\-\_\-all\-\_\-worker\-\_\-threads@{stop\-\_\-all\-\_\-worker\-\_\-threads}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{stop\-\_\-all\-\_\-worker\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}void stop\-\_\-all\-\_\-worker\-\_\-threads (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8c_a387b490d4ae04c791a10b5a17ffe6332}
+
+
+Signals all worker threads to stop. 
+
+
+
+Definition at line 54 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a8229f86491e42d208c45d0fd522f5618}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!timediff\-\_\-s@{timediff\-\_\-s}}
+\index{timediff\-\_\-s@{timediff\-\_\-s}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{timediff\-\_\-s}]{\setlength{\rightskip}{0pt plus 5cm}static double timediff\-\_\-s (
+\begin{DoxyParamCaption}
+\item[{struct timespec $\ast$}]{t1, }
+\item[{struct timespec $\ast$}]{t2}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_a8229f86491e42d208c45d0fd522f5618}
+
+
+Returns the difference in time in seconds, t2 -\/ t1. 
+
+
+
+Definition at line 270 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_a61c8c60e1f4f08b1453b090f596ab783}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!unregister\-\_\-msu\-\_\-with\-\_\-thread@{unregister\-\_\-msu\-\_\-with\-\_\-thread}}
+\index{unregister\-\_\-msu\-\_\-with\-\_\-thread@{unregister\-\_\-msu\-\_\-with\-\_\-thread}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{unregister\-\_\-msu\-\_\-with\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}int unregister\-\_\-msu\-\_\-with\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{worker__thread_8c_a61c8c60e1f4f08b1453b090f596ab783}
+
+
+Removes an M\-S\-U from the list of M\-S\-Us within its thread. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 110 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_aee69cdb6d81921c488d525f1910c7d29}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!worker\-\_\-mod\-\_\-msu\-\_\-route@{worker\-\_\-mod\-\_\-msu\-\_\-route}}
+\index{worker\-\_\-mod\-\_\-msu\-\_\-route@{worker\-\_\-mod\-\_\-msu\-\_\-route}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{worker\-\_\-mod\-\_\-msu\-\_\-route}]{\setlength{\rightskip}{0pt plus 5cm}static int worker\-\_\-mod\-\_\-msu\-\_\-route (
+\begin{DoxyParamCaption}
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf ctrl\-\_\-msu\-\_\-route\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_aee69cdb6d81921c488d525f1910c7d29}
+
+
+Modifies the M\-S\-U's routes, either adding or removing a route subscription. 
+
+
+
+Definition at line 180 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_affd43aeedbda560d9053be69cd049b1f}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!worker\-\_\-thread\-\_\-loop@{worker\-\_\-thread\-\_\-loop}}
+\index{worker\-\_\-thread\-\_\-loop@{worker\-\_\-thread\-\_\-loop}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{worker\-\_\-thread\-\_\-loop}]{\setlength{\rightskip}{0pt plus 5cm}static int worker\-\_\-thread\-\_\-loop (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{thread, }
+\item[{void $\ast$}]{v\-\_\-worker\-\_\-thread}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_affd43aeedbda560d9053be69cd049b1f}
+
+
+The main worker thread loop. 
+
+Checks for exit signal, processes messages 
+
+Definition at line 345 of file worker\-\_\-thread.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{worker__thread_8c_aca6807273671d50c81ae472c0ccff882}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!cur\-\_\-time@{cur\-\_\-time}}
+\index{cur\-\_\-time@{cur\-\_\-time}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{cur\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}struct timespec cur\-\_\-time\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_aca6807273671d50c81ae472c0ccff882}
+
+
+Static structure for holding current time, so it can be returned from \hyperlink{worker__thread_8c_a9ce9dc4d98f4a214ec3af317fd5f43de}{next\-\_\-timeout}. 
+
+
+
+Definition at line 275 of file worker\-\_\-thread.\-c.
+
+\hypertarget{worker__thread_8c_aa3af09741e0d9465673ae26fb5822eb1}{\index{worker\-\_\-thread.\-c@{worker\-\_\-thread.\-c}!worker\-\_\-threads@{worker\-\_\-threads}}
+\index{worker\-\_\-threads@{worker\-\_\-threads}!worker_thread.c@{worker\-\_\-thread.\-c}}
+\subsubsection[{worker\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf worker\-\_\-thread}$\ast$ worker\-\_\-threads\mbox{[}32\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{worker__thread_8c_aa3af09741e0d9465673ae26fb5822eb1}
+
+
+Static struct to keep track of worker threads. 
+
+
+
+Definition at line 39 of file worker\-\_\-thread.\-c.
+

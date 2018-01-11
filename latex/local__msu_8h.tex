@@ -1,0 +1,165 @@
+\hypertarget{local__msu_8h}{\section{src/runtime/local\-\_\-msu.h File Reference}
+\label{local__msu_8h}\index{src/runtime/local\-\_\-msu.\-h@{src/runtime/local\-\_\-msu.\-h}}
+}
+
+
+Declares the structures and functions applicable to M\-S\-Us on the local machine.  
+
+
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}message\-\_\-queue.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}worker\-\_\-thread.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu}
+\begin{DoxyCompactList}\small\item\em The structure that represents an M\-S\-U located on the local machine. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{local__msu_8h_abcfd9eae0738d85b82f8a583614d7f0b}{init\-\_\-msu} (unsigned int id, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type, struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} $\ast$data)
+\begin{DoxyCompactList}\small\item\em Allocates and creates a new M\-S\-U of the specified type and I\-D on the given thread. \end{DoxyCompactList}\item 
+int \hyperlink{local__msu_8h_ae10b786cc697892379645137fe8e1726}{try\-\_\-destroy\-\_\-msu} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Destroys the M\-S\-U, but only if it has no states currently saved. \end{DoxyCompactList}\item 
+void \hyperlink{local__msu_8h_a67ee1f7032f975202303063322324d8f}{destroy\-\_\-msu} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Calls type-\/specific destroy function and frees associated memory. \end{DoxyCompactList}\item 
+int \hyperlink{local__msu_8h_a4d2045bc71f6df0037e769d2be703a82}{msu\-\_\-dequeue} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Dequeus a message from a local M\-S\-U and calls its receive function. \end{DoxyCompactList}\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{local__msu_8h_aed382fb62bcbdf04647222659632bec0}{get\-\_\-local\-\_\-msu} (unsigned int id)
+\begin{DoxyCompactList}\small\item\em Gets the local M\-S\-U with the given I\-D, or N\-U\-L\-L if N/\-A. \end{DoxyCompactList}\item 
+int \hyperlink{local__msu_8h_a6890f3b85b3b4c5ffa5d1af575ca05da}{msu\-\_\-error} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, int broadcast)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Declares the structures and functions applicable to M\-S\-Us on the local machine. 
+
+Definition in file \hyperlink{local__msu_8h_source}{local\-\_\-msu.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{local__msu_8h_a67ee1f7032f975202303063322324d8f}{\index{local\-\_\-msu.\-h@{local\-\_\-msu.\-h}!destroy\-\_\-msu@{destroy\-\_\-msu}}
+\index{destroy\-\_\-msu@{destroy\-\_\-msu}!local_msu.h@{local\-\_\-msu.\-h}}
+\subsubsection[{destroy\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8h_a67ee1f7032f975202303063322324d8f}
+
+
+Calls type-\/specific destroy function and frees associated memory. 
+
+
+
+Definition at line 257 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8h_aed382fb62bcbdf04647222659632bec0}{\index{local\-\_\-msu.\-h@{local\-\_\-msu.\-h}!get\-\_\-local\-\_\-msu@{get\-\_\-local\-\_\-msu}}
+\index{get\-\_\-local\-\_\-msu@{get\-\_\-local\-\_\-msu}!local_msu.h@{local\-\_\-msu.\-h}}
+\subsubsection[{get\-\_\-local\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ get\-\_\-local\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8h_aed382fb62bcbdf04647222659632bec0}
+
+
+Gets the local M\-S\-U with the given I\-D, or N\-U\-L\-L if N/\-A. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & I\-D of the M\-S\-U to retrieve \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+local msu instance, or N\-U\-L\-L on error 
+\end{DoxyReturn}
+
+
+Definition at line 134 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8h_abcfd9eae0738d85b82f8a583614d7f0b}{\index{local\-\_\-msu.\-h@{local\-\_\-msu.\-h}!init\-\_\-msu@{init\-\_\-msu}}
+\index{init\-\_\-msu@{init\-\_\-msu}!local_msu.h@{local\-\_\-msu.\-h}}
+\subsubsection[{init\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ init\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf msu\-\_\-init\-\_\-data} $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8h_abcfd9eae0738d85b82f8a583614d7f0b}
+
+
+Allocates and creates a new M\-S\-U of the specified type and I\-D on the given thread. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & I\-D of the M\-S\-U to be created \\
+\hline
+{\em type} & M\-S\-U type of the M\-S\-U to be created \\
+\hline
+{\em thread} & The thread on which this M\-S\-U is to be created \\
+\hline
+{\em data} & Any initial data that is passed to the M\-S\-U's specific init function \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The created local M\-S\-U, or N\-U\-L\-L on error 
+\end{DoxyReturn}
+
+
+Definition at line 198 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8h_a4d2045bc71f6df0037e769d2be703a82}{\index{local\-\_\-msu.\-h@{local\-\_\-msu.\-h}!msu\-\_\-dequeue@{msu\-\_\-dequeue}}
+\index{msu\-\_\-dequeue@{msu\-\_\-dequeue}!local_msu.h@{local\-\_\-msu.\-h}}
+\subsubsection[{msu\-\_\-dequeue}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-dequeue (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8h_a4d2045bc71f6df0037e769d2be703a82}
+
+
+Dequeus a message from a local M\-S\-U and calls its receive function. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu} & M\-S\-U to dequeue the message from \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error, 1 if no message existed to be dequeued 
+\end{DoxyReturn}
+
+
+Definition at line 323 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8h_a6890f3b85b3b4c5ffa5d1af575ca05da}{\index{local\-\_\-msu.\-h@{local\-\_\-msu.\-h}!msu\-\_\-error@{msu\-\_\-error}}
+\index{msu\-\_\-error@{msu\-\_\-error}!local_msu.h@{local\-\_\-msu.\-h}}
+\subsubsection[{msu\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-error (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{int}]{broadcast}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8h_a6890f3b85b3b4c5ffa5d1af575ca05da}
+
+
+Definition at line 353 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8h_ae10b786cc697892379645137fe8e1726}{\index{local\-\_\-msu.\-h@{local\-\_\-msu.\-h}!try\-\_\-destroy\-\_\-msu@{try\-\_\-destroy\-\_\-msu}}
+\index{try\-\_\-destroy\-\_\-msu@{try\-\_\-destroy\-\_\-msu}!local_msu.h@{local\-\_\-msu.\-h}}
+\subsubsection[{try\-\_\-destroy\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int try\-\_\-destroy\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8h_ae10b786cc697892379645137fe8e1726}
+
+
+Destroys the M\-S\-U, but only if it has no states currently saved. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, 1 if M\-S\-U cannot be destroyed 
+\end{DoxyReturn}
+
+
+Definition at line 249 of file local\-\_\-msu.\-c.
+

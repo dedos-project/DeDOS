@@ -1,0 +1,66 @@
+\hypertarget{dfg__instantiation_8h}{\section{src/runtime/dfg\-\_\-instantiation.h File Reference}
+\label{dfg__instantiation_8h}\index{src/runtime/dfg\-\_\-instantiation.\-h@{src/runtime/dfg\-\_\-instantiation.\-h}}
+}
+
+
+Instantiation of a dfg on a runtime.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{dfg__instantiation_8h_a91b7262a30da463465594eb826994eca}{init\-\_\-dfg\-\_\-msu\-\_\-types} (struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$$\ast$\hyperlink{msu__type_8c_ab0aef54bc608cc3b2f051d2d99d5ac2a}{msu\-\_\-types}, int n\-\_\-msu\-\_\-types)
+\begin{DoxyCompactList}\small\item\em Runs the runtime initilization function for the given M\-S\-U types. \end{DoxyCompactList}\item 
+int \hyperlink{dfg__instantiation_8h_af4b002f6d94e9f410eefc7b9d0350c10}{instantiate\-\_\-dfg\-\_\-runtime} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt)
+\begin{DoxyCompactList}\small\item\em Instantiates the M\-S\-Us, routes, and threads on the specified runtime. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Instantiation of a dfg on a runtime. 
+
+Definition in file \hyperlink{dfg__instantiation_8h_source}{dfg\-\_\-instantiation.\-h}.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dfg__instantiation_8h_a91b7262a30da463465594eb826994eca}{\index{dfg\-\_\-instantiation.\-h@{dfg\-\_\-instantiation.\-h}!init\-\_\-dfg\-\_\-msu\-\_\-types@{init\-\_\-dfg\-\_\-msu\-\_\-types}}
+\index{init\-\_\-dfg\-\_\-msu\-\_\-types@{init\-\_\-dfg\-\_\-msu\-\_\-types}!dfg_instantiation.h@{dfg\-\_\-instantiation.\-h}}
+\subsubsection[{init\-\_\-dfg\-\_\-msu\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-dfg\-\_\-msu\-\_\-types (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$$\ast$}]{msu\-\_\-types, }
+\item[{int}]{n\-\_\-msu\-\_\-types}
+\end{DoxyParamCaption}
+)}}\label{dfg__instantiation_8h_a91b7262a30da463465594eb826994eca}
+
+
+Runs the runtime initilization function for the given M\-S\-U types. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu\-\_\-types} & list of pointers to M\-S\-U types \\
+\hline
+{\em n\-\_\-msu\-\_\-types} & Size of {\ttfamily msu\-\_\-types} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 160 of file dfg\-\_\-instantiation.\-c.
+
+\hypertarget{dfg__instantiation_8h_af4b002f6d94e9f410eefc7b9d0350c10}{\index{dfg\-\_\-instantiation.\-h@{dfg\-\_\-instantiation.\-h}!instantiate\-\_\-dfg\-\_\-runtime@{instantiate\-\_\-dfg\-\_\-runtime}}
+\index{instantiate\-\_\-dfg\-\_\-runtime@{instantiate\-\_\-dfg\-\_\-runtime}!dfg_instantiation.h@{dfg\-\_\-instantiation.\-h}}
+\subsubsection[{instantiate\-\_\-dfg\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}int instantiate\-\_\-dfg\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt}
+\end{DoxyParamCaption}
+)}}\label{dfg__instantiation_8h_af4b002f6d94e9f410eefc7b9d0350c10}
+
+
+Instantiates the M\-S\-Us, routes, and threads on the specified runtime. 
+
+
+
+Definition at line 174 of file dfg\-\_\-instantiation.\-c.
+

@@ -1,0 +1,333 @@
+\hypertarget{scheduling_8c}{\section{src/global\-\_\-controller/scheduling.c File Reference}
+\label{scheduling_8c}\index{src/global\-\_\-controller/scheduling.\-c@{src/global\-\_\-controller/scheduling.\-c}}
+}
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}scheduling.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}api.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-ids.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}haproxy.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{scheduling_8c_a7897854f6e8bd2e711a4e027b00734c2}{Q\-L\-E\-N\-\_\-\-R\-O\-U\-T\-I\-N\-G}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{unused__def_8h_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D} \hyperlink{scheduling_8c_aa7c1a54aab9a038f0afb43018a5c7b6d}{n\-\_\-downstream\-\_\-msus} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\item 
+static double \hyperlink{scheduling_8c_a95b7034c12caed9a0199aeb7b90d4ece}{get\-\_\-q\-\_\-len} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\item 
+static int \hyperlink{scheduling_8c_acd22b510512d1a0e8af9fc5cb14a4ad3}{downstream\-\_\-q\-\_\-len} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\item 
+static int \hyperlink{scheduling_8c_a21e0545632ceb7906b61e82d87c230fd}{fix\-\_\-route\-\_\-ranges} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route})
+\item 
+int \hyperlink{scheduling_8c_a6c9b7890c977cfb1e4b0699474dbf366}{fix\-\_\-all\-\_\-route\-\_\-ranges} (struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$\hyperlink{dfg_8c_a7e47c8351eb11d990fbe315642762ddd}{dfg})
+\item 
+int \hyperlink{scheduling_8c_ab5c28b99078f1ba7bbd2d1a0adc51333}{msu\-\_\-hierarchical\-\_\-sort} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$$\ast$msus)
+\begin{DoxyCompactList}\small\item\em Based on the meta routing, sort msus in a list in ascending order (from leaf to root) \end{DoxyCompactList}\item 
+void \hyperlink{scheduling_8c_ab020d10a972e632284d18892cad85e42}{prepare\-\_\-clone} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Find an I\-D and clean up data structures for an M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__thread}{dfg\-\_\-thread} $\ast$ \hyperlink{scheduling_8c_a22a04a68835f004d9589f0d9e2a8410f}{find\-\_\-unused\-\_\-thread} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$runtime, struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$type, int is\-\_\-pinned)
+\begin{DoxyCompactList}\small\item\em Find a suitable thread for an M\-S\-U. \end{DoxyCompactList}\item 
+int \hyperlink{scheduling_8c_afccc2ab61bcdc43216d9b9f301ccde37}{place\-\_\-on\-\_\-runtime} (struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt, struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Find a core on which to spawn a new thread for an M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__dependency}{dfg\-\_\-dependency} $\ast$ \hyperlink{scheduling_8c_ac20405d3abe1b6b992b6a334ce6ee851}{get\-\_\-dependency} (struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$type, struct \hyperlink{structdfg__msu__type}{dfg\-\_\-msu\-\_\-type} $\ast$dep\-\_\-type)
+\item 
+int \hyperlink{scheduling_8c_a41c6d24aa0d55d09d688f01df7c23fb8}{wire\-\_\-msu} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\item 
+static int \hyperlink{scheduling_8c_a4bac1090fb008bc84fcdff91026b0877}{remove\-\_\-routes\-\_\-to\-\_\-msu} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\item 
+static int \hyperlink{scheduling_8c_a1379e202cd6923adf75cb706877af62b}{get\-\_\-dependencies} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu, struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$$\ast$output, int out\-\_\-size)
+\item 
+int \hyperlink{scheduling_8c_aae0e7c5366b17b1bf635835098c78a93}{unclone\-\_\-msu} (int msu\-\_\-id)
+\item 
+struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$ \hyperlink{scheduling_8c_ab9276a1c201a9d56f72de1bb35739b71}{clone\-\_\-msu} (int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Clone a msu of given I\-D. \end{DoxyCompactList}\item 
+int \hyperlink{scheduling_8c_a01fab5f28a195c4dda6914256a67a596}{schedule\-\_\-msu} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu, struct \hyperlink{structdfg__runtime}{dfg\-\_\-runtime} $\ast$rt, struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$$\ast$new\-\_\-msus)
+\begin{DoxyCompactList}\small\item\em Tries to place an M\-S\-U on a given runtime. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{scheduling_8c_a7897854f6e8bd2e711a4e027b00734c2}{\index{scheduling.\-c@{scheduling.\-c}!Q\-L\-E\-N\-\_\-\-R\-O\-U\-T\-I\-N\-G@{Q\-L\-E\-N\-\_\-\-R\-O\-U\-T\-I\-N\-G}}
+\index{Q\-L\-E\-N\-\_\-\-R\-O\-U\-T\-I\-N\-G@{Q\-L\-E\-N\-\_\-\-R\-O\-U\-T\-I\-N\-G}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{Q\-L\-E\-N\-\_\-\-R\-O\-U\-T\-I\-N\-G}]{\setlength{\rightskip}{0pt plus 5cm}\#define Q\-L\-E\-N\-\_\-\-R\-O\-U\-T\-I\-N\-G}}\label{scheduling_8c_a7897854f6e8bd2e711a4e027b00734c2}
+
+
+Definition at line 44 of file scheduling.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{scheduling_8c_ab9276a1c201a9d56f72de1bb35739b71}{\index{scheduling.\-c@{scheduling.\-c}!clone\-\_\-msu@{clone\-\_\-msu}}
+\index{clone\-\_\-msu@{clone\-\_\-msu}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{clone\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-msu}$\ast$ clone\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_ab9276a1c201a9d56f72de1bb35739b71}
+
+
+Clone a msu of given I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu\-\_\-id} & id of the M\-S\-U to clone \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0/-\/1 success/failure 
+\end{DoxyReturn}
+
+
+Definition at line 619 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_acd22b510512d1a0e8af9fc5cb14a4ad3}{\index{scheduling.\-c@{scheduling.\-c}!downstream\-\_\-q\-\_\-len@{downstream\-\_\-q\-\_\-len}}
+\index{downstream\-\_\-q\-\_\-len@{downstream\-\_\-q\-\_\-len}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{downstream\-\_\-q\-\_\-len}]{\setlength{\rightskip}{0pt plus 5cm}static int downstream\-\_\-q\-\_\-len (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling_8c_acd22b510512d1a0e8af9fc5cb14a4ad3}
+
+
+Definition at line 57 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_a22a04a68835f004d9589f0d9e2a8410f}{\index{scheduling.\-c@{scheduling.\-c}!find\-\_\-unused\-\_\-thread@{find\-\_\-unused\-\_\-thread}}
+\index{find\-\_\-unused\-\_\-thread@{find\-\_\-unused\-\_\-thread}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{find\-\_\-unused\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-thread}$\ast$ find\-\_\-unused\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{runtime, }
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{type, }
+\item[{int}]{is\-\_\-pinned}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_a22a04a68835f004d9589f0d9e2a8410f}
+
+
+Find a suitable thread for an M\-S\-U. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \hyperlink{structdfg__runtime}{dfg\-\_\-runtime}} & $\ast$runtime\-: pointer to runtime endpoint \\
+\hline
+{\em int} & colocation\-\_\-group\-: colocation group I\-D to filter \\
+\hline
+{\em int} & \hyperlink{structmsu__type}{msu\-\_\-type}\-: M\-S\-U type I\-D to filter \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\-: pointer to \hyperlink{structdfg__thread}{dfg\-\_\-thread} or N\-U\-L\-L 
+\end{DoxyReturn}
+
+
+Definition at line 272 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_a6c9b7890c977cfb1e4b0699474dbf366}{\index{scheduling.\-c@{scheduling.\-c}!fix\-\_\-all\-\_\-route\-\_\-ranges@{fix\-\_\-all\-\_\-route\-\_\-ranges}}
+\index{fix\-\_\-all\-\_\-route\-\_\-ranges@{fix\-\_\-all\-\_\-route\-\_\-ranges}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{fix\-\_\-all\-\_\-route\-\_\-ranges}]{\setlength{\rightskip}{0pt plus 5cm}int fix\-\_\-all\-\_\-route\-\_\-ranges (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-dfg} $\ast$}]{dfg}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_a6c9b7890c977cfb1e4b0699474dbf366}
+
+
+Definition at line 179 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_a21e0545632ceb7906b61e82d87c230fd}{\index{scheduling.\-c@{scheduling.\-c}!fix\-\_\-route\-\_\-ranges@{fix\-\_\-route\-\_\-ranges}}
+\index{fix\-\_\-route\-\_\-ranges@{fix\-\_\-route\-\_\-ranges}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{fix\-\_\-route\-\_\-ranges}]{\setlength{\rightskip}{0pt plus 5cm}static int fix\-\_\-route\-\_\-ranges (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling_8c_a21e0545632ceb7906b61e82d87c230fd}
+
+
+Definition at line 71 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_a1379e202cd6923adf75cb706877af62b}{\index{scheduling.\-c@{scheduling.\-c}!get\-\_\-dependencies@{get\-\_\-dependencies}}
+\index{get\-\_\-dependencies@{get\-\_\-dependencies}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{get\-\_\-dependencies}]{\setlength{\rightskip}{0pt plus 5cm}static int get\-\_\-dependencies (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf dfg\-\_\-msu} $\ast$$\ast$}]{output, }
+\item[{int}]{out\-\_\-size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling_8c_a1379e202cd6923adf75cb706877af62b}
+
+
+Definition at line 529 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_ac20405d3abe1b6b992b6a334ce6ee851}{\index{scheduling.\-c@{scheduling.\-c}!get\-\_\-dependency@{get\-\_\-dependency}}
+\index{get\-\_\-dependency@{get\-\_\-dependency}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{get\-\_\-dependency}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-dependency}$\ast$ get\-\_\-dependency (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf dfg\-\_\-msu\-\_\-type} $\ast$}]{dep\-\_\-type}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_ac20405d3abe1b6b992b6a334ce6ee851}
+
+
+Definition at line 346 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_a95b7034c12caed9a0199aeb7b90d4ece}{\index{scheduling.\-c@{scheduling.\-c}!get\-\_\-q\-\_\-len@{get\-\_\-q\-\_\-len}}
+\index{get\-\_\-q\-\_\-len@{get\-\_\-q\-\_\-len}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{get\-\_\-q\-\_\-len}]{\setlength{\rightskip}{0pt plus 5cm}static double get\-\_\-q\-\_\-len (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling_8c_a95b7034c12caed9a0199aeb7b90d4ece}
+
+
+Definition at line 48 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_ab5c28b99078f1ba7bbd2d1a0adc51333}{\index{scheduling.\-c@{scheduling.\-c}!msu\-\_\-hierarchical\-\_\-sort@{msu\-\_\-hierarchical\-\_\-sort}}
+\index{msu\-\_\-hierarchical\-\_\-sort@{msu\-\_\-hierarchical\-\_\-sort}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{msu\-\_\-hierarchical\-\_\-sort}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-hierarchical\-\_\-sort (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$$\ast$}]{msus}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_ab5c28b99078f1ba7bbd2d1a0adc51333}
+
+
+Based on the meta routing, sort msus in a list in ascending order (from leaf to root) 
+
+
+\begin{DoxyParams}{Parameters}
+{\em struct} & \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msus\-: decayed pointer to a list of M\-S\-U pointers \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+-\/1/0\-: failure/success 
+\end{DoxyReturn}
+
+
+Definition at line 198 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_aa7c1a54aab9a038f0afb43018a5c7b6d}{\index{scheduling.\-c@{scheduling.\-c}!n\-\_\-downstream\-\_\-msus@{n\-\_\-downstream\-\_\-msus}}
+\index{n\-\_\-downstream\-\_\-msus@{n\-\_\-downstream\-\_\-msus}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{n\-\_\-downstream\-\_\-msus}]{\setlength{\rightskip}{0pt plus 5cm}static int {\bf U\-N\-U\-S\-E\-D} n\-\_\-downstream\-\_\-msus (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling_8c_aa7c1a54aab9a038f0afb43018a5c7b6d}
+
+
+Definition at line 33 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_afccc2ab61bcdc43216d9b9f301ccde37}{\index{scheduling.\-c@{scheduling.\-c}!place\-\_\-on\-\_\-runtime@{place\-\_\-on\-\_\-runtime}}
+\index{place\-\_\-on\-\_\-runtime@{place\-\_\-on\-\_\-runtime}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{place\-\_\-on\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}int place\-\_\-on\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt, }
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_afccc2ab61bcdc43216d9b9f301ccde37}
+
+
+Find a core on which to spawn a new thread for an M\-S\-U. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \hyperlink{structdfg__runtime}{dfg\-\_\-runtime}} & the target runtime \\
+\hline
+{\em struct} & dfg\-\_\-msu\-\_\-msu\-: the target M\-S\-U \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+failure/success\-: -\/1/0 
+\end{DoxyReturn}
+
+
+Definition at line 317 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_ab020d10a972e632284d18892cad85e42}{\index{scheduling.\-c@{scheduling.\-c}!prepare\-\_\-clone@{prepare\-\_\-clone}}
+\index{prepare\-\_\-clone@{prepare\-\_\-clone}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{prepare\-\_\-clone}]{\setlength{\rightskip}{0pt plus 5cm}void prepare\-\_\-clone (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_ab020d10a972e632284d18892cad85e42}
+
+
+Find an I\-D and clean up data structures for an M\-S\-U. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \hyperlink{structdfg__msu}{dfg\-\_\-msu}} & msu\-: target M\-S\-U \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+none 
+\end{DoxyReturn}
+
+
+Definition at line 260 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_a4bac1090fb008bc84fcdff91026b0877}{\index{scheduling.\-c@{scheduling.\-c}!remove\-\_\-routes\-\_\-to\-\_\-msu@{remove\-\_\-routes\-\_\-to\-\_\-msu}}
+\index{remove\-\_\-routes\-\_\-to\-\_\-msu@{remove\-\_\-routes\-\_\-to\-\_\-msu}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{remove\-\_\-routes\-\_\-to\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}static int remove\-\_\-routes\-\_\-to\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{scheduling_8c_a4bac1090fb008bc84fcdff91026b0877}
+
+
+Definition at line 506 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_a01fab5f28a195c4dda6914256a67a596}{\index{scheduling.\-c@{scheduling.\-c}!schedule\-\_\-msu@{schedule\-\_\-msu}}
+\index{schedule\-\_\-msu@{schedule\-\_\-msu}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{schedule\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int schedule\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf dfg\-\_\-runtime} $\ast$}]{rt, }
+\item[{struct {\bf dfg\-\_\-msu} $\ast$$\ast$}]{new\-\_\-msus}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_a01fab5f28a195c4dda6914256a67a596}
+
+
+Tries to place an M\-S\-U on a given runtime. 
+
+Will wire the M\-S\-U with all upstream and downstream M\-S\-U, enforcing locality constraints. Also, will spawn any missing dependency. 
+\begin{DoxyParams}{Parameters}
+{\em struct} & \hyperlink{structdfg__msu}{dfg\-\_\-msu} msu\-: the target M\-S\-U \\
+\hline
+{\em struct} & \hyperlink{structdfg__runtime}{dfg\-\_\-runtime}\-: the target runtime \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0/-\/1 success/failure 
+\end{DoxyReturn}
+
+
+Definition at line 710 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_aae0e7c5366b17b1bf635835098c78a93}{\index{scheduling.\-c@{scheduling.\-c}!unclone\-\_\-msu@{unclone\-\_\-msu}}
+\index{unclone\-\_\-msu@{unclone\-\_\-msu}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{unclone\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int unclone\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_aae0e7c5366b17b1bf635835098c78a93}
+
+
+Definition at line 566 of file scheduling.\-c.
+
+\hypertarget{scheduling_8c_a41c6d24aa0d55d09d688f01df7c23fb8}{\index{scheduling.\-c@{scheduling.\-c}!wire\-\_\-msu@{wire\-\_\-msu}}
+\index{wire\-\_\-msu@{wire\-\_\-msu}!scheduling.c@{scheduling.\-c}}
+\subsubsection[{wire\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int wire\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{scheduling_8c_a41c6d24aa0d55d09d688f01df7c23fb8}
+
+
+Definition at line 355 of file scheduling.\-c.
+

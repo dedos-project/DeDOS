@@ -1,0 +1,290 @@
+\hypertarget{output__thread_8c}{\section{src/runtime/output\-\_\-thread.c File Reference}
+\label{output__thread_8c}\index{src/runtime/output\-\_\-thread.\-c@{src/runtime/output\-\_\-thread.\-c}}
+}
+
+
+A \hyperlink{structdedos__thread}{dedos\-\_\-thread} which monitors a queue for output to be sent to other runtimes or the global controller.  
+
+
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}worker\-\_\-thread.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dedos\-\_\-threads.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}thread\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-type.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}ctrl\-\_\-runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}output\-\_\-thread.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$netinet/ip.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{output__thread_8c_a53ca1e8b57647539d4b71aeecaf0a2bb}{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E}(msg, target)
+\begin{DoxyCompactList}\small\item\em Checks whether the size of the message matches the size of the target struct. \end{DoxyCompactList}\item 
+\#define \hyperlink{output__thread_8c_abaaffb3d58130f38735d3b30d536cae7}{S\-T\-A\-T\-\_\-\-R\-E\-P\-O\-R\-T\-I\-N\-G\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}~\hyperlink{stats_8h_ad0a95ec958d1ee5f5693d210cdc4c7e3}{S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S}
+\begin{DoxyCompactList}\small\item\em How often to report statistics. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void $\ast$ \hyperlink{output__thread_8c_a16cbca3218f7ac24b20d867f96b9cde6}{init\-\_\-output\-\_\-thread} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$output\-\_\-thread)
+\begin{DoxyCompactList}\small\item\em Initializes the static copy of the output thread. \end{DoxyCompactList}\item 
+static int \hyperlink{output__thread_8c_acf910014a62f357dd3acc596cfb3f388}{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-ctrl} (struct \hyperlink{structsend__to__ctrl__msg}{send\-\_\-to\-\_\-ctrl\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Process a \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a9abf78c296448ffc429d6c578f856b61}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L} message. \end{DoxyCompactList}\item 
+static int \hyperlink{output__thread_8c_a16b8950243ccab325d5ad499bec443d5}{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-peer} (struct \hyperlink{structsend__to__peer__msg}{send\-\_\-to\-\_\-peer\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Process a \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R} message. \end{DoxyCompactList}\item 
+static int \hyperlink{output__thread_8c_a581f5914a2bec0d5e57ceea6fd7edb45}{output\-\_\-thread\-\_\-connect\-\_\-to\-\_\-runtime} (struct \hyperlink{structctrl__add__runtime__msg}{ctrl\-\_\-add\-\_\-runtime\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Process a \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acde413fd81f842dfc555f97766f3aeab}{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E} message. \end{DoxyCompactList}\item 
+void \hyperlink{output__thread_8c_a29deb435fdb02d579ebaf9cd30413c42}{stop\-\_\-output\-\_\-monitor} ()
+\begin{DoxyCompactList}\small\item\em Triggers the output thread to stop execution. \end{DoxyCompactList}\item 
+void \hyperlink{output__thread_8c_a5b8feea98a512b16b376d3bd085270c2}{join\-\_\-output\-\_\-thread} ()
+\begin{DoxyCompactList}\small\item\em Joins the underlying pthread. \end{DoxyCompactList}\item 
+static int \hyperlink{output__thread_8c_a8c31952d63685093dd507456a8d7121a}{process\-\_\-output\-\_\-thread\-\_\-msg} (struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Processes a thread message that is delivered to the output thread. \end{DoxyCompactList}\item 
+static int \hyperlink{output__thread_8c_a42915a6bc10321fd1d25da2c28cf89a4}{check\-\_\-output\-\_\-thread\-\_\-queue} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$output\-\_\-thread)
+\begin{DoxyCompactList}\small\item\em Checks the queue of the output thread for messages and acts on them if present. \end{DoxyCompactList}\item 
+static int \hyperlink{output__thread_8c_acf731b1325d1569eb4b66a3a2881cd75}{output\-\_\-thread\-\_\-loop} (struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$self, void \hyperlink{unused__def_8h_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D} $\ast$init\-\_\-data)
+\begin{DoxyCompactList}\small\item\em The main thread loop for the output thread. \end{DoxyCompactList}\item 
+int \hyperlink{output__thread_8c_a2e960c3ad6dcc99bca5f8b513d0384d4}{enqueue\-\_\-for\-\_\-output} (struct \hyperlink{structthread__msg}{thread\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Enqueues a \hyperlink{structthread__msg}{thread\-\_\-msg} for delivery to the output thread. \end{DoxyCompactList}\item 
+struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$ \hyperlink{output__thread_8c_afba788718b6582c8d3e59f7c4f2fc79b}{start\-\_\-output\-\_\-monitor\-\_\-thread} (void)
+\begin{DoxyCompactList}\small\item\em Starts the thread monitoring the queue for messages to be sent to other endpoints. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structdedos__thread}{dedos\-\_\-thread} $\ast$ \hyperlink{output__thread_8c_a90991e5b1681d8c9b689df4e44521a72}{static\-\_\-output\-\_\-thread}
+\begin{DoxyCompactList}\small\item\em A static copy of the output thread, so others can enqueue messages. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A \hyperlink{structdedos__thread}{dedos\-\_\-thread} which monitors a queue for output to be sent to other runtimes or the global controller. 
+
+Definition in file \hyperlink{output__thread_8c_source}{output\-\_\-thread.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{output__thread_8c_a53ca1e8b57647539d4b71aeecaf0a2bb}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E@{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E}}
+\index{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E@{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-H\-E\-C\-K\-\_\-\-M\-S\-G\-\_\-\-S\-I\-Z\-E(
+\begin{DoxyParamCaption}
+\item[{}]{msg, }
+\item[{}]{target}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8c_a53ca1e8b57647539d4b71aeecaf0a2bb}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} (msg->data\_size != \textcolor{keyword}{sizeof}(target)) \{ \hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{\(\backslash\)}
+\hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{        log\_warn}(\textcolor{stringliteral}{"Message data size (%d) does not match size"} \(\backslash\)
+                 \textcolor{stringliteral}{"of target type (%d)"} #target, (\textcolor{keywordtype}{int})msg->data\_size , \(\backslash\)
+                 (\textcolor{keywordtype}{int})\textcolor{keyword}{sizeof}(target)); \(\backslash\)
+        return -1; \(\backslash\)
+    \} \(\backslash\)
+\end{DoxyCode}
+
+
+Checks whether the size of the message matches the size of the target struct. 
+
+
+
+Definition at line 96 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_abaaffb3d58130f38735d3b30d536cae7}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!S\-T\-A\-T\-\_\-\-R\-E\-P\-O\-R\-T\-I\-N\-G\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S@{S\-T\-A\-T\-\_\-\-R\-E\-P\-O\-R\-T\-I\-N\-G\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}}
+\index{S\-T\-A\-T\-\_\-\-R\-E\-P\-O\-R\-T\-I\-N\-G\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S@{S\-T\-A\-T\-\_\-\-R\-E\-P\-O\-R\-T\-I\-N\-G\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{S\-T\-A\-T\-\_\-\-R\-E\-P\-O\-R\-T\-I\-N\-G\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\-T\-A\-T\-\_\-\-R\-E\-P\-O\-R\-T\-I\-N\-G\-\_\-\-D\-U\-R\-A\-T\-I\-O\-N\-\_\-\-M\-S~{\bf S\-T\-A\-T\-\_\-\-S\-A\-M\-P\-L\-E\-\_\-\-P\-E\-R\-I\-O\-D\-\_\-\-M\-S}}}\label{output__thread_8c_abaaffb3d58130f38735d3b30d536cae7}
+
+
+How often to report statistics. 
+
+
+
+Definition at line 168 of file output\-\_\-thread.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{output__thread_8c_a42915a6bc10321fd1d25da2c28cf89a4}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!check\-\_\-output\-\_\-thread\-\_\-queue@{check\-\_\-output\-\_\-thread\-\_\-queue}}
+\index{check\-\_\-output\-\_\-thread\-\_\-queue@{check\-\_\-output\-\_\-thread\-\_\-queue}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{check\-\_\-output\-\_\-thread\-\_\-queue}]{\setlength{\rightskip}{0pt plus 5cm}static int check\-\_\-output\-\_\-thread\-\_\-queue (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{output\-\_\-thread}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{output__thread_8c_a42915a6bc10321fd1d25da2c28cf89a4}
+
+
+Checks the queue of the output thread for messages and acts on them if present. 
+
+
+
+Definition at line 151 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_a2e960c3ad6dcc99bca5f8b513d0384d4}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!enqueue\-\_\-for\-\_\-output@{enqueue\-\_\-for\-\_\-output}}
+\index{enqueue\-\_\-for\-\_\-output@{enqueue\-\_\-for\-\_\-output}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{enqueue\-\_\-for\-\_\-output}]{\setlength{\rightskip}{0pt plus 5cm}int enqueue\-\_\-for\-\_\-output (
+\begin{DoxyParamCaption}
+\item[{struct {\bf thread\-\_\-msg} $\ast$}]{thread\-\_\-msg}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8c_a2e960c3ad6dcc99bca5f8b513d0384d4}
+
+
+Enqueues a \hyperlink{structthread__msg}{thread\-\_\-msg} for delivery to the output thread. 
+
+Message should be of type \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acde413fd81f842dfc555f97766f3aeab}{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E}, \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R}, or \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a9abf78c296448ffc429d6c578f856b61}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L}.
+
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 213 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_a16cbca3218f7ac24b20d867f96b9cde6}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!init\-\_\-output\-\_\-thread@{init\-\_\-output\-\_\-thread}}
+\index{init\-\_\-output\-\_\-thread@{init\-\_\-output\-\_\-thread}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{init\-\_\-output\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}static void$\ast$ init\-\_\-output\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{output\-\_\-thread}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{output__thread_8c_a16cbca3218f7ac24b20d867f96b9cde6}
+
+
+Initializes the static copy of the output thread. 
+
+
+
+Definition at line 43 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_a5b8feea98a512b16b376d3bd085270c2}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!join\-\_\-output\-\_\-thread@{join\-\_\-output\-\_\-thread}}
+\index{join\-\_\-output\-\_\-thread@{join\-\_\-output\-\_\-thread}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{join\-\_\-output\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}void join\-\_\-output\-\_\-thread (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8c_a5b8feea98a512b16b376d3bd085270c2}
+
+
+Joins the underlying pthread. 
+
+
+
+Definition at line 90 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_a581f5914a2bec0d5e57ceea6fd7edb45}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!output\-\_\-thread\-\_\-connect\-\_\-to\-\_\-runtime@{output\-\_\-thread\-\_\-connect\-\_\-to\-\_\-runtime}}
+\index{output\-\_\-thread\-\_\-connect\-\_\-to\-\_\-runtime@{output\-\_\-thread\-\_\-connect\-\_\-to\-\_\-runtime}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{output\-\_\-thread\-\_\-connect\-\_\-to\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}static int output\-\_\-thread\-\_\-connect\-\_\-to\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{struct {\bf ctrl\-\_\-add\-\_\-runtime\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{output__thread_8c_a581f5914a2bec0d5e57ceea6fd7edb45}
+
+
+Process a \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380acde413fd81f842dfc555f97766f3aeab}{C\-O\-N\-N\-E\-C\-T\-\_\-\-T\-O\-\_\-\-R\-U\-N\-T\-I\-M\-E} message. 
+
+
+
+Definition at line 71 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_acf731b1325d1569eb4b66a3a2881cd75}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!output\-\_\-thread\-\_\-loop@{output\-\_\-thread\-\_\-loop}}
+\index{output\-\_\-thread\-\_\-loop@{output\-\_\-thread\-\_\-loop}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{output\-\_\-thread\-\_\-loop}]{\setlength{\rightskip}{0pt plus 5cm}static int output\-\_\-thread\-\_\-loop (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dedos\-\_\-thread} $\ast$}]{self, }
+\item[{void {\bf U\-N\-U\-S\-E\-D} $\ast$}]{init\-\_\-data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{output__thread_8c_acf731b1325d1569eb4b66a3a2881cd75}
+
+
+The main thread loop for the output thread. 
+
+Checks the queue for messages, sends them, sends stats messages 
+
+Definition at line 174 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_acf910014a62f357dd3acc596cfb3f388}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!output\-\_\-thread\-\_\-send\-\_\-to\-\_\-ctrl@{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-ctrl}}
+\index{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-ctrl@{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-ctrl}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-ctrl}]{\setlength{\rightskip}{0pt plus 5cm}static int output\-\_\-thread\-\_\-send\-\_\-to\-\_\-ctrl (
+\begin{DoxyParamCaption}
+\item[{struct {\bf send\-\_\-to\-\_\-ctrl\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{output__thread_8c_acf910014a62f357dd3acc596cfb3f388}
+
+
+Process a \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380a9abf78c296448ffc429d6c578f856b61}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-C\-T\-R\-L} message. 
+
+
+
+Definition at line 49 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_a16b8950243ccab325d5ad499bec443d5}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!output\-\_\-thread\-\_\-send\-\_\-to\-\_\-peer@{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-peer}}
+\index{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-peer@{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-peer}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{output\-\_\-thread\-\_\-send\-\_\-to\-\_\-peer}]{\setlength{\rightskip}{0pt plus 5cm}static int output\-\_\-thread\-\_\-send\-\_\-to\-\_\-peer (
+\begin{DoxyParamCaption}
+\item[{struct {\bf send\-\_\-to\-\_\-peer\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{output__thread_8c_a16b8950243ccab325d5ad499bec443d5}
+
+
+Process a \hyperlink{thread__message_8h_ae1d212e0fe0ba69bb058e9d25e286380abf3a0adaf4d7123cb7810433db3ac8da}{S\-E\-N\-D\-\_\-\-T\-O\-\_\-\-P\-E\-E\-R} message. 
+
+
+
+Definition at line 60 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_a8c31952d63685093dd507456a8d7121a}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!process\-\_\-output\-\_\-thread\-\_\-msg@{process\-\_\-output\-\_\-thread\-\_\-msg}}
+\index{process\-\_\-output\-\_\-thread\-\_\-msg@{process\-\_\-output\-\_\-thread\-\_\-msg}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{process\-\_\-output\-\_\-thread\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}static int process\-\_\-output\-\_\-thread\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{struct {\bf thread\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{output__thread_8c_a8c31952d63685093dd507456a8d7121a}
+
+
+Processes a thread message that is delivered to the output thread. 
+
+
+
+Definition at line 105 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_afba788718b6582c8d3e59f7c4f2fc79b}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!start\-\_\-output\-\_\-monitor\-\_\-thread@{start\-\_\-output\-\_\-monitor\-\_\-thread}}
+\index{start\-\_\-output\-\_\-monitor\-\_\-thread@{start\-\_\-output\-\_\-monitor\-\_\-thread}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{start\-\_\-output\-\_\-monitor\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-thread}$\ast$ start\-\_\-output\-\_\-monitor\-\_\-thread (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8c_afba788718b6582c8d3e59f7c4f2fc79b}
+
+
+Starts the thread monitoring the queue for messages to be sent to other endpoints. 
+
+
+
+Definition at line 223 of file output\-\_\-thread.\-c.
+
+\hypertarget{output__thread_8c_a29deb435fdb02d579ebaf9cd30413c42}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!stop\-\_\-output\-\_\-monitor@{stop\-\_\-output\-\_\-monitor}}
+\index{stop\-\_\-output\-\_\-monitor@{stop\-\_\-output\-\_\-monitor}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{stop\-\_\-output\-\_\-monitor}]{\setlength{\rightskip}{0pt plus 5cm}void stop\-\_\-output\-\_\-monitor (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{output__thread_8c_a29deb435fdb02d579ebaf9cd30413c42}
+
+
+Triggers the output thread to stop execution. 
+
+
+
+Definition at line 86 of file output\-\_\-thread.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{output__thread_8c_a90991e5b1681d8c9b689df4e44521a72}{\index{output\-\_\-thread.\-c@{output\-\_\-thread.\-c}!static\-\_\-output\-\_\-thread@{static\-\_\-output\-\_\-thread}}
+\index{static\-\_\-output\-\_\-thread@{static\-\_\-output\-\_\-thread}!output_thread.c@{output\-\_\-thread.\-c}}
+\subsubsection[{static\-\_\-output\-\_\-thread}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-thread}$\ast$ static\-\_\-output\-\_\-thread\hspace{0.3cm}{\ttfamily [static]}}}\label{output__thread_8c_a90991e5b1681d8c9b689df4e44521a72}
+
+
+A static copy of the output thread, so others can enqueue messages. 
+
+
+
+Definition at line 40 of file output\-\_\-thread.\-c.
+

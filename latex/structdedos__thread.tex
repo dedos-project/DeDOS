@@ -1,0 +1,134 @@
+\hypertarget{structdedos__thread}{\section{dedos\-\_\-thread Struct Reference}
+\label{structdedos__thread}\index{dedos\-\_\-thread@{dedos\-\_\-thread}}
+}
+
+
+Structure representing any thread within De\-D\-O\-S.  
+
+
+
+
+{\ttfamily \#include $<$dedos\-\_\-threads.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+pthread\-\_\-t \hyperlink{structdedos__thread_a7a40b7dea35c3ebfb87974126bdd52f8}{pthread}
+\begin{DoxyCompactList}\small\item\em The underlying pthread. \end{DoxyCompactList}\item 
+int \hyperlink{structdedos__thread_a9ec2f386c1e31415ee26e54c39f0f02a}{id}
+\begin{DoxyCompactList}\small\item\em A unique identifier for the thread. \end{DoxyCompactList}\item 
+enum \hyperlink{dfg_8h_a673ccd9aadafd31e8beaf16423c07db2}{thread\-\_\-mode} \hyperlink{structdedos__thread_a70d31c1db4f14b59fd88148f5a4d8cbb}{mode}
+\begin{DoxyCompactList}\small\item\em \mbox{[}un\mbox{]}pinned \end{DoxyCompactList}\item 
+struct \hyperlink{structmsg__queue}{msg\-\_\-queue} \hyperlink{structdedos__thread_ace61dc188bd6d8018126c508b1a42493}{queue}
+\begin{DoxyCompactList}\small\item\em Queue for incoming message. \end{DoxyCompactList}\item 
+sem\-\_\-t \hyperlink{structdedos__thread_ababe14eb9fbd46f21932e27b04785973}{sem}
+\begin{DoxyCompactList}\small\item\em Locks thread until a message is available. \end{DoxyCompactList}\item 
+pthread\-\_\-mutex\-\_\-t \hyperlink{structdedos__thread_abff71615fe6947f8fed5a26e198b6b4b}{exit\-\_\-lock}
+\begin{DoxyCompactList}\small\item\em For checking if thread should exit. \end{DoxyCompactList}\item 
+int \hyperlink{structdedos__thread_ae1ad6c5ad2f9c080a1b396a8572e75f5}{exit\-\_\-signal}
+\begin{DoxyCompactList}\small\item\em For checking if thread should exit. \end{DoxyCompactList}\item 
+struct timespec \hyperlink{structdedos__thread_aa45d04173d89640ec2ddeb95c66db84e}{last\-\_\-metric}
+\begin{DoxyCompactList}\small\item\em For logging thread metrics. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Structure representing any thread within De\-D\-O\-S. 
+
+Definition at line 35 of file dedos\-\_\-threads.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structdedos__thread_abff71615fe6947f8fed5a26e198b6b4b}{\index{dedos\-\_\-thread@{dedos\-\_\-thread}!exit\-\_\-lock@{exit\-\_\-lock}}
+\index{exit\-\_\-lock@{exit\-\_\-lock}!dedos_thread@{dedos\-\_\-thread}}
+\subsubsection[{exit\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-mutex\-\_\-t dedos\-\_\-thread\-::exit\-\_\-lock}}\label{structdedos__thread_abff71615fe6947f8fed5a26e198b6b4b}
+
+
+For checking if thread should exit. 
+
+
+
+Definition at line 47 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{structdedos__thread_ae1ad6c5ad2f9c080a1b396a8572e75f5}{\index{dedos\-\_\-thread@{dedos\-\_\-thread}!exit\-\_\-signal@{exit\-\_\-signal}}
+\index{exit\-\_\-signal@{exit\-\_\-signal}!dedos_thread@{dedos\-\_\-thread}}
+\subsubsection[{exit\-\_\-signal}]{\setlength{\rightskip}{0pt plus 5cm}int dedos\-\_\-thread\-::exit\-\_\-signal}}\label{structdedos__thread_ae1ad6c5ad2f9c080a1b396a8572e75f5}
+
+
+For checking if thread should exit. 
+
+
+
+Definition at line 49 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{structdedos__thread_a9ec2f386c1e31415ee26e54c39f0f02a}{\index{dedos\-\_\-thread@{dedos\-\_\-thread}!id@{id}}
+\index{id@{id}!dedos_thread@{dedos\-\_\-thread}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int dedos\-\_\-thread\-::id}}\label{structdedos__thread_a9ec2f386c1e31415ee26e54c39f0f02a}
+
+
+A unique identifier for the thread. 
+
+
+
+Definition at line 39 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{structdedos__thread_aa45d04173d89640ec2ddeb95c66db84e}{\index{dedos\-\_\-thread@{dedos\-\_\-thread}!last\-\_\-metric@{last\-\_\-metric}}
+\index{last\-\_\-metric@{last\-\_\-metric}!dedos_thread@{dedos\-\_\-thread}}
+\subsubsection[{last\-\_\-metric}]{\setlength{\rightskip}{0pt plus 5cm}struct timespec dedos\-\_\-thread\-::last\-\_\-metric}}\label{structdedos__thread_aa45d04173d89640ec2ddeb95c66db84e}
+
+
+For logging thread metrics. 
+
+
+
+Definition at line 51 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{structdedos__thread_a70d31c1db4f14b59fd88148f5a4d8cbb}{\index{dedos\-\_\-thread@{dedos\-\_\-thread}!mode@{mode}}
+\index{mode@{mode}!dedos_thread@{dedos\-\_\-thread}}
+\subsubsection[{mode}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf thread\-\_\-mode} dedos\-\_\-thread\-::mode}}\label{structdedos__thread_a70d31c1db4f14b59fd88148f5a4d8cbb}
+
+
+\mbox{[}un\mbox{]}pinned 
+
+
+
+Definition at line 41 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{structdedos__thread_a7a40b7dea35c3ebfb87974126bdd52f8}{\index{dedos\-\_\-thread@{dedos\-\_\-thread}!pthread@{pthread}}
+\index{pthread@{pthread}!dedos_thread@{dedos\-\_\-thread}}
+\subsubsection[{pthread}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-t dedos\-\_\-thread\-::pthread}}\label{structdedos__thread_a7a40b7dea35c3ebfb87974126bdd52f8}
+
+
+The underlying pthread. 
+
+
+
+Definition at line 37 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{structdedos__thread_ace61dc188bd6d8018126c508b1a42493}{\index{dedos\-\_\-thread@{dedos\-\_\-thread}!queue@{queue}}
+\index{queue@{queue}!dedos_thread@{dedos\-\_\-thread}}
+\subsubsection[{queue}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msg\-\_\-queue} dedos\-\_\-thread\-::queue}}\label{structdedos__thread_ace61dc188bd6d8018126c508b1a42493}
+
+
+Queue for incoming message. 
+
+
+
+Definition at line 43 of file dedos\-\_\-threads.\-h.
+
+\hypertarget{structdedos__thread_ababe14eb9fbd46f21932e27b04785973}{\index{dedos\-\_\-thread@{dedos\-\_\-thread}!sem@{sem}}
+\index{sem@{sem}!dedos_thread@{dedos\-\_\-thread}}
+\subsubsection[{sem}]{\setlength{\rightskip}{0pt plus 5cm}sem\-\_\-t dedos\-\_\-thread\-::sem}}\label{structdedos__thread_ababe14eb9fbd46f21932e27b04785973}
+
+
+Locks thread until a message is available. 
+
+
+
+Definition at line 45 of file dedos\-\_\-threads.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{dedos__threads_8h}{dedos\-\_\-threads.\-h}\end{DoxyCompactItemize}

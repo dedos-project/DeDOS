@@ -1,0 +1,78 @@
+\hypertarget{structjson__state}{\section{json\-\_\-state Struct Reference}
+\label{structjson__state}\index{json\-\_\-state@{json\-\_\-state}}
+}
+
+
+Structure to hold state while parsing J\-S\-O\-N.  
+
+
+
+
+{\ttfamily \#include $<$jsmn\-\_\-parser.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+void $\ast$ \hyperlink{structjson__state_acc079826c9aec290370460c6a5b0cdc8}{data}
+\begin{DoxyCompactList}\small\item\em The object currently under construction. \end{DoxyCompactList}\item 
+int \hyperlink{structjson__state_a89afcce72accc1241265f843ec7d6f40}{parent\-\_\-type}
+\begin{DoxyCompactList}\small\item\em The type of object that is being create. \end{DoxyCompactList}\item 
+struct \hyperlink{structjson__state}{json\-\_\-state} $\ast$ \hyperlink{structjson__state_a62a49f4c9101a8e5a93a757c74060b25}{next}
+\item 
+\hyperlink{structjsmntok__t}{jsmntok\-\_\-t} $\ast$ \hyperlink{structjson__state_a4b6bd5d26604be1ca0783f1b36c01a9f}{tok}
+\begin{DoxyCompactList}\small\item\em When saving state, provides a linked-\/list. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Structure to hold state while parsing J\-S\-O\-N. 
+
+Definition at line 49 of file jsmn\-\_\-parser.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structjson__state_acc079826c9aec290370460c6a5b0cdc8}{\index{json\-\_\-state@{json\-\_\-state}!data@{data}}
+\index{data@{data}!json_state@{json\-\_\-state}}
+\subsubsection[{data}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ json\-\_\-state\-::data}}\label{structjson__state_acc079826c9aec290370460c6a5b0cdc8}
+
+
+The object currently under construction. 
+
+
+
+Definition at line 50 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{structjson__state_a62a49f4c9101a8e5a93a757c74060b25}{\index{json\-\_\-state@{json\-\_\-state}!next@{next}}
+\index{next@{next}!json_state@{json\-\_\-state}}
+\subsubsection[{next}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf json\-\_\-state}$\ast$ json\-\_\-state\-::next}}\label{structjson__state_a62a49f4c9101a8e5a93a757c74060b25}
+
+
+Definition at line 52 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{structjson__state_a89afcce72accc1241265f843ec7d6f40}{\index{json\-\_\-state@{json\-\_\-state}!parent\-\_\-type@{parent\-\_\-type}}
+\index{parent\-\_\-type@{parent\-\_\-type}!json_state@{json\-\_\-state}}
+\subsubsection[{parent\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}int json\-\_\-state\-::parent\-\_\-type}}\label{structjson__state_a89afcce72accc1241265f843ec7d6f40}
+
+
+The type of object that is being create. 
+
+
+
+Definition at line 51 of file jsmn\-\_\-parser.\-h.
+
+\hypertarget{structjson__state_a4b6bd5d26604be1ca0783f1b36c01a9f}{\index{json\-\_\-state@{json\-\_\-state}!tok@{tok}}
+\index{tok@{tok}!json_state@{json\-\_\-state}}
+\subsubsection[{tok}]{\setlength{\rightskip}{0pt plus 5cm}{\bf jsmntok\-\_\-t}$\ast$ json\-\_\-state\-::tok}}\label{structjson__state_a4b6bd5d26604be1ca0783f1b36c01a9f}
+
+
+When saving state, provides a linked-\/list. 
+
+The json token currently being read 
+
+Definition at line 53 of file jsmn\-\_\-parser.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{jsmn__parser_8h}{jsmn\-\_\-parser.\-h}\end{DoxyCompactItemize}

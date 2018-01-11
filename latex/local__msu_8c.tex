@@ -1,0 +1,490 @@
+\hypertarget{local__msu_8c}{\section{src/runtime/local\-\_\-msu.c File Reference}
+\label{local__msu_8c}\index{src/runtime/local\-\_\-msu.\-c@{src/runtime/local\-\_\-msu.\-c}}
+}
+
+
+Defines the structures and functions used by M\-S\-Us on the local machine.  
+
+
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing\-\_\-strategies.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}inter\-\_\-runtime\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}thread\-\_\-message.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-state.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-calls.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$sys/resource.\-h$>$}\\*
+{\ttfamily \#include $<$sys/time.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{local__msu_8c_adc4cc5c67b56f34138d786ef6331e3f4}{\-\_\-\-\_\-\-U\-S\-E\-\_\-\-G\-N\-U}
+\item 
+\#define \hyperlink{local__msu_8c_afde968acf847eb9da5256cd6cd345158}{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D}~1024
+\begin{DoxyCompactList}\small\item\em M\-O\-V\-E\-M\-E\-: M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D Defines the maximum I\-D that can be assigned to an M\-S\-U. \end{DoxyCompactList}\item 
+\#define \hyperlink{local__msu_8c_a6ceef54519e673aaaa1c425f2124c97e}{N\-U\-M\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}~sizeof(\hyperlink{local__msu_8c_aaf7909bd1a8bd764c34c2c591776a2c6}{M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}) / sizeof(enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id})
+\item 
+\#define \hyperlink{local__msu_8c_a516ac6fe119b2e64bc0c4f2be6321339}{R\-E\-C\-O\-R\-D\-\_\-\-D\-I\-F\-F}(dstat, rstat, id)~\hyperlink{rt__stats_8h_acff104aea41cb59659523c979b3d193d}{increment\-\_\-stat}(dstat, id, after.\-rstat -\/ before-\/$>$rstat)
+\item 
+\#define \hyperlink{local__msu_8c_a6bb1abb38f3bcc4004700d80d42fbfbf}{R\-E\-C\-O\-R\-D\-\_\-\-T\-I\-M\-E\-D\-I\-F\-F}(dstat, rstat, id)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{local__msu_8c_ab64254d690d69d8158edb394619731db}{msu\-\_\-alloc} ()
+\begin{DoxyCompactList}\small\item\em Allocates the memory associated with an M\-S\-U structure. \end{DoxyCompactList}\item 
+static void \hyperlink{local__msu_8c_ab46a46a7bf30bbdc1f553e59cc376245}{msu\-\_\-free} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Frees the memory associated with an M\-S\-U structure, including any routes, messages in its queue, or states. \end{DoxyCompactList}\item 
+static int \hyperlink{local__msu_8c_adf94439398feddbd7c38edbd73945575}{rm\-\_\-from\-\_\-local\-\_\-registry} (int id)
+\begin{DoxyCompactList}\small\item\em Removes an M\-S\-U from the local M\-S\-U registry. \end{DoxyCompactList}\item 
+static int \hyperlink{local__msu_8c_a1d81fb1edd4ec2a3c6d49de56d776eb1}{add\-\_\-to\-\_\-local\-\_\-registry} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Adds an M\-S\-U to the local registry so it can be referred to elsewhere by I\-D. \end{DoxyCompactList}\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{local__msu_8c_aed382fb62bcbdf04647222659632bec0}{get\-\_\-local\-\_\-msu} (unsigned int id)
+\begin{DoxyCompactList}\small\item\em Gets the local M\-S\-U with the given I\-D, or N\-U\-L\-L if N/\-A. \end{DoxyCompactList}\item 
+static void \hyperlink{local__msu_8c_afe2f89339d1b0f900dbe2afae78bd891}{init\-\_\-msu\-\_\-stats} (int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Initializes the stat I\-D\-S that are relevant to an M\-S\-U. \end{DoxyCompactList}\item 
+static void \hyperlink{local__msu_8c_a38c27a08220630ca1b48731d208b7714}{unregister\-\_\-msu\-\_\-stats} (int msu\-\_\-id)
+\begin{DoxyCompactList}\small\item\em Unregisters the stat I\-D\-S that are relevant to an M\-S\-U. \end{DoxyCompactList}\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{local__msu_8c_abcfd9eae0738d85b82f8a583614d7f0b}{init\-\_\-msu} (unsigned int id, struct \hyperlink{structmsu__type}{msu\-\_\-type} $\ast$type, struct \hyperlink{structworker__thread}{worker\-\_\-thread} $\ast$thread, struct \hyperlink{structmsu__init__data}{msu\-\_\-init\-\_\-data} $\ast$data)
+\begin{DoxyCompactList}\small\item\em Allocates and creates a new M\-S\-U of the specified type and I\-D on the given thread. \end{DoxyCompactList}\item 
+int \hyperlink{local__msu_8c_ae10b786cc697892379645137fe8e1726}{try\-\_\-destroy\-\_\-msu} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Destroys the M\-S\-U, but only if it has no states currently saved. \end{DoxyCompactList}\item 
+void \hyperlink{local__msu_8c_a67ee1f7032f975202303063322324d8f}{destroy\-\_\-msu} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Calls type-\/specific destroy function and frees associated memory. \end{DoxyCompactList}\item 
+static int \hyperlink{local__msu_8c_a5afc098c4a9942148147d0c88f97bcbb}{msu\-\_\-receive} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\begin{DoxyCompactList}\small\item\em Calls type-\/specific M\-S\-U receive function and records execution time. \end{DoxyCompactList}\item 
+static int \hyperlink{local__msu_8c_ae3800d9794c41e37f62a723ebeb9cc1b}{gather\-\_\-metrics\-\_\-before} (struct rusage $\ast$before)
+\item 
+static void \hyperlink{local__msu_8c_abd6d46be1f15aeda184f7e72cbe3eabd}{record\-\_\-metrics} (struct rusage $\ast$before, int msu\-\_\-id)
+\item 
+int \hyperlink{local__msu_8c_a4d2045bc71f6df0037e769d2be703a82}{msu\-\_\-dequeue} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu)
+\begin{DoxyCompactList}\small\item\em Dequeus a message from a local M\-S\-U and calls its receive function. \end{DoxyCompactList}\item 
+int \hyperlink{local__msu_8c_a6890f3b85b3b4c5ffa5d1af575ca05da}{msu\-\_\-error} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$msu, struct \hyperlink{structmsu__msg__hdr}{msu\-\_\-msg\-\_\-hdr} $\ast$hdr, int broadcast)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+pthread\-\_\-rwlock\-\_\-t \hyperlink{local__msu_8c_a015a8524ceb7dbc7b4cee6abd536930e}{msu\-\_\-registry\-\_\-lock}
+\begin{DoxyCompactList}\small\item\em Lock to protect access to local msu registry. \end{DoxyCompactList}\item 
+struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$ \hyperlink{local__msu_8c_a5cc246005a4bef7990703be2d68354c9}{local\-\_\-msu\-\_\-registry} \mbox{[}1024\mbox{]}
+\begin{DoxyCompactList}\small\item\em Mapping of M\-S\-U I\-D to the specific instance of the local M\-S\-U. \end{DoxyCompactList}\item 
+static enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{local__msu_8c_aaf7909bd1a8bd764c34c2c591776a2c6}{M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S} \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em The stat I\-Ds that are associated with an M\-S\-U, to be registered on M\-S\-U creation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Defines the structures and functions used by M\-S\-Us on the local machine. 
+
+Definition in file \hyperlink{local__msu_8c_source}{local\-\_\-msu.\-c}.
+
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{local__msu_8c_adc4cc5c67b56f34138d786ef6331e3f4}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!\-\_\-\-\_\-\-U\-S\-E\-\_\-\-G\-N\-U@{\-\_\-\-\_\-\-U\-S\-E\-\_\-\-G\-N\-U}}
+\index{\-\_\-\-\_\-\-U\-S\-E\-\_\-\-G\-N\-U@{\-\_\-\-\_\-\-U\-S\-E\-\_\-\-G\-N\-U}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{\-\_\-\-\_\-\-U\-S\-E\-\_\-\-G\-N\-U}]{\setlength{\rightskip}{0pt plus 5cm}\#define \-\_\-\-\_\-\-U\-S\-E\-\_\-\-G\-N\-U}}\label{local__msu_8c_adc4cc5c67b56f34138d786ef6331e3f4}
+
+
+Definition at line 36 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_afde968acf847eb9da5256cd6cd345158}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D@{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D}}
+\index{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D@{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D~1024}}\label{local__msu_8c_afde968acf847eb9da5256cd6cd345158}
+
+
+M\-O\-V\-E\-M\-E\-: M\-A\-X\-\_\-\-M\-S\-U\-\_\-\-I\-D Defines the maximum I\-D that can be assigned to an M\-S\-U. 
+
+Necessary becaues M\-S\-Us are indexed by I\-D in the local registry. 
+
+Definition at line 44 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a6ceef54519e673aaaa1c425f2124c97e}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!N\-U\-M\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S@{N\-U\-M\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}}
+\index{N\-U\-M\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S@{N\-U\-M\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{N\-U\-M\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-U\-M\-\_\-\-M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S~sizeof({\bf M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}) / sizeof(enum {\bf stat\-\_\-id})}}\label{local__msu_8c_a6ceef54519e673aaaa1c425f2124c97e}
+
+
+Definition at line 171 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a516ac6fe119b2e64bc0c4f2be6321339}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!R\-E\-C\-O\-R\-D\-\_\-\-D\-I\-F\-F@{R\-E\-C\-O\-R\-D\-\_\-\-D\-I\-F\-F}}
+\index{R\-E\-C\-O\-R\-D\-\_\-\-D\-I\-F\-F@{R\-E\-C\-O\-R\-D\-\_\-\-D\-I\-F\-F}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{R\-E\-C\-O\-R\-D\-\_\-\-D\-I\-F\-F}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\-E\-C\-O\-R\-D\-\_\-\-D\-I\-F\-F(
+\begin{DoxyParamCaption}
+\item[{}]{dstat, }
+\item[{}]{rstat, }
+\item[{}]{id}
+\end{DoxyParamCaption}
+)~{\bf increment\-\_\-stat}(dstat, id, after.\-rstat -\/ before-\/$>$rstat)}}\label{local__msu_8c_a516ac6fe119b2e64bc0c4f2be6321339}
+
+
+Definition at line 299 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a6bb1abb38f3bcc4004700d80d42fbfbf}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!R\-E\-C\-O\-R\-D\-\_\-\-T\-I\-M\-E\-D\-I\-F\-F@{R\-E\-C\-O\-R\-D\-\_\-\-T\-I\-M\-E\-D\-I\-F\-F}}
+\index{R\-E\-C\-O\-R\-D\-\_\-\-T\-I\-M\-E\-D\-I\-F\-F@{R\-E\-C\-O\-R\-D\-\_\-\-T\-I\-M\-E\-D\-I\-F\-F}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{R\-E\-C\-O\-R\-D\-\_\-\-T\-I\-M\-E\-D\-I\-F\-F}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\-E\-C\-O\-R\-D\-\_\-\-T\-I\-M\-E\-D\-I\-F\-F(
+\begin{DoxyParamCaption}
+\item[{}]{dstat, }
+\item[{}]{rstat, }
+\item[{}]{id}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8c_a6bb1abb38f3bcc4004700d80d42fbfbf}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\hyperlink{rt__stats_8c_acff104aea41cb59659523c979b3d193d}{increment\_stat}(dstat, \textcolor{keywordtype}{id}, ((\textcolor{keywordtype}{double})after.rstat.tv\_sec + after.rstat.tv\_usec * 1e-6) - \(\backslash\)
+                              ((\textcolor{keywordtype}{double})before->rstat.tv\_sec + before->rstat.tv\_usec * 1e-6))
+\end{DoxyCode}
+
+
+Definition at line 302 of file local\-\_\-msu.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{local__msu_8c_a1d81fb1edd4ec2a3c6d49de56d776eb1}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!add\-\_\-to\-\_\-local\-\_\-registry@{add\-\_\-to\-\_\-local\-\_\-registry}}
+\index{add\-\_\-to\-\_\-local\-\_\-registry@{add\-\_\-to\-\_\-local\-\_\-registry}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{add\-\_\-to\-\_\-local\-\_\-registry}]{\setlength{\rightskip}{0pt plus 5cm}static int add\-\_\-to\-\_\-local\-\_\-registry (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{local__msu_8c_a1d81fb1edd4ec2a3c6d49de56d776eb1}
+
+
+Adds an M\-S\-U to the local registry so it can be referred to elsewhere by I\-D. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em M\-S\-U} & the local M\-S\-U to add to the registry \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 114 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a67ee1f7032f975202303063322324d8f}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!destroy\-\_\-msu@{destroy\-\_\-msu}}
+\index{destroy\-\_\-msu@{destroy\-\_\-msu}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{destroy\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8c_a67ee1f7032f975202303063322324d8f}
+
+
+Calls type-\/specific destroy function and frees associated memory. 
+
+
+
+Definition at line 257 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_ae3800d9794c41e37f62a723ebeb9cc1b}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!gather\-\_\-metrics\-\_\-before@{gather\-\_\-metrics\-\_\-before}}
+\index{gather\-\_\-metrics\-\_\-before@{gather\-\_\-metrics\-\_\-before}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{gather\-\_\-metrics\-\_\-before}]{\setlength{\rightskip}{0pt plus 5cm}static int gather\-\_\-metrics\-\_\-before (
+\begin{DoxyParamCaption}
+\item[{struct rusage $\ast$}]{before}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{local__msu_8c_ae3800d9794c41e37f62a723ebeb9cc1b}
+
+
+Definition at line 291 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_aed382fb62bcbdf04647222659632bec0}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!get\-\_\-local\-\_\-msu@{get\-\_\-local\-\_\-msu}}
+\index{get\-\_\-local\-\_\-msu@{get\-\_\-local\-\_\-msu}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{get\-\_\-local\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ get\-\_\-local\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8c_aed382fb62bcbdf04647222659632bec0}
+
+
+Gets the local M\-S\-U with the given I\-D, or N\-U\-L\-L if N/\-A. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & I\-D of the M\-S\-U to retrieve \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+local msu instance, or N\-U\-L\-L on error 
+\end{DoxyReturn}
+
+
+Definition at line 134 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_abcfd9eae0738d85b82f8a583614d7f0b}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!init\-\_\-msu@{init\-\_\-msu}}
+\index{init\-\_\-msu@{init\-\_\-msu}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{init\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ init\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{id, }
+\item[{struct {\bf msu\-\_\-type} $\ast$}]{type, }
+\item[{struct {\bf worker\-\_\-thread} $\ast$}]{thread, }
+\item[{struct {\bf msu\-\_\-init\-\_\-data} $\ast$}]{data}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8c_abcfd9eae0738d85b82f8a583614d7f0b}
+
+
+Allocates and creates a new M\-S\-U of the specified type and I\-D on the given thread. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & I\-D of the M\-S\-U to be created \\
+\hline
+{\em type} & M\-S\-U type of the M\-S\-U to be created \\
+\hline
+{\em thread} & The thread on which this M\-S\-U is to be created \\
+\hline
+{\em data} & Any initial data that is passed to the M\-S\-U's specific init function \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The created local M\-S\-U, or N\-U\-L\-L on error 
+\end{DoxyReturn}
+
+
+Definition at line 198 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_afe2f89339d1b0f900dbe2afae78bd891}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!init\-\_\-msu\-\_\-stats@{init\-\_\-msu\-\_\-stats}}
+\index{init\-\_\-msu\-\_\-stats@{init\-\_\-msu\-\_\-stats}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{init\-\_\-msu\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}static void init\-\_\-msu\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{local__msu_8c_afe2f89339d1b0f900dbe2afae78bd891}
+
+
+Initializes the stat I\-D\-S that are relevant to an M\-S\-U. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu\-\_\-id} & I\-D of the msu to register \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 177 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_ab64254d690d69d8158edb394619731db}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!msu\-\_\-alloc@{msu\-\_\-alloc}}
+\index{msu\-\_\-alloc@{msu\-\_\-alloc}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{msu\-\_\-alloc}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf local\-\_\-msu}$\ast$ msu\-\_\-alloc (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{local__msu_8c_ab64254d690d69d8158edb394619731db}
+
+
+Allocates the memory associated with an M\-S\-U structure. 
+
+\begin{DoxyReturn}{Returns}
+Pointer to allocated M\-S\-U 
+\end{DoxyReturn}
+
+
+Definition at line 58 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a4d2045bc71f6df0037e769d2be703a82}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!msu\-\_\-dequeue@{msu\-\_\-dequeue}}
+\index{msu\-\_\-dequeue@{msu\-\_\-dequeue}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{msu\-\_\-dequeue}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-dequeue (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8c_a4d2045bc71f6df0037e769d2be703a82}
+
+
+Dequeus a message from a local M\-S\-U and calls its receive function. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu} & M\-S\-U to dequeue the message from \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error, 1 if no message existed to be dequeued 
+\end{DoxyReturn}
+
+
+Definition at line 323 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a6890f3b85b3b4c5ffa5d1af575ca05da}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!msu\-\_\-error@{msu\-\_\-error}}
+\index{msu\-\_\-error@{msu\-\_\-error}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{msu\-\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}int msu\-\_\-error (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf msu\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{int}]{broadcast}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8c_a6890f3b85b3b4c5ffa5d1af575ca05da}
+
+
+Definition at line 353 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_ab46a46a7bf30bbdc1f553e59cc376245}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!msu\-\_\-free@{msu\-\_\-free}}
+\index{msu\-\_\-free@{msu\-\_\-free}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{msu\-\_\-free}]{\setlength{\rightskip}{0pt plus 5cm}static void msu\-\_\-free (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{local__msu_8c_ab46a46a7bf30bbdc1f553e59cc376245}
+
+
+Frees the memory associated with an M\-S\-U structure, including any routes, messages in its queue, or states. 
+
+
+
+Definition at line 71 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a5afc098c4a9942148147d0c88f97bcbb}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!msu\-\_\-receive@{msu\-\_\-receive}}
+\index{msu\-\_\-receive@{msu\-\_\-receive}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{msu\-\_\-receive}]{\setlength{\rightskip}{0pt plus 5cm}static int msu\-\_\-receive (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{local__msu_8c_a5afc098c4a9942148147d0c88f97bcbb}
+
+
+Calls type-\/specific M\-S\-U receive function and records execution time. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu} & M\-S\-U to receive data \\
+\hline
+{\em data} & Data to be sent to M\-S\-U \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 275 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_abd6d46be1f15aeda184f7e72cbe3eabd}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!record\-\_\-metrics@{record\-\_\-metrics}}
+\index{record\-\_\-metrics@{record\-\_\-metrics}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{record\-\_\-metrics}]{\setlength{\rightskip}{0pt plus 5cm}static void record\-\_\-metrics (
+\begin{DoxyParamCaption}
+\item[{struct rusage $\ast$}]{before, }
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}}\label{local__msu_8c_abd6d46be1f15aeda184f7e72cbe3eabd}
+
+
+Definition at line 306 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_adf94439398feddbd7c38edbd73945575}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!rm\-\_\-from\-\_\-local\-\_\-registry@{rm\-\_\-from\-\_\-local\-\_\-registry}}
+\index{rm\-\_\-from\-\_\-local\-\_\-registry@{rm\-\_\-from\-\_\-local\-\_\-registry}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{rm\-\_\-from\-\_\-local\-\_\-registry}]{\setlength{\rightskip}{0pt plus 5cm}static int rm\-\_\-from\-\_\-local\-\_\-registry (
+\begin{DoxyParamCaption}
+\item[{int}]{id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{local__msu_8c_adf94439398feddbd7c38edbd73945575}
+
+
+Removes an M\-S\-U from the local M\-S\-U registry. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & I\-D of the M\-S\-U to remove \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 on error 
+\end{DoxyReturn}
+
+
+Definition at line 90 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_ae10b786cc697892379645137fe8e1726}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!try\-\_\-destroy\-\_\-msu@{try\-\_\-destroy\-\_\-msu}}
+\index{try\-\_\-destroy\-\_\-msu@{try\-\_\-destroy\-\_\-msu}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{try\-\_\-destroy\-\_\-msu}]{\setlength{\rightskip}{0pt plus 5cm}int try\-\_\-destroy\-\_\-msu (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{local__msu_8c_ae10b786cc697892379645137fe8e1726}
+
+
+Destroys the M\-S\-U, but only if it has no states currently saved. 
+
+\begin{DoxyReturn}{Returns}
+0 on success, 1 if M\-S\-U cannot be destroyed 
+\end{DoxyReturn}
+
+
+Definition at line 249 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a38c27a08220630ca1b48731d208b7714}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!unregister\-\_\-msu\-\_\-stats@{unregister\-\_\-msu\-\_\-stats}}
+\index{unregister\-\_\-msu\-\_\-stats@{unregister\-\_\-msu\-\_\-stats}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{unregister\-\_\-msu\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}static void unregister\-\_\-msu\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{local__msu_8c_a38c27a08220630ca1b48731d208b7714}
+
+
+Unregisters the stat I\-D\-S that are relevant to an M\-S\-U. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msu\-\_\-id} & I\-D of the M\-S\-U to register \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 189 of file local\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{local__msu_8c_a5cc246005a4bef7990703be2d68354c9}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!local\-\_\-msu\-\_\-registry@{local\-\_\-msu\-\_\-registry}}
+\index{local\-\_\-msu\-\_\-registry@{local\-\_\-msu\-\_\-registry}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{local\-\_\-msu\-\_\-registry}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf local\-\_\-msu}$\ast$ local\-\_\-msu\-\_\-registry\mbox{[}1024\mbox{]}}}\label{local__msu_8c_a5cc246005a4bef7990703be2d68354c9}
+
+
+Mapping of M\-S\-U I\-D to the specific instance of the local M\-S\-U. 
+
+
+
+Definition at line 52 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_a015a8524ceb7dbc7b4cee6abd536930e}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!msu\-\_\-registry\-\_\-lock@{msu\-\_\-registry\-\_\-lock}}
+\index{msu\-\_\-registry\-\_\-lock@{msu\-\_\-registry\-\_\-lock}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{msu\-\_\-registry\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-rwlock\-\_\-t msu\-\_\-registry\-\_\-lock}}\label{local__msu_8c_a015a8524ceb7dbc7b4cee6abd536930e}
+
+
+Lock to protect access to local msu registry. 
+
+
+
+Definition at line 50 of file local\-\_\-msu.\-c.
+
+\hypertarget{local__msu_8c_aaf7909bd1a8bd764c34c2c591776a2c6}{\index{local\-\_\-msu.\-c@{local\-\_\-msu.\-c}!M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S@{M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}}
+\index{M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S@{M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}!local_msu.c@{local\-\_\-msu.\-c}}
+\subsubsection[{M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf stat\-\_\-id} M\-S\-U\-\_\-\-S\-T\-A\-T\-\_\-\-I\-D\-S\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{local__msu_8c_aaf7909bd1a8bd764c34c2c591776a2c6}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea12a6b7f2204c50215b8cf5c9d7d4d7f0}{MSU\_QUEUE\_LEN},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea1b6372f66e1b4da3d1f66cf91fbe67fb}{MSU\_ITEMS\_PROCESSED},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea7caed2ec31d7e3e90def7caef8615e4c}{MSU\_EXEC\_TIME},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea8d5f55aea7b42f8ae9ef6825a6497e8f}{MSU\_IDLE\_TIME},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea003bb405e663e22b980595a0a9966987}{MSU\_MEM\_ALLOC},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eace4e2b956986e374b71665b6a2bca708}{MSU\_NUM\_STATES},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea10e14365e196acab962c7059b73b6413}{MSU\_ERROR\_CNT},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea47d96bf87775ffc393489363dc2a6dbf}{MSU\_UCPUTIME},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea31fc4ec60940e48f34e4878b9f5d7fda}{MSU\_SCPUTIME},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea6724476dcc0304e7bb03c9db48dd8a96}{MSU\_MINFLT},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784eaffe6d77948b752c5305dddb075199ee2}{MSU\_MAJFLT},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea488ca954ecca0d0766a3e90f63d3f0eb}{MSU\_VCSW},
+    \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784ea0a0a8fa406d350e76b815797667033b5}{MSU\_IVCSW}
+\}
+\end{DoxyCode}
+
+
+The stat I\-Ds that are associated with an M\-S\-U, to be registered on M\-S\-U creation. 
+
+
+
+Definition at line 155 of file local\-\_\-msu.\-c.
+

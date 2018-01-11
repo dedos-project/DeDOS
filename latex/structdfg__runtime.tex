@@ -1,0 +1,147 @@
+\hypertarget{structdfg__runtime}{\section{dfg\-\_\-runtime Struct Reference}
+\label{structdfg__runtime}\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}}
+}
+
+
+Representation of a runtime in the D\-F\-G.  
+
+
+
+
+{\ttfamily \#include $<$dfg.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{structdfg__runtime_ab9978989f372b69d34ef5e186a5db881}{id}
+\begin{DoxyCompactList}\small\item\em Unique identifier for the runtime. \end{DoxyCompactList}\item 
+\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} \hyperlink{structdfg__runtime_ad0f9d4865c5f177d2062ade3ddf407b4}{ip}
+\begin{DoxyCompactList}\small\item\em I\-P of the node on which the runtime is running. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__runtime_a112f547c6913972fc06b6ff614995bf1}{port}
+\begin{DoxyCompactList}\small\item\em Port on which the runtime is listening for controller/inter-\/runtime. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__runtime_a70d2e7498c96220b9483710588bdd07c}{n\-\_\-cores}
+\begin{DoxyCompactList}\small\item\em Number of cores on the runtime node. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__thread}{dfg\-\_\-thread} $\ast$ \hyperlink{structdfg__runtime_a4b28fe6113c7edf2f4defb4edee42078}{threads} \mbox{[}32\mbox{]}
+\begin{DoxyCompactList}\small\item\em Threads located on the runtime. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__runtime_acb3779eccb9614f48771aeb3e16394bc}{n\-\_\-pinned\-\_\-threads}
+\begin{DoxyCompactList}\small\item\em Number of the above-\/threads which are pinned. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__runtime_ae9fb600da8228ad88cc06dfd863d980f}{n\-\_\-unpinned\-\_\-threads}
+\begin{DoxyCompactList}\small\item\em Number of the above-\/threads which are unpinned. \end{DoxyCompactList}\item 
+struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$ \hyperlink{structdfg__runtime_a1ad88caaa574b644201c1abccd94066a}{routes} \mbox{[}64\mbox{]}
+\begin{DoxyCompactList}\small\item\em Routes located on this runtime. \end{DoxyCompactList}\item 
+int \hyperlink{structdfg__runtime_a410c8ded04d9b53061dbb939446ac26a}{n\-\_\-routes}
+\begin{DoxyCompactList}\small\item\em Number of routes above. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Representation of a runtime in the D\-F\-G. 
+
+Definition at line 73 of file dfg.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structdfg__runtime_ab9978989f372b69d34ef5e186a5db881}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!id@{id}}
+\index{id@{id}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-runtime\-::id}}\label{structdfg__runtime_ab9978989f372b69d34ef5e186a5db881}
+
+
+Unique identifier for the runtime. 
+
+
+
+Definition at line 74 of file dfg.\-h.
+
+\hypertarget{structdfg__runtime_ad0f9d4865c5f177d2062ade3ddf407b4}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!ip@{ip}}
+\index{ip@{ip}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{ip}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint32\-\_\-t} dfg\-\_\-runtime\-::ip}}\label{structdfg__runtime_ad0f9d4865c5f177d2062ade3ddf407b4}
+
+
+I\-P of the node on which the runtime is running. 
+
+
+
+Definition at line 75 of file dfg.\-h.
+
+\hypertarget{structdfg__runtime_a70d2e7498c96220b9483710588bdd07c}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!n\-\_\-cores@{n\-\_\-cores}}
+\index{n\-\_\-cores@{n\-\_\-cores}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{n\-\_\-cores}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-runtime\-::n\-\_\-cores}}\label{structdfg__runtime_a70d2e7498c96220b9483710588bdd07c}
+
+
+Number of cores on the runtime node. 
+
+
+
+Definition at line 77 of file dfg.\-h.
+
+\hypertarget{structdfg__runtime_acb3779eccb9614f48771aeb3e16394bc}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!n\-\_\-pinned\-\_\-threads@{n\-\_\-pinned\-\_\-threads}}
+\index{n\-\_\-pinned\-\_\-threads@{n\-\_\-pinned\-\_\-threads}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{n\-\_\-pinned\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-runtime\-::n\-\_\-pinned\-\_\-threads}}\label{structdfg__runtime_acb3779eccb9614f48771aeb3e16394bc}
+
+
+Number of the above-\/threads which are pinned. 
+
+
+
+Definition at line 80 of file dfg.\-h.
+
+\hypertarget{structdfg__runtime_a410c8ded04d9b53061dbb939446ac26a}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!n\-\_\-routes@{n\-\_\-routes}}
+\index{n\-\_\-routes@{n\-\_\-routes}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{n\-\_\-routes}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-runtime\-::n\-\_\-routes}}\label{structdfg__runtime_a410c8ded04d9b53061dbb939446ac26a}
+
+
+Number of routes above. 
+
+
+
+Definition at line 84 of file dfg.\-h.
+
+\hypertarget{structdfg__runtime_ae9fb600da8228ad88cc06dfd863d980f}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!n\-\_\-unpinned\-\_\-threads@{n\-\_\-unpinned\-\_\-threads}}
+\index{n\-\_\-unpinned\-\_\-threads@{n\-\_\-unpinned\-\_\-threads}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{n\-\_\-unpinned\-\_\-threads}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-runtime\-::n\-\_\-unpinned\-\_\-threads}}\label{structdfg__runtime_ae9fb600da8228ad88cc06dfd863d980f}
+
+
+Number of the above-\/threads which are unpinned. 
+
+
+
+Definition at line 81 of file dfg.\-h.
+
+\hypertarget{structdfg__runtime_a112f547c6913972fc06b6ff614995bf1}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!port@{port}}
+\index{port@{port}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{port}]{\setlength{\rightskip}{0pt plus 5cm}int dfg\-\_\-runtime\-::port}}\label{structdfg__runtime_a112f547c6913972fc06b6ff614995bf1}
+
+
+Port on which the runtime is listening for controller/inter-\/runtime. 
+
+
+
+Definition at line 76 of file dfg.\-h.
+
+\hypertarget{structdfg__runtime_a1ad88caaa574b644201c1abccd94066a}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!routes@{routes}}
+\index{routes@{routes}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{routes}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-route}$\ast$ dfg\-\_\-runtime\-::routes\mbox{[}64\mbox{]}}}\label{structdfg__runtime_a1ad88caaa574b644201c1abccd94066a}
+
+
+Routes located on this runtime. 
+
+
+
+Definition at line 83 of file dfg.\-h.
+
+\hypertarget{structdfg__runtime_a4b28fe6113c7edf2f4defb4edee42078}{\index{dfg\-\_\-runtime@{dfg\-\_\-runtime}!threads@{threads}}
+\index{threads@{threads}!dfg_runtime@{dfg\-\_\-runtime}}
+\subsubsection[{threads}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dfg\-\_\-thread}$\ast$ dfg\-\_\-runtime\-::threads\mbox{[}32\mbox{]}}}\label{structdfg__runtime_a4b28fe6113c7edf2f4defb4edee42078}
+
+
+Threads located on the runtime. 
+
+
+
+Definition at line 79 of file dfg.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/common/\hyperlink{dfg_8h}{dfg.\-h}\end{DoxyCompactItemize}

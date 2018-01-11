@@ -1,0 +1,21 @@
+language: c
+before_install:
+- sudo apt-get update -qq
+- sudo apt-get install -qq doxygen check libssl-dev libpcre3-dev libgmp-dev socat
+  haproxy lcov
+script: make docs && make runtime-cov
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: "$GITHUB_TOKEN"
+  on:
+    branch: master
+notifications:
+  email:
+    recipients:
+    - iped@seas.upenn.edu
+    on_success: always
+  slack:
+    rooms:
+      secure: YPPqaIaY0Bm/EBhTYT6t1ximfs/YaIDtR7CCKcNFoZAWcuQKsBeOD4BOmPdGcFfIO+djFEws34yKp3xDnE/qErWIWNR2tknl7YlzMY1U9PWhZbDfxou9sFr+WeiLtG8geh9o+NAO0+TaMW39LLXq9+EtTR0jZWnVbCCd6d2V1lqbYeepQvqObAbhIEOzIlEAS1V9TYq86jCFqgVm6evbOO93igRCdd+Gy7c+74L+vCLpnF9HfWbg4ubEVei+5gMK1I+nlhe6E+zmbegNjnpzGU8qrNbHfmlyXYHqd/2clo9HZa3AbYhh7lVOcMb1AAogr9SVzdqnlJAergQInkWJpOfjb4sLW/2/UNkkHSk5qBnaDnHoUFHukfs3f4xMU41elN//mfcF/9+CsDXi0/x5g5DsaOkL2ESSB40XQVs5KPhF9kBxdCjQTRIx5pWjKl6JCBE7wQdSkJs4egfUQHQ+YJShFJHFOvC+YxMh7tco/tbVo/pyv0iuhgS1InUditQXB+sp6QDdAlBbVYeRh7o5C1IxCQrWFEZahygQgEtpYu2Vd56sOyIHx3a5900HmgxvORHiGvldr6Dzp4TJHSYN176qH3MWUy5hsl42hhSGbGPx1drhIF0ZydJZS9UgssNrh8+rnrDLvr6CoI7yfhQAMIkeum59DGHAMraUjptRsfU=
+    on_success: always

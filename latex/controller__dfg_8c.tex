@@ -1,0 +1,183 @@
+\hypertarget{controller__dfg_8c}{\section{src/global\-\_\-controller/controller\-\_\-dfg.c File Reference}
+\label{controller__dfg_8c}\index{src/global\-\_\-controller/controller\-\_\-dfg.\-c@{src/global\-\_\-controller/controller\-\_\-dfg.\-c}}
+}
+{\ttfamily \#include \char`\"{}dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg\-\_\-reader.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}haproxy.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{controller__dfg_8c_af487533eb383a2ccfda6764026d48c33}{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D}~9999
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{controller__dfg_8c_aca78c79b953c56dbce2a9a7a7f885280}{init\-\_\-controller\-\_\-dfg} (char $\ast$filename)
+\item 
+int \hyperlink{controller__dfg_8c_ad04da47ff4a3e528fb1782626999df4b}{local\-\_\-listen\-\_\-port} ()
+\item 
+int \hyperlink{controller__dfg_8c_a5e0c921985ceebbffc0ac546e390c6f1}{generate\-\_\-msu\-\_\-id} ()
+\item 
+int \hyperlink{controller__dfg_8c_afb9e13d3d1ca176ef2f98d8a1742ceca}{generate\-\_\-route\-\_\-id} ()
+\item 
+\hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} \hyperlink{controller__dfg_8c_a555b513ea6e04b500cec6c25fc05b530}{generate\-\_\-endpoint\-\_\-key} (struct \hyperlink{structdfg__route}{dfg\-\_\-route} $\ast$\hyperlink{baremetal__msu_8c_a538b353a8d12fea0e493c541296db2a2}{route})
+\item 
+int \hyperlink{controller__dfg_8c_ac36e9596ead289a27bfda2c2d10a70d3}{init\-\_\-dfg\-\_\-lock} ()
+\item 
+int \hyperlink{controller__dfg_8c_a39ff13c4ef0f80b6de22f760d4329830}{lock\-\_\-dfg} ()
+\item 
+int \hyperlink{controller__dfg_8c_abec6430cd7ef883d9c2d470237c3ad69}{unlock\-\_\-dfg} ()
+\item 
+struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$ \hyperlink{controller__dfg_8c_a0a1b47cc66025ec502815ca08de4797c}{get\-\_\-dfg} (void)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structdedos__dfg}{dedos\-\_\-dfg} $\ast$ \hyperlink{controller__dfg_8c_aec8e5a3726d7d58b766e6ff9e46094a7}{D\-F\-G} = N\-U\-L\-L
+\item 
+static int \hyperlink{controller__dfg_8c_a7775b245154256d7afeb76ca827777c7}{max\-\_\-msu\-\_\-id} = -\/1
+\item 
+pthread\-\_\-mutex\-\_\-t \hyperlink{controller__dfg_8c_a67b9740461824930dcb3b3d57e64d6e2}{dfg\-\_\-mutex}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{controller__dfg_8c_af487533eb383a2ccfda6764026d48c33}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D@{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D}}
+\index{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D@{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-O\-U\-T\-E\-\_\-\-I\-D~9999}}\label{controller__dfg_8c_af487533eb383a2ccfda6764026d48c33}
+
+
+Definition at line 64 of file controller\-\_\-dfg.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{controller__dfg_8c_a555b513ea6e04b500cec6c25fc05b530}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!generate\-\_\-endpoint\-\_\-key@{generate\-\_\-endpoint\-\_\-key}}
+\index{generate\-\_\-endpoint\-\_\-key@{generate\-\_\-endpoint\-\_\-key}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{generate\-\_\-endpoint\-\_\-key}]{\setlength{\rightskip}{0pt plus 5cm}{\bf uint32\-\_\-t} generate\-\_\-endpoint\-\_\-key (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-route} $\ast$}]{route}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_a555b513ea6e04b500cec6c25fc05b530}
+
+
+Definition at line 75 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_a5e0c921985ceebbffc0ac546e390c6f1}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!generate\-\_\-msu\-\_\-id@{generate\-\_\-msu\-\_\-id}}
+\index{generate\-\_\-msu\-\_\-id@{generate\-\_\-msu\-\_\-id}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{generate\-\_\-msu\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int generate\-\_\-msu\-\_\-id (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_a5e0c921985ceebbffc0ac546e390c6f1}
+
+
+Definition at line 54 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_afb9e13d3d1ca176ef2f98d8a1742ceca}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!generate\-\_\-route\-\_\-id@{generate\-\_\-route\-\_\-id}}
+\index{generate\-\_\-route\-\_\-id@{generate\-\_\-route\-\_\-id}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{generate\-\_\-route\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int generate\-\_\-route\-\_\-id (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_afb9e13d3d1ca176ef2f98d8a1742ceca}
+
+
+Definition at line 66 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_a0a1b47cc66025ec502815ca08de4797c}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!get\-\_\-dfg@{get\-\_\-dfg}}
+\index{get\-\_\-dfg@{get\-\_\-dfg}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{get\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-dfg}$\ast$ get\-\_\-dfg (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_a0a1b47cc66025ec502815ca08de4797c}
+\begin{DoxyReturn}{Returns}
+the D\-F\-G with which this runtime was instantiated 
+\end{DoxyReturn}
+
+
+Definition at line 105 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_aca78c79b953c56dbce2a9a7a7f885280}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!init\-\_\-controller\-\_\-dfg@{init\-\_\-controller\-\_\-dfg}}
+\index{init\-\_\-controller\-\_\-dfg@{init\-\_\-controller\-\_\-dfg}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{init\-\_\-controller\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-controller\-\_\-dfg (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_aca78c79b953c56dbce2a9a7a7f885280}
+
+
+Definition at line 30 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_ac36e9596ead289a27bfda2c2d10a70d3}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!init\-\_\-dfg\-\_\-lock@{init\-\_\-dfg\-\_\-lock}}
+\index{init\-\_\-dfg\-\_\-lock@{init\-\_\-dfg\-\_\-lock}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{init\-\_\-dfg\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-dfg\-\_\-lock (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_ac36e9596ead289a27bfda2c2d10a70d3}
+
+
+Definition at line 84 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_ad04da47ff4a3e528fb1782626999df4b}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!local\-\_\-listen\-\_\-port@{local\-\_\-listen\-\_\-port}}
+\index{local\-\_\-listen\-\_\-port@{local\-\_\-listen\-\_\-port}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{local\-\_\-listen\-\_\-port}]{\setlength{\rightskip}{0pt plus 5cm}int local\-\_\-listen\-\_\-port (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_ad04da47ff4a3e528fb1782626999df4b}
+
+
+Definition at line 45 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_a39ff13c4ef0f80b6de22f760d4329830}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!lock\-\_\-dfg@{lock\-\_\-dfg}}
+\index{lock\-\_\-dfg@{lock\-\_\-dfg}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{lock\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}int lock\-\_\-dfg (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_a39ff13c4ef0f80b6de22f760d4329830}
+
+
+Definition at line 88 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_abec6430cd7ef883d9c2d470237c3ad69}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!unlock\-\_\-dfg@{unlock\-\_\-dfg}}
+\index{unlock\-\_\-dfg@{unlock\-\_\-dfg}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{unlock\-\_\-dfg}]{\setlength{\rightskip}{0pt plus 5cm}int unlock\-\_\-dfg (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__dfg_8c_abec6430cd7ef883d9c2d470237c3ad69}
+
+
+Definition at line 97 of file controller\-\_\-dfg.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{controller__dfg_8c_aec8e5a3726d7d58b766e6ff9e46094a7}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!D\-F\-G@{D\-F\-G}}
+\index{D\-F\-G@{D\-F\-G}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{D\-F\-G}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-dfg}$\ast$ D\-F\-G = N\-U\-L\-L\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__dfg_8c_aec8e5a3726d7d58b766e6ff9e46094a7}
+
+
+Definition at line 28 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_a67b9740461824930dcb3b3d57e64d6e2}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!dfg\-\_\-mutex@{dfg\-\_\-mutex}}
+\index{dfg\-\_\-mutex@{dfg\-\_\-mutex}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{dfg\-\_\-mutex}]{\setlength{\rightskip}{0pt plus 5cm}pthread\-\_\-mutex\-\_\-t dfg\-\_\-mutex}}\label{controller__dfg_8c_a67b9740461824930dcb3b3d57e64d6e2}
+
+
+Definition at line 82 of file controller\-\_\-dfg.\-c.
+
+\hypertarget{controller__dfg_8c_a7775b245154256d7afeb76ca827777c7}{\index{controller\-\_\-dfg.\-c@{controller\-\_\-dfg.\-c}!max\-\_\-msu\-\_\-id@{max\-\_\-msu\-\_\-id}}
+\index{max\-\_\-msu\-\_\-id@{max\-\_\-msu\-\_\-id}!controller_dfg.c@{controller\-\_\-dfg.\-c}}
+\subsubsection[{max\-\_\-msu\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int max\-\_\-msu\-\_\-id = -\/1\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__dfg_8c_a7775b245154256d7afeb76ca827777c7}
+
+
+Definition at line 52 of file controller\-\_\-dfg.\-c.
+

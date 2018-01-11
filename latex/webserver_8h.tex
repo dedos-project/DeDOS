@@ -1,0 +1,110 @@
+\hypertarget{webserver_8h}{\section{src/msus/webserver/webserver.h File Reference}
+\label{webserver_8h}\index{src/msus/webserver/webserver.\-h@{src/msus/webserver/webserver.\-h}}
+}
+{\ttfamily \#include $<$sys/epoll.\-h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{webserver_8h_a9c13c9463b47856fb4465723ae9fd703}{W\-S\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E}~((int)0x01)
+\item 
+\#define \hyperlink{webserver_8h_a31f4beb89f21628cde6587cd0d192e86}{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-R\-E\-A\-D}~((int)0x02)
+\item 
+\#define \hyperlink{webserver_8h_ae669d94030dfc6a6ae6a58f696268bd3}{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-W\-R\-I\-T\-E}~((int)0x04)
+\item 
+\#define \hyperlink{webserver_8h_ab31158a3e885b01a4ae7bb133a44bde9}{W\-S\-\_\-\-E\-R\-R\-O\-R}~((int)0x08)
+\item 
+\#define \hyperlink{webserver_8h_a989d75e3a6c0a105c91d471efdb52c52}{R\-T\-N\-\_\-\-T\-O\-\_\-\-E\-V\-T}(rtn\-\_\-\-\_\-)
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09}{webserver\-\_\-status} \{ \\*
+\hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a682466b7669a81b39a8d657274fd4b95}{N\-I\-L}, 
+\hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a6f24e8b06b3c77b24cd3d51eb7733a17}{C\-O\-N\-\_\-\-E\-R\-R\-O\-R}, 
+\hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09acad28945d500e3fc972e2d1c3b948e8e}{N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N}, 
+\hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09aa3e3016f383ee24c55e104e4783ffa73}{C\-O\-N\-\_\-\-A\-C\-C\-E\-P\-T\-E\-D}, 
+\\*
+\hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09accc488ac9fdb96b9682a1f585aea223a}{C\-O\-N\-\_\-\-S\-S\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G}, 
+\hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09ab0851a32906cf2abdac26c15e0c7f347}{C\-O\-N\-\_\-\-R\-E\-A\-D\-I\-N\-G}, 
+\hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09ad41f15a479e199cff697f0c6e6cfa365}{C\-O\-N\-\_\-\-D\-B\-\_\-\-R\-E\-Q\-U\-E\-S\-T}, 
+\hyperlink{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a18e6a04d0e2ec9c6052d2c89aec9720c}{C\-O\-N\-\_\-\-W\-R\-I\-T\-I\-N\-G}
+ \}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{webserver_8h_a989d75e3a6c0a105c91d471efdb52c52}{\index{webserver.\-h@{webserver.\-h}!R\-T\-N\-\_\-\-T\-O\-\_\-\-E\-V\-T@{R\-T\-N\-\_\-\-T\-O\-\_\-\-E\-V\-T}}
+\index{R\-T\-N\-\_\-\-T\-O\-\_\-\-E\-V\-T@{R\-T\-N\-\_\-\-T\-O\-\_\-\-E\-V\-T}!webserver.h@{webserver.\-h}}
+\subsubsection[{R\-T\-N\-\_\-\-T\-O\-\_\-\-E\-V\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\-T\-N\-\_\-\-T\-O\-\_\-\-E\-V\-T(
+\begin{DoxyParamCaption}
+\item[{}]{rtn\-\_\-\-\_\-}
+\end{DoxyParamCaption}
+)}}\label{webserver_8h_a989d75e3a6c0a105c91d471efdb52c52}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+(rtn\_\_ & \hyperlink{webserver_8h_a31f4beb89f21628cde6587cd0d192e86}{WS\_INCOMPLETE\_READ} ? EPOLLIN : 0) | \(\backslash\)
+                          (rtn\_\_ & \hyperlink{webserver_8h_ae669d94030dfc6a6ae6a58f696268bd3}{WS\_INCOMPLETE\_WRITE} ? EPOLLOUT : 0)
+\end{DoxyCode}
+
+
+Definition at line 40 of file webserver.\-h.
+
+\hypertarget{webserver_8h_a9c13c9463b47856fb4465723ae9fd703}{\index{webserver.\-h@{webserver.\-h}!W\-S\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E@{W\-S\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E}}
+\index{W\-S\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E@{W\-S\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E}!webserver.h@{webserver.\-h}}
+\subsubsection[{W\-S\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\-S\-\_\-\-C\-O\-M\-P\-L\-E\-T\-E~((int)0x01)}}\label{webserver_8h_a9c13c9463b47856fb4465723ae9fd703}
+
+
+Definition at line 24 of file webserver.\-h.
+
+\hypertarget{webserver_8h_ab31158a3e885b01a4ae7bb133a44bde9}{\index{webserver.\-h@{webserver.\-h}!W\-S\-\_\-\-E\-R\-R\-O\-R@{W\-S\-\_\-\-E\-R\-R\-O\-R}}
+\index{W\-S\-\_\-\-E\-R\-R\-O\-R@{W\-S\-\_\-\-E\-R\-R\-O\-R}!webserver.h@{webserver.\-h}}
+\subsubsection[{W\-S\-\_\-\-E\-R\-R\-O\-R}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\-S\-\_\-\-E\-R\-R\-O\-R~((int)0x08)}}\label{webserver_8h_ab31158a3e885b01a4ae7bb133a44bde9}
+
+
+Definition at line 27 of file webserver.\-h.
+
+\hypertarget{webserver_8h_a31f4beb89f21628cde6587cd0d192e86}{\index{webserver.\-h@{webserver.\-h}!W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-R\-E\-A\-D@{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-R\-E\-A\-D}}
+\index{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-R\-E\-A\-D@{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-R\-E\-A\-D}!webserver.h@{webserver.\-h}}
+\subsubsection[{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-R\-E\-A\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-R\-E\-A\-D~((int)0x02)}}\label{webserver_8h_a31f4beb89f21628cde6587cd0d192e86}
+
+
+Definition at line 25 of file webserver.\-h.
+
+\hypertarget{webserver_8h_ae669d94030dfc6a6ae6a58f696268bd3}{\index{webserver.\-h@{webserver.\-h}!W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-W\-R\-I\-T\-E@{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-W\-R\-I\-T\-E}}
+\index{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-W\-R\-I\-T\-E@{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-W\-R\-I\-T\-E}!webserver.h@{webserver.\-h}}
+\subsubsection[{W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-W\-R\-I\-T\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\-S\-\_\-\-I\-N\-C\-O\-M\-P\-L\-E\-T\-E\-\_\-\-W\-R\-I\-T\-E~((int)0x04)}}\label{webserver_8h_ae669d94030dfc6a6ae6a58f696268bd3}
+
+
+Definition at line 26 of file webserver.\-h.
+
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09}{\index{webserver.\-h@{webserver.\-h}!webserver\-\_\-status@{webserver\-\_\-status}}
+\index{webserver\-\_\-status@{webserver\-\_\-status}!webserver.h@{webserver.\-h}}
+\subsubsection[{webserver\-\_\-status}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf webserver\-\_\-status}}}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09}
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{N\-I\-L@{N\-I\-L}!webserver.\-h@{webserver.\-h}}\index{webserver.\-h@{webserver.\-h}!N\-I\-L@{N\-I\-L}}\item[{\em 
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a682466b7669a81b39a8d657274fd4b95}{N\-I\-L}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a682466b7669a81b39a8d657274fd4b95}
+}]\index{C\-O\-N\-\_\-\-E\-R\-R\-O\-R@{C\-O\-N\-\_\-\-E\-R\-R\-O\-R}!webserver.\-h@{webserver.\-h}}\index{webserver.\-h@{webserver.\-h}!C\-O\-N\-\_\-\-E\-R\-R\-O\-R@{C\-O\-N\-\_\-\-E\-R\-R\-O\-R}}\item[{\em 
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a6f24e8b06b3c77b24cd3d51eb7733a17}{C\-O\-N\-\_\-\-E\-R\-R\-O\-R}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a6f24e8b06b3c77b24cd3d51eb7733a17}
+}]\index{N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N@{N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N}!webserver.\-h@{webserver.\-h}}\index{webserver.\-h@{webserver.\-h}!N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N@{N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N}}\item[{\em 
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09acad28945d500e3fc972e2d1c3b948e8e}{N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09acad28945d500e3fc972e2d1c3b948e8e}
+}]\index{C\-O\-N\-\_\-\-A\-C\-C\-E\-P\-T\-E\-D@{C\-O\-N\-\_\-\-A\-C\-C\-E\-P\-T\-E\-D}!webserver.\-h@{webserver.\-h}}\index{webserver.\-h@{webserver.\-h}!C\-O\-N\-\_\-\-A\-C\-C\-E\-P\-T\-E\-D@{C\-O\-N\-\_\-\-A\-C\-C\-E\-P\-T\-E\-D}}\item[{\em 
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09aa3e3016f383ee24c55e104e4783ffa73}{C\-O\-N\-\_\-\-A\-C\-C\-E\-P\-T\-E\-D}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09aa3e3016f383ee24c55e104e4783ffa73}
+}]\index{C\-O\-N\-\_\-\-S\-S\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G@{C\-O\-N\-\_\-\-S\-S\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G}!webserver.\-h@{webserver.\-h}}\index{webserver.\-h@{webserver.\-h}!C\-O\-N\-\_\-\-S\-S\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G@{C\-O\-N\-\_\-\-S\-S\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G}}\item[{\em 
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09accc488ac9fdb96b9682a1f585aea223a}{C\-O\-N\-\_\-\-S\-S\-L\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09accc488ac9fdb96b9682a1f585aea223a}
+}]\index{C\-O\-N\-\_\-\-R\-E\-A\-D\-I\-N\-G@{C\-O\-N\-\_\-\-R\-E\-A\-D\-I\-N\-G}!webserver.\-h@{webserver.\-h}}\index{webserver.\-h@{webserver.\-h}!C\-O\-N\-\_\-\-R\-E\-A\-D\-I\-N\-G@{C\-O\-N\-\_\-\-R\-E\-A\-D\-I\-N\-G}}\item[{\em 
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09ab0851a32906cf2abdac26c15e0c7f347}{C\-O\-N\-\_\-\-R\-E\-A\-D\-I\-N\-G}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09ab0851a32906cf2abdac26c15e0c7f347}
+}]\index{C\-O\-N\-\_\-\-D\-B\-\_\-\-R\-E\-Q\-U\-E\-S\-T@{C\-O\-N\-\_\-\-D\-B\-\_\-\-R\-E\-Q\-U\-E\-S\-T}!webserver.\-h@{webserver.\-h}}\index{webserver.\-h@{webserver.\-h}!C\-O\-N\-\_\-\-D\-B\-\_\-\-R\-E\-Q\-U\-E\-S\-T@{C\-O\-N\-\_\-\-D\-B\-\_\-\-R\-E\-Q\-U\-E\-S\-T}}\item[{\em 
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09ad41f15a479e199cff697f0c6e6cfa365}{C\-O\-N\-\_\-\-D\-B\-\_\-\-R\-E\-Q\-U\-E\-S\-T}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09ad41f15a479e199cff697f0c6e6cfa365}
+}]\index{C\-O\-N\-\_\-\-W\-R\-I\-T\-I\-N\-G@{C\-O\-N\-\_\-\-W\-R\-I\-T\-I\-N\-G}!webserver.\-h@{webserver.\-h}}\index{webserver.\-h@{webserver.\-h}!C\-O\-N\-\_\-\-W\-R\-I\-T\-I\-N\-G@{C\-O\-N\-\_\-\-W\-R\-I\-T\-I\-N\-G}}\item[{\em 
+\hypertarget{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a18e6a04d0e2ec9c6052d2c89aec9720c}{C\-O\-N\-\_\-\-W\-R\-I\-T\-I\-N\-G}\label{webserver_8h_a4b078d99ed3d03303ca3ba56f4a18d09a18e6a04d0e2ec9c6052d2c89aec9720c}
+}]\end{description}
+\end{Desc}
+
+
+Definition at line 29 of file webserver.\-h.
+

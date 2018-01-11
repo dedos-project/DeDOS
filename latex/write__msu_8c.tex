@@ -1,0 +1,55 @@
+\hypertarget{write__msu_8c}{\section{src/msus/webserver/write\-\_\-msu.c File Reference}
+\label{write__msu_8c}\index{src/msus/webserver/write\-\_\-msu.\-c@{src/msus/webserver/write\-\_\-msu.\-c}}
+}
+{\ttfamily \#include \char`\"{}webserver/write\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}socket\-\_\-msu.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}webserver/connection-\/handler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}msu\-\_\-state.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}routing\-\_\-strategies.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}profiler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}local\-\_\-msu.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{write__msu_8c_ac6409ccb71a3478cd13a54a17bf83f2c}{write\-\_\-http\-\_\-response} (struct \hyperlink{structlocal__msu}{local\-\_\-msu} $\ast$self, struct \hyperlink{structmsu__msg}{msu\-\_\-msg} $\ast$msg)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmsu__type}{msu\-\_\-type} \hyperlink{write__msu_8c_ab983dd5b1ea98246eb97a2e03b774aa6}{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-W\-R\-I\-T\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{write__msu_8c_ac6409ccb71a3478cd13a54a17bf83f2c}{\index{write\-\_\-msu.\-c@{write\-\_\-msu.\-c}!write\-\_\-http\-\_\-response@{write\-\_\-http\-\_\-response}}
+\index{write\-\_\-http\-\_\-response@{write\-\_\-http\-\_\-response}!write_msu.c@{write\-\_\-msu.\-c}}
+\subsubsection[{write\-\_\-http\-\_\-response}]{\setlength{\rightskip}{0pt plus 5cm}static int write\-\_\-http\-\_\-response (
+\begin{DoxyParamCaption}
+\item[{struct {\bf local\-\_\-msu} $\ast$}]{self, }
+\item[{struct {\bf msu\-\_\-msg} $\ast$}]{msg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{write__msu_8c_ac6409ccb71a3478cd13a54a17bf83f2c}
+
+
+Definition at line 29 of file write\-\_\-msu.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{write__msu_8c_ab983dd5b1ea98246eb97a2e03b774aa6}{\index{write\-\_\-msu.\-c@{write\-\_\-msu.\-c}!W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-W\-R\-I\-T\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-W\-R\-I\-T\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}
+\index{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-W\-R\-I\-T\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E@{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-W\-R\-I\-T\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}!write_msu.c@{write\-\_\-msu.\-c}}
+\subsubsection[{W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-W\-R\-I\-T\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf msu\-\_\-type} W\-E\-B\-S\-E\-R\-V\-E\-R\-\_\-\-W\-R\-I\-T\-E\-\_\-\-M\-S\-U\-\_\-\-T\-Y\-P\-E}}\label{write__msu_8c_ab983dd5b1ea98246eb97a2e03b774aa6}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    .name = \textcolor{stringliteral}{"Webserver\_write\_MSU"},
+    .id = \hyperlink{msu__ids_8h_a851c0dbd648ff4a582486353dd06ee1f}{WEBSERVER\_WRITE\_MSU\_TYPE\_ID},
+    .receive = \hyperlink{write__msu_8c_ac6409ccb71a3478cd13a54a17bf83f2c}{write\_http\_response},
+    .route = \hyperlink{routing__strategies_8c_a4cecf041254066a9d178fd6cc041cfa9}{route\_to\_origin\_runtime}
+\}
+\end{DoxyCode}
+
+
+Definition at line 69 of file write\-\_\-msu.\-c.
+

@@ -1,0 +1,286 @@
+\hypertarget{global__controller_2runtime__communication_8c}{\section{src/global\-\_\-controller/runtime\-\_\-communication.c File Reference}
+\label{global__controller_2runtime__communication_8c}\index{src/global\-\_\-controller/runtime\-\_\-communication.\-c@{src/global\-\_\-controller/runtime\-\_\-communication.\-c}}
+}
+{\ttfamily \#include \char`\"{}runtime\-\_\-communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}communication.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}rt\-\_\-controller\-\_\-messages.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stat\-\_\-msg\-\_\-handler.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}epollops.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unused\-\_\-def.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dfg\-\_\-writer.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}haproxy.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$signal.\-h$>$}\\*
+{\ttfamily \#include $<$sys/epoll.\-h$>$}\\*
+{\ttfamily \#include $<$unistd.\-h$>$}\\*
+{\ttfamily \#include $<$sys/stat.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structruntime__endpoint}{runtime\-\_\-endpoint}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{global__controller_2runtime__communication_8c_a69a73fb377905e4b29d5afc0696cd0b3}{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-I\-D}~32
+\item 
+\#define \hyperlink{global__controller_2runtime__communication_8c_ae1e40da7f291c23110442c51b0a76854}{M\-A\-X\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-S\-O\-C\-K\-S}~2
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{global__controller_2runtime__communication_8c_a7899d34db9065b972d102a467e87f64b}{runtime\-\_\-fd} (unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id} (int \hyperlink{global__controller_2runtime__communication_8h_a7899d34db9065b972d102a467e87f64b}{runtime\-\_\-fd})
+\item 
+int \hyperlink{global__controller_2runtime__communication_8c_a37fd94c4db8a170a4c66c6ce4529a219}{send\-\_\-to\-\_\-runtime} (unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, struct \hyperlink{structctrl__runtime__msg__hdr}{ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr} $\ast$hdr, void $\ast$payload)
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_a56e37184146ef59bd9e13642501aa002}{send\-\_\-add\-\_\-runtime\-\_\-msg} (unsigned int target\-\_\-id, int new\-\_\-rt\-\_\-id, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} ip, int port)
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_ab90e783de66364fe6c4921a287afff31}{remove\-\_\-runtime\-\_\-endpoint} (int fd)
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_a4ea303d7071a0222a34d018546fbdfca}{add\-\_\-runtime\-\_\-endpoint} (unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, int fd, \hyperlink{msus_2webserver_2uthash_8h_a435d1572bf3f880d55459d9805097f62}{uint32\-\_\-t} ip, int port)
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_af3b68a6a7cb514033894fb032dc64524}{process\-\_\-rt\-\_\-init\-\_\-message} (ssize\-\_\-t payload\-\_\-size, int fd)
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_a6409a960c912ec471485e153e8d32b29}{process\-\_\-rt\-\_\-stats\-\_\-message} (size\-\_\-t payload\-\_\-size, int fd)
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_a3a22387aac255e10924553ea6a487f9e}{process\-\_\-rt\-\_\-message\-\_\-hdr} (struct \hyperlink{structrt__controller__msg__hdr}{rt\-\_\-controller\-\_\-msg\-\_\-hdr} $\ast$hdr, int fd)
+\item 
+static void \hyperlink{global__controller_2runtime__communication_8c_a5b03a4ad158f034704bdb837ce21a41f}{add\-\_\-output\-\_\-sock} (int fd)
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_a35da1b4df2cddb7c67e10a7dbfad3903}{handle\-\_\-runtime\-\_\-communication} (int fd, void \hyperlink{unused__def_8h_addf5ec070e9499d36b7f2009ce736076}{U\-N\-U\-S\-E\-D} $\ast$data)
+\item 
+int \hyperlink{global__controller_2runtime__communication_8c_aac01b856b00092f83e4d6249c8cb0bc7}{get\-\_\-output\-\_\-listener} (int port)
+\item 
+int \hyperlink{global__controller_2runtime__communication_8c_aed6aa9f706cfddc4cfab0843e4430610}{runtime\-\_\-communication\-\_\-loop} (int listen\-\_\-port, char $\ast$output\-\_\-file, int output\-\_\-port)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structruntime__endpoint}{runtime\-\_\-endpoint} \hyperlink{global__controller_2runtime__communication_8c_ab158162f9b3a02a852024fa40f7ced8c}{runtime\-\_\-endpoints} \mbox{[}32\mbox{]}
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_a0535e8c6fb3d65822d2ee310faa9016b}{output\-\_\-listen\-\_\-sock} = -\/1
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_a46f147233eb45e3957f10332a34e767e}{output\-\_\-socks} \mbox{[}2\mbox{]}
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_a8b9a4a3cf96d4cf11c56760ce06e1ee3}{output\-\_\-sock\-\_\-idx} = 0
+\item 
+static int \hyperlink{global__controller_2runtime__communication_8c_afcd82d9ec1a2fb6e61db8c487c6f4a47}{listen\-\_\-sock} = -\/1
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{global__controller_2runtime__communication_8c_ae1e40da7f291c23110442c51b0a76854}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!M\-A\-X\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-S\-O\-C\-K\-S@{M\-A\-X\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-S\-O\-C\-K\-S}}
+\index{M\-A\-X\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-S\-O\-C\-K\-S@{M\-A\-X\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-S\-O\-C\-K\-S}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-S\-O\-C\-K\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-S\-O\-C\-K\-S~2}}\label{global__controller_2runtime__communication_8c_ae1e40da7f291c23110442c51b0a76854}
+
+
+Definition at line 216 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a69a73fb377905e4b29d5afc0696cd0b3}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-I\-D@{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-I\-D}}
+\index{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-I\-D@{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-I\-D}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-I\-D}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\-A\-X\-\_\-\-R\-U\-N\-T\-I\-M\-E\-\_\-\-I\-D~32}}\label{global__controller_2runtime__communication_8c_a69a73fb377905e4b29d5afc0696cd0b3}
+
+
+Definition at line 42 of file runtime\-\_\-communication.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{global__controller_2runtime__communication_8c_a5b03a4ad158f034704bdb837ce21a41f}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!add\-\_\-output\-\_\-sock@{add\-\_\-output\-\_\-sock}}
+\index{add\-\_\-output\-\_\-sock@{add\-\_\-output\-\_\-sock}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{add\-\_\-output\-\_\-sock}]{\setlength{\rightskip}{0pt plus 5cm}static void add\-\_\-output\-\_\-sock (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a5b03a4ad158f034704bdb837ce21a41f}
+
+
+Definition at line 222 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a4ea303d7071a0222a34d018546fbdfca}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!add\-\_\-runtime\-\_\-endpoint@{add\-\_\-runtime\-\_\-endpoint}}
+\index{add\-\_\-runtime\-\_\-endpoint@{add\-\_\-runtime\-\_\-endpoint}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{add\-\_\-runtime\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}static int add\-\_\-runtime\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{runtime\-\_\-id, }
+\item[{int}]{fd, }
+\item[{{\bf uint32\-\_\-t}}]{ip, }
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a4ea303d7071a0222a34d018546fbdfca}
+
+
+Definition at line 130 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_aac01b856b00092f83e4d6249c8cb0bc7}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!get\-\_\-output\-\_\-listener@{get\-\_\-output\-\_\-listener}}
+\index{get\-\_\-output\-\_\-listener@{get\-\_\-output\-\_\-listener}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{get\-\_\-output\-\_\-listener}]{\setlength{\rightskip}{0pt plus 5cm}int get\-\_\-output\-\_\-listener (
+\begin{DoxyParamCaption}
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)}}\label{global__controller_2runtime__communication_8c_aac01b856b00092f83e4d6249c8cb0bc7}
+
+
+Definition at line 273 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a35da1b4df2cddb7c67e10a7dbfad3903}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!handle\-\_\-runtime\-\_\-communication@{handle\-\_\-runtime\-\_\-communication}}
+\index{handle\-\_\-runtime\-\_\-communication@{handle\-\_\-runtime\-\_\-communication}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{handle\-\_\-runtime\-\_\-communication}]{\setlength{\rightskip}{0pt plus 5cm}static int handle\-\_\-runtime\-\_\-communication (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{void {\bf U\-N\-U\-S\-E\-D} $\ast$}]{data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a35da1b4df2cddb7c67e10a7dbfad3903}
+
+
+Definition at line 232 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_af3b68a6a7cb514033894fb032dc64524}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!process\-\_\-rt\-\_\-init\-\_\-message@{process\-\_\-rt\-\_\-init\-\_\-message}}
+\index{process\-\_\-rt\-\_\-init\-\_\-message@{process\-\_\-rt\-\_\-init\-\_\-message}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{process\-\_\-rt\-\_\-init\-\_\-message}]{\setlength{\rightskip}{0pt plus 5cm}static int process\-\_\-rt\-\_\-init\-\_\-message (
+\begin{DoxyParamCaption}
+\item[{ssize\-\_\-t}]{payload\-\_\-size, }
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_af3b68a6a7cb514033894fb032dc64524}
+
+
+Definition at line 156 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a3a22387aac255e10924553ea6a487f9e}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!process\-\_\-rt\-\_\-message\-\_\-hdr@{process\-\_\-rt\-\_\-message\-\_\-hdr}}
+\index{process\-\_\-rt\-\_\-message\-\_\-hdr@{process\-\_\-rt\-\_\-message\-\_\-hdr}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{process\-\_\-rt\-\_\-message\-\_\-hdr}]{\setlength{\rightskip}{0pt plus 5cm}static int process\-\_\-rt\-\_\-message\-\_\-hdr (
+\begin{DoxyParamCaption}
+\item[{struct {\bf rt\-\_\-controller\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a3a22387aac255e10924553ea6a487f9e}
+
+
+Definition at line 193 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a6409a960c912ec471485e153e8d32b29}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!process\-\_\-rt\-\_\-stats\-\_\-message@{process\-\_\-rt\-\_\-stats\-\_\-message}}
+\index{process\-\_\-rt\-\_\-stats\-\_\-message@{process\-\_\-rt\-\_\-stats\-\_\-message}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{process\-\_\-rt\-\_\-stats\-\_\-message}]{\setlength{\rightskip}{0pt plus 5cm}static int process\-\_\-rt\-\_\-stats\-\_\-message (
+\begin{DoxyParamCaption}
+\item[{size\-\_\-t}]{payload\-\_\-size, }
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a6409a960c912ec471485e153e8d32b29}
+
+
+Definition at line 177 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_ab90e783de66364fe6c4921a287afff31}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!remove\-\_\-runtime\-\_\-endpoint@{remove\-\_\-runtime\-\_\-endpoint}}
+\index{remove\-\_\-runtime\-\_\-endpoint@{remove\-\_\-runtime\-\_\-endpoint}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{remove\-\_\-runtime\-\_\-endpoint}]{\setlength{\rightskip}{0pt plus 5cm}static int remove\-\_\-runtime\-\_\-endpoint (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_ab90e783de66364fe6c4921a287afff31}
+
+
+Definition at line 119 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_aed6aa9f706cfddc4cfab0843e4430610}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!runtime\-\_\-communication\-\_\-loop@{runtime\-\_\-communication\-\_\-loop}}
+\index{runtime\-\_\-communication\-\_\-loop@{runtime\-\_\-communication\-\_\-loop}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{runtime\-\_\-communication\-\_\-loop}]{\setlength{\rightskip}{0pt plus 5cm}int runtime\-\_\-communication\-\_\-loop (
+\begin{DoxyParamCaption}
+\item[{int}]{listen\-\_\-port, }
+\item[{char $\ast$}]{output\-\_\-file, }
+\item[{int}]{output\-\_\-port}
+\end{DoxyParamCaption}
+)}}\label{global__controller_2runtime__communication_8c_aed6aa9f706cfddc4cfab0843e4430610}
+
+
+Definition at line 302 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a7899d34db9065b972d102a467e87f64b}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!runtime\-\_\-fd@{runtime\-\_\-fd}}
+\index{runtime\-\_\-fd@{runtime\-\_\-fd}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{runtime\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int runtime\-\_\-fd (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{global__controller_2runtime__communication_8c_a7899d34db9065b972d102a467e87f64b}
+
+
+Definition at line 46 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!runtime\-\_\-id@{runtime\-\_\-id}}
+\index{runtime\-\_\-id@{runtime\-\_\-id}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{runtime\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}static int runtime\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{int}]{runtime\-\_\-fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}
+
+
+Definition at line 53 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a56e37184146ef59bd9e13642501aa002}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!send\-\_\-add\-\_\-runtime\-\_\-msg@{send\-\_\-add\-\_\-runtime\-\_\-msg}}
+\index{send\-\_\-add\-\_\-runtime\-\_\-msg@{send\-\_\-add\-\_\-runtime\-\_\-msg}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{send\-\_\-add\-\_\-runtime\-\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}static int send\-\_\-add\-\_\-runtime\-\_\-msg (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{target\-\_\-id, }
+\item[{int}]{new\-\_\-rt\-\_\-id, }
+\item[{{\bf uint32\-\_\-t}}]{ip, }
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a56e37184146ef59bd9e13642501aa002}
+
+
+Definition at line 94 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a37fd94c4db8a170a4c66c6ce4529a219}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!send\-\_\-to\-\_\-runtime@{send\-\_\-to\-\_\-runtime}}
+\index{send\-\_\-to\-\_\-runtime@{send\-\_\-to\-\_\-runtime}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{send\-\_\-to\-\_\-runtime}]{\setlength{\rightskip}{0pt plus 5cm}int send\-\_\-to\-\_\-runtime (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{runtime\-\_\-id, }
+\item[{struct {\bf ctrl\-\_\-runtime\-\_\-msg\-\_\-hdr} $\ast$}]{hdr, }
+\item[{void $\ast$}]{payload}
+\end{DoxyParamCaption}
+)}}\label{global__controller_2runtime__communication_8c_a37fd94c4db8a170a4c66c6ce4529a219}
+
+
+Definition at line 62 of file runtime\-\_\-communication.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{global__controller_2runtime__communication_8c_afcd82d9ec1a2fb6e61db8c487c6f4a47}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!listen\-\_\-sock@{listen\-\_\-sock}}
+\index{listen\-\_\-sock@{listen\-\_\-sock}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{listen\-\_\-sock}]{\setlength{\rightskip}{0pt plus 5cm}int listen\-\_\-sock = -\/1\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_afcd82d9ec1a2fb6e61db8c487c6f4a47}
+
+
+Definition at line 300 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a0535e8c6fb3d65822d2ee310faa9016b}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!output\-\_\-listen\-\_\-sock@{output\-\_\-listen\-\_\-sock}}
+\index{output\-\_\-listen\-\_\-sock@{output\-\_\-listen\-\_\-sock}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{output\-\_\-listen\-\_\-sock}]{\setlength{\rightskip}{0pt plus 5cm}int output\-\_\-listen\-\_\-sock = -\/1\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a0535e8c6fb3d65822d2ee310faa9016b}
+
+
+Definition at line 218 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a8b9a4a3cf96d4cf11c56760ce06e1ee3}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!output\-\_\-sock\-\_\-idx@{output\-\_\-sock\-\_\-idx}}
+\index{output\-\_\-sock\-\_\-idx@{output\-\_\-sock\-\_\-idx}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{output\-\_\-sock\-\_\-idx}]{\setlength{\rightskip}{0pt plus 5cm}int output\-\_\-sock\-\_\-idx = 0\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a8b9a4a3cf96d4cf11c56760ce06e1ee3}
+
+
+Definition at line 220 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_a46f147233eb45e3957f10332a34e767e}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!output\-\_\-socks@{output\-\_\-socks}}
+\index{output\-\_\-socks@{output\-\_\-socks}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{output\-\_\-socks}]{\setlength{\rightskip}{0pt plus 5cm}int output\-\_\-socks\mbox{[}2\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_a46f147233eb45e3957f10332a34e767e}
+
+
+Definition at line 219 of file runtime\-\_\-communication.\-c.
+
+\hypertarget{global__controller_2runtime__communication_8c_ab158162f9b3a02a852024fa40f7ced8c}{\index{global\-\_\-controller/runtime\-\_\-communication.\-c@{global\-\_\-controller/runtime\-\_\-communication.\-c}!runtime\-\_\-endpoints@{runtime\-\_\-endpoints}}
+\index{runtime\-\_\-endpoints@{runtime\-\_\-endpoints}!global_controller/runtime_communication.c@{global\-\_\-controller/runtime\-\_\-communication.\-c}}
+\subsubsection[{runtime\-\_\-endpoints}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf runtime\-\_\-endpoint} runtime\-\_\-endpoints\mbox{[}32\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{global__controller_2runtime__communication_8c_ab158162f9b3a02a852024fa40f7ced8c}
+
+
+Definition at line 44 of file runtime\-\_\-communication.\-c.
+

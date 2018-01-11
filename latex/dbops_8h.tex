@@ -1,0 +1,108 @@
+\hypertarget{dbops_8h}{\section{src/msus/webserver/dbops.h File Reference}
+\label{dbops_8h}\index{src/msus/webserver/dbops.\-h@{src/msus/webserver/dbops.\-h}}
+}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structdb__state}{db\-\_\-state}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235}{db\-\_\-status} \{ \\*
+\hyperlink{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235af3cab8f24348a8a7c0b7c519908f68de}{D\-B\-\_\-\-N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N}, 
+\hyperlink{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a7e9a2b4372c897e1bd6fcd02433071a0}{D\-B\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G}, 
+\hyperlink{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a26556468796e74ddaa12c0054c3c5730}{D\-B\-\_\-\-S\-E\-N\-D}, 
+\hyperlink{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a94f6cb9f41ae7adf996bf0f894a838ab}{D\-B\-\_\-\-R\-E\-C\-V}, 
+\\*
+\hyperlink{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a08950ab82581b37399a6a08b468e3037}{D\-B\-\_\-\-D\-O\-N\-E}, 
+\hyperlink{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a4a77755b435b88fa0e492fbc5b231d73}{D\-B\-\_\-\-E\-R\-R}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{dbops_8h_a7016358677e611c80eaef142dd7063df}{init\-\_\-db} (char $\ast$ip, int port, int max\-\_\-load)
+\item 
+void $\ast$ \hyperlink{dbops_8h_aeddf21f54409959642231e2257615fb3}{allocate\-\_\-db\-\_\-memory} ()
+\item 
+void \hyperlink{dbops_8h_a5d41a4e6f46237cf891618fb7fb22349}{free\-\_\-db\-\_\-memory} (void $\ast$memory)
+\item 
+int \hyperlink{dbops_8h_a17fc0181bcc2ffb776a0af22d793cdb4}{query\-\_\-db} (struct \hyperlink{structdb__state}{db\-\_\-state} $\ast$\hyperlink{http__parser_8c_adc6e5733fc3c22f0a7b2914188c49c90}{state})
+\end{DoxyCompactItemize}
+
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235}{\index{dbops.\-h@{dbops.\-h}!db\-\_\-status@{db\-\_\-status}}
+\index{db\-\_\-status@{db\-\_\-status}!dbops.h@{dbops.\-h}}
+\subsubsection[{db\-\_\-status}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf db\-\_\-status}}}\label{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235}
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{D\-B\-\_\-\-N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N@{D\-B\-\_\-\-N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N}!dbops.\-h@{dbops.\-h}}\index{dbops.\-h@{dbops.\-h}!D\-B\-\_\-\-N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N@{D\-B\-\_\-\-N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N}}\item[{\em 
+\hypertarget{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235af3cab8f24348a8a7c0b7c519908f68de}{D\-B\-\_\-\-N\-O\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-O\-N}\label{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235af3cab8f24348a8a7c0b7c519908f68de}
+}]\index{D\-B\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G@{D\-B\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G}!dbops.\-h@{dbops.\-h}}\index{dbops.\-h@{dbops.\-h}!D\-B\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G@{D\-B\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G}}\item[{\em 
+\hypertarget{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a7e9a2b4372c897e1bd6fcd02433071a0}{D\-B\-\_\-\-C\-O\-N\-N\-E\-C\-T\-I\-N\-G}\label{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a7e9a2b4372c897e1bd6fcd02433071a0}
+}]\index{D\-B\-\_\-\-S\-E\-N\-D@{D\-B\-\_\-\-S\-E\-N\-D}!dbops.\-h@{dbops.\-h}}\index{dbops.\-h@{dbops.\-h}!D\-B\-\_\-\-S\-E\-N\-D@{D\-B\-\_\-\-S\-E\-N\-D}}\item[{\em 
+\hypertarget{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a26556468796e74ddaa12c0054c3c5730}{D\-B\-\_\-\-S\-E\-N\-D}\label{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a26556468796e74ddaa12c0054c3c5730}
+}]\index{D\-B\-\_\-\-R\-E\-C\-V@{D\-B\-\_\-\-R\-E\-C\-V}!dbops.\-h@{dbops.\-h}}\index{dbops.\-h@{dbops.\-h}!D\-B\-\_\-\-R\-E\-C\-V@{D\-B\-\_\-\-R\-E\-C\-V}}\item[{\em 
+\hypertarget{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a94f6cb9f41ae7adf996bf0f894a838ab}{D\-B\-\_\-\-R\-E\-C\-V}\label{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a94f6cb9f41ae7adf996bf0f894a838ab}
+}]\index{D\-B\-\_\-\-D\-O\-N\-E@{D\-B\-\_\-\-D\-O\-N\-E}!dbops.\-h@{dbops.\-h}}\index{dbops.\-h@{dbops.\-h}!D\-B\-\_\-\-D\-O\-N\-E@{D\-B\-\_\-\-D\-O\-N\-E}}\item[{\em 
+\hypertarget{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a08950ab82581b37399a6a08b468e3037}{D\-B\-\_\-\-D\-O\-N\-E}\label{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a08950ab82581b37399a6a08b468e3037}
+}]\index{D\-B\-\_\-\-E\-R\-R@{D\-B\-\_\-\-E\-R\-R}!dbops.\-h@{dbops.\-h}}\index{dbops.\-h@{dbops.\-h}!D\-B\-\_\-\-E\-R\-R@{D\-B\-\_\-\-E\-R\-R}}\item[{\em 
+\hypertarget{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a4a77755b435b88fa0e492fbc5b231d73}{D\-B\-\_\-\-E\-R\-R}\label{dbops_8h_add81c081d239e1c0cdae4bf80dd6f235a4a77755b435b88fa0e492fbc5b231d73}
+}]\end{description}
+\end{Desc}
+
+
+Definition at line 23 of file dbops.\-h.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{dbops_8h_aeddf21f54409959642231e2257615fb3}{\index{dbops.\-h@{dbops.\-h}!allocate\-\_\-db\-\_\-memory@{allocate\-\_\-db\-\_\-memory}}
+\index{allocate\-\_\-db\-\_\-memory@{allocate\-\_\-db\-\_\-memory}!dbops.h@{dbops.\-h}}
+\subsubsection[{allocate\-\_\-db\-\_\-memory}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ allocate\-\_\-db\-\_\-memory (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{dbops_8h_aeddf21f54409959642231e2257615fb3}
+
+
+Definition at line 87 of file dbops.\-c.
+
+\hypertarget{dbops_8h_a5d41a4e6f46237cf891618fb7fb22349}{\index{dbops.\-h@{dbops.\-h}!free\-\_\-db\-\_\-memory@{free\-\_\-db\-\_\-memory}}
+\index{free\-\_\-db\-\_\-memory@{free\-\_\-db\-\_\-memory}!dbops.h@{dbops.\-h}}
+\subsubsection[{free\-\_\-db\-\_\-memory}]{\setlength{\rightskip}{0pt plus 5cm}void free\-\_\-db\-\_\-memory (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{memory}
+\end{DoxyParamCaption}
+)}}\label{dbops_8h_a5d41a4e6f46237cf891618fb7fb22349}
+
+
+Definition at line 93 of file dbops.\-c.
+
+\hypertarget{dbops_8h_a7016358677e611c80eaef142dd7063df}{\index{dbops.\-h@{dbops.\-h}!init\-\_\-db@{init\-\_\-db}}
+\index{init\-\_\-db@{init\-\_\-db}!dbops.h@{dbops.\-h}}
+\subsubsection[{init\-\_\-db}]{\setlength{\rightskip}{0pt plus 5cm}void init\-\_\-db (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{ip, }
+\item[{int}]{port, }
+\item[{int}]{max\-\_\-load}
+\end{DoxyParamCaption}
+)}}\label{dbops_8h_a7016358677e611c80eaef142dd7063df}
+
+
+Definition at line 79 of file dbops.\-c.
+
+\hypertarget{dbops_8h_a17fc0181bcc2ffb776a0af22d793cdb4}{\index{dbops.\-h@{dbops.\-h}!query\-\_\-db@{query\-\_\-db}}
+\index{query\-\_\-db@{query\-\_\-db}!dbops.h@{dbops.\-h}}
+\subsubsection[{query\-\_\-db}]{\setlength{\rightskip}{0pt plus 5cm}int query\-\_\-db (
+\begin{DoxyParamCaption}
+\item[{struct {\bf db\-\_\-state} $\ast$}]{state}
+\end{DoxyParamCaption}
+)}}\label{dbops_8h_a17fc0181bcc2ffb776a0af22d793cdb4}
+
+
+Definition at line 182 of file dbops.\-c.
+

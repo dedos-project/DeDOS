@@ -1,0 +1,95 @@
+\hypertarget{structdedos__msg}{\section{dedos\-\_\-msg Struct Reference}
+\label{structdedos__msg}\index{dedos\-\_\-msg@{dedos\-\_\-msg}}
+}
+
+
+A linked-\/list entry containing a message.  
+
+
+
+
+{\ttfamily \#include $<$message\-\_\-queue.\-h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structdedos__msg}{dedos\-\_\-msg} $\ast$ \hyperlink{structdedos__msg_ab769ff04df992859169a7a456256bd04}{next}
+\begin{DoxyCompactList}\small\item\em The next message in the list, or N\-U\-L\-L if N/\-A. \end{DoxyCompactList}\item 
+enum \hyperlink{message__queue_8h_ade4286e2189401663d8ce0287895570a}{dedos\-\_\-msg\-\_\-type} \hyperlink{structdedos__msg_af4d233fc84b050bee1af851fd420d317}{type}
+\begin{DoxyCompactList}\small\item\em Target of delivery\-: runtime, thread, or M\-S\-U. \end{DoxyCompactList}\item 
+void $\ast$ \hyperlink{structdedos__msg_a91f31ca1c757b98cbc2de7bf7c18cb49}{data}
+\begin{DoxyCompactList}\small\item\em Payload. \end{DoxyCompactList}\item 
+ssize\-\_\-t \hyperlink{structdedos__msg_a336dcb0b72f421b1e99dc23f76d4bcd1}{data\-\_\-size}
+\begin{DoxyCompactList}\small\item\em Size of payload. \end{DoxyCompactList}\item 
+struct timespec \hyperlink{structdedos__msg_a178267be123a7471f2ec7e4a74d598fd}{delivery\-\_\-time}
+\begin{DoxyCompactList}\small\item\em Message is ignored until this time (in C\-L\-O\-C\-K\-\_\-\-M\-O\-N\-O\-T\-O\-N\-I\-C\-\_\-\-C\-O\-A\-R\-S\-E) has passed. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A linked-\/list entry containing a message. 
+
+Definition at line 42 of file message\-\_\-queue.\-h.
+
+
+
+\subsection{Member Data Documentation}
+\hypertarget{structdedos__msg_a91f31ca1c757b98cbc2de7bf7c18cb49}{\index{dedos\-\_\-msg@{dedos\-\_\-msg}!data@{data}}
+\index{data@{data}!dedos_msg@{dedos\-\_\-msg}}
+\subsubsection[{data}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ dedos\-\_\-msg\-::data}}\label{structdedos__msg_a91f31ca1c757b98cbc2de7bf7c18cb49}
+
+
+Payload. 
+
+
+
+Definition at line 48 of file message\-\_\-queue.\-h.
+
+\hypertarget{structdedos__msg_a336dcb0b72f421b1e99dc23f76d4bcd1}{\index{dedos\-\_\-msg@{dedos\-\_\-msg}!data\-\_\-size@{data\-\_\-size}}
+\index{data\-\_\-size@{data\-\_\-size}!dedos_msg@{dedos\-\_\-msg}}
+\subsubsection[{data\-\_\-size}]{\setlength{\rightskip}{0pt plus 5cm}ssize\-\_\-t dedos\-\_\-msg\-::data\-\_\-size}}\label{structdedos__msg_a336dcb0b72f421b1e99dc23f76d4bcd1}
+
+
+Size of payload. 
+
+
+
+Definition at line 50 of file message\-\_\-queue.\-h.
+
+\hypertarget{structdedos__msg_a178267be123a7471f2ec7e4a74d598fd}{\index{dedos\-\_\-msg@{dedos\-\_\-msg}!delivery\-\_\-time@{delivery\-\_\-time}}
+\index{delivery\-\_\-time@{delivery\-\_\-time}!dedos_msg@{dedos\-\_\-msg}}
+\subsubsection[{delivery\-\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}struct timespec dedos\-\_\-msg\-::delivery\-\_\-time}}\label{structdedos__msg_a178267be123a7471f2ec7e4a74d598fd}
+
+
+Message is ignored until this time (in C\-L\-O\-C\-K\-\_\-\-M\-O\-N\-O\-T\-O\-N\-I\-C\-\_\-\-C\-O\-A\-R\-S\-E) has passed. 
+
+
+
+Definition at line 52 of file message\-\_\-queue.\-h.
+
+\hypertarget{structdedos__msg_ab769ff04df992859169a7a456256bd04}{\index{dedos\-\_\-msg@{dedos\-\_\-msg}!next@{next}}
+\index{next@{next}!dedos_msg@{dedos\-\_\-msg}}
+\subsubsection[{next}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf dedos\-\_\-msg}$\ast$ dedos\-\_\-msg\-::next}}\label{structdedos__msg_ab769ff04df992859169a7a456256bd04}
+
+
+The next message in the list, or N\-U\-L\-L if N/\-A. 
+
+
+
+Definition at line 44 of file message\-\_\-queue.\-h.
+
+\hypertarget{structdedos__msg_af4d233fc84b050bee1af851fd420d317}{\index{dedos\-\_\-msg@{dedos\-\_\-msg}!type@{type}}
+\index{type@{type}!dedos_msg@{dedos\-\_\-msg}}
+\subsubsection[{type}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf dedos\-\_\-msg\-\_\-type} dedos\-\_\-msg\-::type}}\label{structdedos__msg_af4d233fc84b050bee1af851fd420d317}
+
+
+Target of delivery\-: runtime, thread, or M\-S\-U. 
+
+
+
+Definition at line 46 of file message\-\_\-queue.\-h.
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/runtime/\hyperlink{message__queue_8h}{message\-\_\-queue.\-h}\end{DoxyCompactItemize}

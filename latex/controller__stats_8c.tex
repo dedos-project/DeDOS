@@ -1,0 +1,254 @@
+\hypertarget{controller__stats_8c}{\section{src/global\-\_\-controller/controller\-\_\-stats.c File Reference}
+\label{controller__stats_8c}\index{src/global\-\_\-controller/controller\-\_\-stats.\-c@{src/global\-\_\-controller/controller\-\_\-stats.\-c}}
+}
+{\ttfamily \#include \char`\"{}controller\-\_\-stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}timeseries.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stats.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-mysql.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}controller\-\_\-dfg.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stat\-\_\-msg\-\_\-handler.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdbool.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structstat__type}{stat\-\_\-type}
+\begin{DoxyCompactList}\small\item\em The structure holding all items of a type of stats. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{controller__stats_8c_aaa8af8a5fe5beb6d2b7209d056d79ef2}{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}~sizeof(\hyperlink{controller__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}{stat\-\_\-types}) / sizeof($\ast$\hyperlink{controller__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}{stat\-\_\-types})
+\item 
+\#define \hyperlink{controller__stats_8c_a90ae7bfe6759086680787cb8c0e8fd16}{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structstat__type}{stat\-\_\-type} $\ast$ \hyperlink{controller__stats_8c_aaa2d072c574d5a6dd4f685812ebc64c0}{get\-\_\-stat\-\_\-type} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id)
+\item 
+static struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$ \hyperlink{controller__stats_8c_a9776f5368e7cd393a2aab50d74a95769}{get\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id, unsigned int item\-\_\-id)
+\item 
+struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$ \hyperlink{controller__stats_8c_a2e2929573de20f4429aa9bdd5a1550e1}{get\-\_\-thread\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id}, unsigned int thread\-\_\-id)
+\item 
+struct \hyperlink{structtimed__rrdb}{timed\-\_\-rrdb} $\ast$ \hyperlink{controller__stats_8c_a85375362edd836dfab829c415aff3641}{get\-\_\-msu\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} id, unsigned int msu\-\_\-id)
+\item 
+static int \hyperlink{controller__stats_8c_a85b9548ab5f0c4574c372f513eb1f8e4}{unregister\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\item 
+int \hyperlink{controller__stats_8c_a0b586a4d840dde8f832066c88534c5cc}{unregister\-\_\-msu\-\_\-stats} (unsigned int msu\-\_\-id)
+\item 
+int \hyperlink{controller__stats_8c_ac29c17fd5a8f47223ba648b59d6d397f}{unregister\-\_\-thread\-\_\-stats} (unsigned int thread\-\_\-id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__stats_8c_ac5075875d614404fee367643320622d6}{register\-\_\-stat} (enum \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id} \hyperlink{stat__ids_8h_ac210bd14ba53357098c0b3ebdd69784e}{stat\-\_\-id}, unsigned int item\-\_\-id)
+\item 
+int \hyperlink{controller__stats_8c_a1f2050497a6b205ae3d2f31e62bf8bea}{register\-\_\-msu\-\_\-stats} (unsigned int msu\-\_\-id, int msu\-\_\-type\-\_\-id, int thread\-\_\-id, int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__stats_8c_a59435da360ded4cc6c9a6cc5a3e0834a}{register\-\_\-thread\-\_\-stats} (unsigned int thread\-\_\-id, unsigned int \hyperlink{global__controller_2runtime__communication_8c_aa98647f6cb733e8fb488e1b5c711fab9}{runtime\-\_\-id})
+\item 
+int \hyperlink{controller__stats_8c_a987e4bed1652d7ebda191ee1f202addc}{init\-\_\-statistics} ()
+\begin{DoxyCompactList}\small\item\em Initializes the entire stats module. \end{DoxyCompactList}\item 
+void \hyperlink{controller__stats_8c_a256a57eae442310da08b39e60b30f396}{show\-\_\-stats} (struct \hyperlink{structdfg__msu}{dfg\-\_\-msu} $\ast$msu)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static struct \hyperlink{structstat__type}{stat\-\_\-type} \hyperlink{controller__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}{stat\-\_\-types} \mbox{[}$\,$\mbox{]}
+\item 
+static bool \hyperlink{controller__stats_8c_a1b7740196a8b8beb4d29cd7da7e65a7e}{stats\-\_\-initialized} = false
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{controller__stats_8c_a90ae7bfe6759086680787cb8c0e8fd16}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T@{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T}}
+\index{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T@{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\-H\-E\-C\-K\-\_\-\-I\-N\-I\-T}}\label{controller__stats_8c_a90ae7bfe6759086680787cb8c0e8fd16}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keywordflow}{if} (!\hyperlink{controller__stats_8c_a1b7740196a8b8beb4d29cd7da7e65a7e}{stats\_initialized}) \{ \hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{\(\backslash\)}
+\hyperlink{logging_8h_afd2d22d45a6b32ff3ff8ea73013f09dc}{        log\_warn}(\textcolor{stringliteral}{"Statistics not initialized"}); \(\backslash\)
+        return -1; \(\backslash\)
+    \}
+\end{DoxyCode}
+
+
+Definition at line 45 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_aaa8af8a5fe5beb6d2b7209d056d79ef2}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}}
+\index{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S@{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\-\_\-\-S\-T\-A\-T\-\_\-\-T\-Y\-P\-E\-S~sizeof({\bf stat\-\_\-types}) / sizeof($\ast${\bf stat\-\_\-types})}}\label{controller__stats_8c_aaa8af8a5fe5beb6d2b7209d056d79ef2}
+
+
+Definition at line 42 of file controller\-\_\-stats.\-c.
+
+
+
+\subsection{Function Documentation}
+\hypertarget{controller__stats_8c_a85375362edd836dfab829c415aff3641}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!get\-\_\-msu\-\_\-stat@{get\-\_\-msu\-\_\-stat}}
+\index{get\-\_\-msu\-\_\-stat@{get\-\_\-msu\-\_\-stat}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{get\-\_\-msu\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf timed\-\_\-rrdb}$\ast$ get\-\_\-msu\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id, }
+\item[{unsigned int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_a85375362edd836dfab829c415aff3641}
+
+
+Definition at line 95 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a9776f5368e7cd393a2aab50d74a95769}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!get\-\_\-stat@{get\-\_\-stat}}
+\index{get\-\_\-stat@{get\-\_\-stat}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{get\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf timed\-\_\-rrdb}$\ast$ get\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__stats_8c_a9776f5368e7cd393a2aab50d74a95769}
+
+
+Definition at line 61 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_aaa2d072c574d5a6dd4f685812ebc64c0}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!get\-\_\-stat\-\_\-type@{get\-\_\-stat\-\_\-type}}
+\index{get\-\_\-stat\-\_\-type@{get\-\_\-stat\-\_\-type}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{get\-\_\-stat\-\_\-type}]{\setlength{\rightskip}{0pt plus 5cm}static struct {\bf stat\-\_\-type}$\ast$ get\-\_\-stat\-\_\-type (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__stats_8c_aaa2d072c574d5a6dd4f685812ebc64c0}
+
+
+Definition at line 52 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a2e2929573de20f4429aa9bdd5a1550e1}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!get\-\_\-thread\-\_\-stat@{get\-\_\-thread\-\_\-stat}}
+\index{get\-\_\-thread\-\_\-stat@{get\-\_\-thread\-\_\-stat}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{get\-\_\-thread\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf timed\-\_\-rrdb}$\ast$ get\-\_\-thread\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{id, }
+\item[{unsigned int}]{runtime\-\_\-id, }
+\item[{unsigned int}]{thread\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_a2e2929573de20f4429aa9bdd5a1550e1}
+
+
+Definition at line 85 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a987e4bed1652d7ebda191ee1f202addc}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!init\-\_\-statistics@{init\-\_\-statistics}}
+\index{init\-\_\-statistics@{init\-\_\-statistics}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{init\-\_\-statistics}]{\setlength{\rightskip}{0pt plus 5cm}int init\-\_\-statistics (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_a987e4bed1652d7ebda191ee1f202addc}
+
+
+Initializes the entire stats module. 
+
+M\-U\-S\-T B\-E C\-A\-L\-L\-E\-D before runtime starts 
+
+Definition at line 192 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a1f2050497a6b205ae3d2f31e62bf8bea}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!register\-\_\-msu\-\_\-stats@{register\-\_\-msu\-\_\-stats}}
+\index{register\-\_\-msu\-\_\-stats@{register\-\_\-msu\-\_\-stats}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{register\-\_\-msu\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int register\-\_\-msu\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id, }
+\item[{int}]{msu\-\_\-type\-\_\-id, }
+\item[{int}]{thread\-\_\-id, }
+\item[{int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_a1f2050497a6b205ae3d2f31e62bf8bea}
+
+
+Definition at line 170 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_ac5075875d614404fee367643320622d6}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!register\-\_\-stat@{register\-\_\-stat}}
+\index{register\-\_\-stat@{register\-\_\-stat}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{register\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}int register\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_ac5075875d614404fee367643320622d6}
+
+
+Definition at line 132 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a59435da360ded4cc6c9a6cc5a3e0834a}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!register\-\_\-thread\-\_\-stats@{register\-\_\-thread\-\_\-stats}}
+\index{register\-\_\-thread\-\_\-stats@{register\-\_\-thread\-\_\-stats}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{register\-\_\-thread\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int register\-\_\-thread\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_a59435da360ded4cc6c9a6cc5a3e0834a}
+
+
+Definition at line 181 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a256a57eae442310da08b39e60b30f396}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!show\-\_\-stats@{show\-\_\-stats}}
+\index{show\-\_\-stats@{show\-\_\-stats}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{show\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}void show\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{struct {\bf dfg\-\_\-msu} $\ast$}]{msu}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_a256a57eae442310da08b39e60b30f396}
+
+
+Definition at line 231 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a0b586a4d840dde8f832066c88534c5cc}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!unregister\-\_\-msu\-\_\-stats@{unregister\-\_\-msu\-\_\-stats}}
+\index{unregister\-\_\-msu\-\_\-stats@{unregister\-\_\-msu\-\_\-stats}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{unregister\-\_\-msu\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int unregister\-\_\-msu\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{msu\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_a0b586a4d840dde8f832066c88534c5cc}
+
+
+Definition at line 116 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a85b9548ab5f0c4574c372f513eb1f8e4}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!unregister\-\_\-stat@{unregister\-\_\-stat}}
+\index{unregister\-\_\-stat@{unregister\-\_\-stat}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{unregister\-\_\-stat}]{\setlength{\rightskip}{0pt plus 5cm}static int unregister\-\_\-stat (
+\begin{DoxyParamCaption}
+\item[{enum {\bf stat\-\_\-id}}]{stat\-\_\-id, }
+\item[{unsigned int}]{item\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__stats_8c_a85b9548ab5f0c4574c372f513eb1f8e4}
+
+
+Definition at line 102 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_ac29c17fd5a8f47223ba648b59d6d397f}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!unregister\-\_\-thread\-\_\-stats@{unregister\-\_\-thread\-\_\-stats}}
+\index{unregister\-\_\-thread\-\_\-stats@{unregister\-\_\-thread\-\_\-stats}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{unregister\-\_\-thread\-\_\-stats}]{\setlength{\rightskip}{0pt plus 5cm}int unregister\-\_\-thread\-\_\-stats (
+\begin{DoxyParamCaption}
+\item[{unsigned int}]{thread\-\_\-id, }
+\item[{unsigned int}]{runtime\-\_\-id}
+\end{DoxyParamCaption}
+)}}\label{controller__stats_8c_ac29c17fd5a8f47223ba648b59d6d397f}
+
+
+Definition at line 124 of file controller\-\_\-stats.\-c.
+
+
+
+\subsection{Variable Documentation}
+\hypertarget{controller__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!stat\-\_\-types@{stat\-\_\-types}}
+\index{stat\-\_\-types@{stat\-\_\-types}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{stat\-\_\-types}]{\setlength{\rightskip}{0pt plus 5cm}struct {\bf stat\-\_\-type} stat\-\_\-types\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__stats_8c_a62672346ada903ef5c36c3999fa0ddc0}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+= \{
+    \hyperlink{stats_8h_abba66a08e3a3b0fb1c4d85cb97112f36}{REPORTED\_STAT\_TYPES}
+\}
+\end{DoxyCode}
+
+
+Definition at line 38 of file controller\-\_\-stats.\-c.
+
+\hypertarget{controller__stats_8c_a1b7740196a8b8beb4d29cd7da7e65a7e}{\index{controller\-\_\-stats.\-c@{controller\-\_\-stats.\-c}!stats\-\_\-initialized@{stats\-\_\-initialized}}
+\index{stats\-\_\-initialized@{stats\-\_\-initialized}!controller_stats.c@{controller\-\_\-stats.\-c}}
+\subsubsection[{stats\-\_\-initialized}]{\setlength{\rightskip}{0pt plus 5cm}bool stats\-\_\-initialized = false\hspace{0.3cm}{\ttfamily [static]}}}\label{controller__stats_8c_a1b7740196a8b8beb4d29cd7da7e65a7e}
+
+
+Definition at line 43 of file controller\-\_\-stats.\-c.
+
