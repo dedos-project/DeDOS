@@ -53,6 +53,9 @@ def help_(name=None):
         help_(name)
         print ""
 
+def send(*message):
+    api.send_through_daemon(' '.join(message))
+
 def cfg(filename):
     ''' Sets the configuration file for CLI and Daemon
     Arguments:
@@ -85,7 +88,8 @@ fn_map = dict(
         classify=classify,
         help=help_,
         quit=quit,
-        shutdown=shutdown
+        shutdown=shutdown,
+        send=send
 )
 
 def prompt():

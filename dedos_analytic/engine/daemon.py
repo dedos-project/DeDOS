@@ -4,12 +4,13 @@ from dedos_analytic.database.db_api import DbApi
 import feature_engineering as dfe
 from ..logger import *
 from .classifiers import DbScanner
+from .dedos_ctl import DedosCtl
 from sklearn.cluster import DBSCAN
 import json
 import threading
 import zmq
 
-zctx = zmq.Context()
+zctx = zmq.Context.instance()
 
 class DaemonMessage():
 
@@ -17,6 +18,7 @@ class DaemonMessage():
     CLASSIFY=2
     CONFIGURE=3
     SHUTDOWN=4
+    SEND=5
 
     def __init__(self, type, **params):
         self.type = type
@@ -45,6 +47,10 @@ class DaemonMessage():
         return DaemonMessage(cls.CONFIGURE, config=config, name=name)
 
     @classmethod
+    def send_message(cls, message):
+        return DaemonMessage(cls.SEND, message=message)
+
+    @classmethod
     def shutdown_message(cls):
         return DaemonMessage(cls.SHUTDOWN)
 
@@ -55,15 +61,17 @@ class _Daemon():
 
     def __init__(self, config=None, interval = -1):
         self.dbscanners = {}
+        self.dedos_ctl = None
         self.interval = interval
         self.rep_socket = None
         self.req_socket = None
-        self.dedos_socket = None
         self.is_running = False
         self.config = config
 
     def set_config(self, config):
         self.config = config
+        self.init_dbscanner(config)
+        self.dedos_ctl = DedosCtl(config)
 
     def init_dbscanner(self, config, name='_MAIN'):
         self.dbscanners[name] = DbScanner(config)
@@ -97,6 +105,13 @@ class _Daemon():
         self.dbscanners[msg.name].classify(msg.start, msg.end)
         return "SUCCESS"
 
+    def process_send_msg(self, msg):
+        if self.dedos_ctl is None:
+            log_error("Cannot send to dedos before connecting")
+            return "ERROR"
+        self.dedos_ctl.send_message(msg.message)
+        return "SUCCESS"
+
     def process_cfg_msg(self, msg):
         if msg.name in self.dbscanners:
             log_error("Scanner {} already initialized".format(msg.name))
@@ -108,27 +123,12 @@ class _Daemon():
         self.is_running = False
         return "SHUTTING DOWN"
 
-    def _connect_to_dedos(self):
-        if self.config is None:
-            log_error("Cannot connect to dedos before configuration")
-            return
-        if self.dedos_socket is not None:
-            log_warn("Replacing existing dedos socket!")
-
-        dfg = json.load(open(self.config['dedos_dfg']))
-
-        self.dedos_socket = zctx.socket(zmq.REQ)
-        sock_loc = "tcp://{dfg[global_ctl_ip]}:{cfg[dedos_control_port]}" \
-                   .format(cfg=self.config, dfg=dfg)
-        self.dedos_socket.connect(sock_loc)
-        log_info("Connected to dedos at {}".format(sock_loc))
-
-
     MSG_HANDLERS = {
             DaemonMessage.TRAIN: process_train_msg,
             DaemonMessage.CLASSIFY: process_classify_msg,
             DaemonMessage.CONFIGURE: process_cfg_msg,
-            DaemonMessage.SHUTDOWN: process_shutdown_msg
+            DaemonMessage.SHUTDOWN: process_shutdown_msg,
+            DaemonMessage.SEND: process_send_msg
     }
 
     def _process_message(self, smsg):
@@ -164,7 +164,6 @@ class _Daemon():
 
     def _loop(self):
         log_info("Daemon started!")
-        self._connect_to_dedos()
         self.is_running = True
         while self.is_running:
             self._loop_iteration()
