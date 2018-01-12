@@ -27,6 +27,7 @@ END OF LICENSE STUB
 #include "jsmn.h"
 #include "logging.h"
 
+#include <zmq.h>
 #include <unistd.h>
 
 #define JSON_LEN_INCREMENT 1024
@@ -424,6 +425,29 @@ void dfg_to_file(char *filename) {
     fwrite(dfg_json, sizeof(char), json_size, file);
     fwrite("\n", sizeof(char), 1, file);
     fclose(file);
+}
+
+#define ZMQ_TOPIC "DFG"
+
+int dfg_to_zmq(void *zmq_socket) {
+    lock_dfg();
+    struct dedos_dfg *dfg = get_dfg();
+    char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
+    unlock_dfg();
+
+    size_t json_size = strlen(dfg_json);
+
+    int rtn = zmq_send(zmq_socket, ZMQ_TOPIC, strlen(ZMQ_TOPIC), ZMQ_SNDMORE);
+    if (rtn < 0) {
+        log_perror("Error publishing topic to zmq socket");
+    }
+
+    rtn = zmq_send(zmq_socket, dfg_json, json_size, 0);
+    if (rtn < 0) {
+        log_perror("Error publishing dfg to zmq socket");
+        return -1;
+    }
+    return 0;
 }
 
 int dfg_to_fd(int fd) {
