@@ -118,14 +118,12 @@ listener.sockets.on('connection', function(socket) {
     var start_controller = function(filename) {
         log.debug("Attempting to start controller");
         controller.start(filename).then( () => {
-            log.info("Controller started I think! Waiting to connect for 2 seconds");
+            log.info("Controller started I think! Waiting to test connection for 2 seconds");
             setTimeout(() => {
-                controller.connect().then( () => {
-                    log.info("Controller connected!");
-                }, (err) => {
-                    log.error(`Couldn't connect to controller: ${err} ${err.stack}`);
-                    emit_error(socket, err);
-                });
+                if (!controller.is_connected()) {
+                    log.error(`No connection from controller!`);
+                    emit_error(socket, "No connection from controller");
+                }
             }, 2000);
         }, (err) => {
             log.error(`Error starting controller!`);
@@ -153,17 +151,6 @@ listener.sockets.on('connection', function(socket) {
             (err) => {
                 log.error(`Error starting runtime ${err}`);
             }
-        );
-    }
-
-    /** Attempt to connect to a running instance of the controller */
-    var attempt_controller_connection = function() {
-        controller.connect().then(
-            () => {
-                log.info("Successfully connected to controller!");
-                emit_error(socket, "Connected to running DeDOS instance");
-            },
-            (err) => { log.debug("Could not connect to controller"); }
         );
     }
 
@@ -224,7 +211,12 @@ listener.sockets.on('connection', function(socket) {
                 // (initialization of runtimes and controller adds to ssh registry)
                 ssh.broadcastFile(local_path, `${config.remote_dfg_dir}/${filename}`).then(
                     () => {
-                        attempt_controller_connection();
+                        log.debug("DFG broadcasted");
+                        setTimeout( () => {
+                            if (controller.is_connected()) {
+                                emit_error(socket, "Connected to running DeDOS instance");
+                            }
+                        },1500);
                     },
                     (err) => {
                         emit_error(socket, `Error broadcasting DFG: ${err}`);
