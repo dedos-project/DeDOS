@@ -26,6 +26,10 @@ var server = http.createServer(function(request, response){
         fs.readFile(__dirname + "/index.html", function(err, data){
             sysUtils.getResponse(response,err,data,'html');
         });
+    } else if (path == '/index2.html') {
+        fs.readFile(__dirname + '/index2.html', function(err, data) {
+            sysUtils.getResponse(response, err, data, 'html');
+        })
     } else if(path.indexOf('.jpg') != -1) {
         fs.readFile(__dirname + "/src/img/" + path,function(err,data){
             sysUtils.getResponse(response,err,data,'jpg');
@@ -59,9 +63,9 @@ var emit_error = function(socket, msg) {
 var listening_sockets = []
 
 /** Broadcasts the DFG to all listening sockets */
-var broadcast_dfg = function(dfg, filename, init) {
+var broadcast_dfg = function(dfg, filename) {
     for (var i = 0; i < listening_sockets.length; i++) {
-        sysUtils.sendDfg(dfg, listening_sockets[i], init);
+        sysUtils.sendDfg(dfg, listening_sockets[i]);
     }
     log.debug(`Broadcast DFG to ${listening_sockets.length} listeners`);
 }
@@ -191,8 +195,13 @@ listener.sockets.on('connection', function(socket) {
                 controller.init(dfg.controller['ip'],
                     // On receipt of a new DFG
                     (new_dfg) => {
-                        ensure_runtimes_started(new_dfg.runtimes, filename);
-                        broadcast_dfg(new_dfg, filename, false)
+                        if (JSON.stringify(new_dfg) == JSON.stringify(global_dfg)) {
+                            log.debug("No DFG diff")
+                        } else {
+                            ensure_runtimes_started(new_dfg.runtimes, filename);
+                            broadcast_dfg(new_dfg, filename, false);
+                            global_dfg = new_dfg;
+                        }
                     },
                     // If the connection to the controller errors out
                     (err) => {
