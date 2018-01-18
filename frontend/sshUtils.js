@@ -66,7 +66,7 @@ Connection.prototype.run = function(cmd) {
                     reject(err);
                 }
             );
-        });
+        }, reject);
     });
 }
 
@@ -122,11 +122,15 @@ Connection.prototype.mkdir = function(path) {
         this.connect().then(() => {
             log.debug(`Attempting to make directory ${path} on ${host}`);
             ssh.mkdir(path).then(resolve, reject);
-        });
+        }, reject);
     });
 }
 
 var ssh_utils = {};
+
+ssh_utils.clear_connections = function() {
+    connections = [];
+}
 
 /** Adds a new connection object which can be subsequently referenced by its ID */
 ssh_utils.add_connection = function(id, host) {
@@ -273,10 +277,12 @@ ssh_utils.broadcastFile = function(src, dst) {
         }
         // Try to put the file regardless of if mkdir succeeds
         promises.push(function(tmp_cid) {
+            return new Promise((resolve, reject) => {
                 var conn = connections[tmp_cid];
                 conn.mkdir(path.dirname(dst)).then(
-                    () => {conn.put(src, dst)},
-                    () => {conn.put(src, dst)})
+                    () => {conn.put(src, dst).then(resolve, reject)},
+                    () => {conn.put(src, dst).then(resolve, reject)});
+            });
         }(cid));
     }
 

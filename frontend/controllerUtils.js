@@ -57,15 +57,12 @@ controller.init = function(ip, on_dfg, on_error, on_close) {
     dfg_socket = zmq.socket('sub');
     // On receipt of data from the controller
     dfg_socket.on('message', function(topic, message) {
-        dfg_socket.monitor(500, 1);
-        log.debug(`Received ${topic} message`);
         connected = true;
         // Add to the received buffer, and attempt to parse
         receive_buffer += message;
         parseUtils.parseDfg(receive_buffer).then(
             // If parsing works, call the dfg callback
             (dfg) => {
-                log.debug(`Received dfg of length ${receive_buffer.length}`);
                 receive_buffer = '';
                 on_dfg(dfg);
                 error_cnt = 0;
@@ -151,11 +148,14 @@ controller.is_connected = function() {
  * @param json_file DFG file to initialize controller with
  * @return Promise Resolves if attempt to start controller succeeded, otherwise rejects
  */
-controller.start = function(json_file) {
+controller.start = function(json_file, on_stop) {
+    dfg_socket.monitor(2000, 1);
     return new Promise( (resolve, reject) => {
         ssh.start("ctl", config.controller_cmd(json_file), () => {
                 log.warn("Controller stopped");
                 uninit();
+                if (on_stop) 
+                    on_stop();
             }).then(
             (output) => {
                 log.info(`Controller started with line: ${output}`);
@@ -174,10 +174,10 @@ controller.start = function(json_file) {
  * @return Promise Resolves if command to kill the controller succeeded
  */
 controller.kill = function() {
+    dfg_socket.monitor(2000, 1);
     return new Promise((resolve, reject) => {
         ssh.kill("ctl", config.gc_exec).then( () => {
             log.info("Killed controller");
-            uninit();
         }, (err) => {
             log.warn(`Error killing controller: ${err}`);
         });

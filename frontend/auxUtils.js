@@ -29,7 +29,7 @@ auxUtils.topoSort = function(msu_types){
             break;
         } catch (e) {
             var bad = e.message.split(':').slice(-1)[0].trim();
-            log.note(`Cyclic dependency! Removing ${bad}`);
+            //log.note(`Cyclic dependency! Removing ${bad}`);
             var removed = false;
             for (var i = 0; i < edges.length; i++) {
                 if (edges[i][1] == parseInt(bad)) {
@@ -54,7 +54,7 @@ auxUtils.topoSort = function(msu_types){
     var types = [];
     for(var i = 0;i<sorted_codes.length;i++){
         types.push({
-            type:sorted_codes[i],
+            id:sorted_codes[i],
             name:sorted_names[i],
             order:i
         });
