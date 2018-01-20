@@ -1,1089 +1,1016 @@
 var socket = io.connect();
 
-//drawing parameters
-var drawing_params = {
-	dfg_height:0,
-	dfg_width:0,
-	ms_height:0,
-	board_width:0,
-	board_height:0,
-	pool_margin:0,
-	nodes_spacing:0,
-	layer_margin:0,
-	gap:5,
-	ratio:1
-};
+class Controller {
 
-var status_color = {
-	"idle":'#006699',
-	"running":'#00cc66',
-	"stopping":'#ffcc00',
-	"attacking":'#ff3333',
-};
+    constructor(ui) {
+        this.ui = ui;
 
-var attack_strength = ["low","medium","high"];
-var tag_color = ['#006699','#ff9966'];
-var ex_color = d3.scaleQuantile().domain([0,1])
-        .range(["#33cc33","#ffb31a","#ff471a"]); 
+        this.dfg_selected = true;
+        this.dedos_running = false;
+        this.app_name = false;
 
-var disc_timer;		//Timer for disconnect status that used to display a gradient effect
-var state_flag = 0;	//"0" for unload;"1" for file loaded but not start the experiment;"2" for file loaded and experiment started but not everything launched;"3" for everything including all runtimes and experiment launched
-var filename = "";	//filename of the loaded dfg json file
-var launched_num = 0; 	//number of launched runtime
-var rt_num = 0; 	//number of runtime
-var cores = [];
-var type_code = [];
-var type_name = [];
+        socket.on('application', function(app_name) {
+            this.app_name = app_name;
+            ui.app_name = app_name;
+        });
 
-var rt_info = [];
-var radius = []
+        socket.on('dfg_files', function(files) {
+            ui.dfg_list = files;
+        });
 
-var menu_btn_num = 0;
+        socket.on('runtimes', function(rts) {
+            ui.runtimes = rts;
+        });
 
-var menu_colors;
-var msu_color = ["#3957ff", "#d3fe14", "#c9080a", "#fec7f8", "#0b7b3e", "#0bf0e9", "#c203c8", "#fd9b39", "#888593", "#906407", "#98ba7f", "#fe6794", "#10b0ff", "#ac7bff", "#fee7c0", "#964c63", "#1da49c", "#0ad811", "#bbd9fd", "#fe6cfe", "#297192", "#d1a09c", "#78579e", "#81ffad", "#739400", "#ca6949", "#d9bf01", "#646a58", "#d5097e"];
+        socket.on('msu_types', function(msu_types) {
+            ui.msu_types = msu_types;
+        });
 
+        socket.on('msus', function(msus) {
+            ui.msus = msus;
+        });
 
-var rt_colors;
-var rt_status = ["Idle","Launching","Launched"];
+        socket.on('links', function(routes) {
+            ui.routes = routes;
+        });
 
-var context_menu_showing = false;
+        socket.on('error_msg', function(msg) {
+            ui.show_error(msg);
+        });
 
-d3.select('body').on('click', function() {
-    if (context_menu_showing) {
-        d3.select('.popup').remove();
-        context_menu_showing = false;
+        socket.on('started', (msg) => {
+            this.dedos_running = true;
+            ui.status = 'running';
+        });
+
+        socket.on('stopped', (msg) => {
+            this.dedos_running = false;
+            this.force_reset();
+        });
+
+        d3.select('body').on('contextmenu', ui.toggle_ctx_menu.bind(ui));
+        d3.select('body').on('click', ui.remove_ctx_menu.bind(ui));
     }
-});
 
-d3.select('body').on('contextmenu', function(d, i) {
-    if (context_menu_showing) {
-        d3.event.preventDefault();
-        d3.select('.popup').remove();
-        context_menu_showing = false;
-    } else {
-        d3_target = d3.select(d3.event.target);
-        if (d3_target.classed('node')) {
-            d3.event.preventDefault();
-            context_menu_showing = true;
-
-            node = d3_target.datum();
-
-            canvas = d3.select(d3_target.node().parentNode);
-
-            popup = canvas.append('g')
-                .attr('class', 'popup')
-
-            popup.append("rect")
-                .attr('class', 'popup_bg')
-                .attr('width', 70)
-                .attr('height', 60)
-                .attr('x', d3_target.attr('cx'))
-                .attr('y', d3_target.attr('cy'))
-                .attr('rx', '10')
-                .attr('ry', '10')
-
-            clone_group = popup.append('g')
-
-            clone_rect = clone_group.append('rect')
-                .attr('class', 'popup_button')
-                .attr('width', 70)
-                .attr('height', 30)
-                .attr('x', d3_target.attr('cx'))
-                .attr('y', d3_target.attr('cy'))
-                .attr('rx', '10')
-                .attr('ry', '10')
-
-            clone_group.append('text')
-                .attr('x', parseInt(d3_target.attr('cx')) + 35)
-                .attr('y', parseInt(d3_target.attr('cy')) + 15)
-                .attr('text-anchor', 'middle')
-                .attr('dominant-baseline', 'central')
-                .text(`Clone`)
-
-            clone_group.on('mouseover', function() {
-                clone_rect.transition()
-                    .duration(200)
-                    .style('fill', 'rgba(255, 255, 255, 1)')
-            }).on('mouseout', function() {
-                clone_rect.transition()
-                    .duration(200)
-                    .style('fill', 'rgba(255, 255, 255, .6)')
-            }).on('click', function() {
-                socket.emit('clone', node.id);
-                d3.select('.popup').remove();
-                context_menu_showing = false;
-            });
-
-            unclone_group = popup.append('g')
-
-            unclone_rect = unclone_group.append('rect')
-                .attr('class', 'popup_button')
-                .attr('width', 70)
-                .attr('height', 30)
-                .attr('x', d3_target.attr('cx'))
-                .attr('y', parseInt(d3_target.attr('cy')) + 30)
-                .attr('rx', '10')
-                .attr('ry', '10')
-
-            unclone_group.append('text')
-                .attr('x', parseInt(d3_target.attr('cx')) + 35)
-                .attr('y', parseInt(d3_target.attr('cy')) + 45)
-                .attr('text-anchor', 'middle')
-                .attr('dominant-baseline', 'central')
-                .text(`Remove`)
-
-            unclone_group.on('mouseover', function() {
-                unclone_rect.transition()
-                    .duration(200)
-                    .style('fill', 'rgba(255, 255, 255, 1)')
-            }).on('mouseout', function() {
-                unclone_rect.transition()
-                    .duration(200)
-                    .style('fill', 'rgba(255, 255, 255, .6)')
-            }).on('click', function() {
-                socket.emit('unclone', node.id);
-                d3.select('.popup').remove();
-                context_menu_showing = false;
-            });
-
-            // This brings the parent node to the front
-            canvas.node().parentNode.appendChild(canvas.node())
+    open_load_dialog() {
+        if (!this.dedos_running) {
+            socket.emit('get_dfgs');
+            this.ui.dfg_list = [];
+            this.ui.show_dfg_list();
+        } else {
+            this.ui.show_error("Please stop experiemnt first");
         }
     }
-});
 
-//initialize the layout for the page 
-$('document').ready(function(){
-	menu_btn_num = $('.level button').length
-	menu_colors = chroma.scale(['#ff99bb','#009999']).mode('lch').colors(menu_btn_num);
-	$('.level').each(function(i,e){
-		jQuery(this).find('button').each(function(j,ee){
-			$(this).css('margin-left',5 + 22.5 * j+'vw');	
-			$(this).css('left',-5*j);
-			$(this).css('background-color',menu_colors[j]);
-		});
-	});
-	$('.level button').mouseover(function(){
-		$('.level button').css('transition','0.5s all');
-		$(this).css('z-index',1000);
-		$(this).css('height','80px');
-		$(this).css('transition-delay','0s');
-	});
-	$('.level button').mouseout(function(){
-		$(this).css('z-index',10);
-		$(this).css('height','70px');
-	});
+    start_dedos() {
+        if (this.dedos_running) {
+            this.ui.show_error("DeDOS is already running");
+        } else if (!this.dfg_selected) {
+            this.ui.show_error("Load DFG before starting DeDOS");
+        } else {
+            this.ui.status = 'starting';
+            socket.emit('start', ui.dfg_filename);
+        }
+    }
 
-	var num = $('.btn-content').length/2;
-	$('.btn-content').each(function(i,d){
-		$(d).css('background-color',tag_color[Math.floor((i/2))]);
-		var temp = num * 60 / 2 - Math.floor((i / 2)) * 60;
-		if(temp==0)
-			$(d).css('top','50%');
-		else if(temp<0)
-			$(d).css('top','calc(50% + '+(-1*temp)+'px)');
-		else
-			$(d).css('top','calc(50% - '+temp+'px)');
-	});
-	$('.legend-board').each(function(i,d){
-		$(d).css('background-color',tag_color[i]);
-	});
+    stop_dedos() {
+        if (!this.dedos_running) {
+            this.ui.show_error("DeDOS has not yet been started");
+        } else {
+            this.ui.status = 'stopping';
+            socket.emit('stop');
+        }
+    }
 
-	$('.toggle-on').click(function(){
-		$('.btn-content').css('left','10vw');
-		$('.legend-wrapper').css('left','0');
-	});
-	$('.toggle-off').click(function(){
-		$('.btn-content').css('left','0');
-		$('.legend-wrapper').css('left','-10vw');
-	});
+    force_reset() {
+        ui.status = 'idle';
+        this.dedos_running = false;
+        this.dfg_selected = false;
+        ui.reset();
+    }
 
-	$('#toggle-on-l').click(function(){
-		$('#legend-wrapper-l').css('z-index',10);
-		l_on();
-	});
-	$('#toggle-off-l').click(function(){
-		l_off();				
-	});
+    reset() {
+        if (this.dedos_running) {
+            ui.show_error("Shut down DeDOS before restarting");
+        } else {
+            socket.emit('reset');
+            this.force_reset();
+        }
+    }
 
-	//legend menu toggle off
-	function l_off(){
-		$('#toggle-off-l').css('z-index','0');
-		$('#toggle-off-l').css('opacity','0');
-		$('#toggle-on-l').css('z-index','10');
-		$('#toggle-on-l').css('opacity','1');
-	}
-
-	//legend menu toggle on
-	function l_on(){
-		$('#toggle-on-l').css('z-index','0');
-		$('#toggle-on-l').css('opacity','0');
-		$('#toggle-off-l').css('z-index','10');
-		$('#toggle-off-l').css('opacity','1');
-	}
-});
-
-var init_width = jQuery(window).width();
-var init_height = Math.max(800,jQuery(window).height());
-
-drawSVG();
-
-//Onclick function
-/**
- * transmit the command to the server to fetch the all available dfg file
- * @params: none
- * @return: none		 
- */
-function loadFile(){
-	if(state_flag < 2){
-		socket.emit('load-file','placeholder');
-		$('select option').each(function(i,e){
-			if(i>0)
-				$(this).remove();
-		});
-		$('#container').fadeIn(500);
-		$('#load_file').css('display','block');
-	}
-	else{
-		var msg = 'Please stop the experiment first!';
-		$('#container').fadeIn(500);
-		$('#error_msg').css('display','block');
-		$('#warning_txt').text(msg);
-	}
-}
-
-/**
- * start the dedos program(global controller, all runtimes and benchmarking tool as client)
- * @params: none
- * @returm: none
- */
-function start(){
-	if(state_flag == 0){
-		var msg = 'Please load a dfg file first!';
-		$('#container').fadeIn(500);
-		$('#error_msg').css('display','block');
-		$('#warning_txt').text(msg);
-	}
-	else if(state_flag >= 3){
-		var msg = 'Please stop the experiment first!';
-		$('#container').fadeIn(500);
-		$('#error_msg').css('display','block');
-		$('#warning_txt').text(msg);
-	}
-	else{
-		socket.emit('start',filename);
-	}
-}
-function stop(){
-	if(state_flag<2){
-		var msg = "No runtime launched yet!";
-		$('#container').fadeIn(500);
-		$('#error_msg').css('display','block');
-		$('#warning_txt').text(msg);
-	}
-	else if(state_flag == 2){
-		var msg = "Please wait for all runtimes launched!";
-		$('#container').fadeIn(500);
-		$('#error_msg').css('display','block');
-		$('#warning_txt').text(msg);
-	}
-	else{
-		socket.emit('stop','placeholder');
-		d3.select('#status_board').select('rect')
-			.transition()
-			.duration(500)
-			.attr('fill',status_color['stopping']);
-		d3.select('#status_board').select('text')
-			.transition()
-			.duration(500)
-			.text('Stopping');
-	}
-}
-
-function reset(){
-	if(state_flag == 1){
-		d3.select('#status_board').select('rect')
-			.transition()
-			.duration(500)
-			.attr('fill',status_color['idle']);
-		d3.select('#status_board').select('text')
-			.transition()
-			.duration(500)
-			.text('Idle');
-		d3.select('svg').remove();
-		drawSVG();
-		state_flag = 0;
-		$('.legend-wrapper').css('display','none');
-		$('.btn-content').css('display','none');
-		$('.content').remove();
-
-		socket.emit('reset','placeholder');
-	}
-	else if(state_flag > 1){
-		var msg = "Please stop the experiment first";
-		$('#container').fadeIn(500);
-		$('#error_msg').css('display','block');
-		$('#warning_txt').text(msg);
-	}
-}
-
-function submit(){
-	if($(".wrapper select option").length<2){
-		var msg = "There is no valid dfg file";
-		$('#container').fadeIn(500);
-		$('#error_msg').css('display','block');
-		$('#warning_txt').text(msg);
-	}
-	else if($(".wrapper select option:selected").val()==""){
-		var msg = "Please select an dfg file!";
-		$('#container').fadeIn(500);
-		$('#error_msg').css('display','block');
-		$('#warning_txt').text(msg);
-	}
-	else{
-		launched_num = 0;	//reset the number of launched runtime to zero
-		filename = $(".wrapper select option:selected").val();
-		socket.emit('dfg_file',filename);
-		$('.exp_window').css('display','none');
-		$('#container').css('display','none');
-	}
-}
-
-function cancel(){
-	$('#container').css('display','none');
-	$('.exp_window').css('display','none');
-}
-
-//Drawing function
-function drawSVG(){
-	var svg = d3.select('body')
-			.append('div').classed('canvas', true)
-			.append('svg')
-			.attr("preserveAspectRatio", "xMinYMin meet")
-			.attr("viewBox", "0 0 " + (0.9 * init_width - (menu_btn_num - 1) * 5) + " " + (init_height - 120))
-			.classed("svg-content-responsive", true) 
-			.attr('width',0.9 * init_width - (menu_btn_num - 1) * 5)
-			.attr('height',init_height - 120)
-			.append('g');
-	//drawing size initialize
-	drawing_params.board_height = 0.08*init_height;		//define board height
-
-	var chart = $("svg"),
-	    aspect = chart.width() / chart.height(),
-	    container = chart.parent().parent();
-	$(window).on("resize", function() {
-	    var targetWidth = 0.9 * container.width() - (menu_btn_num - 1) * 5;
-	    chart.attr('transform','translate(' + 0.05 * container.width() + ',' + '90)');
-	    chart.attr("width", targetWidth);
-	    chart.attr("height", Math.round(targetWidth / aspect));
-	}).trigger("resize");
-	
-	//draw status board
-    var board_g = svg.append('g')
-        .attr('id','status_board')
-        .attr('transform','translate(0,0)')
-        .attr('opacity',1);
-    board_g.append('rect')
-        .attr('width',0.9 * init_width - (menu_btn_num - 1) * 5)
-        .attr('height',drawing_params.board_height)
-        .attr('fill',status_color['idle'])
-        .attr('rx',5);
-   	board_g.append('text')
-	   	.attr('x',(0.9 * init_width - (menu_btn_num - 1) * 5) / 2)
-	   	.attr('y',drawing_params.board_height / 2)
-	   	.attr('text-anchor','middle')
-	   	.attr('baseline-shift','-24%')
-	   	.attr('fill','white')
-	   	.text('Idle');
-}
-
-function drawInit(rt_info,i){
-	rt_colors = chroma.scale(['#009999','#ffcc00']).mode('lch').colors(rt_num);
-
-	if(rt_num<5){
-		drawing_params.dfg_height = init_height - 120 - 2 * (drawing_params.board_height + drawing_params.gap);
-	}
-	else{
-		drawing_params.dfg_height = (init_height - 120 - (drawing_params.board_height + drawing_params.gap) - drawing_params.gap)/2 - (drawing_params.board_height + drawing_params.gap);	
-	}
-	drawing_params.pool_margin = 0.005*Math.max(init_height,init_width);
-	drawing_params.layer_margin = 1.5*drawing_params.pool_margin;
-	drawing_params.nodes_spacing = 0.025*drawing_params.pool_margin;
-	if(rt_num<5){
-		drawing_params.board_width = (0.9*init_width - (menu_btn_num - 1) * 5 - (rt_num - 1)*drawing_params.gap)/rt_num;
-		drawing_params.dfg_width = drawing_params.board_width;
-	}
-	else{
-		drawing_params.board_width = (0.9*init_width - (menu_btn_num - 1) * 5 - (Math.ceil(rt_num/2) - 1)*drawing_params.gap)/Math.ceil(rt_num/2);
-		drawing_params.dfg_width = drawing_params.board_width;
-	}
-
-	var rt_board = d3.select('svg')
-		.append('g')
-		.attr('transform',function(){
-			if(rt_num<5)
-				return 'translate('+i*(drawing_params.board_width+drawing_params.gap)+','+(drawing_params.board_height+drawing_params.gap)+')';
-			else{
-				if(i<Math.ceil(rt_num/2)){
-					return 'translate('+i*(drawing_params.board_width+drawing_params.gap)+','+(drawing_params.board_height+drawing_params.gap)+')';
-				}
-				else{
-					if(rt_num%2==1){
-						var sec_layer_w = drawing_params.board_width*Math.ceil(rt_num/2)/parseInt(rt_num/2);
-						var offset_y = 2*(drawing_params.board_height+drawing_params.gap)+2*(drawing_params.dfg_height+drawing_params.gap);
-						return 'translate('+(i%(Math.ceil(rt_num/2)))*(sec_layer_w+drawing_params.gap)+','+offset_y+')';
-					}
-					else{
-						var offset_y = 2*(drawing_params.board_height+drawing_params.gap)+2*(drawing_params.dfg_height+drawing_params.gap);
-						return 'translate('+(i%(rt_num/2))*(drawing_params.board_width+drawing_params.gap)+','+offset_y+')';
-					}
-				}
-			}
-		})
-		.attr('class','rt_board')
-		.attr('id','rt_board_'+i);
-	rt_board.append('rect')
-		.attr('id','rt_rect_'+i)
-		.attr('opacity',0)
-		.attr('height',0)
-		.attr('width',0)
-		.attr('fill',rt_colors[i])
-		.attr('rx',5)
-		.attr('height',drawing_params.board_height)
-		.attr('width',function(){
-			if(rt_num<5||rt_num>=5&&i<Math.ceil(rt_num/2))
-				return drawing_params.board_width;
-			else{
-				if(rt_num%2==1)
-					return drawing_params.board_width*Math.ceil(rt_num/2)/parseInt(rt_num/2);
-				else
-					return drawing_params.board_width;
-			}
-		})
-		.transition()
-		.duration(500)
-		.attr('opacity',1);
-	rt_board.append('text')
-		.attr('font-weight','bold')
-		.attr('fill','white')
-		.attr('x',20)
-		.attr('y',drawing_params.board_height/2)
-		.attr('baseline-shift','-24%')
-		.html('RT-'+rt_info[i].id);
-	rt_board.append('text')
-		.attr('fill','white')
-		.attr('class','ip_n_status')
-		.attr('id','ip_n_status_'+i)
-		.attr('x',function(){
-			if(rt_num<5||rt_num>=5&&i<Math.ceil(rt_num/2))
-				return 70+(drawing_params.board_width - 20 - 70)/2;
-			else{
-				if(rt_num%2==1){
-					var sec_layer_w = drawing_params.board_width*Math.ceil(rt_num/2)/parseInt(rt_num/2);
-					return 70+(sec_layer_w - 20 - 70)/2;
-				}
-				else
-					return 70+(drawing_params.board_width - 20 - 70)/2;
-			}
-		})
-		.attr('y',drawing_params.board_height/2)
-		.attr('text-anchor','middle')
-		.attr('baseline-shift','-24%')
-		.html(rt_info[i].ip+'&ensp;'+rt_info[i].status);
-	//dfg_pool
-	var rt_board = d3.select('svg')
-		.append('g')
-		.attr('transform',function(){
-			if(rt_num<5)
-				return 'translate('+i*(drawing_params.board_width+drawing_params.gap)+','+2*(drawing_params.gap+drawing_params.board_height)+')';
-			else{
-				if(i<Math.ceil(rt_num/2))
-					return 'translate('+i*(drawing_params.board_width+drawing_params.gap)+','+2*(drawing_params.gap+drawing_params.board_height)+')';
-				else{
-					if(rt_num%2==1){
-						var sec_layer_w = drawing_params.board_width*Math.ceil(rt_num/2)/parseInt(rt_num/2);
-						var offset_y = 2*(drawing_params.board_height+drawing_params.gap)+drawing_params.dfg_height+drawing_params.gap;
-						return 'translate('+(i%(Math.ceil(rt_num/2)))*(sec_layer_w+drawing_params.gap)+','+offset_y+')';
-					}
-					else{
-						var offset_y = 2*(drawing_params.board_height+drawing_params.gap)+drawing_params.dfg_height+drawing_params.gap;
-						return 'translate('+(i%(rt_num/2))*(drawing_params.board_width+drawing_params.gap)+','+offset_y+')';
-					}
-				}
-			}
-		})
-		.attr('class','dfg')
-		.attr('id','pool_'+i);
-	rt_board.append('rect')
-		.attr('opacity',0)
-		.attr('rx',10)
-		.attr('height',0)
-		.attr('width',0)
-		.attr('fill','#888')
-		.transition()
-		.duration(500)
-		.attr('opacity',0.2)
-		.attr('height',drawing_params.dfg_height)
-		.attr('width',function(){
-			if(rt_num<5||rt_num>=5&&i<Math.ceil(rt_num/2))
-				return drawing_params.board_width;
-			else{
-				if(rt_num%2==1)
-					return drawing_params.board_width*Math.ceil(rt_num/2)/parseInt(rt_num/2);
-				else
-					return drawing_params.board_width;
-			}
-		});
-}
-
-function node_x(d, i, runtime_id, num) {
-    var pos_index = d['thread_id'] - 1;
-    if(rt_num<5||rt_num>=5&&rt_num%2==0){
-        var val = ((drawing_params.dfg_width - drawing_params.pool_margin*2)/num)*(pos_index+0.5)+drawing_params.pool_margin;
-        return val;
-    }else{
-        if(runtime_id<Math.ceil(rt_num/2))
-            return ((drawing_params.dfg_width - drawing_params.pool_margin*2)/num)*(pos_index+0.5)+drawing_params.pool_margin;
-        else{
-            var sec_layer_w = drawing_params.dfg_width*Math.ceil(rt_num/2)/parseInt(rt_num/2);
-            return ((sec_layer_w - drawing_params.pool_margin*2)/num)*(pos_index+0.5)+drawing_params.pool_margin;
+    submit_selected_dfg() {
+        if (this.ui.selected_dfg != null) {
+            this.dfg_selected = true;
+            socket.emit('selected_dfg', this.ui.selected_dfg);
+            this.ui.hide_dfg_list();
+        } else {
+            this.ui.show_error("Please select DFG file first");
         }
     }
 }
 
-function node_y(type_num, type, types) {
-    return (drawing_params.dfg_height - drawing_params.pool_margin)/type_num*(typeMapping(type,types)+0.5)+drawing_params.pool_margin; 
-}
 
-function node_mouseover(d, radius) {
-    d3.select(`#node_label_${d.id}`)
-        .transition("mouseover")
-        .duration(200)
-        .attr("opacity", 1);
+class UI {
 
-    d3.select(`#node_${d.id}`)
-        .transition("mouseover")
-        .duration(200)
-        .attr("r", radius*1.1);
-    
-    d3.selectAll('.outgoing-' + d.id).transition("highlight").attr('opacity',1);
-}
+    constructor() {
 
-function node_mouseout(d, radius) {
-    d3.select(`#node_label_${d.id}`)
-        .transition("mouseover")
-        .duration(200)
-        .attr("opacity", 0);
+        this._msu_types = [];
+        this._rts= [];
+        this._msus = [];
+        this._routes = [];
+        this.app_name = "";
 
-    d3.select(`#node_${d.id}`)
-        .transition("mouseover")
-        .duration(200)
-        .attr("r", radius);
-    
-    d3.selectAll('.outgoing-' + d.id).transition("highlight").attr('opacity',0.2);
-}
-    
+        this.dfg_params = {
+            margin: 10,
+            spacing: 10,
+            rt_status_height: 50
+        };
 
-function drawNodesByType(selection,classified_data,radius,type,num,runtime_id,index,types,mode){
-    var type_num = types.length;
-    if(document.getElementById('box_'+type+"_"+runtime_id)==null){
-        var box = selection.append('rect')
-            .attr("x",drawing_params.pool_margin)
-            .attr("y",function(){
-                return (drawing_params.dfg_height - drawing_params.pool_margin)/type_num*typeMapping(type,types)+drawing_params.pool_margin+0.5*drawing_params.layer_margin;
-            })
-            .attr("width",function(){
-            	if(rt_num<5||rt_num>=5&&rt_num%2==0)
-                    return drawing_params.dfg_width - (drawing_params.pool_margin*2);
-                else{
-                	if(runtime_id<Math.ceil(rt_num/2))
-                        return drawing_params.dfg_width - (drawing_params.pool_margin*2);
-                	else{
-						var sec_layer_w = drawing_params.dfg_width*Math.ceil(rt_num/2)/parseInt(rt_num/2);
-						return sec_layer_w - (drawing_params.pool_margin*2);
-                	}
-                }
-            })
-            .attr("height",function(){
-                return (drawing_params.dfg_height - drawing_params.pool_margin)/type_num - drawing_params.layer_margin;
-            })
-            .attr('id','box_'+type+"_"+runtime_id)
-            .attr("stroke","#aaa")
-            .attr("stroke-width",2)
-            .attr("stroke-dasharray", "4,4")
-            .attr("fill-opacity",0)
-            .attr('opacity',0.4);
+        this.runtime_dimensions = [1, 1];
+
+        this.statuses = {
+            idle: '#006699',
+            starting: '#33aa66',
+            running: '#00cc66',
+            stopping: '#ffcc00'
+        }
+
+        this.legend_visible = false;
+
+        this.msu_radius = 15;
+        this.msu_colors = ["#3957ff", "#d3fe14", "#c9080a", "#fec7f8", "#0b7b3e", "#0bf0e9", "#c203c8", "#fd9b39", "#888593", "#906407", "#98ba7f", "#fe6794", "#10b0ff", "#ac7bff", "#fee7c0", "#964c63", "#1da49c", "#0ad811", "#bbd9fd", "#fe6cfe", "#297192", "#d1a09c", "#78579e", "#81ffad", "#739400", "#ca6949", "#d9bf01", "#646a58", "#d5097e"];
+
+        this.default_dfg = 'Select a dfg';
+
+        this.draw_menu();
+        this.resize_dfg();
+        $(window).on('resize', this.resize_dfg.bind(this));
     }
 
-    var node = selection.selectAll(".node_"+type)
-            .data(classified_data[runtime_id][type]);
+    reset() {
+        this.routes = [];
+        this.msus = [];
+        this.runtimes = [];
+        this.msu_types = [];
+    }
 
-    node.enter().append("circle")
-            .attr('class','node node_'+type+' node_rt_'+runtime_id)
-            .attr("id", function(d){
-                return "node_" + d.id;
+    get menu_height() {
+        return 70;
+    }
+
+    toggle_legend() {
+        if (this.legend_visible) {
+            d3.select('#legend_toggle')
+                .html('&#10097;')
+                .transition()
+                .duration(500)
+                .style('left', '0px')
+            d3.select('#legend_board')
+                .transition()
+                .duration(500)
+                .style('left', '-120px');
+            this.legend_visible = false;
+        } else {
+            d3.select('#legend_toggle')
+                .html('&#10096;')
+                .transition()
+                .duration(500)
+                .style('left', '120px')
+            d3.select('#legend_board')
+                .transition()
+                .duration(500)
+                .style('left', '0px')
+            this.legend_visible = true;
+        }
+    }
+
+    draw_menu() {
+        // TOP MENU BUTTONS
+        const START_COLOR = '#ff99bb';
+        const END_COLOR = '#009999';
+
+        var menu_btns = d3.select('#top_menu').selectAll('button');
+
+        var menu_colors = chroma.scale([START_COLOR, END_COLOR])
+                            .mode('lch')
+                            .colors(menu_btns.size());
+
+        const ORIG_WIDTH = 22.5; // vw
+
+        const MENU_HEIGHT = 70 // px
+        const ORIG_HEIGHT = `${this.menu_height}px`; // px
+        const SELECTED_HEIGHT = `${MENU_HEIGHT+10}px` // px
+
+        menu_btns.style('margin-left', (d, i) => { 
+                      return 5 + ORIG_WIDTH * i + 'vw'; 
+                  }).style('background-color', (d, i) => {
+                      return menu_colors[i];
+                  }).style('width', ORIG_WIDTH + 'vw')
+                  .style('height', ORIG_HEIGHT)
+                  .on('mouseover', function (d, i) {
+                       d3.select(this).transition()
+                                      .duration(500)
+                                      .style('z-index', 1000)
+                                      .style('height', SELECTED_HEIGHT);
+                  }).on('mouseout', function (d, i) {
+                       d3.select(this).transition()
+                                      .duration(500)
+                                      .style('z-index', 10)
+                                      .style('height', ORIG_HEIGHT);
+                  });
+    }
+
+    get svg_width() {
+        var container = d3.select('svg').node().parentNode.parentNode;
+
+        return 0.9 * $(container).width();
+    }
+
+    get svg_height() {
+        return $(window).height() - 100;
+    }
+
+    get dfg_height() {
+        return this.svg_height - this.menu_height;
+    }
+
+    get dfg_width() {
+        return this.svg_width;
+    }
+
+    get runtime_height() {
+        return (this.dfg_height - this.status_height) / this.runtime_dimensions[0];
+    }
+
+    get status_height() {
+        return 40;
+    }
+
+    get runtime_width() {
+        return this.dfg_width / this.runtime_dimensions[1];
+    }
+
+
+    resize_dfg() {
+        d3.select('#dfg_svg')
+            .attr('width', this.svg_width)
+            .attr('height', this.svg_height + 50)
+            .attr('preserveAspectRatio', 'xMinYMin meet')
+            .attr('viewBox', `0 0 ${this.svg_width} ${this.svg_height}`);
+
+        d3.select('#dedos_status rect')
+            .attr('width', this.svg_width)
+            .attr('height', this.status_height);
+
+        d3.select('#dedos_status text')
+            .attr('x', this.svg_width / 2)
+            .attr('y', this.status_height * .9)
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'white');
+
+        d3.select('#dedos_appname')
+            .attr('x', this.svg_width / 2)
+            .attr('y', this.status_height * .4)
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'white');
+
+        d3.select('#dfg')
+            .attr('transform', `translate(0, ${this.status_height})`);
+
+        d3.selectAll('.rt_bg_rect')
+            .attr('height', this.runtime_height - this.dfg_params.rt_status_height);
+
+        d3.selectAll('.msu_group')
+            .attr('transform', (d) => {
+                return 'translate(' +
+                    (this.rt_thread_location(d.thread_id, d.runtime_id) - this.msu_radius / 2) + ',' + 
+                     this.rt_type_location(d.type_id) + ')'})
+
+
+        d3.selectAll('.route')
+            .attr('d', (d) => {
+                var start = this.msu_location(d.src);
+                var end = this.msu_location(d.dst);
+                var mid = [(start[0] + end[0]) / (2), (start[1] + end[1]) / 2];
+                return `M ${start[0]} ${start[1]}` +
+                       `Q ${start[0]} ${mid[1]} ${mid[0]} ${mid[1]}` +
+                       `Q ${end[0]} ${mid[1]} ${end[0]} ${end[1]}`;
             })
-            .attr('fill',function(){
-        	    return msu_color[typeMapping(type,types)];
+
+        var RT_STATUS_HEIGHT = this.dfg_params.rt_status_height;
+
+        d3.selectAll('.rt_label')
+            .attr('x', this.runtime_width / 2)
+            .attr('y', (d) => { return this.runtime_status_location(d.id) + RT_STATUS_HEIGHT / 3})
+
+        d3.selectAll('.rt_status')
+            .attr('x', this.runtime_width / 2)
+            .attr('y', (d) => { return this.runtime_status_location(d.id) + RT_STATUS_HEIGHT * 2/3})
+
+        d3.selectAll('.rt_label_rect')
+            .attr('y', (d) => {return this.runtime_status_location(d.id)})
+            .attr('height', RT_STATUS_HEIGHT) 
+            .attr('width', this.runtime_width)
+
+        d3.selectAll('.rt_bg_rect')
+            .attr('height', this.runtime_height)
+            .attr('width', this.runtime_width);
+
+        d3.selectAll('.runtime_group')
+            .attr('transform', (d, i) => {
+                var rt_loc = this.runtime_location(d.id);
+                return `translate(${rt_loc[0]},${rt_loc[1]})`});
+        
+
+        this.msu_types = this._msu_types;
+    }
+
+
+    refresh() {
+        this.app = this.app;
+    }
+
+    set msu_types(types) {
+        this._msu_types = types;
+
+        this.type_indices = {};
+        this.type_colors = {};
+        for (var i = 0; i < types.length; i++) {
+            this.type_indices[types[i].id] = i;
+            this.type_colors[types[i].id] = this.msu_colors[i];
+        }
+
+        var msu_radius = this.msu_radius;
+        var type_colors = this.type_colors;
+
+        var size_legend_text = function(legend_g) {
+            legend_g.selectAll('.legend_msu_text')
+                .attr('x', msu_radius * 2 + 2)
+                .attr('y', msu_radius + 5)
+        }
+
+        var add_legend_text = function(legend_g) {
+            legend_g.append('text')
+                .attr('class', (d) => { return 'legend_msu_text';})
+                .text((d)=> { return d.name})
+                .attr('dominant-baseline', 'central')
+                .attr('font-weight', 'bold')
+                .style('fill', 'white')
+            size_legend_text(legend_g)
+        }
+
+        var size_legend_circle = function(legend_g) {
+            legend_g.select('.legend_msu')
+                .attr('r', msu_radius)
+                .attr('cx', msu_radius)
+                .attr('cy', msu_radius + 5)
+        }
+
+        var add_legend_circle = function(legend_g) {
+            legend_g.append('circle')
+                .attr('class', (d) => { return `legend_msu msu_type_${d.id}`})
+                .attr('fill', (d) => { return type_colors[d.id]})
+                .attr('stroke', '#aaa')
+                .attr('stroke-width', 1);
+            size_legend_circle(legend_g);
+        }
+
+
+        d3.select('#legend_board')
+            .attr('height',(this.type_height + this.dfg_params.spacing) * Math.max(types.length, 1));
+
+        var data = d3.select('#legend_board').selectAll('g').data(types, (d) => {return d.id});
+        data
+            .attr('transform',(d,i) => {
+                return `translate(0, ${(this.type_height + this.dfg_params.spacing) * i})`})
+            .call(size_legend_circle)
+            .call(size_legend_text);
+        data.enter()
+            .append('g')
+            .attr('class', 'legend_group msu_type')
+            .attr('transform',(d,i) => {
+                return `translate(0, ${(this.type_height + this.dfg_params.spacing) * i})`})
+            .call(add_legend_circle)
+            .call(add_legend_text);
+        data.exit()
+            .remove()
+
+        d3.selectAll('.legend_group')
+            .on('mouseover', (d) => {
+                d3.selectAll(`.msu_label_type_${d.id}`)
+                    .transition('mouseover')
+                    .duration(200)
+                    .attr('opacity', 1)
+
+                d3.selectAll(`.msu_type_${d.id}`)
+                    .transition('mouseover')
+                    .duration(200)
+                    .attr('r', msu_radius * 1.1);
+                d3.selectAll(`.route_from_type_${d.id}`).transition('highlight').attr('opacity', 1);
+            }).on('mouseout', (d) => {
+                d3.selectAll(`.msu_label_type_${d.id}`)
+                    .transition('mouseover')
+                    .duration(200)
+                    .attr('opacity', 0)
+
+                d3.selectAll(`.msu_type_${d.id}`)
+                    .transition('mouseover')
+                    .duration(200)
+                    .attr('r', msu_radius * 1);
+                d3.selectAll(`.route_from_type_${d.id}`).transition('highlight').attr('opacity', .2);
+            });
+
+
+    }
+
+    get type_height() {
+        return (this.runtime_height - this.dfg_params.margin * 2 - this.dfg_params.rt_status_height - this.msu_radius) /
+            Math.max(this._msu_types.length, 1);
+    }
+
+    runtime_location(rt_id) {
+        var i = this.rt_indices[rt_id];
+        var x_loc = i % this.runtime_dimensions[1];
+        var y_loc = Math.floor(i / this.runtime_dimensions[1]);
+        return [this.runtime_width * x_loc, this.runtime_height * y_loc];
+    }
+
+    runtime_status_location(rt_id) {
+        if (Math.floor((this.rt_indices[rt_id]) / this.runtime_dimensions[1]) % 2 == 0) {
+            return 0;
+        } else {
+            return this.runtime_height + this.dfg_params.rt_status_height;
+        }
+    }
+
+    set runtimes(rts) {
+
+        const RT_STATUS_HEIGHT = this.dfg_params.rt_status_height;
+
+        this._rts = rts;
+        this.rt_indices = {};
+        for (var i = 0; i < rts.length; i++) {
+            this.rt_indices[rts[i].id] = i;
+        }
+
+        if (rts.length < 5) {
+            this.runtime_dimensions = [1, rts.length];
+        } else {
+            this.runtime_dimensions = [2, Math.floor((rts.length+1)/2)];
+        }
+
+        var runtime_width = this.runtime_width;
+        var runtime_height = this.runtime_height;
+	    var rt_colors = chroma.scale(['#009999','#ffcc00']).mode('lch').colors(rts.length);
+
+        var rt_status_loc = this.runtime_status_location.bind(this);
+
+        var set_rt_label_loc = function(rt_group) {
+            rt_group
+                .select('.rt_label')
+                .attr('x', runtime_width / 2)
+                .attr('y', (d) => { return rt_status_loc(d.id) + RT_STATUS_HEIGHT / 3})
+        }
+
+        var add_rt_label = function(rt_group) {
+            rt_group.append('text')
+                .attr('font-weight', 'bold')
+                .attr('class', 'rt_label')
+                .attr('fill', 'white')
+                .attr('text-anchor', 'middle')
+                .text((d, i) => {return d.ip})
+                .attr('opacity', 0)
+                .transition()
+                .duration(500)
+                .attr('opacity', 1);
+
+            set_rt_label_loc(rt_group)
+        };
+
+        var set_rt_status_loc = function(rt_group) {
+            rt_group
+                .select('.rt_status')
+                .attr('x', runtime_width /2) 
+                .attr('y', (d) => { return rt_status_loc(d.id) + RT_STATUS_HEIGHT * 2 / 3})
+                .text((d, i) => {return d.status})
+        }
+
+        var add_rt_status = function(rt_group) {
+            rt_group.append('text')
+                .attr('fill', 'white')
+                .attr('class', 'rt_status')
+                .attr('id', (d, i) => { return `rt_status_${i}`})
+                .attr('text-anchor', 'middle')
+                .attr('opacity', 0)
+                .transition()
+                .duration(500)
+                .attr('opacity', 1);
+            set_rt_status_loc(rt_group);
+        }
+
+        var set_rt_rect_loc = function(rt_group) {
+            rt_group
+                .select('.rt_label_rect')
+                .attr('height', RT_STATUS_HEIGHT) 
+                .attr('width', runtime_width)
+                .attr('y', (d) => {return rt_status_loc(d.id)})
+        };
+
+
+        var add_rt_status_and_label = function(rt_group) {
+            rt_group.append('rect')
+                .attr('class', 'rt_label_rect')
+                .attr('id', (d, i) => { return `rte_label_rect_${d.id}`; })
+                .attr('fill', (d, i) => { return rt_colors[i]; })
+                .attr('rx', 5)
+                .attr('opacity', 0)
+                .transition()
+                .duration(500)
+                .attr('opacity', 1);
+
+            set_rt_rect_loc(rt_group);
+            rt_group.call(add_rt_status);
+            rt_group.call(add_rt_label);
+        };
+
+        var set_rt_dfg_bg_size = function(rt_group) {
+            rt_group
+                .select('.rt_bg_rect')
+                .attr('height', runtime_height)
+                .attr('width', runtime_width);
+        }
+
+        var add_rt_dfg_bg = function(rt_group) {
+            rt_group.append('rect')
+                .attr('class', 'rt_bg_rect')
+                .attr('rx', 10)
+                .attr('opacity', 0)
+                .transition()
+                .duration(500)
+                .attr('opacity', 0.2)
+            
+            set_rt_dfg_bg_size(rt_group)
+        };
+
+        var msu_types = this._msu_types;
+
+        var type_height = this.type_height;
+        var params = this.dfg_params;
+
+        var d3_rts = d3.select('#dfg').selectAll('g .runtime_group').data(rts,
+                function(d) { return d.id})
+
+        d3_rts
+            .transition()
+            .duration(1000)
+            .attr('transform', (d, i) => {
+                var rt_loc = this.runtime_location(d.id);
+                return `translate(${rt_loc[0]},${rt_loc[1]})`})
+            .call(set_rt_rect_loc)
+            .call(set_rt_status_loc)
+            .call(set_rt_label_loc)
+            .call(set_rt_dfg_bg_size)
+
+        d3_rts.select('.msu_board')
+            .attr('transform', `translate(0, ${RT_STATUS_HEIGHT})`)
+
+        d3_rts.enter()
+            .append('g')
+                .attr('class', 'runtime_group')
+                .attr('transform', (d, i) => {
+                    var rt_loc = this.runtime_location(d.id);
+                    return `translate(${rt_loc[0]},${rt_loc[1]})`})
+                .attr('id', (d, i) => {return `rt_group_${d.id}`})
+                .call(add_rt_status_and_label)
+                .append('g')
+                    .attr('class', 'msu_board')
+                    .attr('id', (d, i) => {return `msu_board_${d.id}`;})
+                    .attr('transform', `translate(0, ${RT_STATUS_HEIGHT})`)
+                    .call(add_rt_dfg_bg)
+
+
+        var exiting_rts = d3_rts.exit();
+
+        exiting_rts.selectAll('rect')
+            .transition()
+            .duration(1000)
+            .attr('opacity', 0)
+            .remove();
+
+        exiting_rts.selectAll('text')
+            .transition()
+            .duration(1000)
+            .attr('opacity', 0)
+            .remove();
+
+        exiting_rts.selectAll('g')
+            .selectAll('rect')
+            .transition()
+            .duration(1000)
+            .attr('opacity', 0)
+            .remove();
+
+        exiting_rts.transition().delay(1000).remove();
+
+    }
+
+    rt_type_location(type_id) {
+        var i = this.type_indices[type_id];
+        return (this.type_height + this.dfg_params.spacing) * (i+.5);
+    }
+
+    rt_thread_location(thread_id, rt_id) {
+        return thread_id * (this.thread_width(rt_id));
+    }
+
+    thread_width(rt_id) {
+        return (this.runtime_width - this.msu_radius) / this._rts[this.rt_indices[rt_id]].threads;
+    }
+
+    get thread_spacing() {
+        return 10;
+    }
+
+    fill_runtime_msus(rt_id, msus) {
+        var thread_width = this.thread_width(rt_id);
+        var thread_spacing = this.thread_spacing;
+        var type_colors = this.type_colors;
+        var msu_radius = this.msu_radius;
+
+        var add_msu_circle = function(msu_group) {
+            var msu = msu_group.append('circle');
+
+            msu.attr('class', (d) => {return `msu msu_type_${d.type_id} msu_${d.id}`})
+                .attr('id', (d) => {return `msu_${d.id}`})
+                .attr('fill', (d) => {return type_colors[d.type_id]})
+                .attr('stroke', '#aaa')
+                .attr('stroke-width', 1)
+                .attr('cx', 0)
+                .attr('cy', 0)
+                .attr('r', msu_radius)
+                .attr('opacity', 0)
+                .transition('msu_fade')
+                .duration(500)
+                .attr('opacity', 1);
+        }
+
+        var remove_msu_circle = function(msu_group) {
+            msu_group.selectAll('circle')
+                .transition("msu_fade")
+                .duration(500)
+                .attr('opacity', 0)
+                .remove();
+        }
+
+        var add_msu_text = function(msu_group) {
+            msu_group.append('text')
+                .attr('class', (d) => {return `msu_label msu_${d.id} msu_label_type_${d.type_id}`})
+                .attr('id', (d) => { return `msu_label_${d.id}`})
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr('text-anchor', 'middle')
+                .attr('dominant-baseline', 'central')
+                .text((d) => { return d.id })
+                .attr('opacity', 0)
+                .attr('font-weight', 'bold')
+                .style('pointer-events', 'none')
+        }
+
+        var msus = d3.select(`#msu_board_${rt_id}`).selectAll('g .msu_group').data(msus,
+                (d) => { return d.id});
+
+        msus.transition()
+            .duration(1000)
+            .attr('transform', (d) => {
+                    return 'translate(' +
+                    (this.rt_thread_location(d.thread_id, d.runtime_id) - msu_radius / 2) + ',' +
+                    this.rt_type_location(d.type_id) + ')'})
+
+        msus.enter()
+            .append('g')
+                .attr('class', (d) => `msu_group msu_${d.id}`)
+                .attr('id', (d) => {return `msu_group_${d.id}`;})
+                .attr('transform', (d) => {
+                        return 'translate(' +
+                        (this.rt_thread_location(d.thread_id, d.runtime_id) - msu_radius / 2) + ',' +
+                        this.rt_type_location(d.type_id) + ')'})
+                .call(add_msu_circle)
+                .call(add_msu_text);
+
+        msus.exit()
+            .transition()
+            .call(remove_msu_circle)
+            .delay(1000)
+            .remove()
+
+        d3.selectAll('.msu_group').on('mouseover', (d) => {
+            d3.selectAll(`#msu_label_${d.id}`)
+                .transition('mouseover')
+                .duration(200)
+                .attr('opacity', 1)
+
+            d3.select(`#msu_${d.id}`)
+                .transition('mouseover')
+                .duration(200)
+                .attr('r', msu_radius * 1.1);
+
+            d3.selectAll(`.route_from_${d.id}`).transition('highlight').attr('opacity', 1);
+        });
+
+        d3.selectAll('.msu_group').on('mouseout', (d) => {
+            d3.select(`#msu_label_${d.id}`)
+                .transition('mouseover')
+                .duration(200)
+                .attr('opacity', 0)
+
+            d3.select(`#msu_${d.id}`)
+                .transition('mouseover')
+                .duration(200)
+                .attr('r', msu_radius);
+
+            d3.selectAll(`.route_from_${d.id}`).transition('highlight').attr('opacity', .2);
+        });
+    }
+
+    set msus(msus) {
+        this._msus = msus;
+        this.msu_runtimes = {};
+        this.msu_threads = {};
+        this.msu_type_ids = {};
+
+        // Initialize empty structure to hold msus by runtime/type
+        var by_runtime = {};
+        for (var i = 0; i < this._rts.length; i++) {
+            by_runtime[this._rts[i].id] = [];
+        }
+
+        // Include the MSUs
+        for (var i = 0; i < msus.length; i++) {
+            by_runtime[msus[i].runtime_id].push(msus[i]);
+            this.msu_runtimes[msus[i].id] = msus[i].runtime_id;
+            this.msu_threads[msus[i].id] = msus[i].thread_id;
+            this.msu_type_ids[msus[i].id] = msus[i].type_id;
+        }
+
+        for (var i = 0; i < this._rts.length; i++) {
+            var rt = this._rts[i];
+            this.fill_runtime_msus(rt.id, by_runtime[rt.id]);
+        }
+    }
+
+    msu_location(msu) {
+        var rt_loc = this.runtime_location(this.msu_runtimes[msu]);
+        return [this.rt_thread_location(this.msu_threads[msu], this.msu_runtimes[msu]) + rt_loc[0],
+                this.rt_type_location(this.msu_type_ids[msu]) + rt_loc[1] + this.dfg_params.rt_status_height];
+    }
+
+    set routes(routes) {
+        this._routes = routes;
+        var r = d3.select('#routes').selectAll('path').data(routes,
+                (d) => {return `${d.src}-${d.dst}`});
+
+        r.attr('d', (d) => {
+                var start = this.msu_location(d.src);
+                var end = this.msu_location(d.dst);
+                var mid = [(start[0] + end[0]) / (2), (start[1] + end[1]) / 2];
+                return `M ${start[0]} ${start[1]}` +
+                       `Q ${start[0]} ${mid[1]} ${mid[0]} ${mid[1]}` +
+                       `Q ${end[0]} ${mid[1]} ${end[0]} ${end[1]}`;})
+            .attr('stroke-dasharray', function() { return this.getTotalLength()} )
+            .attr('stroke-dashoffset', 0)
+
+        r.enter()
+            .append('path')
+            .attr('class', (d) => { return `route route_from_${d.src} route_from_type_${this.msu_type_ids[d.src]}`})
+            .attr('d', (d) => {
+                var start = this.msu_location(d.src);
+                var end = this.msu_location(d.dst);
+                var mid = [(start[0] + end[0]) / (2), (start[1] + end[1]) / 2];
+                return `M ${start[0]} ${start[1]}` +
+                       `Q ${start[0]} ${mid[1]} ${mid[0]} ${mid[1]}` +
+                       `Q ${end[0]} ${mid[1]} ${end[0]} ${end[1]}`;
             })
-            .attr('stroke',function(){
-                return '#ddd';
-            })
-            .attr('stroke-width',radius*0.25)
-            .attr('cx', function (d,i) {
-                return node_x(d, i, runtime_id, num);
-            })
-            .attr('cy', function () { 
-                return node_y(type_num, type, types);
-            })
-            .attr('r',radius)
-            .attr('opacity',0)
-            .transition("node_appearance")
+            .attr('stroke', '#dddddd')
+            .attr('opacity', 0.0)
+            .attr('stroke-dasharray', function() { return this.getTotalLength()} )
+            .attr('stroke-dashoffset', function() { return this.getTotalLength()})
+            .transition('appearance')
+            .duration(1000)
+            .attr('stroke-dashoffset', 0)
+            .attr('opacity', 0.2);
+
+        r.exit()
+            .transition()
+            .duration(1000)
+            .style('stroke-dashoffset', function() { return this.getTotalLength();})
+            .attr('opacity', 0)
+            .remove()
+    }
+
+    get selected_dfg() {
+        var selection = d3.select('#dfg_list').property('value');
+        if (selection != this.default_dfg) {
+            return selection;
+        }
+        return null;
+    }
+
+    set dfg_list(dfgs) {
+        var entries = ([this.default_dfg]).concat(dfgs);
+        d3.select('#dfg_list').selectAll('option').data(entries)
+            .enter()
+            .append('option')
+                .text((d) => {return d});
+    }
+
+    show_dfg_list() {
+        d3.select('#dfg_loader')
+            .style('display', 'inline')
+            .transition()
             .duration(500)
-            .attr('opacity',1)
+            .style('opacity', 1);
 
-    node.enter().append('text')
-        .attr('class', 'node_label')
-        .attr('id', function(d) {
-            return 'node_label_' + d.id;
-        })
-        .attr('x', function(d, i) {
-            return node_x(d, i, runtime_id, num);
-        })
-        .attr('y', function() {
-            return node_y(type_num, type, types);
-        })
-        .attr('text-anchor', 'middle')
-        .attr('dominant-baseline', 'central')
-        .text(function(d) {
-            return d.id;
-        })
-        .attr('opacity', 0)
-        .attr('font-weight', 'bold')
-        .style('pointer-events', 'none');
+    }
 
+    hide_dfg_list() {
+        d3.select('#dfg_loader')
+            .transition()
+            .duration(500)
+            .style('opacity', 0)
+            .style('display', 'none');
+    }
 
-    node.exit()
-    .transition("node_appearance")
-    .duration(500)
-    .attr('opacity',0)
-    .remove();
+    show_error(msg) {
+        d3.select('#error_txt')
+            .text(msg);
+        d3.select('#error_msg')
+            .style('display', 'inline')
+            .transition()
+            .duration(500)
+            .style('opacity', 1);
+    }
 
+    hide_error(msg) {
+        d3.select('#error_msg')
+            .transition()
+            .duration(500)
+            .style('opacity', 0)
+            .style('display', 'none');
+    }
 
+    set app_name(name) {
+        d3.select('#dedos_appname')
+            .text(name)
+    }
 
-    selection.selectAll(".node_"+type).on('mouseover', (d)=>{return node_mouseover(d, radius)});
-    selection.selectAll(".node_label").on('mouseover', (d)=>{return node_mouseover(d, radius)});
-            /*
-            function(d){
-        node_mouseover(d.id);
-        node = d3.select(this)
-            .transition("node_mouseover")
-            .duration("200")
-            .attr("r",radius*1.1);
-
-
-        //group = d3.select(this.parentNode);
-        //group.append('text')
-        //    .attr('x', node.attr('cx'))
-        //    .attr('y', node.attr('cy'))
-        //    .text(d.id)
-
-        d3.selectAll('.outgoing-' + d.id).transition("highlight").attr('opacity',1);
-    });*/
-
-    selection.selectAll(".node_"+type).on('mouseout', (d) => {return node_mouseout(d, radius)});
-    selection.selectAll(".node_label").on('mouseout', (d) => {return node_mouseout(d, radius)});
-}
-
-function drawLinks(links){
-	var svg = d3.select('svg').select('g');
-    var curveData = [];
-    //Links in dfg preprocess
-    links.forEach(function(e){
-        var src_node = d3.select('#node_'+e.source);
-        var parent_node = src_node.select(function(){return this.parentNode})
-        if (parent_node.empty()) {
-            return;
-        }
-        var src_translation = src_node.select(function(){return this.parentNode}).attr('transform');
-        src_translation = translateParse(src_translation);
-        var temp_s = {
-            "x":parseInt(d3.select('#node_'+e.source).attr("cx"))+parseInt(src_translation.x),
-            "y":parseInt(d3.select('#node_'+e.source).attr("cy"))+parseInt(src_translation.y),
-            "r":d3.select('#node_'+e.source).attr("r"),
-            "id":e.source
-        };
-        d3_node = d3.select("#node_" + e.target)
-        if (d3_node.empty()) {
-            return
+    set status(stat) {
+        if (stat in this.statuses) {
+            d3.select('#dedos_status').select('rect')
+                .transition()
+                .duration(500)
+                .attr('fill', this.statuses[stat]);
         }
 
-        className = d3.select("#node_"+e.target).attr('class');
-        className = className.substring((className.length-3),className.length);
-        var dst_node = d3.select('#node_'+e.target);
-        var dst_translation = dst_node.select(function(){return this.parentNode}).attr('transform');
-        dst_translation = translateParse(dst_translation);
-        var temp_t = {
-            "x":parseInt(d3.select('#node_'+e.target).attr("cx"))+parseInt(dst_translation.x),
-            "y":parseInt(d3.select('#node_'+e.target).attr("cy"))+parseInt(dst_translation.y),
-            "r":d3.select('#node_'+e.target).attr("r"),
-            "id":e.target
-        };
-        var temp = [temp_s,temp_t];
-        curveData.push(temp);
-    }); 
-    //Draw links in dfg
-    var link = d3.select('svg').select('g').selectAll(".link")
-            .data(curveData, (d) => { return d[0].id + "," + d[1].id });
-    
-    link.enter()
-        .append("path")
-        .attr("class", function(d){
-        	return "link outgoing-"+d[0].id;
-        })
-        .attr("d", function(d){
-            if(d[0].y>=d[1].y)
+        d3.select('#dedos_status').select('text')
+            .transition()
+            .duration(500)
+            .text(stat);
+    }
+
+    toggle_ctx_menu() {
+        if (this.ctx_menu_visible) {
+            d3.event.preventDefault();
+            this.remove_ctx_menu();
+        } else {
+            var d3_target = d3.select(d3.event.target);
+            // If it's not an MSU, do nothing
+            if (!d3_target.classed('msu')) {
                 return;
-            if(d[0].x==d[1].x){
-                return "M" + d[0].x + "," + (parseInt(d[0].y)+parseInt(d[0].r)) 
-                + "L" + d[0].x+ ","
-                + (parseInt(d[1].y) + d[0].y)/2 
-                + "L" + d[0].x + ","
-                + (parseInt(d[1].y) - parseInt(d[1].r));
+            } else {
+                d3.event.preventDefault();
+                var msu = d3_target.datum();
+
+                var canvas = d3.select('#dfg');
+                var msu_loc = this.msu_location(msu.id);
+
+                this.draw_ctx_menu(canvas,
+                              msu_loc[0],
+                              msu_loc[1],
+                              msu.id);
             }
-            else{
-                return "M" + d[0].x + "," + (parseInt(d[0].y) + parseInt(d[0].r))
-                + "T" + (parseInt(d[1].x)+d[0].x)/2 + "," + (0.4*parseInt(d[1].y)+0.6*d[0].y)
-                + "T" + d[1].x + "," + (parseInt(d[1].y) - parseInt(d[1].r));   
-            }
-        })
-        .attr('stroke','#ddd')
-        .attr('opacity',0.0)
-        .transition("appearance")
-        .duration(500)
-        .attr('opacity', 0.2);
-
-    link.exit()
-        .transition("appearance")
-	    .duration(500)
-	    .attr('opacity',0)
-	    .remove();
-
-    link.transition("appearance")
-    	.attr('class',function(d){
-        	return "link outgoing-"+d[0].id;
-    	})
-        .duration(500)
-        .attr("d", function(d){
-            if(d[0].y>=d[1].y)
-                return;
-            if(d[0].x==d[1].x){
-                return "M" + d[0].x + "," + (parseInt(d[0].y)+parseInt(d[0].r)) 
-                + "L" + d[0].x+ ","
-                + (parseInt(d[1].y) + d[0].y)/2 
-                + "L" + d[0].x + ","
-                + (parseInt(d[1].y) - parseInt(d[1].r));
-            }
-            else{
-                return "M" + d[0].x + "," + (parseInt(d[0].y) + parseInt(d[0].r))
-                + "T" + (parseInt(d[1].x)+d[0].x)/2 + "," + (0.4*parseInt(d[1].y)+0.6*d[0].y)
-                + "T" + d[1].x + "," + (parseInt(d[1].y) - parseInt(d[1].r));   
-            }
-    });
-
-
-}
-
-//Assistance parsing function
-function translateParse(str){
-    var res = {
-        x:0,
-        y:0
-    };
-    var temp = str;
-    var translate_str = "translate(";
-    res.x = str.substring(translate_str.length,str.indexOf(','));
-    res.y = str.substring(str.indexOf(',')+1,str.length-1);
-    return res;
-}
-
-function typeMapping(type,types){
-	for(var i = 0;i<types.length;i++){
-		if(types[i].type==type)
-			return types[i].order;
-	}
-	return -1;
-}
-
-function getIpAddress(str){
-	var pos = -1;
-	rt_status.forEach(function(e){
-    	pos = Math.max(pos,str.indexOf(e));
-	});
-	return str.substring(0,pos-1);
-}
-
-socket.on('connect',function(){
-	console.log('Connect successfully');
-	if(document.getElementById('status_board')!=null){
-		clearInterval(disc_timer);
-		d3.select('#status_board').select('rect')
-			.transition()
-			.duration(500)
-			.attr('fill',status_color['idle']);
-		d3.select('#status_board').select('text')
-			.transition()
-			.duration(500)
-			.text('Idle');
-		d3.select('svg').remove();
-		drawSVG();
-		$('.legend-wrapper').css('display','none');
-		$('.btn-content').css('display','none');
-		$('.content').remove();
-		state_flag = 0;
-	}
-});
-
-socket.on('dfg_files',function(data){
-	for(var i = 0;i<data.length;i++){
-		var str = "<option value='"+data[i]+"'>"+data[i]+"</option>";
-		$('select').append(str);
-	}
-});
-
-socket.on('error_msg',function(data){
-	$('#container').fadeIn(500);
-	$('#error_msg').css('display','block');
-	$('#warning_txt').text(data);
-});
-
-socket.on('rt_info',function(data){
-	rt_info = data;
-	d3.selectAll('.rt_board').remove();
-	d3.selectAll('.dfg').remove();
-	d3.selectAll('.content').remove();
-	d3.selectAll('.link').remove();
-	d3.selectAll('.ms_board').remove();
-	d3.selectAll('.machine_stat').remove();
-	rt_num = rt_info.length;
-	
-	for(var i = 0;i<rt_num;i++){
-		drawInit(rt_info,i);
-	}
-	var temp = [];
-	d3.selectAll('.rt_board').each(function(e){
-		temp.push(translateParse(d3.select(this).attr('transform')));
-	});
-	d3.selectAll('.rt_board').on('mouseover',function(d,i){
-		d3.select(this).select('rect')
-			.attr('opacity',1)
-			.transition()
-			.duration(100)
-			.attr('fill','#336699');
-	});
-	d3.selectAll('.rt_board').on('mouseout',function(d,i){
-		d3.select(this).select('rect')
-			.transition()
-			.duration(100)
-			.attr('fill',rt_colors[i]);
-	});
-});
-
-socket.on('dfg',function(data){
-	var nodes = data.nodes;
-	var links = data.links;
-	var classified_data = data.classified_data;
-
-
-	var types = data.types;
-	var mode = data.mode;
-	
-	filename = data.filename;
-	cores = data.cores;
-	radius = [];
-	type_code = [];
-	type_name = [];
-	types.forEach(function(e){
-		type_code.push(e['type']);
-		type_name.push(e['name']);
-	});
-
-	$('.legend-wrapper').css('display','block');
-	$('.btn-content').css('display','block');
-
-	if(mode == 'init'){
-		state_flag = 1;
-		d3.select('#status_board').select('text')
-			.transition()
-			.duration(500)
-			.text('Idle   ' + filename);
-	}
-	else{
-		state_flag = 3;
-		if(mode != 'normal')
-			launched_num = rt_info.length;
-		d3.select('#status_board').select('rect')
-			.transition()
-			.duration(500)
-			.attr('fill',status_color['running']);
-		d3.select('#status_board').select('text')
-			.transition()
-			.duration(500)
-			.text('Running    ' + filename);
-		var index = data;
-		for(var i = 0;i<rt_info.length;i++){
-			d3.select('#ip_n_status_'+i).html(function(){
-				var ip = rt_info[i].ip;
-				return ip + '&ensp;Launched'; 
-			});
-		}
-	}
-
-	//Draw all nodes and bounding box in dataflow graph
-    for(var j = 0;j<classified_data.length;j++){
-        var total_num = cores[j];
-        var type_num = types.length;
-        radius.push(Math.min(
-                    ((drawing_params.dfg_width - drawing_params.pool_margin*2)/total_num - drawing_params.nodes_spacing*2),
-                    ((drawing_params.dfg_height - drawing_params.pool_margin)/type_num - drawing_params.layer_margin)/2)
-                );
-        for(var i = 0;i<type_code.length;i++)
-            drawNodesByType(d3.select('#pool_'+j),classified_data,radius[j],type_code[i],total_num,j,i,types,mode);
+        }
     }
-    drawLinks(links);
-    if($('.content').length==0){
-    	for(var i = 0;i<type_name.length;i++){
-			var content = "<div class='content'><div class='valign'><div class='type-btn'></div><p>"+type_name[i].replace(' ', '<br/>')+"</p></div></div>";
-			$('#legend-wrapper-l').append(content);
-		}
-		$('.content').css('height',(60/type_name.length)+'vh');
-		$('.content').each(function(i,e){
-			console.log('executed');
-			$(e).css('top',5+i*(60/type_name.length)+'vh');
-		});
-		$('.type-btn').each(function(i,e){
-			$(e).css('background-color',msu_color[i]);
-		});
-		d3.selectAll('.type-btn').on('mouseover',function(d,i){
-			d3.selectAll('.node_'+type_code[i]).attr('r',function(){
-				var this_class = d3.select(this).attr('class');
-				var rt_ind = this_class.substring(this_class.indexOf('node_rt_') + 8);
-				console.log("Hover in rt index:"+rt_ind);
-				return 1.1*radius[rt_ind];
-			});
-		});
-		d3.selectAll('.type-btn').on('mouseout',function(d,i){
-			d3.selectAll('.node_'+type_code[i]).attr('r',function(){
-				var this_class = d3.select(this).attr('class');
-				var rt_ind = this_class.substring(this_class.indexOf('node_rt_') + 8);
-				console.log("Hover out rt index:"+rt_ind);
-				return radius[rt_ind];
-			});
-		});
+
+    remove_ctx_menu() {
+        if (this.ctx_menu_visible) {
+            d3.select('#ctx_menu').remove();
+            this.ctx_menu_visible = false;
+        }
     }
-});
 
-socket.on('launching',function(data){
-	var filename = data;
-	d3.selectAll('.ip_n_status').html(function(){
-		var str = d3.select(this).html().toString();
-		var ip = getIpAddress(str);
-		return ip + '&ensp;Launching'; 
-	});
-	d3.select('#status_board').select('rect')
-		.transition()
-		.duration(500)
-		.attr('fill',status_color['running']);
-	d3.select('#status_board').select('text')
-		.transition()
-		.duration(500)
-		.text('Running    '+filename);
-});
 
-socket.on('launched',function(data){
-	var index = data;
-	d3.select('#ip_n_status_'+index).html(function(){
-		var str = d3.select(this).html().toString();
-		var ip = getIpAddress(str);
-		return ip + '&ensp;Launched'; 
-	});
-	launched_num++;
-	console.log(launched_num);
-	if(launched_num == rt_num){
-		state_flag = 3;
-		socket.emit('all-launched','placeholder');
-	}
-});
+    draw_ctx_menu(canvas, x, y, id) {
+        this.ctx_menu_visible = true;
 
-socket.on('stop-finish',function(data){
-	var index = data;
-	console.log('STOP-SIGNAL:'+data);
+        const MENU_WIDTH = 70;
+        const MENU_HEIGHT = 60;
+        const MENU_ROUND = 10;
 
-    var selection;
-    if (index > 0) {
-        selection = d3.select("#ip_n_status_" + index);
-        launched_num--;
-    } else {
-        selection = d3.selectAll(".ip_n_status")
-        launched_num = 0;
+        const COLOR_OUT = 'rgba(255,255,255,.6)';
+        const COLOR_IN = 'rgba(255,255,255,1)';
+
+        var ctx_menu = canvas.append('g')
+                    .attr('id', 'ctx_menu')
+
+        ctx_menu.append('rect')
+             .attr('class', 'ctx_menu_bg')
+             .attr('width', MENU_WIDTH)
+             .attr('height', MENU_HEIGHT)
+             .attr('x', x)
+             .attr('y', y)
+             .attr('rx', MENU_ROUND)
+             .attr('ry', MENU_ROUND);
+
+        // Creating the CLONE button
+        var clone_group = ctx_menu.append('g');
+
+        var clone_rect = clone_group.append('rect')
+                     .attr('class', 'ctx_menu_button')
+                     .attr('width', MENU_WIDTH)
+                     .attr('height', MENU_HEIGHT/2)
+                     .attr('x', x)
+                     .attr('y', y)
+                     .attr('rx', MENU_ROUND)
+                     .attr('ry', MENU_ROUND);
+
+        clone_group.append('text')
+                       .attr('x', x + MENU_WIDTH / 2)
+                       .attr('y', y + MENU_HEIGHT / 4)
+                       .attr('text-anchor', 'middle')
+                       .attr('dominant-baseline', 'central')
+                       .text('Clone');
+
+        clone_group.on('mouseover', () => {
+            clone_rect.transition()
+                      .duration(200)
+                      .style('fill', COLOR_IN)
+        }).on('mouseout', () => {
+            clone_rect.transition()
+                      .duration(200)
+                      .style('fill', COLOR_OUT)
+        }).on('click', () => {
+            socket.emit('clone', id);
+            this.remove_ctx_menu();
+        });
+
+        // Creating the REMOVE button
+        var unclone_group = ctx_menu.append('g');
+
+        var unclone_rect = unclone_group.append('rect')
+                       .attr('class', 'ctx_menu_button')
+                       .attr('width', MENU_WIDTH)
+                       .attr('height', MENU_HEIGHT/2)
+                       .attr('x', x)
+                       .attr('y', y + MENU_HEIGHT/2)
+                       .attr('rx', MENU_ROUND)
+                       .attr('ry', MENU_ROUND);
+
+        unclone_group.append('text')
+                         .attr('x', x + MENU_WIDTH / 2)
+                         .attr('y', y + MENU_HEIGHT * .75)
+                         .attr('text-anchor', 'middle')
+                         .attr('dominant-baseline', 'central')
+                         .text('Remove');
+
+        unclone_group.on('mouseover', () => {
+            unclone_rect.transition()
+                        .duration(200)
+                        .style('fill', COLOR_IN);
+        }).on('mouseout', () => {
+            unclone_rect.transition()
+                        .duration(200)
+                        .style('fill', COLOR_OUT);
+        }).on('click', () => {
+            socket.emit('unclone', id);
+            remove_ctx_menu();
+        });
+
+        // Bring the parent node to the front
+        canvas.node().parentNode.appendChild(canvas.node());
     }
-    selection.html(function(){
-        var str = d3.select(this).html().toString();
-        var ip = getIpAddress(str);
-        return ip + '&ensp;Idle';
-    });
-	console.log("Remaining:"+launched_num);
-    // Index == -1 forces a reset
-	if(launched_num <= 0 ){
-		state_flag = 1;
-		d3.select('#status_board').select('rect')
-			.transition()
-			.duration(500)
-			.attr('fill',status_color['idle']);
-		d3.select('#status_board').select('text')
-			.transition()
-			.duration(500)
-			.text('Idle    '+filename);
-		$('.attack-board').remove();
-		socket.emit('stop-finish','placeholder')
-	}
-});
 
-socket.on('begin starting',function(data){
-	state_flag = 2;
-	var filename = data
-	d3.select('#status_board').select('rect')
-		.transition()
-		.duration(500)
-		.attr('fill',status_color['running']);
-	d3.select('#status_board').select('text')
-		.transition()
-		.duration(500)
-		.text('Running    '+filename);
-});
+}
 
-socket.on("disconnect", function(){
-    console.log("client disconnected from server");
-    d3.select('#status_board').select('rect')
-			.transition().duration(1000)
-			.attr('fill','#ff6666')
-			.transition().duration(1000)
-			.attr('fill','#ff3333')
-			.transition().duration(1000)
-			.attr('fill','#ff6666');
-    disc_timer = setInterval(function(){
-		d3.select('#status_board').select('rect')
-			.transition().duration(1000)
-			.attr('fill','#ff6666')
-			.transition().duration(1000)
-			.attr('fill','#ff3333')
-			.transition().duration(1000)
-			.attr('fill','#ff6666');
-    },3000);
-    d3.select('#status_board').select('text')
-		.transition()
-		.duration(500)
-		.text('Disconnect');
-});
+ui = new UI();
+var app = new Controller(ui);
 
+var open_load_dialog = app.open_load_dialog.bind(app);
+var start_dedos = app.start_dedos.bind(app);
+var stop_dedos = app.stop_dedos.bind(app);
+var reset_ui = app.reset.bind(app);
+var submit_dfg = app.submit_selected_dfg.bind(app);
+var close_loader = ui.hide_dfg_list.bind(ui);
+var hide_error = ui.hide_error.bind(ui);
+var toggle_legend = ui.toggle_legend.bind(ui);
+
+$('document').ready( app.force_reset );

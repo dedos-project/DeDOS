@@ -18,8 +18,17 @@ class DaemonApi():
         msg = DaemonMessage.configure_message(self.config)
         daemon.send_message(msg)
 
+    def take_action(self):
+        msg = DaemonMessage.act_message()
+        daemon.send_message(msg)
+
+    def send_through_daemon(self, message):
+        msg = DaemonMessage.send_message(message)
+        daemon.send_message(msg)
+    
     def start_daemon(self):
         daemon.init_dbscanner(self.config)
+        daemon.set_config(self.config)
         daemon.run()
 
     def connect_to_daemon(self):

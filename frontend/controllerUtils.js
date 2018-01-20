@@ -30,6 +30,7 @@ var close_cb;
 var uninit = function() {
     controller_init = false;
     connected = false;
+    dfg_socket.unmonitor();
 }
 
 /** Object to hold exported functions */
@@ -52,21 +53,22 @@ controller.init = function(ip, on_dfg, on_error, on_close) {
 
     var receive_buffer = '';
     var error_cnt = 0;
-    dfg_socket = new net.Socket();
 
+    dfg_socket = zmq.socket('sub');
     // On receipt of data from the controller
-    dfg_socket.on('data', function(data) {
+    dfg_socket.on('message', function(topic, message) {
+        connected = true;
         // Add to the received buffer, and attempt to parse
-        receive_buffer += data;
+        receive_buffer += message;
         parseUtils.parseDfg(receive_buffer).then(
             // If parsing works, call the dfg callback
             (dfg) => {
-                log.debug(`Received dfg of length ${data.length}`);
                 receive_buffer = '';
                 on_dfg(dfg);
                 error_cnt = 0;
             },
             // Otherwise add to the received buffer
+            // (this really shouldn't be a problem since switching to zmq)
             (err) => {
                 error_cnt+=1;
                 if (error_cnt > 5) {
@@ -84,8 +86,29 @@ controller.init = function(ip, on_dfg, on_error, on_close) {
         log.note(`Received ${data} from control socket`);
     });
 
+    var conn_str = `tcp://${controller_ip}:${config.gc_sock_port}`
+    dfg_socket.connect(conn_str);
+    dfg_socket.subscribe("");
+    log.info(`Listening for controller at ${conn_str}`);
+
     error_cb = on_error;
     close_cb = on_close;
+
+    dfg_socket.on('error', when_errored);
+    dfg_socket.on('close', when_closed);
+
+
+    // Try to connect to the control socket, but no worries if it can't happen
+    ctl_socket.on('error', (e) => {
+        log.warn(`Error on controller ctl socket: ${e}`);
+    });
+    try {
+        var conn_str =`tcp://${controller_ip}:${config.gc_ctl_port}`;
+        ctl_socket.connect(conn_str);
+        log.info(`Attempted connect to ${conn_str}`);
+    } catch(e) {
+        log.warn(`Failed to connect to controller ctl socket ${e}`);
+    }
 }
 
 /** When the connection to the controller closes */
@@ -100,40 +123,6 @@ var when_errored = function(err) {
     log.error(`Connection to controller errored:: ${err}`);
     uninit();
     error_cb(err);
-}
-
-/**
- * Connect to the global controller
- * @return Promise resolves on successful connection, rejects if cannot connect
- */
-controller.connect = function() {
-    // Try to connect to the control socket, but no worries if it can't happen
-    ctl_socket.on('error', (e) => {
-        log.warn(`Error on controller ctl socket: ${e}`);
-    });
-    try {
-        var conn_str =`tcp://${controller_ip}:${config.gc_ctl_port}`;
-        ctl_socket.connect(conn_str);
-        log.info(`Attempted connect to ${conn_str}`);
-    } catch(e) {
-        log.warn(`Failed to connect to controller ctl socket ${e}`);
-    }
-
-    return new Promise( (resolve, reject) => {
-        // Have to set the callback for errors to catch a failed connection, then overwrite later
-        dfg_socket.on('error', (err) => {
-            log.info(`Connection to controller failed: ${err}`);
-            reject(err);
-        });
-        log.debug(`Attempting to connect to controller at ${controller_ip}`);
-        dfg_socket.connect(config.gc_sock_port, controller_ip, () => {
-            log.info(`Connected to controller at ${controller_ip}:${config.gc_sock_port}`);
-            connected = true;
-            dfg_socket.on('error', when_errored);
-            dfg_socket.on('close', when_closed);
-            resolve();
-        });
-    });
 }
 
 /** Closes the conncetion to the global controller */
@@ -159,11 +148,14 @@ controller.is_connected = function() {
  * @param json_file DFG file to initialize controller with
  * @return Promise Resolves if attempt to start controller succeeded, otherwise rejects
  */
-controller.start = function(json_file) {
+controller.start = function(json_file, on_stop) {
+    dfg_socket.monitor(2000, 1);
     return new Promise( (resolve, reject) => {
         ssh.start("ctl", config.controller_cmd(json_file), () => {
                 log.warn("Controller stopped");
                 uninit();
+                if (on_stop) 
+                    on_stop();
             }).then(
             (output) => {
                 log.info(`Controller started with line: ${output}`);
@@ -182,10 +174,10 @@ controller.start = function(json_file) {
  * @return Promise Resolves if command to kill the controller succeeded
  */
 controller.kill = function() {
+    dfg_socket.monitor(2000, 1);
     return new Promise((resolve, reject) => {
         ssh.kill("ctl", config.gc_exec).then( () => {
             log.info("Killed controller");
-            uninit();
         }, (err) => {
             log.warn(`Error killing controller: ${err}`);
         });

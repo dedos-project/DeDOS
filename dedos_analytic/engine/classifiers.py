@@ -11,6 +11,7 @@ from  dedos_analytic.database.db_api import DbApi
 import feature_engineering as dfe
 import data_manipulation as ddm
 import json
+import os
 
 from ..logger import *
 
@@ -40,22 +41,11 @@ def dbscan_predict(model, X_new, metric=sp.spatial.distance.euclidean):
    # New datapoint is noise otherwise
    return -1
 
-def dbscan_predict2(model, tree, X):
-
-    dists, indices = tree.query(X)
-
-
-    labels = model.labels_[model.core_sample_indices_[indices]]
-
-    labels[dists > model.eps] = -1
-
-    unique_vals, counts = np.unique(labels, return_counts = True)
-    return dict(zip(unique_vals, counts))
 
 
 class DbScanner():
 
-    def __init__(self, config):
+    def __init__(self, config, log_dir = None):
         self.db = DbApi(config)
         self.metrics = config['msu_metrics']
         self.params = config['dbscan_params']
@@ -63,6 +53,48 @@ class DbScanner():
         self.ckdtrees = {}
         self.scalers = {}
         self.is_trained = False
+        self.last_classification = None
+
+        self.log_dir = log_dir
+        if log_dir is not None:
+            self.logs = {}
+        else:
+            self.logs = None
+
+    def write_classification(self, X, labels, label, epoch, core_indices=None): 
+        X['epoch']  = epoch
+        X['label']  = labels
+        if core_indices is None:
+            X['core'] = False
+        else:
+            mask = np.zeros_like(labels, dtype=bool)
+            mask[core_indices] = True
+            X['core'] = mask
+        with open(self.get_log(label, X), 'a') as f:
+            X.to_csv(f, index=False, header=False)
+
+    def dbscan_predict(self,  model, tree, X, type_name, epoch):
+        dists, indices = tree.query(X)
+
+        labels = model.labels_[model.core_sample_indices_[indices]]
+
+        labels[dists > model.eps] = -1
+
+        if self.log_dir is not None:
+            self.write_classification(X, labels, type_name, epoch)
+
+        unique_vals, counts = np.unique(labels, return_counts = True)
+        return dict(zip(unique_vals, counts))
+
+    def get_log(self, label, X):
+        if self.logs is None:
+            return None
+        if label not in self.logs:
+            self.logs[label] = os.path.join(self.log_dir, label)
+            with open(self.logs[label], 'w') as f:
+                f.write(','.join(X.columns) + '\n')
+        return self.logs[label]
+
 
     def train(self, start=0, end = None):
 
@@ -93,10 +125,17 @@ class DbScanner():
             if msu_type not in self.params:
                 log_error("Could not find params for msu type {}".format(msu_type))
                 continue
-            params = self.params[msu_type]
 
             X, self.scalers[msu_type] = dfe.scale_data(df, metrics, return_scalers = True)
+            params = {
+                    'eps': self.params[msu_type]['eps'],
+                    'min_samples': self.params[msu_type]['percent_samples'] * len(X)
+            }
+
             self.models[msu_type] = DBSCAN(**params).fit(X)
+
+            if self.log_dir is not None:
+                self.write_classification(X, self.models[msu_type].labels_, msu_type, df.epoch, self.models[msu_type].core_sample_indices_)
 
             if np.all(self.models[msu_type].labels_ == -1):
                 log_warn("No classes detected for msu type {}, metrics {}, params {}"
@@ -144,9 +183,10 @@ class DbScanner():
                 log_warn("No core indices for msu type {}".format(msu_type))
                 continue
 
-            classification[msu_type] = dbscan_predict2(self.models[msu_type], self.ckdtrees[msu_type],  X)
+            classification[msu_type] = self.dbscan_predict(self.models[msu_type], self.ckdtrees[msu_type], X, msu_type, df.epoch)
 
         for msu_type, cl in classification.items():
             log_info('MSU type {} Classification : {}'.format(msu_type, json.dumps(cl, sort_keys=True)))
 
+        self.last_classification = classification
         return classification

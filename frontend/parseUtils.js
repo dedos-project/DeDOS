@@ -37,7 +37,7 @@ var readMsus = function(raw_dfg, types) {
     for (var i = 0; i < raw_msus.length; i++) {
         msus.push(readMsu(raw_msus[i], types));
     }
-    log.debug(`Read ${msus.length} MSUs`);
+    //log.debug(`Read ${msus.length} MSUs`);
     return msus;
 }
 
@@ -57,7 +57,7 @@ var readMsu = function(raw_msu, raw_types) {
         'runtime_id': raw_msu.scheduling.runtime,
         'thread_id': raw_msu.scheduling.thread_id,
         'name': name,
-        'type': raw_msu.type,
+        'type_id': raw_msu.type,
         'routing': routes
     };
 }
@@ -102,8 +102,8 @@ var parseLinks = function(msus, routes) {
             var dests = auxUtils.routingMatch(msu.routing[j], routes);
             for (var k = 0; k < dests.length; k++) {
                 links.push({
-                    source: msu.id,
-                    target: dests[k]
+                    src: msu.id,
+                    dst: dests[k]
                 });
             }
         }

@@ -53,6 +53,9 @@ def help_(name=None):
         help_(name)
         print ""
 
+def send(*message):
+    api.send_through_daemon(' '.join(message))
+
 def cfg(filename):
     ''' Sets the configuration file for CLI and Daemon
     Arguments:
@@ -70,6 +73,11 @@ def shutdown():
     global do_quit
     do_quit = True
 
+def act():
+    ''' Acts on the last-performed classifcation'''
+    api.take_action()
+
+
 def quit():
     ''' Quits the CLI, and shuts down the daemon if it was started by the CLI '''
     print "Exiting..."
@@ -85,7 +93,9 @@ fn_map = dict(
         classify=classify,
         help=help_,
         quit=quit,
-        shutdown=shutdown
+        shutdown=shutdown,
+        send=send,
+        act=act
 )
 
 def prompt():
@@ -101,8 +111,9 @@ def prompt():
     else:
         log_error("Command {} not recognized".format(cmd))
 
-def start(config_file):
+def start(config_file, logdir):
     global api
+    daemon.logdir = logdir
     config = yaml.load(open(config_file))
     api = DaemonApi(config)
     while not do_quit:

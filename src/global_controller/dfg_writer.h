@@ -23,6 +23,7 @@ END OF LICENSE STUB
 
 char *dfg_to_json(struct dedos_dfg *dfg, int n_stats);
 void dfg_to_file(char *filename);
+int dfg_to_zmq(void *zmq_sock);
 int dfg_to_fd(int fd);
 
 #endif

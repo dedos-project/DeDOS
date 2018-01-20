@@ -150,7 +150,7 @@ class DbApi:
         log_debug(" Points / second: ~{}".format(1/spp))
         rounded_time = resolution_round(df.TIME, spp * 1e9)
 
-        epoch = ((rounded_time - min(rounded_time)) / (spp * 1e9)).astype(int)
+        epoch = ((rounded_time - self.get_start_time()) / (spp * 1e9)).astype(int)
         df = df.assign(msu_id = msu.id)
         df = df.assign(msu_type = msu.msu_type.name)
         df = df.assign(epoch = epoch)

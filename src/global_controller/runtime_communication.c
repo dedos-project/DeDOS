@@ -28,6 +28,7 @@ END OF LICENSE STUB
 #include "dfg_writer.h"
 #include "haproxy.h"
 
+#include <zmq.h>
 #include <signal.h>
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -213,37 +214,8 @@ static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {
     }
 }
 
-#define MAX_OUTPUT_SOCKS 2
-
-static int output_listen_sock = -1;
-static int output_socks[MAX_OUTPUT_SOCKS];
-static int output_sock_idx = 0;
-
-static void add_output_sock(int fd) {
-    if (output_socks[output_sock_idx] > 0) {
-        close(output_socks[output_sock_idx]);
-    }
-    output_socks[output_sock_idx] = fd;
-    output_sock_idx++;
-    output_sock_idx %= MAX_OUTPUT_SOCKS;
-}
-
-
 static int handle_runtime_communication(int fd, void UNUSED *data) {
     struct rt_controller_msg_hdr hdr;
-
-    if (fd == output_listen_sock) {
-        log_info("Adding new output port");
-        int new_fd = accept(fd, NULL, 0);
-        if (new_fd > 0) {
-            add_output_sock(new_fd);
-            log_info("Added new output listener");
-            return 0;
-        } else {
-            log_error("Error adding new listener");
-            return 0;
-        }
-    }
 
     int rtn = read_payload(fd, sizeof(hdr), &hdr);
     if (rtn < 0) {
@@ -322,14 +294,19 @@ int runtime_communication_loop(int listen_port, char *output_file, int output_po
         return -1;
     }
 
+    void *output_socket = NULL;
     if (output_port > 0) {
-        output_listen_sock = init_listening_socket(output_port);
-        if (output_listen_sock < 0) {
-            log_error("Error listening on port %d", output_port);
+        void *context = zmq_ctx_new(); // TODO: This shouldn't be here
+        output_socket = zmq_socket(context, ZMQ_PUB);
+        char port_str[32];
+        sprintf(port_str, "tcp://*:%d", output_port);
+        int rtn = zmq_bind(output_socket, port_str);
+        if (rtn != 0) {
+            log_perror("Error binding ZMQ socket to %s", port_str);
             return -1;
+        } else {
+            log_info("Bound DFG publish socket on port %d", output_port);
         }
-        log_info("Listening for DFG reader on port %d", output_port);
-        add_to_epoll(epoll_fd, output_listen_sock, EPOLLIN, false);
     }
 
     struct timespec begin;
@@ -349,13 +326,8 @@ int runtime_communication_loop(int listen_port, char *output_file, int output_po
             if (output_file != NULL) {
                 dfg_to_file(output_file);
             }
-            for (int i=0; i < MAX_OUTPUT_SOCKS; i++) {
-                if (output_socks[i] > 0) {
-                    if (dfg_to_fd(output_socks[i]) < 0) {
-                        close(output_socks[i]);
-                        output_socks[i] = 0;
-                    }
-                }
+            if (output_socket != NULL) {
+                dfg_to_zmq(output_socket);
             }
             clock_gettime(CLOCK_REALTIME_COARSE, &begin);
         }
