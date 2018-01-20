@@ -1,23 +1,31 @@
-dedos_dfg: 3-8db.json
+dedos_dfg: webserver_1rt.json
 dataset: all_attacks_spaced
 event_log_dir: /home/iped/datasets
 dedos_module_dir: /home/iped/Dedos
 event_types: [client, tls_reneg, slowloris, redos]
 
 dedos_control_port: 4321
+dfg_broadcast_port: 10000
 
 msu_metrics:
     regex: [MSU_USER_TIME, QUEUE_LEN]
     read: [MSU_USER_TIME, QUEUE_LEN]
     http: [NUM_STATES]
 
+
+clone_threshold: .1
+remove_threshold: .05
+
+target_msu_types:
+    http: read
+
 dbscan_params:
     regex:
-        eps: .1
-        min_samples: 150
+        eps: 1.35
+        percent_samples: .5
     read:
-        eps: .5
-        min_samples: 150
+        eps: 1.35
+        percent_samples: .5
     http:
-        eps: .1
-        min_samples: 150
+        eps: 1.35
+        percent_samples: .5

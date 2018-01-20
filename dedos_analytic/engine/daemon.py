@@ -19,6 +19,7 @@ class DaemonMessage():
     CONFIGURE=3
     SHUTDOWN=4
     SEND=5
+    ACT=6
 
     def __init__(self, type, **params):
         self.type = type
@@ -51,30 +52,40 @@ class DaemonMessage():
         return DaemonMessage(cls.SEND, message=message)
 
     @classmethod
+    def act_message(cls, name='_MAIN'):
+        return DaemonMessage(cls.ACT, name=name)
+
+    @classmethod
     def shutdown_message(cls):
         return DaemonMessage(cls.SHUTDOWN)
+
 
 
 class _Daemon():
 
     SOCKLOC = 'ipc:///tmp/DEDOS_DAEMON'
 
-    def __init__(self, config=None, interval = -1):
+    def __init__(self, config=None, interval = -1, logdir=None):
         self.dbscanners = {}
         self.dedos_ctl = None
+        self.logdir = logdir
         self.interval = interval
         self.rep_socket = None
         self.req_socket = None
         self.is_running = False
         self.config = config
+        self.last_classification = None
 
     def set_config(self, config):
         self.config = config
         self.init_dbscanner(config)
+        if self.dedos_ctl is not None:
+            self.dedos_ctl.stop_dfg_monitor()
         self.dedos_ctl = DedosCtl(config)
+        self.dedos_ctl.start_dfg_monitor()
 
     def init_dbscanner(self, config, name='_MAIN'):
-        self.dbscanners[name] = DbScanner(config)
+        self.dbscanners[name] = DbScanner(config, log_dir=self.logdir)
 
     def send_message(self, daemon_msg):
         if self.req_socket is None:
@@ -102,7 +113,7 @@ class _Daemon():
             log_error("Scanner {} not trained".format(msg.name))
             return "ERROR"
 
-        self.dbscanners[msg.name].classify(msg.start, msg.end)
+        self.last_classification = self.dbscanners[msg.name].classify(msg.start, msg.end)
         return "SUCCESS"
 
     def process_send_msg(self, msg):
@@ -123,12 +134,23 @@ class _Daemon():
         self.is_running = False
         return "SHUTTING DOWN"
 
+    def process_act_msg(self, msg):
+        classification = self.last_classification
+        if classification is None:
+            log_error("Cannot act before classifying")
+            return "ERROR"
+        actions = self.dedos_ctl.act(classification)
+        self.last_classification = None
+        return "SUCCESS {}".format(actions)
+
+
     MSG_HANDLERS = {
             DaemonMessage.TRAIN: process_train_msg,
             DaemonMessage.CLASSIFY: process_classify_msg,
             DaemonMessage.CONFIGURE: process_cfg_msg,
             DaemonMessage.SHUTDOWN: process_shutdown_msg,
-            DaemonMessage.SEND: process_send_msg
+            DaemonMessage.SEND: process_send_msg,
+            DaemonMessage.ACT: process_act_msg
     }
 
     def _process_message(self, smsg):
@@ -177,6 +199,11 @@ class _Daemon():
         self.rep_socket = zctx.socket(zmq.REP)
         self.rep_socket.bind(self.SOCKLOC)
         self._loop()
+
+    def stop(self):
+        self.is_running = False
+        if self.dedos_ctl is not None:
+            self.dedos_ctl.stop_dfg_monitor()
 
     def run(self):
 
