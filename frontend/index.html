@@ -4,7 +4,7 @@
 	<link href="https://fonts.googleapis.com/css?family=Poiret+One" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css?family=Bree+Serif" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css?family=Righteous" rel="stylesheet">
-	<link href="sidemenu.css" rel="stylesheet">
+	<link href="main.css" rel="stylesheet">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.3.4/chroma.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -12,24 +12,24 @@
 	<title>Redos Demo</title>
 </head>
 <body>
-	<div id="container"></div>
-	<div id="level-2" class="level">
-		<button onclick = "start()">START</button>
-		<button onclick = "loadFile()">LOAD</button>
-		<button onclick = "stop()">STOP</button>
-		<button onclick = "reset()">RESET</button>
+    <div id="overlay"></div>
+    <div id="top_menu">
+		<button onclick = "start_dedos()">START</button>
+		<button onclick = "open_load_dialog()">LOAD</button>
+		<button onclick = "stop_dedos()">STOP</button>
+		<button onclick = "reset_ui()">RESET</button>
 	</div>
-	<div id = "load_file" class="exp_window">
-        <p>DFG file load</p>
-        <div class="wrapper">
-			<select>
-				<option selected class="placeholder" value="">Select a dfg</option>
+	<div id="dfg_loader" class="popup">
+        <p>Load DFG file</p>
+        <div id="dfg_list_wrapper">
+			<select id="dfg_list">
+				<option selected class="dfg_item" value="">Select a dfg</option>
 			</select>
 		</div>
-        <button class = "button submit" onclick="submit()">Submit</button>
-        <button class = "button cancel" onclick="cancel()">Cancel</button>
+        <button id="submit" onclick="submit_dfg()">Submit</button>
+        <button id="cancel" onclick="close_loader()">Cancel</button>
     </div>
-    <div id="error_msg" class="exp_window">
+    <div id="error_msg" class="popup">
         <img src='alert.png' style="width: 64px;
             height: 64px;
             left: calc(50% - 32px);
@@ -37,14 +37,26 @@
             top: 10px;
             ">
         <p hidden id="warning_code"></p>
-        <p id="warning_txt"></p>
-        <button class="button cancel" id="error_ok" onclick="cancel()">OK</button>
+        <p id="error_txt"></p>
+        <button class="cancel" id="error_ok" onclick="hide_error()">OK</button>
     </div>
-    <div class="legend-wrapper" id="legend-wrapper-l">
-		<div class="legend-board"></div>
+    <svg class="legend" id="legend_board"></div>
+    <div class='legend' id="legend_toggle" onclick="toggle_legend()">&#10097;</div>
+
+    <div id="canvas"> 
+        <svg id="dfg_svg">
+            <g id='dedos_status'>
+                <rect rx=5> </rect>
+                <text text-anchor='middle' baseline-shift='-25%' fill='white'> Status... </text>
+                <text id="dedos_appname" text-anchor='middle' baseline-shift='-75%' fill='white'> Name... </text>
+            </g>
+            <g id='dfg'> 
+                <g id='routes'> </g>
+            </g>
+        </svg>
     </div>
-	<div class="btn-content toggle-on" id="toggle-on-l">&#10097;</div>
-	<div class="btn-content toggle-off" id="toggle-off-l">&#10096;</div>
+
+
 	<script type="text/javascript" src='index.js'></script>
 </body>
 </html>

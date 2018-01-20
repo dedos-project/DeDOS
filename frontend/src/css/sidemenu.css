@@ -18,7 +18,7 @@ text{
     z-index    : 1100;
     display    : none;
 } 
-.level{
+#top_menu{
 	position: absolute;
 	top: 0;
 }
@@ -42,12 +42,10 @@ button{
 	border: none;
 	font-family: 'Poiret One', cursive;
 }
-.level button{
+#top_menu button{
 	margin-top: 0;
 	z-index:10;
 	position: absolute;
-	width: 22.5vw;
-	height:70px;
 	text-align: center;
 	background: transparent;
 	color: white;
@@ -55,16 +53,6 @@ button{
 	border-bottom-right-radius: 5px;
 	border-bottom-left-radius: 5px;
 	box-shadow: 0px 0px 54px 2px rgba(0,0,0,0.5);
-}
-#level-2{
-	/*display: none;*/
-	z-index: 1;
-}
-#level-2 button{
-	opacity: 1;
-}
-#level-2 button:nth-child(1){
-	margin-left:5vw;
 }
 #circle-menu{
 	position: fixed;
@@ -205,6 +193,11 @@ path.link {
 	box-shadow: 10px 0px 20px -4px rgba(0, 0, 0, 0.2);
 	cursor: pointer;
 }
+#legend_trigger {
+    background-color: rgb(0, 102, 153);
+    top: 50%
+}
+
 .toggle-on{
 	opacity: 1;
 	z-index: 10;
@@ -218,6 +211,7 @@ path.link {
 	box-shadow: 0 0px 20px 0px rgba(0, 0, 0, 0.2);
 	position: absolute;
 	width:10vw;
+    left:-10vw;
 	height:60vh;
 	top:5vh;
 	background-color: white;
