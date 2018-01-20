@@ -277,10 +277,12 @@ static char *msu_to_json(struct dfg_msu *msu, int n_stats) {
     char *scheduling = scheduling_to_json(&msu->scheduling);
     KEY_VAL(json, "scheduling", "%s", scheduling, strlen(scheduling));
 
+    /*
     if (n_stats > 0) {
         char *stats = msu_stats_to_json(msu->id, n_stats);
         KEY_VAL(json, "stats", "%s", stats, strlen(stats));
     }
+    */
 
 
     END_OBJ(json);
@@ -427,7 +429,7 @@ void dfg_to_file(char *filename) {
     fclose(file);
 }
 
-#define ZMQ_TOPIC "DFG"
+#define ZMQ_TOPIC "DFG "
 
 int dfg_to_zmq(void *zmq_socket) {
     lock_dfg();
