@@ -32,7 +32,7 @@ END OF LICENSE STUB
  * The maximum number of times that a call to `read()`
  * can be attempted for a single buffer before giving up
  */
-#define MAX_READ_ATTEMPTS 100
+#define MAX_READ_ATTEMPTS 200
 
 int read_payload(int fd, size_t size, void *buff) {
     ssize_t rtn = 0;
@@ -68,7 +68,7 @@ ssize_t send_to_endpoint(int fd, void *data, size_t data_len) {
     while (size < data_len) {
         ssize_t rtn = write(fd, data + size, data_len - size);
         if (rtn <= 0) {
-            log_error("Error sending buffer to endpoint with socket %d", fd);
+            log_perror("Error sending buffer %p to endpoint with socket %d", data + size, fd);
             break;
         } else if (rtn < data_len) {
             log_warn("Full buffer not sent to endpoint!");

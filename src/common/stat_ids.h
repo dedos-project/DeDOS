@@ -23,36 +23,30 @@ END OF LICENSE STUB
  */
 #ifndef STATS_IDS_H_
 #define STATS_IDS_H_
+#include "unused_def.h"
 #include <time.h>
 #include <stdlib.h>
 
-/**
- * The identifiers with which stats can be logged
- */
 enum stat_id {
-    MSU_QUEUE_LEN,
-    MSU_ITEMS_PROCESSED,
-    MSU_EXEC_TIME,
-    MSU_IDLE_TIME,
-    MSU_MEM_ALLOC,
-    MSU_NUM_STATES,
-    MSU_ERROR_CNT,
-    MSU_UCPUTIME,
-    MSU_SCPUTIME,
-    MSU_MINFLT,
-    MSU_MAJFLT,
-    MSU_VCSW,
-    MSU_IVCSW,
-    THREAD_UCPUTIME,
-    THREAD_SCPUTIME,
-    THREAD_MAXRSS,
-    THREAD_MINFLT,
-    THREAD_MAJFLT,
-    THREAD_VCSW,
-    THREAD_IVCSW,
-    MSU_STAT1, /**< For custom MSU statistics */
-    MSU_STAT2, /**< For custom MSU statistics */
-    MSU_STAT3, /**< For custom MSU statistics */
+    QUEUE_LEN,
+    ITEMS_PROCESSED,
+    EXEC_TIME,
+    IDLE_TIME,
+    MEM_ALLOC,
+    NUM_STATES,
+    ERROR_CNT,
+
+    UCPUTIME,
+    SCPUTIME,
+    MAXRSS,
+    MINFLT,
+    MAJFLT,
+    VCSW,
+    IVCSW,
+
+    MSU_STAT1,
+    MSU_STAT2,
+    MSU_STAT3,
 
     /** Profiling */
     PROF_ENQUEUE,
@@ -66,6 +60,39 @@ enum stat_id {
     PROF_DEDOS_ENTRY,
     /** Profiling */
     PROF_DEDOS_EXIT
+};
+
+struct stat_label {
+    enum stat_id id;
+    char *label;
+};
+
+#define _STNAM(stat) {stat, #stat}
+
+static struct stat_label UNUSED stat_labels[] = {
+    _STNAM(QUEUE_LEN),
+    _STNAM(ITEMS_PROCESSED),
+    _STNAM(EXEC_TIME),
+    _STNAM(IDLE_TIME),
+    _STNAM(MEM_ALLOC),
+    _STNAM(NUM_STATES),
+    _STNAM(ERROR_CNT),
+    _STNAM(UCPUTIME),
+    _STNAM(SCPUTIME),
+    _STNAM(MAXRSS),
+    _STNAM(MINFLT),
+    _STNAM(MAJFLT),
+    _STNAM(VCSW),
+    _STNAM(IVCSW),
+    _STNAM(MSU_STAT1),
+    _STNAM(MSU_STAT2),
+    _STNAM(MSU_STAT3),
+    _STNAM(PROF_ENQUEUE),
+    _STNAM(PROF_DEQUEUE),
+    _STNAM(PROF_REMOTE_SEND),
+    _STNAM(PROF_REMOTE_RECV),
+    _STNAM(PROF_DEDOS_ENTRY),
+    _STNAM(PROF_DEDOS_EXIT)
 };
 
 #endif

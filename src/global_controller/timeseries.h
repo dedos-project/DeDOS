@@ -50,7 +50,7 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
                          struct timed_rrdb *timeseries);
 
 /** Prints the beginning and end of a timeseries. */
-void print_timeseries(struct timed_rrdb *ts);
+void print_timeseries(struct timed_rrdb *ts, struct timespec *start_time);
 
 
 #endif

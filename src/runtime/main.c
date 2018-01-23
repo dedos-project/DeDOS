@@ -49,7 +49,7 @@ END OF LICENSE STUB
 int main(int argc, char **argv) {
 
     char *dfg_json = NULL;
-    char *statlog = NULL;
+    //char *statlog = NULL;
     int runtime_id = -1;
     float prof_prob = 0;
 
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
                 runtime_id = atoi(optarg);
                 break;
             case 'l':
-                statlog = optarg;
+                //statlog = optarg;
                 break;
             case 'p':
                 prof_prob = atof(optarg);
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     }
     set_local_directory(dirname(argv[0]));
 
-    if (init_statistics() != 0) {
+    if (check_statistics() != 0) {
         log_warn("Error initializing runtime statistics");
     }
     INIT_PROFILER(prof_prob);
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
     stop_all_worker_threads();
     join_output_thread();
 
-    finalize_statistics(statlog);
+    //finalize_statistics(statlog);
     free_runtime_dfg();
     log_info("Exiting runtime...");
     return 0;

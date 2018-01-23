@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS Bins;
 DROP TABLE IF EXISTS Points;
 DROP TABLE IF EXISTS Timeseries;
 DROP TABLE IF EXISTS Msus;
@@ -44,7 +45,7 @@ CREATE TABLE Msus (
 );
 
 CREATE TABLE Timeseries (
-    pk  int NOT NULL AUTO_INCREMENT,
+    pk int NOT NULL AUTO_INCREMENT,
     runtime_id int,
     thread_pk int,
     msu_pk int,
@@ -60,10 +61,22 @@ CREATE TABLE Timeseries (
 );
 
 CREATE TABLE Points (
+    pk int NOT NULL AUTO_INCREMENT,
     timeseries_pk int NOT NULL,
     ts BIGINT NOT NULL,
-    val DECIMAL(18,9),
-    PRIMARY KEY (timeseries_pk, ts),
     INDEX time_index (ts),
-    FOREIGN KEY (timeseries_pk) REFERENCES Timeseries(pk)
+    FOREIGN KEY (timeseries_pk) REFERENCES Timeseries(pk),
+    PRIMARY KEY (pk)
+);
+
+CREATE TABLE Bins (
+    pk int NOT NULL AUTO_INCREMENT,
+    low DECIMAL(18,9) NOT NULL,
+    high DECIMAL(18,9) NOT NULL,
+    size int NOT NULL,
+    percentile DECIMAL(5, 2) NOT NULL,
+    points_pk int NOT NULL,
+    FOREIGN KEY (points_pk) REFERENCES Points(pk),
+    CONSTRAINT unique_pctile UNIQUE (pk, percentile),
+    PRIMARY KEY (pk)
 );

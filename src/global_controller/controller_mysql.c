@@ -41,14 +41,13 @@ bool mysql_initialized = false;
         return -1; \
     }
 
-
 #define SQL_LOCK \
     pthread_mutex_lock(&lock)
 
 #define SQL_UNLOCK \
     pthread_mutex_unlock(&lock)
 
-#define MAX_REQ_LEN 1024
+#define MAX_REQ_LEN 4096
 
 #define MAX_INIT_CONTENTS_SIZE 8192
 
@@ -142,7 +141,7 @@ int db_init(int clear) {
 
     for (int i = 0; i < N_REPORTED_STAT_TYPES; ++i) {
         if (db_register_statistic(reported_stat_types[i].id,
-                                  reported_stat_types[i].name) != 0) {
+                                  reported_stat_types[i].label) != 0) {
             return -1;
         }
     }
@@ -292,7 +291,7 @@ int db_register_msu(int msu_id, int msu_type_id, int thread_id, int runtime_id) 
 int db_register_msu_timeseries(int msu_id) {
     CHECK_SQL_INIT;
     int i;
-    for (i = 0; i < N_REPORTED_MSU_STAT_TYPES; ++i) {
+    for (i = 0; i < N_MSU_STAT_TYPES; ++i) {
         char check_query[MAX_REQ_LEN];
         char insert_query[MAX_REQ_LEN];
         char select_msu_pk[MAX_REQ_LEN];
@@ -305,13 +304,13 @@ int db_register_msu_timeseries(int msu_id) {
                  "select * from Timeseries where "
                  "msu_pk = (%s) "
                  "and statistic_id = (%d)",
-                 select_msu_pk, reported_msu_stat_types[i].id);
+                 select_msu_pk, msu_stat_types[i].id);
 
 
         snprintf(insert_query, MAX_REQ_LEN,
                  "insert into Timeseries (statistic_id, msu_pk) "
                  "values ((%d), (%s))",
-                 reported_msu_stat_types[i].id, select_msu_pk);
+                 msu_stat_types[i].id, select_msu_pk);
 
         if (db_check_and_register(check_query, insert_query, element, msu_id) != 0) {
             return -1;
@@ -326,7 +325,7 @@ int db_register_thread_timeseries(int thread_id, int runtime_id) {
     char insert_query[MAX_REQ_LEN];
     char select_thread_pk[MAX_REQ_LEN];
     const char *element = "thread_timeseries";
-    for (int i=0; i < N_REPORTED_THREAD_STAT_TYPES; ++i) {
+    for (int i=0; i < N_THREAD_STAT_TYPES; ++i) {
         snprintf(select_thread_pk, MAX_REQ_LEN,
                  "select pk from Threads where thread_id = (%d) and runtime_id = (%d)",
                  thread_id, runtime_id);
@@ -335,12 +334,12 @@ int db_register_thread_timeseries(int thread_id, int runtime_id) {
                  "select * from Timeseries where "
                  "thread_pk = (%s) "
                  "and statistic_id = (%d)",
-                 select_thread_pk, reported_thread_stat_types[i].id);
+                 select_thread_pk, thread_stat_types[i].id);
 
         snprintf(insert_query, MAX_REQ_LEN,
                 "insert into Timeseries (statistic_id, thread_pk) "
                 "values ((%d), (%s))",
-                reported_thread_stat_types[i].id, select_thread_pk);
+                thread_stat_types[i].id, select_thread_pk);
 
         if (db_check_and_register(check_query, insert_query, element, thread_id) != 0) {
             return -1;
@@ -423,69 +422,128 @@ int db_check_and_register(const char *check_query, const char *insert_query,
     }
 }
 
-static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id, int item_id, int runtime_id) {
+static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id,
+                        struct stat_referent *referent, unsigned int runtime_id) {
     char select_pk[MAX_REQ_LEN];
-    if (is_thread_stat(stat_id)) {
-        snprintf(select_pk, MAX_REQ_LEN,
-                "select pk from Threads where thread_id = %d and runtime_id = %d",
-                item_id, runtime_id);
-        snprintf(query, MAX_REQ_LEN,
-                "select pk from Timeseries where thread_pk = (%s) and statistic_id = (%d)",
-                select_pk, stat_id);
-        return 0;
-    } else if (is_msu_stat(stat_id)) {
-        snprintf(select_pk, MAX_REQ_LEN,
-                "select pk from Msus where msu_id = %d", item_id);
-        snprintf(query, MAX_REQ_LEN,
-                "select pk from Timeseries where msu_pk = (%s) and statistic_id = (%d)",
-                select_pk, stat_id);
-        return 0;
-    } else {
-        log_error("Cannot get timestamp query for stat type %d", stat_id);
-        return -1;
+    switch (referent->type) {
+        case MSU_STAT:
+            snprintf(select_pk, MAX_REQ_LEN,
+                     "select pk from Msus where msu_id = %u", referent->id);
+            snprintf(query, MAX_REQ_LEN,
+                    "select pk from Timeseries where msu_pk = (%s) and statistic_id = (%d)",
+                    select_pk, stat_id);
+            return 0;
+        case THREAD_STAT:
+            snprintf(select_pk, MAX_REQ_LEN,
+                     "select pk from Threads where thread_id = %d and runtime_id = %u",
+                     referent->id, runtime_id);
+            snprintf(query, MAX_REQ_LEN,
+                     "select pk from Timeseries where thread_pk = (%s) and statistic_id = (%d)",
+                     select_pk, stat_id);
+            return 0;
+        case RT_STAT:
+            snprintf(select_pk, MAX_REQ_LEN,
+                     "select pk from Timeseries where runtime_id = (%u) and statistic_id = (%d)",
+                     runtime_id, stat_id);
+            return 0;
+        default:
+            log_error("Cannot get ts query for stat type %d", stat_id);
+            return -1;
     }
 }
-
 /**
  * Insert datapoint for a timseries in the DB.
  * @param input: pointer to timed_stat object
  * @param input_hdr: header of stat sample
  * @return: 0 on success
  */
-int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr, int runtime_id) {
+int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
     CHECK_SQL_INIT;
     SQL_LOCK;
     /* Find timeserie to insert data point first */
     char ts_query[MAX_REQ_LEN];
-    if (get_ts_query(ts_query, input_hdr->stat_id, input_hdr->item_id, runtime_id) != 0) {
+    if (get_ts_query(ts_query, sample->stat_id, &sample->referent, runtime_id) != 0) {
         SQL_UNLOCK;
         return -1;
     }
-    int i;
-    for (i = 0; i < input_hdr->n_stats; ++i) {
-        if (input[i].time.tv_sec < 0) {
-            continue;
-        }
-        int query_len;
-        char insert_query[MAX_REQ_LEN];
-        query_len = snprintf(insert_query, MAX_REQ_LEN,
-                             "insert into Points (timeseries_pk, ts, val) values "
-                             "((%s), %lu, %Lf)",
-                             ts_query,
-                             (unsigned long) input[i].time.tv_sec * (unsigned long)1e9 + (unsigned long)input[i].time.tv_nsec,
-                             input[i].value);
 
-        if (mysql_real_query(&mysql, insert_query, query_len)) {
-            log_error("MySQL query (%s) failed: %s", insert_query, mysql_error(&mysql));
-            SQL_UNLOCK;
-            return -1;
-        } else {
-            log(LOG_SQL, "inserted data point for msu %d and stat %d",
-                input_hdr->item_id, input_hdr->stat_id);
-            SQL_UNLOCK;
-            return 0;
-        }
+    char query[MAX_REQ_LEN];
+    unsigned long ts = (unsigned long) sample->start.tv_sec * 1e9 +
+                       (unsigned long) sample->start.tv_nsec;
+    size_t query_len = snprintf(query, MAX_REQ_LEN,
+                                "insert into Points (timeseries_pk, ts) values "
+                                "((%s), %lu)",
+                                ts_query, ts);
+
+    if (mysql_real_query(&mysql, query, query_len)) {
+        log_error("MySQL query (%s) failed: %s", query, mysql_error(&mysql));
+        SQL_UNLOCK;
+        return -1;
     }
 
+    char points_query[MAX_REQ_LEN];
+    query_len = snprintf(points_query, MAX_REQ_LEN,
+                         "select pk from Points where timeseries_pk = (%s) and ts = (%lu)",
+                         ts_query, ts);
+
+    if (mysql_real_query(&mysql, points_query, query_len)) {
+        log_error("MySQL query (%s) failed: %s", query, mysql_error(&mysql));
+        SQL_UNLOCK;
+        return -1;
+    }
+
+    MYSQL_RES *result = mysql_store_result(&mysql);
+    if (result == NULL) {
+        log_error("Could not find result of points query after insertion");
+        SQL_UNLOCK;
+        return -1;
+    }
+
+    MYSQL_ROW row = mysql_fetch_row(result);
+    if (!row) {
+        log_error("Could not fetch row of resulting query");
+        SQL_UNLOCK;
+        return -1;
+    }
+
+    char *points_pk = row[0];
+
+    char values[MAX_REQ_LEN];
+    size_t values_size = 0;
+    double so_far = 0;
+    double total_size = sample->total_samples;
+    for (int i=0; i < sample->n_bins; i++) {
+        so_far += sample->bin_size[i];
+        values_size += snprintf(values + values_size, MAX_REQ_LEN - values_size,
+                                "\n(%lf, %lf, %u, %f, %s),",
+                                sample->bin_edges[i],
+                                sample->bin_edges[i+1],
+                                sample->bin_size[i],
+                                100.0 * so_far / total_size,
+                                points_pk);
+    }
+    values[values_size - 1] = '\0';
+    query_len = snprintf(query, MAX_REQ_LEN,
+                         "Insert into Bins (low, high, size, percentile, points_pk) values %s",
+                         values);
+    if (mysql_real_query(&mysql, query, query_len)) {
+        log_error("MySQL query (%s) failed: %s", query, mysql_error(&mysql));
+        SQL_UNLOCK;
+        return -1;
+    }
+    mysql_free_result(result);
+    log(LOG_MYSQL, "Inserted data point for stat %d", sample->stat_id);
+    SQL_UNLOCK;
     return 0;
 }
+
+int db_insert_samples(struct stat_sample *samples, int n_samples, unsigned int runtime_id) {
+    for (int i=0; i < n_samples; i++) {
+        if (db_insert_sample(&samples[i], runtime_id) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+

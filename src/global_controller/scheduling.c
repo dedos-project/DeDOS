@@ -46,7 +46,7 @@ static int UNUSED n_downstream_msus(struct dfg_msu * msu) {
 #ifdef QLEN_ROUTING
 
 static double get_q_len(struct dfg_msu *msu) {
-    struct timed_rrdb *q_len = get_msu_stat(MSU_QUEUE_LEN, msu->id);
+    struct timed_rrdb *q_len = get_msu_stat(QUEUE_LEN, msu->id);
     double avg = average_n(q_len, 5);
     if (avg < 0) {
         return 0;

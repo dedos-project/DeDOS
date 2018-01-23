@@ -73,7 +73,7 @@ static struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
         return NULL;
     }
     if (type->id_indices[item_id] == -1) {
-        //log_error("ID %u for types %d not initialized", item_id, id);
+        log_warn("ID %u for types %d not initialized", item_id, id);
         return NULL;
     }
     if (type->items == NULL) {
@@ -82,21 +82,27 @@ static struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
     return &type->items[type->id_indices[item_id]].stats;
 }
 
+static int thread_item_id(int runtime_id, int thread_id) {
+    return runtime_id * MAX_THREADS + thread_id;
+}
+
 struct timed_rrdb *get_thread_stat(enum stat_id id,
                                    unsigned int runtime_id, unsigned int thread_id) {
     if (!stats_initialized) {
         return NULL;
     }
-    int item_id = runtime_id * MAX_THREADS + thread_id ;
-    return get_stat(id, item_id);
+    return get_stat(id, thread_item_id(runtime_id, thread_id));
 }
 
+static int msu_item_id(int msu_id) {
+    return MAX_RUNTIMES * MAX_THREADS + msu_id;
+}
 
 struct timed_rrdb *get_msu_stat(enum stat_id id, unsigned int msu_id) {
     if (!stats_initialized) {
         return NULL;
     }
-    return get_stat(id, msu_id);
+    return get_stat(id, msu_item_id(msu_id));
 }
 
 static int unregister_stat(enum stat_id stat_id, unsigned int item_id) {
@@ -105,6 +111,10 @@ static int unregister_stat(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
     struct stat_type *type = get_stat_type(stat_id);
+    if (type == NULL) {
+        log_error("Cannot get stat type %d", stat_id);
+        return -1;
+    }
     if (type->id_indices[item_id] == -1) {
         log_warn("Item ID %u not assigned", item_id);
         return -1;
@@ -115,21 +125,21 @@ static int unregister_stat(enum stat_id stat_id, unsigned int item_id) {
 
 int unregister_msu_stats(unsigned int msu_id) {
     CHECK_INIT;
-    for (int i=0; i < N_REPORTED_MSU_STAT_TYPES; i++) {
-        unregister_stat(reported_msu_stat_types[i].id, msu_id);
+    for (int i=0; i < N_MSU_STAT_TYPES; i++) {
+        unregister_stat(msu_stat_types[i].id, msu_item_id(msu_id));
     }
     return 0;
 }
 
 int unregister_thread_stats(unsigned int thread_id, unsigned int runtime_id) {
     CHECK_INIT;
-    for (int i=0; i < N_REPORTED_THREAD_STAT_TYPES; i++) {
-        unregister_stat(reported_thread_stat_types[i].id, runtime_id * MAX_THREADS +  thread_id);
+    for (int i=0; i < N_THREAD_STAT_TYPES; i++) {
+        unregister_stat(thread_stat_types[i].id, thread_item_id(runtime_id, thread_id));
     }
     return 0;
 }
 
-int register_stat(enum stat_id stat_id, unsigned int item_id) {
+static int register_stat(enum stat_id stat_id, unsigned int item_id) {
     CHECK_INIT;
     if (item_id >= MAX_STAT_ID) {
         log_error("Item ID %u too high!", item_id);
@@ -140,12 +150,16 @@ int register_stat(enum stat_id stat_id, unsigned int item_id) {
         return -1;
     }
     struct stat_type *type = get_stat_type(stat_id);
+    if (type == NULL) {
+        log_error("Could not get stat type %d", stat_id);
+        return -1;
+    }
     if (type->id_indices[item_id] != -1) {
         log_warn("Item ID %u already assigned index %d",
                   item_id, type->id_indices[item_id]);
         return 1;
     }
-    log(LOG_STATS, "Allocating new msu stat item: %u", item_id);
+    log(LOG_STAT_ALLOCATION, "Allocating new stat item: %d.%u", stat_id,item_id);
     int index = type->num_items;
     type->id_indices[item_id] = index;
     type->num_items++;
@@ -170,8 +184,8 @@ int register_stat(enum stat_id stat_id, unsigned int item_id) {
 int register_msu_stats(unsigned int msu_id, int msu_type_id, int thread_id, int runtime_id) {
     CHECK_INIT;
     db_register_msu_stats(msu_id, msu_type_id, thread_id, runtime_id);
-    for (int i=0; i < N_REPORTED_MSU_STAT_TYPES; i++) {
-        if (register_stat(reported_msu_stat_types[i].id, msu_id)) {
+    for (int i=0; i < N_MSU_STAT_TYPES; i++) {
+        if (register_stat(msu_stat_types[i].id, msu_item_id(msu_id))) {
             log_warn("Couldn't register msu %u", msu_id);
         }
     }
@@ -180,16 +194,22 @@ int register_msu_stats(unsigned int msu_id, int msu_type_id, int thread_id, int 
 
 int register_thread_stats(unsigned int thread_id, unsigned int runtime_id) {
     CHECK_INIT;
-    for (int i=0; i < N_REPORTED_THREAD_STAT_TYPES; i++) {
-        if (register_stat(reported_thread_stat_types[i].id, runtime_id * MAX_THREADS + thread_id)) {
+    for (int i=0; i < N_THREAD_STAT_TYPES; i++) {
+        if (register_stat(thread_stat_types[i].id, thread_item_id(runtime_id, thread_id))) {
             log_warn("Couldn't register thread %u", thread_id);
+        } else {
+            log(LOG_STAT_REGISTRATION,"Registered thread %u.%u (%d) ",
+                runtime_id, thread_id, thread_item_id(runtime_id, thread_id));
         }
     }
     db_register_thread_stats(thread_id, runtime_id);
     return 0;
 }
 
+struct timespec start_time;
+
 int init_statistics() {
+    clock_gettime(CLOCK_REALTIME, &start_time);
     if (stats_initialized) {
         log_error("Statistics already initialized");
         return -1;
@@ -233,9 +253,9 @@ void show_stats(struct dfg_msu *msu){
         return;
     }
     int stat_id = msu->id;
-    for (int i=0; i < N_REPORTED_MSU_STAT_TYPES; i++) {
-        struct timed_rrdb *ts = get_msu_stat(reported_msu_stat_types[i].id, stat_id);
-        printf("******* Statistic: %s\n", reported_msu_stat_types[i].name);
-        print_timeseries(ts);
+    for (int i=0; i < N_MSU_STAT_TYPES; i++) {
+        struct timed_rrdb *ts = get_msu_stat(msu_stat_types[i].id, stat_id);
+        printf("******* Statistic: %s\n", msu_stat_types[i].label);;
+        print_timeseries(ts, &start_time);
     }
 }

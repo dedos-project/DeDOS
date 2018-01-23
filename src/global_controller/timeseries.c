@@ -79,7 +79,7 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
 /** Prints the beginning and end of a timeseries.
  * @param timeseries The timeseries to print
  */
-void print_timeseries(struct timed_rrdb *timeseries){
+void print_timeseries(struct timed_rrdb *timeseries, struct timespec *start_time){
 
     char str[RRDB_ENTRIES * 10 * 2];
     char *buff = str;
@@ -88,8 +88,10 @@ void print_timeseries(struct timed_rrdb *timeseries){
 
     for (int i=0; i<PRINT_LEN; i++) {
         int index = (timeseries->write_index + i) % RRDB_ENTRIES;
-        double time = timeseries->time[index].tv_sec +
-                      ((double)timeseries->time[index].tv_nsec * 1e-9);
+        double time = 0;
+        if (timeseries->time[index].tv_sec != 0)
+        time = timeseries->time[index].tv_sec - start_time->tv_sec +
+               ((double)timeseries->time[index].tv_nsec * 1e-9);
         buff += sprintf(buff, "| %9.4f ", time);
     }
 
@@ -97,21 +99,23 @@ void print_timeseries(struct timed_rrdb *timeseries){
 
     for (int i=RRDB_ENTRIES-PRINT_LEN; i<RRDB_ENTRIES; i++) {
         int index = (timeseries->write_index + i) % RRDB_ENTRIES;
-        double time = timeseries->time[index].tv_sec +
-                      ((double)timeseries->time[index].tv_nsec * 1e-9);
+        double time = 0;
+        if (timeseries->time[index].tv_sec != 0) 
+        time = timeseries->time[index].tv_sec - start_time->tv_sec +
+               ((double)timeseries->time[index].tv_nsec * 1e-9);
         buff += sprintf(buff, "| %9.4f ", time);
     }
 
     buff += sprintf(buff, "\nDATA: ");
     for (int i=0; i<PRINT_LEN; i++){
         int index = (timeseries->write_index + i) % RRDB_ENTRIES;
-        buff += sprintf(buff, "| %9d ", (int)timeseries->data[index]);
+        buff += sprintf(buff, "| %9f ", timeseries->data[index]);
     }
     buff += sprintf(buff, "| ... ");
 
     for (int i=RRDB_ENTRIES-PRINT_LEN; i<RRDB_ENTRIES; i++){
         int index = (timeseries->write_index + i) % RRDB_ENTRIES;
-        buff += sprintf(buff, "| %9d ", (int)timeseries->data[index]);
+        buff += sprintf(buff, "| %9f ", timeseries->data[index]);
     }
     buff += sprintf(buff, "\n");
     printf("%s", str);

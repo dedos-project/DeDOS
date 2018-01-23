@@ -30,35 +30,44 @@ END OF LICENSE STUB
 #define MAX_SAMPLE_SIZE 64
 struct stat_sample *incoming_samples;
 
-static int process_stat_sample(int runtime_id, struct stat_sample *sample) {
-    int rtn = db_insert_sample(sample->stats, &sample->hdr, runtime_id);
+static int process_stat_samples(int runtime_id, int n_samples,
+                               struct stat_sample *samples) {
+    log(LOG_PROCESS_STATS, "Processing %d stats from runtime %d", n_samples, runtime_id);
+    int rtn = db_insert_samples(samples, n_samples, runtime_id);
+    log_info("HERE");
     if (rtn < 0) {
-        log(LOG_MYSQL,"Error inserting stats %d.%u into DB",
-            sample->hdr.stat_id, sample->hdr.item_id);
+        log(LOG_MYSQL,"Error inserting stats into DB");
     }
+    log_info("HERE");
 
     struct timed_rrdb *stat;
-    if (is_thread_stat(sample->hdr.stat_id)) {
-        stat = get_thread_stat(sample->hdr.stat_id, runtime_id, sample->hdr.item_id);
-    } else if (is_msu_stat(sample->hdr.stat_id)) {
-        stat = get_msu_stat(sample->hdr.stat_id, sample->hdr.item_id);
-    } else {
-        log_error("Cannot find statistic %d", sample->hdr.stat_id);
-        return -1;
-    }
+    for (int i=0; i < n_samples; i++) {
+        stat = NULL;
+        switch (samples[i].referent.type) {
+            case THREAD_STAT:
+                stat = get_thread_stat(samples[i].stat_id, runtime_id, samples[i].referent.id);
+                break;
+            case MSU_STAT:
+                stat = get_msu_stat(samples[i].stat_id, samples[i].referent.id);
+                break;
+            default:
+                log_error("Cannot find %dth stat %d type %d",
+                          i, samples[i].stat_id, samples[i].referent.type);
+                return -1;
+        }
 
-    if (stat == NULL) {
-        log(LOG_PROCESS_STATS, "Error getting stat sample %d.%u",
-            sample->hdr.stat_id, sample->hdr.item_id);
-        return -1;
+        if (stat == NULL) {
+            log(LOG_PROCESS_STATS, "Error getting stat sample for %dth stat %d type %d id %d",
+                i, samples[i].stat_id, samples[i].referent.type, samples[i].referent.id);
+            continue;
+        }
+        struct timed_stat tstat = {samples[i].start, samples[i].bin_edges[samples[i].n_bins]};
+        rtn = append_to_timeseries(&tstat, 1, stat);
+        if (rtn < 0) {
+            log_error("Error appending stats to timeseries");
+            continue;
+        }
     }
-    rtn = append_to_timeseries(sample->stats, sample->hdr.n_stats, stat);
-    if (rtn < 0) {
-        log_error("Error appending stats %d.%u to timeseries",
-                  sample->hdr.stat_id, sample->hdr.item_id);
-        return -1;
-    }
-
 
     return 0;
 }
@@ -69,18 +78,14 @@ int handle_serialized_stats_buffer(int runtime_id, void *buffer, size_t buffer_l
         return -1;
     }
 
-    int n_samples = deserialize_stat_samples(buffer, buffer_len,
-                                             incoming_samples, MAX_STAT_SAMPLES);
+    struct stat_sample *incoming;
+    int n_samples = deserialize_stat_samples(buffer, buffer_len, &incoming);
     if (n_samples < 0) {
         log_error("Error deserializing stat samples");
         return -1;
     }
 
-    for (int i=0; i<n_samples; i++) {
-        if (process_stat_sample(runtime_id, &incoming_samples[i]) != 0) {
-            //log_error("Error processing stat sample");
-        }
-    }
+    process_stat_samples(runtime_id, n_samples, incoming);
 
 #ifdef DYN_SCHED
     perform_cloning();
@@ -91,7 +96,7 @@ int handle_serialized_stats_buffer(int runtime_id, void *buffer, size_t buffer_l
 }
 
 int init_stats_msg_handler() {
-    incoming_samples = init_stat_samples(MAX_STAT_SAMPLES, MAX_SAMPLE_SIZE);
+    incoming_samples = malloc(sizeof(*incoming_samples) & MAX_STAT_SAMPLES);
     if (incoming_samples == NULL) {
         log_error("Error initializing stat samples");
         return -1;

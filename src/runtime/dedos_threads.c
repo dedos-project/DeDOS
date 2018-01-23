@@ -50,22 +50,10 @@ static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID + 2];
 /** Keep track of which cores have been assigned to threads */
 static int pinned_cores[MAX_CORES];
 
-enum stat_id thread_stat_items[] = {
-    THREAD_UCPUTIME,
-    THREAD_SCPUTIME,
-    THREAD_MAXRSS,
-    THREAD_MINFLT,
-    THREAD_MAJFLT,
-    THREAD_VCSW,
-    THREAD_IVCSW
-};
-
-#define N_THREAD_STAT_ITEMS sizeof(thread_stat_items) / sizeof(*thread_stat_items)
-
 /** Initilizes the stat items associated with a thread */
 static inline void init_thread_stat_items(int id) {
-    for (int i=0; i < N_THREAD_STAT_ITEMS; i++) {
-        init_stat_item(thread_stat_items[i], id);
+    for (int i=0; i < N_THREAD_STAT_TYPES; i++) {
+        init_thread_stat(thread_stat_types[i].id, id);
     }
 }
 
@@ -215,13 +203,13 @@ static inline void gather_thread_metrics(struct dedos_thread *thread) {
         return;
     }
     int id = thread->id;
-    record_stat(THREAD_UCPUTIME, id, (double)usage.ru_utime.tv_sec + usage.ru_utime.tv_usec * 1e-6, 1);
-    record_stat(THREAD_SCPUTIME, id, (double)usage.ru_stime.tv_sec + usage.ru_stime.tv_usec * 1e-6, 1);
-    record_stat(THREAD_MAXRSS, id, usage.ru_maxrss, 0);
-    record_stat(THREAD_MINFLT, id, usage.ru_minflt, 0);
-    record_stat(THREAD_MAJFLT, id, usage.ru_majflt, 0);
-    record_stat(THREAD_VCSW, id, usage.ru_nvcsw, 1);
-    record_stat(THREAD_IVCSW, id, usage.ru_nivcsw, 1);
+    record_thread_stat(UCPUTIME, id, (double)usage.ru_utime.tv_sec + usage.ru_utime.tv_usec * 1e-6);
+    record_thread_stat(SCPUTIME, id, (double)usage.ru_stime.tv_sec + usage.ru_stime.tv_usec * 1e-6);
+    record_thread_stat(MAXRSS, id, usage.ru_maxrss);
+    record_thread_stat(MINFLT, id, usage.ru_minflt);
+    record_thread_stat(MAJFLT, id, usage.ru_majflt);
+    record_thread_stat(VCSW, id, usage.ru_nvcsw);
+    record_thread_stat(IVCSW, id, usage.ru_nivcsw);
 }
 
 

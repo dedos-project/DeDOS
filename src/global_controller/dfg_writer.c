@@ -110,32 +110,6 @@ struct json_output {
 };
 
 
-static char *stat_to_json(struct timed_rrdb *timeseries, int n_stats) {
-    static struct json_output json;
-
-    int write_index = timeseries->write_index;
-    START_JSON(json);
-    START_LIST(json);
-
-    for (int i= write_index - n_stats - 1; i<write_index; i++) {
-        int index = i >= 0 ? i : RRDB_ENTRIES + i;
-        if (timeseries->time[index].tv_sec == 0 && timeseries->time[index].tv_nsec == 0) {
-            continue;
-        }
-        START_OBJ(json);
-        char ts[32];
-        sprintf(ts, "%ld.%09ld", timeseries->time[index].tv_sec,
-                                 timeseries->time[index].tv_nsec);
-        KEY_VAL(json, "time", "%s", ts, 32);
-        KEY_VAL(json, "value", "%.3f", timeseries->data[index], 16);
-        END_OBJ(json);
-    }
-    END_LIST(json);
-    END_JSON(json);
-    return json.string;
-}
-
-
 static char *meta_routing_to_json(struct dfg_meta_routing *meta_routing) {
     static struct json_output json;
 
@@ -225,34 +199,7 @@ static char *scheduling_to_json(struct dfg_scheduling *sched) {
     return json.string;
 }
 
-static char *msu_stats_to_json(int msu_id, int n_stats) {
-    static struct json_output json;
-
-    START_JSON(json);
-    START_LIST(json);
-
-    for (int i=0; i<N_REPORTED_MSU_STAT_TYPES; i++) {
-        START_OBJ(json);
-        KEY_STRVAL(json, "label", reported_msu_stat_types[i].name);
-        KEY(json, "stats");
-        struct timed_rrdb *stat = get_msu_stat(reported_msu_stat_types[i].id, msu_id);
-        if (stat == NULL) {
-            log_error("Cannot get MSU stat %d (idx %d) msu %d",
-                    reported_msu_stat_types[i].id, i, msu_id);
-            return "";
-        }
-        char *stat_json = stat_to_json(stat, n_stats);
-        VALUE(json, "%s", stat_json, strlen(stat_json));
-        END_OBJ(json);
-    }
-    END_LIST(json);
-    END_JSON(json);
-
-    return json.string;
-}
-
-
-static char *msu_to_json(struct dfg_msu *msu, int n_stats) {
+static char *msu_to_json(struct dfg_msu *msu) {
     static struct json_output json;
 
     START_JSON(json);
@@ -362,7 +309,7 @@ static char *runtime_to_json(struct dfg_runtime *rt) {
 static pthread_mutex_t json_lock;
 static int initialized = 0;
 
-char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
+char *dfg_to_json(struct dedos_dfg *dfg) {
     static struct json_output json;
     if (!initialized) {
         pthread_mutex_init(&json_lock, NULL);
@@ -393,7 +340,7 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
     KEY(json, "MSUs");
     START_LIST(json);
     for (int i=0; i<dfg->n_msus; i++) {
-        char *msu = msu_to_json(dfg->msus[i], n_stats);
+        char *msu = msu_to_json(dfg->msus[i]);
         VALUE(json, "%s", msu, strlen(msu));
     }
     END_LIST(json);
@@ -416,7 +363,7 @@ char *dfg_to_json(struct dedos_dfg *dfg, int n_stats) {
 void dfg_to_file(char *filename) {
     lock_dfg();
     struct dedos_dfg *dfg = get_dfg();
-    char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
+    char *dfg_json = dfg_to_json(dfg);
     unlock_dfg();
     int json_size = strlen(dfg_json);
     FILE *file = fopen(filename, "w");
@@ -434,7 +381,7 @@ void dfg_to_file(char *filename) {
 int dfg_to_zmq(void *zmq_socket) {
     lock_dfg();
     struct dedos_dfg *dfg = get_dfg();
-    char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
+    char *dfg_json = dfg_to_json(dfg);
     unlock_dfg();
 
     size_t json_size = strlen(dfg_json);
@@ -454,7 +401,7 @@ int dfg_to_zmq(void *zmq_socket) {
 
 int dfg_to_fd(int fd) {
     struct dedos_dfg *dfg = get_dfg();
-    char *dfg_json = dfg_to_json(dfg, STAT_SAMPLE_SIZE);
+    char *dfg_json = dfg_to_json(dfg);
     unlock_dfg();
 
     size_t json_size = strlen(dfg_json);

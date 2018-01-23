@@ -151,33 +151,14 @@ struct local_msu *get_local_msu(unsigned int id) {
     return msu;
 }
 
-/** The stat IDs that are associated with an MSU, to be registered on MSU creation */
-static enum stat_id MSU_STAT_IDS[] = {
-    MSU_QUEUE_LEN,
-    MSU_ITEMS_PROCESSED,
-    MSU_EXEC_TIME,
-    MSU_IDLE_TIME,
-    MSU_MEM_ALLOC,
-    MSU_NUM_STATES,
-    MSU_ERROR_CNT,
-    MSU_UCPUTIME,
-    MSU_SCPUTIME,
-    MSU_MINFLT,
-    MSU_MAJFLT,
-    MSU_VCSW,
-    MSU_IVCSW
-};
-
-#define NUM_MSU_STAT_IDS sizeof(MSU_STAT_IDS) / sizeof(enum stat_id)
-
 /**
  * Initializes the stat IDS that are relevant to an MSU
  * @param msu_id ID of the msu to register
   */
 static void init_msu_stats(int msu_id) {
-    for (int i=0; i<NUM_MSU_STAT_IDS; i++) {
-        if (init_stat_item(MSU_STAT_IDS[i], msu_id) != 0) {
-            log_warn("Could not initialize stat item %d for msu %d", MSU_STAT_IDS[i], msu_id);
+    for (int i=0; i<N_MSU_STAT_TYPES; i++) {
+        if (init_msu_stat(msu_stat_types[i].id, msu_id) != 0) {
+            log_warn("Could not initialize stat item %s for msu %d", msu_stat_types[i].label, msu_id);
         }
     }
 }
@@ -187,10 +168,10 @@ static void init_msu_stats(int msu_id) {
  * @param msu_id ID of the MSU to register
  */
 static void unregister_msu_stats(int msu_id) {
-    for (int i=0; i < NUM_MSU_STAT_IDS; i++) {
-        if (remove_stat_item(MSU_STAT_IDS[i], msu_id) != 0) {
-            log_warn("Could not remove stat item %d for msu %d",
-                     MSU_STAT_IDS[i], msu_id);
+    for (int i=0; i < N_MSU_STAT_TYPES; i++) {
+        if (remove_msu_stat(msu_stat_types[i].id, msu_id) != 0) {
+            log_warn("Could not remove stat item %s for msu %d",
+                     msu_stat_types[i].label, msu_id);
         }
     }
 }
@@ -274,11 +255,11 @@ void destroy_msu(struct local_msu *msu) {
  */
 static int msu_receive(struct local_msu *msu, struct msu_msg *msg) {
 
-    record_end_time(MSU_IDLE_TIME, msu->id);
-    record_start_time(MSU_EXEC_TIME, msu->id);
+    end_msu_interval(IDLE_TIME, msu->id);
+    begin_msu_interval(EXEC_TIME, msu->id);
     int rtn = msu->type->receive(msu, msg);
-    record_end_time(MSU_EXEC_TIME, msu->id);
-    record_start_time(MSU_IDLE_TIME, msu->id);
+    end_msu_interval(EXEC_TIME, msu->id);
+    begin_msu_interval(IDLE_TIME, msu->id);
 
     if (rtn != 0) {
         log_error("Error executing MSU %d (%s) receive function",
@@ -297,10 +278,10 @@ static inline int gather_metrics_before(struct rusage *before) {
 }
 
 #define RECORD_DIFF(dstat, rstat, id) \
-    increment_stat(dstat, id, after.rstat - before->rstat)
+    increment_msu_stat(dstat, id, after.rstat - before->rstat)
 
 #define RECORD_TIMEDIFF(dstat, rstat, id) \
-    increment_stat(dstat, id, ((double)after.rstat.tv_sec + after.rstat.tv_usec * 1e-6) - \
+    increment_msu_stat(dstat, id, ((double)after.rstat.tv_sec + after.rstat.tv_usec * 1e-6) - \
                               ((double)before->rstat.tv_sec + before->rstat.tv_usec * 1e-6))
 
 static inline void record_metrics(struct rusage *before, int msu_id) {
@@ -311,12 +292,12 @@ static inline void record_metrics(struct rusage *before, int msu_id) {
         return;
     }
 
-    RECORD_TIMEDIFF(MSU_UCPUTIME, ru_utime, msu_id);
-    RECORD_TIMEDIFF(MSU_SCPUTIME, ru_stime, msu_id);
-    RECORD_DIFF(MSU_MINFLT, ru_minflt, msu_id);
-    RECORD_DIFF(MSU_MAJFLT, ru_majflt, msu_id);
-    RECORD_DIFF(MSU_VCSW, ru_nvcsw, msu_id);
-    RECORD_DIFF(MSU_IVCSW, ru_nivcsw, msu_id);
+    RECORD_TIMEDIFF(UCPUTIME, ru_utime, msu_id);
+    RECORD_TIMEDIFF(SCPUTIME, ru_stime, msu_id);
+    RECORD_DIFF(MINFLT, ru_minflt, msu_id);
+    RECORD_DIFF(MAJFLT, ru_majflt, msu_id);
+    RECORD_DIFF(VCSW, ru_nvcsw, msu_id);
+    RECORD_DIFF(IVCSW, ru_nivcsw, msu_id);
 }
 
 
@@ -336,13 +317,13 @@ int msu_dequeue(struct local_msu *msu) {
         } else {
             log(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
             struct rusage before;
-            record_stat(MSU_QUEUE_LEN, msu->id, msu->queue.num_msgs, false);
+            record_msu_stat(QUEUE_LEN, msu->id, msu->queue.num_msgs);
             int gather_err = gather_metrics_before(&before);
             int rtn = msu_receive(msu, msg);
             if (gather_err == 0) {
                 record_metrics(&before, msu->id);
             }
-            increment_stat(MSU_ITEMS_PROCESSED, msu->id, 1);
+            increment_msu_stat(ITEMS_PROCESSED, msu->id, 1);
             free(msg);
             return rtn;
         }
@@ -352,7 +333,7 @@ int msu_dequeue(struct local_msu *msu) {
 
 int msu_error(struct local_msu *msu, struct msu_msg_hdr *hdr, int broadcast) {
 
-    increment_stat(MSU_ERROR_CNT, msu->id, 1);
+    increment_msu_stat(ERROR_CNT, msu->id, 1);
 
     if (!broadcast) {
         return 0;

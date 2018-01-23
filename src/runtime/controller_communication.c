@@ -464,39 +464,32 @@ int send_stats_to_controller() {
         log(LOG_STAT_SEND, "Skipping sending statistics: controller not initialized");
         return -1;
     }
-    int rtn = 0;
-    int total_items = 0;
-    struct timespec now;
-    clock_gettime(CLOCK_REALTIME_COARSE, &now);
-    for (int i=0; i<N_REPORTED_STAT_TYPES; i++) {
-        enum stat_id stat_id = reported_stat_types[i].id;
-        int n_items;
-        struct stat_sample *samples = get_stat_samples(stat_id, &now,  &n_items);
-        total_items += n_items;
-        if (samples == NULL) {
-            log(LOG_STAT_SEND, "Error getting stat sample for send to controller");
-            continue;
-        }
-        size_t serial_size = serialized_stat_sample_size(samples, n_items);
+    struct stat_sample *samples;
+    int n_samples = sample_stats(&samples);
 
-        char buffer[serial_size];
-        size_t ser_rtn = serialize_stat_samples(samples, n_items, buffer, serial_size);
-        if (ser_rtn < 0) {
-            log_error("Error serializing stat sample");
-            rtn = -1;
-        }
-
-        struct rt_controller_msg_hdr hdr = {
-            .type = RT_STATS,
-            .payload_size = ser_rtn
-        };
-
-        int rtn = send_to_controller(&hdr, buffer);
-        if (rtn < 0) {
-            log_error("Error sending statistics to controller");
-            rtn = -1;
-        }
+    if (n_samples < 0) {
+        log_error("Error sampling statistics");
+        return -1;
     }
-    log(LOG_STAT_SEND, "Sending %d statistics to controller", total_items);
-    return rtn;
+    if (n_samples == 0) {
+        log(LOG_STAT_SEND, "No statistics to send to controller");
+        return 0;
+    }
+
+    void *buffer;
+    size_t used_size = serialize_stat_samples(samples, n_samples, &buffer);
+
+    struct rt_controller_msg_hdr hdr = {
+        .type = RT_STATS,
+        .payload_size = used_size
+    };
+
+    int rtn = send_to_controller(&hdr, buffer);
+    if (rtn < 0) {
+        log_error("Error sending statistics to controller");
+        return -1;
+    }
+
+    log(LOG_STAT_SEND, "Sending %d statistics to controller", n_samples);
+    return 0;
 }

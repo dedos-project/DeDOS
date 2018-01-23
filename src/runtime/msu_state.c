@@ -73,8 +73,8 @@ void *msu_init_state(struct local_msu *msu, struct msu_msg_key *key, size_t size
     HASH_ADD(hh, msu->item_state, key, key->key_len, state);
 #endif
 
-    increment_stat(MSU_MEM_ALLOC, msu->id, (double)(sizeof(*state) + size));
-    increment_stat(MSU_NUM_STATES, msu->id, 1);
+    increment_msu_stat(MEM_ALLOC, msu->id, (double)(sizeof(*state) + size));
+    increment_msu_stat(NUM_STATES, msu->id, 1);
 
     return state->data;
 }
@@ -106,9 +106,9 @@ int msu_free_state(struct local_msu *msu, struct msu_msg_key *key) {
     }
     HASH_DEL(msu->item_state, state);
 
-    increment_stat(MSU_MEM_ALLOC, msu->id,
+    increment_msu_stat(MEM_ALLOC, msu->id,
                    (double)(-1 * (int)(sizeof(*state) + state->size)));
-    increment_stat(MSU_NUM_STATES, msu->id, -1);
+    increment_msu_stat(NUM_STATES, msu->id, -1);
     free(state->data);
     free(state);
     return 0;

@@ -34,6 +34,7 @@ int db_register_thread_stats(int thread_id, int runtime_id);
 int db_register_msu_stats(int msu_id, int msu_type_id, int thread_id, int runtime_id);
 int db_register_msu(int msu_id, int msu_type_id, int thread_id, int runtime_id);
 
-int db_insert_sample(struct timed_stat *input, struct stat_sample_hdr *input_hdr, int runtime_id);
-
+int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id);
+int db_insert_samples(struct stat_sample *samples, int n_samples, 
+                      unsigned int runtime_id);
 #endif

@@ -63,6 +63,7 @@ void init_profiler(float tag_prob) {
     srand(time(NULL));
 
     for (int i=0; i<N_PROF_STAT_IDS; i++) {
-        init_stat_item(profiler_stat_ids[i], PROFILER_ITEM_ID);
+        // TODO: RE-ENABLE PROFILING!
+        //init_msu_stat_item(profiler_stat_ids[i], PROFILER_ITEM_ID);
     }
 }

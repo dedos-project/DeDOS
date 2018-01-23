@@ -1,103 +1,37 @@
-/*
-START OF LICENSE STUB
-    DeDOS: Declarative Dispersion-Oriented Software
-    Copyright (C) 2017 University of Pennsylvania, Georgetown University
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-END OF LICENSE STUB
-*/
-/**
- * @file rt_stats.h
- *
- * Collecting statistics within the runtime
- */
-
-#ifndef RT_STATS_H_
-#define RT_STATS_H_
+#ifndef _RT_BIN_STATS_H_
+#define _RT_BIN_STATS_H_
 #include "stats.h"
 
-#include <stdbool.h>
+int record_msu_stat(enum stat_id sid, unsigned int id, double value);
+int record_thread_stat(enum stat_id sid, unsigned int id, double value);
+int record_rt_stat(enum stat_id sid, double value);
 
-/**
- * Un-registers an item so it can no longer have statistics registered,
- * and will not be reported to the global controller
- */
-int remove_stat_item(enum stat_id stat_id, unsigned int item_id);
+int increment_msu_stat(enum stat_id sid, unsigned int id, double increment);
+int increment_thread_stat(enum stat_id sid, unsigned int id, double increment);
+int increment_rt_stat(enum stat_id sid, double increment);
 
-/**
- * Initializes a new stat item so it can have stats registered
- * and can be reported to the global controller
- */
-int init_stat_item(enum stat_id stat_id, unsigned int item_id);
+int last_msu_stat(enum stat_id sid, unsigned int id, double *out);
+int last_thread_stat(enum stat_id sid, unsigned int id, double *out);
+int last_rt_stat(enum stat_id sid, double *out);
 
-/**
- * Initializes the entire stats module. MUST BE CALLED before runtime starts
- */
-int init_statistics();
+int begin_msu_interval(enum stat_id sid, unsigned int id);
+int begin_thread_interval(enum stat_id sid, unsigned int id);
+int begin_rt_interval(enum stat_id sid);
 
-/**
- * Writes the statistics to statlog if provided, and frees assocated structure
- * @param statlog Log file to dump statistics to or NULL if N/A
- */
-void finalize_statistics(char *statlog);
+int end_msu_interval(enum stat_id, unsigned int id);
+int end_thread_interval(enum stat_id, unsigned int id);
+int end_rt_interval(enum stat_id);
 
-/**
- * Starts a measurement of elapsed time.
- * Not added to the log until a call to record_end_time
- * @param stat_id ID for stat type being logged
- * @param item_id ID for the item to which the stat refers
- * @return 0 on success, -1 on error
- */
-int record_start_time(enum stat_id stat_id, unsigned int item_id);
+int remove_msu_stat(enum stat_id, unsigned int id);
+int remove_thread_stat(enum stat_id, unsigned int id);
+int remove_rt_stat(enum stat_id);
 
-/**
- * Records the elapsed time since the previous call to record_start_time
- * @param stat_id ID for stat being logged
- * @param item_id ID for item within the statistic
- */
-int record_end_time(enum stat_id stat_id, unsigned int item_id);
+int init_msu_stat(enum stat_id, unsigned int id);
+int init_thread_stat(enum stat_id, unsigned int id);
+int init_rt_stat(enum stat_id);
 
-/**
- * Increments the given statistic by the provided value
- * @param stat_id ID for the stat being logged
- * @param item_id ID for the item to which the stat refers (must be registered!)
- * @param value The amount to add to the given stat
- * @return 0 on success, -1 on error
- */
-int increment_stat(enum stat_id stat_id, unsigned int item_id, double value);
+int sample_stats(struct stat_sample **samples);
 
-/**
- * Records a statistic in the statlog
- * @param stat_id ID for stat being logged
- * @param item_id ID for item to which stat refers (must be registered!)
- * @param stat Statistic to record
- * @param relog Whether to log statistic if it matches the previously logged stat
- * @return 0 on success, -1 on error
- */
-int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool relog);
+int check_statistics();
 
-/** Returns the last statistic recorded */
-double get_last_stat(enum stat_id stat_id, unsigned int item_id);
-
-/**
- * Samples the statistic with the provided stat_id.
- * @param stat_id the ID of the stat_type to sample
- * @param time The time at which the samples should be taken
- * @param n_samples_out Output argument, stores the number of samples acquired
- * @return The statically-allocated stat sample (does not need to be freed)
- */
-struct stat_sample *get_stat_samples(enum stat_id stat_id, struct timespec *time,
-                                     int *n_sample_out);
 #endif
-

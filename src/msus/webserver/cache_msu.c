@@ -168,7 +168,7 @@ static int cache_file(struct ws_cache_state *fc, char *path, char *contents, lon
 
         log_info("Evicting %s from cache", cached->path);
 #ifdef MONITOR_CACHE_STATS
-        increment_stat(CACHE_EVICT_STAT, cache_instance->id, 1);
+        increment_msu_stat(CACHE_EVICT_STAT, cache_instance->id, 1);
 #endif
 
         HASH_DEL(fc->cache, cached);
@@ -241,7 +241,7 @@ static int ws_cache_lookup(struct local_msu *self,
         if (file == NULL) {
             // File not cached, send to file IO msu
 #ifdef MONITOR_CACHE_STATS
-            increment_stat(CACHE_MISS_STAT, cache_instance->id, 1);
+            increment_msu_stat(CACHE_MISS_STAT, cache_instance->id, 1);
 #endif
             call_msu_type(self, &WEBSERVER_FILEIO_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         } else {
@@ -260,7 +260,7 @@ static int ws_cache_lookup(struct local_msu *self,
                 resp->header_len = MAX_HEADER_LEN;
             }
 #ifdef MONITOR_CACHE_STATS
-            increment_stat(CACHE_HIT_STAT, cache_instance->id, 1);
+            increment_msu_stat(CACHE_HIT_STAT, cache_instance->id, 1);
 #endif
             call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         }
@@ -289,9 +289,9 @@ static int ws_cache_init(struct local_msu *self, struct msu_init_data *init_data
     cache_instance = self;
 
 #ifdef MONITOR_CACHE_STATS
-    init_stat_item(CACHE_HIT_STAT, self->id);
-    init_stat_item(CACHE_MISS_STAT, self->id);
-    init_stat_item(CACHE_EVICT_STAT, self->id);
+    init_msu_stat(CACHE_HIT_STAT, self->id);
+    init_msu_stat(CACHE_MISS_STAT, self->id);
+    init_msu_stat(CACHE_EVICT_STAT, self->id);
 #endif
 
     return 0;

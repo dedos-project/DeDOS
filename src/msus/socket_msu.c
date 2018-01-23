@@ -71,7 +71,7 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
     if (rtn < 0) {
         rtn = add_to_epoll(state->epoll_fd, fd, events, true);
 #ifdef MONITOR_NUM_FDS
-        increment_stat(MSU_STAT1, instance->id, 1);
+        increment_msu_stat(MSU_STAT1, instance->id, 1);
 #endif
         if (rtn < 0) {
             log_perror("Error enabling epoll for fd %d", fd);
@@ -97,7 +97,7 @@ int msu_remove_fd_monitor(int fd) {
         return -1;
     } else {
 #ifdef MONITOR_NUM_FDS
-        increment_stat(MSU_STAT1, instance->id, -1);
+        increment_msu_stat(MSU_STAT1, instance->id, -1);
 #endif
     }
 
@@ -167,7 +167,7 @@ static int process_connection(int fd, void *v_state) {
 
 static int set_default_target(int fd, void *v_state) {
 #ifdef MONITOR_NUM_FDS
-    increment_stat(MSU_STAT1, instance->id, 1);
+    increment_msu_stat(MSU_STAT1, instance->id, 1);
 #endif
     struct sock_msu_state *state = v_state;
     state->destinations[fd] = NULL;
@@ -293,7 +293,7 @@ static int socket_msu_init(struct local_msu *self, struct msu_init_data *init_da
     instance = self;
 
 #ifdef MONITOR_NUM_FDS
-    init_stat_item(MSU_STAT1, self->id);
+    init_msu_stat(MSU_STAT1, self->id);
 #endif
 
     init_call_local_msu(self, self, &self_key, 0, NULL);

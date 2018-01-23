@@ -22,7 +22,6 @@ END OF LICENSE STUB
  *
  * Functions for the sending and receiving of statistics between ctrl and runtime
  */
-
 #ifndef STATS_H_
 #define STATS_H_
 #include "unused_def.h"
@@ -39,135 +38,108 @@ struct timed_stat {
     long double value;
 };
 
-/** Header for a single stat sample for a single item */
-struct stat_sample_hdr {
-    /** The ID of the statistic being sampled */
-    enum stat_id stat_id;
-    /** The ID for the item being sampled */
-    unsigned int item_id;
-    /** The size of the sample (number of stats, not number of items) */
-    int n_stats;
+enum stat_referent_type {
+    MSU_STAT, THREAD_STAT, RT_STAT
 };
 
-/** A single stat sample for a single item */
+struct stat_referent {
+    unsigned int id;
+    enum stat_referent_type type;
+};
+
+#define N_STAT_BINS 20
 struct stat_sample {
-    struct stat_sample_hdr hdr;
-    /** The allocated size of the stat_sample::stats structure */
-    int max_stats;
-    /** The statistics in question*/
-    struct timed_stat *stats;
+    enum stat_id stat_id;
+    struct stat_referent referent;
+    struct timespec start;
+    struct timespec end;
+    unsigned int n_bins;
+    double bin_edges[N_STAT_BINS + 1];
+    unsigned int bin_size[N_STAT_BINS];
+    unsigned int total_samples;
 };
 
-/** Structure to hold both the stat ID and the string describing it */
-struct stat_type_label {
-    enum stat_id id;
-    char *name;
-};
+#define MSU_STAT_TYPES \
+    _STNAM(QUEUE_LEN), \
+    _STNAM(ITEMS_PROCESSED), \
+    _STNAM(EXEC_TIME), \
+    _STNAM(IDLE_TIME), \
+    _STNAM(MEM_ALLOC), \
+    _STNAM(NUM_STATES), \
+    _STNAM(ERROR_CNT), \
+    _STNAM(UCPUTIME), \
+    _STNAM(SCPUTIME), \
+    _STNAM(MINFLT), \
+    _STNAM(MAJFLT), \
+    _STNAM(VCSW), \
+    _STNAM(IVCSW), \
+    _STNAM(MSU_STAT1), \
+    _STNAM(MSU_STAT2), \
+    _STNAM(MSU_STAT3)
 
-#ifndef REPORTED_MSU_STAT_TYPES
-#define REPORTED_MSU_STAT_TYPES \
-    {MSU_QUEUE_LEN, "QUEUE_LEN"}, \
-    {MSU_ITEMS_PROCESSED, "ITEMS_PROCESSED"}, \
-    {MSU_MEM_ALLOC, "MEMORY_ALLOCATED"}, \
-    {MSU_NUM_STATES, "NUM_STATES"}, \
-    {MSU_EXEC_TIME, "EXEC_TIME"}, \
-    {MSU_IDLE_TIME, "IDLE_TIME"}, \
-    {MSU_ERROR_CNT, "ERROR_COUNT"}, \
-    {MSU_UCPUTIME, "MSU_USER_TIME"}, \
-    {MSU_SCPUTIME, "MSU_KERNEL_TIME"}, \
-    {MSU_MINFLT, "MSU_MINOR_FAULTS"}, \
-    {MSU_MAJFLT, "MSU_MAJOR_FAULTS"}, \
-    {MSU_VCSW, "MSU_VOL_CTX_SW"}, \
-    {MSU_IVCSW, "MSU_INVOL_CTX_SW"}
-#endif
+#define THREAD_STAT_TYPES \
+    _STNAM(UCPUTIME), \
+    _STNAM(SCPUTIME), \
+    _STNAM(MAXRSS), \
+    _STNAM(MINFLT), \
+    _STNAM(MAJFLT), \
+    _STNAM(VCSW), \
+    _STNAM(IVCSW),
 
-#ifndef REPORTED_THREAD_STAT_TYPES
-#define REPORTED_THREAD_STAT_TYPES \
-    {THREAD_UCPUTIME, "USER_TIME"}, \
-    {THREAD_SCPUTIME, "KERNAL_TIME"}, \
-    {THREAD_MAXRSS, "MAX_RSS"}, \
-    {THREAD_MINFLT, "MINOR_FAULTS"}, \
-    {THREAD_MAJFLT, "MAJOR_FAULTS"}, \
-    {THREAD_VCSW, "VOL_CTX_SW"}, \
-    {THREAD_IVCSW, "INVOL_CTX_SW"}
-#endif
+#define RUNTIME_STAT_TYPES
 
-#ifndef REPORTED_STAT_TYPES
 #define REPORTED_STAT_TYPES \
-    REPORTED_MSU_STAT_TYPES, \
-    REPORTED_THREAD_STAT_TYPES
-#endif
-
-int is_thread_stat(enum stat_id id);
-int is_msu_stat(enum stat_id id);
+    _STNAM(QUEUE_LEN), \
+    _STNAM(ITEMS_PROCESSED), \
+    _STNAM(EXEC_TIME), \
+    _STNAM(IDLE_TIME), \
+    _STNAM(MEM_ALLOC), \
+    _STNAM(NUM_STATES), \
+    _STNAM(ERROR_CNT), \
+    _STNAM(UCPUTIME), \
+    _STNAM(SCPUTIME), \
+    _STNAM(MAXRSS), \
+    _STNAM(MINFLT), \
+    _STNAM(MAJFLT), \
+    _STNAM(VCSW), \
+    _STNAM(IVCSW), \
+    _STNAM(MSU_STAT1), \
+    _STNAM(MSU_STAT2), \
+    _STNAM(MSU_STAT3),
 
 /** Static structure so the reported stat types can be referenced as an array */
-static struct stat_type_label UNUSED reported_stat_types[] = {
+static struct stat_label UNUSED reported_stat_types[] = {
     REPORTED_STAT_TYPES
 };
+
 /** Number of reported stat types */
 #define N_REPORTED_STAT_TYPES sizeof(reported_stat_types) / sizeof(*reported_stat_types)
 
-static struct stat_type_label UNUSED reported_msu_stat_types[] = {
-    REPORTED_MSU_STAT_TYPES
+static struct stat_label UNUSED msu_stat_types[] = {
+    MSU_STAT_TYPES
 };
-#define N_REPORTED_MSU_STAT_TYPES \
-    sizeof(reported_msu_stat_types) / sizeof(*reported_msu_stat_types)
 
-static struct stat_type_label UNUSED reported_thread_stat_types[] = {
-    REPORTED_THREAD_STAT_TYPES
+#define N_MSU_STAT_TYPES sizeof(msu_stat_types) / sizeof(*msu_stat_types)
+
+static struct stat_label UNUSED thread_stat_types[] = {
+    THREAD_STAT_TYPES
 };
-#define N_REPORTED_THREAD_STAT_TYPES \
-    sizeof(reported_thread_stat_types) / sizeof(*reported_thread_stat_types)
 
+#define N_THREAD_STAT_TYPES sizeof(thread_stat_types) / sizeof(*thread_stat_types)
 
+static struct stat_label UNUSED runtime_stat_types[] = {
+    RUNTIME_STAT_TYPES
+};
 
-/** Maxmimum identifier that can be assigned to a stat item */
-#define MAX_STAT_ITEM_ID 4192
-
-/** Number of statistics sampled in each send from runtime to controller */
-#define STAT_SAMPLE_SIZE 5
+#define N_RUNTIME_STAT_TYPES sizeof(runtime_stat_types) / sizeof(*runtime_stat_types)
 
 /** How often samples are sent from runtime to controller */
-#define STAT_SAMPLE_PERIOD_MS 500
+#define STAT_SAMPLE_PERIOD_MS 5000
 
-/** Frees a set of stat samples */
-void free_stat_samples(struct stat_sample *samples, int n_samples);
+size_t serialize_stat_samples(struct stat_sample *samples, int n_samples,
+                              void **buffer);
 
-/**
- * Initilizes `n` sets of  samples of statistics, each of which contains `max_stats` points
- * @return allocated structure on success, NULL on error
- */
-struct stat_sample *init_stat_samples(int max_stats, int n_samples);
+int deserialize_stat_samples(void *buffer, size_t buff_len,
+                             struct stat_sample **samples);
 
-/**
- * Deserializes from the provided buffer into the `samples` structure.
- * @param buffer The buffer to deserialize
- * @param buff_len The size of the serialized buffer
- * @param samples The structure into which to deserialize
- * @param n_samples The number of items allocated in `samples`
- * @return 0 on success, -1 on error
- */
-int deserialize_stat_samples(void *buffer, size_t buff_len, struct stat_sample *samples,
-                             int n_samples);
-
-/**
- * Serializes from the provided `samples` into the `buffer`
- * @param samples The samples to deserialize
- * @param n_samples size of `samples`
- * @param buffer The buffer into which to serialize
- * @param buff_len The size of the allocated `buffer`
- * @return 0 on success, -1 on error (if buffer is too small)
- */
-ssize_t serialize_stat_samples(struct stat_sample *samples, int n_samples,
-                               void *buffer, size_t buff_len);
-
-/**
- * Determines the size needed to hold the serialized version of `sample`.
- *
- * @param sample The sample to serialize
- * @param n_samples The number of elements in `sample`
- * @return size needed
- */
-size_t serialized_stat_sample_size(struct stat_sample *sample, int n_samples);
 #endif

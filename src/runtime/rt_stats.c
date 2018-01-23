@@ -1,849 +1,646 @@
-/*
-START OF LICENSE STUB
-    DeDOS: Declarative Dispersion-Oriented Software
-    Copyright (C) 2017 University of Pennsylvania, Georgetown University
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-END OF LICENSE STUB
-*/
-/**
- * @file rt_stats.c
- *
- * Collecting statistics within the runtime
- */
-
 #include "rt_stats.h"
-#include "stats.h"
+#include "dfg.h"
+#include "runtime_dfg.h"
 #include "logging.h"
 
-#include <stdio.h>
-#include <stdio_ext.h>
-#include <stdlib.h>
-#include <pthread.h>
 #include <stdbool.h>
 
 /** The clock used to mark the time at which events take place */
 #define CLOCK_ID CLOCK_REALTIME_COARSE
 #define DURATION_CLOCK_ID CLOCK_MONOTONIC
 
-/** The time at which the runtime started */
-static struct timespec stats_start_time;
-/** Whether ::init_statistics has been called */
-static bool stats_initialized = false;
+#define INCREMENT_START_TO_END(start, end) \
+    do { \
+        end.tv_nsec = start.tv_nsec + STAT_SAMPLE_PERIOD_MS * 1e6; \
+        end.tv_sec = start.tv_sec + (end.tv_nsec / 1e9); \
+        end.tv_nsec %= (long)1e9; \
+    } while (0)
 
+#define STAT_LIST_SIZE 8192
 
-/**
- * The internal statistics structure where stats are aggregated
- * One per statistic-item.
- */
-struct stat_item
+struct stat_list
 {
-    unsigned int id;          /**< A unique identifier for the item being logged */
-    int write_index;          /**< The write index in the circular buffer */
-    bool rolled_over;         /**< Whether the stats structure has rolled over at least once */
-    struct timed_stat *stats; /**< Timestamp and data for each gathered statistic */
-    pthread_mutex_t mutex;    /**< Lock for changing stat item */
+    pthread_mutex_t rec_mutex;
+    bool recorded;
+
+    struct timespec start_time;
+    unsigned int write_index; /**< The next index that will be written to */
+
+    /** Timestamp and data for each gathered statistic */
+    struct timed_stat stats[STAT_LIST_SIZE];
 };
 
-/**
- * The structure holding all items of a type of stats
- */
+#define TIME_CMP(start, end) \
+    ((start).tv_sec > (end).tv_sec) ? 1 : \
+    ((start).tv_sec < (end).tv_sec) ? -1 : \
+    ((start).tv_nsec > (end).tv_nsec) ? 1 : \
+    ((start).tv_nsec < (end).tv_nsec) ? -1 : 0
+
+#define ITEM_GROUP_SIZE 4
+
+struct stat_item_group
+{
+    enum stat_id stat;
+    struct stat_referent referent;
+
+    struct timespec last_start_time;
+    struct timed_stat last_stat;
+
+    unsigned int write_index;
+    unsigned int read_index;
+
+    struct stat_list stat_list[ITEM_GROUP_SIZE];
+};
+
+#define RT_ITEM_ID 1
+
+#define MAX_RT_ITEM_ID RT_ITEM_ID
+
+#define THREAD_ITEM_ID(th) (MAX_RT_ITEM_ID + (th + 1))
+#define THREAD_FROM_ITEM_ID(id) (id - MAX_RT_ITEM_ID - 1)
+
+#define MAX_THREAD_ITEM_ID THREAD_ITEM_ID(MAX_THREADS)
+
+#define MSU_ITEM_ID(ms) (MAX_THREAD_ITEM_ID + ms)
+#define MSU_FROM_ITEM_ID(id) (id - MAX_THREAD_ITEM_ID)
+
+#define MAX_MSU_ITEM_ID MSU_ITEM_ID(MAX_MSU)
+
+#define MAX_ITEM_ID MAX_MSU_ITEM_ID
+
+/** Assumes one of r, t, m > 0 */
+#define ITEM_ID(r, t, m) \
+    r > 0 ? RT_ITEM_ID : \
+    t > 0 ? THREAD_ITEM_ID(t) : m
+
+#define ITEM_ID_REFERENT_TYPE(id) \
+    id > MAX_MSU_ITEM_ID ? -1 : \
+    id > MAX_THREAD_ITEM_ID ? MSU_STAT : \
+    id > MAX_RT_ITEM_ID ? THREAD_STAT : \
+    RT_STAT
+
+static unsigned int id_from_item_id(unsigned int id) {
+    switch (ITEM_ID_REFERENT_TYPE(id)) {
+        case MSU_STAT: return MSU_FROM_ITEM_ID(id);
+        case THREAD_STAT: return THREAD_FROM_ITEM_ID(id);
+        case RT_STAT: return local_runtime_id();
+    }
+    return -1;
+}
+
 struct stat_type {
-    enum stat_id id;          /**< Stat ID as defined in stats.h */
-    bool enabled;             /**< If true, logging for this item is enabled */
-    int max_stats;            /**< Maximum number of statistics that can be held in memory */
-    char *format;             /**< Format for printf */
-    char *label;              /**< Name to output for this statistic */
-    int id_indices[MAX_STAT_ITEM_ID];   /**< Index at which the IDs are stored */
-    int num_items;            /**< Number of items currently registered for logging */
-    int max_items;            /**< Number of items allocated for logging */
-    pthread_rwlock_t lock;    /**< Lock for adding new stat items */
-    struct stat_item *items;  /**< The items of this type being logged */
-};
+    struct stat_label stat;
+    bool enabled;
 
-#if DUMP_STATS
-#define MAX_STATS 262144
-#else
-/** The maximum number of statistics that can be held in the rrdb */
-#define MAX_STATS 8192
-#endif
+    pthread_mutex_t id_mutex;
+    unsigned int max_used_id_index;
+    unsigned int used_ids[MAX_ITEM_ID];
+    struct stat_item_group *stat_items[MAX_ITEM_ID];
+};
 
 /** If set to 0, will disable all gathering of statistics */
 #define GATHER_STATS 1
 
-#define GATHER_MSU_STATS 1 & GATHER_STATS
-#define GATHER_CUSTOM_STATS 1 & GATHER_STATS
-#define GATHER_THREAD_STATS 1 & GATHER_STATS
-
-#ifdef DEDOS_PROFILER
-#define GATHER_PROFILING 1
+#if defined(DEDOS_PROFILER) & GATHER_STATS
+#define GATHER_PROF 1
 #else
-#define GATHER_PROFILING 0
+#define GATHER_PROF 0
 #endif
 
-/** The list of all statistics that can be gathered in the system */
-struct stat_type stat_types[] = {
-    {MSU_QUEUE_LEN,       GATHER_MSU_STATS,   MAX_STATS, "%02.0f", "MSU_Q_LEN"},
-    {MSU_ITEMS_PROCESSED, GATHER_MSU_STATS,   MAX_STATS, "%03.0f", "ITEMS_PROCESSED"},
-    {MSU_EXEC_TIME,       GATHER_MSU_STATS,   MAX_STATS, "%0.9f",  "MSU_EXEC_TIME"},
-    {MSU_IDLE_TIME,       GATHER_MSU_STATS,   MAX_STATS, "%0.9f",  "MSU_IDLE_TIME"},
-    {MSU_MEM_ALLOC,       GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_MEM_ALLOC"},
-    {MSU_NUM_STATES,      GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_NUM_STATES"},
-    {MSU_ERROR_CNT,       GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_ERROR_CNT"},
-    {MSU_UCPUTIME,        GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_USER_TIME"},
-    {MSU_SCPUTIME,        GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_KERNEL_TIME"},
-    {MSU_MINFLT,          GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_MINOR_FAULTS"},
-    {MSU_MAJFLT,          GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_MAJOR_FAULTS"},
-    {MSU_VCSW,            GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_VOL_CTX_SW"},
-    {MSU_IVCSW,           GATHER_MSU_STATS,   MAX_STATS, "%09.0f", "MSU_INVOL_CTX_SW"},
-    {THREAD_UCPUTIME,     GATHER_THREAD_STATS,    MAX_STATS, "%09.9f", "THREAD_USER_TIME"},
-    {THREAD_SCPUTIME,     GATHER_THREAD_STATS,    MAX_STATS, "%09.9f", "THREAD_KERNEL_TIME"},
-    {THREAD_MAXRSS,       GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_MAX_RSS"},
-    {THREAD_MINFLT,       GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_MINOR_PG_FAULTS"},
-    {THREAD_MAJFLT,       GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_MAJOR_PG_FAULTS"},
-    {THREAD_VCSW,         GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_VOL_CTX_SW"},
-    {THREAD_IVCSW,        GATHER_THREAD_STATS,    MAX_STATS, "%09.0f", "THREAD_INVOL_CTX_SW"},
-    {MSU_STAT1,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT1"},
-    {MSU_STAT2,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT2"},
-    {MSU_STAT3,           GATHER_CUSTOM_STATS,    MAX_STATS, "%03.0f", "MSU_STAT3"},
-    {PROF_ENQUEUE,        GATHER_PROFILING,       MAX_STATS, "%0.0f", "ENQUEUE"},
-    {PROF_DEQUEUE,        GATHER_PROFILING,       MAX_STATS, "%0.0f", "DEQUEUE"},
-    {PROF_REMOTE_SEND,    GATHER_PROFILING,       MAX_STATS, "%0.0f", "SEND"},
-    {PROF_REMOTE_RECV,    GATHER_PROFILING,       MAX_STATS, "%0.0f", "RECV"},
-    {PROF_DEDOS_ENTRY,    GATHER_PROFILING,       MAX_STATS, "%0.0f", "ENTRY"},
-    {PROF_DEDOS_EXIT,     GATHER_PROFILING,       MAX_STATS, "%0.0f", "EXIT"},
+
+#define DEF_STAT(stat) \
+    {_STNAM(stat), GATHER_STATS, PTHREAD_MUTEX_INITIALIZER}
+
+#define DEF_PROF_STAT(stat) \
+    {_STNAM(stat), GATHER_PROF, PTHREAD_MUTEX_INITIALIZER}
+
+/**
+ * Statistics should be defined in the same order as the enumerator,
+ * or else indices would have to be looked up on every call.
+ *
+ * It is assumed this is followed unless WARN_UNCHECKED_STATS is defined.
+ */
+static struct stat_type stat_types[] = {
+    DEF_STAT(QUEUE_LEN),
+    DEF_STAT(ITEMS_PROCESSED),
+    DEF_STAT(EXEC_TIME),
+    DEF_STAT(IDLE_TIME),
+    DEF_STAT(MEM_ALLOC),
+    DEF_STAT(NUM_STATES),
+    DEF_STAT(ERROR_CNT),
+    DEF_STAT(UCPUTIME),
+    DEF_STAT(SCPUTIME),
+    DEF_STAT(MAXRSS),
+    DEF_STAT(MINFLT),
+    DEF_STAT(MAJFLT),
+    DEF_STAT(VCSW),
+    DEF_STAT(IVCSW),
+    DEF_STAT(MSU_STAT1),
+    DEF_STAT(MSU_STAT2),
+    DEF_STAT(MSU_STAT3),
+    DEF_PROF_STAT(PROF_ENQUEUE),
+    DEF_PROF_STAT(PROF_DEQUEUE),
+    DEF_PROF_STAT(PROF_REMOTE_SEND),
+    DEF_PROF_STAT(PROF_REMOTE_RECV),
+    DEF_PROF_STAT(PROF_DEDOS_ENTRY),
+    DEF_PROF_STAT(PROF_DEDOS_EXIT)
 };
 
-/** The number of types of statistics */
 #define N_STAT_TYPES (sizeof(stat_types) / sizeof(*stat_types))
 
-#define CHECK_INITIALIZATION \
-    if (!stats_initialized) { \
-        log_error("Statistics not initialized!"); \
-        return -1; \
+/** If this is defined, each access to statistics will be accompanied
+ * by a warning if the order of stats has not been checked */
+#define WARN_UNCHECKED_STATS
+
+#ifdef WARN_UNCHECKED_STATS
+#define ORDER_CHECK \
+    if (!stats_checked) { \
+        log_warn("Order of statistics is being checked during execution"); \
+        check_statistics(); \
     }
-
-/* TODO: Incremental flushes of raw items, followed by eventual conversion
-static inline int flush_raw_item_to_log(FILE *file, struct stat_type *type,
-                                        int item_idx) {
-    struct stat_item *item = &type->items[item_idx];
-    int max_stats = type->max_stats;
-
-    fwrite(&type->id, sizeof(type->id), 1, file);
-    int label_len = strlen(type->label) + 1;
-    fwrite(&label_len, sizeof(label_len), 1, file);
-    fwrite(type->label, sizeof(char), label_len, file);
-    int fmt_len = strlen(type->format) + 1;
-    fwrite(&fmt_len, sizeof(fmt_len), 1, file);
-    fwrite(type->format, sizeof(char), fmt_len, file);
-
-    fwrite(&item->id, sizeof(item->id), 1, file);
-    fwrite(&item->write_index, sizeof(item->write_index), 1, file);
-    fwrite(&item->rolled_over, sizeof(item->rolled_over), 1, file);
-    int n_stats = item->rolled_over ? max_stats : item->write_index;
-    fwrite(&n_stats, sizeof(n_stats), 1, file);
-    fwrite(item->stats, sizeof(*item->stats), n_stats, file);
-
-    return 0;
-}
-
-static int convert_raw_item_from_log(FILE *in_file, FILE *out_file) {
-    struct stat_type type;
-    struct stat_item item;
-
-    fread(&type.id, sizeof(type.id), 1, in_file);
-    int label_len;
-    fread(&label_len, sizeof(label_len), 1, in_file);
-    fread(type.label, sizeof(char), label_len, in_file);
-
-    int fmt_len;
-    fread(&fmt_len, sizeof(fmt_len), 1, in_file);
-    fread(type.format, sizeof(char), fmt_len, in_file);
-
-    fread(&item.id, sizeof(item.id), 1, in_file);
-    fread(&item.write_index, sizeof(item.write_index), 1, in_file);
-    fread(&item.rolled_over, sizeof(item.rolled_over), 1, in_file);
-    int n_stats;
-    fread(&n_stats, sizeof(n_stats), 1, in_file);
-    item.stats = malloc(sizeof(*item.stats) * n_stats);
-    fread(item.stats, sizeof(*item.stats), n_stats, in_file);
-
-    return write_item_to_log(out_file, &type, &item);
-}
-*/
-
-/** Writes a single stat item to the log file */
-static int write_item_to_log(FILE *out_file, struct stat_type *type, struct stat_item *item) {
-
-    char label[64];
-    int ln = snprintf(label, 64, "%s:%02d:", type->label, item->id);
-    label[ln] = '\0';
-    //size_t label_size = strlen(label);
-
-    int n_stats = item->rolled_over ? type->max_stats : item->write_index;
-    for (int i=0; i<n_stats; i++) {
-        int rtn;
-        if ((rtn = fprintf(out_file, "%s", label)) > 30 || rtn < 0) {
-            log_warn("printed out %d characters while outputting value %d", rtn, i);
-        }
-
-        //fwrite(label, 1, label_size, out_file);
-        if ((rtn = fprintf(out_file, "%010ld.%09ld:",
-                (long int)item->stats[i].time.tv_sec,
-                (long int)item->stats[i].time.tv_nsec)) > 30 || rtn < 0)  {
-            log_warn("Printed out %d characters outputting value %d",rtn,  i);
-        }
-        if ((rtn = fprintf(out_file, type->format, item->stats[i].value)) > 30 || rtn < 0) {
-            log_warn("printed out %d characters while outputting value %d", rtn, i);
-        }
-        fprintf(out_file, "%s", "\n");
-    }
-    log(LOG_STATS, "Flushed %d items for type %s (rollover: %d)", n_stats, type->label, item->rolled_over);
-    return 0;
-}
-
-
-/**
- * Gets the amount of time that has elapsed since logging started.
- * @param *t the elapsed time is output into this variable
-*/
-static void get_elapsed_time(struct timespec *t) {
-   clock_gettime(CLOCK_ID, t);
-   //t->tv_sec -= stats_start_time.tv_sec;
-}
-
-/** Locks a stat type for writing */
-static inline int wrlock_type(struct stat_type *type) {
-    if (pthread_rwlock_wrlock(&type->lock) != 0) {
-        log_error("Error locking stat type %s", type->label);
-        return -1;
-    }
-    return 0;
-}
-
-/** Unlocks a stat type */
-static inline int unlock_type(struct stat_type *type) {
-    if (pthread_rwlock_unlock(&type->lock) != 0) {
-        log_error("Error unlocking stat type %s", type->label);
-        return -1;
-    }
-    return 0;
-}
-
-/** Locks a stat type for reading */
-static inline int rlock_type(struct stat_type *type) {
-    if (pthread_rwlock_rdlock(&type->lock) != 0) {
-        log_error("Error locking stat type %s", type->label);
-        return -1;
-    }
-    return 0;
-}
-
-/** Locks an item_stats structure, printing an error message on failure
- * @param *item the item_stats structure to lock
- * @return 0 on success, -1 on error
- */
-static inline int lock_item(struct stat_item *item) {
-    if ( pthread_mutex_lock(&item->mutex) != 0) {
-        log_error("Error locking mutex for an item with ID %u", item->id);
-        return -1;
-    }
-    return 0;
-}
-
-/** Unlocks an item_stats structure, printing an error message on failure
- * @param *item the item_stats structure to unlock
- * @return 0 on success, -1 on error
- */
-static inline int unlock_item(struct stat_item *item) {
-    if ( pthread_mutex_unlock(&item->mutex) != 0) {
-        log_error("Error locking mutex for an item with ID %u", item->id);
-        return -1;
-    }
-    return 0;
-}
-
-/** Writes all statistics to the provided log file */
-static void UNUSED flush_all_stats_to_log(FILE *file) {
-    for (int i=0; i<N_STAT_TYPES; i++) {
-        if (!stat_types[i].enabled) {
-            continue;
-        }
-        rlock_type(&stat_types[i]);
-        for (int j=0; j<stat_types[i].num_items; j++) {
-            lock_item(&stat_types[i].items[j]);
-            write_item_to_log(file, &stat_types[i], &stat_types[i].items[j]);
-            unlock_item(&stat_types[i].items[j]);
-        }
-        unlock_type(&stat_types[i]);
-    }
-}
-
-/** Frees the memory associated with an individual stat item */
-static void destroy_stat_item(struct stat_item *item) {
-    free(item->stats);
-    pthread_mutex_destroy(&item->mutex);
-}
-
-/** Gets the stat item associated with the given item_id in the given type */
-static struct stat_item *get_item_stat(struct stat_type *type, unsigned int item_id) {
-    if (item_id > MAX_STAT_ITEM_ID) {
-        log_error("Item ID %u too high. Max: %d", item_id, MAX_STAT_ITEM_ID);
-        return NULL;
-    }
-    int id_index = type->id_indices[item_id];
-    if (id_index == -1) {
-        log_error("Item ID %u not initialized for stat %s",
-                  item_id, type->label);
-        return NULL;
-    }
-    return &type->items[id_index];
-}
-
-static inline long double current_double_time() {
-    struct timespec t;
-    clock_gettime(DURATION_CLOCK_ID, &t);
-    return (long double)t.tv_sec + (long double)t.tv_nsec / 1e9;
-}
-
-int record_start_time(enum stat_id stat_id, unsigned int item_id) {
-    CHECK_INITIALIZATION;
-
-    struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) {
-        return 0;
-    }
-    if (rlock_type(type)) {
-        return -1;
-    }
-    struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
-    if (item == NULL) {
-        return -1;
-    }
-
-    if (lock_item(item)) {
-        return -1;
-    }
-    get_elapsed_time(&item->stats[item->write_index].time);
-    item->stats[item->write_index].value = current_double_time();
-    unlock_item(item);
-
-    return 0;
-}
-
-#if DUMP_STATS
-#define WARN_ROLLOVER(label, item_id) \
-        log_warn("Stats for type %s.%u rolling over. Log file will be missing data", \
-                 label, item_id);
 #else
-#define WARN_ROLLOVER(label, item_id)
+#define CHECK_STATS
 #endif
 
+/** Whether ::check_statistics has been called */
+static bool stats_checked = false;
 
-int record_end_time(enum stat_id stat_id, unsigned int item_id) {
-    CHECK_INITIALIZATION;
-
-    long double new_time = current_double_time();
-
-    struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) {
-        return 0;
+int check_statistics() {
+    int rtn = 0;
+    for (int i=0; i < N_STAT_TYPES; i++) {
+        struct stat_type *type = &stat_types[i];
+        if (type->stat.id != i) {
+            log_error("Stat type %s (%d) at incorrect index %d! Disabling!!",
+                      type->stat.label, type->stat.id, i);
+            type->enabled = 0;
+            rtn = 1;
+        }
     }
-    if (rlock_type(type)) {
-        return -1;
-    }
-    struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
-    if (item == NULL) {
-        return -1;
-    }
-
-    if (lock_item(item)) {
-        return -1;
-    }
-
-    item->stats[item->write_index].value = new_time - item->stats[item->write_index].value;
-    item->write_index++;
-
-    if (item->write_index == type->max_stats) {
-        WARN_ROLLOVER(type->label, item_id);
-        item->write_index = 0;
-        item->rolled_over = true;
-    }
-
-    unlock_item(item);
-    return 0;
+    stats_checked = true;
+    return rtn;
 }
-int increment_stat(enum stat_id stat_id, unsigned int item_id, double value) {
-    CHECK_INITIALIZATION;
 
-    struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) {
-        return 0;
-    }
-    if (rlock_type(type)) {
+static int lock_type(struct stat_type *type) {
+    if (pthread_mutex_lock(&type->id_mutex) != 0) {
+        log_error("Failed to lock type %s mutex", type->stat.label);
         return -1;
     }
-    struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
-    if (item == NULL) {
-        return -1;
-    }
-
-    if (lock_item(item)) {
-        return -1;
-    }
-
-    get_elapsed_time(&item->stats[item->write_index].time);
-    int last_index = item->write_index - 1;
-    if ( last_index < 0 ) {
-        last_index = type->max_stats - 1;
-    }
-    item->stats[item->write_index].value = item->stats[last_index].value + value;
-    item->write_index++;
-    if (item->write_index == type->max_stats) {
-        WARN_ROLLOVER(type->label, item_id);
-        item->write_index = 0;
-        item->rolled_over = true;
-    }
-
-    unlock_item(item);
     return 0;
 }
 
-int record_stat(enum stat_id stat_id, unsigned int item_id, double stat, bool relog) {
-    CHECK_INITIALIZATION;
-
-    struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) {
-        return 0;
-    }
-    if (rlock_type(type)) {
+static int unlock_type(struct stat_type *type) {
+    if (pthread_mutex_unlock(&type->id_mutex) != 0) {
+        log_error("Failed to unlock type %s mutex", type->stat.label);
         return -1;
     }
-    struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
-    if (item == NULL) {
-        return -1;
-    }
-
-    if (lock_item(item)) {
-        return -1;
-    }
-
-    int last_index = item->write_index - 1;
-    bool do_log = true;
-    if (last_index >= 0) {
-        do_log = item->stats[last_index].value != stat;
-    }
-
-    if (relog || do_log) {
-        get_elapsed_time(&item->stats[item->write_index].time);
-        item->stats[item->write_index].value = stat;
-        item->write_index++;
-        if (item->write_index == type->max_stats) {
-            WARN_ROLLOVER(type->label, item_id);
-            item->write_index = 0;
-            item->rolled_over = true;
-        }
-    }
-    unlock_item(item);
     return 0;
 }
 
-double get_last_stat(enum stat_id stat_id, unsigned int item_id) {
-    CHECK_INITIALIZATION;
+#define CHECK_ID_MAX(id) \
+    if (id > MAX_ITEM_ID) { \
+        log_error("Item ID %u too high!", id); \
+        return NULL; \
+    }
+
+static struct stat_item_group *get_item_group(struct stat_type *type,
+                                              unsigned int item_id) {
+    CHECK_ID_MAX(item_id);
+    struct stat_item_group *group = type->stat_items[item_id];
+    if (group == NULL) {
+        log_error("Cannot get item %u from stat %s",
+                  item_id, type->stat.label);
+        return NULL;
+    }
+    return group;
+}
+
+static struct stat_list *get_locked_write_stat_list(struct stat_item_group *group,
+                                                    unsigned int item_id,
+                                                    struct timespec *cur_time) {
+
+    struct stat_list *old_list = &group->stat_list[group->write_index];
+    struct stat_list *new_list = old_list;
+    int locked = pthread_mutex_trylock(&old_list->rec_mutex);
+    if (locked == 1 || old_list->recorded) {
+        group->write_index = (group->write_index + 1) % ITEM_GROUP_SIZE;
+        new_list = &group->stat_list[group->write_index];
+        new_list->recorded = false;
+        new_list->start_time = *cur_time;
+        if (locked == 0)
+            pthread_mutex_unlock(&old_list->rec_mutex);
+        pthread_mutex_lock(&new_list->rec_mutex);
+    }
+    return new_list;
+}
+
+static void unlock_stat_list(struct stat_list *list) {
+    pthread_mutex_unlock(&list->rec_mutex);
+}
+
+#define timestamp(t) clock_gettime(CLOCK_ID, t);
+#define dur_timestamp(t) clock_gettime(DURATION_CLOCK_ID, t);
+
+#define timediff_dbl(t1, t2) (double) (t2.tv_sec - t1.tv_sec) + (t2.tv_nsec - t1.tv_nsec) * 1e-9
+
+
+#define DEF_INDIV_FNS(fn, msu_fn_name, thread_fn_name, rt_fn_name) \
+    int msu_fn_name(enum stat_id sid, unsigned int mid) { \
+        return fn(sid, MSU_ITEM_ID(mid)); \
+    } \
+    int thread_fn_name(enum stat_id sid, unsigned int tid) { \
+        return fn(sid, THREAD_ITEM_ID(tid)); \
+    } \
+    int rt_fn_name(enum stat_id sid) { \
+        return fn(sid, RT_ITEM_ID); \
+    }
+
+#define DEF_INDIV_FNS_WARG(fn, msu_fn_name, thread_fn_name, rt_fn_name, argtype) \
+    int msu_fn_name(enum stat_id sid, unsigned int mid, argtype _arg) { \
+        return fn(sid, MSU_ITEM_ID(mid), _arg); \
+    } \
+    int thread_fn_name(enum stat_id sid, unsigned int tid, argtype _arg) { \
+        return fn(sid, THREAD_ITEM_ID(tid), _arg); \
+    } \
+    int rt_fn_name(enum stat_id sid, argtype _arg) { \
+        return fn(sid, RT_ITEM_ID, _arg); \
+    }
+
+static int record_stat(enum stat_id stat_id, unsigned int item_id, double value) {
+    struct timespec t;
+    timestamp(&t);
 
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {
         return 0;
     }
-    if (rlock_type(type)) {
-        return -1;
-    }
-    struct stat_item *item = get_item_stat(type, item_id);
-    unlock_type(type);
-    if (item == NULL) {
-        return -1;
-    }
-    if (lock_item(item)) {
+    struct stat_item_group *group = get_item_group(type, item_id);
+    if (group == NULL) {
         return -1;
     }
 
-    int last_index = item->write_index - 1;
-    double last_stat = 0;
-    if (last_index >= 0) {
-        last_stat = item->stats[last_index].value;
+    struct stat_list *list = get_locked_write_stat_list(group, item_id, &t);
+    int idx = list->write_index;
+    if (idx >= STAT_LIST_SIZE) {
+        log_warn("Cannot record statistic! Too many already recorded!");
+        return -1;
+    }
+    list->stats[idx].time = t;
+    list->stats[idx].value = value;
+    list->write_index = (idx + 1);
+    group->last_stat = list->stats[idx];
+
+    unlock_stat_list(list);
+    log(LOG_RECORD_STAT, "Recorded stat %d, item %d, value %f", stat_id, item_id, value);
+
+    return 0;
+}
+DEF_INDIV_FNS_WARG(record_stat,
+                   record_msu_stat, record_thread_stat, record_rt_stat,
+                   double);
+
+static int get_last_stat(enum stat_id stat_id, unsigned int item_id, double *out) {
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    struct stat_item_group *group = get_item_group(type, item_id);
+    if (group == NULL) {
+        return -1;
     }
 
-    unlock_item(item);
+    *out = group->last_stat.value;
+    return 0;
+}
+DEF_INDIV_FNS_WARG(get_last_stat,
+                   last_msu_stat, last_thread_stat, last_rt_stat,
+                   double *);
 
-    return last_stat;
+
+static int increment_stat(enum stat_id stat_id, unsigned int item_id, double increment) {
+    double val = -1;
+    if (get_last_stat(stat_id, item_id, &val) != 0) {
+        return -1;
+    }
+    return record_stat(stat_id, item_id, val + increment);
+}
+DEF_INDIV_FNS_WARG(increment_stat,
+                   increment_msu_stat, increment_thread_stat, increment_rt_stat,
+                   double);
+
+static int begin_interval(enum stat_id stat_id, unsigned int item_id) {
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    struct stat_item_group *group = get_item_group(type, item_id);
+    if (group == NULL) {
+        return -1;
+    }
+    dur_timestamp(&group->last_start_time);
+    return 0;
+}
+DEF_INDIV_FNS(begin_interval,
+              begin_msu_interval, begin_thread_interval, begin_rt_interval)
+
+static int end_interval(enum stat_id stat_id, unsigned int item_id) {
+    struct timespec t;
+    dur_timestamp(&t);
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    struct stat_item_group *group = get_item_group(type, item_id);
+    if (group == NULL) {
+        return -1;
+    }
+    double td = timediff_dbl(group->last_start_time, t);
+    return record_stat(stat_id, item_id, td);
+}
+DEF_INDIV_FNS(end_interval,
+              end_msu_interval, end_thread_interval, end_rt_interval);
+
+static struct stat_item_group *allocate_stat_item_group(enum stat_id stat, unsigned int item_id) {
+    struct stat_item_group *group = calloc(sizeof(*group), 1);
+    if (group == NULL) {
+        log_error("Failed to allocate stat_item_group");
+        return NULL;
+    }
+    group->stat = stat;
+    group->referent.id = id_from_item_id(item_id);
+    group->referent.type = ITEM_ID_REFERENT_TYPE(item_id);
+    log(LOG_STAT_ALLOCATION, "Allocated item group id=%d, item_id=%d, type=%d",
+        group->referent.id, item_id, group->referent.type);
+
+    return group;
 }
 
-/** Returns 1 if t1 > t2, -1 if t2 > t1, 0 otherwise */
-static inline int time_cmp(struct timespec *t1, struct timespec *t2) {
-    return t1->tv_sec > t2->tv_sec ? 1 :
-            ( t1->tv_sec < t2->tv_sec ? -1 :
-             ( t1->tv_nsec > t2->tv_nsec ? 1 :
-               ( t1->tv_nsec < t2->tv_nsec ? -1 : 0 ) ) );
+static void free_stat_item_group(struct stat_item_group *group) {
+    free(group);
 }
 
-/** Finds the index at which the given time occurred in the stats */
-static int find_time_index(struct timed_stat *stats, struct timespec *time,
-                    int start_index, int stat_size) {
-    if (start_index < 0) {
-        start_index = stat_size - 1;
-    }
-    if (time_cmp(&stats[start_index].time, time) <= 0) {
-        return start_index;
-    }
-    int search_index = start_index - 1;
-    do {
-        if (search_index < 0) {
-            search_index = stat_size - 1;
-        }
-        if (time_cmp(&stats[search_index].time, time) <= 0) {
-            return search_index;
-        }
-        search_index--;
-    } while (search_index != start_index - 1);
-    return -1;
-}
+static pthread_mutex_t all_sample_lock = PTHREAD_MUTEX_INITIALIZER;
+static int total_num_stats;
+static struct stat_sample *all_samples;
 
-/** Takes a sample of the provided stat item and stores it in `sample` */
-static int sample_stat_item(struct stat_item *item, int stat_size,
-                     struct timespec *sample_end, struct timespec *interval, int sample_size,
-                     struct timed_stat *sample) {
-    struct timespec sample_time = *sample_end;
-    if (lock_item(item)) {
+static int lock_samples() {
+    if (pthread_mutex_lock(&all_sample_lock) != 0) {
+        log_error("Error locking stat samples");
         return -1;
     }
-    int sample_index = item->write_index - 1;
-    if (sample_index < 0) {
-        sample_index = stat_size + sample_index;
+    return 0;
+}
+static int unlock_samples() {
+    if (pthread_mutex_unlock(&all_sample_lock) != 0) {
+        log_error("Error unlocking stat samples");
+        return -1;
     }
-    int max_index = item->rolled_over ?  stat_size : item->write_index;
+    return 0;
+}
+
+static int remove_stat_item(enum stat_id stat_id, unsigned int item_id) {
+    ORDER_CHECK;
+
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+
+    if (lock_type(type)) {
+        return -1;
+    }
+
+    if (type->stat_items[item_id] == NULL) {
+        log_error("Cannot remove item %s.%u -- already removed",
+                  type->stat.label, item_id);
+        unlock_type(type);
+        return -1;
+    }
     int i;
-    for (i=0; i<sample_size; i++) {
-        if (max_index > 1) {
-            sample_index = find_time_index(item->stats, &sample_time, sample_index, max_index);
-        } else {
-            sample_index = 0;
-        }
-        if (sample_index < 0) {
-            log(LOG_STATS, "Couldn't find time index for item %d", item->id);
-            unlock_item(item);
-            return i;
-        }
-        sample[sample_size - i - 1].value = item->stats[sample_index].value;
-        sample[sample_size - i - 1].time = sample_time;
-        sample_time.tv_nsec -= interval->tv_nsec;
-        if (sample_time.tv_nsec < 0) {
-            sample_time.tv_sec -= 1;
-            sample_time.tv_nsec = 1e9 + sample_time.tv_nsec;
-        }
-        sample_time.tv_sec -= interval->tv_sec;
+    for (i=0; i < MAX_ITEM_ID && type->used_ids[i] != item_id; i++);
+
+    if (i == MAX_ITEM_ID) {
+        log_warn("Cannot find id %u in stat %s", item_id, type->stat.label);
     }
-    unlock_item(item);
-    return i;
-}
+    type->used_ids[i] = 0;
 
-/** Takes a sample of the provided stat type (stat_id) and places it in `sample` */
-static int sample_stat(enum stat_id stat_id, struct timespec *end, struct timespec *interval,
-                int sample_size, struct stat_sample *sample, int n_samples) {
-    CHECK_INITIALIZATION;
+    free_stat_item_group(type->stat_items[item_id]);
 
-    struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) {
-        log_error("Attempted to sample disabled statistic %d", stat_id);
-        return -1;
-    }
-
-
-    if (n_samples < type->num_items) {
-        log_error("Not enough samples (%d) to fit all stat items (%d)", n_samples, type->num_items);
-        return -1;
-    }
-
-    int item_id = -1;
-    for (int i=0; i<type->num_items; i++) {
-        sample[i].hdr.stat_id = stat_id;
-        // Find the next item index
-        for (item_id += 1;
-                item_id < MAX_STAT_ITEM_ID && type->id_indices[item_id] == -1;
-                item_id++) {}
-        log(LOG_TEST, "Found :%d", item_id);
-        if (item_id == MAX_STAT_ITEM_ID) {
-            log_error("Cannot find item ID %d", i);
-            return -1;
-        }
-        int idx = type->id_indices[item_id];
-        sample[i].hdr.item_id = type->items[idx].id;
-        sample[i].hdr.n_stats = sample_size;
-        int rtn = sample_stat_item(&type->items[idx], type->max_stats, end, interval, sample_size,
-                                    sample[i].stats);
-
-        if ( rtn < 0) {
-            log_error("Error sampling item %d (idx %d)", type->items[i].id, i);
-            return -1;
-        } else {
-            sample[i].hdr.n_stats = rtn;
-        }
-    }
-    return type->num_items;
-}
-
-/** Samples `sample_size` most recent stats in `interval` intervals.
- * Note: Not used at the moment, deferring to sample_stat instead
- * */
-static int UNUSED sample_recent_stats(enum stat_id stat_id, struct timespec *interval,
-                                      int sample_size, struct stat_sample *sample, int n_samples) {
-    CHECK_INITIALIZATION;
-    struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) {
-        return 0;
-    }
-    struct timespec now;
-    get_elapsed_time(&now);
-    return sample_stat(stat_id, &now, interval, sample_size, sample, n_samples);
-}
-
-/** A statically allocated stat_sample structure which is pre-allocated to store samples
- * from each stat type */
-static struct stat_sample *stat_samples[N_REPORTED_STAT_TYPES];
-
-/** The interval at which stats should be sampled */
-static struct timespec stat_sample_interval = {
-    .tv_sec = (STAT_SAMPLE_PERIOD_MS / 1000) / STAT_SAMPLE_SIZE,
-    .tv_nsec = (int)(STAT_SAMPLE_PERIOD_MS * 1e6 / STAT_SAMPLE_SIZE) % (int)1e9
-};
-
-struct stat_sample *get_stat_samples(enum stat_id stat_id, struct timespec *sample_time,
-                                     int *n_samples_out) {
-    if (!stats_initialized) {
-        log_error("Stats not initialized");
-        return NULL;
-    }
-
-    *n_samples_out = 0;
-    int i;
-    for (i=0; i < N_REPORTED_STAT_TYPES; i++) {
-        if (reported_stat_types[i].id == stat_id) {
-            break;
-        }
-    }
-    if (i == N_REPORTED_STAT_TYPES) {
-        log_error("%d is not a reported stat type", stat_id);
-        return NULL;
-    }
-    if (stat_samples[i] == NULL) {
-        // No stat samples registered!"
-        return NULL;
-    }
-    struct stat_type *type = &stat_types[stat_id];
-    if (rlock_type(type)) {
-        return NULL;
-    }
-    int rtn = sample_stat(stat_id, sample_time, &stat_sample_interval, STAT_SAMPLE_SIZE,
-                          stat_samples[i], type->num_items);
     unlock_type(type);
-    if (rtn < 0) {
-        log_error("Error sampling recent stats");
-        return NULL;
-    }
-    *n_samples_out = rtn;
-    return stat_samples[i];
-}
 
-/** Reallocates the existing stats structure to store the provided number of samples */
-static void realloc_stat_samples(enum stat_id stat_id, int n_samples) {
-    for (int i=0; i < N_REPORTED_STAT_TYPES; i++) {
-        if (reported_stat_types[i].id == stat_id) {
-            free_stat_samples(stat_samples[i], n_samples - 1);
-            stat_samples[i] = init_stat_samples(STAT_SAMPLE_SIZE, n_samples);
-            log(LOG_STAT_REALLOC, "Reallocated %d to %d samples", stat_id, n_samples);
-            return;
-        }
-    }
-}
-
-int remove_stat_item(enum stat_id stat_id, unsigned int item_id) {
-    CHECK_INITIALIZATION;
-
-    struct stat_type *type = &stat_types[stat_id];
-    if (!type->enabled) {
-        return 0;
-    }
-    if (wrlock_type(type) != 0) {
+    if (lock_samples()) {
+        log_error("Could not lock mutex for samples");
         return -1;
     }
-    if (type->id_indices[item_id] == -1) {
-        log_error("Item ID %u not assigned an index", item_id);
-        return -1;
-    }
-
-    int index = type->id_indices[item_id];
-    struct stat_item *item = &type->items[index];
-
-    item->id = -1;
-    item->write_index = 0;
-    item->rolled_over = false;
-    free(item->stats);
-
-    type->id_indices[item_id] = -1;
-    type->num_items--;
-    unlock_type(type);
+    total_num_stats--;
+    all_samples = realloc(all_samples, sizeof(*all_samples) * total_num_stats * 2);
+    unlock_samples();
     return 0;
 }
 
+DEF_INDIV_FNS(remove_stat_item,
+              remove_msu_stat, remove_thread_stat, remove_rt_stat);
 
-/**
- * Initializes a stat item so that statistics can be logged to it.
- * (e.g. initializing MSU_QUEUE_LEN for item N, corresponding to msu # N)
- * @param stat_id ID of the statistic type to be logged
- * @param item_id ID of the item to be logged
- */
-int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
-    CHECK_INITIALIZATION;
+
+static int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
+    ORDER_CHECK;
 
     struct stat_type *type = &stat_types[stat_id];
     if (!type->enabled) {
         log(LOG_STATS, "Skipping initialization of type %s item %d",
-                   type->label, item_id);
+            type->stat.label, item_id);
         return 0;
     }
-    if (wrlock_type(type) != 0) {
+
+    if (lock_samples()) {
+        log_error("Could not lock mutex for samples");
         return -1;
     }
-    if (type->id_indices[item_id] != -1) {
-        log_error("Item ID %u already assigned index %d for stat %s",
-                item_id, type->id_indices[item_id], type->label);
+    total_num_stats++;
+    all_samples = realloc(all_samples, sizeof(*all_samples) * total_num_stats * 2);
+    unlock_samples();
+
+
+    if (lock_type(type)) {
         return -1;
     }
-    int index;
-    for (index=0; index<type->max_items; index++) {
-        if (type->items[index].id == -1) {
+
+    if (type->stat_items[item_id] != NULL) {
+        // MAYBE: Log the rt, th, msu of the already-initialized stat
+        log_error("Item ID %u already initialized for stat %s",
+                  item_id, type->stat.label);
+        unlock_type(type);
+        return -1;
+    }
+
+    // Iterate through until an unused index is found
+    int i;
+    for (i=0; i < MAX_ITEM_ID && type->used_ids[i] != 0; i++);
+
+    if (i == MAX_ITEM_ID) {
+        log_error("Cannot fit more statistics of type %s", type->stat.label);
+        unlock_type(type);
+        return -1;
+    }
+
+    type->used_ids[i] = item_id;
+
+    if (type->max_used_id_index < i) {
+        type->max_used_id_index = i;
+    }
+
+    struct stat_item_group *group = allocate_stat_item_group(stat_id, item_id);;
+    if (group == NULL) {
+        return -1;
+    }
+
+    type->stat_items[item_id] = group;
+
+    unlock_type(type);
+
+    log(LOG_STATS, "Initialized stat item %s.%u",
+        type->stat.label, item_id);
+
+    return 0;
+}
+DEF_INDIV_FNS(init_stat_item,
+              init_msu_stat, init_thread_stat, init_rt_stat);
+
+
+static unsigned int qpartition(struct timed_stat *stats, unsigned int size) {
+    double mid_val = stats[size - 1].value;
+    int i = 0;
+
+    struct timed_stat swap;
+    for (int j = 0; j < size; j++) {
+        if (stats[j].value <= mid_val) {
+            swap = stats[j];
+            stats[j] = stats[i];
+            stats[i] = swap;
+        }
+    }
+    swap = stats[size-1];
+    stats[size-1] = stats[i];
+    stats[i] = swap;
+    return i + 1;
+}
+
+static void qsort_by_value(struct timed_stat *stats, unsigned int size) {
+    if (size > 1) {
+        unsigned int idx = qpartition(stats, size);
+
+        qsort_by_value(stats + idx, size - idx);
+        qsort_by_value(stats, idx);
+    }
+}
+
+static int sample_stat_item(struct stat_item_group *group, struct stat_sample *sample) {
+    struct stat_list *read_list = &(group->stat_list[group->read_index]);
+    pthread_mutex_lock(&read_list->rec_mutex);
+    read_list->recorded = true;
+
+    qsort_by_value(read_list->stats, read_list->write_index);
+
+    unsigned int size = read_list->write_index;
+    if (size == 0) {
+        pthread_mutex_unlock(&read_list->rec_mutex);
+        return 1;
+    }
+    sample->total_samples = size;
+
+    double increment = (double) size / N_STAT_BINS;
+    int max_bins = N_STAT_BINS;
+    if (increment < 0) {
+        max_bins = size;
+        increment = 1;
+    }
+    if (read_list->stats[0].value == read_list->stats[size-1].value) {
+        sample->bin_edges[0] = read_list->stats[0].value;
+        sample->bin_edges[1] = read_list->stats[0].value;
+        sample->bin_size[0] = size;
+        sample->n_bins = 1;
+    } else {
+        int last_index = 0;
+        int bin_index = 0;
+        sample->bin_edges[0] = read_list->stats[0].value;
+        for (int i=0; i<max_bins - 1; i++) {
+            int sample_index = (int)(increment * i);
+            double sample_value = read_list->stats[sample_index].value;
+
+            sample->bin_size[bin_index] = sample_index - last_index;
+            if (sample_value == sample->bin_edges[bin_index]) {
+                continue;
+            }
+            sample->bin_edges[bin_index+1] = sample_value;
+            last_index = sample_index;
+            bin_index++;
+        }
+        sample->bin_edges[bin_index + 1] = read_list->stats[size - 1].value;
+        sample->bin_size[bin_index] = size - last_index;
+        sample->n_bins = bin_index;
+    }
+
+    sample->start = read_list->start_time;
+    timestamp(&sample->end);
+    sample->stat_id = group->stat;
+    sample->referent = group->referent;
+    log(LOG_STAT_SAMPLES, "Referent: %d.%d", sample->referent.type, sample->referent.id);
+
+    group->read_index = (group->read_index + 1) % ITEM_GROUP_SIZE;
+    pthread_mutex_unlock(&read_list->rec_mutex);
+    log(LOG_STAT_SAMPLES, "Sample min: %f max: %f",
+            sample->bin_edges[0], sample->bin_edges[sample->n_bins - 1]);
+    return 0;
+}
+
+static int sample_stat_type(struct stat_type *type,
+                     struct stat_sample *samples,
+                     unsigned int n_samples) {
+    lock_type(type);
+    int sample_index = 0;
+    for (int i=0; i < type->max_used_id_index; i++) {
+        unsigned int id = type->used_ids[i];
+        if (id == 0) {
+            continue;
+        }
+        struct stat_item_group *group = type->stat_items[id];
+        if (group == NULL) {
+            log_warn("Group for id %u is null yet it persists in used_ids", id);
+            continue;
+        }
+        if (sample_index >= n_samples) {
+            log_warn("Out of samples to store statistic %s (n_samples=%d)", 
+                     type->stat.label, n_samples);
             break;
         }
-    }
-    if (index == type->max_items) {
-        type->max_items++;
-        type->items = realloc(type->items, sizeof(*type->items) * (type->max_items));
-        realloc_stat_samples(stat_id, type->max_items);
-
-        if ( type->items == NULL ) {
-            log_error("Error reallocating stat item");
-            return -1;
+        int rtn = sample_stat_item(group, samples + sample_index);
+        if (rtn == 0) {
+            sample_index++;
         }
     }
-    log(LOG_STATS, "Item %u has index %d", item_id, index);
-    struct stat_item *item = &type->items[index];
-
-    if (pthread_mutex_init(&item->mutex,NULL)) {
-        log_error("Error initializing item %u lock", item_id);
-        return -1;
-    }
-
-    item->id = item_id;
-    item->write_index = 0;
-    item->rolled_over = false;
-    item->stats = calloc(type->max_stats, sizeof(*item->stats));
-
-    if (item->stats == NULL) {
-        log_error("Error calloc'ing item statistics");
-        return -1;
-    }
-
-    type->id_indices[item_id] = index;
-
-    type->num_items++;
-
-    if (unlock_type(type) != 0) {
-        return -1;
-    }
-
-    log(LOG_STAT_INITS, "Initialized stat item %s.%d (idx: %d)",
-            stat_types[stat_id].label, item_id, index);
-    return 0;
+    log(LOG_STAT_SAMPLES, "Sampled %d stats of type %s",
+        sample_index, type->stat.label);
+    unlock_type(type);
+    return sample_index;
 }
 
-int init_statistics() {
-    if ( stats_initialized ) {
-        log_error("Statistics have already been initialized");
+int sample_stats(struct stat_sample **samples) {
+    if (lock_samples()) {
         return -1;
     }
-
-    clock_gettime(CLOCK_ID, &stats_start_time);
-
-    for (int i = 0; i < N_STAT_TYPES; i++) {
-        struct stat_type *type = &stat_types[i];
-        if ( type->id != i ) {
-            log_error("Stat type %s at incorrect index (%d, not %d)! Disabling!!",
-                       type->label, i, type->id);
-            type->enabled = 0;
+    *samples = all_samples;
+    int samples_taken = 0;
+    for (int i=0; i < N_REPORTED_STAT_TYPES; i++) {
+        int rtn = sample_stat_type(&stat_types[reported_stat_types[i].id],
+                                   all_samples + samples_taken,
+                                   total_num_stats - samples_taken);
+        if (rtn < 0) {
+            log_error("Error sampling statistics");
+            break;
         }
-
-        if (type->enabled) {
-            if (pthread_rwlock_init(&type->lock, NULL) != 0) {
-                log_warn("Error initializing lock for stat %s. Disabling!", type->label);
-                type->enabled = 0;
-            }
-            type->num_items = 0;
-            type->items = NULL;
-            for (int j = 0; j < MAX_STAT_ITEM_ID; j++) {
-                type->id_indices[j] = -1;
-            }
-            log(LOG_STATS, "Initialized stat type %s (%d ids)", type->label, MAX_STAT_ITEM_ID);
-        }
+        samples_taken += rtn;
     }
 
-#if DUMP_STATS
-    log_info("Statistics initialized for eventual dump to log file");
-#else
-    log_info("Statistics initialized. Will **NOT** be dumped to log file");
-#endif
-    stats_initialized = true;
-    return 0;
-}
-
-void finalize_statistics(char *statlog) {
-    if (statlog != NULL) {
-#if DUMP_STATS
-        log_info("Outputting stats to log. Do not quit.");
-        FILE *file = fopen(statlog, "w");
-        flush_all_stats_to_log(file);
-        fclose(file);
-        log_info("Finished outputting stats to %s", statlog);
-#else
-        log_info("Skipping dump to stat log. Set DUMP_STATS=1 to enable");
-#endif
-    }
-
-    for (int i = 0; i < N_STAT_TYPES; i++) {
-        struct stat_type *type = &stat_types[i];
-        if (type->enabled) {
-            wrlock_type(type);
-            for (int j = 0; j < type->num_items; j++) {
-                log(LOG_STAT_INITS, "Destroying item %s.idx=%d",
-                           type->label, j);
-                destroy_stat_item(&type->items[j]);
-            }
-            free(type->items);
-            unlock_type(type);
-            pthread_rwlock_destroy(&type->lock);
-        }
-    }
+    unlock_samples();
+    return samples_taken;
 }
