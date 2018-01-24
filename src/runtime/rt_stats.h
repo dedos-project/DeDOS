@@ -30,8 +30,11 @@ int init_msu_stat(enum stat_id, unsigned int id);
 int init_thread_stat(enum stat_id, unsigned int id);
 int init_rt_stat(enum stat_id);
 
+int init_runtime_statistics();
+
 int sample_stats(struct stat_sample **samples);
 
 int check_statistics();
+int get_stat_limit(enum stat_id id, double *limit);
 
 #endif

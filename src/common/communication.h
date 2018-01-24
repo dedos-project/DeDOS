@@ -56,7 +56,10 @@ ssize_t send_to_endpoint(int fd, void *data, size_t data_len);
  * @param port The port to which to bind
  * @returns the file descriptor on success, -1 on error
  */
-int init_bound_socket(int port);
+int _init_bound_socket(int port);
+#ifndef init_bound_socket
+#define init_bound_socket _init_bound_socket
+#endif
 
 /**
  * Initializes a socket which is bound to and listening on the given port.
@@ -64,7 +67,10 @@ int init_bound_socket(int port);
  * @param port The port on which to listen
  * @return The file descriptor on success, -1 on error
  */
-int init_listening_socket(int port);
+int _init_listening_socket(int port);
+#ifndef init_listening_socket
+#define init_listening_socket _init_listening_socket
+#endif
 
 /**
  * Initializes a socket that is connected to a given address.
@@ -73,6 +79,9 @@ int init_listening_socket(int port);
  * @param addr The address to connect to
  * @returns file descriptor on sucecss, -1 on error
  */
-int init_connected_socket(struct sockaddr_in *addr);
+int _init_connected_socket(struct sockaddr_in *addr);
+#ifndef init_connected_socket
+#define init_connected_socket _init_connected_socket
+#endif
 
 #endif

@@ -59,4 +59,5 @@ bool is_controller_fd(int fd);
 /** Samples the relevant statistics and sends them to the controller */
 int send_stats_to_controller();
 
+int send_stat_limits();
 #endif

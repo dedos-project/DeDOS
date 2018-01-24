@@ -50,6 +50,7 @@ CREATE TABLE Timeseries (
     thread_pk int,
     msu_pk int,
     statistic_id int NOT NULL,
+    max_limit DECIMAL(18, 9),
     FOREIGN KEY (runtime_id) REFERENCES Runtimes(id),
     FOREIGN KEY (thread_pk) REFERENCES Threads(pk),
     FOREIGN KEY (msu_pk) REFERENCES Msus(pk),

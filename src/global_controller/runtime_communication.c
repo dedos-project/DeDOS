@@ -178,7 +178,7 @@ static int process_rt_init_message(ssize_t payload_size, int fd) {
 static int process_rt_stats_message(size_t payload_size, int fd) {
 
     char buffer[payload_size];
-    int rtn = read_payload(fd, sizeof(buffer), &buffer);
+    int rtn = read_payload(fd, payload_size, &buffer);
     if (rtn < 0) {
         log_error("Error reading stats message payload");
         return -1;
@@ -189,6 +189,25 @@ static int process_rt_stats_message(size_t payload_size, int fd) {
         return -1;
     }
     return handle_serialized_stats_buffer(id, buffer, payload_size);
+}
+
+static int process_rt_stat_limit_message(size_t payload_size, int fd) {
+    if (payload_size != sizeof(struct stat_limit)) {
+        log_error("Cannot process stat limit message of size %d", (int)payload_size);
+        return -1;
+    }
+    int id = runtime_id(fd);
+    if (id < 0) {
+        log_error("Cannot get runtime ID from file descriptor");
+        return -1;
+    }
+    struct stat_limit lim;
+    int rtn = read_payload(fd, payload_size, &lim);
+    if (rtn < 0) {
+        log_error("Error reading stat limit payload");
+        return -1;
+    }
+    return set_rt_stat_limit(id, &lim);
 }
 
 static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {
@@ -208,6 +227,13 @@ static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {
                 return -1;
             }
             return 0;
+         case RT_STAT_LIMIT:
+            rtn = process_rt_stat_limit_message(hdr->payload_size, fd);
+            if (rtn < 0) {
+                log_error("Error processing rt stat limit message from fd %d", fd);
+                return -1;
+            }
+            return 0;
         default:
             log_error("Received unknown message type from fd %d: %d", fd, hdr->type);
             return -1;
@@ -216,7 +242,6 @@ static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {
 
 static int handle_runtime_communication(int fd, void UNUSED *data) {
     struct rt_controller_msg_hdr hdr;
-
     int rtn = read_payload(fd, sizeof(hdr), &hdr);
     if (rtn < 0) {
         log_error("Error reading runtime message header from fd %d", fd);

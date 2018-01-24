@@ -37,4 +37,6 @@ int db_register_msu(int msu_id, int msu_type_id, int thread_id, int runtime_id);
 int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id);
 int db_insert_samples(struct stat_sample *samples, int n_samples, 
                       unsigned int runtime_id);
+
+int db_set_rt_stat_limit(int runtime_id, enum stat_id stat_id, double limit);
 #endif

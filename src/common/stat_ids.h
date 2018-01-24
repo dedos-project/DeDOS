@@ -28,13 +28,16 @@ END OF LICENSE STUB
 #include <stdlib.h>
 
 enum stat_id {
+    // Runtime or MSUs
+    MEM_ALLOC,
+    FILEDES,
+    ERROR_CNT,
+
     QUEUE_LEN,
     ITEMS_PROCESSED,
     EXEC_TIME,
     IDLE_TIME,
-    MEM_ALLOC,
     NUM_STATES,
-    ERROR_CNT,
 
     UCPUTIME,
     SCPUTIME,
@@ -70,13 +73,14 @@ struct stat_label {
 #define _STNAM(stat) {stat, #stat}
 
 static struct stat_label UNUSED stat_labels[] = {
+    _STNAM(MEM_ALLOC),
+    _STNAM(FILEDES),
+    _STNAM(ERROR_CNT),
     _STNAM(QUEUE_LEN),
     _STNAM(ITEMS_PROCESSED),
     _STNAM(EXEC_TIME),
     _STNAM(IDLE_TIME),
-    _STNAM(MEM_ALLOC),
     _STNAM(NUM_STATES),
-    _STNAM(ERROR_CNT),
     _STNAM(UCPUTIME),
     _STNAM(SCPUTIME),
     _STNAM(MAXRSS),

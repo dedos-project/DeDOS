@@ -40,10 +40,12 @@ int monitor_controller_socket(int fd);
  */
 int monitor_runtime_socket(int fd);
 
+/** Connects to the global controller at the provided address */
+int initialize_controller_communication(int local_port, struct sockaddr_in *ctrl_addr);
+
 /**
- * Starts (blocking) the socket monitor, listening on the provided port.
- * Also connects to the global controller at the provided address
+ * Starts (blocking) the socket monitor, listening on the port provided to connect_to_controller
  */
-int run_socket_monitor(int local_port, struct sockaddr_in *ctrl_addr);
+int run_socket_monitor();
 
 #endif

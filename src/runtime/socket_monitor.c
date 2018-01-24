@@ -22,8 +22,8 @@ END OF LICENSE STUB
  *
  * Monitors an incoming port for messages from runtime or controller
  */
+#include "filedes.h"
 #include "epollops.h"
-#include "communication.h"
 #include "logging.h"
 #include "controller_communication.h"
 #include "runtime_communication.h"
@@ -142,22 +142,29 @@ int monitor_runtime_socket(int new_fd) {
     return 0;
 }
 
-int run_socket_monitor(int local_port, struct sockaddr_in *ctrl_addr) {
+int initialize_controller_communication(int local_port, struct sockaddr_in *ctrl_addr) {
     int rtn = init_socket_monitor(local_port);
     if (rtn < 0) {
         log_critical("Error initializing socket monitor");
         return -1;
     }
-
+    
     int sock;
     do {
         log_info("Attempting to connect to controller");
         sock = init_controller_socket(ctrl_addr);
-        if (sock < 0)
+        if (sock < 0) 
             sleep(1);
     } while (sock <= 0);
 
-    log_info("Connected to global controller on socket %d. Entering socket monitor loop.", sock);
+    log_info("Connected to global controller on socket %d", sock);
+
+    return 0;
+}
+
+int run_socket_monitor() {
+    // TODO: This really doesn't need to be its own function
+    log_info("Entering socket monitor loop");
 
     return socket_monitor_epoll_loop();
 }

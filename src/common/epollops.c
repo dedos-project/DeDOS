@@ -22,6 +22,7 @@ END OF LICENSE STUB
  *
  * Wrapper functions for epoll to manage event-based communication
  */
+#include "dedos.h"
 
 #include "epollops.h"
 #include "logging.h"

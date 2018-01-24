@@ -21,6 +21,7 @@ END OF LICENSE STUB
  * @file msu_calls.c
  * Defines methods used for calling MSUs from other MSUs
  */
+#include "dedos.h"
 
 #include "msu_calls.h"
 #include "logging.h"

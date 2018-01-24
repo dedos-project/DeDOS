@@ -42,10 +42,11 @@ struct sock_msu_state {
     struct msu_type *default_target;
     struct msu_msg_hdr hdr_mask[MAX_FDS];
     struct local_msu *destinations[MAX_FDS];
+    bool accepted_locally [MAX_FDS];
 };
 
 
-#define SOCKET_HANDLER_TIMEOUT 500
+#define SOCKET_HANDLER_TIMEOUT 250
 #define SOCKET_HANDLER_BATCH_SIZE 1000
 
 struct key_seed {
@@ -53,7 +54,6 @@ struct key_seed {
     uint32_t local_ip;
 };
 
-#define MONITOR_NUM_FDS
 
 int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
                    struct msu_msg_hdr *hdr) {
@@ -70,9 +70,6 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
 
     if (rtn < 0) {
         rtn = add_to_epoll(state->epoll_fd, fd, events, true);
-#ifdef MONITOR_NUM_FDS
-        increment_msu_stat(MSU_STAT1, instance->id, 1);
-#endif
         if (rtn < 0) {
             log_perror("Error enabling epoll for fd %d", fd);
             return -1;
@@ -96,9 +93,10 @@ int msu_remove_fd_monitor(int fd) {
         log_perror("Error removing fd %d from epoll", fd);
         return -1;
     } else {
-#ifdef MONITOR_NUM_FDS
-        increment_msu_stat(MSU_STAT1, instance->id, -1);
-#endif
+        if (state->accepted_locally[fd]) {
+            increment_msu_stat(FILEDES, instance->id, -1);
+            state->accepted_locally[fd] = false;
+        }
     }
 
     return 0;
@@ -166,10 +164,9 @@ static int process_connection(int fd, void *v_state) {
 }
 
 static int set_default_target(int fd, void *v_state) {
-#ifdef MONITOR_NUM_FDS
-    increment_msu_stat(MSU_STAT1, instance->id, 1);
-#endif
+    increment_msu_stat(FILEDES, instance->id, 1);
     struct sock_msu_state *state = v_state;
+    state->accepted_locally[fd] = true;
     state->destinations[fd] = NULL;
     return 0;
 }
@@ -199,12 +196,12 @@ static int socket_msu_receive(struct local_msu *self, struct msu_msg *msg) {
 static void socket_msu_destroy(struct local_msu *self) {
     struct sock_msu_state *state = self->msu_state;
 
-    int rtn = close(state->sock_fd);
+    int rtn = msu_close(self, state->sock_fd);
     if (rtn == -1) {
         log_error("Error closing socket");
     }
 
-    rtn = close(state->epoll_fd);
+    rtn = msu_close(self, state->epoll_fd);
     if (rtn == -1) {
         log_error("Error closing epoll fd");
     }
@@ -276,7 +273,7 @@ static int socket_msu_init(struct local_msu *self, struct msu_init_data *init_da
         return -1;
     }
 
-    state->sock_fd = init_listening_socket(init.port);
+    state->sock_fd = init_listening_msu_socket(self, init.port);
     if (state->sock_fd == -1) {
         log_error("Couldn't initialize socket for socket handler MSU %d", self->id);
         return -1;
@@ -291,10 +288,6 @@ static int socket_msu_init(struct local_msu *self, struct msu_init_data *init_da
 
     state->self = self;
     instance = self;
-
-#ifdef MONITOR_NUM_FDS
-    init_msu_stat(MSU_STAT1, self->id);
-#endif
 
     init_call_local_msu(self, self, &self_key, 0, NULL);
 

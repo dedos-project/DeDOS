@@ -21,8 +21,7 @@ END OF LICENSE STUB
  * @file: controller_communication.c
  * Communication with global controller from runtime
  */
-
-#include "controller_communication.h"
+#include "dedos.h"
 #include "communication.h"
 #include "logging.h"
 #include "socket_monitor.h"
@@ -458,6 +457,35 @@ int init_controller_socket(struct sockaddr_in *addr) {
     }
     return sock;
 }
+
+
+int send_stat_limits() {
+    if (controller_sock < 0) {
+        log_error("Cannot communicate stat limits to controller -- controller uninitialized");
+        return -1;
+    }
+    for (int i=0; i < N_REPORTED_STAT_TYPES; i++) {
+        double lim;
+        int rtn = get_stat_limit(reported_stat_types[i].id, &lim);
+        if (rtn < 0) {
+            return -1;
+        }
+        if (rtn == 0) {
+            struct stat_limit limit = {reported_stat_types[i].id, lim};
+            struct rt_controller_msg_hdr hdr = {
+                .type = RT_STAT_LIMIT,
+                .payload_size = sizeof(limit)
+            };
+            int rtn = send_to_controller(&hdr, &limit);
+            if (rtn < 0) {
+                log_error("Error sending statistics to controller");
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
 
 int send_stats_to_controller() {
     if (controller_sock < 0) {

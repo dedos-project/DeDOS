@@ -27,6 +27,7 @@ END OF LICENSE STUB
 #include "stats.h"
 #include "dfg.h"
 #include "logging.h"
+#include <stdbool.h>
 
 double average_n(struct timed_rrdb *timeseries, int n_samples) {
     double sum = 0;
@@ -60,21 +61,22 @@ int append_to_timeseries(struct timed_stat *input, int input_size,
     int write_index = timeseries->write_index;
     for (int i=0; i<input_size; i++) {
         write_index %= RRDB_ENTRIES;
-        if (input[i].time.tv_sec == 0 && input[i].time.tv_nsec == 0) {
+        /*if (input[i].time.tv_sec == 0 && input[i].time.tv_nsec == 0) {
             // FIXME: I don't know why this happens sometimes
             continue;
-        }
+        }*/
         timeseries->data[write_index] = input[i].value;
         timeseries->time[write_index] = input[i].time;
         write_index++;
     }
     timeseries->write_index = write_index % RRDB_ENTRIES;
+    timeseries->used = true;
     return 0;
 }
 
 /** The length of the begnning and end of the timeseries that's printed
  * when print_timeseries() is called */
-#define PRINT_LEN 6
+#define PRINT_LEN 4
 
 /** Prints the beginning and end of a timeseries.
  * @param timeseries The timeseries to print

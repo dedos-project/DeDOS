@@ -22,6 +22,7 @@ END OF LICENSE STUB
  *
  * Instantiation of a dfg on a runtime
  */
+#include "dedos.h"
 #include "logging.h"
 #include "local_msu.h"
 #include "dfg.h"

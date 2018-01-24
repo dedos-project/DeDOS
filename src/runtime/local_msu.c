@@ -21,7 +21,8 @@ END OF LICENSE STUB
  * @file local_msu.c
  * Defines the structures and functions used by MSUs on the local machine
  */
-
+#include "dedos.h"
+#include "communication.h"
 #include "local_msu.h"
 #include "routing_strategies.h"
 #include "logging.h"
@@ -31,6 +32,7 @@ END OF LICENSE STUB
 #include "thread_message.h"
 #include "msu_state.h"
 #include "msu_calls.h"
+#include "filedes.h"
 
 #include <stdlib.h>
 #define __USE_GNU // For some reason, necessary for RUSAGE_THREAD
@@ -362,4 +364,20 @@ int msu_error(struct local_msu *msu, struct msu_msg_hdr *hdr, int broadcast) {
         }
     }
     return 0;
+}
+
+int init_listening_msu_socket(struct local_msu *msu, int port) {
+    int rtn = init_listening_socket(port);
+    if (rtn > 0) {
+        increment_msu_stat(FILEDES, msu->id, 1);
+    }
+    return rtn;
+}
+
+int msu_close(struct local_msu *msu, int fd) {
+    int rtn = close(fd);
+    if (rtn == 0) {
+        increment_msu_stat(FILEDES, msu->id, -1);
+    }
+    return rtn;
 }

@@ -23,6 +23,7 @@ END OF LICENSE STUB
  * Code for the creation and modifcation of the data-flow graph
  */
 #include "dfg.h"
+#include "dedos.h"
 #include "logging.h"
 
 #include <stdbool.h>

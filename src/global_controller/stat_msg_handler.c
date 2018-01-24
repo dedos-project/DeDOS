@@ -34,11 +34,9 @@ static int process_stat_samples(int runtime_id, int n_samples,
                                struct stat_sample *samples) {
     log(LOG_PROCESS_STATS, "Processing %d stats from runtime %d", n_samples, runtime_id);
     int rtn = db_insert_samples(samples, n_samples, runtime_id);
-    log_info("HERE");
     if (rtn < 0) {
         log(LOG_MYSQL,"Error inserting stats into DB");
     }
-    log_info("HERE");
 
     struct timed_rrdb *stat;
     for (int i=0; i < n_samples; i++) {
@@ -50,6 +48,9 @@ static int process_stat_samples(int runtime_id, int n_samples,
             case MSU_STAT:
                 stat = get_msu_stat(samples[i].stat_id, samples[i].referent.id);
                 break;
+            case RT_STAT:
+                stat = get_runtime_stat(samples[i].stat_id, runtime_id);
+                break;
             default:
                 log_error("Cannot find %dth stat %d type %d",
                           i, samples[i].stat_id, samples[i].referent.type);
@@ -57,7 +58,7 @@ static int process_stat_samples(int runtime_id, int n_samples,
         }
 
         if (stat == NULL) {
-            log(LOG_PROCESS_STATS, "Error getting stat sample for %dth stat %d type %d id %d",
+            log_warn("Error getting stat sample for %dth stat %d type %d id %d",
                 i, samples[i].stat_id, samples[i].referent.type, samples[i].referent.id);
             continue;
         }
@@ -70,6 +71,10 @@ static int process_stat_samples(int runtime_id, int n_samples,
     }
 
     return 0;
+}
+
+int set_rt_stat_limit(int runtime_id, struct stat_limit *lim) {
+    return db_set_rt_stat_limit(runtime_id, lim->id, lim->limit);
 }
 
 int handle_serialized_stats_buffer(int runtime_id, void *buffer, size_t buffer_len) {

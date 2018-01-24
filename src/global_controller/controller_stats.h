@@ -33,6 +33,7 @@ struct stat_item {
 #define MAX_STAT_ID 4192
 
 
+struct timed_rrdb *get_runtime_stat(enum stat_id id, unsigned int runtime_id);
 struct timed_rrdb *get_msu_stat(enum stat_id id, unsigned int msu_id);
 struct timed_rrdb *get_thread_stat(enum stat_id id, unsigned int thread_id, unsigned int runtime_id);
 

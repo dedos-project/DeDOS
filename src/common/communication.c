@@ -23,6 +23,7 @@ END OF LICENSE STUB
  * General-purpose socket communication functions used from
  * global controller, runtime, or MSUs
  */
+#include "dedos.h"
 #include "communication.h"
 #include "logging.h"
 
@@ -78,7 +79,7 @@ ssize_t send_to_endpoint(int fd, void *data, size_t data_len) {
     return size;
 }
 
-int init_connected_socket(struct sockaddr_in *addr) {
+int _init_connected_socket(struct sockaddr_in *addr) {
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
@@ -111,7 +112,7 @@ int init_connected_socket(struct sockaddr_in *addr) {
     return sock;
 }
 
-int init_bound_socket(int port) {
+int _init_bound_socket(int port) {
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == -1) {
         log_perror("Failed to create socket");
@@ -144,7 +145,7 @@ int init_bound_socket(int port) {
  */
 #define BACKLOG 1024
 
-int init_listening_socket(int port) {
+int _init_listening_socket(int port) {
     int sock = init_bound_socket(port);
     if (sock < 0) {
         log_error("Could not start listening socket due to failed bind");

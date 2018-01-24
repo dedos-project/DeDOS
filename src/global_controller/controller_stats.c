@@ -82,8 +82,20 @@ static struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
     return &type->items[type->id_indices[item_id]].stats;
 }
 
+static int runtime_item_id(int runtime_id) {
+    return runtime_id;
+}
+
+struct timed_rrdb *get_runtime_stat(enum stat_id id,
+                                    unsigned int runtime_id) {
+    if (!stats_initialized) {
+        return NULL;
+    }
+    return get_stat(id, runtime_item_id(runtime_id));
+}
+
 static int thread_item_id(int runtime_id, int thread_id) {
-    return runtime_id * MAX_THREADS + thread_id;
+    return MAX_RUNTIMES + runtime_id * MAX_THREADS + thread_id;
 }
 
 struct timed_rrdb *get_thread_stat(enum stat_id id,
@@ -95,7 +107,7 @@ struct timed_rrdb *get_thread_stat(enum stat_id id,
 }
 
 static int msu_item_id(int msu_id) {
-    return MAX_RUNTIMES * MAX_THREADS + msu_id;
+    return MAX_RUNTIMES + MAX_RUNTIMES * MAX_THREADS + msu_id;
 }
 
 struct timed_rrdb *get_msu_stat(enum stat_id id, unsigned int msu_id) {
@@ -181,6 +193,19 @@ static int register_stat(enum stat_id stat_id, unsigned int item_id) {
     return 0;
 }
 
+int register_runtime_stats(unsigned int runtime_id) {
+    CHECK_INIT;
+    // Database registration of stats performed on db_init 
+    // b/c runtimes known in advance (for now)
+    // db_register_rt_stats(runtime_id);
+    for (int i=0; i < N_RUNTIME_STAT_TYPES; i++) {
+        if (register_stat(runtime_stat_types[i].id, runtime_item_id(runtime_id))) {
+            log_warn("Couldn't register runtime %u", runtime_id);
+        }
+    }
+    return 0;
+}
+
 int register_msu_stats(unsigned int msu_id, int msu_type_id, int thread_id, int runtime_id) {
     CHECK_INIT;
     db_register_msu_stats(msu_id, msu_type_id, thread_id, runtime_id);
@@ -231,6 +256,7 @@ int init_statistics() {
     }
     for (int i=0; i < dfg->n_runtimes; i++) {
         struct dfg_runtime *rt = dfg->runtimes[i];
+        register_runtime_stats(rt->id);
         for (int j=0; j < rt->n_pinned_threads + rt->n_unpinned_threads; j++) {
             register_thread_stats(rt->threads[j]->id, rt->id);
         }
@@ -255,7 +281,12 @@ void show_stats(struct dfg_msu *msu){
     int stat_id = msu->id;
     for (int i=0; i < N_MSU_STAT_TYPES; i++) {
         struct timed_rrdb *ts = get_msu_stat(msu_stat_types[i].id, stat_id);
-        printf("******* Statistic: %s\n", msu_stat_types[i].label);;
-        print_timeseries(ts, &start_time);
+        printf("******* Statistic %s:", msu_stat_types[i].label);;
+        if (ts->used) {
+            printf("\n");
+            print_timeseries(ts, &start_time);
+        } else {
+            printf(" NO DATA\n");
+        }
     }
 }

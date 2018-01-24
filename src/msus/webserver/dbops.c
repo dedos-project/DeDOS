@@ -17,6 +17,7 @@ START OF LICENSE STUB
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 END OF LICENSE STUB
 */
+#include "dedos.h"
 #include <stdlib.h>
 #include "logging.h"
 #include <sys/socket.h>

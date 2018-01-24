@@ -22,9 +22,10 @@ END OF LICENSE STUB
  *
  * Messages passed to an MSU
  */
+#include "dedos.h"
+#include "communication.h"
 #include "msu_message.h"
 #include "logging.h"
-#include "communication.h"
 #include "local_msu.h"
 #include "uthash.h"
 #include "runtime_dfg.h"

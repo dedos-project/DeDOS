@@ -23,6 +23,7 @@ END OF LICENSE STUB
  * A dedos_thread which monitors a queue for output to be sent to
  * other runtimes or the global controller
  */
+#include "dedos.h"
 #include "logging.h"
 #include "worker_thread.h"
 #include "dedos_threads.h"

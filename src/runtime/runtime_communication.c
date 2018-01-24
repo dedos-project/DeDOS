@@ -21,9 +21,11 @@ END OF LICENSE STUB
  * @file: runtime/runtime_communication.c
  * All communication to and from other runtimes
  */
+#include "dedos.h"
+#include "communication.h"
 #include "runtime_communication.h"
 #include "logging.h"
-#include "communication.h"
+#include "filedes.h"
 #include "msu_message.h"
 #include "inter_runtime_messages.h"
 #include "local_msu.h"

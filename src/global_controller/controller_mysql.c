@@ -209,6 +209,25 @@ int db_register_msu_type(int msu_type_id, char *name) {
     return db_check_and_register(check_query, insert_query, element, msu_type_id);
 }
 
+int db_register_rt_timeseries(int runtime_id) {
+    CHECK_SQL_INIT;
+    char check_query[MAX_REQ_LEN];
+    char insert_query[MAX_REQ_LEN];
+    for (int i=0; i < N_RUNTIME_STAT_TYPES; ++i) {
+        snprintf(check_query, MAX_REQ_LEN,
+                 "select * from Timeseries where "
+                 "runtime_id = %d and statistic_id = %d",
+                 runtime_id, runtime_stat_types[i].id);
+        snprintf(insert_query, MAX_REQ_LEN,
+                 "insert into Timeseries (statistic_id, runtime_id) "
+                 "values ((%d), (%d))",
+                 runtime_stat_types[i].id, runtime_id);
+        if (db_check_and_register(check_query, insert_query, "rt_timeseries", runtime_id) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
 /**
  * Register a runtime in the DB. Does nothing if runtime id already exists
  * @param int runtime_id: the runtime ID
@@ -228,7 +247,18 @@ int db_register_runtime(int runtime_id) {
              "insert into Runtimes (id) values (%d)",
              runtime_id);
 
-    return db_check_and_register(check_query, insert_query, element, runtime_id);
+    int rtn = db_check_and_register(check_query, insert_query, element, runtime_id);
+    if (rtn < 0) {
+        log_error("Error registering runtime %d", runtime_id);
+        return -1;
+    }
+
+    rtn = db_register_rt_timeseries(runtime_id);
+    if (rtn < 0) {
+        log_error("Error registering runtime %d timeseries", runtime_id);
+        return -1;
+    }
+    return 0;
 }
 
 /**
@@ -319,6 +349,23 @@ int db_register_msu_timeseries(int msu_id) {
     return 0;
 }
 
+int db_set_rt_stat_limit(int runtime_id, enum stat_id stat_id, double limit) {
+    char query[MAX_REQ_LEN];
+
+    size_t qlen = snprintf(query, MAX_REQ_LEN,
+             "UPDATE Timeseries SET max_limit = %f "
+             "WHERE runtime_id = %d and statistic_id = %d",
+             limit, runtime_id, stat_id);
+
+    if (mysql_real_query(&mysql, query, qlen)) {
+        log_error("Error making query %s: %s", query, mysql_error(&mysql));
+        return -1;
+    }
+    return 0;
+}
+
+
+
 int db_register_thread_timeseries(int thread_id, int runtime_id) {
     CHECK_SQL_INIT;
     char check_query[MAX_REQ_LEN];
@@ -347,8 +394,6 @@ int db_register_thread_timeseries(int thread_id, int runtime_id) {
     }
     return 0;
 }
-
-
 
 int db_register_thread_stats(int thread_id, int runtime_id) {
     CHECK_SQL_INIT;
@@ -442,9 +487,10 @@ static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id,
                      select_pk, stat_id);
             return 0;
         case RT_STAT:
-            snprintf(select_pk, MAX_REQ_LEN,
+            snprintf(query, MAX_REQ_LEN,
                      "select pk from Timeseries where runtime_id = (%u) and statistic_id = (%d)",
                      runtime_id, stat_id);
+            log_critical("RUNTIME STAT");
             return 0;
         default:
             log_error("Cannot get ts query for stat type %d", stat_id);
@@ -468,7 +514,7 @@ int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
     }
 
     char query[MAX_REQ_LEN];
-    unsigned long ts = (unsigned long) sample->start.tv_sec * 1e9 +
+    unsigned long ts = (unsigned long) sample->start.tv_sec * (unsigned long)1e9 +
                        (unsigned long) sample->start.tv_nsec;
     size_t query_len = snprintf(query, MAX_REQ_LEN,
                                 "insert into Points (timeseries_pk, ts) values "
@@ -532,7 +578,7 @@ int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
         return -1;
     }
     mysql_free_result(result);
-    log(LOG_MYSQL, "Inserted data point for stat %d", sample->stat_id);
+    log(LOG_MYSQL, "Inserted data point for stat %d (%s)", sample->stat_id, points_query);
     SQL_UNLOCK;
     return 0;
 }

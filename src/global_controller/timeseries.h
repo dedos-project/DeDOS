@@ -26,6 +26,7 @@ END OF LICENSE STUB
 #ifndef TIMESERIES_H
 #define TIMESERIES_H
 #include "stats.h"
+#include <stdbool.h>
 #include <time.h>
 
 /** The maximum length of the round-robin database */
@@ -37,6 +38,7 @@ struct timed_rrdb {
     double data[RRDB_ENTRIES];            /**< The statistics */
     struct timespec time[RRDB_ENTRIES];   /**< The time at which the stats were gathered */
     int write_index;     /**< Offset into the rrdb at which writing has occurred */
+    bool used;          /**< True if any entires in the timeseries */
 };
 
 // Have to put this here to deal with ciruclar depedency :(

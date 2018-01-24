@@ -21,6 +21,7 @@ END OF LICENSE STUB
  * @file runtime/main.c
  * Main executable file to start the runtime
  */
+#include "dedos.h"
 #include "worker_thread.h"
 #include "local_files.h"
 #include "rt_stats.h"
@@ -100,6 +101,10 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    if (init_runtime_statistics() != 0) {
+        log_warn("Could not initialize runtime-specific stats");
+    }
+
     struct sockaddr_in ctrl_addr;
     int rtn = controller_address(&ctrl_addr);
     if (rtn < 0) {
@@ -113,8 +118,20 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    rtn = initialize_controller_communication(local_runtime_port(), &ctrl_addr);
+    if (rtn < 0) {
+        log_error("Error connecting to controller");
+        return -1;
+    }
+
+    rtn = send_stat_limits();
+    if (rtn < 0) {
+        log_error("Error sending statistic limits!");
+        return -1;
+    }
+
     // This will block until the socket monitor exits
-    rtn = run_socket_monitor(local_runtime_port(), &ctrl_addr);
+    rtn = run_socket_monitor();
     if (rtn < 0) {
         log_critical("Error running socket monitor. Runtime will exit");
     }

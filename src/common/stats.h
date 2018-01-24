@@ -59,14 +59,20 @@ struct stat_sample {
     unsigned int total_samples;
 };
 
+struct stat_limit {
+    enum stat_id id;
+    double limit;
+};
+
 #define MSU_STAT_TYPES \
+    _STNAM(MEM_ALLOC), \
+    _STNAM(FILEDES), \
+    _STNAM(ERROR_CNT), \
     _STNAM(QUEUE_LEN), \
     _STNAM(ITEMS_PROCESSED), \
     _STNAM(EXEC_TIME), \
     _STNAM(IDLE_TIME), \
-    _STNAM(MEM_ALLOC), \
     _STNAM(NUM_STATES), \
-    _STNAM(ERROR_CNT), \
     _STNAM(UCPUTIME), \
     _STNAM(SCPUTIME), \
     _STNAM(MINFLT), \
@@ -79,6 +85,7 @@ struct stat_sample {
 
 #define THREAD_STAT_TYPES \
     _STNAM(UCPUTIME), \
+    _STNAM(FILEDES), \
     _STNAM(SCPUTIME), \
     _STNAM(MAXRSS), \
     _STNAM(MINFLT), \
@@ -86,9 +93,11 @@ struct stat_sample {
     _STNAM(VCSW), \
     _STNAM(IVCSW),
 
-#define RUNTIME_STAT_TYPES
+#define RUNTIME_STAT_TYPES \
+    _STNAM(FILEDES)
 
 #define REPORTED_STAT_TYPES \
+    _STNAM(FILEDES), \
     _STNAM(QUEUE_LEN), \
     _STNAM(ITEMS_PROCESSED), \
     _STNAM(EXEC_TIME), \
@@ -134,12 +143,13 @@ static struct stat_label UNUSED runtime_stat_types[] = {
 #define N_RUNTIME_STAT_TYPES sizeof(runtime_stat_types) / sizeof(*runtime_stat_types)
 
 /** How often samples are sent from runtime to controller */
-#define STAT_SAMPLE_PERIOD_MS 5000
+#define STAT_SAMPLE_PERIOD_MS 200
 
 size_t serialize_stat_samples(struct stat_sample *samples, int n_samples,
                               void **buffer);
 
 int deserialize_stat_samples(void *buffer, size_t buff_len,
                              struct stat_sample **samples);
+
 
 #endif

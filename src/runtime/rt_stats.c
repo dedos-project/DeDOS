@@ -1,4 +1,5 @@
 #include "rt_stats.h"
+#include "filedes.h"
 #include "dfg.h"
 #include "runtime_dfg.h"
 #include "logging.h"
@@ -54,12 +55,12 @@ struct stat_item_group
 
 #define RT_ITEM_ID 1
 
-#define MAX_RT_ITEM_ID RT_ITEM_ID
+#define MAX_RT_ITEM_ID (RT_ITEM_ID + 1)
 
 #define THREAD_ITEM_ID(th) (MAX_RT_ITEM_ID + (th + 1))
-#define THREAD_FROM_ITEM_ID(id) (id - MAX_RT_ITEM_ID - 1)
+#define THREAD_FROM_ITEM_ID(id) ((id) - MAX_RT_ITEM_ID - 1)
 
-#define MAX_THREAD_ITEM_ID THREAD_ITEM_ID(MAX_THREADS)
+#define MAX_THREAD_ITEM_ID THREAD_ITEM_ID(MAX_THREADS + 1)
 
 #define MSU_ITEM_ID(ms) (MAX_THREAD_ITEM_ID + ms)
 #define MSU_FROM_ITEM_ID(id) (id - MAX_THREAD_ITEM_ID)
@@ -93,6 +94,9 @@ struct stat_type {
     bool enabled;
 
     pthread_mutex_t id_mutex;
+
+    int (*limit_fn)(double*);
+
     unsigned int max_used_id_index;
     unsigned int used_ids[MAX_ITEM_ID];
     struct stat_item_group *stat_items[MAX_ITEM_ID];
@@ -111,6 +115,9 @@ struct stat_type {
 #define DEF_STAT(stat) \
     {_STNAM(stat), GATHER_STATS, PTHREAD_MUTEX_INITIALIZER}
 
+#define DEF_LIMITED_STAT(stat, lim_fn) \
+    {_STNAM(stat), GATHER_STATS, PTHREAD_MUTEX_INITIALIZER, lim_fn}
+
 #define DEF_PROF_STAT(stat) \
     {_STNAM(stat), GATHER_PROF, PTHREAD_MUTEX_INITIALIZER}
 
@@ -121,13 +128,14 @@ struct stat_type {
  * It is assumed this is followed unless WARN_UNCHECKED_STATS is defined.
  */
 static struct stat_type stat_types[] = {
+    DEF_STAT(MEM_ALLOC),
+    DEF_LIMITED_STAT(FILEDES, proc_fd_limit),
+    DEF_STAT(ERROR_CNT),
     DEF_STAT(QUEUE_LEN),
     DEF_STAT(ITEMS_PROCESSED),
     DEF_STAT(EXEC_TIME),
     DEF_STAT(IDLE_TIME),
-    DEF_STAT(MEM_ALLOC),
     DEF_STAT(NUM_STATES),
-    DEF_STAT(ERROR_CNT),
     DEF_STAT(UCPUTIME),
     DEF_STAT(SCPUTIME),
     DEF_STAT(MAXRSS),
@@ -305,6 +313,7 @@ static int get_last_stat(enum stat_id stat_id, unsigned int item_id, double *out
     }
     struct stat_item_group *group = get_item_group(type, item_id);
     if (group == NULL) {
+        log_error("Canot get last stat %s for item id %u", type->stat.label, item_id);
         return -1;
     }
 
@@ -369,8 +378,9 @@ static struct stat_item_group *allocate_stat_item_group(enum stat_id stat, unsig
     group->stat = stat;
     group->referent.id = id_from_item_id(item_id);
     group->referent.type = ITEM_ID_REFERENT_TYPE(item_id);
-    log(LOG_STAT_ALLOCATION, "Allocated item group id=%d, item_id=%d, type=%d",
-        group->referent.id, item_id, group->referent.type);
+    log(LOG_STAT_ALLOCATION, "Allocated item  id=%d, item_id=%d, type=%d, stat=%d",
+        group->referent.id, item_id, group->referent.type, stat);
+    timestamp(&group->stat_list[0].start_time);
 
     return group;
 }
@@ -506,46 +516,56 @@ static int init_stat_item(enum stat_id stat_id, unsigned int item_id) {
 DEF_INDIV_FNS(init_stat_item,
               init_msu_stat, init_thread_stat, init_rt_stat);
 
+int init_runtime_statistics() {
+    for (int i=0; i < N_RUNTIME_STAT_TYPES; i++) {
+        init_rt_stat(runtime_stat_types[i].id);
+    }
+    return 0;
+}
 
-static unsigned int qpartition(struct timed_stat *stats, unsigned int size) {
+
+static unsigned int qpartition(struct timed_stat *stats, int size) {
     double mid_val = stats[size - 1].value;
     int i = 0;
 
     struct timed_stat swap;
-    for (int j = 0; j < size; j++) {
+    for (int j = 0; j < size - 1; j++) {
         if (stats[j].value <= mid_val) {
             swap = stats[j];
             stats[j] = stats[i];
             stats[i] = swap;
+            i++;
         }
     }
     swap = stats[size-1];
     stats[size-1] = stats[i];
     stats[i] = swap;
-    return i + 1;
+    return i;
 }
 
-static void qsort_by_value(struct timed_stat *stats, unsigned int size) {
+static void qsort_by_value(struct timed_stat *stats, int size) {
     if (size > 1) {
         unsigned int idx = qpartition(stats, size);
 
-        qsort_by_value(stats + idx, size - idx);
         qsort_by_value(stats, idx);
+        qsort_by_value(stats + idx + 1, size - idx - 1);
     }
 }
 
 static int sample_stat_item(struct stat_item_group *group, struct stat_sample *sample) {
     struct stat_list *read_list = &(group->stat_list[group->read_index]);
     pthread_mutex_lock(&read_list->rec_mutex);
-    read_list->recorded = true;
-
-    qsort_by_value(read_list->stats, read_list->write_index);
-
     unsigned int size = read_list->write_index;
     if (size == 0) {
         pthread_mutex_unlock(&read_list->rec_mutex);
         return 1;
     }
+
+    read_list->recorded = true;
+    read_list->write_index = 0;
+    qsort_by_value(read_list->stats, size);
+
+
     sample->total_samples = size;
 
     double increment = (double) size / N_STAT_BINS;
@@ -563,7 +583,7 @@ static int sample_stat_item(struct stat_item_group *group, struct stat_sample *s
         int last_index = 0;
         int bin_index = 0;
         sample->bin_edges[0] = read_list->stats[0].value;
-        for (int i=0; i<max_bins - 1; i++) {
+        for (int i=1; i<max_bins - 1; i++) {
             int sample_index = (int)(increment * i);
             double sample_value = read_list->stats[sample_index].value;
 
@@ -577,7 +597,7 @@ static int sample_stat_item(struct stat_item_group *group, struct stat_sample *s
         }
         sample->bin_edges[bin_index + 1] = read_list->stats[size - 1].value;
         sample->bin_size[bin_index] = size - last_index;
-        sample->n_bins = bin_index;
+        sample->n_bins = bin_index + 1;
     }
 
     sample->start = read_list->start_time;
@@ -643,4 +663,15 @@ int sample_stats(struct stat_sample **samples) {
 
     unlock_samples();
     return samples_taken;
+}
+
+int get_stat_limit(enum stat_id id, double *limit) {
+    struct stat_type *type = &stat_types[id];
+    if (type == NULL) {
+        return -1;
+    }
+    if (type->limit_fn == NULL) {
+        return 1;
+    }
+    return type->limit_fn(limit);
 }

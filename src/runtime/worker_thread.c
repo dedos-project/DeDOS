@@ -35,6 +35,8 @@ END OF LICENSE STUB
 /** The maximum ID that can be assigned to a worker thread */
 #define MAX_DEDOS_THREAD_ID 32
 
+static __thread struct local_msu *current_msu;
+
 /** Static struct to keep track of worker threads */
 static struct worker_thread *worker_threads[MAX_DEDOS_THREAD_ID];
 
@@ -339,7 +341,13 @@ int enqueue_worker_timeout(struct worker_thread *thread, struct timespec *interv
     return 0;
 }
 
-
+int current_msu_id() {
+    if (current_msu != NULL) {
+        return current_msu->id;
+    } else {
+        return -1;
+    }
+}
 
 /** The main worker thread loop. Checks for exit signal, processes messages */
 static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread) {
@@ -357,7 +365,9 @@ static int worker_thread_loop(struct dedos_thread *thread, void *v_worker_thread
         for (int i=0; i<self->n_msus; i++) {
             log(LOG_MSU_DEQUEUES, "Attempting to dequeue from msu %d (thread %d)",
                        self->msus[i]->id, thread->id);
+            current_msu = self->msus[i];
             msu_dequeue(self->msus[i]);
+            current_msu = NULL;
         }
         // FIXME: Protect read of num_msgs through mutex
         int num_msgs = thread->queue.num_msgs;

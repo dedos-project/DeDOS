@@ -29,7 +29,8 @@ END OF LICENSE STUB
  */
 enum rt_controller_msg_type {
     RT_CTL_INIT, /**< Payload type: rt_controller_init_msg */
-    RT_STATS     /**< Payload: output of ::serialize_stat_samples */
+    RT_STATS,    /**< Payload: output of ::serialize_stat_samples */
+    RT_STAT_LIMIT /**< Payload: ::stat_limit */
 };
 
 /**

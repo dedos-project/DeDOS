@@ -22,6 +22,7 @@ END OF LICENSE STUB
  *
  * Defines conversion of JSON strings to dedos_dfg
  */
+#include "dedos.h"
 
 #include "dfg_reader.h"
 #include "dfg.h"

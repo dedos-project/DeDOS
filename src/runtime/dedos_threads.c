@@ -26,6 +26,7 @@ END OF LICENSE STUB
 /** Needed for CPU_SET etc. */
 #define _GNU_SOURCE
 
+#include "dedos.h"
 #include "dedos_threads.h"
 #include "thread_message.h"
 #include "output_thread.h"
@@ -45,6 +46,8 @@ END OF LICENSE STUB
 /** The index at which to store the dedos_thread handling sending messages */
 #define OUTPUT_THREAD_INDEX MAX_DEDOS_THREAD_ID + 1
 
+static __thread struct dedos_thread *current_thread;
+
 /** Static structure to hold created dedos_thread's */
 static struct dedos_thread *dedos_threads[MAX_DEDOS_THREAD_ID + 2];
 /** Keep track of which cores have been assigned to threads */
@@ -53,7 +56,16 @@ static int pinned_cores[MAX_CORES];
 /** Initilizes the stat items associated with a thread */
 static inline void init_thread_stat_items(int id) {
     for (int i=0; i < N_THREAD_STAT_TYPES; i++) {
+        log_critical("Initializing %d", id);
         init_thread_stat(thread_stat_types[i].id, id);
+    }
+}
+
+int current_thread_id() {
+    if (current_thread != NULL) {
+        return current_thread->id;
+    } else {
+        return -1;
     }
 }
 

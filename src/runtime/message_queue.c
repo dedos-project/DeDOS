@@ -23,6 +23,7 @@ END OF LICENSE STUB
  * Structures and functions for enqueueing and dequeuing general-purpose
  * messages from a queue
  */
+#include "dedos.h"
 #include "message_queue.h"
 #include "logging.h"
 

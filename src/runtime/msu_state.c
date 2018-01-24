@@ -22,6 +22,7 @@ END OF LICENSE STUB
  *
  * State storage that is tied to a specific MSU message
  */
+#include "dedos.h"
 #include "msu_message.h"
 #include "rt_stats.h"
 #include "logging.h"

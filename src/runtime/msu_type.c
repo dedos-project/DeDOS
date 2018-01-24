@@ -22,7 +22,7 @@ END OF LICENSE STUB
  *
  * Registration and location of msu types
  */
-
+#include "dedos.h"
 #include "dfg.h"
 #include "msu_type.h"
 #include "logging.h"
