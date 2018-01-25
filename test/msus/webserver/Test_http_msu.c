@@ -163,7 +163,7 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__no_db_no_regex) {
 
 START_DEDOS_TEST(test_craft_http_response__valid_http__db_access__fail_invalid_addr) {
 
-    init_statistics();
+    check_statistics();
 
     log_info(HTTP_INIT_STR(DB_PORT));
     struct msu_init_data init_data = {
@@ -172,7 +172,7 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access__fail_invalid_a
 
     sock_state.epoll_fd = init_epoll(-1);
     ck_assert_int_ne(sock_state.epoll_fd, -1);
-    init_stat_item(MSU_STAT1, socket_msu.id);
+    init_msu_stat(MSU_STAT1, socket_msu.id);
 
     struct local_msu http_msu = {
         .type = &WEBSERVER_HTTP_MSU_TYPE,
@@ -200,8 +200,9 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access__fail_invalid_a
     rtn = craft_http_response(&http_msu, &msg);
 
     ck_assert_int_eq(rtn, -1);
-    int n_fds = (int)get_last_stat(MSU_STAT1, socket_msu.id);
-    ck_assert_int_eq(n_fds, 0);
+    double n_fds;
+    last_msu_stat(MSU_STAT1, socket_msu.id, &n_fds);
+    ck_assert_int_eq((int)n_fds, 0);
     ck_assert_int_eq(write_msu.queue.num_msgs, 1);
     struct msu_msg *msg_out = dequeue_msu_msg(&write_msu.queue);
 
@@ -216,7 +217,7 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access__fail_invalid_a
 
 START_DEDOS_TEST(test_craft_http_response__valid_http__db_access) {
 
-    init_statistics();
+    check_statistics();
 
     struct msu_init_data init_data = {
         HTTP_INIT_STR(DB_PORT)
@@ -224,7 +225,7 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access) {
 
     sock_state.epoll_fd = init_epoll(-1);
     ck_assert_int_ne(sock_state.epoll_fd, -1);
-    init_stat_item(MSU_STAT1, socket_msu.id);
+    init_msu_stat(MSU_STAT1, socket_msu.id);
 
     int sock = init_test_listening_socket(DB_PORT);
 
@@ -260,7 +261,8 @@ START_DEDOS_TEST(test_craft_http_response__valid_http__db_access) {
     rtn = craft_http_response(&http_msu, &msg);
 
     ck_assert_int_eq(rtn, 0);
-    int n_fds = (int)get_last_stat(MSU_STAT1, socket_msu.id);
+    double n_fds;
+    last_msu_stat(MSU_STAT1, socket_msu.id, &n_fds);
     ck_assert_int_eq(n_fds, 1);
     ck_assert_int_eq(cache_msu.queue.num_msgs, 0);
 

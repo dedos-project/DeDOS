@@ -92,8 +92,8 @@ START_DEDOS_TEST(test_read_http_request__from_sock_no_ssl__partial_read_and_seco
         .msu_state = &state
     };
 
-    init_statistics();
-    init_stat_item(MSU_STAT1, sock_msu.id);
+    check_statistics();
+    init_msu_stat(MSU_STAT1, sock_msu.id);
     INIT_LOCAL_RUNTIME(LOCAL_RT_ID);
     ADD_ROUTE_TO_MSU(read_msu, http_msu, LOCAL_RT_ID, 12);
 
@@ -123,9 +123,10 @@ START_DEDOS_TEST(test_read_http_request__from_sock_no_ssl__partial_read_and_seco
     ck_assert_int_eq(rtn, 0);
     ck_assert_int_eq(http_msu.queue.num_msgs, 0);
 
-    int n_fds = (int)get_last_stat(MSU_STAT1, sock_msu.id);
+    double n_fds;
+    last_msu_stat(MSU_STAT1, sock_msu.id, &n_fds);
 
-    ck_assert_int_eq(n_fds, 1);
+    ck_assert_int_eq((int)n_fds, 1);
     // Assert socket msu stored the reference
     ck_assert_ptr_eq(sock_state.destinations[fd_in], &read_msu);
     ck_assert_int_eq(msu_num_states(&read_msu), 1);

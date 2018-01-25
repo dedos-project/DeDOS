@@ -28,8 +28,9 @@
 #define PORT 8081
 
 int connect_to_webserver() {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
-    ck_assert_int_eq(n_fds, 0);
+    double n_fds;
+    last_msu_stat(MSU_STAT1, 10, &n_fds);
+    ck_assert_int_eq((int)n_fds, 0);
 
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     ck_assert_int_ne(sock, -1);
@@ -257,14 +258,16 @@ int file_count_eviction_cache_test() {
 
 
 START_DEDOS_INTEGRATION_TEST(connect_to_webserver) {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
+    double n_fds;
+	last_msu_stat(MSU_STAT1, 10, &n_fds);
     ck_assert_int_eq(n_fds, 1);
     int n_states = type_num_states(&WEBSERVER_READ_MSU_TYPE);
     ck_assert_int_eq(n_states, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(ssl_start_connect_to_webserver) {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
+    double n_fds;
+	last_msu_stat(MSU_STAT1, 10, &n_fds);
     ck_assert_int_eq(n_fds, 1);
 
     int n_states = type_num_states(&WEBSERVER_READ_MSU_TYPE);
@@ -272,7 +275,8 @@ START_DEDOS_INTEGRATION_TEST(ssl_start_connect_to_webserver) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(ssl_fully_connect_to_webserver) {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
+    double n_fds;
+	last_msu_stat(MSU_STAT1, 10, &n_fds);
     ck_assert_int_eq(n_fds, 1);
 
     int n_states = type_num_states(&WEBSERVER_READ_MSU_TYPE);
@@ -280,7 +284,8 @@ START_DEDOS_INTEGRATION_TEST(ssl_fully_connect_to_webserver) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(write_full_http_request) {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
+    double n_fds;
+	last_msu_stat(MSU_STAT1, 10, &n_fds);
     ck_assert_int_eq(n_fds, 0);
 
     int n_states = type_num_states(&WEBSERVER_READ_MSU_TYPE);
@@ -288,7 +293,8 @@ START_DEDOS_INTEGRATION_TEST(write_full_http_request) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(write_partial_http_request) {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
+    double n_fds;
+	last_msu_stat(MSU_STAT1, 10, &n_fds);
     ck_assert_int_eq(n_fds, 1);
 
     int n_states = type_num_states(&WEBSERVER_READ_MSU_TYPE);
@@ -296,7 +302,8 @@ START_DEDOS_INTEGRATION_TEST(write_partial_http_request) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(write_invalid_http_request) {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
+    double n_fds;
+	last_msu_stat(MSU_STAT1, 10, &n_fds);
     ck_assert_int_eq(n_fds, 0);
 
     int n_states = type_num_states(&WEBSERVER_READ_MSU_TYPE);
@@ -304,12 +311,14 @@ START_DEDOS_INTEGRATION_TEST(write_invalid_http_request) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(write_and_read_regex_request) {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
+    double n_fds;
+	last_msu_stat(MSU_STAT1, 10, &n_fds);
     ck_assert_int_eq(n_fds, 0);
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(write_and_read_http) {
-    int n_fds = get_last_stat(MSU_STAT1, 10);
+    double n_fds;
+	last_msu_stat(MSU_STAT1, 10, &n_fds);
     ck_assert_int_eq(n_fds, 0);
 
     int n_states = type_num_states(&WEBSERVER_READ_MSU_TYPE);
@@ -319,9 +328,10 @@ START_DEDOS_INTEGRATION_TEST(write_and_read_http) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(one_file_cache_test) {
-    int hits = get_last_stat(CACHE_HIT_STAT, 14);
-    int misses = get_last_stat(CACHE_MISS_STAT, 14);
-    int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
+    double hits, misses, evicts;
+    last_msu_stat(CACHE_HIT_STAT, 14, &hits);
+    last_msu_stat(CACHE_MISS_STAT, 14, &misses);
+    last_msu_stat(CACHE_EVICT_STAT, 14, &evicts);
     ck_assert_int_eq(hits, 1);
     ck_assert_int_eq(misses, 1);
     ck_assert_int_eq(evicts, 0);
@@ -332,9 +342,10 @@ START_DEDOS_INTEGRATION_TEST(one_file_cache_test) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(two_file_cache_test) {
-    int hits = get_last_stat(CACHE_HIT_STAT, 14);
-    int misses = get_last_stat(CACHE_MISS_STAT, 14);
-    int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
+    double hits, misses, evicts;
+    last_msu_stat(CACHE_HIT_STAT, 14, &hits);
+    last_msu_stat(CACHE_MISS_STAT, 14, &misses);
+    last_msu_stat(CACHE_EVICT_STAT, 14, &evicts);
     ck_assert_int_eq(hits, 2);
     ck_assert_int_eq(misses, 2);
     ck_assert_int_eq(evicts, 0);
@@ -345,9 +356,10 @@ START_DEDOS_INTEGRATION_TEST(two_file_cache_test) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(occupancy_limit_cache_test) {
-    int hits = get_last_stat(CACHE_HIT_STAT, 14);
-    int misses = get_last_stat(CACHE_MISS_STAT, 14);
-    int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
+    double hits, misses, evicts;
+    last_msu_stat(CACHE_HIT_STAT, 14, &hits);
+    last_msu_stat(CACHE_MISS_STAT, 14, &misses);
+    last_msu_stat(CACHE_EVICT_STAT, 14, &evicts);
     ck_assert_int_eq(hits, 0);
     ck_assert_int_eq(misses, 2);
     ck_assert_int_eq(evicts, 0);
@@ -358,9 +370,10 @@ START_DEDOS_INTEGRATION_TEST(occupancy_limit_cache_test) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(size_eviction_cache_test) {
-    int hits = get_last_stat(CACHE_HIT_STAT, 14);
-    int misses = get_last_stat(CACHE_MISS_STAT, 14);
-    int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
+    double hits, misses, evicts;
+    last_msu_stat(CACHE_HIT_STAT, 14, &hits);
+    last_msu_stat(CACHE_MISS_STAT, 14, &misses);
+    last_msu_stat(CACHE_EVICT_STAT, 14, &evicts);
     ck_assert_int_eq(hits, 1);
     ck_assert_int_eq(misses, 3);
     ck_assert_int_eq(evicts, 2);
@@ -371,9 +384,10 @@ START_DEDOS_INTEGRATION_TEST(size_eviction_cache_test) {
 } END_DEDOS_INTEGRATION_TEST()
 
 START_DEDOS_INTEGRATION_TEST(file_count_eviction_cache_test) {
-    int hits = get_last_stat(CACHE_HIT_STAT, 14);
-    int misses = get_last_stat(CACHE_MISS_STAT, 14);
-    int evicts = get_last_stat(CACHE_EVICT_STAT, 14);
+    double hits, misses, evicts;
+    last_msu_stat(CACHE_HIT_STAT, 14, &hits);
+    last_msu_stat(CACHE_MISS_STAT, 14, &misses);
+    last_msu_stat(CACHE_EVICT_STAT, 14, &evicts);
     ck_assert_int_eq(hits, 1);
     ck_assert_int_eq(misses, 4);
     ck_assert_int_eq(evicts, 2);

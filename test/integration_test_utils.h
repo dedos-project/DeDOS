@@ -227,7 +227,7 @@ int type_num_states(struct msu_type *type) {
 #define DEDOS_START_INTEGRATION_TEST_LIST(json_filename) \
     DEDOS_START_TEST_LIST(json_filename); \
     set_local_directory("."); \
-    init_statistics(); \
+    check_statistics(); \
     DEDOS_ADD_TEST_RESOURCE(DFG_JSON_FILE__, json_filename); \
 
 

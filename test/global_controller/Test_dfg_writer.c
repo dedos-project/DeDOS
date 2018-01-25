@@ -178,7 +178,7 @@ START_DEDOS_TEST(test_msu_type_to_json) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_msu_to_json) {
-    validate_json(msu_to_json(&msu1, 0));
+    validate_json(msu_to_json(&msu1));
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_runtime_to_json) {
@@ -186,35 +186,9 @@ START_DEDOS_TEST(test_runtime_to_json) {
 } END_DEDOS_TEST
 
 START_DEDOS_TEST(test_dfg_to_json__no_stats) {
-    validate_json(dfg_to_json(&dfg, 0));
+    validate_json(dfg_to_json(&dfg));
 } END_DEDOS_TEST
 
-START_DEDOS_TEST(test_stat_to_json) {
-    validate_json(stat_to_json(&stats, 3));
-} END_DEDOS_TEST
-
-START_DEDOS_TEST(test_msu_stats_to_json) {
-    init_statistics();
-    //register_msu_stats(msu1.id, msu1.scheduling.thread->id, msu1.scheduling.runtime->id);
-
-    stat_types[0].items[0].stats = stats;
-    stat_types[1].items[0].stats = stats;
-    validate_json(msu_stats_to_json(msu1.id, 4));
-} END_DEDOS_TEST
-
-START_DEDOS_TEST(test_dfg_to_json__stats) {
-    init_statistics();
-    //register_msu_stats(msu1.id, msu1.scheduling.thread->id, msu1.scheduling.runtime->id);
-    //register_msu_stats(msu2.id, msu2.scheduling.thread->id, msu2.scheduling.runtime->id);
-
-    stat_types[0].items[0].stats = stats;
-    stat_types[1].items[0].stats = stats;
-
-    stat_types[0].items[1].stats = stats;
-    stat_types[1].items[1].stats = stats;
-
-    validate_json(dfg_to_json(&dfg, 2));
-} END_DEDOS_TEST
 
 DEDOS_START_TEST_LIST("dfg_writer");
 // From controller_dfg.c
@@ -224,7 +198,4 @@ DEDOS_ADD_TEST_FN(test_msu_type_to_json)
 DEDOS_ADD_TEST_FN(test_msu_to_json)
 DEDOS_ADD_TEST_FN(test_runtime_to_json)
 DEDOS_ADD_TEST_FN(test_dfg_to_json__no_stats)
-DEDOS_ADD_TEST_FN(test_stat_to_json)
-DEDOS_ADD_TEST_FN(test_msu_stats_to_json)
-DEDOS_ADD_TEST_FN(test_dfg_to_json__stats)
 DEDOS_END_TEST_LIST()

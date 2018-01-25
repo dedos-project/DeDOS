@@ -238,7 +238,8 @@ START_DEDOS_TEST(test_msu_error__broadcast) {
     msg = dequeue_msu_msg(&msu2->queue);
     ck_assert_ptr_ne(msg, NULL);
 
-    double n_failures = get_last_stat(MSU_ERROR_CNT, msu3->id);
+    double n_failures;
+    last_msu_stat(ERROR_CNT, msu3->id, &n_failures);
     ck_assert_int_eq(n_failures, 1);
 
 } END_DEDOS_TEST
@@ -250,7 +251,7 @@ DEDOS_START_TEST_LIST("local_msu")
 
 set_local_runtime(&local_runtime);
 // Just to keep it from complaining
-init_statistics();
+check_statistics();
 
 DEDOS_ADD_TEST_FN(test_rm_from_local_registry__success)
 DEDOS_ADD_TEST_FN(test_rm_from_local_registry__fail)
