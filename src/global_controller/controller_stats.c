@@ -300,7 +300,7 @@ int append_stat_sample(struct stat_sample *sample, int runtime_id) {
     int item_id;
     switch (sample->referent.type) {
         case THREAD_STAT:
-            item_id = thread_item_id(sample->referent.id, runtime_id);
+            item_id = thread_item_id(runtime_id, sample->referent.id);
             break;
         case MSU_STAT:
             item_id = msu_item_id(sample->referent.id);
@@ -320,7 +320,8 @@ int append_stat_sample(struct stat_sample *sample, int runtime_id) {
     }
     int idx;
     if ((idx = type->id_indices[item_id]) == -1) {
-        log_warn("Item ID %u (referent %d) not assigned", item_id, sample->referent.id);
+        log_warn("Item ID %u (referent %d.%d, rt=%d) not assigned", item_id, sample->referent.type, sample->referent.id, runtime_id);
+        return -1;
     }
     struct stat_item *item = &type->items[idx];
 
