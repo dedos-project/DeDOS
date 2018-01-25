@@ -196,12 +196,12 @@ static int socket_msu_receive(struct local_msu *self, struct msu_msg *msg) {
 static void socket_msu_destroy(struct local_msu *self) {
     struct sock_msu_state *state = self->msu_state;
 
-    int rtn = msu_close(self, state->sock_fd);
+    int rtn = close(state->sock_fd);
     if (rtn == -1) {
         log_error("Error closing socket");
     }
 
-    rtn = msu_close(self, state->epoll_fd);
+    rtn = close(state->epoll_fd);
     if (rtn == -1) {
         log_error("Error closing epoll fd");
     }
@@ -273,7 +273,7 @@ static int socket_msu_init(struct local_msu *self, struct msu_init_data *init_da
         return -1;
     }
 
-    state->sock_fd = init_listening_msu_socket(self, init.port);
+    state->sock_fd = init_listening_socket(init.port);
     if (state->sock_fd == -1) {
         log_error("Couldn't initialize socket for socket handler MSU %d", self->id);
         return -1;

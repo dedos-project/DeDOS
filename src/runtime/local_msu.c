@@ -366,18 +366,3 @@ int msu_error(struct local_msu *msu, struct msu_msg_hdr *hdr, int broadcast) {
     return 0;
 }
 
-int init_listening_msu_socket(struct local_msu *msu, int port) {
-    int rtn = init_listening_socket(port);
-    if (rtn > 0) {
-        increment_msu_stat(FILEDES, msu->id, 1);
-    }
-    return rtn;
-}
-
-int msu_close(struct local_msu *msu, int fd) {
-    int rtn = close(fd);
-    if (rtn == 0) {
-        increment_msu_stat(FILEDES, msu->id, -1);
-    }
-    return rtn;
-}

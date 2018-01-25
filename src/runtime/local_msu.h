@@ -104,7 +104,4 @@ int msu_dequeue(struct local_msu *msu);
 struct local_msu *get_local_msu(unsigned int id);
 
 int msu_error(struct local_msu *msu, struct msu_msg_hdr *hdr, int broadcast);
-
-int init_listening_msu_socket(struct local_msu *msu, int port);
-int msu_close(struct local_msu *msu,  int fd);
 #endif
