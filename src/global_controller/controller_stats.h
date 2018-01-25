@@ -25,11 +25,6 @@ END OF LICENSE STUB
 #include "dfg.h"
 #include "unused_def.h"
 
-struct stat_item {
-    unsigned int id;
-    struct timed_rrdb stats;
-};
-
 #define MAX_STAT_ID 4192
 
 
@@ -42,6 +37,8 @@ int register_msu_stats(unsigned int msu_id, int msu_type_id, int thread_id, int 
 int unregister_thread_stats(unsigned int thread_id, unsigned int runtime_id);
 int register_thread_stats(unsigned int thread_id, unsigned int runtime_id);
 int init_statistics();
+
+int append_stat_sample(struct stat_sample *sample, int runtime_id);
 
 void show_stats(struct dfg_msu *msu);
 

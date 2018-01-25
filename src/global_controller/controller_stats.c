@@ -27,6 +27,13 @@ END OF LICENSE STUB
 
 #include <stdbool.h>
 
+struct stat_item {
+    unsigned int id;
+    struct timed_rrdb min_stats;
+    struct timed_rrdb max_stats;
+};
+
+
 struct stat_type {
     enum stat_id id;
     char *name;
@@ -79,7 +86,7 @@ static struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
     if (type->items == NULL) {
         return NULL;
     }
-    return &type->items[type->id_indices[item_id]].stats;
+    return &type->items[type->id_indices[item_id]].min_stats;
 }
 
 static int runtime_item_id(int runtime_id) {
@@ -185,10 +192,8 @@ static int register_stat(enum stat_id stat_id, unsigned int item_id) {
 
     struct stat_item *item = &type->items[index];
     item->id = item_id;
-    for (int i=0; i < RRDB_ENTRIES; i++) {
-        item->stats.time[i].tv_sec = -1;
-    }
-    memset(&item->stats, 0, sizeof(item->stats));
+    memset(&item->min_stats, 0, sizeof(item->min_stats));
+    memset(&item->max_stats, 0, sizeof(item->max_stats));
 
     return 0;
 }
@@ -290,3 +295,46 @@ void show_stats(struct dfg_msu *msu){
         }
     }
 }
+
+int append_stat_sample(struct stat_sample *sample, int runtime_id) {
+    int item_id;
+    switch (sample->referent.type) {
+        case THREAD_STAT:
+            item_id = thread_item_id(sample->referent.id, runtime_id);
+            break;
+        case MSU_STAT:
+            item_id = msu_item_id(sample->referent.id);
+            break;
+        case RT_STAT:
+            item_id = runtime_item_id(sample->referent.id);
+            break;
+        default:
+            log_error("Cannot locate referent type %d", sample->referent.type);
+            return -1;
+    }
+
+    struct stat_type *type = get_stat_type(sample->stat_id);
+    if (type == NULL) {
+        log_error("Couldn't get stat type %d", sample->stat_id);
+        return -1;
+    }
+    int idx;
+    if ((idx = type->id_indices[item_id]) == -1) {
+        log_warn("Item ID %u (referent %d) not assigned", item_id, sample->referent.id);
+    }
+    struct stat_item *item = &type->items[idx];
+
+    struct timed_stat minstat = {sample->start, sample->bin_edges[0]};
+    int rtn = append_to_timeseries(&minstat, 1, &item->min_stats);
+    if (rtn < 0) {
+        log_warn("Error appending to min timeseries");
+    }
+    struct timed_stat maxstat = {sample->start, sample->bin_edges[sample->n_bins]};
+    rtn = append_to_timeseries(&maxstat, 1, &item->max_stats);
+    if (rtn < 0) {
+        log_warn("Error append to max timeseries");
+    }
+    return 0;
+}
+
+

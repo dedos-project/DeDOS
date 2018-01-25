@@ -38,36 +38,8 @@ static int process_stat_samples(int runtime_id, int n_samples,
         log(LOG_MYSQL,"Error inserting stats into DB");
     }
 
-    struct timed_rrdb *stat;
     for (int i=0; i < n_samples; i++) {
-        stat = NULL;
-        switch (samples[i].referent.type) {
-            case THREAD_STAT:
-                stat = get_thread_stat(samples[i].stat_id, runtime_id, samples[i].referent.id);
-                break;
-            case MSU_STAT:
-                stat = get_msu_stat(samples[i].stat_id, samples[i].referent.id);
-                break;
-            case RT_STAT:
-                stat = get_runtime_stat(samples[i].stat_id, runtime_id);
-                break;
-            default:
-                log_error("Cannot find %dth stat %d type %d",
-                          i, samples[i].stat_id, samples[i].referent.type);
-                return -1;
-        }
-
-        if (stat == NULL) {
-            log_warn("Error getting stat sample for %dth stat %d type %d id %d",
-                i, samples[i].stat_id, samples[i].referent.type, samples[i].referent.id);
-            continue;
-        }
-        struct timed_stat tstat = {samples[i].start, samples[i].bin_edges[samples[i].n_bins]};
-        rtn = append_to_timeseries(&tstat, 1, stat);
-        if (rtn < 0) {
-            log_error("Error appending stats to timeseries");
-            continue;
-        }
+        append_stat_sample(&samples[i], runtime_id);
     }
 
     return 0;
