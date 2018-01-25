@@ -42,6 +42,8 @@ void set_local_runtime(struct dfg_runtime *rt);
  */
 int init_runtime_dfg(char *filename, int runtime_id);
 
+int instantiate_runtime_dfg();
+
 /**
  * Gets the sockaddr associated with the global controller
  * @param addr Output parameter to be filled with controller's ip and port

@@ -58,19 +58,20 @@ int init_runtime_dfg(char *filename, int runtime_id) {
                   runtime_id, filename);
         return -1;
     }
+    return 0;
+}
+
+int instantiate_runtime_dfg() {
 
     if (init_dfg_msu_types(DFG->msu_types, DFG->n_msu_types) != 0) {
-        log_error("Error instantiating MSU types found in %s",
-                  filename);
+        log_error("Error instantiating MSU types");
         return -1;
     }
 
     if (instantiate_dfg_runtime(LOCAL_RUNTIME) != 0) {
-        log_error("Error instantiating runtime %d from %s",
-                  runtime_id, filename);
+        log_error("Error instantiating runtime");
         return -1;
     }
-
     return 0;
 }
 

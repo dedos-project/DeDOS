@@ -56,7 +56,6 @@ static int pinned_cores[MAX_CORES];
 /** Initilizes the stat items associated with a thread */
 static inline void init_thread_stat_items(int id) {
     for (int i=0; i < N_THREAD_STAT_TYPES; i++) {
-        log_critical("Initializing %d", id);
         init_thread_stat(thread_stat_types[i].id, id);
     }
 }

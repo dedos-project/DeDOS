@@ -517,8 +517,10 @@ DEF_INDIV_FNS(init_stat_item,
               init_msu_stat, init_thread_stat, init_rt_stat);
 
 int init_runtime_statistics() {
+    log_info("Initialized rt stat %d", 12314123);
     for (int i=0; i < N_RUNTIME_STAT_TYPES; i++) {
         init_rt_stat(runtime_stat_types[i].id);
+        log_info("Initialized rt stat %d", runtime_stat_types[i].id);
     }
     return 0;
 }

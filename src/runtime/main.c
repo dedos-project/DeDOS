@@ -101,8 +101,14 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    log_info("INITING RUNTIME STATS");
     if (init_runtime_statistics() != 0) {
         log_warn("Could not initialize runtime-specific stats");
+    }
+
+    if (instantiate_runtime_dfg() != 0) {
+        log_critical("Error initializing runtime from json file. Exiting");
+        exit(-1);
     }
 
     struct sockaddr_in ctrl_addr;
