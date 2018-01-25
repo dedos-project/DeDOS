@@ -8,7 +8,7 @@
 int current_thread_id();
 int current_msu_id();
 
-#define MAX_FDS 131072
+#define MAX_FDS 2097152
 static int thread_fds[MAX_FDS];
 static int msu_fds[MAX_FDS];
 

@@ -143,7 +143,7 @@ static struct stat_label UNUSED runtime_stat_types[] = {
 #define N_RUNTIME_STAT_TYPES sizeof(runtime_stat_types) / sizeof(*runtime_stat_types)
 
 /** How often samples are sent from runtime to controller */
-#define STAT_SAMPLE_PERIOD_MS 200
+#define STAT_SAMPLE_PERIOD_MS 250
 
 size_t serialize_stat_samples(struct stat_sample *samples, int n_samples,
                               void **buffer);

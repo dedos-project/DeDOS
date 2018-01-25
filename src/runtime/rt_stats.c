@@ -17,14 +17,19 @@
         end.tv_nsec %= (long)1e9; \
     } while (0)
 
-#define STAT_LIST_SIZE 8192
+#define MAX_STATS_PER_SECOND 20000
 
+//#define STAT_LIST_SIZE MAX_STATS_PER_SECOND * STAT_SAMPLE_PERIOD_MS / 1000
+#define STAT_LIST_SIZE 5000
 struct stat_list
 {
-    pthread_mutex_t rec_mutex;
+    // I don't know if the mutex gains anything due to the
+    // order of the mutexes...
+    pthread_mutex_t record_lock;
     bool recorded;
 
     struct timespec start_time;
+    pthread_mutex_t writer_mutex;
     unsigned int write_index; /**< The next index that will be written to */
 
     /** Timestamp and data for each gathered statistic */
@@ -37,7 +42,7 @@ struct stat_list
     ((start).tv_nsec > (end).tv_nsec) ? 1 : \
     ((start).tv_nsec < (end).tv_nsec) ? -1 : 0
 
-#define ITEM_GROUP_SIZE 4
+#define ITEM_GROUP_SIZE 3
 
 struct stat_item_group
 {
@@ -45,10 +50,12 @@ struct stat_item_group
     struct stat_referent referent;
 
     struct timespec last_start_time;
+
+    pthread_mutex_t last_stat_lock;
     struct timed_stat last_stat;
 
+    pthread_mutex_t write_index_lock;
     unsigned int write_index;
-    unsigned int read_index;
 
     struct stat_list stat_list[ITEM_GROUP_SIZE];
 };
@@ -183,6 +190,17 @@ int check_statistics() {
             type->enabled = 0;
             rtn = 1;
         }
+        bool found = false;
+        for (int j=0; j < N_REPORTED_STAT_TYPES; j++) {
+            if (reported_stat_types[j].id == i) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            log_warn("Disabling stat type %s because it is not being reported", type->stat.label);
+            type->enabled = 0;
+        }
     }
     stats_checked = true;
     return rtn;
@@ -226,23 +244,34 @@ static struct stat_list *get_locked_write_stat_list(struct stat_item_group *grou
                                                     unsigned int item_id,
                                                     struct timespec *cur_time) {
 
+    pthread_mutex_lock(&group->write_index_lock);
+
     struct stat_list *old_list = &group->stat_list[group->write_index];
     struct stat_list *new_list = old_list;
-    int locked = pthread_mutex_trylock(&old_list->rec_mutex);
-    if (locked == 1 || old_list->recorded) {
+
+    int locked = pthread_mutex_trylock(&old_list->record_lock);
+
+    if (locked || old_list->recorded) {
+        log(LOG_STATS, "Switching to new stat list");
         group->write_index = (group->write_index + 1) % ITEM_GROUP_SIZE;
         new_list = &group->stat_list[group->write_index];
+
+        pthread_mutex_lock(&new_list->writer_mutex);
         new_list->recorded = false;
+        new_list->write_index = 0;
+        pthread_mutex_unlock(&new_list->writer_mutex);
+
         new_list->start_time = *cur_time;
         if (locked == 0)
-            pthread_mutex_unlock(&old_list->rec_mutex);
-        pthread_mutex_lock(&new_list->rec_mutex);
+            pthread_mutex_unlock(&old_list->record_lock);
+        pthread_mutex_lock(&new_list->record_lock);
     }
+    pthread_mutex_unlock(&group->write_index_lock);
     return new_list;
 }
 
 static void unlock_stat_list(struct stat_list *list) {
-    pthread_mutex_unlock(&list->rec_mutex);
+    pthread_mutex_unlock(&list->record_lock);
 }
 
 #define timestamp(t) clock_gettime(CLOCK_ID, t);
@@ -273,7 +302,8 @@ static void unlock_stat_list(struct stat_list *list) {
         return fn(sid, RT_ITEM_ID, _arg); \
     }
 
-static int record_stat(enum stat_id stat_id, unsigned int item_id, double value) {
+static int _record_stat(enum stat_id stat_id, unsigned int item_id, double value, bool lock) {
+    log(LOG_STATS, "Recording stat %d.%u", stat_id, item_id);
     struct timespec t;
     timestamp(&t);
 
@@ -286,22 +316,47 @@ static int record_stat(enum stat_id stat_id, unsigned int item_id, double value)
         return -1;
     }
 
+    if (lock)
+        pthread_mutex_lock(&group->last_stat_lock);
+
     struct stat_list *list = get_locked_write_stat_list(group, item_id, &t);
+
+    pthread_mutex_lock(&list->writer_mutex);
+
     int idx = list->write_index;
     if (idx >= STAT_LIST_SIZE) {
-        log_warn("Cannot record statistic! Too many already recorded!");
+        log_warn("Cannot record statistic %s.%u (%d-%u)! Too many already recorded!",
+                 type->stat.label, item_id, ITEM_ID_REFERENT_TYPE(item_id), id_from_item_id(item_id));
+        if (lock)
+            pthread_mutex_unlock(&group->last_stat_lock);
         return -1;
     }
     list->stats[idx].time = t;
     list->stats[idx].value = value;
     list->write_index = (idx + 1);
+
+
     group->last_stat = list->stats[idx];
 
+
+    pthread_mutex_unlock(&list->writer_mutex);
+
     unlock_stat_list(list);
+
+    if (lock)
+        pthread_mutex_unlock(&group->last_stat_lock);
+
     log(LOG_RECORD_STAT, "Recorded stat %d, item %d, value %f", stat_id, item_id, value);
 
+    log(LOG_STATS, "Stat %d.%u recorded", stat_id, item_id);
     return 0;
 }
+
+static int record_stat(enum stat_id stat_id, unsigned int item_id, double value) {
+    int rtn = _record_stat(stat_id, item_id, value, true);
+    return rtn;
+}
+
 DEF_INDIV_FNS_WARG(record_stat,
                    record_msu_stat, record_thread_stat, record_rt_stat,
                    double);
@@ -326,11 +381,20 @@ DEF_INDIV_FNS_WARG(get_last_stat,
 
 
 static int increment_stat(enum stat_id stat_id, unsigned int item_id, double increment) {
-    double val = -1;
-    if (get_last_stat(stat_id, item_id, &val) != 0) {
+    struct stat_type *type = &stat_types[stat_id];
+    if (!type->enabled) {
+        return 0;
+    }
+    struct stat_item_group *group = get_item_group(type, item_id);
+    if (group == NULL) {
+        log_error("Could not retrieve item group %d.%u", stat_id, item_id);
         return -1;
     }
-    return record_stat(stat_id, item_id, val + increment);
+
+    pthread_mutex_lock(&group->last_stat_lock);
+    int rtn = _record_stat(stat_id, item_id, group->last_stat.value + increment, false);
+    pthread_mutex_unlock(&group->last_stat_lock);
+    return rtn;
 }
 DEF_INDIV_FNS_WARG(increment_stat,
                    increment_msu_stat, increment_thread_stat, increment_rt_stat,
@@ -382,10 +446,24 @@ static struct stat_item_group *allocate_stat_item_group(enum stat_id stat, unsig
         group->referent.id, item_id, group->referent.type, stat);
     timestamp(&group->stat_list[0].start_time);
 
+    pthread_mutex_init(&group->last_stat_lock, NULL);
+    pthread_mutex_init(&group->write_index_lock, NULL);
+
+    for (int i=0; i < ITEM_GROUP_SIZE; i++) {
+        pthread_mutex_init(&group->stat_list[i].writer_mutex, NULL);
+        pthread_mutex_init(&group->stat_list[i].record_lock, NULL);
+    }
     return group;
 }
 
 static void free_stat_item_group(struct stat_item_group *group) {
+    pthread_mutex_destroy(&group->last_stat_lock);
+    pthread_mutex_destroy(&group->write_index_lock);
+
+    for (int i=0; i < ITEM_GROUP_SIZE; i++) {
+        pthread_mutex_destroy(&group->stat_list[i].writer_mutex);
+        pthread_mutex_destroy(&group->stat_list[i].record_lock);
+    }
     free(group);
 }
 
@@ -555,11 +633,12 @@ static void qsort_by_value(struct timed_stat *stats, int size) {
 }
 
 static int sample_stat_item(struct stat_item_group *group, struct stat_sample *sample) {
-    struct stat_list *read_list = &(group->stat_list[group->read_index]);
-    pthread_mutex_lock(&read_list->rec_mutex);
+    struct stat_list *read_list = &(group->stat_list[group->write_index]);
+
+    pthread_mutex_lock(&read_list->record_lock);
     unsigned int size = read_list->write_index;
-    if (size == 0) {
-        pthread_mutex_unlock(&read_list->rec_mutex);
+    if (size == 0 || read_list->recorded) {
+        pthread_mutex_unlock(&read_list->record_lock);
         return 1;
     }
 
@@ -608,8 +687,7 @@ static int sample_stat_item(struct stat_item_group *group, struct stat_sample *s
     sample->referent = group->referent;
     log(LOG_STAT_SAMPLES, "Referent: %d.%d", sample->referent.type, sample->referent.id);
 
-    group->read_index = (group->read_index + 1) % ITEM_GROUP_SIZE;
-    pthread_mutex_unlock(&read_list->rec_mutex);
+    pthread_mutex_unlock(&read_list->record_lock);
     log(LOG_STAT_SAMPLES, "Sample min: %f max: %f",
             sample->bin_edges[0], sample->bin_edges[sample->n_bins - 1]);
     return 0;
@@ -620,7 +698,7 @@ static int sample_stat_type(struct stat_type *type,
                      unsigned int n_samples) {
     lock_type(type);
     int sample_index = 0;
-    for (int i=0; i < type->max_used_id_index; i++) {
+    for (int i=0; i <= type->max_used_id_index; i++) {
         unsigned int id = type->used_ids[i];
         if (id == 0) {
             continue;
@@ -640,8 +718,6 @@ static int sample_stat_type(struct stat_type *type,
             sample_index++;
         }
     }
-    log(LOG_STAT_SAMPLES, "Sampled %d stats of type %s",
-        sample_index, type->stat.label);
     unlock_type(type);
     return sample_index;
 }

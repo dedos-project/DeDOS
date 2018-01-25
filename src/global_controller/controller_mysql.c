@@ -490,7 +490,6 @@ static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id,
             snprintf(query, MAX_REQ_LEN,
                      "select pk from Timeseries where runtime_id = (%u) and statistic_id = (%d)",
                      runtime_id, stat_id);
-            log_critical("RUNTIME STAT");
             return 0;
         default:
             log_error("Cannot get ts query for stat type %d", stat_id);
