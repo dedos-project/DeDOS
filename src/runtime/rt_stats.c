@@ -20,7 +20,7 @@
 #define MAX_STATS_PER_SECOND 20000
 
 //#define STAT_LIST_SIZE MAX_STATS_PER_SECOND * STAT_SAMPLE_PERIOD_MS / 1000
-#define STAT_LIST_SIZE 5000
+#define STAT_LIST_SIZE 250000
 struct stat_list
 {
     // I don't know if the mutex gains anything due to the
@@ -327,6 +327,8 @@ static int _record_stat(enum stat_id stat_id, unsigned int item_id, double value
     if (idx >= STAT_LIST_SIZE) {
         log_warn("Cannot record statistic %s.%u (%d-%u)! Too many already recorded!",
                  type->stat.label, item_id, ITEM_ID_REFERENT_TYPE(item_id), id_from_item_id(item_id));
+        pthread_mutex_unlock(&list->writer_mutex);
+        unlock_stat_list(list);
         if (lock)
             pthread_mutex_unlock(&group->last_stat_lock);
         return -1;

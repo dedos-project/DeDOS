@@ -305,6 +305,7 @@ static inline void record_metrics(struct rusage *before, int msu_id) {
 
 int msu_dequeue(struct local_msu *msu) {
     struct msu_msg *msg = dequeue_msu_msg(&msu->queue);
+    record_msu_stat(QUEUE_LEN, msu->id, msu->queue.num_msgs);
     if (msg) {
         if (msg->hdr.error_flag) {
             if (msu->type->receive_error == NULL) {
@@ -319,7 +320,6 @@ int msu_dequeue(struct local_msu *msu) {
         } else {
             log(LOG_MSU_DEQUEUES, "Dequeued MSU message %p for msu %d", msg, msu->id);
             struct rusage before;
-            record_msu_stat(QUEUE_LEN, msu->id, msu->queue.num_msgs);
             int gather_err = gather_metrics_before(&before);
             int rtn = msu_receive(msu, msg);
             if (gather_err == 0) {
