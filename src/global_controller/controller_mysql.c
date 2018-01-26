@@ -47,9 +47,18 @@ bool mysql_initialized = false;
 #define SQL_UNLOCK \
     pthread_mutex_unlock(&lock)
 
-#define MAX_REQ_LEN 4096
+#define MAX_REQ_LEN 32768
 
 #define MAX_INIT_CONTENTS_SIZE 8192
+
+static inline int make_mysql_query(const char *query, size_t size) {
+    log(LOG_MYSQL, "Making query %s", query);
+    if (mysql_real_query(&mysql, query, size)) {
+        log_error("MySQL query (%s) failed: %s", query, mysql_error(&mysql));
+        return -1;
+    }
+    return 0;
+}
 
 int db_register_msu_type(int msu_type_id, char *name);
 int db_register_statistic(int stat_id, char *name);
@@ -65,7 +74,7 @@ static int split_exec_cmd(char *cmd) {
         req[len] = ';';
         req[len+1] = '\0';
 
-        int status = mysql_query(&mysql, req);
+        int status = make_mysql_query(req, len);
         if (status) {
             log_error("Could not execute mysql query %s. Error: %s",
                       req, mysql_error(&mysql));
@@ -357,7 +366,7 @@ int db_set_rt_stat_limit(int runtime_id, enum stat_id stat_id, double limit) {
              "WHERE runtime_id = %d and statistic_id = %d",
              limit, runtime_id, stat_id);
 
-    if (mysql_real_query(&mysql, query, qlen)) {
+    if (make_mysql_query(query, qlen)) {
         log_error("Error making query %s: %s", query, mysql_error(&mysql));
         return -1;
     }
@@ -433,7 +442,7 @@ int db_check_and_register(const char *check_query, const char *insert_query,
     int query_len;
 
     query_len = strlen(check_query);
-    if (mysql_real_query(&mysql, check_query, query_len)) {
+    if (make_mysql_query(check_query, query_len)) {
         log_error("MySQL query failed: %s\n %s", mysql_error(&mysql), check_query);
         SQL_UNLOCK;
         return -1;
@@ -448,7 +457,7 @@ int db_check_and_register(const char *check_query, const char *insert_query,
                 mysql_free_result(result);
 
                 query_len = strlen(insert_query);
-                if (mysql_real_query(&mysql, insert_query, query_len)) {
+                if (make_mysql_query(insert_query, query_len)) {
                     log_error("MySQL query (%s) failed: %s", insert_query, mysql_error(&mysql));
                     SQL_UNLOCK;
                     return -1;
@@ -496,6 +505,8 @@ static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id,
             return -1;
     }
 }
+
+
 /**
  * Insert datapoint for a timseries in the DB.
  * @param input: pointer to timed_stat object
@@ -512,31 +523,31 @@ int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
         return -1;
     }
 
-    char query[MAX_REQ_LEN];
+    char pts_query[MAX_REQ_LEN];
     unsigned long ts = (unsigned long) sample->start.tv_sec * (unsigned long)1e9 +
                        (unsigned long) sample->start.tv_nsec;
-    size_t query_len = snprintf(query, MAX_REQ_LEN,
-                                "insert into Points (timeseries_pk, ts) values "
-                                "((%s), %lu)",
-                                ts_query, ts);
-
-    if (mysql_real_query(&mysql, query, query_len)) {
+    snprintf(pts_query, MAX_REQ_LEN,
+                    "insert into Points (timeseries_pk, ts) values "
+                    "((%s), %lu);\n"
+                    "SELECT LAST_INSERT_ID() INTO @pts_val",
+                    ts_query, ts);
+/*
+    if (make_mysql_query(&mysql, query, query_len)) {
         log_error("MySQL query (%s) failed: %s", query, mysql_error(&mysql));
         SQL_UNLOCK;
         return -1;
     }
 
     char points_query[MAX_REQ_LEN];
-    query_len = snprintf(points_query, MAX_REQ_LEN,
+    size_t query_len = snprintf(points_query, MAX_REQ_LEN,
                          "select pk from Points where timeseries_pk = (%s) and ts = (%lu)",
                          ts_query, ts);
 
-    if (mysql_real_query(&mysql, points_query, query_len)) {
+    if (make_mysql_query(&mysql, points_query, query_len)) {
         log_error("MySQL query (%s) failed: %s", query, mysql_error(&mysql));
         SQL_UNLOCK;
         return -1;
     }
-
     MYSQL_RES *result = mysql_store_result(&mysql);
     if (result == NULL) {
         log_error("Could not find result of points query after insertion");
@@ -550,8 +561,8 @@ int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
         SQL_UNLOCK;
         return -1;
     }
+*/
 
-    char *points_pk = row[0];
 
     char values[MAX_REQ_LEN];
     size_t values_size = 0;
@@ -560,24 +571,32 @@ int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
     for (int i=0; i < sample->n_bins; i++) {
         so_far += sample->bin_size[i];
         values_size += snprintf(values + values_size, MAX_REQ_LEN - values_size,
-                                "\n(%lf, %lf, %u, %f, %s),",
+                                "\n(%lf, %lf, %u, %f, @pts_val),",
                                 sample->bin_edges[i],
                                 sample->bin_edges[i+1],
                                 sample->bin_size[i],
-                                100.0 * so_far / total_size,
-                                points_pk);
+                                100.0 * so_far / total_size);
     }
+    char query[MAX_REQ_LEN];
     values[values_size - 1] = '\0';
-    query_len = snprintf(query, MAX_REQ_LEN,
-                         "Insert into Bins (low, high, size, percentile, points_pk) values %s",
-                         values);
-    if (mysql_real_query(&mysql, query, query_len)) {
-        log_error("MySQL query (%s) failed: %s", query, mysql_error(&mysql));
+    snprintf(query, MAX_REQ_LEN,
+                    "Insert into Bins (low, high, size, percentile, points_pk) values %s;",
+                     values);
+
+    char full_query[MAX_REQ_LEN];
+    size_t query_len = snprintf(full_query, MAX_REQ_LEN, "BEGIN; %s;\n%s\n COMMIT;", pts_query, query);
+    if (make_mysql_query(full_query, query_len)) {
+        log_error("MySQL query (%s) failed: %s", full_query, mysql_error(&mysql));
         SQL_UNLOCK;
         return -1;
     }
-    mysql_free_result(result);
-    log(LOG_MYSQL, "Inserted data point for stat %d (%s)", sample->stat_id, points_query);
+    //mysql_free_result(result);
+    log(LOG_MYSQL, "Inserted data point for stat %d (%s)", sample->stat_id, full_query);
+    MYSQL_RES *result;
+    while (mysql_next_result(&mysql) == 0) {
+        result = mysql_store_result(&mysql);
+        mysql_free_result(result);
+    }
     SQL_UNLOCK;
     return 0;
 }

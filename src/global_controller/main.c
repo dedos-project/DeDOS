@@ -37,7 +37,7 @@ END OF LICENSE STUB
 #include "dfg_reader.h"
 #include "controller_mysql.h"
 
-#define FILENAME_LEN 32
+#define FILENAME_LEN 128
 
 pthread_t cli_thread;
 pthread_t sock_thread;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
                     exit(EXIT_FAILURE);
                 }
                 break;
-            case 'j' : strcpy(filename, optarg);
+            case 'j' : strncpy(filename, optarg, FILENAME_LEN);
                 break;
             case 'o' : output_filename = optarg;
                 break;

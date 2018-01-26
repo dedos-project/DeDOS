@@ -30,12 +30,25 @@ END OF LICENSE STUB
 #define MAX_SAMPLE_SIZE 64
 struct stat_sample *incoming_samples;
 
+#define MIN_DB_INSERT_INTERVAL_MS 1000
+
+static struct timespec last_db_insert_time[MAX_RUNTIMES + 1];
+
+#define TIMEDIFF_MS(a, b) \
+    (((b).tv_sec - (a).tv_sec) * 1e3 + (int)((double)((b).tv_nsec - (a).tv_nsec) * 1e-6))
+
 static int process_stat_samples(int runtime_id, int n_samples,
                                struct stat_sample *samples) {
     log(LOG_PROCESS_STATS, "Processing %d stats from runtime %d", n_samples, runtime_id);
-    int rtn = db_insert_samples(samples, n_samples, runtime_id);
-    if (rtn < 0) {
-        log(LOG_MYSQL,"Error inserting stats into DB");
+
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if (TIMEDIFF_MS(last_db_insert_time[runtime_id], now) > MIN_DB_INSERT_INTERVAL_MS) {
+        last_db_insert_time[runtime_id] = now;
+        int rtn = db_insert_samples(samples, n_samples, runtime_id);
+        if (rtn < 0) {
+            log(LOG_MYSQL,"Error inserting stats into DB");
+        }
     }
 
     for (int i=0; i < n_samples; i++) {

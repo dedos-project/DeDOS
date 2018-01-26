@@ -65,7 +65,7 @@ static struct stat_type *get_stat_type(enum stat_id id) {
     return NULL;
 }
 
-static struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
+static struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id, bool max) {
     if (!stats_initialized) {
         log_error("Stats not initialized");
         return NULL;
@@ -86,7 +86,11 @@ static struct timed_rrdb *get_stat(enum stat_id id, unsigned int item_id) {
     if (type->items == NULL) {
         return NULL;
     }
-    return &type->items[type->id_indices[item_id]].min_stats;
+    if (max) {
+        return &type->items[type->id_indices[item_id]].max_stats;
+    } else {
+        return &type->items[type->id_indices[item_id]].min_stats;
+    }
 }
 
 static int runtime_item_id(int runtime_id) {
@@ -98,7 +102,7 @@ struct timed_rrdb *get_runtime_stat(enum stat_id id,
     if (!stats_initialized) {
         return NULL;
     }
-    return get_stat(id, runtime_item_id(runtime_id));
+    return get_stat(id, runtime_item_id(runtime_id), false);
 }
 
 static int thread_item_id(int runtime_id, int thread_id) {
@@ -110,7 +114,7 @@ struct timed_rrdb *get_thread_stat(enum stat_id id,
     if (!stats_initialized) {
         return NULL;
     }
-    return get_stat(id, thread_item_id(runtime_id, thread_id));
+    return get_stat(id, thread_item_id(runtime_id, thread_id), false);
 }
 
 static int msu_item_id(int msu_id) {
@@ -121,7 +125,14 @@ struct timed_rrdb *get_msu_stat(enum stat_id id, unsigned int msu_id) {
     if (!stats_initialized) {
         return NULL;
     }
-    return get_stat(id, msu_item_id(msu_id));
+    return get_stat(id, msu_item_id(msu_id), false);
+}
+
+struct timed_rrdb *get_msu_max_stat(enum stat_id id, unsigned int msu_id) {
+    if (!stats_initialized) {
+        return NULL;
+    }
+    return get_stat(id, msu_item_id(msu_id), true);
 }
 
 static int unregister_stat(enum stat_id stat_id, unsigned int item_id) {
@@ -320,7 +331,8 @@ int append_stat_sample(struct stat_sample *sample, int runtime_id) {
     }
     int idx;
     if ((idx = type->id_indices[item_id]) == -1) {
-        log_warn("Item ID %u (referent %d.%d, rt=%d) not assigned", item_id, sample->referent.type, sample->referent.id, runtime_id);
+        log(LOG_CTL_STATS, "Item ID %u (referent %d.%d, rt=%d) not assigned",
+                item_id, sample->referent.type, sample->referent.id, runtime_id);
         return -1;
     }
     struct stat_item *item = &type->items[idx];

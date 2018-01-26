@@ -30,6 +30,7 @@ END OF LICENSE STUB
 
 struct timed_rrdb *get_runtime_stat(enum stat_id id, unsigned int runtime_id);
 struct timed_rrdb *get_msu_stat(enum stat_id id, unsigned int msu_id);
+struct timed_rrdb *get_msu_max_stat(enum stat_id id, unsigned int msu_id);
 struct timed_rrdb *get_thread_stat(enum stat_id id, unsigned int thread_id, unsigned int runtime_id);
 
 int unregister_msu_stats(unsigned int msu_id);

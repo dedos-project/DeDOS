@@ -17,6 +17,8 @@ START OF LICENSE STUB
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 END OF LICENSE STUB
 */
+#include "scheduling.h"
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -100,31 +102,35 @@ static int get_read_qlens(double *qlens, int n_qlens) {
 }
 */
 void set_haproxy_weights(int rt_id, int offset) {
-    int n_reads[MAX_RUNTIMES+1];
-    for (int i=0; i< MAX_RUNTIMES + 1; i++) {
-        if (runtime_fd(i) > 0) {
-            if (i == rt_id) {
-                n_reads[i] = -offset;
-            } else {
-                n_reads[i] = 0;
-            }
-        } else {
-            n_reads[i] = -1;
-        }
-    }
     struct dfg_msu_type *type = get_dfg_msu_type(WEBSERVER_READ_MSU_TYPE_ID);
     if (type == NULL) {
         log_error("Error getting read type");
         return;
     }
+
+    int q_lens[MAX_RUNTIMES + 1];
+    for (int i=0; i < MAX_RUNTIMES + 1; i++) {
+        q_lens[i] = 0;
+    }
+    int used_runtimes[MAX_RUNTIMES + 1];
+    // Start at 1 to avoid dividing by 0 later
+    int total_qlen = 1;
     for (int i=0; i<type->n_instances; i++) {
+        int q_len = downstream_q_len(type->instances[i]);
         int rt_id = type->instances[i]->scheduling.runtime->id;
-        n_reads[rt_id]++;
+        q_lens[rt_id] += q_len;
+        total_qlen += q_len;
+        used_runtimes[rt_id] = 1;
+    }
+
+    int weights[MAX_RUNTIMES + 1];
+    for (int i=0; i < MAX_RUNTIMES + 1; i++) {
+        weights[i] = (int)(100.0 * ((double)(total_qlen - q_lens[i])/(total_qlen)));
     }
 
     for (int i=0; i <= MAX_RUNTIMES; i++) {
-        if (n_reads[i] >= 0) {
-            reweight_haproxy(i, n_reads[i]);
+        if (used_runtimes[i]) {
+            reweight_haproxy(i, weights[i]);
         }
     }
 }

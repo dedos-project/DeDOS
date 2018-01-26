@@ -23,11 +23,12 @@ END OF LICENSE STUB
 #include "dfg.h"
 #include "scheduling_cut.h"
 
+#include <stdbool.h>
 struct to_schedule {
     int *msu_ids;
     int num_msu;
 };
-
+int downstream_q_len(struct dfg_msu *msu);
 void prepare_clone(struct dfg_msu *msu);
 struct dfg_msu *clone_msu(int msu_id);
 int unclone_msu(int msu_id);
@@ -46,4 +47,6 @@ int greedy_policy(struct to_schedule *ts, struct dedos_dfg *dfg);
 int set_edges(struct to_schedule *ts, struct dedos_dfg *dfg);
 int set_msu_deadlines(struct to_schedule *ts, struct dedos_dfg *dfg);
 
+
+bool could_clone_type(struct dfg_msu_type *type);
 #endif /* !SCHEDULING_H_ */
