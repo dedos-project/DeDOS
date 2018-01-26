@@ -24,6 +24,7 @@ END OF LICENSE STUB
 #include "webserver/cache_msu.h"
 #include "webserver/write_msu.h"
 #include "webserver/read_msu.h"
+#include "webserver/regex_msu.h"
 #include "socket_msu.h"
 #include "msu_calls.h"
 #include "logging.h"
@@ -71,7 +72,7 @@ static int handle_db(struct http_state *http_state,
             return call_msu_type(self, &WEBSERVER_CACHE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         }
 
-        return call_msu_type(self, &WEBSERVER_REGEX_ROUTING_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
+        return call_msu_type(self, &WEBSERVER_REGEX_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
     }
     log_error("Unknown return code from database access: %d", rtn);
     msu_error(self, &msg->hdr, 0);
