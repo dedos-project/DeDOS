@@ -21,6 +21,7 @@ END OF LICENSE STUB
 #include "webserver/http_msu.h"
 #include "webserver/connection-handler.h"
 #include "webserver/dbops.h"
+#include "webserver/httpops.h"
 #include "webserver/cache_msu.h"
 #include "webserver/write_msu.h"
 #include "webserver/read_msu.h"
@@ -41,6 +42,8 @@ static int send_error(struct local_msu *self, struct http_state *http_state,
     resp->body_len = craft_error_response(resp->url, resp->body);
     return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, hdr, sizeof(*resp), resp);
 }
+
+#define HTML_BODY "<html> <body> Hello from DeDOS </body> </html>"
 
 static int handle_db(struct http_state *http_state,
                      struct local_msu *self,
@@ -69,7 +72,12 @@ static int handle_db(struct http_state *http_state,
 
         if (!has_regex(resp->url)) {
             log(LOG_HTTP_MSU, "Crafting response for url %s", resp->url);
-            return call_msu_type(self, &WEBSERVER_CACHE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
+            // return call_msu_type(self, &WEBSERVER_CACHE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
+
+            strcpy(resp->body, HTML_BODY);
+            resp->body_len = strlen(HTML_BODY);
+            resp->header_len = generate_header(resp->header, 200, MAX_HEADER_LEN, resp->body_len, "text/html");
+            return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
         }
 
         return call_msu_type(self, &WEBSERVER_REGEX_MSU_TYPE, &msg->hdr, sizeof(*resp), resp);
