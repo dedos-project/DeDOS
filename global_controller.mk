@@ -1,5 +1,5 @@
 DYNAMIC_SCHEDULING=0
-DEBUG = 1
+DEBUG = 0
 
 LOGS = \
 	   INFO \
@@ -7,7 +7,8 @@ LOGS = \
 	   WARN \
 	   CRITICAL \
 	   CUSTOM \
-	   SCHEDULING_DECISIONS \
+	   CLONING 
+	   #PROCESS_STATS
 	   #RUNTIME_MESSAGES \
 	   EPOLL_OPS
 	   #RUNTIME_MESSAGES \
@@ -44,7 +45,7 @@ CLEANUP=rm -f
 CLEAN_DIR=rm -rf
 MKDIR=mkdir -p
 
-OPTIM=0
+OPTIM=3
 
 CC:=gcc
 CXX:=g++
@@ -64,16 +65,19 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 CFLAGS=-Wall -pthread -O$(OPTIM) $(LOG_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
-ifeq ($(MAKECMDGOALS), $(filter $(MAKECMDGOALS),coverage init_cov cov-site))
+ifneq ($(MAKECMDGOALS),)
+ifneq ($(MAKECMDGOALS), $(filter-out $(MAKECMDGOALS),coverage init_cov cov-site))
+  $(warning "Coverage on")
   CFLAGS+= -fprofile-arcs -ftest-coverage --coverage
   OPTIM=0
+endif
 endif
 
 ifeq ($(DEBUG), 1)
   CFLAGS+=-ggdb
 endif
 
-ifeq ($(DYNAMIC_SCHEDULING), 1)
+ifeq ($(strip $(DYNAMIC_SCHEDULING)),1)
   CFLAGS+=-DDYN_SCHED
 endif
 

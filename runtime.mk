@@ -68,7 +68,12 @@ LOG_DEFINES=$(foreach logname, $(LOGS), -DLOG_$(logname)) \
 			$(foreach logname, $(NO_LOGS), -DNO_LOG_$(logname))
 MSU_DEFINES=$(foreach MSU_APP, $(MSU_APPLICATIONS), -DCOMPILE_$(call upper, $(MSU_APP))_MSUS)
 
-CFLAGS=-Wall -pthread -lssl -lrt -lcrypto -lm -O$(OPTIM) $(LOG_DEFINES) $(MSU_DEFINES)
+ifeq ($(strip $(DEBUG)),1)
+  CFLAGS+=-ggdb
+  OPTIM=0
+endif
+
+CFLAGS+=-Wall -pthread -lssl -lrt -lcrypto -lm -O$(OPTIM) $(LOG_DEFINES) $(MSU_DEFINES)
 CC_EXTRAFLAGS = --std=gnu99
 
 # If your MSU application requires additional cflags, include them here
@@ -84,10 +89,6 @@ ifneq (,$(findstring pico_tcp,$(MSU_APPLICATIONS)))
 # Add folders to be compiled under src/legacy/ to the LEGACY_LIBS variable
 LEGACY_LIBS+= picotcp
 CFLAGS+=-lpcap
-endif
-
-ifeq ($(DEBUG), 1)
-  CFLAGS+=-ggdb
 endif
 
 ifeq ($(DATAPLANE_PROFILING),1)
