@@ -82,6 +82,10 @@ int msu_monitor_fd(int fd, uint32_t events, struct local_msu *destination,
 struct msu_msg_hdr blank_hdr = {};
 
 int msu_remove_fd_monitor(int fd) {
+    if (instance == NULL) {
+        log_error("Cannot remove FD monitor -- MSU instance is NULL");
+        return -1;
+    }
     struct sock_msu_state *state = instance->msu_state;
 
     state->hdr_mask[fd] = blank_hdr;
@@ -94,7 +98,6 @@ int msu_remove_fd_monitor(int fd) {
         return -1;
     } else {
         if (state->accepted_locally[fd]) {
-            increment_msu_stat(FILEDES, instance->id, -1);
             state->accepted_locally[fd] = false;
         }
     }
@@ -153,9 +156,9 @@ static int process_connection(int fd, void *v_state) {
         }
         int rtn = call_local_msu(state->self, destination, hdr, sizeof(*msg), msg);
         if (rtn < 0) {
-            log_error("Error enqueueing to next MSU");
+            log_error("Error enqueueing to next MSU! Dropping MSU message");
             msu_error(instance, NULL, 0);
-            msu_monitor_fd(fd, EPOLLIN | EPOLLOUT, destination, hdr);
+            //msu_monitor_fd(fd, EPOLLIN | EPOLLOUT, destination, hdr);
             return -1;
         }
         log(LOG_SOCKET_HANDLER,"Enqueued to MSU %d", destination->id);
@@ -164,7 +167,6 @@ static int process_connection(int fd, void *v_state) {
 }
 
 static int set_default_target(int fd, void *v_state) {
-    increment_msu_stat(FILEDES, instance->id, 1);
     struct sock_msu_state *state = v_state;
     state->accepted_locally[fd] = true;
     state->destinations[fd] = NULL;

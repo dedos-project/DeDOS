@@ -178,6 +178,7 @@ static void *dedos_thread_starter(void *thread_init_v) {
     // Have to get things out of the thread_init, because
     // it will be destroyed externally once sem_post() is complete
     struct dedos_thread *thread = init->self;
+    current_thread = thread;
     dedos_thread_fn thread_fn = init->thread_fn;
     dedos_thread_destroy_fn destroy_fn = init->destroy_fn;
 
@@ -202,7 +203,7 @@ static void *dedos_thread_starter(void *thread_init_v) {
     if (destroy_fn) {
         destroy_fn(thread, init_rtn);
     }
-
+    current_thread = NULL;
     return (void*)(intptr_t)rtn;
 }
 

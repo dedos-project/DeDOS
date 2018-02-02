@@ -47,7 +47,7 @@ bool mysql_initialized = false;
 #define SQL_UNLOCK \
     pthread_mutex_unlock(&lock)
 
-#define MAX_REQ_LEN 32768
+#define MAX_REQ_LEN 65536
 
 #define MAX_INIT_CONTENTS_SIZE 8192
 
@@ -489,8 +489,8 @@ static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id,
             return 0;
         case THREAD_STAT:
             snprintf(select_pk, MAX_REQ_LEN,
-                     "select pk from Threads where thread_id = %d and runtime_id = %u",
-                     referent->id, runtime_id);
+                     "select pk from Threads where runtime_id = %u and thread_id = %u",
+                     runtime_id, referent->id);
             snprintf(query, MAX_REQ_LEN,
                      "select pk from Timeseries where thread_pk = (%s) and statistic_id = (%d)",
                      select_pk, stat_id);
@@ -504,6 +504,47 @@ static int get_ts_query(char query[MAX_REQ_LEN], enum stat_id stat_id,
             log_error("Cannot get ts query for stat type %d", stat_id);
             return -1;
     }
+}
+
+int db_insert_sample_query(struct stat_sample *sample, unsigned int runtime_id,
+                           char *query_out, size_t query_out_size) {
+    /* Find timeserie to insert data point first */
+    char ts_query[MAX_REQ_LEN];
+    if (get_ts_query(ts_query, sample->stat_id, &sample->referent, runtime_id) != 0) {
+        SQL_UNLOCK;
+        return -1;
+    }
+
+    char pts_query[MAX_REQ_LEN];
+    unsigned long ts = (unsigned long) sample->start.tv_sec * (unsigned long)1e9 +
+                       (unsigned long) sample->start.tv_nsec;
+    snprintf(pts_query, MAX_REQ_LEN,
+                    "insert into Points (ts, timeseries_pk) values "
+                    "(%lu, (%s));\n"
+                    "SELECT LAST_INSERT_ID() INTO @pts_val",
+                    ts, ts_query);
+
+
+    char values[MAX_REQ_LEN];
+    size_t values_size = 0;
+    double so_far = 0;
+    double total_size = sample->total_samples;
+    for (int i=0; i < sample->n_bins; i++) {
+        so_far += sample->bin_size[i];
+        values_size += snprintf(values + values_size, MAX_REQ_LEN - values_size,
+                                "\n(%lf, %lf, %u, %f, @pts_val),",
+                                sample->bin_edges[i],
+                                sample->bin_edges[i+1],
+                                sample->bin_size[i],
+                                100.0 * so_far / total_size);
+    }
+    char query[MAX_REQ_LEN];
+    values[values_size - 1] = '\0';
+    snprintf(query, MAX_REQ_LEN,
+                    "Insert into Bins (low, high, size, percentile, points_pk) values %s",
+                     values);
+
+    return snprintf(query_out, query_out_size, "%s;\n%s;\n", pts_query, query);
 }
 
 
@@ -527,10 +568,10 @@ int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
     unsigned long ts = (unsigned long) sample->start.tv_sec * (unsigned long)1e9 +
                        (unsigned long) sample->start.tv_nsec;
     snprintf(pts_query, MAX_REQ_LEN,
-                    "insert into Points (timeseries_pk, ts) values "
-                    "((%s), %lu);\n"
+                    "insert into Points (ts, timeseries_pk) values "
+                    "(%lu, (%s));\n"
                     "SELECT LAST_INSERT_ID() INTO @pts_val",
-                    ts_query, ts);
+                    ts, ts_query);
 /*
     if (make_mysql_query(&mysql, query, query_len)) {
         log_error("MySQL query (%s) failed: %s", query, mysql_error(&mysql));
@@ -584,7 +625,7 @@ int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
                      values);
 
     char full_query[MAX_REQ_LEN];
-    size_t query_len = snprintf(full_query, MAX_REQ_LEN, "BEGIN; %s;\n%s\n COMMIT;", pts_query, query);
+    size_t query_len = snprintf(full_query, MAX_REQ_LEN, "%s;\n%s;", pts_query, query);
     if (make_mysql_query(full_query, query_len)) {
         log_error("MySQL query (%s) failed: %s", full_query, mysql_error(&mysql));
         SQL_UNLOCK;
@@ -601,12 +642,51 @@ int db_insert_sample(struct stat_sample *sample, unsigned int runtime_id) {
     return 0;
 }
 
+#define MAX_FULL_QUERY_LEN 131072
+char db_full_query[MAX_FULL_QUERY_LEN + 1];
+
 int db_insert_samples(struct stat_sample *samples, int n_samples, unsigned int runtime_id) {
     for (int i=0; i < n_samples; i++) {
         if (db_insert_sample(&samples[i], runtime_id) != 0) {
             return -1;
         }
     }
+    return 0;
+    /* // THIS PUTS ALL QUERIES INTO A SINGLE COMMIT
+    SQL_LOCK;
+    size_t query_size = sprintf(db_full_query, "BEGIN; \n");
+    for (int i=0; i < n_samples; i++) {
+        int rtn = db_insert_sample_query(&samples[i], runtime_id, db_full_query + query_size, MAX_FULL_QUERY_LEN- query_size);
+        if (rtn <= 0) {
+            log_error("Error getting sample query");
+            SQL_UNLOCK;
+            return -1;
+        }
+        query_size += rtn;
+        if (query_size >= MAX_FULL_QUERY_LEN) {
+            log_error("Query too large");
+            SQL_UNLOCK;
+            return -1;
+        }
+    }
+    query_size += snprintf(db_full_query + query_size, MAX_FULL_QUERY_LEN - query_size, "END;");
+    if (query_size >= MAX_FULL_QUERY_LEN) {
+        log_error("Query too large");
+        SQL_UNLOCK;
+        return -1;
+    }
+    if (make_mysql_query(db_full_query, query_size)) {
+        log_error("BAD!");
+        SQL_UNLOCK;
+        return -1;
+    }
+    MYSQL_RES *result;
+    while (mysql_next_result(&mysql) == 0) {
+        result = mysql_store_result(&mysql);
+        mysql_free_result(result);
+    }
+    SQL_UNLOCK;
+    */
     return 0;
 }
 

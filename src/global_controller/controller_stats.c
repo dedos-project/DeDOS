@@ -307,6 +307,40 @@ void show_stats(struct dfg_msu *msu){
     }
 }
 
+struct rt_stat_limits {
+    bool limit_set[MAX_STAT_ID + 1];
+    double limit[MAX_STAT_ID + 1];
+};
+
+static struct rt_stat_limits rt_stat_limits[MAX_RUNTIMES + 1];
+
+int set_ctl_rt_stat_limit(int runtime_id, struct stat_limit *lim) {
+    if (runtime_id > MAX_RUNTIMES) {
+        log_error("Cannot set stat limit, runtime ID too high");
+        return -1;
+    }
+    if (lim->id > MAX_STAT_ID) {
+        log_error("Cannot set stat limit, limit ID too high");
+        return -1;
+    }
+    rt_stat_limits[runtime_id].limit[lim->id] = lim->limit;
+    rt_stat_limits[runtime_id].limit_set[lim->id] = true;
+    return 0;
+}
+   
+int get_rt_stat_limit(int runtime_id, enum stat_id stat, double *lim) {
+    if (runtime_id > MAX_RUNTIMES) {
+        log_error("Cannot get stat limit, runtime ID too high");
+        return -1;
+    }
+    if (!rt_stat_limits[runtime_id].limit_set[stat]) {
+        return -1;
+    }
+    *lim = rt_stat_limits[runtime_id].limit[stat];
+    return 0;
+}
+
+
 int append_stat_sample(struct stat_sample *sample, int runtime_id) {
     int item_id;
     switch (sample->referent.type) {

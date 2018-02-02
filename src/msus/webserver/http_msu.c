@@ -33,6 +33,7 @@ END OF LICENSE STUB
 #include "msu_state.h"
 #include "unused_def.h"
 #include "local_msu.h"
+#include "routing_strategies.h"
 #include "webserver/regex_routing_msu.h"
 
 static int send_error(struct local_msu *self, struct http_state *http_state,
@@ -40,6 +41,7 @@ static int send_error(struct local_msu *self, struct http_state *http_state,
     struct response_state *resp = malloc(sizeof(*resp));
     init_response_state(resp, &http_state->conn);
     resp->body_len = craft_error_response(resp->url, resp->body);
+    resp->header_len = generate_header(resp->header, 404, MAX_HEADER_LEN, resp->body_len, "text/html");
     return call_msu_type(self, &WEBSERVER_WRITE_MSU_TYPE, hdr, sizeof(*resp), resp);
 }
 
@@ -102,7 +104,8 @@ static int handle_parsing(struct read_state *read_state,
         msu_free_state(self, &msg->hdr.key);
         return 0;
     }
-    log(LOG_HTTP_MSU, "Parsing request: %s (fd: %d)", read_state->req, read_state->conn.fd);
+    log(LOG_HTTP_MSU, "Parsing request: %*.*s (fd: %d)", read_state->req_len, read_state->req_len,
+            read_state->req, read_state->conn.fd);
     int rtn = parse_request(read_state->req, read_state->req_len, http_state);
 
     if (rtn & WS_COMPLETE) {
@@ -158,10 +161,11 @@ static int craft_http_response(struct local_msu *self,
         case NIL:
         case CON_READING:
             log(LOG_HTTP_MSU, "got CON_READING");
+            int fd = read_state->conn.fd;
+
             rtn = handle_parsing(read_state, http_state, self, msg);
             if (rtn < 0) {
-                log_error("Error processing fd %d, ID %u, retrieved %d", read_state->conn.fd,
-                          (msg->hdr.key.id), retrieved);
+                log_error("Error processing fd %d, retrieved %d", fd, retrieved);
             }
             return rtn;
         case CON_DB_REQUEST:
@@ -214,6 +218,7 @@ struct msu_type WEBSERVER_HTTP_MSU_TYPE = {
     .id = WEBSERVER_HTTP_MSU_TYPE_ID,
     .init = http_init,
     .destroy = http_destroy,
+    .route = forced_consistency_routing,
     .receive = craft_http_response,
     .receive_error = clear_state
 };

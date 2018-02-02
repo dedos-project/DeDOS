@@ -22,6 +22,7 @@ END OF LICENSE STUB
 
 int reweight_haproxy(int server, int weight);
 
-void set_haproxy_weights(int rt_id, int offset);
+void set_haproxy_weights(void);
+void set_haproxy_ignore_instance(int msu_id);
 #endif
 

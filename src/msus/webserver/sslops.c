@@ -215,6 +215,8 @@ int read_ssl(SSL *ssl, char *buf, int *buf_size) {
     if (num_bytes > 0) {
         *buf_size = num_bytes;
         return WS_COMPLETE;
+    } else if (num_bytes == 0) {
+        return WS_ERROR;
     } else {
         CHECK_SSL_WANTS(ssl, num_bytes);
     }

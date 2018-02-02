@@ -65,6 +65,8 @@ struct route_set {
  */
 int init_route(int route_id, int type_id);
 
+int get_runtime_route_endpoint(struct routing_table *table, uint32_t key, int rt_id,
+                               struct msu_endpoint *endpoint);
 /**
  * Gets the endpoint associated with the given key in the provided route
  * @param route Route to search for key

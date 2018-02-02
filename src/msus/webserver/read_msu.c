@@ -62,7 +62,11 @@ static int handle_read(struct read_state *read_state,
         close_connection(&conn);
         return 0;
     } else {
-        log(LOG_WEBSERVER_READ, "Read %s", read_state->req);
+#ifdef LOG_READ_REQUESTS
+        char preq[read_state->req_len+1];
+        snprintf(preq, read_state->req_len, "%s", read_state->req);
+        log(LOG_READ_REQUESTS, "Read from %d, %s", read_state->conn.fd, preq);
+#endif
     }
     struct read_state *out = malloc(sizeof(*out));
     memcpy(out, read_state, sizeof(*read_state));

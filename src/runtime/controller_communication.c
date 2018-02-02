@@ -291,6 +291,13 @@ static struct thread_msg *thread_msg_from_ctrl_hdr(struct ctrl_runtime_msg_hdr *
     enum thread_msg_type type = get_thread_msg_type(hdr->type);
     struct thread_msg *thread_msg = construct_thread_msg(type, hdr->payload_size, msg_data);
     thread_msg->ack_id = hdr->id;
+    thread_msg->ack_sem = malloc(sizeof(*thread_msg->ack_sem));
+
+    if (thread_msg->ack_sem == NULL) {
+        log_error("Could not create ack sem");
+        return thread_msg;
+    }
+    sem_init(thread_msg->ack_sem, 0, 0);
     return thread_msg;
 }
 
@@ -318,6 +325,13 @@ static int pass_ctrl_msg_to_thread(struct ctrl_runtime_msg_hdr *hdr, int fd) {
     if (rtn < 0) {
         log_error("Error enquing control message on thread %d", hdr->thread_id);
         return -1;
+    }
+    if (thread_msg->ack_sem != NULL) {
+        log(LOG_ACK_SEM, "Waiting on ack sem");
+        sem_wait(thread_msg->ack_sem);
+        log(LOG_ACK_SEM, "Received sem ack");
+        sem_destroy(thread_msg->ack_sem);
+        free(thread_msg->ack_sem);
     }
     return 0;
 }

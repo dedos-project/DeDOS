@@ -50,6 +50,7 @@ int send_create_msu_msg(struct dfg_msu *msu) {
         return -1;
     }
     log(LOG_RUNTIME_MESSAGES, "Sent CREATE_MSU message");
+    usleep(1e5);
     return 0;
 }
 
@@ -190,7 +191,7 @@ int send_del_endpoint_msg(struct dfg_route *route, struct dfg_route_endpoint *en
         log_error("Error sending del-endpoint msg to runtime %d", route->runtime->id);
         return -1;
     }
-    log(LOG_RUNTIME_MESSAGES, "Sent ADD_ENDPOINT message");
+    log(LOG_RUNTIME_MESSAGES, "Sent DEL_ENDPOINT message");
     return 0;
 }
 

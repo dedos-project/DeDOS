@@ -51,6 +51,7 @@ enum thread_msg_type {
 struct thread_msg {
     enum thread_msg_type type;
     int ack_id; /**< for sending acknowledgements to controller. Not implemented fully */
+    sem_t *ack_sem;
     ssize_t data_size;
     void *data;
 };

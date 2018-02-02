@@ -206,8 +206,7 @@ int access_database(char *url, struct db_state *state) {
     "<!DOCTYPE html>\n<html>\n<body>\n<h1>418 I am a teapot</h1>\n</body>\n</html>"
 
 int craft_error_response(char UNUSED *url, char *response) {
-    int n = sprintf(response, ERROR_HTTP_HEADER ERROR_HTTP_BODY,
-            (int)strlen(ERROR_HTTP_BODY));
+    int n = sprintf(response, ERROR_HTTP_BODY);
     return n;
 }
 

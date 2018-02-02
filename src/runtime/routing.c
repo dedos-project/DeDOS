@@ -39,6 +39,12 @@ END OF LICENSE STUB
 /** The maximum ID that may be assigned to a route */
 #define MAX_ROUTE_ID 10000
 
+struct routing_values {
+    int n_endpoints;
+    uint32_t keys[MAX_DESTINATIONS];
+    struct msu_endpoint endpoints[MAX_DESTINATIONS];
+};
+
 /**
  * The core of the routing system, the routing table lists a route's destinations.
  * The routing_table is kept private so the rwlock can be enfoced.
@@ -49,19 +55,24 @@ struct routing_table{
     int type_id; /**< The type-id associated with the destinations in this table */
     pthread_rwlock_t rwlock; /**< Protects access to the destinations so they cannot be changed
                                   while they are being read */
-    int n_endpoints;      /**< The number of destinations this route contains */
-    uint32_t keys[MAX_DESTINATIONS]; /**< The keys associated with each of the destinations */
-    struct msu_endpoint endpoints[MAX_DESTINATIONS]; /**< The destinations themselves */
+    struct routing_values values;
+    struct routing_values values_by_runtime[MAX_RUNTIMES+1];
 };
+
+static int UNUSED sprint_routing_values(struct routing_values *values, char *str, int strlen) {
+    int offset = 0;
+    for (int i=0; i < values->n_endpoints; i++) {
+        struct msu_endpoint *destination = &values->endpoints[i];
+        offset += sprintf(str + offset, "- %4d: %3d\n", destination->id, (int)values->keys[i]);
+    }
+    return offset;
+}
 
 #ifdef LOG_ROUTING_CHANGES
 static void print_routing_table(struct routing_table *table) {
     char output[1024];
     int offset = sprintf(output,"\n---------- ROUTE TYPE: %d ----------\n", table->type_id);
-    for (int i=0; i<table->n_endpoints; i++) {
-        struct msu_endpoint *destination = &table->endpoints[i];
-        offset += sprintf(output+offset, "- %4d: %3d\n", destination->id, (int)table->keys[i]);
-    }
+    sprint_routing_values(&table->values, output + offset, 1024 - offset);
     log(LOG_ROUTING_CHANGES, "%s", output);
 }
 #else
@@ -107,14 +118,17 @@ static int unlock(struct routing_table *table) {
  * @param value the value to use in the search
  * @return the index of the destination with the appropriate value
  */
-static int find_value_index(struct routing_table *table, uint32_t value) {
+static int find_value_index(struct routing_values *values, uint32_t value) {
     //TODO: Binary search?
     int i = -1;
-    if (table->n_endpoints == 0)
+    if (values->n_endpoints == 0)
         return -1;
-    value = value % table->keys[table->n_endpoints-1];
-    for (i=0; i<table->n_endpoints; i++) {
-        if (table->keys[i] > value)
+    if (values->keys[values->n_endpoints - 1] == 0) {
+        return -1;
+    }
+    value = value % values->keys[values->n_endpoints-1];
+    for (i=0; i<values->n_endpoints; i++) {
+        if (values->keys[i] > value)
             return i;
     }
     return i;
@@ -127,12 +141,59 @@ static int find_value_index(struct routing_table *table, uint32_t value) {
  * @param msu_id the ID to search for in the table
  * @return the index of the destination with the appropriate msu id
  */
-static int find_id_index(struct routing_table *table, int msu_id) {
-    for (int i=0; i<table->n_endpoints; i++) {
-        if (table->endpoints[i].id == msu_id)
+static int find_id_index(struct routing_values *values, int msu_id) {
+    for (int i=0; i<values->n_endpoints; i++) {
+        if (values->endpoints[i].id == msu_id)
             return i;
     }
     return -1;
+}
+
+static int rm_routing_values_entry(struct routing_values *values, int msu_id) {
+    int index = find_id_index(values, msu_id);
+    if (index == -1) {
+        log_error("MSU %d does not exist in this route", msu_id);
+        return -1;
+    }
+
+    // Shift destinations after removed index back by one
+    for (int i=index; i<values->n_endpoints-1; ++i) {
+        values->keys[i] = values->keys[i+1];
+        values->endpoints[i] = values->endpoints[i+1];
+    }
+    values->n_endpoints--;
+    return 0;
+}
+
+static int recompute_runtime_values(struct routing_table *table, int runtime_id) {
+    int rt_i = 0;
+    struct routing_values *rt_values = &table->values_by_runtime[runtime_id];
+    for (int i=0; i < table->values.n_endpoints; i++) {
+        if (table->values.endpoints[i].runtime_id == runtime_id) {
+            rt_values->endpoints[rt_i] = table->values.endpoints[i];
+            rt_values->keys[rt_i] = (rt_i > 0 ? rt_values->keys[rt_i - 1] : 0) + \
+                                    table->values.keys[i] - (i > 0 ? table->values.keys[i-1] : 0);
+            rt_i++;
+        }
+    }
+    rt_values->n_endpoints = rt_i;
+    //char output[1024];
+    //sprint_routing_values(rt_values, output, 1024);
+    //log(LOG_RUNTIME_ROUTES, "%s", output);
+    return 0;
+}
+
+static int get_endpoint_from_values_by_id(struct routing_values *values, int msu_id,
+                                          struct msu_endpoint *ep) {
+    int rtn = -1;
+    for (int i=0; i < values->n_endpoints; i++) {
+        if (values->endpoints[i].id == msu_id) {
+            *ep = values->endpoints[i];
+            rtn = 0;
+            break;
+        }
+    }
+    return rtn;
 }
 
 /**
@@ -143,19 +204,24 @@ static int find_id_index(struct routing_table *table, int msu_id) {
  */
 static int rm_routing_table_entry(struct routing_table *table, int msu_id) {
     write_lock(table);
-    int index = find_id_index(table, msu_id);
-    if (index == -1) {
+    struct msu_endpoint ep;
+    int rtn = get_endpoint_from_values_by_id(&table->values, msu_id, &ep);
+    if (rtn < 0) {
+        unlock(table);
         log_error("MSU %d does not exist in route %d", msu_id, table->id);
+        return -1;
+    }
+    rtn = rm_routing_values_entry(&table->values, msu_id);
+    if (rtn < 0) {
         unlock(table);
         return -1;
     }
-
-    // Shift destinations after removed index back by one
-    for (int i=index; i<table->n_endpoints-1; ++i) {
-        table->keys[i] = table->keys[i+1];
-        table->endpoints[i] = table->endpoints[i+1];
+    rtn = recompute_runtime_values(table, ep.runtime_id);
+    if (rtn < 0) {
+        unlock(table);
+        return -1;
     }
-    table->n_endpoints--;
+    
     unlock(table);
     log(LOG_ROUTING_CHANGES, "Removed destination %d from table %d (type %d)",
                msu_id, table->id, table->type_id);
@@ -176,21 +242,27 @@ int add_routing_table_entry(struct routing_table *table,
     write_lock(table);
 
     int i;
-    if (table->n_endpoints >= MAX_DESTINATIONS) {
+    if (table->values.n_endpoints >= MAX_DESTINATIONS) {
         log_error("Too many endpoints to add to route. Max: %d", MAX_DESTINATIONS);
         unlock(table);
         return -1;
     }
 
     // Shift all endpoints greater than the provided endpoint up by one
-    for (i = table->n_endpoints; i > 0 && key < table->keys[i-1]; --i) {
-        table->keys[i] = table->keys[i-1];
-        table->endpoints[i] = table->endpoints[i-1];
+    for (i = table->values.n_endpoints; i > 0 && key < table->values.keys[i-1]; --i) {
+        table->values.keys[i] = table->values.keys[i-1];
+        table->values.endpoints[i] = table->values.endpoints[i-1];
     }
-    table->keys[i] = key;
-    table->endpoints[i] = *dest;
-    table->endpoints[i].route_id = table->id;
-    table->n_endpoints++;
+    table->values.keys[i] = key;
+    table->values.endpoints[i] = *dest;
+    table->values.endpoints[i].route_id = table->id;
+    table->values.n_endpoints++;
+
+    int rtn = recompute_runtime_values(table, dest->runtime_id);
+    if (rtn < 0) {
+        unlock(table);
+        return -1;
+    }
     unlock(table);
 
     log(LOG_ROUTING_CHANGES, "Added destination %d to table %d (type: %d)",
@@ -209,7 +281,7 @@ int add_routing_table_entry(struct routing_table *table,
 static int alter_routing_table_entry(struct routing_table *table,
                                      int msu_id, uint32_t new_key) {
     write_lock(table);
-    int index = find_id_index(table, msu_id);
+    int index = find_id_index(&table->values, msu_id);
     if (index == -1) {
         log_error("MSU %d does not exist in route %d", msu_id, table->id);
         unlock(table);
@@ -217,23 +289,28 @@ static int alter_routing_table_entry(struct routing_table *table,
     }
     // TODO: Next two steps could be done in one operation
 
-    int UNUSED orig_key = table->keys[index];
+    int UNUSED orig_key = table->values.keys[index];
 
-    struct msu_endpoint endpoint = table->endpoints[index];
+    struct msu_endpoint endpoint = table->values.endpoints[index];
     // Shift indices after removed back
-    for (int i=index; i<table->n_endpoints-1; i++) {
-        table->keys[i] = table->keys[i+1];
-        table->endpoints[i] = table->endpoints[i+1];
+    for (int i=index; i<table->values.n_endpoints-1; i++) {
+        table->values.keys[i] = table->values.keys[i+1];
+        table->values.endpoints[i] = table->values.endpoints[i+1];
     }
 
     // Shift indices after inserted forward
     int i;
-    for (i = table->n_endpoints-1; i > 0 && new_key < table->keys[i-1]; i--) {
-        table->keys[i] = table->keys[i-1];
-        table->endpoints[i] = table->endpoints[i-1];
+    for (i = table->values.n_endpoints-1; i > 0 && new_key < table->values.keys[i-1]; i--) {
+        table->values.keys[i] = table->values.keys[i-1];
+        table->values.endpoints[i] = table->values.endpoints[i-1];
     }
-    table->keys[i] = new_key;
-    table->endpoints[i] = endpoint;
+    table->values.keys[i] = new_key;
+    table->values.endpoints[i] = endpoint;
+    int rtn = recompute_runtime_values(table, endpoint.runtime_id);
+    if (rtn < 0) {
+        unlock(table);
+        return -1;
+    }
     unlock(table);
     log(LOG_ROUTING_CHANGES, "Changed key of msu %d in table %d from %d to %d",
                msu_id, table->id, orig_key, new_key);
@@ -302,19 +379,19 @@ int get_shortest_queue_endpoint(struct routing_table *table,
 
     unsigned int shortest_queue = MAX_MSU_Q_SIZE;
     int n_shortest = 0;
-    struct msu_endpoint *endpoints[table->n_endpoints];
+    struct msu_endpoint *endpoints[table->values.n_endpoints];
 
-    for (int i=0; i<table->n_endpoints; i++) {
-        if (table->endpoints[i].locality == MSU_IS_REMOTE) {
+    for (int i=0; i<table->values.n_endpoints; i++) {
+        if (table->values.endpoints[i].locality == MSU_IS_REMOTE) {
             continue;
         }
-        int length = table->endpoints[i].queue->num_msgs;
+        int length = table->values.endpoints[i].queue->num_msgs;
         if (length < shortest_queue) {
-            endpoints[0] = &table->endpoints[i];
+            endpoints[0] = &table->values.endpoints[i];
             shortest_queue = length;
             n_shortest = 1;
         } else if (length == shortest_queue) {
-            endpoints[n_shortest] = &table->endpoints[i];
+            endpoints[n_shortest] = &table->values.endpoints[i];
             n_shortest++;
         }
     }
@@ -333,8 +410,8 @@ int get_endpoint_by_index(struct routing_table *table, int index,
                           struct msu_endpoint *endpoint) {
     int rtn = -1;
     read_lock(table);
-    if (table->n_endpoints > index) {
-        *endpoint = table->endpoints[index];
+    if (table->values.n_endpoints > index) {
+        *endpoint = table->values.endpoints[index];
         rtn = 0;
     }
     unlock(table);
@@ -345,9 +422,9 @@ int get_endpoint_by_id(struct routing_table *table, int msu_id,
                        struct msu_endpoint *endpoint) {
     int rtn = -1;
     read_lock(table);
-    for (int i=0; i < table->n_endpoints; i++) {
-        if (table->endpoints[i].id == msu_id) {
-            *endpoint = table->endpoints[i];
+    for (int i=0; i < table->values.n_endpoints; i++) {
+        if (table->values.endpoints[i].id == msu_id) {
+            *endpoint = table->values.endpoints[i];
             rtn = 0;
             break;
         }
@@ -360,14 +437,14 @@ int get_endpoints_by_runtime_id(struct routing_table *table, int runtime_id,
                                 struct msu_endpoint *endpoints, int n_endpoints) {
     int found_endpoints = 0;
     read_lock(table);
-    for (int i=0; i < table->n_endpoints; i++) {
-        if (table->endpoints[i].runtime_id == runtime_id) {
+    for (int i=0; i < table->values.n_endpoints; i++) {
+        if (table->values.endpoints[i].runtime_id == runtime_id) {
             if (n_endpoints <= found_endpoints) {
                 log_error("Not enough endpoints passed in to hold results");
                 unlock(table);
                 return -1;
             }
-            endpoints[found_endpoints] = table->endpoints[i];
+            endpoints[found_endpoints] = table->values.endpoints[i];
             found_endpoints++;
         }
     }
@@ -377,24 +454,40 @@ int get_endpoints_by_runtime_id(struct routing_table *table, int runtime_id,
 
 int get_n_endpoints(struct routing_table *table) {
     read_lock(table);
-    int n_endpoints = table->n_endpoints;
+    int n_endpoints = table->values.n_endpoints;
     unlock(table);
     return n_endpoints;
 }
 
 int get_route_endpoint(struct routing_table *table, uint32_t key, struct msu_endpoint *endpoint) {
     read_lock(table);
-    int index = find_value_index(table, key);
+    int index = find_value_index(&table->values, key);
     if (index < 0) {
         log_error("Could not find index for key %d", key);
         unlock(table);
         return -1;
     }
-    *endpoint = table->endpoints[index];
+    *endpoint = table->values.endpoints[index];
     log(LOG_ROUTING_DECISIONS, "Endpoint for key %u is %d", key, endpoint->id);
     unlock(table);
     return 0;
 }
+
+int get_runtime_route_endpoint(struct routing_table *table, uint32_t key, int rt_id,
+                               struct msu_endpoint *endpoint) {
+    read_lock(table);
+    int index = find_value_index(&table->values_by_runtime[rt_id], key);
+    if (index < 0) {
+        log_error("Could not find index for key %d", key);
+        unlock(table);
+        return -1;
+    }
+    *endpoint = table->values_by_runtime[rt_id].endpoints[index];
+    log(LOG_ROUTING_DECISIONS, "Endpoint for key %u is %d", key, endpoint->id);
+    unlock(table);
+    return 0;
+}
+
 
 struct routing_table *get_type_from_route_set(struct route_set *set, int type_id) {
     for (int i=0; i<set->n_routes; i++) {

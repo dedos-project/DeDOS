@@ -136,6 +136,7 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, bool on
        void *data) {
     struct epoll_event events[MAX_EPOLL_EVENTS];
 
+    int rtn =  0;
     for (int j=0; j<batch_size || batch_size == -1;  j++) {
         log(LOG_EPOLL_OPS, "Waiting on epoll");
         int n = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, timeout);
@@ -148,8 +149,8 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, bool on
                 log(LOG_EPOLL_OPS, "Accepting connection on %d", socket_fd);
                 int new_fd = accept_new_connection(socket_fd, epoll_fd, oneshot);
                 if ( new_fd < 0) {
-                    //log_error("Failed accepting new connection on epoll %d", epoll_fd);
-                    return -1;
+                    log_warn("Failed accepting new connection on epoll %d", epoll_fd);
+                    rtn = -1;
                 } else {
                     if (accept_handler) {
                         accept_handler(new_fd, data);
@@ -159,24 +160,27 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, bool on
             } else {
                 log(LOG_EPOLL_OPS, "Processing connection (fd: %d)",
                            events[i].data.fd);
-                int rtn = connection_handler(events[i].data.fd, data);
-                if (rtn != 0) {
-                    if (rtn < 0) {
+                int rtn2 = connection_handler(events[i].data.fd, data);
+                if (rtn2 != 0) {
+                    if (rtn2 < 0) {
                         log_error("Failed processing existing connection (fd: %d)",
                                   events[i].data.fd);
                     } else {
                         log(LOG_EPOLL_OPS, "Got exit code %d from fd %d",
                                    rtn, events[i].data.fd);
                     }
-                    return rtn;
+                    rtn = -1;
                 } else {
                     log(LOG_EPOLL_OPS, "Processed connection (fd: %d)",
                                events[i].data.fd);
                 }
             }
         }
+        if (rtn < 0) {
+            return rtn;
+        }
     }
-    return 0;
+    return rtn;
 }
 
 

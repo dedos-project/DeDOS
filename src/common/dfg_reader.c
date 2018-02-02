@@ -240,6 +240,13 @@ INIT_OBJ_FN(init_dfg_msu_type) {
 /** Key: "MSU_types", Object: ::ROOT */
 PARSE_OBJ_LIST_FN(set_msu_types, init_dfg_msu_type);
 
+/** Key: "runtime_max", Object ::MSU_TYPES */
+PARSE_FN(set_msu_type_runtime_max) {
+    struct dfg_msu_type *type = GET_PARSE_OBJ();
+    type->runtime_max = GET_INT_TOK();
+    return 0;
+}
+
 /** Key: "id", Object: ::MSU_TYPES */
 PARSE_FN(set_msu_type_id) {
     struct dfg_msu_type *type = GET_PARSE_OBJ();
@@ -699,6 +706,7 @@ static struct key_mapping key_map[] = {
     { "dependencies", MSU_TYPES, set_dependencies },
     { "cloneable", MSU_TYPES, set_cloneable },
     { "colocation_group", MSU_TYPES, set_colocation_group },
+    { "runtime_max", MSU_TYPES, set_msu_type_runtime_max },
 
     { "id", MSUS, set_msu_id },
     { "vertex_type", MSUS, set_msu_vertex_type },

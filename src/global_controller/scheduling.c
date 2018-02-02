@@ -66,6 +66,8 @@ int downstream_q_len(struct dfg_msu *msu) {
 }
 #endif
 
+#define ROUTING_OUTPUT_SIZE 8192
+
 #ifdef QLEN_ROUTING
 static int fix_route_ranges(struct dfg_route *route) {
 
@@ -77,30 +79,45 @@ static int fix_route_ranges(struct dfg_route *route) {
         return 0;
     }
 
-    double total_q_len = 0;
+    double sum_q_len = 1;
+    double max_q_len = 1;
     double q_lens[route->n_endpoints];
     for (int i=0; i < route->n_endpoints; i++) {
         q_lens[i] = downstream_q_len(route->endpoints[i]->msu);
-        if (q_lens[i] < .001) {
-            q_lens[i] = .001;
+        if (q_lens[i] * 1.2 > max_q_len) {
+            max_q_len = q_lens[i] * 1.2;
         }
-        total_q_len += q_lens[i];
+        if (q_lens[i] == 0) {
+            q_lens[i] = 1;
+        }
+        sum_q_len += q_lens[i];
     }
     int last = 0;
     int keys[route->n_endpoints];
     int old_keys[route->n_endpoints];
     int ids[route->n_endpoints];
+    double max_weight = 0;
     for (int i=0; i < route->n_endpoints; i++) {
-        double pct = (1.0 - q_lens[i] / total_q_len) * 10000;
-        if (pct < 1) {
-            pct = 1;
+        double weight = sum_q_len / q_lens[i];
+        if (weight > max_weight) {
+            max_weight = weight;
         }
+    }
+    for (int i=0; i < route->n_endpoints; i++) {
+        //double pct = (10000 * ((double)(max_q_len -  q_lens[i])/max_q_len));
+        //double pct = (10000 * ((double)(sum_q_len -  q_lens[i])/sum_q_len));
+        double weight = sum_q_len / q_lens[i];
+        double pct = (10000 * (weight / max_weight));
+        //if (pct < 1) {
+        //    pct = 1;
+        //}
         keys[i] = pct + last;
         last = keys[i];
         old_keys[i] = route->endpoints[i]->key;
         ids[i] = route->endpoints[i]->msu->id;
     }
 
+    bool UNUSED something_changed = false;
     for (int i=0; i < route->n_endpoints; i++) {
         if (old_keys[i] != keys[i]) {
             int rtn = mod_endpoint(ids[i], keys[i], route->id);
@@ -108,12 +125,32 @@ static int fix_route_ranges(struct dfg_route *route) {
                 log_error("Error modifying endpoint");
                 return -1;
             } else {
-                log(LOG_ROUTING_CHANGES,
-                          "Modified endpoint %d (idx: %d) in route %d to have key %d (old: %d)",
-                          ids[i], i, route->id, keys[i], old_keys[i]);
+                something_changed = true;
+                //log(LOG_ROUTING_CHANGES,
+                //          "Modified endpoint %d (idx: %d) in route %d to have key %d (old: %d)",
+                //          ids[i], i, route->id, keys[i], old_keys[i]);
             }
         }
     }
+#ifdef LOG_ROUTING_CHANGES
+
+    if (something_changed) {
+        char log_output[ROUTING_OUTPUT_SIZE];
+        int s = snprintf(log_output, ROUTING_OUTPUT_SIZE, "ROUTE: %d.%d (%f)\n",
+                         route->msu_type->id, route->id, max_q_len);
+        for (int i=0; i < route->n_endpoints; i++) {
+            int rtn = snprintf(log_output + s, ROUTING_OUTPUT_SIZE - s, "%d :\t%d \t %d\t (%f)\n",
+                               ids[i], keys[i], keys[i] - (i > 0 ? keys[i-1] : 0), q_lens[i]);
+            if (rtn < 0) {
+                continue;
+            }
+            s += rtn;
+        }
+        log(LOG_ROUTING_CHANGES, "%s", log_output);
+    }
+#endif
+
+
     return 0;
 }
 
@@ -186,7 +223,7 @@ int fix_all_route_ranges(struct dedos_dfg *dfg) {
             }
         }
     }
-    set_haproxy_weights(0, 0);
+    set_haproxy_weights();
     return 0;
 }
 
@@ -225,7 +262,7 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
         int up;
         for (j = i+1; j < n_msus; ++j) {
             for (up = 0; up < msus[i]->type->meta_routing.n_dst_types; ++up) {
-                struct dfg_msu_type *upt = msus[i]->type->meta_routing.dst_types[up];
+                //struct dfg_msu_type *upt = msus[i]->type->meta_routing.dst_types[up];
                 if (msus[j]->type == msus[i]->type->meta_routing.dst_types[up] && j > i) {
                     struct dfg_msu *tmp = msus[j];
                     msus[j] = msus[i];
@@ -233,7 +270,7 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
                     i = 0;
                     j = 0;
                     break;
-                }
+                }/*
                 for (int upup = 0; upup < upt->meta_routing.n_dst_types; ++upup) {
                     if (msus[j]->type == upt->meta_routing.dst_types[upup] && j > i) {
                         struct dfg_msu *tmp = msus[j];
@@ -244,6 +281,7 @@ int msu_hierarchical_sort(struct dfg_msu **msus) {
                         break;
                     }
                 }
+                */
             }
         }
     }
@@ -325,6 +363,62 @@ struct dfg_thread *find_unused_thread(struct dfg_runtime *runtime,
     return  find_unused_thread_except(runtime, type, is_pinned, NULL, 0);
 }
 
+
+bool could_clone_on_runtime(struct dfg_msu_type *type, struct dfg_runtime *rt, 
+                            int used_threads[MAX_THREADS], int *n_used_threads,
+                            int checked_types[MAX_MSU_TYPES], int *n_checked_types) {
+    int is_blocking = type->instances[0]->blocking_mode == NONBLOCK_MSU;
+    struct dfg_thread *free_thread = find_unused_thread_except(rt, 
+                                                               type,
+                                                               is_blocking,
+                                                               used_threads,
+                                                               *n_used_threads);
+
+    if (free_thread == NULL) {
+        return false;
+    }
+
+    if (type->runtime_max == 1 && msu_type_on_runtime(rt, type) != NULL) {
+        return false;
+    }
+
+    checked_types[*n_checked_types] = type->id;
+    (*n_checked_types)++;
+    used_threads[*n_used_threads] = free_thread->id;
+    (*n_used_threads)++;
+
+    for (int i=0; i < type->n_dependencies; i++) {
+        struct dfg_dependency *dep = type->dependencies[i];
+        if (dep->locality != MSU_IS_LOCAL) {
+            continue;
+        }
+        struct dfg_msu_type *dep_type = dep->type;
+        bool already_checked = false;
+        for (int j=0; j < *n_checked_types; j++) {
+            if (dep_type->id == checked_types[j]) {
+                already_checked = true;
+                break;
+            }
+            if (msu_type_on_runtime(rt, dep_type) != NULL) {
+                already_checked = true;
+                break;
+            }
+        }
+        if (already_checked) {
+            continue;
+        }
+
+        bool could_clone = could_clone_on_runtime(dep_type, rt, 
+                                                  used_threads, n_used_threads,
+                                                  checked_types, n_checked_types);
+        if (could_clone == false) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 /**
  * Find a core on which to spawn a new thread for an MSU
  * @param dfg_runtime: the target runtime
@@ -333,6 +427,16 @@ struct dfg_thread *find_unused_thread(struct dfg_runtime *runtime,
  */
 int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
     int ret = 0;
+    int used_threads[MAX_THREADS];
+    memset(used_threads, 0, sizeof(used_threads));
+    int checked_types[MAX_MSU_TYPES];
+    memset(checked_types, 0, sizeof(checked_types));
+    int n_used_threads = 0;
+    int n_checked_types = 0;
+    if (!could_clone_on_runtime(msu->type, rt, used_threads, &n_used_threads, 
+                                checked_types, &n_checked_types)) {
+        return -1;
+    }
 
     struct dfg_thread *free_thread = find_unused_thread(rt, msu->type,
                                                         msu->blocking_mode == NONBLOCK_MSU);
@@ -354,7 +458,7 @@ int place_on_runtime(struct dfg_runtime *rt, struct dfg_msu *msu) {
         log_error("Could not send addmsu command to runtime %d", msu->scheduling.runtime->id);
         return ret;
     }
-
+    usleep(2e5);
     //TODO: update rt->current_alloc
 
     return ret;
@@ -531,8 +635,12 @@ static int remove_routes_to_msu(struct dfg_msu *msu) {
             if (ep == NULL) {
                 continue;
             }
-
-            int rtn = del_endpoint(msu->id, route->id);
+            int rtn = mod_endpoint(msu->id, 0, route->id);
+            if (rtn < 0) {
+                log_warn("Error setting endpoint %d of route %d to 0", msu->id, route->id);
+            }
+            usleep(1e5);
+            rtn = del_endpoint(msu->id, route->id);
             if (rtn < 0) {
                 log_error("Error deleting endpoint from route %d for removal of %d",
                           route->id, msu->id);
@@ -600,13 +708,15 @@ int unclone_msu(int msu_id) {
 
     for (int i=n_deps-1; i>=0; i--) {
         if (dependencies[i]->type->id == WEBSERVER_READ_MSU_TYPE_ID) {
-            set_haproxy_weights(dependencies[i]->scheduling.runtime->id, 1);
+            set_haproxy_ignore_instance(dependencies[i]->id);
+            set_haproxy_weights();
         }
         int rtn = remove_routes_to_msu(dependencies[i]);
         if (rtn < 0) {
             log_error("Error removing routes to msu %d", dependencies[i]->id);
             return -1;
         }
+        usleep(1e6); // 1 seconds
         int id = dependencies[i]->id;
         char *name = dependencies[i]->type->name;
         rtn = remove_msu(id);
@@ -618,7 +728,7 @@ int unclone_msu(int msu_id) {
 
         //TODO: This should really wait for confirmation of deletion of MSU
         if (i > 0)
-            usleep(2000e3); // 2 seconds
+            usleep(1e6); // 2 seconds
     }
 
     return 0;
@@ -717,52 +827,6 @@ struct dfg_msu *clone_msu(int msu_id) {
         return clone;
     }
 }
-
-bool could_clone_on_runtime(struct dfg_msu_type *type, struct dfg_runtime *rt, 
-                            int used_threads[MAX_THREADS], int *n_used_threads,
-                            int checked_types[MAX_MSU_TYPES], int *n_checked_types) {
-    int is_blocking = type->instances[0]->blocking_mode == NONBLOCK_MSU;
-    struct dfg_thread *free_thread = find_unused_thread_except(rt, 
-                                                               type,
-                                                               is_blocking,
-                                                               used_threads,
-                                                               *n_used_threads);
-    if (free_thread == NULL) {
-        return false;
-    }
-
-    checked_types[*n_checked_types] = type->id;
-    (*n_checked_types)++;
-    used_threads[*n_used_threads] = free_thread->id;
-    (*n_used_threads)++;
-
-    for (int i=0; i < type->n_dependencies; i++) {
-        struct dfg_dependency *dep = type->dependencies[i];
-        if (dep->locality != MSU_IS_LOCAL) {
-            continue;
-        }
-        struct dfg_msu_type *dep_type = dep->type;
-        bool already_checked = false;
-        for (int j=0; j < *n_checked_types; j++) {
-            if (dep_type->id == checked_types[j]) {
-                already_checked = true;
-                break;
-            }
-        }
-        if (already_checked) {
-            continue;
-        }
-
-        bool could_clone = could_clone_on_runtime(dep_type, rt, 
-                                                  used_threads, n_used_threads,
-                                                  checked_types, n_checked_types);
-        if (could_clone == false) {
-            return false;
-        }
-    }
-    return true;
-}
-
     
 
 bool could_clone_type(struct dfg_msu_type *type) {
@@ -770,7 +834,9 @@ bool could_clone_type(struct dfg_msu_type *type) {
 
     for (int i=0; i < dfg->n_runtimes; i++) {
         int used_threads[MAX_THREADS];
+        memset(used_threads, 0, sizeof(used_threads));
         int checked_types[MAX_MSU_TYPES];
+        memset(checked_types, 0, sizeof(checked_types));
         int n_used_threads = 0;
         int n_checked_types = 0;
         if (could_clone_on_runtime(type, dfg->runtimes[i], used_threads, &n_used_threads, 

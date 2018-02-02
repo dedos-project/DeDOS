@@ -36,7 +36,7 @@ struct dfg_config;
 struct dfg_vertex;
 
 /** The maximum number of MSUs which can be present in the system at a time */
-#define MAX_MSU 512
+#define MAX_MSU 2048
 
 /** The ID to which messages should be addressed when delivered to the main runtime thread */
 #define MAIN_THREAD_ID 0
@@ -190,6 +190,8 @@ struct dfg_msu_type {
                          up to and including N */
     int colocation_group; /** MSU types which have the same colocation group (if > 0)
                               can be scheduled on the same thread */
+
+    int runtime_max; /**< The maximum number of MSUs on one runtime */
 };
 
 /** Whether an MSU is located on the same runtime or a remote runtime */

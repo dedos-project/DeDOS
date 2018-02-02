@@ -37,7 +37,7 @@ int init_controller_dfg(char *filename) {
     }
     set_dfg(DFG);
 
-    set_haproxy_weights(0,0);
+    set_haproxy_weights();
 
     return 0;
 }

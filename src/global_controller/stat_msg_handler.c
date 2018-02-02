@@ -30,7 +30,7 @@ END OF LICENSE STUB
 #define MAX_SAMPLE_SIZE 64
 struct stat_sample *incoming_samples;
 
-#define MIN_DB_INSERT_INTERVAL_MS 1000
+#define MIN_DB_INSERT_INTERVAL_MS 2000
 
 static struct timespec last_db_insert_time[MAX_RUNTIMES + 1];
 
@@ -59,6 +59,7 @@ static int process_stat_samples(int runtime_id, int n_samples,
 }
 
 int set_rt_stat_limit(int runtime_id, struct stat_limit *lim) {
+    set_ctl_rt_stat_limit(runtime_id, lim);
     return db_set_rt_stat_limit(runtime_id, lim->id, lim->limit);
 }
 

@@ -50,5 +50,5 @@ struct msu_type WEBSERVER_REGEX_MSU_TYPE = {
     .name = "Webserver_regex_msu",
     .id = WEBSERVER_REGEX_MSU_TYPE_ID,
     .receive = craft_ws_regex_response,
-    .route = shortest_queue_route
+    .route = default_routing
 };

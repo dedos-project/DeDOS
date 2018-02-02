@@ -33,7 +33,7 @@ END OF LICENSE STUB
  * The maximum number of times that a call to `read()`
  * can be attempted for a single buffer before giving up
  */
-#define MAX_READ_ATTEMPTS 200
+#define MAX_READ_ATTEMPTS 2048
 
 int read_payload(int fd, size_t size, void *buff) {
     ssize_t rtn = 0;

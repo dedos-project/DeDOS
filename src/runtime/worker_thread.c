@@ -258,6 +258,9 @@ static int process_worker_thread_msg(struct worker_thread *thread, struct thread
                       msg->type, thread->thread->id);
             break;
     }
+    if (msg->ack_sem != NULL) {
+        sem_post(msg->ack_sem);
+    }
     if (msg->ack_id > 0) {
         send_ack_message(msg->ack_id, rtn == 0);
         log_warn("SENT ACK %d", msg->ack_id);

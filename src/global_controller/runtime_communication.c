@@ -33,6 +33,7 @@ END OF LICENSE STUB
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <netdb.h>
 
 struct runtime_endpoint {
     int fd;
@@ -89,6 +90,7 @@ int send_to_runtime(unsigned int runtime_id, struct ctrl_runtime_msg_hdr *hdr, v
     }
     log(LOG_RUNTIME_SENDS, "Sent a payload of size %d to runtime %d (fd: %d)",
                (int)hdr->payload_size, runtime_id, endpoint->fd);
+
     return 0;
 }
 
@@ -150,7 +152,7 @@ static int add_runtime_endpoint(unsigned int runtime_id, int fd, uint32_t ip, in
             }
         }
     }
-    set_haproxy_weights(0,0);
+    set_haproxy_weights();
     return 0;
 }
 
@@ -236,6 +238,18 @@ static int process_rt_message_hdr(struct rt_controller_msg_hdr *hdr, int fd) {
             return 0;
         default:
             log_error("Received unknown message type from fd %d: %d", fd, hdr->type);
+            char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+            struct sockaddr_in client_addr;
+            socklen_t addr_len = sizeof(client_addr);
+            rtn = getnameinfo((struct sockaddr*)&client_addr, addr_len,
+                              hbuf, sizeof(hbuf),
+                              sbuf, sizeof(sbuf),
+                              NI_NUMERICHOST| NI_NUMERICSERV);
+            if ( rtn == 0) {
+                log(LOG_EPOLL_OPS, "Unknown message descriptor %d host=%s, port=%s",
+                    fd, hbuf, sbuf);
+            }
+            close(fd);
             return -1;
     }
 }
@@ -296,6 +310,11 @@ int get_output_listener(int port) {
 
 static int listen_sock = -1;
 
+int new_runtime(int fd, void *data) {
+    log_info("Accepted new connection (fd: %d)", fd);
+    return 0;
+}
+
 int runtime_communication_loop(int listen_port, char *output_file, int output_port) {
 
     signal(SIGPIPE, SIG_IGN);
@@ -341,7 +360,7 @@ int runtime_communication_loop(int listen_port, char *output_file, int output_po
     int rtn = 0;
     while (rtn == 0) {
         rtn = epoll_loop(listen_sock, epoll_fd, 1, 1000, 0,
-                         handle_runtime_communication, NULL, NULL);
+                         handle_runtime_communication, new_runtime, NULL);
         if (rtn < 0) {
             log_error("Epoll loop exited with error");
             return -1;

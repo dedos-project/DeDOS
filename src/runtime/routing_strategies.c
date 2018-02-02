@@ -43,6 +43,7 @@ int default_routing(struct msu_type *type, struct local_msu *sender,
     }
     return 0;
 }
+
 int shortest_queue_route(struct msu_type *type, struct local_msu *sender,
                          struct msu_msg *msg, struct msu_endpoint *output) {
     struct routing_table *table = get_type_from_route_set(&sender->routes, type->id);
@@ -58,6 +59,7 @@ int shortest_queue_route(struct msu_type *type, struct local_msu *sender,
     }
     return 0;
 }
+
 int route_to_id(struct msu_type *type, struct local_msu *sender, int msu_id,
                 struct msu_endpoint *output) {
     struct routing_table *table = get_type_from_route_set(&sender->routes, type->id);
@@ -68,11 +70,12 @@ int route_to_id(struct msu_type *type, struct local_msu *sender, int msu_id,
     }
     int rtn = get_endpoint_by_id(table, msu_id, output);
     if (rtn < 0) {
-        log_error("Error getting endpoint with ID %d from msu %d", msu_id, sender->id);
+        log_warn("Error getting endpoint with ID %d from msu %d", msu_id, sender->id);
         return -1;
     }
     return 0;
 }
+
 int route_to_origin_runtime(struct msu_type *type, struct local_msu *sender, struct msu_msg *msg,
                             struct msu_endpoint *output) {
 
@@ -85,20 +88,29 @@ int route_to_origin_runtime(struct msu_type *type, struct local_msu *sender, str
         return -1;
     }
 
-    int n_endpoints = get_n_endpoints(table);
-    struct msu_endpoint eps[n_endpoints];
-
-    int n_rt_endpoints = get_endpoints_by_runtime_id(table, runtime_id, eps, n_endpoints);
-    if (n_rt_endpoints <= 0) {
-        log_error("Could not get endpoint with runtime id %d", runtime_id);
+    int rtn = get_runtime_route_endpoint(table, msg->hdr.key.id, runtime_id, output);
+    if (rtn < 0) {
+        log_error("Error getting endpoint on runtime %d from msu %d", runtime_id, sender->id);
         return -1;
     }
-
-    log(LOG_ROUTING_DECISIONS, "Sending to one of %d endpoints with correct runtime",
-        n_rt_endpoints);
-    *output = eps[((unsigned int)msg->hdr.key.id) % n_rt_endpoints];
-    log(LOG_ROUTING_DECISIONS, "Chose endpoint %d (idx: %d)",
-        output->id, ((unsigned int)msg->hdr.key.id) % n_rt_endpoints);
+    log(LOG_RUNTIME_ROUTING, "Routing to msu %d on runtime %d", output->id, output->runtime_id);
     return 0;
 }
 
+int forced_consistency_routing(struct msu_type *type, struct local_msu *sender, 
+                                      struct msu_msg *msg, struct msu_endpoint *output) {
+
+    struct msu_provinance_item *last_visit = get_provinance_item(&msg->hdr.provinance, type);
+    if (last_visit == NULL) {
+        return default_routing(type, sender, msg, output);
+    }
+    
+    int rtn = route_to_id(type, sender, last_visit->msu_id, output);
+    if (rtn == 0) {
+        return 0;
+    }
+
+    log_warn("Could not force consistency of mesage to msu %d", last_visit->msu_id);
+
+    return default_routing(type, sender, msg, output);
+}
