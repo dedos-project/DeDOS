@@ -259,7 +259,7 @@ static int handle_runtime_communication(int fd, void UNUSED *data) {
     int rtn = read_payload(fd, sizeof(hdr), &hdr);
     if (rtn < 0) {
         log_error("Error reading runtime message header from fd %d", fd);
-        return 1;
+        return -1;
     } else if (rtn == 1) {
         int id = remove_runtime_endpoint(fd);
         if (id < 0) {
@@ -358,7 +358,7 @@ int runtime_communication_loop(int listen_port, char *output_file, int output_po
 
     struct timespec elapsed;
     int rtn = 0;
-    while (rtn == 0) {
+    while (rtn <= 0) {
         rtn = epoll_loop(listen_sock, epoll_fd, 1, 1000, 0,
                          handle_runtime_communication, new_runtime, NULL);
         if (rtn < 0) {

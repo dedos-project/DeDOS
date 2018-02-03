@@ -163,20 +163,23 @@ int epoll_loop(int socket_fd, int epoll_fd, int batch_size, int timeout, bool on
                 int rtn2 = connection_handler(events[i].data.fd, data);
                 if (rtn2 != 0) {
                     if (rtn2 < 0) {
-                        log_error("Failed processing existing connection (fd: %d)",
+                        log_error("Failed processing existing connection on fd: %d. "
+                                  "Removing from epoll.",
                                   events[i].data.fd);
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
+                        close(events[i].data.fd);
                     } else {
                         log(LOG_EPOLL_OPS, "Got exit code %d from fd %d",
                                    rtn, events[i].data.fd);
                     }
-                    rtn = -1;
+                    rtn = rtn2;
                 } else {
                     log(LOG_EPOLL_OPS, "Processed connection (fd: %d)",
                                events[i].data.fd);
                 }
             }
         }
-        if (rtn < 0) {
+        if (rtn != 0) {
             return rtn;
         }
     }

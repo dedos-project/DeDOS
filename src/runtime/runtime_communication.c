@@ -121,6 +121,18 @@ int add_runtime_peer(unsigned int runtime_id, int fd) {
     return 0;
 }
 
+static int rm_runtime_peer(int fd) {
+    for (int i=0; i < MAX_RUNTIME_ID; i++) {
+        if (runtime_peers[i].fd == fd) {
+            log_info("Removing runtime peer %d (fd: %d)", i, fd);
+            runtime_peers[i].fd = 0;
+            return 0;
+        }
+    }
+    log_warn("Could not identify runtime with fd %d", fd);
+    return -1;
+}
+
 /**
  * Sends the inter_runtime_init message to the runtime with the given ID
  */
@@ -291,8 +303,9 @@ int handle_runtime_communication(int fd) {
 
     if (rtn < 0) {
         log_error("Error reading runtime message");
-        // Return of -1 will make epoll loop exit
-        return 1;
+        // Return of 1 will make epoll loop exit
+        rm_runtime_peer(fd);
+        return -1;
     } else {
         log(LOG_INTER_RUNTIME_COMMUNICATION,
                    "Read message from runtime with fd %d", fd);
@@ -301,6 +314,7 @@ int handle_runtime_communication(int fd) {
     rtn = process_runtime_message_hdr(&hdr, fd);
     if (rtn < 0) {
         log_error("Error processing inter-runtime message from fd %d", fd);
+        rm_runtime_peer(fd);
         return -1;
     }
     return 0;
