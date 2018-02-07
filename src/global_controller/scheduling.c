@@ -744,6 +744,7 @@ int unclone_msu(int msu_id) {
  * @return 0/-1 success/failure
  */
 struct dfg_msu *clone_msu(int msu_id) {
+    log(LOG_CLONE_ATTEMPT, "Got attempt to clone");
     int ret;
 
     struct dfg_msu *clone = calloc(1, sizeof(struct dfg_msu));

@@ -36,6 +36,7 @@ MSU_TYPE_MAPPING = OrderedDict([
     ('id', 'id'),
     ('meta_routing', 'meta_routing'),
     ('cloneable', 'cloneable'),
+    ('runtime_max', 'runtime_max'),
 ])
 
 DEPENDENCY_MAPPING = OrderedDict([

@@ -240,7 +240,7 @@ int try_to_clone_type(struct dfg_msu_type *type) {
     bool gt_0 = rt_min_min_gt_0(type);
     if (gt_0 || reaching_runtime_limit(type, false)) {
         set_related_type_times(type, last_try_clone_time);
-        if (could_clone_type(type) && enough_time_elapsed(last_clone_time, type, 10)) {
+        if (could_clone_type(type) && enough_time_elapsed(last_clone_time, type, 5)) {
             set_related_type_times(type, last_clone_time);
             clone_type(type);
         }
@@ -307,8 +307,8 @@ int try_to_unclone_type(struct dfg_msu_type *type) {
     double eq_0 = p_qlen_max_eq_0(type, last_msu->scheduling.runtime);
 
     if (eq_0 > 0) {
-        if (enough_time_elapsed(last_unclone_time, type, 50) &&
-                enough_time_elapsed(last_try_clone_time, type, 200) &&
+        if (enough_time_elapsed(last_unclone_time, type, 25) &&
+                enough_time_elapsed(last_try_clone_time, type, 100) &&
                 can_unclone_latest(type)) {
             log(LOG_SCHEDULING_DECISIONS, "eq0 is %f", eq_0);
             set_related_type_times(type, last_unclone_time);

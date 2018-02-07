@@ -377,7 +377,7 @@ static int process_ctrl_message(struct ctrl_runtime_msg_hdr *hdr, int fd) {
             break;
         case CTRL_MODIFY_ROUTE:
             rtn = process_ctrl_route_msg((struct ctrl_route_msg*) msg_data);
-            if (rtn < 0) {
+            if (rtn != 0) {
                 log_error("Error processing control route message");
                 return -1;
             }

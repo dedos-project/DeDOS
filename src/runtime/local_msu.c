@@ -226,6 +226,7 @@ struct local_msu *init_msu(unsigned int id,
         return NULL;
     }
 
+    log(LOG_MSU_INIT, "Initialized msu");
     return msu;
 }
 

@@ -40,6 +40,8 @@ END OF LICENSE STUB
 #include <stdio.h>
 #include <pthread.h>
 
+#include "unused_def.h"
+
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -61,10 +63,17 @@ END OF LICENSE STUB
 #define LOG_ALL 1
 #endif
 
+static double UNUSED get_logtime() {
+    struct timespec t;
+    //clock_gettime(CLOCK_REALTIME_COARSE, &t);
+    clock_gettime(CLOCK_REALTIME_COARSE, &t);
+    return (double)t.tv_sec + (double)t.tv_nsec * 1e-9;;
+}
+
 /** Macro utilized by all loggers **/
 #define log_at_level(lvl_label, color, fd, fmt, ...)\
-        fprintf(fd, "" color "%lu:%s:%d:%s(): " lvl_label ": " fmt ANSI_COLOR_RESET "\n", \
-                pthread_self(), __FILE__, __LINE__, __func__, ##__VA_ARGS__)
+        fprintf(fd, "" color "%.04f:%u:%s:%d:%s(): " lvl_label ": " fmt ANSI_COLOR_RESET "\n", \
+            get_logtime(), (unsigned int)pthread_self(), __FILE__, __LINE__, __func__, ##__VA_ARGS__)
 
 #ifndef log_debug
 #ifdef LOG_DEBUG
