@@ -9,56 +9,6 @@
   "db_name": "dedos", 
   "MSU_types": [
     {
-      "id": 556, 
-      "meta_routing": {
-        "source_types": [
-          555
-        ], 
-        "dst_types": [
-          554, 
-          555
-        ]
-      }, 
-      "cloneable": 2, 
-      "name": "ws_fileio", 
-      "colocation_group": 0
-    }, 
-    {
-      "id": 560, 
-      "meta_routing": {
-        "source_types": [
-          552
-        ], 
-        "dst_types": [
-          553
-        ]
-      }, 
-      "cloneable": 2, 
-      "name": "ws_regex_route", 
-      "colocation_group": 0, 
-      "dependencies": [
-        {
-          "type": 553, 
-          "locality": "local"
-        }
-      ]
-    }, 
-    {
-      "id": 555, 
-      "meta_routing": {
-        "source_types": [
-          552
-        ], 
-        "dst_types": [
-          556, 
-          554
-        ]
-      }, 
-      "cloneable": 1, 
-      "name": "ws_cache", 
-      "colocation_group": 0
-    }, 
-    {
       "id": 554, 
       "meta_routing": {
         "source_types": [
@@ -83,26 +33,51 @@
       ]
     }, 
     {
-      "id": 552, 
+      "id": 555, 
       "meta_routing": {
         "source_types": [
-          500
+          552
         ], 
         "dst_types": [
-          560, 
-          555, 
+          556, 
           554
         ]
       }, 
       "cloneable": 1, 
-      "name": "ws_http", 
+      "name": "ws_cache", 
+      "colocation_group": 0
+    }, 
+    {
+      "id": 10, 
+      "meta_routing": {
+        "dst_types": [
+          500
+        ]
+      }, 
+      "cloneable": 2, 
+      "name": "socket", 
+      "colocation_group": 0
+    }, 
+    {
+      "id": 556, 
+      "meta_routing": {
+        "source_types": [
+          555
+        ], 
+        "dst_types": [
+          554, 
+          555
+        ]
+      }, 
+      "cloneable": 2, 
+      "name": "ws_fileio", 
       "colocation_group": 0
     }, 
     {
       "id": 553, 
       "meta_routing": {
         "source_types": [
-          560
+          552
         ], 
         "dst_types": [
           554
@@ -110,13 +85,22 @@
       }, 
       "cloneable": 2, 
       "name": "ws_regex", 
-      "colocation_group": 0, 
-      "dependencies": [
-        {
-          "type": 560, 
-          "locality": "local"
-        }
-      ]
+      "colocation_group": 0
+    }, 
+    {
+      "id": 552, 
+      "meta_routing": {
+        "source_types": [
+          500
+        ], 
+        "dst_types": [
+          555, 
+          554
+        ]
+      }, 
+      "cloneable": 1, 
+      "name": "ws_http", 
+      "colocation_group": 0
     }, 
     {
       "id": 500, 
@@ -137,17 +121,6 @@
           "locality": "local"
         }
       ]
-    }, 
-    {
-      "id": 10, 
-      "meta_routing": {
-        "dst_types": [
-          500
-        ]
-      }, 
-      "cloneable": 2, 
-      "name": "socket", 
-      "colocation_group": 0
     }
   ], 
   "MSUs": [
@@ -205,7 +178,7 @@
           1005, 
           1003, 
           1002, 
-          1011
+          1010
         ]
       }
     }, 
@@ -247,25 +220,12 @@
         "thread_id": 5, 
         "runtime": 1, 
         "routes": [
-          1011
-        ]
-      }
-    }, 
-    {
-      "id": 17, 
-      "vertex_type": "nop", 
-      "type": 560, 
-      "blocking_mode": "non-blocking", 
-      "scheduling": {
-        "thread_id": 8, 
-        "runtime": 1, 
-        "routes": [
           1010
         ]
       }
     }, 
     {
-      "id": 18, 
+      "id": 17, 
       "vertex_type": "nop", 
       "type": 554, 
       "blocking_mode": "non-blocking", 
@@ -310,11 +270,11 @@
         }, 
         {
           "id": 1004, 
-          "type": 560, 
+          "type": 553, 
           "endpoints": [
             {
               "key": 1, 
-              "msu": 17
+              "msu": 16
             }
           ]
         }, 
@@ -324,7 +284,7 @@
           "endpoints": [
             {
               "key": 1, 
-              "msu": 18
+              "msu": 17
             }
           ]
         }, 
@@ -358,7 +318,7 @@
           "endpoints": [
             {
               "key": 1, 
-              "msu": 18
+              "msu": 17
             }
           ]
         }, 
@@ -378,7 +338,7 @@
           "endpoints": [
             {
               "key": 1, 
-              "msu": 18
+              "msu": 17
             }
           ]
         }, 
@@ -394,21 +354,11 @@
         }, 
         {
           "id": 1010, 
-          "type": 553, 
-          "endpoints": [
-            {
-              "key": 1, 
-              "msu": 16
-            }
-          ]
-        }, 
-        {
-          "id": 1011, 
           "type": 554, 
           "endpoints": [
             {
               "key": 1, 
-              "msu": 18
+              "msu": 17
             }
           ]
         }
